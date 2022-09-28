@@ -61,6 +61,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DistanceConverter,
+    MassConverter,
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
@@ -189,6 +190,10 @@ class SensorDeviceClass(StrEnum):
     # volume (VOLUME_*)
     VOLUME = "volume"
 
+    # weight/mass (g, kg, mg, µg, oz, lb)
+    WEIGHT = "weight"
+    """Using weight instead of mass because is fits better with every day language"""
+
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 
@@ -226,6 +231,7 @@ UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
+    SensorDeviceClass.WEIGHT: MassConverter,
 }
 
 UNIT_RATIOS: dict[str, dict[str, float]] = {
@@ -238,6 +244,7 @@ UNIT_RATIOS: dict[str, dict[str, float]] = {
         TEMP_KELVIN: 1.0,
     },
     SensorDeviceClass.VOLUME: VolumeConverter.UNIT_CONVERSION,
+    SensorDeviceClass.WEIGHT: MassConverter.UNIT_CONVERSION,
 }
 
 # mypy: disallow-any-generics

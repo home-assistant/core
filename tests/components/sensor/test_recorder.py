@@ -100,6 +100,8 @@ def set_time_zone():
         ("temperature", "°F", "°F", "°C", "temperature", 13.050847, -10, 30),
         ("volume", "m³", "m³", "m³", "volume", 13.050847, -10, 30),
         ("volume", "ft³", "ft³", "m³", "volume", 13.050847, -10, 30),
+        ("weight", "g", "g", "g", "mass", 13.050847, -10, 30),
+        ("weight", "oz", "oz", "g", "mass", 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics(
@@ -367,6 +369,8 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
         (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", "SEK", None, 1),
         (IMPERIAL_SYSTEM, "volume", "m³", "m³", "m³", "volume", 1),
         (IMPERIAL_SYSTEM, "volume", "ft³", "ft³", "m³", "volume", 1),
+        (IMPERIAL_SYSTEM, "weight", "g", "g", "g", "mass", 1),
+        (IMPERIAL_SYSTEM, "weight", "oz", "oz", "g", "mass", 1),
         (METRIC_SYSTEM, "distance", "m", "m", "m", "distance", 1),
         (METRIC_SYSTEM, "distance", "mi", "mi", "m", "distance", 1),
         (METRIC_SYSTEM, "energy", "kWh", "kWh", "kWh", "energy", 1),
@@ -377,6 +381,8 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
         (METRIC_SYSTEM, "monetary", "SEK", "SEK", "SEK", None, 1),
         (METRIC_SYSTEM, "volume", "m³", "m³", "m³", "volume", 1),
         (METRIC_SYSTEM, "volume", "ft³", "ft³", "m³", "volume", 1),
+        (METRIC_SYSTEM, "weight", "g", "g", "g", "mass", 1),
+        (METRIC_SYSTEM, "weight", "oz", "oz", "g", "mass", 1),
     ],
 )
 async def test_compile_hourly_sum_statistics_amount(
@@ -1577,6 +1583,8 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
         ("temperature", "°F", 30),
         ("volume", "m³", 30),
         ("volume", "ft³", 30),
+        ("weight", "g", 30),
+        ("weight", "oz", 30),
     ],
 )
 def test_compile_hourly_statistics_unchanged(
@@ -1670,6 +1678,8 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
         ("temperature", "°F", 30),
         ("volume", "m³", 30),
         ("volume", "ft³", 30),
+        ("weight", "g", 30),
+        ("weight", "oz", 30),
     ],
 )
 def test_compile_hourly_statistics_unavailable(
@@ -1765,6 +1775,10 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
         ("measurement", "volume", "ft³", "ft³", "m³", "volume", "mean"),
         ("total", "volume", "m³", "m³", "m³", "volume", "sum"),
         ("total", "volume", "ft³", "ft³", "m³", "volume", "sum"),
+        ("measurement", "weight", "g", "g", "g", "mass", "mean"),
+        ("measurement", "weight", "oz", "oz", "g", "mass", "mean"),
+        ("total", "weight", "g", "g", "g", "mass", "sum"),
+        ("total", "weight", "oz", "oz", "g", "mass", "sum"),
     ],
 )
 def test_list_statistic_ids(
