@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypeVar, Union, cast
 
 from switchbee.api import (
     SwitchBeeDeviceOfflineError,
@@ -11,7 +11,7 @@ from switchbee.api import (
     SwitchBeeTokenError,
 )
 from switchbee.const import SomfyCommand
-from switchbee.device import DeviceType, SwitchBeeBaseDevice
+from switchbee.device import DeviceType, SwitchBeeShutter, SwitchBeeSomfy
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -30,6 +30,11 @@ from .entity import SwitchBeeDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+_DeviceTypeT = TypeVar(
+    "_DeviceTypeT",
+    bound=Union[SwitchBeeShutter, SwitchBeeSomfy],
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -39,18 +44,24 @@ async def async_setup_entry(
     async_add_entities(
         SwitchBeeCover(device, coordinator)
         for device in coordinator.data.values()
-        if device.type in [DeviceType.Shutter, DeviceType.Somfy]
+        if isinstance(
+            device,
+            (
+                SwitchBeeShutter,
+                SwitchBeeSomfy,
+            ),
+        )
     )
 
 
-class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
+class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
     """Representation of a SwitchBee cover."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
 
     def __init__(
         self,
-        device: SwitchBeeBaseDevice,
+        device: _DeviceTypeT,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the SwitchBee cover."""
@@ -111,7 +122,11 @@ class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
         if self._device.type == DeviceType.Somfy:
             return
 
-        if int(self.coordinator.data[self._device.id].position) == -1:
+        coordinator_device = cast(
+            SwitchBeeShutter, self.coordinator.data[self._device.id]
+        )
+
+        if coordinator_device.position == -1:
             self.hass.async_create_task(async_refresh_state())
             # if the device was online (now offline), log message and mark it as Unavailable
             if self._is_online:
@@ -131,9 +146,7 @@ class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
             )
             self._is_online = True
 
-        self._attr_current_cover_position = self.coordinator.data[
-            self._device.id
-        ].position
+        self._attr_current_cover_position = coordinator_device.position
 
         if self._attr_current_cover_position == 0:
             self._attr_is_closed = True
@@ -200,6 +213,8 @@ class SwitchBeeCover(SwitchBeeDeviceEntity, CoverEntity):
                 f"Failed to set {self._attr_name} position to {str(kwargs[ATTR_POSITION])}, error: {str(exp)}"
             ) from exp
         else:
-            self.coordinator.data[self._device.id].position = kwargs[ATTR_POSITION]
+            cast(
+                SwitchBeeShutter, self.coordinator.data[self._device.id]
+            ).position = kwargs[ATTR_POSITION]
             self.coordinator.async_set_updated_data(self.coordinator.data)
             self.async_write_ha_state()
