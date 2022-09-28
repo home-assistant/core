@@ -206,6 +206,15 @@
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Apple TV"
+        },
+        "homekit": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "HomeKit"
+        },
+        "homekit_controller": {
+          "config_flow": true,
+          "iot_class": "local_push"
         }
       }
     },
@@ -1820,15 +1829,6 @@
       "config_flow": false,
       "iot_class": null,
       "name": "Home Assistant Alerts"
-    },
-    "homekit": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "HomeKit"
-    },
-    "homekit_controller": {
-      "config_flow": true,
-      "iot_class": "local_push"
     },
     "homematic": {
       "config_flow": false,
