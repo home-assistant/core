@@ -286,6 +286,16 @@ async def test_action(hass, device_ias, device_inovelli):
                                 "level": 10,
                                 "color": 41,
                             },
+                            {
+                                "domain": DOMAIN,
+                                "device_id": inovelli_reg_device.id,
+                                "type": "issue_individual_led_effect",
+                                "effect_type": "Open_Close",
+                                "led_number": 1,
+                                "duration": 5,
+                                "level": 10,
+                                "color": 41,
+                            },
                         ],
                     }
                 ]
@@ -304,19 +314,39 @@ async def test_action(hass, device_ias, device_inovelli):
         assert calls[0].service == "warning_device_warn"
         assert calls[0].data["ieee"] == ieee_address
 
-        assert len(cluster.request.mock_calls) == 1
-        assert cluster.request.call_args == call(
-            False,
-            1,
-            cluster.commands_by_name["led_effect"].schema,
-            6,
-            41,
-            10,
-            5,
-            expect_reply=False,
-            manufacturer=4151,
-            tries=1,
-            tsn=None,
+        assert len(cluster.request.mock_calls) == 2
+        assert (
+            call(
+                False,
+                cluster.commands_by_name["led_effect"].id,
+                cluster.commands_by_name["led_effect"].schema,
+                6,
+                41,
+                10,
+                5,
+                expect_reply=False,
+                manufacturer=4151,
+                tries=1,
+                tsn=None,
+            )
+            in cluster.request.call_args_list
+        )
+        assert (
+            call(
+                False,
+                cluster.commands_by_name["individual_led_effect"].id,
+                cluster.commands_by_name["individual_led_effect"].schema,
+                1,
+                6,
+                41,
+                10,
+                5,
+                expect_reply=False,
+                manufacturer=4151,
+                tries=1,
+                tsn=None,
+            )
+            in cluster.request.call_args_list
         )
 
 
