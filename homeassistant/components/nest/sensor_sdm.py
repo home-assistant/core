@@ -64,7 +64,7 @@ class SensorBase(SensorEntity):
 
     @property
     def available(self) -> bool:
-        """Return device availability."""
+        """Return the device availability."""
         return self._device_info.available
 
     async def async_added_to_hass(self) -> None:
