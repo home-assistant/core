@@ -230,6 +230,12 @@ class ESPHomeClient(BaseBleakClient):
         esphome_services = await self._client.bluetooth_gatt_get_services(
             address_as_int
         )
+        _LOGGER.debug(
+            "%s - %s: Got services: %s",
+            self._ble_device.name,
+            self._ble_device.address,
+            esphome_services,
+        )
         max_write_without_response = self.mtu_size - GATT_HEADER_SIZE
         services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
         for service in esphome_services.services:
