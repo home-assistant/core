@@ -192,7 +192,10 @@ class SensorDeviceClass(StrEnum):
 
     # weight/mass (g, kg, mg, µg, oz, lb)
     WEIGHT = "weight"
-    """Using weight instead of mass because is fits better with every day language"""
+    """Represent a measurement of an object's mass.
+
+    Weight is used instead of mass to fit with every day language.
+    """
 
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
