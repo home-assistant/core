@@ -117,7 +117,7 @@ class PrinterUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
         if data and any(
             data["state"]["flags"][key] for key in ("pausing", "cancelling")
         ):
-            return timedelta(seconds=3)
+            return timedelta(seconds=5)
 
         return super()._get_update_interval(data)
 
