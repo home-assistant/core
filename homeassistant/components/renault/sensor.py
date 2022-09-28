@@ -26,7 +26,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
-    LENGTH_MILES,
     PERCENTAGE,
     POWER_KILO_WATT,
     TEMP_CELSIUS,
@@ -37,7 +36,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import DEVICE_CLASS_CHARGE_STATE, DEVICE_CLASS_PLUG_STATE, DOMAIN
 from .renault_coordinator import T
@@ -112,14 +110,6 @@ class RenaultSensor(RenaultDataEntity[T], SensorEntity):
             return self.data
         return self.entity_description.value_lambda(self)
 
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the state of this entity."""
-        unit = super().native_unit_of_measurement
-        if self.vehicle.distances_in_miles and unit == LENGTH_KILOMETERS:
-            return LENGTH_MILES
-        return unit
-
 
 def _get_charging_power(entity: RenaultSensor[T]) -> StateType:
     """Return the charging_power of this entity."""
@@ -157,14 +147,6 @@ def _get_plug_state_icon(entity: RenaultSensor[T]) -> str:
 def _get_rounded_value(entity: RenaultSensor[T]) -> float:
     """Return the icon of this entity."""
     return round(cast(float, entity.data))
-
-
-def _get_distance_value(entity: RenaultSensor[T]) -> float:
-    """Return the icon of this entity."""
-    value = cast(float, entity.data)
-    if entity.vehicle.distances_in_miles:
-        value = IMPERIAL_SYSTEM.length(value, LENGTH_KILOMETERS)
-    return round(value)
 
 
 def _get_utc_value(entity: RenaultSensor[T]) -> datetime:
@@ -243,12 +225,12 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="battery_autonomy",
         coordinator="battery",
         data_key="batteryAutonomy",
+        device_class=SensorDeviceClass.DISTANCE,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
         icon="mdi:ev-station",
         name="Battery autonomy",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_lambda=_get_distance_value,
     ),
     RenaultSensorEntityDescription(
         key="battery_available_energy",
@@ -284,29 +266,32 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         key="mileage",
         coordinator="cockpit",
         data_key="totalMileage",
+        device_class=SensorDeviceClass.DISTANCE,
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:sign-direction",
         name="Mileage",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_lambda=_get_distance_value,
+        value_lambda=_get_rounded_value,
     ),
     RenaultSensorEntityDescription(
         key="fuel_autonomy",
         coordinator="cockpit",
         data_key="fuelAutonomy",
+        device_class=SensorDeviceClass.DISTANCE,
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:gas-station",
         name="Fuel autonomy",
         native_unit_of_measurement=LENGTH_KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         requires_fuel=True,
-        value_lambda=_get_distance_value,
+        value_lambda=_get_rounded_value,
     ),
     RenaultSensorEntityDescription(
         key="fuel_quantity",
         coordinator="cockpit",
         data_key="fuelQuantity",
+        device_class=SensorDeviceClass.VOLUME,
         entity_class=RenaultSensor[KamereonVehicleCockpitData],
         icon="mdi:fuel",
         name="Fuel quantity",

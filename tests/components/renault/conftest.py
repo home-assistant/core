@@ -8,7 +8,7 @@ import pytest
 from renault_api.kamereon import exceptions, schemas
 from renault_api.renault_account import RenaultAccount
 
-from homeassistant.components.renault.const import CONF_DISTANCES_IN_MILES, DOMAIN
+from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -37,21 +37,6 @@ def get_config_entry(hass: HomeAssistant) -> ConfigEntry:
     )
     config_entry.add_to_hass(hass)
     return config_entry
-
-
-@pytest.fixture(name="miles_config_entry")
-def get_config_entry_miles(hass: HomeAssistant) -> ConfigEntry:
-    """Create and register mock config entry."""
-    miles_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data=MOCK_CONFIG,
-        unique_id=MOCK_ACCOUNT_ID,
-        options={CONF_DISTANCES_IN_MILES: True},
-        entry_id="123456",
-    )
-    miles_config_entry.add_to_hass(hass)
-    return miles_config_entry
 
 
 @pytest.fixture(name="patch_renault_account")
