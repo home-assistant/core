@@ -628,7 +628,7 @@ async def test_config_flow_step_device_manual_model_error(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_MODEL: DUMMY_MODEL},
+            {CONF_MODEL: TEST_MODEL},
         )
 
     assert result["type"] == "abort"
@@ -740,7 +740,7 @@ async def config_flow_device_success(hass, model_to_test):
 
 async def config_flow_generic_roborock(hass):
     """Test a successful config flow for a generic roborock vacuum."""
-    DUMMY_MODEL = "roborock.vacuum.dummy"
+    dummy_model = "roborock.vacuum.dummy"
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -759,7 +759,7 @@ async def config_flow_generic_roborock(hass):
     assert result["step_id"] == "manual"
     assert result["errors"] == {}
 
-    mock_info = get_mock_info(model=DUMMY_MODEL)
+    mock_info = get_mock_info(model=dummy_model)
 
     with patch(
         "homeassistant.components.xiaomi_miio.device.Device.info",
@@ -771,7 +771,7 @@ async def config_flow_generic_roborock(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DUMMY_MODEL
+    assert result["title"] == dummy_model
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         const.CONF_CLOUD_USERNAME: None,
@@ -779,7 +779,7 @@ async def config_flow_generic_roborock(hass):
         const.CONF_CLOUD_COUNTRY: None,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        CONF_MODEL: DUMMY_MODEL,
+        CONF_MODEL: dummy_model,
         const.CONF_MAC: TEST_MAC,
     }
 
