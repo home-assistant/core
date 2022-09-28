@@ -26,6 +26,7 @@ from homeassistant.util.unit_conversion import (
 
 from .const import MAX_QUEUE_BACKLOG
 from .statistics import (
+    STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
     async_change_statistics_unit,
     async_import_statistics,
@@ -322,17 +323,9 @@ async def ws_adjust_sum_statistics(
     def valid_units(statistics_unit: str | None, display_unit: str | None) -> bool:
         if statistics_unit == display_unit:
             return True
-        for converter in (
-            DistanceConverter,
-            EnergyConverter,
-            MassConverter,
-            VolumeConverter,
-        ):
-            if (
-                statistics_unit == converter.NORMALIZED_UNIT
-                and display_unit in converter.VALID_UNITS
-            ):
-                return True
+        converter = STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
+        if converter is not None and display_unit in converter.VALID_UNITS:
+            return True
         return False
 
     stat_unit = metadata["statistics_unit_of_measurement"]
