@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 from switchbee import SWITCHBEE_BRAND
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
-from switchbee.device import SwitchBeeBaseDevice, DeviceType
+from switchbee.device import DeviceType, SwitchBeeBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
