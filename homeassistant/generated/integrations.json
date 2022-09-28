@@ -4576,6 +4576,31 @@
       "iot_class": "cloud_push",
       "name": "Twitter"
     },
+    "ubiquiti": {
+      "name": "Ubiquiti",
+      "integrations": {
+        "unifi": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "UniFi Network"
+        },
+        "unifi_direct": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "UniFi AP"
+        },
+        "unifiled": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "UniFi LED"
+        },
+        "unifiprotect": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "UniFi Protect"
+        }
+      }
+    },
     "ubus": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -4595,26 +4620,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Ukraine Alarm"
-    },
-    "unifi": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "UniFi Network"
-    },
-    "unifi_direct": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Ubiquiti UniFi AP"
-    },
-    "unifiled": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Ubiquiti UniFi LED"
-    },
-    "unifiprotect": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "UniFi Protect"
     },
     "universal": {
       "config_flow": false,
