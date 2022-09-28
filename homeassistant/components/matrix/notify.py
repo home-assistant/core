@@ -1,8 +1,6 @@
 """Support for Matrix notifications."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -14,7 +12,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RoomID
 from .const import DOMAIN, SERVICE_SEND_MESSAGE
@@ -41,7 +39,9 @@ class MatrixNotificationService(BaseNotificationService):
 
 
 def get_service(
-    hass: HomeAssistant, config: ConfigType, discovery_info: Any = None
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> MatrixNotificationService:
     """Get the Matrix notification service."""
     return MatrixNotificationService(config[CONF_DEFAULT_ROOM])
