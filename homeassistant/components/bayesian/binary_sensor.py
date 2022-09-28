@@ -34,7 +34,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.yaml.objects import NodeListClass
 
 from . import DOMAIN, PLATFORMS
 from .helpers import Observation
@@ -152,7 +151,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         self,
         name: str,
         prior: float,
-        observations: list[Any] | NodeListClass,
+        observations: list[Any],
         probability_threshold: float,
         device_class,
     ) -> None:
@@ -160,17 +159,17 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._attr_name = name
         self._observations = [
             Observation(
-                entity_id=x.get("entity_id"),
-                platform=x.get("platform"),
-                prob_given_false=x.get("prob_given_false"),
-                prob_given_true=x.get("prob_given_true"),
+                entity_id=o.get(CONF_ENTITY_ID),
+                platform=o[CONF_PLATFORM],
+                prob_given_false=o[CONF_P_GIVEN_F],
+                prob_given_true=o[CONF_P_GIVEN_T],
                 observed=None,
-                to_state=x.get("to_state"),
-                above=x.get("above"),
-                below=x.get("below"),
-                value_template=x.get("value_template"),
+                to_state=o.get(CONF_TO_STATE),
+                above=o.get(CONF_ABOVE),
+                below=o.get(CONF_BELOW),
+                value_template=o.get(CONF_VALUE_TEMPLATE),
             )
-            for x in observations
+            for o in observations
         ]
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
@@ -320,7 +319,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             else:
                 _LOGGER.error(
                     "An entity observation did not have an id, please create an issue on github homeassistant/core: '%s'",
-                    entity_obs.to_dict(),
+                    entity_obs,
                 )
 
         return local_observations
@@ -360,8 +359,8 @@ class BayesianBinarySensor(BinarySensorEntity):
         Build and return data structure of the form below.
 
         {
-            "sensor.sensor1": [{"id": 0, ...}, {"id": 1, ...}],
-            "sensor.sensor2": [{"id": 2, ...}],
+            "sensor.sensor1": [Observation, Observation],
+            "sensor.sensor2": [Observation],
             ...
         }
 
@@ -394,8 +393,8 @@ class BayesianBinarySensor(BinarySensorEntity):
         Build and return data structure of the form below.
 
         {
-            "template": [{"id": 0, ...}, {"id": 1, ...}],
-            "template2": [{"id": 2, ...}],
+            "template": [Observation, Observation],
+            "template2": [Observation],
             ...
         }
 
@@ -434,7 +433,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             return None
 
     def _process_state(self, entity_observation: Observation) -> bool | None:
-        """Return True if state conditions are met."""
+        """Return True if state conditions are met, return False if they are not. Returns None if the state is unavailable."""
         entity = entity_observation.entity_id
         assert entity is not None
         try:
@@ -446,7 +445,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             return None
 
     def _process_multi_state(self, entity_observation: Observation) -> bool | None:
-        """Return True if state conditions are met, never return false as all other states should have their own probabilities configured."""
+        """Return True if state conditions are met, otherwise return None. Never return False as all other states should have their own probabilities configured."""
         entity = entity_observation.entity_id
 
         try:
