@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, TypeVar, Union, cast
 
 from switchbee.api import SwitchBeeError, SwitchBeeTokenError
@@ -23,8 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 _DeviceTypeT = TypeVar(
     "_DeviceTypeT",
