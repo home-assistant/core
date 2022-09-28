@@ -7,5 +7,5 @@
   "after_dependencies": ["energy"],
   "quality_scale": "internal",
   "iot_class": "cloud_push",
-  "integration_type": "internal"
+  "integration_type": "system"
 }

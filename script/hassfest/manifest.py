@@ -163,7 +163,7 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Required("domain"): str,
         vol.Required("name"): str,
         vol.Optional("integration_type"): vol.In(
-            ["entity", "hardware", "helper", "internal"]
+            ["entity", "hardware", "helper", "system"]
         ),
         vol.Optional("config_flow"): bool,
         vol.Optional("mqtt"): [str],
