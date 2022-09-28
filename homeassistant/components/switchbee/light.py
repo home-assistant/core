@@ -79,9 +79,6 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
 
         # module is offline
         if brightness == -1:
-            # This specific call will refresh the state of the device in the CU
-            self.hass.async_create_task(self.async_refresh_state())
-
             self._check_if_became_offline()
             return
 
