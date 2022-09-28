@@ -1,7 +1,7 @@
 """Test cases for the initialisation of the Huisbaasje integration."""
 from unittest.mock import patch
 
-from huisbaasje import HuisbaasjeException
+from energyflip import EnergyFlipException
 
 from homeassistant.components import huisbaasje
 from homeassistant.config_entries import ConfigEntryState
@@ -68,7 +68,7 @@ async def test_setup_entry(hass: HomeAssistant):
 async def test_setup_entry_error(hass: HomeAssistant):
     """Test for successfully setting a config entry."""
     with patch(
-        "huisbaasje.Huisbaasje.authenticate", side_effect=HuisbaasjeException
+        "huisbaasje.Huisbaasje.authenticate", side_effect=EnergyFlipException
     ) as mock_authenticate:
         hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = MockConfigEntry(

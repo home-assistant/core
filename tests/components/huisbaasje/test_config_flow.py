@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.huisbaasje.config_flow import (
-    HuisbaasjeConnectionException,
-    HuisbaasjeException,
+    EnergyFlipConnectionException,
+    EnergyFlipException,
 )
 from homeassistant.components.huisbaasje.const import DOMAIN
 
@@ -58,7 +58,7 @@ async def test_form_invalid_auth(hass):
 
     with patch(
         "huisbaasje.Huisbaasje.authenticate",
-        side_effect=HuisbaasjeException,
+        side_effect=EnergyFlipException,
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -80,7 +80,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "huisbaasje.Huisbaasje.authenticate",
-        side_effect=HuisbaasjeConnectionException,
+        side_effect=EnergyFlipConnectionException,
     ):
         form_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
