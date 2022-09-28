@@ -14,9 +14,10 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.service import BleakGATTServiceCollection
 from bleak.exc import BleakError
 
-from homeassistant.core import CALLBACK_TYPE, async_get_hass
+from homeassistant.core import CALLBACK_TYPE, async_get_hass, callback as hass_callback
 
 from ..domain_data import DomainData
+from ..entry_data import RuntimeEntryData
 from .characteristic import BleakGATTCharacteristicESPHome
 from .descriptor import BleakGATTDescriptorESPHome
 from .service import BleakGATTServiceESPHome
@@ -66,9 +67,7 @@ class ESPHomeClient(BaseBleakClient):
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
         self.domain_data = DomainData.get(async_get_hass())
-        config_entry = self.domain_data.get_by_unique_id(self._source)
-        entry_data = self.domain_data.get_entry_data(config_entry)
-        self._client = entry_data.client
+        self._client = self._async_get_entry_data().client
         self._is_connected = False
         self._mtu: int | None = None
         self._cancel_connection_state: CALLBACK_TYPE | None = None
@@ -80,15 +79,37 @@ class ESPHomeClient(BaseBleakClient):
 
     def _unsubscribe_connection_state(self) -> None:
         """Unsubscribe from connection state updates."""
-        if self._cancel_connection_state is not None:
-            try:
-                self._cancel_connection_state()
-            except ValueError as ex:
-                _LOGGER.debug(
-                    "Failed to unsubscribe from connection state (likely connection dropped): %s",
-                    ex,
-                )
-            self._cancel_connection_state = None
+        if not self._cancel_connection_state:
+            return
+        try:
+            self._cancel_connection_state()
+        except ValueError as ex:
+            _LOGGER.debug(
+                "Failed to unsubscribe from connection state (likely connection dropped): %s",
+                ex,
+            )
+        self._cancel_connection_state = None
+
+    @hass_callback
+    def _async_get_entry_data(self) -> RuntimeEntryData:
+        """Get the entry data."""
+        config_entry = self.domain_data.get_by_unique_id(self._source)
+        return self.domain_data.get_entry_data(config_entry)
+
+    def _async_client_disconnected(self) -> None:
+        """Handle the client disconnecting."""
+        self._is_connected = False
+        self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
+        self._async_call_disconnected_callback()
+        self._async_get_entry_data().disconnect_callbacks.remove(
+            self._async_client_disconnected
+        )
+
+    def _async_call_disconnected_callback(self) -> None:
+        """Call the disconnected callback."""
+        if self._disconnected_callback:
+            self._disconnected_callback(self)
+            self._disconnected_callback = None
 
     @api_error_as_bleak_error
     async def connect(
@@ -118,18 +139,23 @@ class ESPHomeClient(BaseBleakClient):
             self._mtu = mtu
             if not connected:
                 self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
-                if self._disconnected_callback:
-                    self._disconnected_callback(self)
+                self._async_call_disconnected_callback()
                 self._unsubscribe_connection_state()
-            if not connected_future.done():
-                if error:
-                    connected_future.set_exception(
-                        BleakError(f"Error while connecting: {error}")
-                    )
-                elif not connected:
-                    connected_future.set_exception(BleakError("Disconnected"))
-                else:
-                    connected_future.set_result(connected)
+            if connected_future.done():
+                return
+            if error:
+                connected_future.set_exception(
+                    BleakError(f"Error while connecting: {error}")
+                )
+                return
+            if not connected:
+                connected_future.set_exception(BleakError("Disconnected"))
+                return
+
+            self._async_get_entry_data().disconnect_callbacks.append(
+                self._async_client_disconnected
+            )
+            connected_future.set_result(connected)
 
         timeout = kwargs.get("timeout", self._timeout)
         self._cancel_connection_state = await self._client.bluetooth_device_connect(
