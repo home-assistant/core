@@ -559,7 +559,9 @@ async def test_mirrored_observations(hass):
 
     assert len(async_get(hass).issues) == 3
     assert (
-        async_get(hass).issues[("bayesian", "mirrored_entrysensor.test_monitored1")]
+        async_get(hass).issues[
+            ("bayesian", "mirrored_entry/Test_Binary/sensor.test_monitored1")
+        ]
         is not None
     )
 

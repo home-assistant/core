@@ -156,7 +156,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         device_class,
     ) -> None:
         """Initialize the Bayesian sensor."""
-        self._attr_name = name
+        self._attr_name: str = name
         self._observations = [
             Observation(
                 entity_id=o.get(CONF_ENTITY_ID),
@@ -280,7 +280,9 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         # detect mirrored entries
         for entity, observations in self.observations_by_entity.items():
-            raise_mirrored_entries(self.hass, observations, text=entity)
+            raise_mirrored_entries(
+                self.hass, observations, text=self._attr_name + "/" + entity
+            )
 
         all_template_observations: list[Observation] = []
         for value in self.observations_by_template.values():
@@ -289,7 +291,9 @@ class BayesianBinarySensor(BinarySensorEntity):
             raise_mirrored_entries(
                 self.hass,
                 all_template_observations,
-                text=str(all_template_observations[0].value_template),
+                text=self._attr_name
+                + "/"
+                + str(all_template_observations[0].value_template),
             )
 
     @callback

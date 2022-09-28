@@ -27,7 +27,7 @@ def raise_mirrored_entries(
         issue_registry.async_create_issue(
             hass,
             DOMAIN,
-            "mirrored_entry" + text,
+            "mirrored_entry/" + text,
             breaks_in_ha_version="2022.10.0",
             is_fixable=False,
             is_persistent=False,
