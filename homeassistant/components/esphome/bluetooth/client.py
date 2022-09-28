@@ -120,6 +120,8 @@ class ESPHomeClient(BaseBleakClient):
                     connected_future.set_exception(
                         BleakError(f"Error while connecting: {error}")
                     )
+                elif not connected:
+                    connected_future.set_exception(BleakError("Disconnected"))
                 else:
                     connected_future.set_result(connected)
 
