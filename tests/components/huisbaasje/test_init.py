@@ -9,8 +9,9 @@ from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNA
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .test_data import MOCK_CURRENT_MEASUREMENTS
+
 from tests.common import MockConfigEntry
-from tests.components.huisbaasje.test_data import MOCK_CURRENT_MEASUREMENTS
 
 
 async def test_setup(hass: HomeAssistant):

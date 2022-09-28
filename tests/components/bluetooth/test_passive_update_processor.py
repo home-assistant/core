@@ -34,13 +34,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import patch_all_discovered_devices
-
-from tests.common import MockEntityPlatform, async_fire_time_changed
-from tests.components.bluetooth import (
+from . import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
 )
+
+from tests.common import MockEntityPlatform, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth_le_tracker.device_tracker import (
     CONF_TRACK_BATTERY,
     CONF_TRACK_BATTERY_INTERVAL,
 )
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DOMAIN,

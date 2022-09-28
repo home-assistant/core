@@ -25,6 +25,10 @@
             },
             "pick_implementation": {
                 "title": "Pick Authentication Method"
+            },
+            "reauth_confirm": {
+                "description": "The Google Sheets integration needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
             }
         }
     }

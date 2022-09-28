@@ -21,7 +21,7 @@ from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "rssi": SensorEntityDescription(

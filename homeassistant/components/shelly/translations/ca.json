@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "reauth_unsuccessful": "La re-autenticaci\u00f3 no ha tingut \u00e8xit, elimina la integraci\u00f3 i torna-la a configurar.",
             "unsupported_firmware": "El dispositiu utilitza una versi\u00f3 de programari no compatible."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "Vols configurar el {model} a {host}? \n\nAbans de configurar-lo, els dispositius amb bateria protegits amb contrasenya s'han de desperar prement el bot\u00f3 del dispositiu.\nEls dispositius que no tinguin contrasenya s'afegiran tan bon punt es despertin. Ja pots despertar el dispositiu manualment mitjan\u00e7ant el bot\u00f3 o esperar a la seg\u00fcent transmissi\u00f3 de dades del dispositiu."
             },
             "credentials": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"

@@ -58,9 +58,11 @@ class MockedValve:
     _id: int
     _is_watering: bool
     _manual_watering_minutes: int
+    _end_time: int
 
     def __init__(self, identifier: int) -> None:
         """Initialize a mocked valve."""
+        self._end_time = 0
         self._id = identifier
         self._is_watering = False
         self._manual_watering_minutes = 0
@@ -78,6 +80,20 @@ class MockedValve:
     async def set_is_watering(self, is_watering: bool):
         """Set the valve to manual watering."""
         self._is_watering = is_watering
+
+    @property
+    def manual_watering_minutes(self):
+        """Return the number of minutes the valve is set to manual watering."""
+        return self._manual_watering_minutes
+
+    async def set_manual_watering_minutes(self, minutes: int):
+        """Set the valve to manual watering."""
+        self._manual_watering_minutes = minutes
+
+    @property
+    def watering_end_time(self) -> int:
+        """Return the end time of the current watering cycle."""
+        return self._end_time
 
 
 def mock_config_entry(hass: HomeAssistant):

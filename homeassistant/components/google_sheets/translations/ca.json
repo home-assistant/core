@@ -25,6 +25,9 @@
             },
             "pick_implementation": {
                 "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
+            },
+            "reauth_confirm": {
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             }
         }
     }

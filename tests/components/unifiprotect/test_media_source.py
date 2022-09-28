@@ -17,11 +17,7 @@ from pyunifiprotect.data import (
 )
 from pyunifiprotect.exceptions import NvrError
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import MediaSourceItem
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.media_source import (
@@ -679,7 +675,7 @@ async def test_browse_media_event(
 
     assert browse.identifier == "test_id:event:test_event_id"
     assert browse.children is None
-    assert browse.media_class == MEDIA_CLASS_VIDEO
+    assert browse.media_class == MediaClass.VIDEO
 
 
 async def test_browse_media_eventthumb(
@@ -710,7 +706,7 @@ async def test_browse_media_eventthumb(
 
     assert browse.identifier == "test_id:eventthumb:test_event_id"
     assert browse.children is None
-    assert browse.media_class == MEDIA_CLASS_IMAGE
+    assert browse.media_class == MediaClass.IMAGE
 
 
 @freeze_time("2022-09-15 03:00:00-07:00")

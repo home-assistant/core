@@ -39,6 +39,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne tjenesten for i stedet \u00e5 bruke ` {alternate_service} `-tjenesten med en m\u00e5lenhets-ID p\u00e5 ` {alternate_target} `. Klikk deretter SEND nedenfor for \u00e5 merke dette problemet som l\u00f8st.",
+            "title": "{deprecated_service} -tjenesten blir fjernet"
+        }
+    },
     "options": {
         "step": {
             "init": {

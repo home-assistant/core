@@ -588,6 +588,9 @@ UV_INDEX: Final = "UV index"
 # Percentage units
 PERCENTAGE: Final = "%"
 
+# Rotational speed units
+REVOLUTIONS_PER_MINUTE: Final = "rpm"
+
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
 IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"

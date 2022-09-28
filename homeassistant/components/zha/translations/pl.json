@@ -173,6 +173,7 @@
     "options": {
         "abort": {
             "not_zha_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem zha",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "usb_probe_failed": "Nie uda\u0142o si\u0119 sondowa\u0107 urz\u0105dzenia USB"
         },
         "error": {

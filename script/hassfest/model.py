@@ -127,7 +127,7 @@ class Integration:
         self.errors.append(Error(*args, **kwargs))
 
     def add_warning(self, *args: Any, **kwargs: Any) -> None:
-        """Add an warning."""
+        """Add a warning."""
         self.warnings.append(Error(*args, **kwargs))
 
     def load_manifest(self) -> None:

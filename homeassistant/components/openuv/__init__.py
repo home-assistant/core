@@ -354,10 +354,11 @@ class OpenUvEntity(Entity):
 
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""
-        coordinates = f"{openuv.client.latitude}, {openuv.client.longitude}"
         self._attr_extra_state_attributes = {}
         self._attr_should_poll = False
-        self._attr_unique_id = f"{coordinates}_{description.key}"
+        self._attr_unique_id = (
+            f"{openuv.client.latitude}_{openuv.client.longitude}_{description.key}"
+        )
         self.entity_description = description
         self.openuv = openuv
 

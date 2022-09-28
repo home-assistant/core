@@ -30,10 +30,7 @@ from zwave_js_server.model.controller import (
 )
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.websocket_api.const import (
-    ERR_INVALID_FORMAT,
-    ERR_NOT_FOUND,
-)
+from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
     ADDITIONAL_PROPERTIES,
     APPLICATION_VERSION,

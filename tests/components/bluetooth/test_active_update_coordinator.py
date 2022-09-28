@@ -20,7 +20,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 
-from tests.components.bluetooth import inject_bluetooth_service_info
+from . import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
 

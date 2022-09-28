@@ -38,10 +38,11 @@ from .const import (
     DOMAIN,
     INFRARED_BRIGHTNESS,
 )
-from .coordinator import LIFXUpdateCoordinator
+from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_STOP,
     LIFXManager,
@@ -139,6 +140,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             color_mode = ColorMode.BRIGHTNESS
         self._attr_color_mode = color_mode
         self._attr_supported_color_modes = {color_mode}
+        self._attr_effect = None
 
     @property
     def brightness(self) -> int:
@@ -163,6 +165,8 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Return the name of the currently running effect."""
         if effect := self.effects_conductor.effect(self.bulb):
             return f"effect_{effect.name}"
+        if effect := self.coordinator.async_get_active_effect():
+            return f"effect_{FirmwareEffect(effect).name.lower()}"
         return None
 
     async def update_during_transition(self, when: int) -> None:
@@ -360,6 +364,13 @@ class LIFXColor(LIFXLight):
 
 class LIFXStrip(LIFXColor):
     """Representation of a LIFX light strip with multiple zones."""
+
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_MOVE,
+        SERVICE_EFFECT_STOP,
+    ]
 
     async def set_color(
         self,

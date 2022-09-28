@@ -8,8 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import SensiboData
 from pytest import MonkeyPatch, raises
 
-from homeassistant.components.button import SERVICE_PRESS
-from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
