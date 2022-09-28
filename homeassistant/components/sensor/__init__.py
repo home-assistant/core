@@ -127,9 +127,6 @@ class SensorDeviceClass(StrEnum):
     # current light level (lx/lm)
     ILLUMINANCE = "illuminance"
 
-    # mass (g, kg, mg, µg, oz, lb)
-    MASS = "mass"
-
     # moisture (%)
     MOISTURE = "moisture"
 
@@ -193,6 +190,9 @@ class SensorDeviceClass(StrEnum):
     # volume (VOLUME_*)
     VOLUME = "volume"
 
+    # weight (g, kg, mg, µg, oz, lb)
+    WEIGHT = "weight"
+
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 
@@ -226,16 +226,15 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter,
-    SensorDeviceClass.MASS: MassConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
+    SensorDeviceClass.WEIGHT: MassConverter,
 }
 
 UNIT_RATIOS: dict[str, dict[str, float]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter.UNIT_CONVERSION,
-    SensorDeviceClass.MASS: MassConverter.UNIT_CONVERSION,
     SensorDeviceClass.PRESSURE: PressureConverter.UNIT_CONVERSION,
     SensorDeviceClass.SPEED: SpeedConverter.UNIT_CONVERSION,
     SensorDeviceClass.TEMPERATURE: {
@@ -244,6 +243,7 @@ UNIT_RATIOS: dict[str, dict[str, float]] = {
         TEMP_KELVIN: 1.0,
     },
     SensorDeviceClass.VOLUME: VolumeConverter.UNIT_CONVERSION,
+    SensorDeviceClass.WEIGHT: MassConverter.UNIT_CONVERSION,
 }
 
 # mypy: disallow-any-generics

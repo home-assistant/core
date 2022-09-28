@@ -41,7 +41,6 @@ CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
 CONF_ILLUMINANCE = "illuminance"
-CONF_MASS = "mass"
 CONF_MOISTURE = "moisture"
 CONF_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 CONF_NITROGEN_MONOXIDE = "nitrogen_monoxide"
@@ -62,6 +61,7 @@ CONF_VALUE = "value"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 CONF_VOLTAGE = "voltage"
 CONF_VOLUME = "volume"
+CONF_WEIGHT = "weight"
 
 ENTITY_TRIGGERS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
@@ -75,7 +75,6 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
-    SensorDeviceClass.MASS: [{CONF_TYPE: CONF_MASS}],
     SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_MOISTURE}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_NITROGEN_MONOXIDE}],
@@ -97,6 +96,7 @@ ENTITY_TRIGGERS = {
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_VOLUME}],
+    SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_WEIGHT}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_VALUE}],
 }
 

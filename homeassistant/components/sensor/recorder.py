@@ -63,12 +63,12 @@ UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
-    SensorDeviceClass.MASS: MassConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
+    SensorDeviceClass.WEIGHT: MassConverter,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged

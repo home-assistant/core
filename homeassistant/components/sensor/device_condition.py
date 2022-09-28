@@ -42,7 +42,6 @@ CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
 CONF_IS_ILLUMINANCE = "is_illuminance"
-CONF_IS_MASS = "is_mass"
 CONF_IS_MOISTURE = "is_moisture"
 CONF_IS_NITROGEN_DIOXIDE = "is_nitrogen_dioxide"
 CONF_IS_NITROGEN_MONOXIDE = "is_nitrogen_monoxide"
@@ -63,6 +62,7 @@ CONF_IS_VALUE = "is_value"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VOLUME = "is_volume"
+CONF_IS_WEIGHT = "is_weight"
 
 ENTITY_CONDITIONS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
@@ -76,7 +76,6 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
     SensorDeviceClass.HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
     SensorDeviceClass.ILLUMINANCE: [{CONF_TYPE: CONF_IS_ILLUMINANCE}],
-    SensorDeviceClass.MASS: [{CONF_TYPE: CONF_IS_MASS}],
     SensorDeviceClass.MOISTURE: [{CONF_TYPE: CONF_IS_MOISTURE}],
     SensorDeviceClass.NITROGEN_DIOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_DIOXIDE}],
     SensorDeviceClass.NITROGEN_MONOXIDE: [{CONF_TYPE: CONF_IS_NITROGEN_MONOXIDE}],
@@ -98,6 +97,7 @@ ENTITY_CONDITIONS = {
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
+    SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_IS_WEIGHT}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
 
