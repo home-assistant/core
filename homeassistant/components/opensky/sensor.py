@@ -22,7 +22,8 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import distance as util_distance, location as util_location
+from homeassistant.util import location as util_location
+from homeassistant.util.unit_conversion import DistanceConverter
 
 CONF_ALTITUDE = "altitude"
 
@@ -105,7 +106,9 @@ class OpenSkySensor(SensorEntity):
         self._session = requests.Session()
         self._latitude = latitude
         self._longitude = longitude
-        self._radius = util_distance.convert(radius, LENGTH_KILOMETERS, LENGTH_METERS)
+        self._radius = DistanceConverter.convert(
+            radius, LENGTH_KILOMETERS, LENGTH_METERS
+        )
         self._altitude = altitude
         self._state = 0
         self._hass = hass

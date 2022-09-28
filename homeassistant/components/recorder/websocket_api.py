@@ -9,11 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import messages
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-)
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
@@ -21,6 +16,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     EnergyConverter,
+    MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
@@ -30,6 +26,7 @@ from homeassistant.util.unit_conversion import (
 
 from .const import MAX_QUEUE_BACKLOG
 from .statistics import (
+    STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
     async_change_statistics_unit,
     async_import_statistics,
@@ -126,6 +123,7 @@ async def ws_handle_get_statistics_during_period(
             {
                 vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
                 vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
                 vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
                 vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
                 vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
@@ -325,20 +323,8 @@ async def ws_adjust_sum_statistics(
     def valid_units(statistics_unit: str | None, display_unit: str | None) -> bool:
         if statistics_unit == display_unit:
             return True
-        if (
-            statistics_unit == DistanceConverter.NORMALIZED_UNIT
-            and display_unit in DistanceConverter.VALID_UNITS
-        ):
-            return True
-        if statistics_unit == ENERGY_KILO_WATT_HOUR and display_unit in (
-            ENERGY_MEGA_WATT_HOUR,
-            ENERGY_WATT_HOUR,
-        ):
-            return True
-        if (
-            statistics_unit == VolumeConverter.NORMALIZED_UNIT
-            and display_unit in VolumeConverter.VALID_UNITS
-        ):
+        converter = STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
+        if converter is not None and display_unit in converter.VALID_UNITS:
             return True
         return False
 

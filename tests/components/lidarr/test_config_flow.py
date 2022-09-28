@@ -1,7 +1,7 @@
 """Test Lidarr config flow."""
 from unittest.mock import patch
 
-from aiopyarr import ArrAuthenticationException, ArrConnectionException, ArrException
+from aiopyarr import exceptions
 
 from homeassistant import data_entry_flow
 from homeassistant.components.lidarr.const import DEFAULT_NAME, DOMAIN
@@ -45,7 +45,7 @@ async def test_flow_user_form(
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test invalid authentication."""
     with _patch_client() as client:
-        client.side_effect = ArrAuthenticationException
+        client.side_effect = exceptions.ArrAuthenticationException
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
@@ -62,7 +62,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
 async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test connection error."""
     with _patch_client() as client:
-        client.side_effect = ArrConnectionException
+        client.side_effect = exceptions.ArrConnectionException
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
@@ -76,10 +76,44 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "cannot_connect"
 
 
+async def test_wrong_app(hass: HomeAssistant) -> None:
+    """Test we show user form on wrong app."""
+    with patch(
+        "homeassistant.components.lidarr.config_flow.LidarrClient.async_try_zeroconf",
+        side_effect=exceptions.ArrWrongAppException,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+            data=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "wrong_app"
+
+
+async def test_zero_conf_failure(hass: HomeAssistant) -> None:
+    """Test we show user form on api key retrieval failure."""
+    with patch(
+        "homeassistant.components.lidarr.config_flow.LidarrClient.async_try_zeroconf",
+        side_effect=exceptions.ArrZeroConfException,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+            data=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "zeroconf_failed"
+
+
 async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     """Test unknown error."""
     with _patch_client() as client:
-        client.side_effect = ArrException
+        client.side_effect = exceptions.ArrException
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_USER},
@@ -91,23 +125,6 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "unknown"
-
-
-async def test_flow_user_failed_zeroconf(hass: HomeAssistant) -> None:
-    """Test zero configuration failed."""
-    with _patch_client() as client:
-        client.return_value = "zeroconf_failed"
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_DATA,
-        )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"]["base"] == "zeroconf_failed"
 
 
 async def test_flow_reauth(

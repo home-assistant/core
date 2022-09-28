@@ -3,7 +3,7 @@
   "name": "PrusaLink",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/prusalink",
-  "requirements": ["pyprusalink==1.0.1"],
+  "requirements": ["pyprusalink==1.1.0"],
   "dhcp": [
     {
       "macaddress": "109C70*"
