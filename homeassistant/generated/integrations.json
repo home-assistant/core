@@ -1443,20 +1443,25 @@
       "iot_class": "cloud_polling",
       "name": "Freedompro"
     },
-    "fritz": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "AVM FRITZ!Box Tools"
-    },
     "fritzbox": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "AVM FRITZ!SmartHome"
-    },
-    "fritzbox_callmonitor": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "AVM FRITZ!Box Call Monitor"
+      "name": "FRITZ!Box",
+      "integrations": {
+        "fritz": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "AVM FRITZ!Box Tools"
+        },
+        "fritzbox": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "AVM FRITZ!SmartHome"
+        },
+        "fritzbox_callmonitor": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "AVM FRITZ!Box Call Monitor"
+        }
+      }
     },
     "fronius": {
       "config_flow": true,
