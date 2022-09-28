@@ -92,7 +92,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
         """Check if the device was online (now offline), log message and mark it as Unavailable."""
         if self._is_online:
             _LOGGER.warning(
-                "%s light is not responding, check the status in the SwitchBee mobile app",
+                "%s device is not responding, check the status in the SwitchBee mobile app",
                 self.name,
             )
             self._is_online = False
