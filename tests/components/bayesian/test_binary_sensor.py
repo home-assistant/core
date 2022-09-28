@@ -500,7 +500,7 @@ async def test_multiple_numeric_observations(hass):
 
 
 async def test_mirrored_observations(hass):
-    """Test sensor with multiple numeric observations of same entity."""
+    """Test whether mirrored entries are detected and appropriate issues are created."""
 
     config = {
         "binary_sensor": {
