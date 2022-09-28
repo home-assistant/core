@@ -62,15 +62,16 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         else:
             try:
-                result = await validate_input(self.hass, user_input)
-                if isinstance(result, tuple):
+                if result := await validate_input(self.hass, user_input):
                     user_input[CONF_API_KEY] = result[1]
-                elif isinstance(result, str):
-                    errors = {"base": result}
             except exceptions.ArrAuthenticationException:
                 errors = {"base": "invalid_auth"}
             except (ClientConnectorError, exceptions.ArrConnectionException):
                 errors = {"base": "cannot_connect"}
+            except exceptions.ArrWrongAppException:
+                errors = {"base": "wrong_app"}
+            except exceptions.ArrZeroConfException:
+                errors = {"base": "zeroconf_failed"}
             except exceptions.ArrException:
                 errors = {"base": "unknown"}
             if not errors:
@@ -130,7 +131,7 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
 async def validate_input(
     hass: HomeAssistant, data: dict[str, Any]
-) -> tuple[str, str, str] | str | None:
+) -> tuple[str, str, str] | None:
     """Validate the user input allows us to connect."""
     host_configuration = PyArrHostConfiguration(
         api_token=data.get(CONF_API_KEY, ""),
