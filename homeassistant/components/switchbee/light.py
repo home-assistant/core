@@ -1,10 +1,12 @@
 """Support for SwitchBee light."""
 
+from __future__ import annotations
+
 import logging
-from typing import Any
+from typing import Any, cast
 
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
-from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeBaseDevice
+from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeDimmer
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -52,7 +54,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity, LightEntity):
 
     def __init__(
         self,
-        device: SwitchBeeBaseDevice,
+        device: SwitchBeeDimmer,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the SwitchBee light."""
@@ -77,7 +79,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity, LightEntity):
         super()._handle_coordinator_update()
 
     def _update_attrs_from_coordinator(self) -> None:
-        async def async_refresh_state():
+        async def async_refresh_state() -> None:
             """Refresh the device state in the Central Unit.
 
             This function addresses issue of a device that came online back but still report
@@ -97,7 +99,10 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity, LightEntity):
             except SwitchBeeError:
                 return
 
-        brightness: int = self.coordinator.data[self._device.id].brightness
+        coordinator_device = cast(
+            SwitchBeeDimmer, self.coordinator.data[self._device.id]
+        )
+        brightness: int = coordinator_device.brightness
 
         # module is offline
         if brightness == -1:
@@ -131,7 +136,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to light."""
         if ATTR_BRIGHTNESS in kwargs:
-            state = brightness_hass_to_switchbee(kwargs[ATTR_BRIGHTNESS])
+            state: int | str = brightness_hass_to_switchbee(kwargs[ATTR_BRIGHTNESS])
         else:
             state = ApiStateCommand.ON
             if self.brightness:
@@ -145,9 +150,15 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity, LightEntity):
             ) from exp
 
         else:
-            # update the coordinator data manually, we already know the Central Unit brightness data for this light
-            self.coordinator.data[self._device.id].brightness = state
-            self.coordinator.async_set_updated_data(self.coordinator.data)
+            # update the coordinator data manually if already know the Central Unit brightness data for this light
+            if isinstance(state, int):
+                cast(
+                    SwitchBeeDimmer, self.coordinator.data[self._device.id]
+                ).brightness = state
+                self.coordinator.async_set_updated_data(self.coordinator.data)
+                return
+
+            # the brightness will be learned and updated in the next coordinator refresh
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off SwitchBee light."""
@@ -160,5 +171,5 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity, LightEntity):
 
         else:
             # update the coordinator manually
-            self.coordinator.data[self._device.id].brightness = 0
+            cast(SwitchBeeDimmer, self.coordinator.data[self._device.id]).brightness = 0
             self.coordinator.async_set_updated_data(self.coordinator.data)
