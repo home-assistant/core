@@ -36,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.11
+PySwitchbot==0.19.12
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -417,7 +417,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.15.1
+dbus-fast==1.17.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1779,7 +1779,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==1.9.2
 
 # homeassistant.components.august
-yalexs==1.2.2
+yalexs==1.2.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
@@ -1794,7 +1794,7 @@ youless-api==0.16
 zeroconf==0.39.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.79
+zha-quirks==0.0.80
 
 # homeassistant.components.zha
 zigpy-deconz==0.18.1

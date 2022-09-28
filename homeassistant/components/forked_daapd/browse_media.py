@@ -55,13 +55,11 @@ OWNTONE_TYPE_TO_MEDIA_TYPE = {
 }
 MEDIA_TYPE_TO_OWNTONE_TYPE = {v: k for k, v in OWNTONE_TYPE_TO_MEDIA_TYPE.items()}
 
-"""
-media_content_id is a uri in the form of SCHEMA:Title:OwnToneURI:Subtype (Subtype only used for Genre)
-OwnToneURI is in format library:type:id (for directories, id is path)
-media_content_type - type of item (mostly used to check if playable or can expand)
-Owntone type may differ from media_content_type when media_content_type is a directory
-Owntown type is used in our own branching, but media_content_type is used for determining playability
-"""
+# media_content_id is a uri in the form of SCHEMA:Title:OwnToneURI:Subtype (Subtype only used for Genre)
+# OwnToneURI is in format library:type:id (for directories, id is path)
+# media_content_type - type of item (mostly used to check if playable or can expand)
+# Owntone type may differ from media_content_type when media_content_type is a directory
+# Owntone type is used in our own branching, but media_content_type is used for determining playability
 
 
 @dataclass

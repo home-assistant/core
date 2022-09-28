@@ -30,6 +30,16 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
+DISTANCE_SENSOR_FT_ATTRIBUTES = {
+    "device_class": "distance",
+    "state_class": "measurement",
+    "unit_of_measurement": "ft",
+}
+DISTANCE_SENSOR_M_ATTRIBUTES = {
+    "device_class": "distance",
+    "state_class": "measurement",
+    "unit_of_measurement": "m",
+}
 ENERGY_SENSOR_KWH_ATTRIBUTES = {
     "device_class": "energy",
     "state_class": "total",
@@ -70,6 +80,16 @@ PRESSURE_SENSOR_PA_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "Pa",
 }
+SPEED_SENSOR_KPH_ATTRIBUTES = {
+    "device_class": "speed",
+    "state_class": "measurement",
+    "unit_of_measurement": "km/h",
+}
+SPEED_SENSOR_MPH_ATTRIBUTES = {
+    "device_class": "speed",
+    "state_class": "measurement",
+    "unit_of_measurement": "mph",
+}
 TEMPERATURE_SENSOR_C_ATTRIBUTES = {
     "device_class": "temperature",
     "state_class": "measurement",
@@ -79,6 +99,26 @@ TEMPERATURE_SENSOR_F_ATTRIBUTES = {
     "device_class": "temperature",
     "state_class": "measurement",
     "unit_of_measurement": "°F",
+}
+VOLUME_SENSOR_FT3_ATTRIBUTES = {
+    "device_class": "volume",
+    "state_class": "measurement",
+    "unit_of_measurement": "ft³",
+}
+VOLUME_SENSOR_M3_ATTRIBUTES = {
+    "device_class": "volume",
+    "state_class": "measurement",
+    "unit_of_measurement": "m³",
+}
+VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL = {
+    "device_class": "volume",
+    "state_class": "total",
+    "unit_of_measurement": "ft³",
+}
+VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
+    "device_class": "volume",
+    "state_class": "total",
+    "unit_of_measurement": "m³",
 }
 
 
@@ -141,14 +181,22 @@ async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
 @pytest.mark.parametrize(
     "attributes, state, value, custom_units, converted_value",
     [
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 1000),
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "m"}, 10),
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "in"}, 10 / 0.0254),
         (POWER_SENSOR_KW_ATTRIBUTES, 10, 10, {"power": "W"}, 10000),
         (POWER_SENSOR_KW_ATTRIBUTES, 10, 10, {"power": "kW"}, 10),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "Pa"}, 1000),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "hPa"}, 10),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "psi"}, 1000 / 6894.757),
+        (SPEED_SENSOR_KPH_ATTRIBUTES, 10, 10, {"speed": "m/s"}, 2.77778),
+        (SPEED_SENSOR_KPH_ATTRIBUTES, 10, 10, {"speed": "km/h"}, 10),
+        (SPEED_SENSOR_KPH_ATTRIBUTES, 10, 10, {"speed": "mph"}, 6.21371),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°C"}, 10),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°F"}, 50),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "K"}, 283.15),
+        (VOLUME_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "m³"}, 10),
+        (VOLUME_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "ft³"}, 353.14666),
     ],
 )
 async def test_statistics_during_period_unit_conversion(
@@ -240,6 +288,8 @@ async def test_statistics_during_period_unit_conversion(
         (ENERGY_SENSOR_KWH_ATTRIBUTES, 10, 10, {"energy": "Wh"}, 10000),
         (GAS_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "m³"}, 10),
         (GAS_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "ft³"}, 353.147),
+        (VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL, 10, 10, {"volume": "m³"}, 10),
+        (VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL, 10, 10, {"volume": "ft³"}, 353.147),
     ],
 )
 async def test_sum_statistics_during_period_unit_conversion(
@@ -327,6 +377,7 @@ async def test_sum_statistics_during_period_unit_conversion(
 @pytest.mark.parametrize(
     "custom_units",
     [
+        {"distance": "L"},
         {"energy": "W"},
         {"power": "Pa"},
         {"pressure": "K"},
@@ -538,6 +589,10 @@ async def test_statistics_during_period_bad_end_time(
 @pytest.mark.parametrize(
     "units, attributes, display_unit, statistics_unit, unit_class",
     [
+        (IMPERIAL_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
+        (METRIC_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
+        (IMPERIAL_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "m", "distance"),
+        (METRIC_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "m", "distance"),
         (IMPERIAL_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
         (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
         (IMPERIAL_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
@@ -546,10 +601,16 @@ async def test_statistics_during_period_bad_end_time(
         (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W", "power"),
         (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
         (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
+        (IMPERIAL_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "m/s", "speed"),
+        (METRIC_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "m/s", "speed"),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
+        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
+        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "m³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "m³", "volume"),
     ],
 )
 async def test_list_statistic_ids(
@@ -1339,8 +1400,12 @@ async def test_backup_end_without_start(
         (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "W", "power"),
         (METRIC_SYSTEM, PRESSURE_SENSOR_PA_ATTRIBUTES, "Pa", "pressure"),
         (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "Pa", "pressure"),
+        (METRIC_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "m/s", "speed"),
+        (METRIC_SYSTEM, SPEED_SENSOR_MPH_ATTRIBUTES, "m/s", "speed"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°C", "temperature"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "m³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_M3_ATTRIBUTES, "m³", "volume"),
     ],
 )
 async def test_get_statistics_metadata(
