@@ -16,7 +16,13 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_VARIABLES,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    callback,
+    is_callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -112,7 +118,17 @@ def _trigger_action_wrapper(
         """Wrap action with extra vars."""
         trigger_variables = conf[CONF_VARIABLES]
         run_variables.update(trigger_variables.async_render(hass, run_variables))
-        await action(run_variables, context)
+
+        if asyncio.iscoroutinefunction(action):
+            await action(run_variables, context)
+        elif is_callback(action):
+
+            def wrapper() -> None:
+                action(run_variables, context)
+
+            callback(wrapper)
+        else:
+            action(run_variables, context)
 
     return with_vars
 
