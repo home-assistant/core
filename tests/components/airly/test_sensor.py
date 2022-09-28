@@ -22,10 +22,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import API_POINT_URL
+from . import API_POINT_URL, init_integration
 
 from tests.common import async_fire_time_changed, load_fixture
-from tests.components.airly import init_integration
 
 
 async def test_sensor(hass, aioclient_mock):
@@ -109,7 +108,6 @@ async def test_sensor(hass, aioclient_mock):
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CO
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     entry = registry.async_get("sensor.home_co")

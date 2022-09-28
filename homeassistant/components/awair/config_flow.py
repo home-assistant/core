@@ -10,7 +10,7 @@ from python_awair.exceptions import AuthError, AwairError
 from python_awair.user import AwairUser
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
+from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
@@ -60,7 +60,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             title = f"{self._device.model} ({self._device.device_id})"
             return self.async_create_entry(
                 title=title,

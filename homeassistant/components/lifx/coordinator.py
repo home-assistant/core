@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from enum import IntEnum
 from functools import partial
 from typing import Any, cast
 
-from aiolifx.aiolifx import Light
+from aiolifx.aiolifx import Light, MultiZoneDirection, MultiZoneEffectType
 from aiolifx.connection import LIFXConnection
 
 from homeassistant.const import Platform
@@ -37,6 +38,15 @@ REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
 
 
+class FirmwareEffect(IntEnum):
+    """Enumeration of LIFX firmware effects."""
+
+    OFF = 0
+    MOVE = 1
+    MORPH = 2
+    FLAME = 3
+
+
 class LIFXUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
@@ -51,7 +61,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.connection = connection
         self.device: Light = connection.device
         self.lock = asyncio.Lock()
+        self.active_effect = FirmwareEffect.OFF
         update_interval = timedelta(seconds=10)
+
         super().__init__(
             hass,
             _LOGGER,
@@ -139,6 +151,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             # Update model-specific configuration
             if lifx_features(self.device)["multizone"]:
                 await self.async_update_color_zones()
+                await self.async_update_multizone_effect()
 
             if lifx_features(self.device)["hev"]:
                 await self.async_get_hev_cycle()
@@ -218,6 +231,33 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 apply=apply,
             )
         )
+
+    async def async_update_multizone_effect(self) -> None:
+        """Update the device firmware effect running state."""
+        await async_execute_lifx(self.device.get_multizone_effect)
+        self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
+
+    async def async_set_multizone_effect(
+        self, effect: str, speed: float, direction: str, power_on: bool = True
+    ) -> None:
+        """Control the firmware-based Move effect on a multizone device."""
+        if lifx_features(self.device)["multizone"] is True:
+            if power_on and self.device.power_level == 0:
+                await self.async_set_power(True, 0)
+
+            await async_execute_lifx(
+                partial(
+                    self.device.set_multizone_effect,
+                    effect=MultiZoneEffectType[effect.upper()].value,
+                    speed=speed,
+                    direction=MultiZoneDirection[direction.upper()].value,
+                )
+            )
+            self.active_effect = FirmwareEffect[effect.upper()]
+
+    def async_get_active_effect(self) -> int:
+        """Return the enum value of the currently active firmware effect."""
+        return self.active_effect.value
 
     async def async_set_hev_cycle_state(self, enable: bool, duration: int = 0) -> None:
         """Start or stop an HEV cycle on a LIFX Clean bulb."""

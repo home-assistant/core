@@ -8,7 +8,7 @@ import pytest
 from pyunifiprotect.data import Camera
 from pyunifiprotect.exceptions import StreamError
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
 )

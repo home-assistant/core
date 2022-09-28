@@ -11,7 +11,7 @@ from aiohttp.typedefs import LooseHeaders
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player import async_fetch_image
 
-from .const import DOMAIN as PLEX_DOMAIN, SERVERS
+from .const import DOMAIN, SERVERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class PlexImageView(HomeAssistantView):
             return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
         hass = request.app["hass"]
-        if (server := hass.data[PLEX_DOMAIN][SERVERS].get(server_id)) is None:
+        if (server := hass.data[DOMAIN][SERVERS].get(server_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         if (image_url := server.thumbnail_cache.get(media_content_id)) is None:
