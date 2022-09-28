@@ -1,6 +1,5 @@
 """Support for Google Nest SDM climate devices."""
 from __future__ import annotations
-import logging
 
 from typing import Any, cast
 
@@ -77,8 +76,6 @@ FAN_INV_MODES = list(FAN_INV_MODE_MAP)
 MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
 MIN_TEMP = 10
 MAX_TEMP = 32
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_sdm_entry(
