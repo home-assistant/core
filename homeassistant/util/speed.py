@@ -24,7 +24,8 @@ from .unit_conversion import (  # pylint: disable=unused-import # noqa: F401
     SpeedConverter,
 )
 
-UNIT_CONVERSION = SpeedConverter.UNIT_CONVERSION
+# pylint: disable-next=protected-access
+UNIT_CONVERSION = SpeedConverter._UNIT_CONVERSION
 VALID_UNITS = SpeedConverter.VALID_UNITS
 
 

@@ -102,7 +102,7 @@ class BaseUnitConverter:
 class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
     """Define the format of a conversion utility."""
 
-    UNIT_CONVERSION: dict[str, float]
+    _UNIT_CONVERSION: dict[str, float]
 
     @classmethod
     def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
@@ -111,14 +111,14 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
             return value
 
         try:
-            from_ratio = cls.UNIT_CONVERSION[from_unit]
+            from_ratio = cls._UNIT_CONVERSION[from_unit]
         except KeyError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
             ) from err
 
         try:
-            to_ratio = cls.UNIT_CONVERSION[to_unit]
+            to_ratio = cls._UNIT_CONVERSION[to_unit]
         except KeyError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
@@ -130,7 +130,7 @@ class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
     @classmethod
     def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
         """Get unit ratio between units of measurement."""
-        return cls.UNIT_CONVERSION[from_unit] / cls.UNIT_CONVERSION[to_unit]
+        return cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit]
 
 
 class DistanceConverter(BaseUnitConverterWithUnitConversion):
@@ -138,7 +138,7 @@ class DistanceConverter(BaseUnitConverterWithUnitConversion):
 
     UNIT_CLASS = "distance"
     NORMALIZED_UNIT = LENGTH_METERS
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         LENGTH_METERS: 1,
         LENGTH_MILLIMETERS: 1 / _MM_TO_M,
         LENGTH_CENTIMETERS: 1 / _CM_TO_M,
@@ -165,7 +165,7 @@ class EnergyConverter(BaseUnitConverterWithUnitConversion):
 
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         ENERGY_WATT_HOUR: 1 * 1000,
         ENERGY_KILO_WATT_HOUR: 1,
         ENERGY_MEGA_WATT_HOUR: 1 / 1000,
@@ -182,7 +182,7 @@ class MassConverter(BaseUnitConverterWithUnitConversion):
 
     UNIT_CLASS = "mass"
     NORMALIZED_UNIT = MASS_GRAMS
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         MASS_MICROGRAMS: 1 * 1000 * 1000,
         MASS_MILLIGRAMS: 1 * 1000,
         MASS_GRAMS: 1,
@@ -205,7 +205,7 @@ class PowerConverter(BaseUnitConverterWithUnitConversion):
 
     UNIT_CLASS = "power"
     NORMALIZED_UNIT = POWER_WATT
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         POWER_WATT: 1,
         POWER_KILO_WATT: 1 / 1000,
     }
@@ -220,7 +220,7 @@ class PressureConverter(BaseUnitConverterWithUnitConversion):
 
     UNIT_CLASS = "pressure"
     NORMALIZED_UNIT = PRESSURE_PA
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         PRESSURE_PA: 1,
         PRESSURE_HPA: 1 / 100,
         PRESSURE_KPA: 1 / 1000,
@@ -249,7 +249,7 @@ class SpeedConverter(BaseUnitConverterWithUnitConversion):
 
     UNIT_CLASS = "speed"
     NORMALIZED_UNIT = SPEED_METERS_PER_SECOND
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         SPEED_FEET_PER_SECOND: 1 / _FOOT_TO_M,
         SPEED_INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
         SPEED_INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
@@ -369,7 +369,7 @@ class VolumeConverter(BaseUnitConverterWithUnitConversion):
     UNIT_CLASS = "volume"
     NORMALIZED_UNIT = VOLUME_CUBIC_METERS
     # Units in terms of m³
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
         VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
         VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
