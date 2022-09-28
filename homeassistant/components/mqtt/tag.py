@@ -28,7 +28,6 @@ from .util import get_mqtt_data, valid_subscribe_topic
 LOG_NAME = "Tag"
 
 TAG = "tag"
-TAGS = "mqtt_tags"
 
 PLATFORM_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {

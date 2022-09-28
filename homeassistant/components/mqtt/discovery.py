@@ -79,12 +79,12 @@ class MQTTConfig(dict):
 
 
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
-    """Clear entry in ALREADY_DISCOVERED list."""
+    """Clear entry from already discovered list."""
     get_mqtt_data(hass).discovery_already_discovered.remove(discovery_hash)
 
 
 def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
-    """Clear entry in ALREADY_DISCOVERED list."""
+    """Add entry tp already discovered list."""
     get_mqtt_data(hass).discovery_already_discovered.add(discovery_hash)
 
 
@@ -200,8 +200,10 @@ async def async_start(  # noqa: C901
                 ]
                 _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
                 if not pending:
-                    mqtt_data.discovery_pending_discovered[discovery_hash]["unsub"]()
-                    mqtt_data.discovery_pending_discovered.pop(discovery_hash)
+                    discovery = mqtt_data.discovery_pending_discovered.pop(
+                        discovery_hash
+                    )
+                    discovery["unsub"]()
                 else:
                     payload = pending.pop()
                     await async_process_discovery_payload(
@@ -241,12 +243,6 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
             )
 
-    if mqtt_data.data_config_flow_lock is None:
-        mqtt_data.data_config_flow_lock = asyncio.Lock()
-
-    mqtt_data.discovery_already_discovered = set()
-    mqtt_data.discovery_pending_discovered = {}
-
     discovery_topics = [
         f"{discovery_topic}/+/+/config",
         f"{discovery_topic}/+/+/+/config",
@@ -260,8 +256,6 @@ async def async_start(  # noqa: C901
 
     mqtt_data.last_discovery = time.time()
     mqtt_integrations = await async_get_mqtt(hass)
-
-    mqtt_data.integration_unsubscribe = {}
 
     for (integration, topics) in mqtt_integrations.items():
 
