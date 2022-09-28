@@ -7,6 +7,7 @@ from homeassistant.components.shelly.diagnostics import TO_REDACT
 from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from .conftest import MOCK_STATUS_COAP
 
 RELAY_BLOCK_ID = 0
 
@@ -33,15 +34,7 @@ async def test_block_config_entry_diagnostics(
             "sw_version": coap_wrapper.sw_version,
         },
         "device_settings": {"coiot": {"update_period": 15}},
-        "device_status": {
-            "update": {
-                "beta_version": "some_beta_version",
-                "has_update": True,
-                "new_version": "some_new_version",
-                "old_version": "some_old_version",
-                "status": "pending",
-            }
-        },
+        "device_status": MOCK_STATUS_COAP,
     }
 
 
