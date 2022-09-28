@@ -84,7 +84,7 @@ def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -
 
 
 def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
-    """Add entry tp already discovered list."""
+    """Add entry to already discovered list."""
     get_mqtt_data(hass).discovery_already_discovered.add(discovery_hash)
 
 
@@ -200,10 +200,8 @@ async def async_start(  # noqa: C901
                 ]
                 _LOGGER.debug("Pending discovery for %s: %s", discovery_hash, pending)
                 if not pending:
-                    discovery = mqtt_data.discovery_pending_discovered.pop(
-                        discovery_hash
-                    )
-                    discovery["unsub"]()
+                    mqtt_data.discovery_pending_discovered[discovery_hash]["unsub"]()
+                    mqtt_data.discovery_pending_discovered.pop(discovery_hash)
                 else:
                     payload = pending.pop()
                     await async_process_discovery_payload(
