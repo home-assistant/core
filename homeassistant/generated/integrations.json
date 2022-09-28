@@ -189,10 +189,34 @@
       "iot_class": null,
       "name": "Home Assistant API"
     },
-    "apple_tv": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "Apple TV"
+    "apple": {
+      "name": "Apple",
+      "integrations": {
+        "icloud": {
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Apple iCloud"
+        },
+        "ibeacon": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "iBeacon Tracker"
+        },
+        "apple_tv": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Apple TV"
+        },
+        "homekit": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "HomeKit"
+        },
+        "homekit_controller": {
+          "config_flow": true,
+          "iot_class": "local_push"
+        }
+      }
     },
     "application_credentials": {
       "config_flow": false,
@@ -1816,15 +1840,6 @@
       "iot_class": null,
       "name": "Home Assistant Alerts"
     },
-    "homekit": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "HomeKit"
-    },
-    "homekit_controller": {
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
     "homematic": {
       "config_flow": false,
       "iot_class": "local_push",
@@ -1923,16 +1938,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Jandy iAqualink"
-    },
-    "ibeacon": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "iBeacon Tracker"
-    },
-    "icloud": {
-      "config_flow": true,
-      "iot_class": "cloud_polling",
-      "name": "Apple iCloud"
     },
     "idteck_prox": {
       "config_flow": false,
