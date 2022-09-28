@@ -252,6 +252,8 @@ ICONS = {
     12: "mdi:counter",
     13: "mdi:thermometer-lines",
     14: "mdi:timer",
+    15: "mdi:palette",
+    16: "mdi:brightness-percent",
 }
 
 
@@ -581,7 +583,6 @@ class InovelliDeviceBindNumber(
     """Inovelli device bind number configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "device_bind_number"
@@ -693,7 +694,7 @@ class InovelliMinimumLoadDimmingLevel(
     """Inovelli minimum load dimming level configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 1
     _attr_native_max_value: float = 254
     _zcl_attribute: str = "minimum_level"
@@ -707,7 +708,7 @@ class InovelliMaximumLoadDimmingLevel(
     """Inovelli maximum load dimming level configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "maximum_level"
@@ -721,7 +722,7 @@ class InovelliAutoShutoffTimer(
     """Inovelli automatic switch shutoff timer configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 32767
     _zcl_attribute: str = "auto_off_timer"
@@ -735,7 +736,7 @@ class InovelliLoadLevelIndicatorTimeout(
     """Inovelli load level indicator timeout configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 11
     _zcl_attribute: str = "load_level_indicator_timeout"
@@ -749,7 +750,7 @@ class InovelliDefaultAllLEDOnColor(
     """Inovelli default all led color when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "led_color_when_on"
@@ -763,7 +764,7 @@ class InovelliDefaultAllLEDOffColor(
     """Inovelli default all led color when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "led_color_when_off"
@@ -777,7 +778,7 @@ class InovelliDefaultAllLEDOnIntensity(
     """Inovelli default all led intensity when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "led_intensity_when_on"
@@ -791,7 +792,7 @@ class InovelliDefaultAllLEDOffIntensity(
     """Inovelli default all led intensity when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 100
     _zcl_attribute: str = "led_intensity_when_off"
@@ -805,7 +806,7 @@ class InovelliDefaultLED1OnColor(
     """Inovelli default led 1 color when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led1_strip_color_when_on"
@@ -819,7 +820,7 @@ class InovelliDefaultLED1OffColor(
     """Inovelli default led 1 color when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led1_strip_color_when_off"
@@ -833,9 +834,9 @@ class InovelliDefaultLED1OnIntensity(
     """Inovelli default led 1 intensity when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led1_strip_intensity_when_on"
     _attr_name: str = "Default LED 1 on intensity"
 
@@ -847,9 +848,9 @@ class InovelliDefaultLED1OffIntensity(
     """Inovelli default led 1 intensity when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led1_strip_intensity_when_off"
     _attr_name: str = "Default LED 1 off intensity"
 
@@ -861,7 +862,7 @@ class InovelliDefaultLED2OnColor(
     """Inovelli default led 2 color when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led2_strip_color_when_on"
@@ -875,7 +876,7 @@ class InovelliDefaultLED2OffColor(
     """Inovelli default led 2 color when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led2_strip_color_when_off"
@@ -889,9 +890,9 @@ class InovelliDefaultLED2OnIntensity(
     """Inovelli default led 2 intensity when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led2_strip_intensity_when_on"
     _attr_name: str = "Default LED 2 on intensity"
 
@@ -903,9 +904,9 @@ class InovelliDefaultLED2OffIntensity(
     """Inovelli default led 2 intensity when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led2_strip_intensity_when_off"
     _attr_name: str = "Default LED 2 off intensity"
 
@@ -917,7 +918,7 @@ class InovelliDefaultLED3OnColor(
     """Inovelli default led 3 color when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led3_strip_color_when_on"
@@ -931,7 +932,7 @@ class InovelliDefaultLED3OffColor(
     """Inovelli default led 3 color when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led3_strip_color_when_off"
@@ -945,9 +946,9 @@ class InovelliDefaultLED3OnIntensity(
     """Inovelli default led 3 intensity when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led3_strip_intensity_when_on"
     _attr_name: str = "Default LED 3 on intensity"
 
@@ -959,9 +960,9 @@ class InovelliDefaultLED3OffIntensity(
     """Inovelli default led 3 intensity when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led3_strip_intensity_when_off"
     _attr_name: str = "Default LED 3 off intensity"
 
@@ -973,7 +974,7 @@ class InovelliDefaultLED4OnColor(
     """Inovelli default led 4 color when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led4_strip_color_when_on"
@@ -987,7 +988,7 @@ class InovelliDefaultLED4OffColor(
     """Inovelli default led 4 color when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led4_strip_color_when_off"
@@ -1001,9 +1002,9 @@ class InovelliDefaultLED4OnIntensity(
     """Inovelli default led 4 intensity when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led4_strip_intensity_when_on"
     _attr_name: str = "Default LED 4 on intensity"
 
@@ -1015,9 +1016,9 @@ class InovelliDefaultLED4OffIntensity(
     """Inovelli default led 4 intensity when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led4_strip_intensity_when_off"
     _attr_name: str = "Default LED 4 off intensity"
 
@@ -1029,7 +1030,7 @@ class InovelliDefaultLED5OnColor(
     """Inovelli default led 5 color when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led5_strip_color_when_on"
@@ -1043,7 +1044,7 @@ class InovelliDefaultLED5OffColor(
     """Inovelli default led 5 color when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led5_strip_color_when_off"
@@ -1057,9 +1058,9 @@ class InovelliDefaultLED5OnIntensity(
     """Inovelli default led 5 intensity when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led5_strip_intensity_when_on"
     _attr_name: str = "Default LED 5 on intensity"
 
@@ -1071,9 +1072,9 @@ class InovelliDefaultLED5OffIntensity(
     """Inovelli default led 5 intensity when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led5_strip_intensity_when_off"
     _attr_name: str = "Default LED 5 off intensity"
 
@@ -1085,7 +1086,7 @@ class InovelliDefaultLED6OnColor(
     """Inovelli default led 6 color when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led6_strip_color_when_on"
@@ -1099,7 +1100,7 @@ class InovelliDefaultLED6OffColor(
     """Inovelli default led 6 color when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led6_strip_color_when_off"
@@ -1113,9 +1114,9 @@ class InovelliDefaultLED6OnIntensity(
     """Inovelli default led 6 intensity when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led6_strip_intensity_when_on"
     _attr_name: str = "Default LED 6 on intensity"
 
@@ -1127,9 +1128,9 @@ class InovelliDefaultLED6OffIntensity(
     """Inovelli default led 6 intensity when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led6_strip_intensity_when_off"
     _attr_name: str = "Default LED 6 off intensity"
 
@@ -1141,7 +1142,7 @@ class InovelliDefaultLED7OnColor(
     """Inovelli default led 7 color when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led7_strip_color_when_on"
@@ -1155,7 +1156,7 @@ class InovelliDefaultLED7OffColor(
     """Inovelli default led 7 color when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
     _zcl_attribute: str = "default_led7_strip_color_when_off"
@@ -1169,9 +1170,9 @@ class InovelliDefaultLED7OnIntensity(
     """Inovelli default led 7 intensity when on configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led7_strip_intensity_when_on"
     _attr_name: str = "Default LED 7 on intensity"
 
@@ -1183,8 +1184,8 @@ class InovelliDefaultLED7OffIntensity(
     """Inovelli default led 7 intensity when off configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon: str = ICONS[3]
+    _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 100
+    _attr_native_max_value: float = 101
     _zcl_attribute: str = "default_led7_strip_intensity_when_off"
     _attr_name: str = "Default LED 7 off intensity"
