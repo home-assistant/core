@@ -35,6 +35,7 @@ from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
     async_get_integration,
+    async_get_integration_descriptions,
     async_get_integrations,
 )
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
@@ -75,6 +76,7 @@ def async_register_commands(
     async_reg(hass, handle_subscribe_entities)
     async_reg(hass, handle_supported_brands)
     async_reg(hass, handle_supported_features)
+    async_reg(hass, handle_integration_descriptions)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -741,3 +743,13 @@ def handle_supported_features(
     """Handle setting supported features."""
     connection.supported_features = msg["features"]
     connection.send_result(msg["id"])
+
+
+@decorators.require_admin
+@decorators.websocket_command({"type": "integration/descriptions"})
+@decorators.async_response
+async def handle_integration_descriptions(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get metadata for all brands and integrations."""
+    connection.send_result(msg["id"], await async_get_integration_descriptions(hass))
