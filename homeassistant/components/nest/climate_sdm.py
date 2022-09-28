@@ -1,11 +1,12 @@
 """Support for Google Nest SDM climate devices."""
 from __future__ import annotations
+import logging
 
 from typing import Any, cast
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
-from google_nest_sdm.device_traits import ConnectivityTrait, FanTrait, TemperatureTrait
+from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
@@ -35,7 +36,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONNECTIVITY_TRAIT_OFFLINE, DATA_DEVICE_MANAGER, DOMAIN
+from .availability_mixin import AvailabilityMixin
+from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 
 # Mapping for sdm.devices.traits.ThermostatMode mode field
@@ -76,6 +78,8 @@ MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
 MIN_TEMP = 10
 MAX_TEMP = 32
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_sdm_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -92,7 +96,7 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-class ThermostatEntity(ClimateEntity):
+class ThermostatEntity(AvailabilityMixin, ClimateEntity):
     """A nest thermostat climate entity."""
 
     _attr_min_temp = MIN_TEMP
@@ -111,15 +115,6 @@ class ThermostatEntity(ClimateEntity):
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return self._device.name
-
-    @property
-    def available(self) -> bool:
-        """Return entity availability."""
-        if ConnectivityTrait.NAME in self._device.traits:
-            trait: ConnectivityTrait = self._device.traits[ConnectivityTrait.NAME]
-            if trait.status == CONNECTIVITY_TRAIT_OFFLINE:
-                return False
-        return super().available
 
     @property
     def device_info(self) -> DeviceInfo:
