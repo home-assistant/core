@@ -215,8 +215,18 @@ class ESPHomeClient(BaseBleakClient):
         if dangerous_use_bleak_cache and (
             cached_services := domain_data.get_gatt_services_cache(address_as_int)
         ):
+            _LOGGER.debug(
+                "Cached services hit for %s - %s",
+                self._ble_device.name,
+                self._ble_device.address,
+            )
             self.services = cached_services
             return self.services
+        _LOGGER.debug(
+            "Cached services miss for %s - %s",
+            self._ble_device.name,
+            self._ble_device.address,
+        )
         esphome_services = await self._client.bluetooth_gatt_get_services(
             address_as_int
         )
