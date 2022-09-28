@@ -22,10 +22,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import RensonCoordinator
 from .const import DOMAIN
-from .sensor import RensonCoordinator
+from .entity import RensonEntity
 
 
 @dataclass
@@ -91,18 +91,18 @@ BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
 )
 
 
-class RensonBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class RensonBinarySensor(RensonEntity, BinarySensorEntity):
     """Get a sensor data from the Renson API and store it in the state of the class."""
 
     def __init__(
         self,
         description: RensonBinarySensorEntityDescription,
-        renson_api: RensonVentilation,
+        api: RensonVentilation,
         coordinator: RensonCoordinator,
     ) -> None:
         """Initialize class."""
-        super().__init__(coordinator)
-        self.renson = renson_api
+        super().__init__(description.key, api, coordinator)
+
         self.field = description.field
         self.entity_description = description
 
@@ -111,9 +111,9 @@ class RensonBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Handle updated data from the coordinator."""
         all_data = self.coordinator.data
 
-        value = self.renson.get_field_value(all_data, self.field.name)
+        value = self.api.get_field_value(all_data, self.field.name)
 
-        self._attr_is_on = self.renson.parse_value(value, DataType.BOOLEAN)
+        self._attr_is_on = self.api.parse_value(value, DataType.BOOLEAN)
 
         self.async_write_ha_state()
 
@@ -124,13 +124,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Call the Renson integration to setup."""
-    renson_api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id]
 
-    coordinator = RensonCoordinator(hass, renson_api)
+    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    coordinator: RensonCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        "coordinator"
+    ]
+
+    await coordinator.async_config_entry_first_refresh()
 
     entities: list = []
     for description in BINARY_SENSORS:
-        entities.append(RensonBinarySensor(description, renson_api, coordinator))
+        entities.append(RensonBinarySensor(description, api, coordinator))
 
     async_add_entities(entities)
+
     await coordinator.async_config_entry_first_refresh()
