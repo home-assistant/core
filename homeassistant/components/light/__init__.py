@@ -112,6 +112,8 @@ COLOR_MODES_COLOR = {
     ColorMode.XY,
 }
 
+# mypy: disallow-any-generics
+
 
 def filter_supported_color_modes(color_modes: Iterable[ColorMode]) -> set[ColorMode]:
     """Filter the given color modes."""
@@ -167,7 +169,7 @@ def color_temp_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
     return ColorMode.COLOR_TEMP in color_modes
 
 
-def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None:
+def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] | None:
     """Get supported color modes for a light entity.
 
     First try the statemachine, then entity registry.
@@ -366,7 +368,7 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Expose light control via state machine and services."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[LightEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -442,6 +444,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         # If a color is specified, convert to the color space supported by the light
         # Backwards compatibility: Fall back to hs color if light.supported_color_modes
         # is not implemented
+        rgb_color: tuple[int, int, int] | None
+        rgbww_color: tuple[int, int, int, int, int] | None
         if not supported_color_modes:
             if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
@@ -451,6 +455,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif (rgbww_color := params.pop(ATTR_RGBWW_COLOR, None)) is not None:
+                # https://github.com/python/mypy/issues/13673
                 rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
                     *rgbww_color, light.min_mireds, light.max_mireds
                 )
@@ -464,16 +469,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
                 rgb_color = color_util.color_hs_to_RGB(*hs_color)
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
         elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
-            rgb_color = params.pop(ATTR_RGB_COLOR)
+            assert (rgb_color := params.pop(ATTR_RGB_COLOR)) is not None
             if ColorMode.RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
+                # https://github.com/python/mypy/issues/13673
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
@@ -492,7 +498,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
                 rgb_color = color_util.color_xy_to_RGB(*xy_color)
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
         elif ATTR_RGBW_COLOR in params and ColorMode.RGBW not in supported_color_modes:
@@ -501,7 +507,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             if ColorMode.RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = rgb_color
             elif ColorMode.RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
             elif ColorMode.HS in supported_color_modes:
@@ -511,7 +517,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         elif (
             ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
         ):
-            rgbww_color = params.pop(ATTR_RGBWW_COLOR)
+            assert (rgbww_color := params.pop(ATTR_RGBWW_COLOR)) is not None
+            # https://github.com/python/mypy/issues/13673
             rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
                 *rgbww_color, light.min_mireds, light.max_mireds
             )
@@ -583,13 +590,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component = cast(EntityComponent, hass.data[DOMAIN])
+    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component = cast(EntityComponent, hass.data[DOMAIN])
+    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -868,8 +875,10 @@ class LightEntity(ToggleEntity):
 
         return data
 
-    def _light_internal_convert_color(self, color_mode: ColorMode | str) -> dict:
-        data: dict[str, tuple] = {}
+    def _light_internal_convert_color(
+        self, color_mode: ColorMode | str
+    ) -> dict[str, tuple[float, ...]]:
+        data: dict[str, tuple[float, ...]] = {}
         if color_mode == ColorMode.HS and self.hs_color:
             hs_color = self.hs_color
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))

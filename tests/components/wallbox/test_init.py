@@ -7,15 +7,14 @@ from homeassistant.components.wallbox import CHARGER_MAX_CHARGING_CURRENT_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import test_response
-
-from tests.components.wallbox import (
+from . import (
     DOMAIN,
     authorisation_response,
     entry,
     setup_integration,
     setup_integration_connection_error,
     setup_integration_read_only,
+    test_response,
 )
 
 

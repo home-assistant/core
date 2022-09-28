@@ -8,7 +8,7 @@ from typing import Any, Protocol, cast
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.components import blueprint
+from homeassistant.components import blueprint, websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -148,91 +148,71 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@callback
-def automations_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all automations that reference the entity."""
+def _automations_with_x(
+    hass: HomeAssistant, referenced_id: str, property_name: str
+) -> list[str]:
+    """Return all automations that reference the x."""
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     return [
         automation_entity.entity_id
         for automation_entity in component.entities
-        if entity_id in cast(AutomationEntity, automation_entity).referenced_entities
+        if referenced_id in getattr(automation_entity, property_name)
     ]
 
 
-@callback
-def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all entities in a scene."""
+def _x_in_automation(
+    hass: HomeAssistant, entity_id: str, property_name: str
+) -> list[str]:
+    """Return all x in an automation."""
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     if (automation_entity := component.get_entity(entity_id)) is None:
         return []
 
-    return list(cast(AutomationEntity, automation_entity).referenced_entities)
+    return list(getattr(automation_entity, property_name))
+
+
+@callback
+def automations_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all automations that reference the entity."""
+    return _automations_with_x(hass, entity_id, "referenced_entities")
+
+
+@callback
+def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all entities in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_entities")
 
 
 @callback
 def automations_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     """Return all automations that reference the device."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component: EntityComponent = hass.data[DOMAIN]
-
-    return [
-        automation_entity.entity_id
-        for automation_entity in component.entities
-        if device_id in cast(AutomationEntity, automation_entity).referenced_devices
-    ]
+    return _automations_with_x(hass, device_id, "referenced_devices")
 
 
 @callback
 def devices_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Return all devices in a scene."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component: EntityComponent = hass.data[DOMAIN]
-
-    if (automation_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(cast(AutomationEntity, automation_entity).referenced_devices)
+    """Return all devices in an automation."""
+    return _x_in_automation(hass, entity_id, "referenced_devices")
 
 
 @callback
 def automations_with_area(hass: HomeAssistant, area_id: str) -> list[str]:
     """Return all automations that reference the area."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component: EntityComponent = hass.data[DOMAIN]
-
-    return [
-        automation_entity.entity_id
-        for automation_entity in component.entities
-        if area_id in cast(AutomationEntity, automation_entity).referenced_areas
-    ]
+    return _automations_with_x(hass, area_id, "referenced_areas")
 
 
 @callback
 def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all areas in an automation."""
-    if DOMAIN not in hass.data:
-        return []
-
-    component: EntityComponent = hass.data[DOMAIN]
-
-    if (automation_entity := component.get_entity(entity_id)) is None:
-        return []
-
-    return list(cast(AutomationEntity, automation_entity).referenced_areas)
+    return _x_in_automation(hass, entity_id, "referenced_areas")
 
 
 @callback
@@ -241,7 +221,7 @@ def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list
     if DOMAIN not in hass.data:
         return []
 
-    component = hass.data[DOMAIN]
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
 
     return [
         automation_entity.entity_id
@@ -252,7 +232,9 @@ def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
-    hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = component = EntityComponent[AutomationEntity](
+        LOGGER, DOMAIN, hass
+    )
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
@@ -308,6 +290,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema({}),
     )
 
+    websocket_api.async_register_command(hass, websocket_config)
+
     return True
 
 
@@ -344,7 +328,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._logger = LOGGER
         self._variables = variables
         self._trigger_variables = trigger_variables
-        self._raw_config = raw_config
+        self.raw_config = raw_config
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
@@ -495,7 +479,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         with trace_automation(
             self.hass,
             self.unique_id,
-            self._raw_config,
+            self.raw_config,
             self._blueprint_inputs,
             trigger_context,
             self._trace_config,
@@ -679,7 +663,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 async def _async_process_config(
     hass: HomeAssistant,
     config: dict[str, Any],
-    component: EntityComponent,
+    component: EntityComponent[AutomationEntity],
 ) -> bool:
     """Process config and add automations.
 
@@ -871,3 +855,28 @@ def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
         return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
 
     return []
+
+
+@websocket_api.websocket_command({"type": "automation/config", "entity_id": str})
+def websocket_config(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get automation config."""
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
+
+    automation = component.get_entity(msg["entity_id"])
+
+    if automation is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "config": automation.raw_config,
+        },
+    )

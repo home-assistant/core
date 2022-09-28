@@ -14,7 +14,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODES,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PRESET_MODE,
-    SUPPORT_PRESET_MODE,
+    FanEntityFeature,
     NotValidPresetModeError,
 )
 from homeassistant.components.zwave_js.fan import ATTR_FAN_STATE
@@ -587,7 +587,7 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FAN_STATE) == "Idle / off"
     assert state.attributes.get(ATTR_PRESET_MODE) == "Auto low"
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_PRESET_MODE
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == FanEntityFeature.PRESET_MODE
 
     # Test setting preset mode
     await hass.services.async_call(

@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Collection, Iterable
 from contextvars import ContextVar
 import logging
-from typing import Any, Protocol, Union, cast
+from typing import Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -119,9 +119,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _async_get_component(hass: HomeAssistant) -> EntityComponent:
+def _async_get_component(hass: HomeAssistant) -> EntityComponent[Group]:
     if (component := hass.data.get(DOMAIN)) is None:
-        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+        component = hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
     return component
 
 
@@ -288,11 +288,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all groups found defined in the configuration."""
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+        hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
 
     await async_process_integration_platform_for_component(hass, DOMAIN)
 
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[Group] = hass.data[DOMAIN]
 
     hass.data[REG_KEY] = GroupIntegrationRegistry()
 
@@ -302,11 +302,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
-        auto = [
-            cast(Group, e)
-            for e in component.entities
-            if not cast(Group, e).user_defined
-        ]
+        auto = [e for e in component.entities if not e.user_defined]
 
         if (conf := await component.async_prepare_reload()) is None:
             return
@@ -331,7 +327,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
         entity_id = f"{DOMAIN}.{object_id}"
-        group: Group | None = cast(Union[Group, None], component.get_entity(entity_id))
+        group = component.get_entity(entity_id)
 
         # new group
         if service.service == SERVICE_SET and group is None:

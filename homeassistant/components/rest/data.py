@@ -69,6 +69,12 @@ class RestData:
             )
             self.data = response.text
             self.headers = response.headers
+        except httpx.TimeoutException as ex:
+            if log_errors:
+                _LOGGER.error("Timeout while fetching data: %s", self._resource)
+            self.last_exception = ex
+            self.data = None
+            self.headers = None
         except httpx.RequestError as ex:
             if log_errors:
                 _LOGGER.error(

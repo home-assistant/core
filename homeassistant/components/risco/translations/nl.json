@@ -16,6 +16,13 @@
                     "username": "Gebruikersnaam"
                 }
             },
+            "local": {
+                "data": {
+                    "host": "Host",
+                    "pin": "Pincode",
+                    "port": "Poort"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

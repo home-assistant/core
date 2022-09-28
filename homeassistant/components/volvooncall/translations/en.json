@@ -15,6 +15,7 @@
                     "password": "Password",
                     "region": "Region",
                     "scandinavian_miles": "Use Scandinavian Miles",
+                    "unit_system": "Unit System",
                     "username": "Username"
                 }
             }

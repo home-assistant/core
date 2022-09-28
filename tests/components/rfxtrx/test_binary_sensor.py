@@ -6,8 +6,9 @@ from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import State
 
+from .conftest import create_rfx_test_cfg
+
 from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 EVENT_SMOKE_DETECTOR_PANIC = "08200300a109000670"
 EVENT_SMOKE_DETECTOR_NO_PANIC = "08200300a109000770"

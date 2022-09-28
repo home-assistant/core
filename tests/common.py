@@ -369,7 +369,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
     msg = ReceiveMessage(topic, payload, qos, retain)
-    hass.data["mqtt"]._mqtt_handle_message(msg)
+    hass.data["mqtt"].client._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)

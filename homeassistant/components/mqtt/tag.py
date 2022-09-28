@@ -23,12 +23,11 @@ from .mixins import (
 )
 from .models import MqttValueTemplate, ReceiveMessage
 from .subscription import EntitySubscription
-from .util import valid_subscribe_topic
+from .util import get_mqtt_data, valid_subscribe_topic
 
 LOG_NAME = "Tag"
 
 TAG = "tag"
-TAGS = "mqtt_tags"
 
 PLATFORM_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
@@ -59,9 +58,8 @@ async def _async_setup_tag(
     discovery_id = discovery_hash[1]
 
     device_id = update_device(hass, config_entry, config)
-    hass.data.setdefault(TAGS, {})
-    if device_id not in hass.data[TAGS]:
-        hass.data[TAGS][device_id] = {}
+    if device_id is not None and device_id not in (tags := get_mqtt_data(hass).tags):
+        tags[device_id] = {}
 
     tag_scanner = MQTTTagScanner(
         hass,
@@ -74,16 +72,16 @@ async def _async_setup_tag(
     await tag_scanner.subscribe_topics()
 
     if device_id:
-        hass.data[TAGS][device_id][discovery_id] = tag_scanner
+        tags[device_id][discovery_id] = tag_scanner
 
     send_discovery_done(hass, discovery_data)
 
 
 def async_has_tags(hass: HomeAssistant, device_id: str) -> bool:
     """Device has tag scanners."""
-    if TAGS not in hass.data or device_id not in hass.data[TAGS]:
+    if device_id not in (tags := get_mqtt_data(hass).tags):
         return False
-    return hass.data[TAGS][device_id] != {}
+    return tags[device_id] != {}
 
 
 class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
@@ -159,4 +157,4 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdate):
             self.hass, self._sub_state
         )
         if self.device_id:
-            self.hass.data[TAGS][self.device_id].pop(discovery_id)
+            get_mqtt_data(self.hass).tags[self.device_id].pop(discovery_id)
