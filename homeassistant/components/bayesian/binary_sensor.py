@@ -259,9 +259,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             raise_mirrored_entries(
                 self.hass,
                 all_template_observations,
-                text=f"{self._attr_name}/{all_template_observations[0]['value_template']}"
-                + "/"
-                + str(all_template_observations[0]["value_template"]),
+                text=f"{self._attr_name}/{all_template_observations[0]['value_template']}",
             )
 
     @callback
