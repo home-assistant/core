@@ -249,7 +249,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         # detect mirrored entries
         for entity, observations in self.observations_by_entity.items():
             raise_mirrored_entries(
-                self.hass, observations, text=str(self._attr_name) + "/" + str(entity)
+                self.hass, observations, text=f"{self._attr_name}/{entity}"
             )
 
         all_template_observations = []
