@@ -140,6 +140,22 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     )
     assert ATTR_STATE_CLASS not in state.attributes
 
+    device.nextchange_temperature = 16
+
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_next_scheduled_preset")
+    assert state
+    assert state.state == PRESET_ECO
+
+    state = hass.states.get(
+        f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_current_scheduled_preset"
+    )
+    assert state
+    assert state.state == PRESET_COMFORT
+
 
 async def test_target_temperature_on(hass: HomeAssistant, fritz: Mock):
     """Test turn device on."""
