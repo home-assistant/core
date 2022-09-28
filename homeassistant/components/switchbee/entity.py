@@ -2,6 +2,7 @@
 from typing import Generic, TypeVar
 
 from switchbee import SWITCHBEE_BRAND
+from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import SwitchBeeBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo
@@ -40,6 +41,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
     ) -> None:
         """Initialize the Switchbee device."""
         super().__init__(device, coordinator)
+        self._is_online: bool = True
         self._attr_device_info = DeviceInfo(
             name=f"SwitchBee {device.unit_id}",
             identifiers={
@@ -56,3 +58,28 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
                 f"{coordinator.api.name} ({coordinator.api.mac})",
             ),
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._is_online and super().available
+
+    async def async_refresh_state(self) -> None:
+        """Refresh the device state in the Central Unit.
+
+        This function addresses issue of a device that came online back but still report
+        unavailable state (-1).
+        Such device (offline device) will keep reporting unavailable state (-1)
+        until it has been actuated by the user (state changed to on/off).
+
+        With this code we keep trying setting dummy state for the device
+        in order for it to start reporting its real state back (assuming it came back online)
+
+        """
+
+        try:
+            await self.coordinator.api.set_state(self._device.id, "dummy")
+        except SwitchBeeDeviceOfflineError:
+            return
+        except SwitchBeeError:
+            return
