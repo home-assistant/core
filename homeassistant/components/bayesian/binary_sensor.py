@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
-from homeassistant.helpers import condition, issue_registry
+from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -37,6 +37,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.yaml.objects import NodeListClass
 
 from . import DOMAIN, PLATFORMS
+from .helpers import Observation
 from .repairs import raise_mirrored_entries
 
 ATTR_OBSERVATIONS = "observations"
@@ -142,52 +143,6 @@ async def async_setup_platform(
     )
 
 
-class Observation:
-    """Representation of a sensor or template observation."""
-
-    def __init__(
-        self,
-        # identifier: str,
-        entity_id: str | None,
-        platform: str,
-        prob_given_true: float,
-        prob_given_false: float,
-        observed: bool | None,
-        to_state: str,
-        above: float | None,
-        below: float | None,
-        value_template: Template | None,
-    ) -> None:
-        """Initialize the Observation."""
-        # self.identifier = identifier
-        self.entity_id = entity_id
-        self.platform = platform
-        self.prob_given_true = prob_given_true
-        self.prob_given_false = prob_given_false
-        self.observed = observed
-        self.to_state = to_state
-        self.below = below
-        self.above = above
-        self.value_template = value_template
-        self.id: str | None = None
-
-    def to_dict(self) -> dict[str, str | float | bool | None]:
-        """Represent Class as a Dict for easier serialization."""
-
-        return {
-            "entity_id": self.entity_id,
-            "platform": self.platform,
-            "prob_given_true": self.prob_given_true,
-            "prob_given_false": self.prob_given_false,
-            "observed": self.observed,
-            "to_state": self.to_state,
-            "below": self.below,
-            "above": self.above,
-            "value_template": str(self.value_template),
-            "id": self.id,
-        }
-
-
 class BayesianBinarySensor(BinarySensorEntity):
     """Representation of a Bayesian sensor."""
 
@@ -235,37 +190,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             "state": self._process_state,
             "multi_state": self._process_multi_state,
         }
-
-    def _raise_mirrored_entries(
-        self, observations: list[Observation], text: str = ""
-    ) -> None:
-        """If there are mirrored entries, the user is probably using a workaround for a patched bug."""
-        if len(observations) != 2:
-            return
-        true_sums_1: bool = (
-            round(observations[0].prob_given_true + observations[1].prob_given_true, 1)
-            == 1.0
-        )
-        false_sums_1: bool = (
-            round(
-                observations[0].prob_given_false + observations[1].prob_given_false, 1
-            )
-            == 1.0
-        )
-        same_states: bool = observations[0].platform == observations[1].platform
-        if true_sums_1 & false_sums_1 & same_states:
-            issue_registry.async_create_issue(
-                self.hass,
-                DOMAIN,
-                "mirrored_entry" + text,
-                breaks_in_ha_version="2022.10.0",
-                is_fixable=True,
-                is_persistent=False,
-                severity=issue_registry.IssueSeverity.WARNING,
-                translation_key="manual_migration",
-                translation_placeholders={"entity": text},
-                learn_more_url="https://github.com/home-assistant/core/pull/67631",
-            )
 
     async def async_added_to_hass(self) -> None:
         """
