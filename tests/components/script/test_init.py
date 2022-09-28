@@ -1025,6 +1025,47 @@ async def test_setup_with_duplicate_scripts(
     assert len(hass.states.async_entity_ids("script")) == 1
 
 
+async def test_websocket_config(hass, hass_ws_client):
+    """Test config command."""
+    config = {
+        "alias": "hello",
+        "sequence": [{"service": "light.turn_on"}],
+    }
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "hello": config,
+            },
+        },
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "script/config",
+            "entity_id": "script.hello",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"config": config}
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "script/config",
+            "entity_id": "script.not_exist",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+
 async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
     """Test the script service works for scripts with overridden entity_id."""
     entity_reg = er.async_get(hass)
