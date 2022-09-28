@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import cast, Any, Final
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -155,7 +155,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         if version is None:
             return None
 
-        return str(version)
+        return cast(str, version)
 
     @property
     def latest_version(self) -> str | None:
@@ -164,7 +164,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
             self.wrapper.device.status,
         )
         if new_version is not None:
-            return str(new_version)
+            return cast(str, new_version)
 
         return self.installed_version
 
@@ -210,7 +210,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         if self.wrapper.device.shelly is None:
             return None
 
-        return str(self.wrapper.device.shelly["ver"])
+        return cast(str, self.wrapper.device.shelly["ver"])
 
     @property
     def latest_version(self) -> str | None:
@@ -219,7 +219,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             self.wrapper.device.status[self.key][self.entity_description.sub_key],
         )
         if new_version is not None:
-            return str(new_version)
+            return cast(str, new_version)
 
         return self.installed_version
 
