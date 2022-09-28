@@ -1475,7 +1475,7 @@ async def test_thermostat_available(
     assert len(hass.states.async_all()) == 1
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
-    assert thermostat.state == HVAC_MODE_COOL
+    assert thermostat.state == HVACMode.COOL
 
 
 async def test_thermostat_unavailable(
