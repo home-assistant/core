@@ -66,9 +66,9 @@ class ESPHomeClient(BaseBleakClient):
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
         self.domain_data = DomainData.get(async_get_hass())
-        self._client = self.domain_data.get_entry_data(
-            self.domain_data.get_by_unique_id(self._source)
-        ).client
+        config_entry = self.domain_data.get_by_unique_id(self._source)
+        entry_data = self.domain_data.get_entry_data(config_entry)
+        self._client = entry_data.client
         self._is_connected = False
         self._mtu: int | None = None
         self._cancel_connection_state: CALLBACK_TYPE | None = None
