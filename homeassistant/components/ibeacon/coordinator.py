@@ -62,7 +62,7 @@ def async_name(
         service_info.name,
         service_info.name.replace("_", ":"),
     ):
-        base_name = f"{ibeacon_advertisement.uuid} {ibeacon_advertisement.major}.{ibeacon_advertisement.minor}"
+        base_name = f"{ibeacon_advertisement.uuid}_{ibeacon_advertisement.major}_{ibeacon_advertisement.minor}"
     else:
         base_name = service_info.name
     if unique_address:
