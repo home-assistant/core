@@ -1,5 +1,6 @@
 """BleBox switch implementation."""
 from datetime import timedelta
+from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -35,10 +36,10 @@ class BleBoxSwitchEntity(BleBoxEntity, SwitchEntity):
         """Return whether switch is on."""
         return self._feature.is_on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._feature.async_turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._feature.async_turn_off()

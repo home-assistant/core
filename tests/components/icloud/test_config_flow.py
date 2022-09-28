@@ -22,27 +22,23 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from .const import (
+    MOCK_CONFIG,
+    PASSWORD,
+    PASSWORD_2,
+    TRUSTED_DEVICES,
+    USERNAME,
+    WITH_FAMILY,
+)
+
 from tests.common import MockConfigEntry
 
-USERNAME = "username@me.com"
-USERNAME_2 = "second_username@icloud.com"
-PASSWORD = "password"
-PASSWORD_2 = "second_password"
-WITH_FAMILY = True
-MAX_INTERVAL = 15
-GPS_ACCURACY_THRESHOLD = 250
 
-MOCK_CONFIG = {
-    CONF_USERNAME: USERNAME,
-    CONF_PASSWORD: PASSWORD,
-    CONF_WITH_FAMILY: DEFAULT_WITH_FAMILY,
-    CONF_MAX_INTERVAL: DEFAULT_MAX_INTERVAL,
-    CONF_GPS_ACCURACY_THRESHOLD: DEFAULT_GPS_ACCURACY_THRESHOLD,
-}
-
-TRUSTED_DEVICES = [
-    {"deviceType": "SMS", "areaCode": "", "phoneNumber": "*******58", "deviceId": "1"}
-]
+@pytest.fixture(name="icloud_bypass_setup", autouse=True)
+def icloud_bypass_setup_fixture():
+    """Mock component setup."""
+    with patch("homeassistant.components.icloud.async_setup_entry", return_value=True):
+        yield
 
 
 @pytest.fixture(name="service")
@@ -385,8 +381,8 @@ async def test_password_update(hass: HomeAssistant, service_authenticated: Magic
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data={**MOCK_CONFIG, "unique_id": USERNAME},
+        context={"source": SOURCE_REAUTH, "unique_id": config_entry.unique_id},
+        data={**MOCK_CONFIG},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -409,8 +405,8 @@ async def test_password_update_wrong_password(hass: HomeAssistant):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data={**MOCK_CONFIG, "unique_id": USERNAME},
+        context={"source": SOURCE_REAUTH, "unique_id": config_entry.unique_id},
+        data={**MOCK_CONFIG},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM

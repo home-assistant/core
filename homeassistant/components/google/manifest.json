@@ -2,7 +2,7 @@
   "domain": "google",
   "name": "Google Calendars",
   "config_flow": true,
-  "dependencies": ["application_credentials", "repairs"],
+  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/calendar.google/",
   "requirements": ["gcal-sync==0.10.0", "oauth2client==4.1.3"],
   "codeowners": ["@allenporter"],

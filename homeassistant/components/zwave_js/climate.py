@@ -21,16 +21,14 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.climate import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    ClimateEntity,
-)
-from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -125,6 +123,8 @@ async def async_setup_entry(
 
 class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     """Representation of a Z-Wave climate."""
+
+    _attr_precision = PRECISION_TENTHS
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
@@ -250,11 +250,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         ):
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of 0.1."""
-        return PRECISION_TENTHS
 
     @property
     def hvac_mode(self) -> HVACMode:

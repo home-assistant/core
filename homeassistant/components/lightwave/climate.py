@@ -1,12 +1,12 @@
 """Support for LightwaveRF TRVs."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     ClimateEntity,
-)
-from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -61,7 +61,7 @@ class LightwaveTrv(ClimateEntity):
         # inhibit is used to prevent race condition on update.  If non zero, skip next update cycle.
         self._inhibit = 0
 
-    def update(self):
+    def update(self) -> None:
         """Communicate with a Lightwave RTF Proxy to get state."""
         (temp, targ, _, trv_output) = self._lwlink.read_trv_status(self._serial)
         if temp is not None:
@@ -95,7 +95,7 @@ class LightwaveTrv(ClimateEntity):
             self._attr_target_temperature = self._inhibit
         return self._attr_target_temperature
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set TRV target temperature."""
         if ATTR_TEMPERATURE in kwargs:
             self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]

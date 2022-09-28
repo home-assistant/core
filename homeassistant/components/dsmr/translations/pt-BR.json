@@ -11,6 +11,8 @@
             "cannot_connect": "Falha ao conectar"
         },
         "step": {
+            "one": "",
+            "other": "",
             "setup_network": {
                 "data": {
                     "dsmr_version": "Selecione a vers\u00e3o do DSMR",

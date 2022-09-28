@@ -13,7 +13,4 @@ DEFAULT_SCAN_INTERVAL = 60
 DATA_UPDATED = "glances_data_updated"
 SUPPORTED_VERSIONS = [2, 3]
 
-if sys.maxsize > 2**32:
-    CPU_ICON = "mdi:cpu-64-bit"
-else:
-    CPU_ICON = "mdi:cpu-32-bit"
+CPU_ICON = f"mdi:cpu-{64 if sys.maxsize > 2**32 else 32}-bit"

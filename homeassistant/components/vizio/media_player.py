@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -21,8 +22,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_INCLUDE,
     CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
@@ -207,7 +206,7 @@ class VizioDevice(MediaPlayerEntity):
             )
 
         if not is_on:
-            self._attr_state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
             self._attr_volume_level = None
             self._attr_is_volume_muted = None
             self._current_input = None
@@ -216,7 +215,7 @@ class VizioDevice(MediaPlayerEntity):
             self._attr_sound_mode = None
             return
 
-        self._attr_state = STATE_ON
+        self._attr_state = MediaPlayerState.ON
 
         if audio_settings := await self._device.get_all_settings(
             VIZIO_AUDIO_SETTINGS, log_api_exception=False

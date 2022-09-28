@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const import (
+    ExclusionStrategy,
     InclusionState,
     InclusionStrategy,
     LogLevel,
@@ -29,10 +30,7 @@ from zwave_js_server.model.controller import (
 )
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.websocket_api.const import (
-    ERR_INVALID_FORMAT,
-    ERR_NOT_FOUND,
-)
+from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
     ADDITIONAL_PROPERTIES,
     APPLICATION_VERSION,
@@ -68,8 +66,8 @@ from homeassistant.components.zwave_js.api import (
     SECURITY_CLASSES,
     SPECIFIC_DEVICE_CLASS,
     STATUS,
+    STRATEGY,
     TYPE,
-    UNPROVISION,
     VALUE,
     VERSION,
 )
@@ -1528,7 +1526,7 @@ async def test_remove_node(
             ID: 2,
             TYPE: "zwave_js/remove_node",
             ENTRY_ID: entry.entry_id,
-            UNPROVISION: True,
+            STRATEGY: ExclusionStrategy.EXCLUDE_ONLY,
         }
     )
 
@@ -1538,7 +1536,7 @@ async def test_remove_node(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.begin_exclusion",
-        "unprovision": True,
+        "strategy": 0,
     }
 
     # Test FailedZWaveCommand is caught

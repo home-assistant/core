@@ -4,11 +4,8 @@ from __future__ import annotations
 from systembridgeconnector.models.media_directories import MediaDirectories
 from systembridgeconnector.models.media_files import File as MediaFile, MediaFiles
 
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
-from homeassistant.components.media_source.const import (
-    MEDIA_CLASS_MAP,
-    MEDIA_MIME_TYPES,
-)
+from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_source import MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,
@@ -97,26 +94,26 @@ class SystemBridgeSource(MediaSource):
                     BrowseMediaSource(
                         domain=DOMAIN,
                         identifier=entry.entry_id,
-                        media_class=MEDIA_CLASS_DIRECTORY,
+                        media_class=MediaClass.DIRECTORY,
                         media_content_type="",
                         title=entry.title,
                         can_play=False,
                         can_expand=True,
                         children=[],
-                        children_media_class=MEDIA_CLASS_DIRECTORY,
+                        children_media_class=MediaClass.DIRECTORY,
                     )
                 )
 
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier="",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="",
             title=self.name,
             can_play=False,
             can_expand=True,
             children=children,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
         )
 
 
@@ -124,7 +121,10 @@ def _build_base_url(
     entry: ConfigEntry,
 ) -> str:
     """Build base url for System Bridge media."""
-    return f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}/api/media/file/data?apiKey={entry.data[CONF_API_KEY]}"
+    return (
+        f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        f"/api/media/file/data?apiKey={entry.data[CONF_API_KEY]}"
+    )
 
 
 def _build_root_paths(
@@ -135,7 +135,7 @@ def _build_root_paths(
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier="",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_type="",
         title=entry.title,
         can_play=False,
@@ -144,17 +144,17 @@ def _build_root_paths(
             BrowseMediaSource(
                 domain=DOMAIN,
                 identifier=f"{entry.entry_id}~~{directory.key}",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MediaClass.DIRECTORY,
                 media_content_type="",
                 title=f"{directory.key[:1].capitalize()}{directory.key[1:]}",
                 can_play=False,
                 can_expand=True,
                 children=[],
-                children_media_class=MEDIA_CLASS_DIRECTORY,
+                children_media_class=MediaClass.DIRECTORY,
             )
             for directory in media_directories.directories
         ],
-        children_media_class=MEDIA_CLASS_DIRECTORY,
+        children_media_class=MediaClass.DIRECTORY,
     )
 
 
@@ -168,7 +168,7 @@ def _build_media_items(
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=identifier,
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_type="",
         title=f"{entry.title} - {path}",
         can_play=False,
@@ -191,17 +191,19 @@ def _build_media_item(
     media_file: MediaFile,
 ) -> BrowseMediaSource:
     """Build individual media item."""
-    ext = (
-        f"~~{media_file.mime_type}"
-        if media_file.is_file and media_file.mime_type is not None
-        else ""
-    )
+    ext = ""
+    if media_file.is_file and media_file.mime_type is not None:
+        ext = f"~~{media_file.mime_type}"
+
+    if media_file.is_directory or media_file.mime_type is None:
+        media_class = MediaClass.DIRECTORY
+    else:
+        media_class = MEDIA_CLASS_MAP[media_file.mime_type.split("/", 1)[0]]
+
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=f"{path}/{media_file.name}{ext}",
-        media_class=MEDIA_CLASS_DIRECTORY
-        if media_file.is_directory or media_file.mime_type is None
-        else MEDIA_CLASS_MAP[media_file.mime_type.split("/", 1)[0]],
+        media_class=media_class,
         media_content_type=media_file.mime_type,
         title=media_file.name,
         can_play=media_file.is_file,

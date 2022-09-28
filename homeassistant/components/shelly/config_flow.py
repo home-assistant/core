@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any, Final
 
@@ -91,6 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     host: str = ""
     info: dict[str, Any] = {}
     device_info: dict[str, Any] = {}
+    entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -259,6 +261,53 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "model": model,
                 "host": self.host,
             },
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+        assert self.entry is not None
+        host = self.entry.data[CONF_HOST]
+
+        if user_input is not None:
+            info = await self._async_get_info(host)
+            if self.entry.data.get("gen", 1) != 1:
+                user_input[CONF_USERNAME] = "admin"
+            try:
+                await validate_input(self.hass, host, info, user_input)
+            except (
+                aiohttp.ClientResponseError,
+                aioshelly.exceptions.InvalidAuthError,
+                asyncio.TimeoutError,
+                aiohttp.ClientError,
+            ):
+                return self.async_abort(reason="reauth_unsuccessful")
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry, data={**self.entry.data, **user_input}
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        if self.entry.data.get("gen", 1) == 1:
+            schema = {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        else:
+            schema = {vol.Required(CONF_PASSWORD): str}
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(schema),
             errors=errors,
         )
 

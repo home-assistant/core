@@ -284,7 +284,7 @@ class CityBikesStation(SensorEntity):
         self._station_id = station_id
         self.entity_id = entity_id
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update station state."""
         for station in self._network.stations:
             if station[ATTR_ID] == self._station_id:

@@ -82,7 +82,7 @@ class AuroraSensor(AuroraEntity, SensorEntity):
         self.entity_description = entity_description
         self.available_prev = True
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor.
 
         This is the only method that should fetch new data for Home Assistant.

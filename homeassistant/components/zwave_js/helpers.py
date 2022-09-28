@@ -30,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -412,4 +413,16 @@ def get_value_state_schema(
     return vol.All(
         vol.Coerce(int),
         vol.Range(min=value.metadata.min, max=value.metadata.max),
+    )
+
+
+def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
+    """Get DeviceInfo for node."""
+    return DeviceInfo(
+        identifiers={get_device_id(driver, node)},
+        sw_version=node.firmware_version,
+        name=node.name or node.device_config.description or f"Node {node.node_id}",
+        model=node.device_config.label,
+        manufacturer=node.device_config.manufacturer,
+        suggested_area=node.location if node.location else None,
     )

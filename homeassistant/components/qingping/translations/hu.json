@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r be van \u00e1ll\u00edtva",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
-            "no_devices_found": "Nincs felder\u00edtett eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
             "not_supported": "Eszk\u00f6z nem t\u00e1mogatott"
         },
         "flow_title": "{name}",

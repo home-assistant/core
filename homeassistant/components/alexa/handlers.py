@@ -10,6 +10,7 @@ from homeassistant import core as ha
 from homeassistant.components import (
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
@@ -20,7 +21,6 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,

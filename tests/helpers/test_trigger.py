@@ -103,3 +103,37 @@ async def test_if_disabled_trigger_not_firing(
     hass.bus.async_fire("enabled_trigger_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_trigger_alias(
+    hass: HomeAssistant, calls: list[ServiceCall], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test triggers support aliases."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "alias": "My event",
+                        "platform": "event",
+                        "event_type": "trigger_event",
+                    }
+                ],
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"alias": "{{ trigger.alias }}"},
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("trigger_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["alias"] == "My event"
+    assert (
+        "Automation trigger 'My event' triggered by event 'trigger_event'"
+        in caplog.text
+    )

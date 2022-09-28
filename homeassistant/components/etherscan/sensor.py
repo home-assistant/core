@@ -83,7 +83,7 @@ class EtherscanSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state of the sensor."""
 
         if self._token_address:

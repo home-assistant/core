@@ -88,7 +88,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
             CONF_ZONE_NUMBER: self._zone_number,
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_ZONE_FAULT, self._fault_callback)

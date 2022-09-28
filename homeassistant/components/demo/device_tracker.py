@@ -18,11 +18,11 @@ def setup_scanner(
 ) -> bool:
     """Set up the demo tracker."""
 
-    def offset():
+    def offset() -> float:
         """Return random offset."""
         return (random.randrange(500, 2000)) / 2e5 * random.choice((-1, 1))
 
-    def random_see(dev_id, name):
+    def random_see(dev_id: str, name: str) -> None:
         """Randomize a sighting."""
         see(
             dev_id=dev_id,

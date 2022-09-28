@@ -8,6 +8,7 @@ import datetime
 from functools import partial
 import logging
 import socket
+from typing import TYPE_CHECKING, Any, Optional, cast
 from urllib.parse import urlparse
 
 from soco import events_asyncio
@@ -21,7 +22,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, call_later
@@ -93,7 +94,7 @@ class SonosData:
         self.favorites: dict[str, SonosFavorites] = {}
         self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
-        self.hosts_heartbeat = None
+        self.hosts_heartbeat: CALLBACK_TYPE | None = None
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
         self.mdns_names: dict[str, str] = {}
@@ -168,10 +169,10 @@ class SonosDiscoveryManager:
         self.data = data
         self.hosts = set(hosts)
         self.discovery_lock = asyncio.Lock()
-        self._known_invisible = set()
+        self._known_invisible: set[SoCo] = set()
         self._manual_config_required = bool(hosts)
 
-    async def async_shutdown(self):
+    async def async_shutdown(self) -> None:
         """Stop all running tasks."""
         await self._async_stop_event_listener()
         self._stop_manual_heartbeat()
@@ -236,6 +237,8 @@ class SonosDiscoveryManager:
                 (SonosAlarms, self.data.alarms),
                 (SonosFavorites, self.data.favorites),
             ):
+                if TYPE_CHECKING:
+                    coord_dict = cast(dict[str, Any], coord_dict)
                 if soco.household_id not in coord_dict:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)
@@ -298,7 +301,7 @@ class SonosDiscoveryManager:
         )
 
     async def _async_handle_discovery_message(
-        self, uid: str, discovered_ip: str, boot_seqnum: int
+        self, uid: str, discovered_ip: str, boot_seqnum: int | None
     ) -> None:
         """Handle discovered player creation and activity."""
         async with self.discovery_lock:
@@ -338,22 +341,27 @@ class SonosDiscoveryManager:
             async_dispatcher_send(self.hass, f"{SONOS_VANISHED}-{uid}", reason)
             return
 
-        discovered_ip = urlparse(info.ssdp_location).hostname
-        boot_seqnum = info.ssdp_headers.get("X-RINCON-BOOTSEQ")
         self.async_discovered_player(
             "SSDP",
             info,
-            discovered_ip,
+            cast(str, urlparse(info.ssdp_location).hostname),
             uid,
-            boot_seqnum,
-            info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME),
+            info.ssdp_headers.get("X-RINCON-BOOTSEQ"),
+            cast(str, info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)),
             None,
         )
 
     @callback
     def async_discovered_player(
-        self, source, info, discovered_ip, uid, boot_seqnum, model, mdns_name
-    ):
+        self,
+        source: str,
+        info: ssdp.SsdpServiceInfo,
+        discovered_ip: str,
+        uid: str,
+        boot_seqnum: str | int | None,
+        model: str,
+        mdns_name: str | None,
+    ) -> None:
         """Handle discovery via ssdp or zeroconf."""
         if self._manual_config_required:
             _LOGGER.warning(
@@ -376,10 +384,12 @@ class SonosDiscoveryManager:
             _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
         asyncio.create_task(
-            self._async_handle_discovery_message(uid, discovered_ip, boot_seqnum)
+            self._async_handle_discovery_message(
+                uid, discovered_ip, cast(Optional[int], boot_seqnum)
+            )
         )
 
-    async def setup_platforms_and_discovery(self):
+    async def setup_platforms_and_discovery(self) -> None:
         """Set up platforms and discovery."""
         await self.hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         self.entry.async_on_unload(

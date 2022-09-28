@@ -203,12 +203,12 @@ class WLEDReverseSwitch(WLEDEntity, SwitchEntity):
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current_ids: set[int],
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Update segments."""
     segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
 
-    new_entities = []
+    new_entities: list[WLEDReverseSwitch] = []
 
     # Process new segments, add them to Home Assistant
     for segment_id in segment_ids - current_ids:

@@ -7,6 +7,7 @@ from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
+    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -15,6 +16,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     PRESSURE_BAR,
     TEMP_CELSIUS,
+    TIME_HOURS,
     VOLUME_LITERS,
 )
 from homeassistant.core import HomeAssistant
@@ -82,6 +84,7 @@ SENSOR_TYPES = (
         name="Pump hours",
         icon="mdi:clock",
         device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=TIME_HOURS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.pump_hours,
@@ -127,7 +130,6 @@ SENSOR_TYPES = (
         name="Error code",
         icon="mdi:bug",
         entity_registry_enabled_default=False,
-        native_unit_of_measurement="",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.error_code,
     ),
@@ -167,9 +169,7 @@ async def async_setup_entry(
     )
 
 
-class JustNimbusSensor(
-    JustNimbusEntity,
-):
+class JustNimbusSensor(JustNimbusEntity, SensorEntity):
     """Implementation of the JustNimbus sensor."""
 
     def __init__(

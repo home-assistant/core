@@ -11,7 +11,7 @@ from zwave_js_server.dump import dump_msgs
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.value import ValueDataType
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -51,6 +51,9 @@ VALUES_TO_REDACT = (
 
 def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
     """Redact value of a Z-Wave value."""
+    # If the value has no value, there is nothing to redact
+    if zwave_value.get("value") in (None, ""):
+        return zwave_value
     for value_to_redact in VALUES_TO_REDACT:
         command_class = None
         if "commandClass" in zwave_value:
@@ -123,6 +126,7 @@ def get_device_entities(
             "entity_category": entry.entity_category,
             "supported_features": entry.supported_features,
             "unit_of_measurement": entry.unit_of_measurement,
+            "value_id": value_id,
             "primary_value": primary_value_data,
         }
         entities.append(entity)

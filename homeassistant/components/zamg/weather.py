@@ -139,6 +139,6 @@ class ZamgWeather(WeatherEntity):
         """Return the wind bearing."""
         return self.zamg_data.get_data(ATTR_WEATHER_WIND_BEARING)
 
-    def update(self):
+    def update(self) -> None:
         """Update current conditions."""
         self.zamg_data.update()

@@ -94,6 +94,8 @@ async def async_setup_entry(
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_should_poll = False
+
     def __init__(self, entry_data, hass_data, mode, units):
         """Initialise the platform with a data instance and station name."""
         self.nws = hass_data[NWS_DATA]
@@ -132,11 +134,6 @@ class NWSWeather(WeatherEntity):
             self._forecast = self.nws.forecast_hourly
 
         self.async_write_ha_state()
-
-    @property
-    def should_poll(self) -> bool:
-        """Entities do not individually poll."""
-        return False
 
     @property
     def attribution(self):
@@ -272,7 +269,7 @@ class NWSWeather(WeatherEntity):
         return f"{base_unique_id(self.latitude, self.longitude)}_{self.mode}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if state is available."""
         last_success = (
             self.coordinator_observation.last_update_success
@@ -292,7 +289,7 @@ class NWSWeather(WeatherEntity):
             last_success_time = False
         return last_success or last_success_time
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.

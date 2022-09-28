@@ -3,14 +3,16 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.update import DOMAIN, SERVICE_INSTALL, UpdateDeviceClass
-from homeassistant.components.update.const import (
+from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
     ATTR_TITLE,
+    DOMAIN,
+    SERVICE_INSTALL,
+    UpdateDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

@@ -177,6 +177,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = store_result
 
     hass.http.register_view(TokenView(retrieve_result))
+    hass.http.register_view(RevokeTokenView())
     hass.http.register_view(LinkUserView(retrieve_result))
     hass.http.register_view(OAuth2AuthorizeCallbackView())
 
@@ -192,8 +193,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class RevokeTokenView(HomeAssistantView):
+    """View to revoke tokens."""
+
+    url = "/auth/revoke"
+    name = "api:auth:revocation"
+    requires_auth = False
+    cors_allowed = True
+
+    async def post(self, request: web.Request) -> web.Response:
+        """Revoke a token."""
+        hass: HomeAssistant = request.app["hass"]
+        data = cast(MultiDictProxy[str], await request.post())
+
+        # OAuth 2.0 Token Revocation [RFC7009]
+        # 2.2 The authorization server responds with HTTP status code 200
+        # if the token has been revoked successfully or if the client
+        # submitted an invalid token.
+        if (token := data.get("token")) is None:
+            return web.Response(status=HTTPStatus.OK)
+
+        refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
+
+        if refresh_token is None:
+            return web.Response(status=HTTPStatus.OK)
+
+        await hass.auth.async_remove_refresh_token(refresh_token)
+        return web.Response(status=HTTPStatus.OK)
+
+
 class TokenView(HomeAssistantView):
-    """View to issue or revoke tokens."""
+    """View to issue tokens."""
 
     url = "/auth/token"
     name = "api:auth:token"
@@ -217,7 +247,9 @@ class TokenView(HomeAssistantView):
         # The revocation request includes an additional parameter,
         # action=revoke.
         if data.get("action") == "revoke":
-            return await self._async_handle_revoke_token(hass, data)
+            # action=revoke is deprecated. Use /auth/revoke instead.
+            # Keep here for backwards compat
+            return await RevokeTokenView.post(self, request)  # type: ignore[arg-type]
 
         if grant_type == "authorization_code":
             return await self._async_handle_auth_code(hass, data, request.remote)
@@ -228,28 +260,6 @@ class TokenView(HomeAssistantView):
         return self.json(
             {"error": "unsupported_grant_type"}, status_code=HTTPStatus.BAD_REQUEST
         )
-
-    async def _async_handle_revoke_token(
-        self,
-        hass: HomeAssistant,
-        data: MultiDictProxy[str],
-    ) -> web.Response:
-        """Handle revoke token request."""
-
-        # OAuth 2.0 Token Revocation [RFC7009]
-        # 2.2 The authorization server responds with HTTP status code 200
-        # if the token has been revoked successfully or if the client
-        # submitted an invalid token.
-        if (token := data.get("token")) is None:
-            return web.Response(status=HTTPStatus.OK)
-
-        refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
-
-        if refresh_token is None:
-            return web.Response(status=HTTPStatus.OK)
-
-        await hass.auth.async_remove_refresh_token(refresh_token)
-        return web.Response(status=HTTPStatus.OK)
 
     async def _async_handle_auth_code(
         self,

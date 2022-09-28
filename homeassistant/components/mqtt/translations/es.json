@@ -49,6 +49,12 @@
             "button_triple_press": "\"{subtype}\" triple pulsaci\u00f3n"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuraci\u00f3n manual MQTT de {platform}(s) encontrada en la clave de la plataforma `{platform}`.\n\nPor favor, mueve la configuraci\u00f3n a la clave `mqtt` de la integraci\u00f3n y reinicia Home Assistant para solucionar este problema. Consulta la [documentaci\u00f3n]({more_info_url}), para obtener m\u00e1s informaci\u00f3n.",
+            "title": "Tu configuraci\u00f3n manual MQTT de {platform}(s) necesita atenci\u00f3n"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Tema de nacimiento no v\u00e1lido.",

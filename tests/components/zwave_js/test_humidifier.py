@@ -3,8 +3,7 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.humidity_control import HumidityControlMode
 from zwave_js_server.event import Event
 
-from homeassistant.components.humidifier import HumidifierDeviceClass
-from homeassistant.components.humidifier.const import (
+from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -12,6 +11,7 @@ from homeassistant.components.humidifier.const import (
     DEFAULT_MIN_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
+    HumidifierDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

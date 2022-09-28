@@ -23,7 +23,7 @@ from pyunifiprotect.test_util.anonymize import random_hex
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
 
@@ -175,38 +175,44 @@ async def init_entry(
 
 async def remove_entities(
     hass: HomeAssistant,
+    ufp: MockUFPFixture,
     ufp_devices: list[ProtectAdoptableDeviceModel],
 ) -> None:
     """Remove all entities for given Protect devices."""
-
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     for ufp_device in ufp_devices:
         if not ufp_device.is_adopted_by_us:
             continue
 
-        name = ufp_device.display_name.replace(" ", "_").lower()
-        entity = entity_registry.async_get(f"{Platform.SENSOR}.{name}_uptime")
-        assert entity is not None
+        devices = getattr(ufp.api.bootstrap, f"{ufp_device.model.value}s")
+        del devices[ufp_device.id]
 
-        device_id = entity.device_id
-        for reg in list(entity_registry.entities.values()):
-            if reg.device_id == device_id:
-                entity_registry.async_remove(reg.entity_id)
-        device_registry.async_remove_device(device_id)
+        mock_msg = Mock()
+        mock_msg.changed_data = {}
+        mock_msg.old_obj = ufp_device
+        mock_msg.new_obj = None
+        ufp.ws_msg(mock_msg)
 
-    await hass.async_block_till_done()
+    await time_changed(hass, 30)
 
 
 async def adopt_devices(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     ufp_devices: list[ProtectAdoptableDeviceModel],
+    fully_adopt: bool = False,
 ):
     """Emit WS to re-adopt give Protect devices."""
 
     for ufp_device in ufp_devices:
+        if fully_adopt:
+            ufp_device.is_adopted = True
+            ufp_device.is_adopted_by_other = False
+            ufp_device.can_adopt = False
+
+        devices = getattr(ufp.api.bootstrap, f"{ufp_device.model.value}s")
+        devices[ufp_device.id] = ufp_device
+
         mock_msg = Mock()
         mock_msg.changed_data = {}
         mock_msg.new_obj = Event(

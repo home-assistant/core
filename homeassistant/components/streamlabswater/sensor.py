@@ -106,7 +106,7 @@ class StreamLabsDailyUsage(SensorEntity):
         """Return gallons as the unit measurement for water."""
         return VOLUME_GALLONS
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve the latest daily usage."""
         self._streamlabs_usage_data.update()
 

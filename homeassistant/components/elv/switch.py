@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import pypca
 from serial import SerialException
@@ -72,15 +73,15 @@ class SmartPlugSwitch(SwitchEntity):
         """Return true if switch is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._pca.turn_on(self._device_id)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._pca.turn_off(self._device_id)
 
-    def update(self):
+    def update(self) -> None:
         """Update the PCA switch's state."""
         try:
             self._state = self._pca.get_state(self._device_id)

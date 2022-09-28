@@ -11,6 +11,7 @@ import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.const import (
     CommandClass,
+    ExclusionStrategy,
     InclusionStrategy,
     LogLevel,
     Protocols,
@@ -46,12 +47,12 @@ from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.const import (
+from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
+    ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
@@ -153,7 +154,7 @@ STATUS = "status"
 REQUESTED_SECURITY_CLASSES = "requested_security_classes"
 
 FEATURE = "feature"
-UNPROVISION = "unprovision"
+STRATEGY = "strategy"
 
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
@@ -480,12 +481,12 @@ async def websocket_network_status(
             "sdk_version": controller.sdk_version,
             "type": controller.controller_type,
             "own_node_id": controller.own_node_id,
-            "is_secondary": controller.is_secondary,
+            "is_primary": controller.is_primary,
             "is_using_home_id_from_other_network": controller.is_using_home_id_from_other_network,
             "is_sis_present": controller.is_SIS_present,
             "was_real_primary": controller.was_real_primary,
-            "is_static_update_controller": controller.is_static_update_controller,
-            "is_slave": controller.is_slave,
+            "is_suc": controller.is_suc,
+            "node_type": controller.node_type,
             "firmware_version": controller.firmware_version,
             "manufacturer_id": controller.manufacturer_id,
             "product_id": controller.product_id,
@@ -1056,7 +1057,7 @@ async def websocket_stop_exclusion(
     {
         vol.Required(TYPE): "zwave_js/remove_node",
         vol.Required(ENTRY_ID): str,
-        vol.Optional(UNPROVISION): bool,
+        vol.Optional(STRATEGY): vol.Coerce(ExclusionStrategy),
     }
 )
 @websocket_api.async_response
@@ -1106,7 +1107,7 @@ async def websocket_remove_node(
         controller.on("node removed", node_removed),
     ]
 
-    result = await controller.async_begin_exclusion(msg.get(UNPROVISION))
+    result = await controller.async_begin_exclusion(msg.get(STRATEGY))
     connection.send_result(
         msg[ID],
         result,

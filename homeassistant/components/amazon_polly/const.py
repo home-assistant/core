@@ -36,6 +36,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Aditi",  # Hindi
     "Amy",
     "Aria",
+    "Arthur",  # English, Neural
     "Astrid",  # Swedish
     "Ayanda",
     "Bianca",  # Italian
@@ -47,6 +48,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Chantal",  # French Canadian
     "Conchita",
     "Cristiano",
+    "Daniel",  # German, Neural
     "Dora",  # Icelandic
     "Emma",  # English
     "Enrique",
@@ -69,6 +71,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Kevin",
     "Kimberly",
     "Lea",  # French
+    "Liam",  # Canadian French, Neural
     "Liv",  # Norwegian
     "Lotte",  # Dutch
     "Lucia",  # Spanish European
@@ -86,6 +89,7 @@ SUPPORTED_VOICES: Final[list[str]] = [
     "Nicole",  # English Australian
     "Olivia",  # Female, Australian, Neural
     "Penelope",  # Spanish US
+    "Pedro",  # Spanish US, Neural
     "Raveena",  # English, Indian
     "Ricardo",
     "Ruben",

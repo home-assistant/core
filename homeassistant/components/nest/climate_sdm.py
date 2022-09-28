@@ -15,8 +15,7 @@ from google_nest_sdm.thermostat_traits import (
     ThermostatTemperatureSetpointTrait,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -24,6 +23,7 @@ from homeassistant.components.climate.const import (
     FAN_ON,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -98,17 +98,13 @@ class ThermostatEntity(ClimateEntity):
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, device: Device) -> None:
         """Initialize ThermostatEntity."""
         self._device = device
         self._device_info = NestDeviceInfo(device)
         self._attr_supported_features = 0
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling since entities have state pushed via pubsub."""
-        return False
 
     @property
     def unique_id(self) -> str | None:

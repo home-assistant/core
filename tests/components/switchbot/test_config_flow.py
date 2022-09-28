@@ -14,6 +14,7 @@ from . import (
     WOHAND_ENCRYPTED_SERVICE_INFO,
     WOHAND_SERVICE_ALT_ADDRESS_INFO,
     WOHAND_SERVICE_INFO,
+    WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
     WOSENSORTH_SERVICE_INFO,
     init_integration,
     patch_async_setup_entry,
@@ -44,7 +45,7 @@ async def test_bluetooth_discovery(hass):
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot EEFF"
     assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",
     }
 
@@ -112,6 +113,17 @@ async def test_async_step_bluetooth_not_switchbot(hass):
     assert result["reason"] == "not_supported"
 
 
+async def test_async_step_bluetooth_not_connectable(hass):
+    """Test discovery via bluetooth and its not connectable switchbot."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
+
+
 async def test_user_setup_wohand(hass):
     """Test the user initiated form with password and valid mac."""
 
@@ -136,7 +148,7 @@ async def test_user_setup_wohand(hass):
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot EEFF"
     assert result["data"] == {
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",
     }
 
@@ -203,7 +215,12 @@ async def test_user_setup_wocurtain_or_bot(hass):
 
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
-        return_value=[WOCURTAIN_SERVICE_INFO, WOHAND_SERVICE_ALT_ADDRESS_INFO],
+        return_value=[
+            NOT_SWITCHBOT_INFO,
+            WOCURTAIN_SERVICE_INFO,
+            WOHAND_SERVICE_ALT_ADDRESS_INFO,
+            WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
+        ],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -234,7 +251,11 @@ async def test_user_setup_wocurtain_or_bot_with_password(hass):
 
     with patch(
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
-        return_value=[WOCURTAIN_SERVICE_INFO, WOHAND_ENCRYPTED_SERVICE_INFO],
+        return_value=[
+            WOCURTAIN_SERVICE_INFO,
+            WOHAND_ENCRYPTED_SERVICE_INFO,
+            WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
+        ],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}

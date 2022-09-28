@@ -6,12 +6,63 @@
             "usb_probe_failed": "\u5075\u6e2c USB \u88dd\u7f6e\u5931\u6557"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_backup_json": "\u7121\u6548\u5099\u4efd JSON"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "\u9078\u5247\u81ea\u52d5\u5099\u4efd"
+                },
+                "description": "\u7531\u81ea\u52d5\u5099\u4efd\u4e2d\u56de\u5fa9\u7db2\u8def\u8a2d\u5b9a",
+                "title": "\u56de\u5fa9\u81ea\u52d5\u5099\u4efd"
+            },
+            "choose_formation_strategy": {
+                "description": "\u9078\u64c7\u7121\u7dda\u96fb\u7684\u7db2\u8def\u8a2d\u5b9a",
+                "menu_options": {
+                    "choose_automatic_backup": "\u56de\u5fa9\u81ea\u52d5\u5099\u4efd",
+                    "form_new_network": "\u522a\u9664\u7db2\u8def\u8a2d\u5b9a\u4e26\u5efa\u7acb\u65b0\u7db2\u8def\u8a2d\u5b9a",
+                    "reuse_settings": "\u4fdd\u7559\u7121\u7dda\u96fb\u7db2\u8def\u8a2d\u5b9a",
+                    "upload_manual_backup": "\u4e0a\u50b3\u624b\u52d5\u5099\u4efd"
+                },
+                "title": "\u7db2\u8def\u683c\u5f0f"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "\u5e8f\u5217\u88dd\u7f6e\u8def\u5f91"
+                },
+                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u5e8f\u5217\u57e0",
+                "title": "\u9078\u64c7\u5e8f\u5217\u57e0"
+            },
             "confirm": {
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
+            "confirm_hardware": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "\u7121\u7dda\u96fb\u985e\u5225"
+                },
+                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u985e\u5225",
+                "title": "\u7121\u7dda\u96fb\u985e\u5225"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "\u901a\u8a0a\u57e0\u901f\u5ea6",
+                    "flow_control": "\u8cc7\u6599\u6d41\u91cf\u63a7\u5236",
+                    "path": "\u5e8f\u5217\u88dd\u7f6e\u8def\u5f91"
+                },
+                "description": "\u8f38\u5165\u5e8f\u5217\u57e0\u8a2d\u5b9a",
+                "title": "\u5e8f\u5217\u57e0\u8a2d\u5b9a"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "\u6c38\u4e45\u53d6\u4ee3\u7121\u7dda\u96fb IEEE \u4f4d\u5740"
+                },
+                "description": "\u5099\u4efd\u4e2d\u7684 IEEE \u4f4d\u5740\u8207\u73fe\u6709\u7121\u7dda\u96fb\u4e0d\u540c\u3002\u70ba\u4e86\u78ba\u8a8d\u7db2\u8def\u6b63\u5e38\u5de5\u4f5c\uff0c\u7121\u7dda\u96fb\u7684 IEEE \u4f4d\u5740\u5fc5\u9808\u9032\u884c\u8b8a\u66f4\u3002\n\n\u6b64\u70ba\u6c38\u4e45\u6027\u64cd\u4f5c\u3002.",
+                "title": "\u8986\u5beb\u7121\u7dda\u96fb IEEE \u4f4d\u5740"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +79,13 @@
                 },
                 "description": "\u8f38\u5165\u901a\u8a0a\u57e0\u7279\u5b9a\u8a2d\u5b9a",
                 "title": "\u8a2d\u5b9a"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "\u4e0a\u50b3\u6a94\u6848"
+                },
+                "description": "\u7531\u4e0a\u50b3\u7684\u5099\u4efd JSON \u6a94\u6848\u4e2d\u56de\u5fa9\u7db2\u8def\u8a2d\u5b9a\u3002\u53ef\u4ee5\u7531\u4e0d\u540c\u7684 ZHA \u5b89\u88dd\u4e2d\u7684 **\u7db2\u8def\u8a2d\u5b9a** \u9032\u884c\u4e0b\u8f09\u3001\u6216\u4f7f\u7528 Zigbee2MQTT  \u4e2d\u7684 `coordinator_backup.json` \u6a94\u6848\u3002",
+                "title": "\u4e0a\u50b3\u624b\u52d5\u5099\u4efd"
             },
             "user": {
                 "data": {
@@ -110,6 +168,78 @@
             "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
             "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",
             "remote_button_triple_press": "\"{subtype}\" \u6309\u9215\u4e09\u9023\u64ca"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "\u6240\u767c\u73fe\u7684\u88dd\u7f6e\u4e26\u975e ZHA \u88dd\u7f6e",
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
+            "usb_probe_failed": "\u5075\u6e2c USB \u88dd\u7f6e\u5931\u6557"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_backup_json": "\u7121\u6548\u5099\u4efd JSON"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "\u9078\u5247\u81ea\u52d5\u5099\u4efd"
+                },
+                "description": "\u7531\u81ea\u52d5\u5099\u4efd\u4e2d\u56de\u5fa9\u7db2\u8def\u8a2d\u5b9a",
+                "title": "\u56de\u5fa9\u81ea\u52d5\u5099\u4efd"
+            },
+            "choose_formation_strategy": {
+                "description": "\u9078\u64c7\u7121\u7dda\u96fb\u7684\u7db2\u8def\u8a2d\u5b9a",
+                "menu_options": {
+                    "choose_automatic_backup": "\u56de\u5fa9\u81ea\u52d5\u5099\u4efd",
+                    "form_new_network": "\u522a\u9664\u7db2\u8def\u8a2d\u5b9a\u4e26\u5efa\u7acb\u65b0\u7db2\u8def\u8a2d\u5b9a",
+                    "reuse_settings": "\u4fdd\u7559\u7121\u7dda\u96fb\u7db2\u8def\u8a2d\u5b9a",
+                    "upload_manual_backup": "\u4e0a\u50b3\u624b\u52d5\u5099\u4efd"
+                },
+                "title": "\u7db2\u8def\u683c\u5f0f"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "\u5e8f\u5217\u88dd\u7f6e\u8def\u5f91"
+                },
+                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u5e8f\u5217\u57e0",
+                "title": "\u9078\u64c7\u5e8f\u5217\u57e0"
+            },
+            "init": {
+                "description": "ZHA \u5c07\u505c\u6b62\u3001\u662f\u5426\u8981\u7e7c\u7e8c\uff1f",
+                "title": "\u91cd\u65b0\u8a2d\u5b9a ZHA"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "\u7121\u7dda\u96fb\u985e\u5225"
+                },
+                "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u985e\u5225",
+                "title": "\u7121\u7dda\u96fb\u985e\u5225"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "\u901a\u8a0a\u57e0\u901f\u5ea6",
+                    "flow_control": "\u8cc7\u6599\u6d41\u91cf\u63a7\u5236",
+                    "path": "\u5e8f\u5217\u88dd\u7f6e\u8def\u5f91"
+                },
+                "description": "\u8f38\u5165\u5e8f\u5217\u57e0\u8a2d\u5b9a",
+                "title": "\u5e8f\u5217\u57e0\u8a2d\u5b9a"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "\u6c38\u4e45\u53d6\u4ee3\u7121\u7dda\u96fb IEEE \u4f4d\u5740"
+                },
+                "description": "\u5099\u4efd\u4e2d\u7684 IEEE \u4f4d\u5740\u8207\u73fe\u6709\u7121\u7dda\u96fb\u4e0d\u540c\u3002\u70ba\u4e86\u78ba\u8a8d\u7db2\u8def\u6b63\u5e38\u5de5\u4f5c\uff0c\u7121\u7dda\u96fb\u7684 IEEE \u4f4d\u5740\u5fc5\u9808\u9032\u884c\u8b8a\u66f4\u3002\n\n\u6b64\u70ba\u6c38\u4e45\u6027\u64cd\u4f5c\u3002.",
+                "title": "\u8986\u5beb\u7121\u7dda\u96fb IEEE \u4f4d\u5740"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "\u4e0a\u50b3\u6a94\u6848"
+                },
+                "description": "\u7531\u4e0a\u50b3\u7684\u5099\u4efd JSON \u6a94\u6848\u4e2d\u56de\u5fa9\u7db2\u8def\u8a2d\u5b9a\u3002\u53ef\u4ee5\u7531\u4e0d\u540c\u7684 ZHA \u5b89\u88dd\u4e2d\u7684 **\u7db2\u8def\u8a2d\u5b9a** \u9032\u884c\u4e0b\u8f09\u3001\u6216\u4f7f\u7528 Zigbee2MQTT  \u4e2d\u7684 `coordinator_backup.json` \u6a94\u6848\u3002",
+                "title": "\u4e0a\u50b3\u624b\u52d5\u5099\u4efd"
+            }
         }
     }
 }
