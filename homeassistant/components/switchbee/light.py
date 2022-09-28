@@ -60,17 +60,11 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
         """Initialize the SwitchBee light."""
         super().__init__(device, coordinator)
         self._attr_is_on = False
-        self._is_online = True
         self._attr_brightness = 0
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_available = True
 
         self._update_attrs_from_coordinator()
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._is_online and super().available
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -79,25 +73,6 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
         super()._handle_coordinator_update()
 
     def _update_attrs_from_coordinator(self) -> None:
-        async def async_refresh_state() -> None:
-            """Refresh the device state in the Central Unit.
-
-            This function addresses issue of a device that came online back but still report
-            unavailable state (-1).
-            Such device (offline device) will keep reporting unavailable state (-1)
-            until it has been actuated by the user (state changed to on/off).
-
-            With this code we keep trying setting dummy state for the device
-            in order for it to start reporting its real state back (assuming it came back online)
-
-            """
-
-            try:
-                await self.coordinator.api.set_state(self._device.id, "dummy")
-            except SwitchBeeDeviceOfflineError:
-                return
-            except SwitchBeeError:
-                return
 
         coordinator_device = cast(
             SwitchBeeDimmer, self.coordinator.data[self._device.id]
@@ -107,7 +82,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
         # module is offline
         if brightness == -1:
             # This specific call will refresh the state of the device in the CU
-            self.hass.async_create_task(async_refresh_state())
+            self.hass.async_create_task(self.async_refresh_state())
 
             # if the device was online (now offline), log message and mark it as Unavailable
             if self._is_online:

@@ -30,7 +30,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevic
         self.api: CentralUnitAPI = swb_api
         self._reconnect_counts: int = 0
 
-        self.mac_formated: str | None = (
+        self.mac_formatted: str | None = (
             None if self.api.mac is None else format_mac(self.api.mac)
         )
 
