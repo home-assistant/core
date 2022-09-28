@@ -1,4 +1,5 @@
 """Support for SwitchBee entity."""
+import logging
 from typing import Generic, TypeVar
 
 from switchbee import SWITCHBEE_BRAND
@@ -12,6 +13,9 @@ from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
 
 _DeviceTypeT = TypeVar("_DeviceTypeT", bound=SwitchBeeBaseDevice)
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator], Generic[_DeviceTypeT]):
@@ -83,3 +87,21 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
             return
         except SwitchBeeError:
             return
+
+    def _check_if_became_offline(self) -> None:
+        """Check if the device was online (now offline), log message and mark it as Unavailable."""
+        if self._is_online:
+            _LOGGER.warning(
+                "%s light is not responding, check the status in the SwitchBee mobile app",
+                self.name,
+            )
+            self._is_online = False
+
+    def _check_if_became_online(self) -> None:
+        """Check if the device was offline (now online) and bring it back."""
+        if not self._is_online:
+            _LOGGER.info(
+                "%s light is now responding",
+                self.name,
+            )
+            self._is_online = True

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
@@ -19,8 +18,6 @@ from .coordinator import SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
 
 MAX_BRIGHTNESS = 255
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _hass_brightness_to_switchbee(value: int) -> int:
@@ -85,23 +82,10 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
             # This specific call will refresh the state of the device in the CU
             self.hass.async_create_task(self.async_refresh_state())
 
-            # if the device was online (now offline), log message and mark it as Unavailable
-            if self._is_online:
-                _LOGGER.warning(
-                    "%s light is not responding, check the status in the SwitchBee mobile app",
-                    self.name,
-                )
-                self._is_online = False
-
+            self._check_if_became_offline()
             return
 
-        # check if the device was offline (now online) and bring it back
-        if not self._is_online:
-            _LOGGER.info(
-                "%s light is now responding",
-                self.name,
-            )
-            self._is_online = True
+        self._check_if_became_online()
 
         self._attr_is_on = bool(brightness != 0)
 
