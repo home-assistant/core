@@ -32,6 +32,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DistanceConverter,
     EnergyConverter,
+    MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
@@ -67,6 +68,7 @@ UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLUME: VolumeConverter,
+    SensorDeviceClass.WEIGHT: MassConverter,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
