@@ -34,7 +34,11 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_available = self.device.available
         self._attr_unique_id = self.device.device_url
 
-        if "#" in self.device_url and not self.device_url.endswith("#1"):
+        if (
+            "#" in self.device_url
+            and not self.device_url.endswith("#1")
+            and self.device.label
+        ):
             # Set the name in order to have different name for every sensor on the same device
             self._attr_name = self.device.label
 
