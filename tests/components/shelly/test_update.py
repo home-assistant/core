@@ -54,9 +54,9 @@ async def test_block_update(hass: HomeAssistant, coap_wrapper, monkeypatch):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_rpc_update(hass: HomeAssistant, rpc_poll_wrapper, monkeypatch):
+async def test_rpc_update(hass: HomeAssistant, rpc_wrapper, monkeypatch):
     """Test rpc device update entity."""
-    assert rpc_poll_wrapper
+    assert rpc_wrapper
 
     entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
@@ -68,9 +68,7 @@ async def test_rpc_update(hass: HomeAssistant, rpc_poll_wrapper, monkeypatch):
     )
 
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(
-            rpc_poll_wrapper.entry, UPDATE_DOMAIN
-        )
+        hass.config_entries.async_forward_entry_setup(rpc_wrapper.entry, UPDATE_DOMAIN)
     )
     await hass.async_block_till_done()
 
@@ -89,10 +87,10 @@ async def test_rpc_update(hass: HomeAssistant, rpc_poll_wrapper, monkeypatch):
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert rpc_poll_wrapper.device.trigger_ota_update.call_count == 1
+    assert rpc_wrapper.device.trigger_ota_update.call_count == 1
 
-    monkeypatch.setitem(rpc_poll_wrapper.device.status["sys"], "available_updates", {})
-    rpc_poll_wrapper.device.shelly = None
+    monkeypatch.setitem(rpc_wrapper.device.status["sys"], "available_updates", {})
+    rpc_wrapper.device.shelly = None
 
     # update entity
     await async_update_entity(hass, "update.test_name_firmware_update")

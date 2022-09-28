@@ -198,50 +198,13 @@ async def rpc_wrapper(hass):
 
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
-        RPC
-    ] = RpcDeviceWrapper(hass, config_entry, device)
-
-    wrapper.async_setup()
-
-    return wrapper
-
-
-@pytest.fixture
-async def rpc_poll_wrapper(hass):
-    """Setups a rpc poll wrapper with mocked device."""
-    await async_setup_component(hass, "shelly", {})
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"sleep_period": 0, "model": "SNSW-001P16EU", "gen": 2, "host": "1.2.3.4"},
-        unique_id="12345678",
-    )
-    config_entry.add_to_hass(hass)
-
-    device = Mock(
-        call_rpc=AsyncMock(),
-        config=MOCK_CONFIG,
-        event={},
-        shelly=MOCK_SHELLY,
-        status=MOCK_STATUS_RPC,
-        firmware_version="some fw string",
-        update=AsyncMock(),
-        trigger_ota_update=AsyncMock(),
-        trigger_reboot=AsyncMock(),
-        initialized=True,
-        shutdown=AsyncMock(),
-    )
-
-    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
-    wrapper_rpc = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
-        RPC
-    ] = RpcDeviceWrapper(hass, config_entry, device)
-    wrapper_rpc.async_setup()
-
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
         RPC_POLL
     ] = RpcPollingWrapper(hass, config_entry, device)
+
+    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        RPC
+    ] = RpcDeviceWrapper(hass, config_entry, device)
+    wrapper.async_setup()
 
     return wrapper
