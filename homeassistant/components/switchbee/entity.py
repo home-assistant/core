@@ -23,7 +23,7 @@ class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator]):
         super().__init__(coordinator)
         self._device = device
         self._attr_name = device.name
-        self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
+        self._attr_unique_id = f"{coordinator.mac_formatted}-{device.id}"
 
 
 class SwitchBeeDeviceEntity(SwitchBeeEntity):
@@ -41,7 +41,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity):
             identifiers={
                 (
                     DOMAIN,
-                    f"{device.unit_id}-{coordinator.mac_formated}",
+                    f"{device.unit_id}-{coordinator.mac_formatted}",
                 )
             },
             manufacturer=SWITCHBEE_BRAND,

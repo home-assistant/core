@@ -26,7 +26,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
         """Initialize."""
         self.api: CentralUnitAPI = swb_api
         self._reconnect_counts: int = 0
-        self.mac_formated: str = format_mac(swb_api.mac)
+        self.mac_formatted: str = format_mac(swb_api.mac)
         super().__init__(
             hass,
             _LOGGER,
