@@ -124,17 +124,6 @@ QUERY_STATISTIC_META = [
 ]
 
 
-STATISTIC_UNIT_TO_UNIT_CLASS: dict[str | None, str] = {
-    DistanceConverter.NORMALIZED_UNIT: DistanceConverter.UNIT_CLASS,
-    EnergyConverter.NORMALIZED_UNIT: EnergyConverter.UNIT_CLASS,
-    MassConverter.NORMALIZED_UNIT: MassConverter.UNIT_CLASS,
-    PowerConverter.NORMALIZED_UNIT: PowerConverter.UNIT_CLASS,
-    PressureConverter.NORMALIZED_UNIT: PressureConverter.UNIT_CLASS,
-    SpeedConverter.NORMALIZED_UNIT: SpeedConverter.UNIT_CLASS,
-    TemperatureConverter.NORMALIZED_UNIT: TemperatureConverter.UNIT_CLASS,
-    VolumeConverter.NORMALIZED_UNIT: VolumeConverter.UNIT_CLASS,
-}
-
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     DistanceConverter.NORMALIZED_UNIT: DistanceConverter,
     EnergyConverter.NORMALIZED_UNIT: EnergyConverter,
@@ -148,6 +137,13 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_unit_class(unit: str | None) -> str | None:
+    """Get corresponding unit class from from the normalized statistics unit."""
+    if converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(unit):
+        return converter.UNIT_CLASS
+    return None
 
 
 def _get_statistic_to_display_unit_converter(
@@ -168,14 +164,13 @@ def _get_statistic_to_display_unit_converter(
         return no_conversion
 
     display_unit: str | None
-    unit_class = STATISTIC_UNIT_TO_UNIT_CLASS[statistic_unit]
+    unit_class = converter.UNIT_CLASS
     if requested_units and unit_class in requested_units:
         display_unit = requested_units[unit_class]
     else:
         display_unit = state_unit
 
-    unit_converter = STATISTIC_UNIT_TO_UNIT_CONVERTER[statistic_unit]
-    if display_unit not in unit_converter.VALID_UNITS:
+    if display_unit not in converter.VALID_UNITS:
         # Guard against invalid state unit in the DB
         return no_conversion
 
@@ -909,9 +904,7 @@ def list_statistic_ids(
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
-                "unit_class": STATISTIC_UNIT_TO_UNIT_CLASS.get(
-                    meta["unit_of_measurement"]
-                ),
+                "unit_class": _get_unit_class(meta["unit_of_measurement"]),
                 "unit_of_measurement": meta["unit_of_measurement"],
             }
             for _, meta in metadata.values()
@@ -934,9 +927,7 @@ def list_statistic_ids(
                 "name": meta["name"],
                 "source": meta["source"],
                 "display_unit_of_measurement": meta["state_unit_of_measurement"],
-                "unit_class": STATISTIC_UNIT_TO_UNIT_CLASS.get(
-                    meta["unit_of_measurement"]
-                ),
+                "unit_class": _get_unit_class(meta["unit_of_measurement"]),
                 "unit_of_measurement": meta["unit_of_measurement"],
             }
 
