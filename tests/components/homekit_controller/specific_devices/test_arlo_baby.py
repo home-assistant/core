@@ -2,6 +2,7 @@
 
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.helpers.entity import EntityCategory
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -46,6 +47,7 @@ async def test_arlo_baby_setup(hass):
                     entity_id="sensor.arlobabya0_battery",
                     unique_id="homekit-00A0000000000-700",
                     friendly_name="ArloBabyA0 Battery",
+                    entity_category=EntityCategory.DIAGNOSTIC,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=PERCENTAGE,
                     state="82",

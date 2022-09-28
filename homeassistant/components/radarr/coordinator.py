@@ -5,7 +5,7 @@ from abc import abstractmethod
 from datetime import timedelta
 from typing import Generic, TypeVar, cast
 
-from aiopyarr import RootFolder, exceptions
+from aiopyarr import Health, RootFolder, SystemStatus, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-T = TypeVar("T", str, list[RootFolder], int)
+T = TypeVar("T", SystemStatus, list[RootFolder], list[Health], int)
 
 
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
@@ -39,7 +39,6 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
-        self.system_version: str | None = None
 
     async def _async_update_data(self) -> T:
         """Get the latest data from Radarr."""
@@ -62,9 +61,9 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
 class StatusDataUpdateCoordinator(RadarrDataUpdateCoordinator):
     """Status update coordinator for Radarr."""
 
-    async def _fetch_data(self) -> str:
+    async def _fetch_data(self) -> SystemStatus:
         """Fetch the data."""
-        return (await self.api_client.async_get_system_status()).version
+        return await self.api_client.async_get_system_status()
 
 
 class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator):
@@ -73,6 +72,14 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator):
     async def _fetch_data(self) -> list[RootFolder]:
         """Fetch the data."""
         return cast(list, await self.api_client.async_get_root_folders())
+
+
+class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+    """Health update coordinator."""
+
+    async def _fetch_data(self) -> list[Health]:
+        """Fetch the health data."""
+        return await self.api_client.async_get_failed_health_checks()
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator):

@@ -1,4 +1,6 @@
 """Support for SwitchBee entity."""
+from typing import Generic, TypeVar
+
 from switchbee import SWITCHBEE_BRAND
 from switchbee.device import SwitchBeeBaseDevice
 
@@ -8,15 +10,17 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
 
+_DeviceTypeT = TypeVar("_DeviceTypeT", bound=SwitchBeeBaseDevice)
 
-class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator]):
+
+class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator], Generic[_DeviceTypeT]):
     """Representation of a Switchbee entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        device: SwitchBeeBaseDevice,
+        device: _DeviceTypeT,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the Switchbee entity."""
@@ -26,12 +30,12 @@ class SwitchBeeEntity(CoordinatorEntity[SwitchBeeCoordinator]):
         self._attr_unique_id = f"{coordinator.mac_formatted}-{device.id}"
 
 
-class SwitchBeeDeviceEntity(SwitchBeeEntity):
+class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
     """Representation of a Switchbee device entity."""
 
     def __init__(
         self,
-        device: SwitchBeeBaseDevice,
+        device: _DeviceTypeT,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the Switchbee device."""

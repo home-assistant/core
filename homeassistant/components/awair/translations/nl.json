@@ -28,7 +28,8 @@
             },
             "local_pick": {
                 "data": {
-                    "device": "Apparaat"
+                    "device": "Apparaat",
+                    "host": "IP-adres"
                 }
             },
             "reauth": {

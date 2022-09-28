@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import binascii
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import copy
 import logging
 from typing import Any, NamedTuple, cast
@@ -116,7 +116,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def _create_rfx(config: dict[str, Any]) -> rfxtrxmod.Connect:
+def _create_rfx(config: Mapping[str, Any]) -> rfxtrxmod.Connect:
     """Construct a rfx object based on config."""
 
     modes = config.get(CONF_PROTOCOLS)

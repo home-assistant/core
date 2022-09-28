@@ -145,9 +145,13 @@ def _mocked_infrared_bulb() -> Light:
 def _mocked_light_strip() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 31  # LIFX Z
+    bulb.color_zones = [MagicMock(), MagicMock()]
+    bulb.effect = {"effect": "MOVE", "speed": 3, "duration": 0, "direction": "RIGHT"}
     bulb.get_color_zones = MockLifxCommand(bulb)
     bulb.set_color_zones = MockLifxCommand(bulb)
-    bulb.color_zones = [MagicMock(), MagicMock()]
+    bulb.get_multizone_effect = MockLifxCommand(bulb)
+    bulb.set_multizone_effect = MockLifxCommand(bulb)
+
     return bulb
 
 

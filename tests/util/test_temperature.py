@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, TEMP_KELVIN
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.temperature as temperature_util
 
 INVALID_SYMBOL = "bob"
@@ -34,10 +35,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         temperature_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         temperature_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 

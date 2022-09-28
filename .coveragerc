@@ -62,7 +62,9 @@ omit =
     homeassistant/components/androidtv/diagnostics.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
-    homeassistant/components/apcupsd/*
+    homeassistant/components/apcupsd/__init__.py
+    homeassistant/components/apcupsd/binary_sensor.py
+    homeassistant/components/apcupsd/sensor.py
     homeassistant/components/apple_tv/__init__.py
     homeassistant/components/apple_tv/browse_media.py
     homeassistant/components/apple_tv/media_player.py
@@ -238,7 +240,9 @@ omit =
     homeassistant/components/doorbird/util.py
     homeassistant/components/dovado/*
     homeassistant/components/downloader/*
-    homeassistant/components/dsmr_reader/*
+    homeassistant/components/dsmr_reader/__init__.py
+    homeassistant/components/dsmr_reader/definitions.py
+    homeassistant/components/dsmr_reader/sensor.py
     homeassistant/components/dte_energy_bridge/sensor.py
     homeassistant/components/dublin_bus_transport/sensor.py
     homeassistant/components/dunehd/__init__.py
@@ -329,6 +333,7 @@ omit =
     homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/climate.py
     homeassistant/components/esphome/cover.py
+    homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
     homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
@@ -572,6 +577,7 @@ omit =
     homeassistant/components/intellifire/climate.py
     homeassistant/components/intellifire/coordinator.py
     homeassistant/components/intellifire/entity.py
+    homeassistant/components/intellifire/fan.py
     homeassistant/components/intellifire/sensor.py
     homeassistant/components/intellifire/switch.py
     homeassistant/components/intesishome/*
@@ -835,8 +841,11 @@ omit =
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/nibe_heatpump/__init__.py
-    homeassistant/components/nibe_heatpump/sensor.py
     homeassistant/components/nibe_heatpump/binary_sensor.py
+    homeassistant/components/nibe_heatpump/number.py
+    homeassistant/components/nibe_heatpump/select.py
+    homeassistant/components/nibe_heatpump/sensor.py
+    homeassistant/components/nibe_heatpump/switch.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
@@ -1000,7 +1009,6 @@ omit =
     homeassistant/components/rachio/entity.py
     homeassistant/components/rachio/switch.py
     homeassistant/components/rachio/webhooks.py
-    homeassistant/components/radarr/sensor.py
     homeassistant/components/radio_browser/__init__.py
     homeassistant/components/radio_browser/media_source.py
     homeassistant/components/radiotherm/__init__.py
@@ -1583,8 +1591,6 @@ omit =
     homeassistant/components/zhong_hong/climate.py
     homeassistant/components/ziggo_mediabox_xl/media_player.py
     homeassistant/components/zoneminder/*
-    homeassistant/components/zwave_js/discovery.py
-    homeassistant/components/zwave_js/sensor.py
     homeassistant/components/zwave_me/__init__.py
     homeassistant/components/zwave_me/binary_sensor.py
     homeassistant/components/zwave_me/button.py

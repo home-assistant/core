@@ -225,7 +225,7 @@ async def test_options_flow(hass, config_entry):
     ) as mock_get_request:
         mock_get_request.return_value = SAMPLE_CONFIG
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
