@@ -61,7 +61,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
         super().__init__(device, coordinator)
         self._attr_is_on = False
         self._is_online = True
-        self._attr_brightness: int = 0
+        self._attr_brightness = 0
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_available = True
 
