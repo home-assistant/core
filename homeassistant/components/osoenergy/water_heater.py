@@ -27,7 +27,6 @@ from .const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SUPPORT_FLAGS_HEATER,
-    SUPPORT_WATER_HEATER,
 )
 
 
@@ -157,19 +156,9 @@ class OSOEnergyWaterHeater(OSOEnergyEntity, WaterHeaterEntity):
         return self.device.get("attributes", {}).get("available", False)
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
     def current_operation(self):
         """Return current operation."""
         return OSO_ENERGY_TO_HASS_STATE[self.device["status"]["current_operation"]]
-
-    @property
-    def operation_list(self):
-        """List of available operation modes."""
-        return SUPPORT_WATER_HEATER
 
     @property
     def current_temperature(self):

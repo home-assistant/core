@@ -47,8 +47,6 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._errors["base"] = "invalid_auth"
 
-            return await self.show_config_form()
-
         return await self.show_config_form()
 
     async def show_config_form(self):  # pylint: disable=unused-argument
@@ -60,7 +58,7 @@ class OSOEnergyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def test_credentials(self, subscription_key):
+    async def test_credentials(self, subscription_key: str):
         """Return true if credentials is valid."""
         try:
             websession = aiohttp_client.async_get_clientsession(self.hass)
