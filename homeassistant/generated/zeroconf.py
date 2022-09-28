@@ -450,7 +450,7 @@ ZEROCONF = {
         },
         {
             "domain": "loqed",
-            "name": "loqed*"
+            "name": "loqed*",
         },
         {
             "domain": "nam",
