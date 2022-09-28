@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _brightness_hass_to_switchbee(value: int) -> int:
     """Convert hass brightness to SwitchBee."""
-    sb_brightness = int(100 * (value) / MAX_BRIGHTNESS)
+    sb_brightness = int(100 * value / MAX_BRIGHTNESS)
     # SwitchBee maximum brightness is 99
     return sb_brightness if sb_brightness != 100 else 99
 
