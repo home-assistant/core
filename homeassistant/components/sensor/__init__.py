@@ -234,19 +234,6 @@ UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.WEIGHT: MassConverter,
 }
 
-UNIT_RATIOS: dict[str, dict[str, float]] = {
-    SensorDeviceClass.DISTANCE: DistanceConverter.UNIT_CONVERSION,
-    SensorDeviceClass.PRESSURE: PressureConverter.UNIT_CONVERSION,
-    SensorDeviceClass.SPEED: SpeedConverter.UNIT_CONVERSION,
-    SensorDeviceClass.TEMPERATURE: {
-        TEMP_CELSIUS: 1.0,
-        TEMP_FAHRENHEIT: 1.8,
-        TEMP_KELVIN: 1.0,
-    },
-    SensorDeviceClass.VOLUME: VolumeConverter.UNIT_CONVERSION,
-    SensorDeviceClass.WEIGHT: MassConverter.UNIT_CONVERSION,
-}
-
 # mypy: disallow-any-generics
 
 
@@ -456,6 +443,7 @@ class SensorEntity(Entity):
         ):
             assert unit_of_measurement
             assert native_unit_of_measurement
+            converter = UNIT_CONVERTERS[device_class]
 
             value_s = str(value)
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
@@ -465,8 +453,9 @@ class SensorEntity(Entity):
             ratio_log = max(
                 0,
                 log10(
-                    UNIT_RATIOS[device_class][native_unit_of_measurement]
-                    / UNIT_RATIOS[device_class][unit_of_measurement]
+                    converter.get_unit_ratio(
+                        native_unit_of_measurement, unit_of_measurement
+                    )
                 ),
             )
             prec = prec + floor(ratio_log)
@@ -474,7 +463,7 @@ class SensorEntity(Entity):
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 value_f = float(value)  # type: ignore[arg-type]
-                value_f_new = UNIT_CONVERTERS[device_class].convert(
+                value_f_new = converter.convert(
                     value_f,
                     native_unit_of_measurement,
                     unit_of_measurement,

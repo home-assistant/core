@@ -163,6 +163,30 @@ def test_convert_nonnumeric_value(
 
 
 @pytest.mark.parametrize(
+    "converter,from_unit,to_unit,expected",
+    [
+        (DistanceConverter, LENGTH_KILOMETERS, LENGTH_METERS, 1 / 1000),
+        (EnergyConverter, ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, 1000),
+        (PowerConverter, POWER_WATT, POWER_KILO_WATT, 1000),
+        (PressureConverter, PRESSURE_HPA, PRESSURE_INHG, pytest.approx(33.86389)),
+        (
+            SpeedConverter,
+            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_MILES_PER_HOUR,
+            pytest.approx(1.609343),
+        ),
+        (TemperatureConverter, TEMP_CELSIUS, TEMP_FAHRENHEIT, 1 / 1.8),
+        (VolumeConverter, VOLUME_GALLONS, VOLUME_LITERS, pytest.approx(0.264172)),
+    ],
+)
+def test_get_unit_ratio(
+    converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
+) -> None:
+    """Test unit ratio."""
+    assert converter.get_unit_ratio(from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
     "value,from_unit,expected,to_unit",
     [
         (5, LENGTH_MILES, pytest.approx(8.04672), LENGTH_KILOMETERS),
