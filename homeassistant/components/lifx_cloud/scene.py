@@ -72,11 +72,8 @@ def map_to_lifx_request(service_args):
     """Map options from home assistant service call to lifx request."""
     body = {}
 
-    if (
-        ATTR_TRANSITION in service_args
-        and service_args.get(ATTR_TRANSITION) is not None
-    ):
-        body["duration"] = service_args.get(ATTR_TRANSITION)
+    if duration := service_args.get(ATTR_TRANSITION) is not None:
+        body["duration"] = duration
 
     return body
 
