@@ -41,6 +41,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DistanceConverter,
@@ -110,6 +111,8 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
         (PressureConverter, PRESSURE_PA),
         (SpeedConverter, SPEED_KILOMETERS_PER_HOUR),
         (TemperatureConverter, TEMP_CELSIUS),
+        (TemperatureConverter, TEMP_FAHRENHEIT),
+        (TemperatureConverter, TEMP_KELVIN),
         (VolumeConverter, VOLUME_LITERS),
     ],
 )
@@ -117,10 +120,10 @@ def test_convert_invalid_unit(
     converter: type[BaseUnitConverter], valid_unit: str
 ) -> None:
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         converter.convert(5, INVALID_SYMBOL, valid_unit)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         converter.convert(5, valid_unit, INVALID_SYMBOL)
 
 
