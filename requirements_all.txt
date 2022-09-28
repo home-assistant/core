@@ -1463,7 +1463,7 @@ pyblackbird==0.5
 pybotvac==0.0.23
 
 # homeassistant.components.braviatv
-pybravia==0.2.2
+pybravia==0.2.3
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.13
@@ -1703,7 +1703,7 @@ pymazda==0.3.7
 pymediaroom==0.6.5.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.6
+pymelcloud==2.5.8
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.0.6
