@@ -155,8 +155,6 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
-    if config[CONF_TYPE] not in DEVICE_ACTION_SCHEMAS:
-        return {}
 
     return {"extra_fields": DEVICE_ACTION_SCHEMAS.get(config[CONF_TYPE], {})}
 
