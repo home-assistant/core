@@ -131,6 +131,14 @@ class SmartThingsAcceleration(ZigbeeChannel):
 class InovelliNotificationChannel(ClientChannel):
     """Inovelli Notification channel."""
 
+    @callback
+    def attribute_updated(self, attrid, value):
+        """Handle an attribute updated on this cluster."""
+
+    @callback
+    def cluster_command(self, tsn, command_id, args):
+        """Handle a cluster command received on this cluster."""
+
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFC31)
 class InovelliConfigEntityChannel(ZigbeeChannel):
