@@ -1,0 +1,5 @@
+{
+  "domain": "google",
+  "name": "Google",
+  "integrations": ["google", "google_sheets"]
+}
