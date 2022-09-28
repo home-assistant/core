@@ -179,6 +179,11 @@ class Integration:
         """Get integration_type."""
         return self.manifest.get("integration_type", "integration")
 
+    @property
+    def iot_class(self) -> str | None:
+        """Return the integration IoT Class."""
+        return self.manifest.get("iot_class")
+
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))

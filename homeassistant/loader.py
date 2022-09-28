@@ -276,7 +276,11 @@ async def async_get_integration_descriptions(
         if integration.domain in core_flows["translated_name"]:
             core_flows["translated_name"].remove(integration.domain)
 
-        metadata = {"config_flow": integration.config_flow, "name": integration.name}
+        metadata = {
+            "config_flow": integration.config_flow,
+            "iot_class": integration.iot_class,
+            "name": integration.name,
+        }
         custom_flows[integration.integration_type][integration.domain] = metadata
 
     return {"core": core_flows, "custom": custom_flows}

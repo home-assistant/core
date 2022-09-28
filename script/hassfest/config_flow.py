@@ -105,6 +105,7 @@ def _populate_brand_integrations(
             continue
         metadata = {}
         metadata["config_flow"] = integration.config_flow
+        metadata["iot_class"] = integration.iot_class
         if integration.translated_name:
             integration_data["translated_name"].add(domain)
         else:
@@ -165,6 +166,7 @@ def _generate_integrations(
         else:  # integration
             integration = integrations[domain]
             metadata["config_flow"] = integration.config_flow
+            metadata["iot_class"] = integration.iot_class
             if integration.translated_name:
                 result["translated_name"].add(domain)
             else:
