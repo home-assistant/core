@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar, Union, cast
+from typing import Any, cast
 
 from switchbee.api import SwitchBeeError, SwitchBeeTokenError
 from switchbee.const import SomfyCommand
-from switchbee.device import DeviceType, SwitchBeeShutter, SwitchBeeSomfy
+from switchbee.device import SwitchBeeShutter, SwitchBeeSomfy
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -23,11 +23,6 @@ from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
 
-_DeviceTypeT = TypeVar(
-    "_DeviceTypeT",
-    bound=Union[SwitchBeeShutter, SwitchBeeSomfy],
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -35,47 +30,84 @@ async def async_setup_entry(
     """Set up SwitchBee switch."""
     coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        SwitchBeeCover(device, coordinator)
+        SwitchBeeCoverEntity(device, coordinator)
         for device in coordinator.data.values()
         if isinstance(
             device,
-            (
-                SwitchBeeShutter,
-                SwitchBeeSomfy,
-            ),
+            SwitchBeeShutter,
+        )
+    )
+
+    async_add_entities(
+        SwitchBeeSomfyEntity(device, coordinator)
+        for device in coordinator.data.values()
+        if isinstance(
+            device,
+            SwitchBeeSomfy,
         )
     )
 
 
-class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
-    """Representation of a SwitchBee cover."""
+class SwitchBeeSomfyEntity(SwitchBeeDeviceEntity[SwitchBeeSomfy], CoverEntity):
+    """Representation of a SwitchBee Somfy cover."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
 
     def __init__(
         self,
-        device: _DeviceTypeT,
+        device: SwitchBeeSomfy,
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the SwitchBee cover."""
         super().__init__(device, coordinator)
         self._attr_current_cover_position = 0
         self._attr_is_closed = True
-        self._is_online = True
+        self._attr_supported_features = (
+            CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN | CoverEntityFeature.STOP
+        )
 
-        if self._device.type == DeviceType.Somfy:
-            self._attr_supported_features = (
-                CoverEntityFeature.CLOSE
-                | CoverEntityFeature.OPEN
-                | CoverEntityFeature.STOP
-            )
-        else:
-            self._attr_supported_features = (
-                CoverEntityFeature.CLOSE
-                | CoverEntityFeature.OPEN
-                | CoverEntityFeature.SET_POSITION
-                | CoverEntityFeature.STOP
-            )
+    async def _fire_somfy_command(self, command: str) -> None:
+        """Async function to fire Somfy device command."""
+        try:
+            await self.coordinator.api.set_state(self._device.id, command)
+        except (SwitchBeeError, SwitchBeeTokenError) as exp:
+            raise HomeAssistantError(
+                f"Failed to fire {command} for {self.name}, {str(exp)}"
+            ) from exp
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        return await self._fire_somfy_command(SomfyCommand.UP)
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        return await self._fire_somfy_command(SomfyCommand.DOWN)
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop a moving cover."""
+        return await self._fire_somfy_command(SomfyCommand.MY)
+
+
+class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity):
+    """Representation of a SwitchBee cover."""
+
+    _attr_device_class = CoverDeviceClass.SHUTTER
+
+    def __init__(
+        self,
+        device: SwitchBeeShutter,
+        coordinator: SwitchBeeCoordinator,
+    ) -> None:
+        """Initialize the SwitchBee cover."""
+        super().__init__(device, coordinator)
+        self._attr_current_cover_position = 0
+        self._attr_is_closed = True
+        self._attr_supported_features = (
+            CoverEntityFeature.CLOSE
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.STOP
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -85,10 +117,6 @@ class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
 
     def _update_from_coordinator(self) -> None:
         """Update the entity attributes from the coordinator data."""
-
-        # Somfy devices within SwitchBee does not have any state, they can only be controlled
-        if self._device.type == DeviceType.Somfy:
-            return
 
         coordinator_device = cast(
             SwitchBeeShutter, self.coordinator.data[self._device.id]
@@ -111,10 +139,6 @@ class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-
-        if self._device.type == DeviceType.Somfy:
-            return await self._fire_somfy_command(SomfyCommand.UP)
-
         if self._attr_current_cover_position == 100:
             return
 
@@ -122,10 +146,6 @@ class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-
-        if self._device.type == DeviceType.Somfy:
-            return await self._fire_somfy_command(SomfyCommand.DOWN)
-
         if self._attr_current_cover_position == 0:
             return
 
@@ -133,10 +153,6 @@ class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop a moving cover."""
-
-        if self._device.type == DeviceType.Somfy:
-            return await self._fire_somfy_command(SomfyCommand.MY)
-
         # to stop the shutter, we just interrupt it with any state during operation
         await self.async_set_cover_position(
             position=self._attr_current_cover_position, force=True
@@ -144,15 +160,6 @@ class SwitchBeeCover(SwitchBeeDeviceEntity[_DeviceTypeT], CoverEntity):
 
         # fetch data from the Central Unit to get the new position
         await self.coordinator.async_request_refresh()
-
-    async def _fire_somfy_command(self, command: str) -> None:
-        """Async function to fire Somfy device command."""
-        try:
-            await self.coordinator.api.set_state(self._device.id, command)
-        except (SwitchBeeError, SwitchBeeTokenError) as exp:
-            raise HomeAssistantError(
-                f"Failed to fire {command} for {self.name}, {str(exp)}"
-            ) from exp
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Async function to set position to cover."""
