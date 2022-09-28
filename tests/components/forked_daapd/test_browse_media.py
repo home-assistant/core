@@ -229,7 +229,7 @@ async def test_async_browse_spotify(hass, hass_ws_client, config_entry):
     assert await async_setup_component(hass, spotify.DOMAIN, {})
     await hass.async_block_till_done()
     config_entry.add_to_hass(hass)
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     with patch(
         "homeassistant.components.forked_daapd.media_player.spotify_async_browse_media"
@@ -277,7 +277,7 @@ async def test_async_browse_media_source(hass, hass_ws_client, config_entry):
     """Test browsing media_source."""
 
     config_entry.add_to_hass(hass)
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     with patch(
         "homeassistant.components.forked_daapd.media_player.media_source.async_browse_media"
