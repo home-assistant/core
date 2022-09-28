@@ -15,7 +15,7 @@ class Observation:
         prob_given_true: float,
         prob_given_false: float,
         observed: bool | None,
-        to_state: str,
+        to_state: str | None,
         above: float | None,
         below: float | None,
         value_template: Template | None,
