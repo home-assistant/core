@@ -13,7 +13,6 @@ from homeassistant.components.mikrotik.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -24,7 +23,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 MOCK_DATA = {
-    CONF_NAME: "Mikrotik",
     CONF_HOST: "0.0.0.0",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
@@ -140,10 +138,16 @@ ARP_DATA = [
     },
 ]
 
-MOCK_UPDATE_INFO = {
+NEW_UPDATE_INFO = {
     "installed-version": "1.0",
     "latest-version": "2.0",
     "status": "New version is available",
+}
+
+UPDATE_INSTALLED_INFO = {
+    "installed-version": "2.0",
+    "latest-version": "2.0",
+    "status": "System is already up to date",
 }
 
 
@@ -166,7 +170,7 @@ async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
             cmd
             == f"{mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.FIRMWARE]}/check-for-updates"
         ):
-            return [MOCK_UPDATE_INFO]
+            return [NEW_UPDATE_INFO]
         return []
 
     options: dict[str, Any] = {}

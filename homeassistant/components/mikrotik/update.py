@@ -44,7 +44,8 @@ class MikrotikUpdateEntity(
         self._attr_title = self.coordinator.model
         self._attr_unique_id = f"{coordinator.serial_num}-firmware-update"
         self._attr_device_info = DeviceInfo(
-            connections={(DOMAIN, coordinator.serial_num)}, name=self._attr_name
+            connections={(DOMAIN, coordinator.serial_num)},
+            name=self.coordinator.hostname,
         )
 
     @property
