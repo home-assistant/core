@@ -14,7 +14,8 @@ from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
 
 from .unit_conversion import VolumeConverter
 
-UNIT_CONVERSION = VolumeConverter.UNIT_CONVERSION
+# pylint: disable-next=protected-access
+UNIT_CONVERSION = VolumeConverter._UNIT_CONVERSION
 VALID_UNITS = VolumeConverter.VALID_UNITS
 
 

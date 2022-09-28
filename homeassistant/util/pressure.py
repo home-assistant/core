@@ -17,7 +17,8 @@ from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
 
 from .unit_conversion import PressureConverter
 
-UNIT_CONVERSION: dict[str, float] = PressureConverter.UNIT_CONVERSION
+# pylint: disable-next=protected-access
+UNIT_CONVERSION: dict[str, float] = PressureConverter._UNIT_CONVERSION
 VALID_UNITS = PressureConverter.VALID_UNITS
 
 

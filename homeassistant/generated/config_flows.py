@@ -28,6 +28,7 @@ FLOWS = {
         "android_ip_webcam",
         "androidtv",
         "anthemav",
+        "apcupsd",
         "apple_tv",
         "arcam_fmj",
         "aseko_pool_live",
