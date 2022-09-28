@@ -1,4 +1,5 @@
 """Number platform for Advantage Air integration."""
+from typing import Any
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -32,11 +33,11 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, NumberEntity):
 
     _attr_native_unit_of_measurement = TIME_MINUTES
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_step = 1
-    _attr_min_value = 0
-    _attr_max_value = 720
+    _attr_native_step = 1
+    _attr_native_min_value = 0
+    _attr_native_max_value = 720
 
-    def __init__(self, instance: str, ac_key: str, action: str) -> None:
+    def __init__(self, instance: dict[str, Any], ac_key: str, action: str) -> None:
         """Initialize the Advantage Air timer number."""
         super().__init__(instance, ac_key)
         self._time_key = f"countDownTo{action}"
@@ -46,7 +47,7 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, NumberEntity):
         )
 
     @property
-    def value(self):
+    def native_value(self):
         """Return the current value."""
         return self._ac.get(self._time_key)
 
@@ -57,6 +58,6 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, NumberEntity):
             return "mdi:timer-outline"
         return "mdi:timer-off-outline"
 
-    async def async_set_value(self, value: float):
+    async def async_set_native_value(self, value: float) -> None:
         """Set the timer value."""
-        await self.async_change({self.ac_key: {"info": {self._time_key: int(value)}}})
+        await self.aircon({self.ac_key: {"info": {self._time_key: int(value)}}})
