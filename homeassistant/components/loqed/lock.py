@@ -42,7 +42,7 @@ class LoqedLock(CoordinatorEntity[LoqedDataCoordinator], LockEntity):
         self._attr_name = self._lock.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._lock.id)},
-            name="Loqed instance",
+            name="Loqed Lock",
             connections={(CONNECTION_NETWORK_MAC, self._lock.id)},
         )
 
