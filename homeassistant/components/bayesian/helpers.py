@@ -9,7 +9,6 @@ class Observation:
 
     def __init__(
         self,
-        # identifier: str,
         entity_id: str | None,
         platform: str,
         prob_given_true: float,
@@ -21,7 +20,6 @@ class Observation:
         value_template: Template | None,
     ) -> None:
         """Initialize the Observation."""
-        # self.identifier = identifier
         self.entity_id = entity_id
         self.platform = platform
         self.prob_given_true = prob_given_true
