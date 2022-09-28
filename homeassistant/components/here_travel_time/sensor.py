@@ -38,7 +38,6 @@ from .const import (
     ATTR_DURATION_IN_TRAFFIC,
     ATTR_ORIGIN,
     ATTR_ORIGIN_NAME,
-    ATTR_ROUTE,
     DOMAIN,
     ICON_CAR,
     ICONS,
@@ -63,11 +62,6 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             key=ATTR_DURATION_IN_TRAFFIC,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=TIME_MINUTES,
-        ),
-        SensorEntityDescription(
-            name="Route",
-            icon="mdi:directions",
-            key=ATTR_ROUTE,
         ),
     )
 
