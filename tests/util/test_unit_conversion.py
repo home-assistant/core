@@ -111,6 +111,8 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
         (PressureConverter, PRESSURE_PA),
         (SpeedConverter, SPEED_KILOMETERS_PER_HOUR),
         (TemperatureConverter, TEMP_CELSIUS),
+        (TemperatureConverter, TEMP_FAHRENHEIT),
+        (TemperatureConverter, TEMP_KELVIN),
         (VolumeConverter, VOLUME_LITERS),
     ],
 )
