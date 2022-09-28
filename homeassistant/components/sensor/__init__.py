@@ -190,8 +190,9 @@ class SensorDeviceClass(StrEnum):
     # volume (VOLUME_*)
     VOLUME = "volume"
 
-    # weight (g, kg, mg, µg, oz, lb)
+    # weight/mass (g, kg, mg, µg, oz, lb)
     WEIGHT = "weight"
+    """Using weight instead of mass because is fits better with every day language"""
 
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
