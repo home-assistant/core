@@ -463,9 +463,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             if obs is not None
         ]
 
-        # for item in attr_observations_list:
-        #    item.value_template=None
-
         return {
             ATTR_OBSERVATIONS: attr_observations_list,
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
