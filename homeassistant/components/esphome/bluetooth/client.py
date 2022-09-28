@@ -252,6 +252,11 @@ class ESPHomeClient(BaseBleakClient):
                         )
                     )
         self.services = services
+        _LOGGER.debug(
+            "Cached services saved for %s - %s",
+            self._ble_device.name,
+            self._ble_device.address,
+        )
         domain_data.set_gatt_services_cache(address_as_int, services)
         return services
 
