@@ -6,8 +6,9 @@ from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.shelly.diagnostics import TO_REDACT
 from homeassistant.core import HomeAssistant
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
 from .conftest import MOCK_STATUS_COAP
+
+from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 RELAY_BLOCK_ID = 0
 
