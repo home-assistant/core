@@ -103,7 +103,7 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return value
 
-        return value * cls.get_unit_ratio(from_unit, to_unit)
+        return value / cls.get_unit_ratio(from_unit, to_unit)
 
     @classmethod
     def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
@@ -126,7 +126,7 @@ class BaseUnitConverter:
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             ) from err
 
-        return (1 * pint_from).m_as(pint_to)  # type: ignore[no-any-return]
+        return (1 * pint_to).m_as(pint_from)  # type: ignore[no-any-return]
 
 
 class DistanceConverter(BaseUnitConverter):
