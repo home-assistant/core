@@ -221,7 +221,7 @@ def test_pressure_same_unit():
 
 def test_pressure_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+    with pytest.raises(HomeAssistantError, match="Cannot convert from .* to .*"):
         METRIC_SYSTEM.pressure(5, "K")
 
 
@@ -253,7 +253,7 @@ def test_accumulated_precipitation_same_unit():
 
 def test_accumulated_precipitation_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+    with pytest.raises(HomeAssistantError, match="Cannot convert from .* to .*"):
         METRIC_SYSTEM.accumulated_precipitation(5, "K")
 
 

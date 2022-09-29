@@ -123,7 +123,10 @@ class BaseUnitConverter:
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             ) from err
 
-        return (1 * pint_to).m_as(pint_from)  # type: ignore[no-any-return]
+        try:
+            return (1 * pint_to).m_as(pint_from)  # type: ignore[no-any-return]
+        except pint.DimensionalityError as err:
+            raise HomeAssistantError(str(err)) from err
 
 
 class DistanceConverter(BaseUnitConverter):
