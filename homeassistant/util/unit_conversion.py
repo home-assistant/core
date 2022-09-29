@@ -1,6 +1,8 @@
 """Typing Helpers for Home Assistant."""
 from __future__ import annotations
 
+from fractions import Fraction
+
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
@@ -52,11 +54,11 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 
 # Distance conversion constants
-_MM_TO_M = 0.001  # 1 mm = 0.001 m
-_CM_TO_M = 0.01  # 1 cm = 0.01 m
+_MM_TO_M = Fraction(1, 1000)  # 1 mm = 0.001 m
+_CM_TO_M = Fraction(1, 100)  # 1 cm = 0.01 m
 _KM_TO_M = 1000  # 1 km = 1000 m
 
-_IN_TO_M = 0.0254  # 1 inch = 0.0254 m
+_IN_TO_M = Fraction(254, 10000)  # 1 inch = 0.0254 m
 _FOOT_TO_M = _IN_TO_M * 12  # 12 inches = 1 foot (0.3048 m)
 _YARD_TO_M = _FOOT_TO_M * 3  # 3 feet = 1 yard (0.9144 m)
 _MILE_TO_M = _YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
@@ -68,18 +70,20 @@ _HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Mass conversion constants
-_POUND_TO_G = 453.59237
-_OUNCE_TO_G = _POUND_TO_G / 16
+_POUND_TO_G = Fraction(45359237, 100000)
+_OUNCE_TO_G = Fraction(_POUND_TO_G, 16)
 
 # Pressure conversion constants
 _STANDARD_GRAVITY = 9.80665
 _MERCURY_DENSITY = 13.5951
 
 # Volume conversion constants
-_L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
-_ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
+_L_TO_CUBIC_METER = Fraction(1, 1000)  # 1 L = 0.001 m³
+_ML_TO_CUBIC_METER = Fraction(1, 1000) * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
 _GALLON_TO_CUBIC_METER = 231 * pow(_IN_TO_M, 3)  # US gallon is 231 cubic inches
-_FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
+_FLUID_OUNCE_TO_CUBIC_METER = Fraction(
+    _GALLON_TO_CUBIC_METER, 128
+)  # 128 fl. oz. in a US gallon
 _CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
 
 
@@ -90,7 +94,7 @@ class BaseUnitConverter:
     NORMALIZED_UNIT: str
     VALID_UNITS: set[str]
 
-    _UNIT_CONVERSION: dict[str, float]
+    _UNIT_CONVERSION: dict[str, Fraction | int]
 
     @classmethod
     def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
@@ -112,13 +116,13 @@ class BaseUnitConverter:
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             ) from err
 
-        new_value = value / from_ratio
-        return new_value * to_ratio
+        new_value = value * Fraction(to_ratio) / Fraction(from_ratio)
+        return float(new_value)
 
     @classmethod
     def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
         """Get unit ratio between units of measurement."""
-        return cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit]
+        return float(cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit])
 
 
 class DistanceConverter(BaseUnitConverter):
@@ -126,15 +130,15 @@ class DistanceConverter(BaseUnitConverter):
 
     UNIT_CLASS = "distance"
     NORMALIZED_UNIT = LENGTH_METERS
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION = {
         LENGTH_METERS: 1,
-        LENGTH_MILLIMETERS: 1 / _MM_TO_M,
-        LENGTH_CENTIMETERS: 1 / _CM_TO_M,
-        LENGTH_KILOMETERS: 1 / _KM_TO_M,
-        LENGTH_INCHES: 1 / _IN_TO_M,
-        LENGTH_FEET: 1 / _FOOT_TO_M,
-        LENGTH_YARD: 1 / _YARD_TO_M,
-        LENGTH_MILES: 1 / _MILE_TO_M,
+        LENGTH_MILLIMETERS: Fraction(1, _MM_TO_M),
+        LENGTH_CENTIMETERS: Fraction(1, _CM_TO_M),
+        LENGTH_KILOMETERS: Fraction(1, _KM_TO_M),
+        LENGTH_INCHES: Fraction(1, _IN_TO_M),
+        LENGTH_FEET: Fraction(1, _FOOT_TO_M),
+        LENGTH_YARD: Fraction(1, _YARD_TO_M),
+        LENGTH_MILES: Fraction(1, _MILE_TO_M),
     }
     VALID_UNITS = {
         LENGTH_KILOMETERS,
@@ -153,10 +157,10 @@ class EnergyConverter(BaseUnitConverter):
 
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION = {
         ENERGY_WATT_HOUR: 1 * 1000,
         ENERGY_KILO_WATT_HOUR: 1,
-        ENERGY_MEGA_WATT_HOUR: 1 / 1000,
+        ENERGY_MEGA_WATT_HOUR: Fraction(1, 1000),
     }
     VALID_UNITS = {
         ENERGY_WATT_HOUR,
@@ -170,13 +174,13 @@ class MassConverter(BaseUnitConverter):
 
     UNIT_CLASS = "mass"
     NORMALIZED_UNIT = MASS_GRAMS
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION = {
         MASS_MICROGRAMS: 1 * 1000 * 1000,
         MASS_MILLIGRAMS: 1 * 1000,
         MASS_GRAMS: 1,
-        MASS_KILOGRAMS: 1 / 1000,
-        MASS_OUNCES: 1 / _OUNCE_TO_G,
-        MASS_POUNDS: 1 / _POUND_TO_G,
+        MASS_KILOGRAMS: Fraction(1, 1000),
+        MASS_OUNCES: Fraction(1, _OUNCE_TO_G),
+        MASS_POUNDS: Fraction(1, _POUND_TO_G),
     }
     VALID_UNITS = {
         MASS_GRAMS,
@@ -193,9 +197,9 @@ class PowerConverter(BaseUnitConverter):
 
     UNIT_CLASS = "power"
     NORMALIZED_UNIT = POWER_WATT
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION = {
         POWER_WATT: 1,
-        POWER_KILO_WATT: 1 / 1000,
+        POWER_KILO_WATT: Fraction(1, 1000),
     }
     VALID_UNITS = {
         POWER_WATT,
@@ -208,16 +212,20 @@ class PressureConverter(BaseUnitConverter):
 
     UNIT_CLASS = "pressure"
     NORMALIZED_UNIT = PRESSURE_PA
-    _UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION = {
         PRESSURE_PA: 1,
-        PRESSURE_HPA: 1 / 100,
-        PRESSURE_KPA: 1 / 1000,
-        PRESSURE_BAR: 1 / 100000,
-        PRESSURE_CBAR: 1 / 1000,
-        PRESSURE_MBAR: 1 / 100,
-        PRESSURE_INHG: 1 / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
-        PRESSURE_PSI: 1 / 6894.757,
-        PRESSURE_MMHG: 1 / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        PRESSURE_HPA: Fraction(1, 100),
+        PRESSURE_KPA: Fraction(1, 1000),
+        PRESSURE_BAR: Fraction(1, 100000),
+        PRESSURE_CBAR: Fraction(1, 1000),
+        PRESSURE_MBAR: Fraction(1, 100),
+        PRESSURE_INHG: Fraction(
+            1, _IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY
+        ),
+        PRESSURE_PSI: Fraction(6894.757293168),
+        PRESSURE_MMHG: Fraction(
+            1, _MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY
+        ),
     }
     VALID_UNITS = {
         PRESSURE_PA,
@@ -237,15 +245,15 @@ class SpeedConverter(BaseUnitConverter):
 
     UNIT_CLASS = "speed"
     NORMALIZED_UNIT = SPEED_METERS_PER_SECOND
-    _UNIT_CONVERSION: dict[str, float] = {
-        SPEED_FEET_PER_SECOND: 1 / _FOOT_TO_M,
-        SPEED_INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
-        SPEED_INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
-        SPEED_KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
-        SPEED_KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
+    _UNIT_CONVERSION = {
+        SPEED_FEET_PER_SECOND: Fraction(1, _FOOT_TO_M),
+        SPEED_INCHES_PER_DAY: Fraction(_DAYS_TO_SECS, _IN_TO_M),
+        SPEED_INCHES_PER_HOUR: Fraction(_HRS_TO_SECS, _IN_TO_M),
+        SPEED_KILOMETERS_PER_HOUR: Fraction(_HRS_TO_SECS, _KM_TO_M),
+        SPEED_KNOTS: Fraction(_HRS_TO_SECS, _NAUTICAL_MILE_TO_M),
         SPEED_METERS_PER_SECOND: 1,
-        SPEED_MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
-        SPEED_MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
+        SPEED_MILES_PER_HOUR: Fraction(_HRS_TO_SECS, _MILE_TO_M),
+        SPEED_MILLIMETERS_PER_DAY: Fraction(_DAYS_TO_SECS, _MM_TO_M),
     }
     VALID_UNITS = {
         SPEED_FEET_PER_SECOND,
@@ -359,13 +367,13 @@ class VolumeConverter(BaseUnitConverter):
     UNIT_CLASS = "volume"
     NORMALIZED_UNIT = VOLUME_CUBIC_METERS
     # Units in terms of m³
-    _UNIT_CONVERSION: dict[str, float] = {
-        VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
-        VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
-        VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
-        VOLUME_FLUID_OUNCE: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
+    _UNIT_CONVERSION = {
+        VOLUME_LITERS: Fraction(1, _L_TO_CUBIC_METER),
+        VOLUME_MILLILITERS: Fraction(1, _ML_TO_CUBIC_METER),
+        VOLUME_GALLONS: Fraction(1, _GALLON_TO_CUBIC_METER),
+        VOLUME_FLUID_OUNCE: Fraction(1, _FLUID_OUNCE_TO_CUBIC_METER),
         VOLUME_CUBIC_METERS: 1,
-        VOLUME_CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
+        VOLUME_CUBIC_FEET: Fraction(1, _CUBIC_FOOT_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         VOLUME_LITERS,
