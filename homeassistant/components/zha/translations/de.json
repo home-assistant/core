@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Ausgabeeffekt f\u00fcr alle LEDs",
+            "issue_individual_led_effect": "Ausgabeeffekt f\u00fcr einzelne LED",
             "squawk": "Kreischen",
             "warn": "Warnen"
         },

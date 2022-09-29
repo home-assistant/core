@@ -10,5 +10,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "title": "La configuraci\u00f3 YAML de Season s'ha eliminat"
+        }
     }
 }
