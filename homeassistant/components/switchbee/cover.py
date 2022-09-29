@@ -29,22 +29,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up SwitchBee switch."""
     coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        SwitchBeeCoverEntity(device, coordinator)
-        for device in coordinator.data.values()
-        if isinstance(
-            device,
-            SwitchBeeShutter,
-        )
-    )
+    switchbee_covers_tuple: list[tuple[Any, Any]] = []
+
+    for device in coordinator.data.values():
+        if isinstance(device, SwitchBeeShutter):
+            switchbee_covers_tuple.append((device, SwitchBeeCoverEntity))
+        elif isinstance(device, SwitchBeeSomfy):
+            switchbee_covers_tuple.append((device, SwitchBeeSomfyEntity))
 
     async_add_entities(
-        SwitchBeeSomfyEntity(device, coordinator)
-        for device in coordinator.data.values()
-        if isinstance(
-            device,
-            SwitchBeeSomfy,
-        )
+        device_class(device, coordinator)
+        for device, device_class in switchbee_covers_tuple
     )
 
 
