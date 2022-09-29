@@ -125,14 +125,14 @@ QUERY_STATISTIC_META = [
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
-    DistanceConverter.NORMALIZED_UNIT: DistanceConverter,
-    EnergyConverter.NORMALIZED_UNIT: EnergyConverter,
-    MassConverter.NORMALIZED_UNIT: MassConverter,
-    PowerConverter.NORMALIZED_UNIT: PowerConverter,
-    PressureConverter.NORMALIZED_UNIT: PressureConverter,
-    SpeedConverter.NORMALIZED_UNIT: SpeedConverter,
-    TemperatureConverter.NORMALIZED_UNIT: TemperatureConverter,
-    VolumeConverter.NORMALIZED_UNIT: VolumeConverter,
+    **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
+    **{unit2: EnergyConverter for unit2 in EnergyConverter.VALID_UNITS},
+    **{unit: MassConverter for unit in MassConverter.VALID_UNITS},
+    **{unit: PowerConverter for unit in PowerConverter.VALID_UNITS},
+    **{unit: PressureConverter for unit in PressureConverter.VALID_UNITS},
+    **{unit: SpeedConverter for unit in SpeedConverter.VALID_UNITS},
+    **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
+    **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
 }
 
 
@@ -140,7 +140,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_unit_class(unit: str | None) -> str | None:
-    """Get corresponding unit class from from the normalized statistics unit."""
+    """Get corresponding unit class from from the statistics unit."""
     if converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(unit):
         return converter.UNIT_CLASS
     return None
@@ -151,7 +151,7 @@ def _get_statistic_to_display_unit_converter(
     state_unit: str | None,
     requested_units: dict[str, str] | None,
 ) -> Callable[[float | None], float | None]:
-    """Prepare a converter from the normalized statistics unit to display unit."""
+    """Prepare a converter from the statistics unit to display unit."""
 
     def no_conversion(val: float | None) -> float | None:
         """Return val."""
@@ -175,21 +175,26 @@ def _get_statistic_to_display_unit_converter(
         return no_conversion
 
     def from_normalized_unit(
-        val: float | None, conv: type[BaseUnitConverter], to_unit: str
+        val: float | None, conv: type[BaseUnitConverter], from_unit: str, to_unit: str
     ) -> float | None:
         """Return val."""
         if val is None:
             return val
-        return conv.convert(val, from_unit=conv.NORMALIZED_UNIT, to_unit=to_unit)
+        return conv.convert(val, from_unit=from_unit, to_unit=to_unit)
 
-    return partial(from_normalized_unit, conv=converter, to_unit=display_unit)
+    return partial(
+        from_normalized_unit,
+        conv=converter,
+        from_unit=statistic_unit,
+        to_unit=display_unit,
+    )
 
 
 def _get_display_to_statistic_unit_converter(
     display_unit: str | None,
     statistic_unit: str | None,
 ) -> Callable[[float], float]:
-    """Prepare a converter from the display unit to the normalized statistics unit."""
+    """Prepare a converter from the display unit to the statistics unit."""
 
     def no_conversion(val: float) -> float:
         """Return val."""
@@ -201,9 +206,7 @@ def _get_display_to_statistic_unit_converter(
     if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
         return no_conversion
 
-    return partial(
-        converter.convert, from_unit=display_unit, to_unit=converter.NORMALIZED_UNIT
-    )
+    return partial(converter.convert, from_unit=display_unit, to_unit=statistic_unit)
 
 
 def _get_unit_converter(
