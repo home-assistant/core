@@ -2267,6 +2267,12 @@
       "iot_class": "local_polling",
       "name": "LED BLE"
     },
+    "leviton": {
+      "name": "Leviton",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "lg_netcast": {
       "config_flow": false,
       "iot_class": "local_polling",
