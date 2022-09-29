@@ -98,7 +98,7 @@ class DeconzSensorDescriptionMixin(Generic[T]):
 class DeconzSensorDescription(SensorEntityDescription, DeconzSensorDescriptionMixin[T]):
     """Class describing deCONZ binary sensor entities."""
 
-    instance_check: type | None = None
+    instance_check: type[T] | None = None
     name_suffix: str = ""
     old_unique_id_suffix: str = ""
 
