@@ -867,11 +867,6 @@
       "config_flow": false,
       "iot_class": null
     },
-    "dialogflow": {
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "name": "Dialogflow"
-    },
     "digital_ocean": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -1678,6 +1673,11 @@
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Google Chat"
+        },
+        "dialogflow": {
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Dialogflow"
         }
       }
     },
