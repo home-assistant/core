@@ -1,6 +1,6 @@
 {
   "domain": "google",
-  "name": "Google Calendars",
+  "name": "Google Calendar",
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/calendar.google/",

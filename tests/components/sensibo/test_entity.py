@@ -6,7 +6,7 @@ from unittest.mock import patch
 from pysensibo.model import SensiboData
 import pytest
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,

@@ -5,8 +5,9 @@ from typing import Final
 
 from .backports.enum import StrEnum
 
+APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -587,6 +588,9 @@ UV_INDEX: Final = "UV index"
 
 # Percentage units
 PERCENTAGE: Final = "%"
+
+# Rotational speed units
+REVOLUTIONS_PER_MINUTE: Final = "rpm"
 
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"

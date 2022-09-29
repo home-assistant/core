@@ -14,7 +14,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Stel uw WLED-integratie in met Home Assistant."
+                "description": "Stel je WLED-integratie in met Home Assistant."
             },
             "zeroconf_confirm": {
                 "description": "Wil je de WLED genaamd `{name}` toevoegen aan Home Assistant?",

@@ -1,9 +1,9 @@
 """Tests for the devolo Home Control climate."""
 from unittest.mock import patch
 
-from homeassistant.components.climate import DOMAIN
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    DOMAIN,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )

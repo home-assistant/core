@@ -12,8 +12,8 @@ from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, get_ffmpeg_man
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    RTSP_TRANSPORTS,
 )
-from homeassistant.components.stream.const import RTSP_TRANSPORTS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant

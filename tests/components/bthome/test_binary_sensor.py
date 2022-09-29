@@ -1,17 +1,16 @@
 """Test BTHome binary sensors."""
 
 import logging
-from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.bthome.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
 
 from . import make_advertisement
 
 from tests.common import MockConfigEntry
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,25 +80,14 @@ async def test_binary_sensors(
     )
     entry.add_to_hass(hass)
 
-    saved_callback = None
-
-    def _async_register_callback(_hass, _callback, _matcher, _mode):
-        nonlocal saved_callback
-        saved_callback = _callback
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.bluetooth.update_coordinator.async_register_callback",
-        _async_register_callback,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
 
-    saved_callback(
+    inject_bluetooth_service_info(
+        hass,
         advertisement,
-        BluetoothChange.ADVERTISEMENT,
     )
     await hass.async_block_till_done()
 

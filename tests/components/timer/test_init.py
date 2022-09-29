@@ -585,17 +585,27 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = {
+        CONF_NAME: "timer from storage",
+        CONF_DURATION: 33,
+        CONF_RESTORE: True,
+    }
     await client.send_json(
         {
             "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{timer_id}",
-            CONF_DURATION: 33,
-            CONF_RESTORE: True,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {
+        "id": "from_storage",
+        CONF_DURATION: "0:00:33",
+        CONF_NAME: "timer from storage",
+        CONF_RESTORE: True,
+    }
 
     state = hass.states.get(timer_entity_id)
     assert state.attributes[ATTR_DURATION] == _format_timedelta(cv.time_period(33))

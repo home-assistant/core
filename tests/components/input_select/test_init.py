@@ -628,13 +628,11 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 async def test_update(hass, hass_ws_client, storage_setup):
     """Test updating options updates the state."""
 
-    items = [
-        {
-            "id": "from_storage",
-            "name": "from storage",
-            "options": ["yaml update 1", "yaml update 2"],
-        }
-    ]
+    settings = {
+        "name": "from storage",
+        "options": ["yaml update 1", "yaml update 2"],
+    }
+    items = [{"id": "from_storage"} | settings]
     assert await storage_setup(items)
 
     input_id = "from_storage"
@@ -647,28 +645,36 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = settings | {
+        "options": ["new option", "newer option"],
+        CONF_INITIAL: "newer option",
+    }
     await client.send_json(
         {
             "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "options": ["new option", "newer option"],
-            CONF_INITIAL: "newer option",
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_OPTIONS] == ["new option", "newer option"]
 
     # Should fail because the initial state is now invalid
+    updated_settings = settings | {
+        "options": ["new option", "no newer option"],
+        CONF_INITIAL: "newer option",
+    }
     await client.send_json(
         {
             "id": 7,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "options": ["new option", "no newer option"],
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
@@ -678,13 +684,11 @@ async def test_update(hass, hass_ws_client, storage_setup):
 async def test_update_duplicates(hass, hass_ws_client, storage_setup, caplog):
     """Test updating options updates the state."""
 
-    items = [
-        {
-            "id": "from_storage",
-            "name": "from storage",
-            "options": ["yaml update 1", "yaml update 2"],
-        }
-    ]
+    settings = {
+        "name": "from storage",
+        "options": ["yaml update 1", "yaml update 2"],
+    }
+    items = [{"id": "from_storage"} | settings]
     assert await storage_setup(items)
 
     input_id = "from_storage"
@@ -697,13 +701,16 @@ async def test_update_duplicates(hass, hass_ws_client, storage_setup, caplog):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = settings | {
+        "options": ["new option", "newer option", "newer option"],
+        CONF_INITIAL: "newer option",
+    }
     await client.send_json(
         {
             "id": 6,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "options": ["new option", "newer option", "newer option"],
-            CONF_INITIAL: "newer option",
+            **updated_settings,
         }
     )
     resp = await client.receive_json()

@@ -117,11 +117,56 @@
     },
     "options": {
         "step": {
+            "choose_automatic_backup": {
+                "title": "Taasta automaatvarundusest"
+            },
+            "choose_formation_strategy": {
+                "description": "Vali raadiov\u00f5rgu s\u00e4tted",
+                "menu_options": {
+                    "choose_automatic_backup": "Taasta automaatvarundusest",
+                    "form_new_network": "Kustuta vana v\u00f5rk ja loo uus",
+                    "reuse_settings": "S\u00e4ilita raadiov\u00f5rgu s\u00e4tted",
+                    "upload_manual_backup": "Lae varukoopia \u00fcles"
+                },
+                "title": "V\u00f5rgu \u00fclesehitus"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Jadapordi seadme rada"
+                },
+                "description": "Vali Zigbee raadio jadaport",
+                "title": "Vali jadaport"
+            },
             "init": {
                 "description": "ZHA peatatakse.  Kas soovid j\u00e4tkata?",
                 "title": "Seadista ZHA uuesti"
             },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Raadio t\u00fc\u00fcp"
+                },
+                "description": "Vali Zigbee raadio t\u00fc\u00fcp",
+                "title": "Raadioseadme t\u00fc\u00fcp"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "Pordi kiirus",
+                    "flow_control": "Andmevoo kontroll",
+                    "path": "Jadapordi seadme aadress"
+                },
+                "description": "Sisesta jadapordi s\u00e4tted",
+                "title": "Jadapordi s\u00e4tted"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Asenda IEEE aadress j\u00e4\u00e4davalt"
+                },
+                "title": "Kirjuta IEEE aadress \u00fcle"
+            },
             "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Lae kirje \u00fcles"
+                },
                 "title": "Lae k\u00e4sitsi loodud varukoopia \u00fcles"
             }
         }

@@ -12,7 +12,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby \u0142\u0105czy\u0142 si\u0119 z serwerem RTSPtoWebRTC dostarczonym przez dodatek: {addon} ?",
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby \u0142\u0105czy\u0142 si\u0119 z serwerem RTSPtoWebRTC dostarczonym przez dodatek: {addon}?",
                 "title": "RTSPtoWebRTC poprzez dodatek Home Assistant"
             },
             "user": {

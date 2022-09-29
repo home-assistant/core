@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components import input_boolean, switch
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     DOMAIN,
     PRESET_ACTIVITY,

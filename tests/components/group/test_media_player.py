@@ -6,11 +6,15 @@ import pytest
 
 from homeassistant.components.group import DOMAIN
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_SEEK,
     SERVICE_PLAY_MEDIA,
@@ -18,20 +22,7 @@ from homeassistant.components.media_player import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_SET,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_TRACK,
-    ATTR_MEDIA_VOLUME_MUTED,
-    SERVICE_CLEAR_PLAYLIST,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -188,9 +179,17 @@ async def test_state_reporting(hass):
 
 async def test_supported_features(hass):
     """Test supported features reporting."""
-    pause_play_stop = SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
-    play_media = SUPPORT_PLAY_MEDIA
-    volume = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
+    pause_play_stop = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+    )
+    play_media = MediaPlayerEntityFeature.PLAY_MEDIA
+    volume = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+    )
 
     await async_setup_component(
         hass,
@@ -352,7 +351,7 @@ async def test_service_calls(hass, mock_media_seek):
     )
 
     state = hass.states.get("media_player.media_group")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] & SUPPORT_SEEK
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & MediaPlayerEntityFeature.SEEK
     assert not mock_media_seek.called
 
     await hass.services.async_call(

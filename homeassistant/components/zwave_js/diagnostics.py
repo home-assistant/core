@@ -11,7 +11,7 @@ from zwave_js_server.dump import dump_msgs
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.value import ValueDataType
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, USER_AGENT
 from .helpers import (
     get_home_and_node_id_from_device_entry,
     get_state_key_from_unique_id,
@@ -51,6 +51,9 @@ VALUES_TO_REDACT = (
 
 def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
     """Redact value of a Z-Wave value."""
+    # If the value has no value, there is nothing to redact
+    if zwave_value.get("value") in (None, ""):
+        return zwave_value
     for value_to_redact in VALUES_TO_REDACT:
         command_class = None
         if "commandClass" in zwave_value:
@@ -135,7 +138,9 @@ async def async_get_config_entry_diagnostics(
 ) -> list[dict]:
     """Return diagnostics for a config entry."""
     msgs: list[dict] = async_redact_data(
-        await dump_msgs(config_entry.data[CONF_URL], async_get_clientsession(hass)),
+        await dump_msgs(
+            config_entry.data[CONF_URL], async_get_clientsession(hass), USER_AGENT
+        ),
         KEYS_TO_REDACT,
     )
     handshake_msgs = msgs[:-1]

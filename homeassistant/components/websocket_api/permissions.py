@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import Final
 
 from homeassistant.components.frontend import EVENT_PANELS_UPDATED
-from homeassistant.components.lovelace.const import EVENT_LOVELACE_UPDATED
+from homeassistant.components.lovelace import EVENT_LOVELACE_UPDATED
 from homeassistant.components.persistent_notification import (
     EVENT_PERSISTENT_NOTIFICATIONS_UPDATED,
 )

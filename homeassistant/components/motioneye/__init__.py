@@ -36,7 +36,7 @@ from motioneye_client.const import (
 )
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.media_source.const import URI_SCHEME
+from homeassistant.components.media_source import URI_SCHEME
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.webhook import (

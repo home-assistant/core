@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import mqtt, siren
-from homeassistant.components.siren.const import ATTR_VOLUME_LEVEL
+from homeassistant.components.siren import ATTR_VOLUME_LEVEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,

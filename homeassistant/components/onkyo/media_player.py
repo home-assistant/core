@@ -9,12 +9,12 @@ from eiscp import eISCP
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    DOMAIN,
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.components.media_player.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv

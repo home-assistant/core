@@ -2,11 +2,12 @@
 
 import copy
 import json
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 import uuid
 
 import pytest
 import serial.tools.list_ports
+from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkNotFormed
@@ -49,6 +50,7 @@ def disable_platform_only():
 def mock_app():
     """Mock zigpy app interface."""
     mock_app = AsyncMock()
+    mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
 
     with patch(

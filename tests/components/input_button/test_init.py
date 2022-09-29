@@ -305,6 +305,7 @@ async def test_ws_create_update(hass, hass_ws_client, storage_setup):
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "new", "name": "newer"}
 
     state = hass.states.get(f"{DOMAIN}.new")
     assert state is not None

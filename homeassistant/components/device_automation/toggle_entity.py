@@ -33,8 +33,6 @@ from .const import (
     CONF_TURNED_ON,
 )
 
-# mypy: allow-untyped-calls, allow-untyped-defs
-
 ENTITY_ACTIONS = [
     {
         # Turn entity off

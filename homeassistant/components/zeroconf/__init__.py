@@ -20,8 +20,7 @@ from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import MDNS_TARGET_IP
+from homeassistant.components.network import MDNS_TARGET_IP, async_get_source_ip
 from homeassistant.components.network.models import Adapter
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,

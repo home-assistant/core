@@ -12,10 +12,17 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     LENGTH_YARD,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.distance as distance_util
 
 INVALID_SYMBOL = "bob"
 VALID_SYMBOL = LENGTH_KILOMETERS
+
+
+def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert distance_util.convert(2, LENGTH_METERS, LENGTH_METERS) == 2
+    assert "use unit_conversion.DistanceConverter instead" in caplog.text
 
 
 def test_convert_same_unit():
@@ -32,10 +39,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         distance_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         distance_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 

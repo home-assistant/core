@@ -48,9 +48,10 @@ from homeassistant.components.stream.worker import (
 )
 from homeassistant.setup import async_setup_component
 
+from .common import generate_h264_video, generate_h265_video
+from .test_ll_hls import TEST_PART_DURATION
+
 from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
-from tests.components.stream.common import generate_h264_video, generate_h265_video
-from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
