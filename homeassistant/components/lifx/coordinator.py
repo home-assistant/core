@@ -161,19 +161,23 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_update_color_zones(self) -> None:
         """Get updated color information for each zone."""
-        zone = 0
-        top = 1
-        while zone < top:
-            # Each get_color_zones can update 8 zones at once
-            resp = await async_execute_lifx(
-                partial(self.device.get_color_zones, start_index=zone)
-            )
-            zone += 8
-            top = resp.count
 
-            # We only await multizone responses so don't ask for just one
-            if zone == top - 1:
-                zone -= 1
+        if lifx_features(self.device)["extended_multizone"] is True:
+            resp = await async_execute_lifx(self.device.get_extended_color_zones)
+        else:
+            zone = 0
+            top = 1
+            while zone < top:
+                # Each get_color_zones can update 8 zones at once
+                resp = await async_execute_lifx(
+                    partial(self.device.get_color_zones, start_index=zone)
+                )
+                zone += 8
+                top = resp.count
+
+                # We only await multizone responses so don't ask for just one
+                if zone == top - 1:
+                    zone -= 1
 
     def async_get_hev_cycle_state(self) -> bool | None:
         """Return the current HEV cycle state."""
@@ -227,6 +231,24 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 start_index=start_index,
                 end_index=end_index,
                 color=hsbk,
+                duration=duration,
+                apply=apply,
+            )
+        )
+
+    async def async_set_extended_color_zones(
+        self,
+        colors: list[float | int | None],
+        colors_count: int,
+        duration: int = 0,
+        apply: int = 1,
+    ) -> None:
+        """Send a set extended color zones message to the device."""
+        await async_execute_lifx(
+            partial(
+                self.device.set_extended_color_zones,
+                colors=colors,
+                colors_count=colors_count,
                 duration=duration,
                 apply=apply,
             )

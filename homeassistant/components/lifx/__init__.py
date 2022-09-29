@@ -57,7 +57,13 @@ CONFIG_SCHEMA = vol.All(
 )
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT, Platform.SELECT]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 

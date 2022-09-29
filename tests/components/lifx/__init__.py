@@ -151,7 +151,61 @@ def _mocked_light_strip() -> Light:
     bulb.set_color_zones = MockLifxCommand(bulb)
     bulb.get_multizone_effect = MockLifxCommand(bulb)
     bulb.set_multizone_effect = MockLifxCommand(bulb)
+    bulb.get_extended_color_zones = MockLifxCommand(
+        bulb,
+        zones_count=8,
+        zone_index=0,
+        colors_count=8,
+        colors=[
+            (0, 0, 65535, 3500),
+            (0, 0, 65535, 3500),
+            (0, 0, 65535, 3500),
+            (0, 0, 65535, 3500),
+            (0, 0, 65535, 3500),
+            (0, 0, 65535, 3500),
+            (0, 0, 65535, 3500),
+            (0, 0, 65535, 3500),
+        ],
+    )
+    bulb.set_extended_color_zones = MockLifxCommand(bulb)
+    return bulb
 
+
+def _mocked_extended_multizone_strip() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 38  # LIFX Z
+    bulb.color_zones = [
+        (0, 0, 65535, 3500),
+        (0, 0, 65535, 3500),
+        (0, 0, 65535, 3500),
+        (0, 0, 65535, 3500),
+        (0, 0, 65535, 3500),
+        (0, 0, 65535, 3500),
+        (0, 0, 65535, 3500),
+        (0, 0, 65535, 3500),
+    ]
+    bulb.effect = {"effect": "MOVE", "speed": 3, "duration": 0, "direction": "RIGHT"}
+    bulb.get_color_zones = MockLifxCommand(bulb)
+    bulb.set_color_zones = MockLifxCommand(bulb)
+    bulb.get_multizone_effect = MockLifxCommand(bulb)
+    bulb.set_multizone_effect = MockLifxCommand(bulb)
+    bulb.get_extended_color_zones = MockLifxCommand(
+        bulb,
+        zones_count=8,
+        zone_index=0,
+        colors_count=8,
+        colors=[
+            (10, 20, 65535, 3500),
+            (10, 20, 65535, 3500),
+            (10, 20, 65535, 3500),
+            (10, 20, 65535, 3500),
+            (10, 20, 65535, 3500),
+            (10, 20, 65535, 3500),
+            (10, 20, 65535, 3500),
+            (10, 20, 65535, 3500),
+        ],
+    )
+    bulb.set_extended_color_zones = MockLifxCommand(bulb)
     return bulb
 
 

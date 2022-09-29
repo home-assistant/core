@@ -46,4 +46,7 @@ INFRARED_BRIGHTNESS_VALUES_MAP = {
 }
 DATA_LIFX_MANAGER = "lifx_manager"
 
+MULTIZONE_COLOR_ZONES = "color_zones"
+
+
 _LOGGER = logging.getLogger(__package__)

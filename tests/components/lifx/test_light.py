@@ -53,6 +53,7 @@ from . import (
     _mocked_bulb,
     _mocked_bulb_new_firmware,
     _mocked_clean_bulb,
+    _mocked_extended_multizone_strip,
     _mocked_light_strip,
     _mocked_white_bulb,
     _patch_config_flow_try_connect,
@@ -410,6 +411,43 @@ async def test_light_strip(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+
+
+async def test_extended_multizone_light_strip(hass: HomeAssistant) -> None:
+    """Test the extended multizone messages."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_extended_multizone_strip()
+    bulb.power_level = 65535
+    bulb.color = [0, 0, 65535, 3500]
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_ZONES: [1, 4, 7],
+            ATTR_HS_COLOR: (50, 60),
+            ATTR_BRIGHTNESS: 128,
+            ATTR_POWER: "on",
+        },
+        blocking=True,
+    )
+    assert len(bulb.set_extended_color_zones.calls) == 1
+    assert len(bulb.set_color_zones.calls) == 0
+    bulb.set_extended_color_zones.reset_mock()
+    bulb.set_color_zones.reset_mock()
 
 
 async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:

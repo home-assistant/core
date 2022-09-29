@@ -410,20 +410,38 @@ class LIFXStrip(LIFXColor):
 
             zones = list(range(0, num_zones))
         else:
+            _LOGGER.debug(zones)
             zones = [x for x in set(zones) if x < num_zones]
 
-        # Send new color to each zone
-        for index, zone in enumerate(zones):
-            zone_hsbk = merge_hsbk(color_zones[zone], hsbk)
-            apply = 1 if (index == len(zones) - 1) else 0
-            try:
-                await self.coordinator.async_set_color_zones(
-                    zone, zone, zone_hsbk, duration, apply
-                )
-            except asyncio.TimeoutError as ex:
-                raise HomeAssistantError(
-                    f"Timeout setting color zones for {self.name}"
-                ) from ex
+        if lifx_features(self.bulb)["extended_multizone"] is True:
+            # Create 82 HSBK values for set_extended_color_zones
+            zones_hsbk = []
+            for index, zone in enumerate(color_zones):
+                zones_hsbk.append(merge_hsbk(zone, hsbk) if index in zones else zone)
+
+            for _ in range(82 - num_zones):
+                zones_hsbk.append((0, 0, 0, 0))
+
+            _LOGGER.debug(
+                "Sending extended zones: %s :: %s", len(zones_hsbk), zones_hsbk
+            )
+            await self.coordinator.async_set_extended_color_zones(
+                zones_hsbk, num_zones, duration
+            )
+        else:
+
+            # Send new color to each zone
+            for index, zone in enumerate(zones):
+                zone_hsbk = merge_hsbk(color_zones[zone], hsbk)
+                apply = 1 if (index == len(zones) - 1) else 0
+                try:
+                    await self.coordinator.async_set_color_zones(
+                        zone, zone, zone_hsbk, duration, apply
+                    )
+                except asyncio.TimeoutError as ex:
+                    raise HomeAssistantError(
+                        f"Timeout setting color zones for {self.name}"
+                    ) from ex
 
         # set_color_zones does not update the
         # state of the bulb, so we need to do that
