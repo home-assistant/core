@@ -284,7 +284,7 @@ class BayesianBinarySensor(BinarySensorEntity):
                 self.hass, observations, text=f"{self._attr_name}/{entity}"
             )
 
-        all_template_observations = []
+        all_template_observations: list[Observation] = []
         for value in self.observations_by_template.values():
             all_template_observations.append(value[0])
         if len(all_template_observations) == 2:
