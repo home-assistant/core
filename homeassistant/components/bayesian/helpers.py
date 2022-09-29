@@ -3,7 +3,16 @@ from __future__ import annotations
 
 import uuid
 
+from homeassistant.const import (
+    CONF_ABOVE,
+    CONF_BELOW,
+    CONF_ENTITY_ID,
+    CONF_PLATFORM,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.helpers.template import Template
+
+from .const import CONF_P_GIVEN_F, CONF_P_GIVEN_T, CONF_TO_STATE
 
 
 class Observation:
@@ -37,15 +46,15 @@ class Observation:
         """Represent Class as a Dict for easier serialization."""
 
         dic = {
-            "entity_id": self.entity_id,
-            "platform": self.platform,
-            "prob_given_true": self.prob_given_true,
-            "prob_given_false": self.prob_given_false,
+            CONF_PLATFORM: self.platform,
+            CONF_ENTITY_ID: self.entity_id,
+            CONF_VALUE_TEMPLATE: self.template,
+            CONF_TO_STATE: self.to_state,
+            CONF_ABOVE: self.above,
+            CONF_BELOW: self.below,
+            CONF_P_GIVEN_T: self.prob_given_true,
+            CONF_P_GIVEN_F: self.prob_given_false,
             "observed": self.observed,
-            "to_state": self.to_state,
-            "below": self.below,
-            "above": self.above,
-            "value_template": str(self.value_template),
         }
 
         for key, value in dic.copy().items():
@@ -53,3 +62,10 @@ class Observation:
                 del dic[key]
 
         return dic
+
+    @property
+    def template(self) -> str | None:
+        """Not all observations have templates and we want to get template strings."""
+        if self.value_template is not None:
+            return self.value_template.template
+        return None

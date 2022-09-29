@@ -41,24 +41,23 @@ from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
+from .const import (
+    ATTR_OBSERVATIONS,
+    ATTR_OCCURRED_OBSERVATION_ENTITIES,
+    ATTR_PROBABILITY,
+    ATTR_PROBABILITY_THRESHOLD,
+    CONF_OBSERVATIONS,
+    CONF_P_GIVEN_F,
+    CONF_P_GIVEN_T,
+    CONF_PRIOR,
+    CONF_PROBABILITY_THRESHOLD,
+    CONF_TEMPLATE,
+    CONF_TO_STATE,
+    DEFAULT_NAME,
+    DEFAULT_PROBABILITY_THRESHOLD,
+)
 from .helpers import Observation
 from .repairs import raise_mirrored_entries, raise_no_prob_given_false
-
-ATTR_OBSERVATIONS = "observations"
-ATTR_OCCURRED_OBSERVATION_ENTITIES = "occurred_observation_entities"
-ATTR_PROBABILITY = "probability"
-ATTR_PROBABILITY_THRESHOLD = "probability_threshold"
-
-CONF_OBSERVATIONS = "observations"
-CONF_PRIOR = "prior"
-CONF_TEMPLATE = "template"
-CONF_PROBABILITY_THRESHOLD = "probability_threshold"
-CONF_P_GIVEN_F = "prob_given_false"
-CONF_P_GIVEN_T = "prob_given_true"
-CONF_TO_STATE = "to_state"
-
-DEFAULT_NAME = "Bayesian Binary Sensor"
-DEFAULT_PROBABILITY_THRESHOLD = 0.5
 
 _LOGGER = logging.getLogger(__name__)
 
