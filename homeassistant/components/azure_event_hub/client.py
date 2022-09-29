@@ -20,6 +20,7 @@ class AzureEventHubClient:
     @property
     def client(self) -> EventHubProducerClient:
         """Return the client."""
+        raise NotImplementedError
 
     async def test_connection(self) -> None:
         """Test connection, will throw EventHubError when it cannot connect."""
