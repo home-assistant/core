@@ -274,18 +274,6 @@ class BayesianBinarySensor(BinarySensorEntity):
                 # in some cases a template may update because of the absence of an entity
                 if entity is not None:
                     obs.entity_id = str(entity)
-                if obs.id is None:
-                    _LOGGER.error(
-                        "An unexpected error obs.id is None for a template entity observation: %s",
-                        obs.to_dict(),
-                    )
-                    if obs.entity_id is None:
-                        _LOGGER.error(
-                            "An unexpected error both obs.id and entity ID are None for a template entity observation: %s",
-                            obs.to_dict(),
-                        )
-                        return
-                    obs.id = obs.entity_id
 
                 self.current_observations[obs.id] = obs
 
@@ -344,13 +332,8 @@ class BayesianBinarySensor(BinarySensorEntity):
 
             observation: bool | None = self.observation_handlers[platform](entity_obs)
             entity_obs.observed = observation
-            if entity_obs.id is not None:
-                local_observations[entity_obs.id] = entity_obs
-            else:
-                _LOGGER.error(
-                    "An entity observation did not have an id, please create an issue on github homeassistant/core: '%s'",
-                    entity_obs,
-                )
+
+            local_observations[entity_obs.id] = entity_obs
 
         return local_observations
 
@@ -399,8 +382,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         observations_by_entity: dict[str, list[Observation]] = {}
-        for i, observation in enumerate(self._observations):
-            observation.id = str(i)
+        for _, observation in enumerate(self._observations):
 
             if observation.entity_id is None:
                 continue
@@ -433,11 +415,9 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         observations_by_template: dict[Template, list[Observation]] = {}
-        for ind, observation in enumerate(self._observations):
+        for _, observation in enumerate(self._observations):
             if observation.value_template is None:
                 continue
-
-            observation.id = str(ind)
 
             template = observation.value_template
             observations_by_template.setdefault(template, []).append(observation)

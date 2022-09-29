@@ -1,6 +1,8 @@
 """Helpers to deal with bayesian observations."""
 from __future__ import annotations
 
+import uuid
+
 from homeassistant.helpers.template import Template
 
 
@@ -29,12 +31,12 @@ class Observation:
         self.below = below
         self.above = above
         self.value_template = value_template
-        self.id: str | None = None
+        self.id: str = str(uuid.uuid4())
 
     def to_dict(self) -> dict[str, str | float | bool | None]:
         """Represent Class as a Dict for easier serialization."""
 
-        return {
+        dic = {
             "entity_id": self.entity_id,
             "platform": self.platform,
             "prob_given_true": self.prob_given_true,
@@ -44,5 +46,10 @@ class Observation:
             "below": self.below,
             "above": self.above,
             "value_template": str(self.value_template),
-            "id": self.id,
         }
+
+        for key, value in dic.copy().items():
+            if value is None:
+                del dic[key]
+
+        return dic
