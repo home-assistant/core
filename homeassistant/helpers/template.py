@@ -200,6 +200,7 @@ class TupleWrapper(tuple, ResultWrapper):
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
+    # pylint: disable=super-init-not-called
     def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
         self.render_result = render_result
@@ -1649,7 +1650,7 @@ def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
     return pass_environment(wrapper)
 
 
-def average(*args: Any) -> float | None:
+def average(*args: Any, default: Any = _SENTINEL) -> Any:
     """
     Filter and function to calculate the arithmetic mean of an iterable or of two or more arguments.
 
@@ -1658,16 +1659,23 @@ def average(*args: Any) -> float | None:
     if len(args) == 0:
         raise TypeError("average expected at least 1 argument, got 0")
 
-    if len(args) == 1:
-        if isinstance(args[0], Iterable):
-            try:
-                return statistics.fmean(args[0])
-            except statistics.StatisticsError:
-                return None
-
+    # If first argument is iterable, more then 1 argument provided but not named default
+    # than use 2nd argument as default.
+    if isinstance(args[0], Iterable):
+        average_list = args[0]
+        if len(args) > 1 and default is _SENTINEL:
+            default = args[1]
+    elif len(args) == 1:
         raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        average_list = args
 
-    return statistics.fmean(args)
+    try:
+        return statistics.fmean(average_list)
+    except (TypeError, statistics.StatisticsError):
+        if default is _SENTINEL:
+            raise_no_default("average", args)
+        return default
 
 
 def forgiving_float(value, default=_SENTINEL):
