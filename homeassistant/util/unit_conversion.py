@@ -265,6 +265,7 @@ class SpeedConverter(BaseUnitConverter):
         SPEED_MILES_PER_HOUR,
         SPEED_MILLIMETERS_PER_DAY,
     }
+    _PINT_UNIT_MAP = {SPEED_KNOTS: "knot"}
 
 
 class TemperatureConverter(BaseUnitConverter):
