@@ -587,6 +587,50 @@ async def test_mirrored_observations(hass):
     )
 
 
+async def test_missing_prob_given_false(hass):
+    """Test whether missing prob_given_false are detected and appropriate issues are created."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "missingpgf",
+            "observations": [
+                {
+                    "platform": "state",
+                    "entity_id": "binary_sensor.test_monitored",
+                    "to_state": "on",
+                    "prob_given_true": 0.8,
+                },
+                {
+                    "platform": "template",
+                    "value_template": "{{states('sensor.test_monitored2') == 'off'}}",
+                    "prob_given_true": 0.79,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_monitored1",
+                    "above": 5,
+                    "prob_given_true": 0.7,
+                },
+            ],
+            "prior": 0.1,
+        }
+    }
+    assert len(async_get(hass).issues) == 0
+    assert await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_monitored2", "on")
+    await hass.async_block_till_done()
+    print(async_get(hass).issues)
+    assert len(async_get(hass).issues) == 3
+    assert (
+        async_get(hass).issues[
+            ("bayesian", "no_prob_given_false/missingpgf/sensor.test_monitored1")
+        ]
+        is not None
+    )
+
+
 async def test_probability_updates(hass):
     """Test probability update function."""
     prob_given_true = [0.3, 0.6, 0.8]
