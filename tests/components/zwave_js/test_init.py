@@ -8,6 +8,7 @@ from zwave_js_server.client import Client
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
+from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js import DOMAIN
@@ -667,6 +668,7 @@ async def test_update_addon(
     backup_calls,
     update_addon_side_effect,
     create_backup_side_effect,
+    version_state,
 ):
     """Test update the Z-Wave JS add-on during entry setup."""
     device = "/test"
@@ -677,7 +679,9 @@ async def test_update_addon(
     addon_info.return_value["update_available"] = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
-    client.connect.side_effect = InvalidServerVersion("Invalid version")
+    client.connect.side_effect = InvalidServerVersion(
+        VersionInfo("a", "b", 1, 1, 1), 1, "Invalid version"
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -703,7 +707,9 @@ async def test_issue_registry(hass, client, version_state):
     device = "/test"
     network_key = "abc123"
 
-    client.connect.side_effect = InvalidServerVersion("Invalid version")
+    client.connect.side_effect = InvalidServerVersion(
+        VersionInfo("a", "b", 1, 1, 1), 1, "Invalid version"
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,

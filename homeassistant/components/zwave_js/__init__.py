@@ -88,6 +88,7 @@ from .const import (
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
+    USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
@@ -129,7 +130,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
 
-    client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
+    client = ZwaveClient(
+        entry.data[CONF_URL],
+        async_get_clientsession(hass),
+        additional_user_agent_components=USER_AGENT,
+    )
 
     # connect and throw error if connection failed
     try:

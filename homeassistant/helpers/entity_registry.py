@@ -335,6 +335,25 @@ class EntityRegistry:
         """Check if an entity_id is currently registered."""
         return self.entities.get_entity_id((domain, platform, unique_id))
 
+    def _entity_id_available(
+        self, entity_id: str, known_object_ids: Iterable[str] | None
+    ) -> bool:
+        """Return True if the entity_id is available.
+
+        An entity_id is available if:
+        - It's not registered
+        - It's not known by the entity component adding the entity
+        - It's not in the state machine
+        """
+        if known_object_ids is None:
+            known_object_ids = {}
+
+        return (
+            entity_id not in self.entities
+            and entity_id not in known_object_ids
+            and self.hass.states.async_available(entity_id)
+        )
+
     @callback
     def async_generate_entity_id(
         self,
@@ -352,15 +371,11 @@ class EntityRegistry:
             raise MaxLengthExceeded(domain, "domain", MAX_LENGTH_STATE_DOMAIN)
 
         test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID]
-        if not known_object_ids:
+        if known_object_ids is None:
             known_object_ids = {}
 
         tries = 1
-        while (
-            test_string in self.entities
-            or test_string in known_object_ids
-            or not self.hass.states.async_available(test_string)
-        ):
+        while not self._entity_id_available(test_string, known_object_ids):
             tries += 1
             len_suffix = len(str(tries)) + 1
             test_string = (
@@ -630,7 +645,7 @@ class EntityRegistry:
                 old_values[attr_name] = getattr(old, attr_name)
 
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
-            if self.async_is_registered(new_entity_id):
+            if not self._entity_id_available(new_entity_id, None):
                 raise ValueError("Entity with this ID is already registered")
 
             if not valid_entity_id(new_entity_id):

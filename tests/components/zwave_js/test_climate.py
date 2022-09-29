@@ -86,21 +86,9 @@ async def test_thermostat_v2(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Mode",
         "commandClass": 64,
         "endpoint": 1,
         "property": "mode",
-        "propertyName": "mode",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 31,
-            "label": "Thermostat mode",
-            "states": {"0": "Off", "1": "Heat", "2": "Cool", "3": "Auto"},
-        },
-        "value": 1,
     }
     assert args["value"] == 2
 
@@ -123,42 +111,19 @@ async def test_thermostat_v2(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Mode",
         "commandClass": 64,
         "endpoint": 1,
         "property": "mode",
-        "propertyName": "mode",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 31,
-            "label": "Thermostat mode",
-            "states": {"0": "Off", "1": "Heat", "2": "Cool", "3": "Auto"},
-        },
-        "value": 1,
     }
     assert args["value"] == 2
     args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Setpoint",
         "commandClass": 67,
         "endpoint": 1,
         "property": "setpoint",
         "propertyKey": 1,
-        "propertyName": "setpoint",
-        "propertyKeyName": "Heating",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "unit": "°F",
-            "ccSpecific": {"setpointType": 1},
-        },
-        "value": 72,
     }
     assert args["value"] == 77
 
@@ -232,21 +197,10 @@ async def test_thermostat_v2(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Setpoint",
         "commandClass": 67,
         "endpoint": 1,
         "property": "setpoint",
         "propertyKey": 1,
-        "propertyName": "setpoint",
-        "propertyKeyName": "Heating",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "unit": "°F",
-            "ccSpecific": {"setpointType": 1},
-        },
-        "value": 72,
     }
     assert args["value"] == 77
 
@@ -254,21 +208,10 @@ async def test_thermostat_v2(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Setpoint",
         "commandClass": 67,
         "endpoint": 1,
         "property": "setpoint",
         "propertyKey": 2,
-        "propertyName": "setpoint",
-        "propertyKeyName": "Cooling",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "unit": "°F",
-            "ccSpecific": {"setpointType": 2},
-        },
-        "value": 73,
     }
     assert args["value"] == 86
 
@@ -306,20 +249,7 @@ async def test_thermostat_v2(
     assert args["valueId"] == {
         "endpoint": 1,
         "commandClass": 68,
-        "commandClassName": "Thermostat Fan Mode",
         "property": "mode",
-        "propertyName": "mode",
-        "ccVersion": 0,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 255,
-            "states": {"0": "Auto low", "1": "Low"},
-            "label": "Thermostat fan mode",
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -408,20 +338,8 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 67,
-        "commandClassName": "Thermostat Setpoint",
         "property": "setpoint",
-        "propertyName": "setpoint",
         "propertyKey": 1,
-        "propertyKeyName": "Heating",
-        "ccVersion": 2,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "unit": "\u00b0C",
-            "ccSpecific": {"setpointType": 1},
-        },
-        "value": 14,
     }
     assert args["value"] == 21.5
 
@@ -627,27 +545,9 @@ async def test_preset_and_no_setpoint(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 8
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Mode",
         "commandClass": 64,
         "endpoint": 0,
         "property": "mode",
-        "propertyName": "mode",
-        "ccVersion": 3,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 31,
-            "label": "Thermostat mode",
-            "states": {
-                "0": "Off",
-                "1": "Heat",
-                "11": "Energy heat",
-                "15": "Full power",
-            },
-        },
-        "value": 1,
     }
     assert args["value"] == 15
 

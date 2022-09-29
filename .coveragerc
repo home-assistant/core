@@ -62,7 +62,9 @@ omit =
     homeassistant/components/androidtv/diagnostics.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
-    homeassistant/components/apcupsd/*
+    homeassistant/components/apcupsd/__init__.py
+    homeassistant/components/apcupsd/binary_sensor.py
+    homeassistant/components/apcupsd/sensor.py
     homeassistant/components/apple_tv/__init__.py
     homeassistant/components/apple_tv/browse_media.py
     homeassistant/components/apple_tv/media_player.py
@@ -326,11 +328,12 @@ omit =
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/binary_sensor.py
-    homeassistant/components/esphome/bluetooth.py
+    homeassistant/components/esphome/bluetooth/*
     homeassistant/components/esphome/button.py
     homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/climate.py
     homeassistant/components/esphome/cover.py
+    homeassistant/components/esphome/domain_data.py
     homeassistant/components/esphome/entry_data.py
     homeassistant/components/esphome/fan.py
     homeassistant/components/esphome/light.py
@@ -838,10 +841,11 @@ omit =
     homeassistant/components/nfandroidtv/__init__.py
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/nibe_heatpump/__init__.py
+    homeassistant/components/nibe_heatpump/binary_sensor.py
     homeassistant/components/nibe_heatpump/number.py
     homeassistant/components/nibe_heatpump/select.py
     homeassistant/components/nibe_heatpump/sensor.py
-    homeassistant/components/nibe_heatpump/binary_sensor.py
+    homeassistant/components/nibe_heatpump/switch.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
     homeassistant/components/nissan_leaf/*
@@ -1228,6 +1232,7 @@ omit =
     homeassistant/components/switchbee/button.py
     homeassistant/components/switchbee/coordinator.py
     homeassistant/components/switchbee/entity.py
+    homeassistant/components/switchbee/light.py
     homeassistant/components/switchbee/switch.py
     homeassistant/components/switchbot/__init__.py
     homeassistant/components/switchbot/binary_sensor.py
