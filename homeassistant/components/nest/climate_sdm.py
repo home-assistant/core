@@ -117,6 +117,11 @@ class ThermostatEntity(ClimateEntity):
         """Return device specific attributes."""
         return self._device_info.device_info
 
+    @property
+    def available(self) -> bool:
+        """Return device availability."""
+        return self._device_info.available
+
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
         self._attr_supported_features = self._get_supported_features()
