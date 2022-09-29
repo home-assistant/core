@@ -18,9 +18,11 @@ from homeassistant.helpers.frame import report
 
 from .unit_conversion import PressureConverter
 
-# pylint: disable-next=protected-access
-UNIT_CONVERSION = PressureConverter._UNIT_CONVERSION
 VALID_UNITS = PressureConverter.VALID_UNITS
+UNIT_CONVERSION: dict[str, float] = {
+    key: PressureConverter.get_unit_ratio(key, PressureConverter.NORMALIZED_UNIT)
+    for key in VALID_UNITS
+}
 
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:

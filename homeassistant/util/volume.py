@@ -16,6 +16,10 @@ from homeassistant.helpers.frame import report
 from .unit_conversion import VolumeConverter
 
 VALID_UNITS = VolumeConverter.VALID_UNITS
+UNIT_CONVERSION: dict[str, float] = {
+    key: VolumeConverter.get_unit_ratio(key, VolumeConverter.NORMALIZED_UNIT)
+    for key in VALID_UNITS
+}
 
 
 def liter_to_gallon(liter: float) -> float:
