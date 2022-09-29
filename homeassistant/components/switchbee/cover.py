@@ -47,16 +47,7 @@ class SwitchBeeSomfyEntity(SwitchBeeDeviceEntity[SwitchBeeSomfy], CoverEntity):
     _attr_supported_features = (
         CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN | CoverEntityFeature.STOP
     )
-
-    def __init__(
-        self,
-        device: SwitchBeeSomfy,
-        coordinator: SwitchBeeCoordinator,
-    ) -> None:
-        """Initialize the SwitchBee cover."""
-        super().__init__(device, coordinator)
-        self._attr_current_cover_position = 0
-        self._attr_is_closed = True
+    _attr_is_closed = None
 
     async def _fire_somfy_command(self, command: str) -> None:
         """Async function to fire Somfy device command."""
@@ -90,16 +81,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.STOP
     )
-
-    def __init__(
-        self,
-        device: SwitchBeeShutter,
-        coordinator: SwitchBeeCoordinator,
-    ) -> None:
-        """Initialize the SwitchBee cover."""
-        super().__init__(device, coordinator)
-        self._attr_current_cover_position = 0
-        self._attr_is_closed = True
+    _attr_is_closed = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
