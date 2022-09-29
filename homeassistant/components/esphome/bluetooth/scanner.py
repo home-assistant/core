@@ -86,7 +86,8 @@ class ESPHomeScanner(BaseHaScanner):
         name = adv.name
         if prev_discovery := self._discovered_devices.get(address):
             # If the last discovery had the full local name
-            # and this one doesn't, keep the old one
+            # and this one doesn't, keep the old one as we
+            # always want the full local name over the short one
             if len(prev_discovery.name) > len(adv.name):
                 name = prev_discovery.name
 
