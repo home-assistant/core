@@ -34,6 +34,7 @@ from homeassistant.helpers.template import result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
+from .repairs import raise_mirrored_entries
 
 ATTR_OBSERVATIONS = "observations"
 ATTR_OCCURRED_OBSERVATION_ENTITIES = "occurred_observation_entities"
@@ -244,6 +245,22 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.current_observations.update(self._initialize_current_observations())
         self.probability = self._calculate_new_probability()
         self._attr_is_on = bool(self.probability >= self._probability_threshold)
+
+        # detect mirrored entries
+        for entity, observations in self.observations_by_entity.items():
+            raise_mirrored_entries(
+                self.hass, observations, text=f"{self._attr_name}/{entity}"
+            )
+
+        all_template_observations = []
+        for value in self.observations_by_template.values():
+            all_template_observations.append(value[0])
+        if len(all_template_observations) == 2:
+            raise_mirrored_entries(
+                self.hass,
+                all_template_observations,
+                text=f"{self._attr_name}/{all_template_observations[0]['value_template']}",
+            )
 
     @callback
     def _recalculate_and_write_state(self):
