@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 from switchbee import SWITCHBEE_BRAND
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
-from switchbee.device import DeviceType, SwitchBeeBaseDevice
+from switchbee.device import SwitchBeeBaseDevice
 
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -46,23 +46,22 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
         """Initialize the Switchbee device."""
         super().__init__(device, coordinator)
         self._is_online: bool = True
-        if self._device.type not in [DeviceType.Somfy]:
-            self._attr_device_info = DeviceInfo(
-                name=f"SwitchBee {device.unit_id}",
-                identifiers={
-                    (
-                        DOMAIN,
-                        f"{device.unit_id}-{coordinator.mac_formatted}",
-                    )
-                },
-                manufacturer=SWITCHBEE_BRAND,
-                model=coordinator.api.module_display(device.unit_id),
-                suggested_area=device.zone,
-                via_device=(
+        self._attr_device_info = DeviceInfo(
+            name=f"SwitchBee {device.unit_id}",
+            identifiers={
+                (
                     DOMAIN,
-                    f"{coordinator.api.name} ({coordinator.api.mac})",
-                ),
-            )
+                    f"{device.unit_id}-{coordinator.mac_formatted}",
+                )
+            },
+            manufacturer=SWITCHBEE_BRAND,
+            model=coordinator.api.module_display(device.unit_id),
+            suggested_area=device.zone,
+            via_device=(
+                DOMAIN,
+                f"{coordinator.api.name} ({coordinator.api.mac})",
+            ),
+        )
 
     @property
     def available(self) -> bool:

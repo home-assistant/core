@@ -166,9 +166,9 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
             raise HomeAssistantError(
                 f"Failed to set {self._attr_name} position to {str(kwargs[ATTR_POSITION])}, error: {str(exp)}"
             ) from exp
-        else:
-            cast(
-                SwitchBeeShutter, self.coordinator.data[self._device.id]
-            ).position = kwargs[ATTR_POSITION]
-            self.coordinator.async_set_updated_data(self.coordinator.data)
-            self.async_write_ha_state()
+
+        cast(
+            SwitchBeeShutter, self.coordinator.data[self._device.id]
+        ).position = kwargs[ATTR_POSITION]
+        self.coordinator.async_set_updated_data(self.coordinator.data)
+        self.async_write_ha_state()
