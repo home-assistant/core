@@ -8,7 +8,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -21,13 +25,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
+    TrackTemplateResult,
     async_track_state_change_event,
     async_track_template_result,
 )
@@ -131,7 +136,7 @@ async def async_setup_platform(
     observations = config[CONF_OBSERVATIONS]
     prior = config[CONF_PRIOR]
     probability_threshold = config[CONF_PROBABILITY_THRESHOLD]
-    device_class = config.get(CONF_DEVICE_CLASS)
+    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     # Should deprecate in some future version (2022.10 at time of writing) & make prob_given_false required in schemas.
     broken_observations: list[dict[str, Any]] = []
@@ -163,7 +168,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         prior: float,
         observations: list[dict[str, Any]],
         probability_threshold: float,
-        device_class,
+        device_class: BinarySensorDeviceClass | None,
     ) -> None:
         """Initialize the Bayesian sensor."""
         self._attr_name: str = name
@@ -216,7 +221,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         @callback
-        def async_threshold_sensor_state_listener(event):
+        def async_threshold_sensor_state_listener(event: Event) -> None:
             """
             Handle sensor state changes.
 
@@ -224,7 +229,10 @@ class BayesianBinarySensor(BinarySensorEntity):
             then calculate the new probability.
             """
 
-            entity = event.data.get("entity_id")
+            entity: str | None = event.data.get(CONF_ENTITY_ID)
+            if entity is None:
+                _LOGGER.error("Unexpected NoneType for event %s", event.data)
+                return
 
             self.current_observations.update(self._record_entity_observations(entity))
             self.async_set_context(event.context)
@@ -239,11 +247,13 @@ class BayesianBinarySensor(BinarySensorEntity):
         )
 
         @callback
-        def _async_template_result_changed(event, updates):
+        def _async_template_result_changed(
+            event: Event | None, updates: list[TrackTemplateResult]
+        ) -> None:
             track_template_result = updates.pop()
             template = track_template_result.template
             result = track_template_result.result
-            entity = event and event.data.get("entity_id")
+            entity: Event | str | None = event and event.data.get(CONF_ENTITY_ID)
             if isinstance(result, TemplateError):
                 _LOGGER.error(
                     "TemplateError('%s') "
@@ -260,13 +270,23 @@ class BayesianBinarySensor(BinarySensorEntity):
 
             for obs in self.observations_by_template[template]:
                 obs.observed = observation
+
+                # in some cases a template may update because of the absence of an entity
                 if entity is not None:
                     obs.entity_id = str(entity)
                 if obs.id is None:
                     _LOGGER.error(
-                        "An unexpected error obs.id is none for a template entity observation"
+                        "An unexpected error obs.id is None for a template entity observation: %s",
+                        obs.to_dict(),
                     )
+                    if obs.entity_id is None:
+                        _LOGGER.error(
+                            "An unexpected error both obs.id and entity ID are None for a template entity observation: %s",
+                            obs.to_dict(),
+                        )
+                        return
                     obs.id = obs.entity_id
+
                 self.current_observations[obs.id] = obs
 
             if event:
