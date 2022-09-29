@@ -81,6 +81,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",

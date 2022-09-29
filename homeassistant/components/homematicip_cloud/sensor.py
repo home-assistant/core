@@ -344,6 +344,8 @@ class HomematicipEnergySensor(HomematicipGenericEntity, SensorEntity):
 class HomematicipWindspeedSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP wind speed sensor."""
 
+    _attr_device_class = SensorDeviceClass.SPEED
+
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the windspeed sensor."""
         super().__init__(hap, device, post="Windspeed")
