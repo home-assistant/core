@@ -27,6 +27,7 @@ DEFAULT_MTU = 23
 GATT_HEADER_SIZE = 3
 DISCONNECT_TIMEOUT = 5.0
 CONNECT_FREE_SLOT_TIMEOUT = 2.0
+GATT_READ_TIMEOUT = 30.0
 
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
@@ -328,7 +329,7 @@ class ESPHomeClient(BaseBleakClient):
         """
         characteristic = self._resolve_characteristic(char_specifier)
         return await self._client.bluetooth_gatt_read(
-            self._address_as_int, characteristic.handle
+            self._address_as_int, characteristic.handle, GATT_READ_TIMEOUT
         )
 
     @verify_connected
@@ -342,7 +343,7 @@ class ESPHomeClient(BaseBleakClient):
             (bytearray) The read data.
         """
         return await self._client.bluetooth_gatt_read_descriptor(
-            self._address_as_int, handle
+            self._address_as_int, handle, GATT_READ_TIMEOUT
         )
 
     @verify_connected
