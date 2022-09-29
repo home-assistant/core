@@ -170,6 +170,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="visibility",
         name="Visibility",
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
