@@ -37,6 +37,7 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     SPEED_MILLIMETERS_PER_DAY,
+    SPEED_MILLIMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -101,6 +102,7 @@ INVALID_SYMBOL = "bob"
         (SpeedConverter, SPEED_METERS_PER_SECOND),
         (SpeedConverter, SPEED_MILES_PER_HOUR),
         (SpeedConverter, SPEED_MILLIMETERS_PER_DAY),
+        (SpeedConverter, SPEED_MILLIMETERS_PER_HOUR),
         (TemperatureConverter, TEMP_CELSIUS),
         (TemperatureConverter, TEMP_FAHRENHEIT),
         (TemperatureConverter, TEMP_KELVIN),
@@ -394,6 +396,8 @@ def test_pressure_convert(
         (5, SPEED_MILLIMETERS_PER_DAY, pytest.approx(0.1968504), SPEED_INCHES_PER_DAY),
         # 5 in/hr * 24 hr/day = 3048 mm/day
         (5, SPEED_INCHES_PER_HOUR, 3048, SPEED_MILLIMETERS_PER_DAY),
+        # 5 in/hr = 127 mm/hour
+        (5, SPEED_INCHES_PER_HOUR, 127, SPEED_MILLIMETERS_PER_HOUR),
         # 5 m/s * 39.3701 in/m * 3600 s/hr = 708661
         (5, SPEED_METERS_PER_SECOND, pytest.approx(708661.42), SPEED_INCHES_PER_HOUR),
         # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s

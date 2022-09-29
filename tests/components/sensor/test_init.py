@@ -22,6 +22,7 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     SPEED_MILLIMETERS_PER_DAY,
+    SPEED_MILLIMETERS_PER_HOUR,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -545,6 +546,14 @@ async def test_custom_unit(
             SPEED_INCHES_PER_HOUR,
             78,
             0.13,
+            SensorDeviceClass.SPEED,
+        ),
+        (
+            SPEED_MILLIMETERS_PER_HOUR,
+            SPEED_INCHES_PER_HOUR,
+            SPEED_INCHES_PER_HOUR,
+            78,
+            3.1,
             SensorDeviceClass.SPEED,
         ),
         (

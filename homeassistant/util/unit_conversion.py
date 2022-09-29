@@ -40,6 +40,7 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     SPEED_MILLIMETERS_PER_DAY,
+    SPEED_MILLIMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -258,6 +259,7 @@ class SpeedConverter(BaseUnitConverterWithUnitConversion):
         SPEED_METERS_PER_SECOND: 1,
         SPEED_MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
         SPEED_MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
+        SPEED_MILLIMETERS_PER_HOUR: _HRS_TO_SECS / _MM_TO_M,
     }
     VALID_UNITS = {
         SPEED_FEET_PER_SECOND,
@@ -268,6 +270,7 @@ class SpeedConverter(BaseUnitConverterWithUnitConversion):
         SPEED_METERS_PER_SECOND,
         SPEED_MILES_PER_HOUR,
         SPEED_MILLIMETERS_PER_DAY,
+        SPEED_MILLIMETERS_PER_HOUR,
     }
 
 
