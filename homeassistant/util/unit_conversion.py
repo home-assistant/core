@@ -1,6 +1,8 @@
 """Typing Helpers for Home Assistant."""
 from __future__ import annotations
 
+import pint
+
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
@@ -51,6 +53,8 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 
+_UNIT_REGISTRY = pint.UnitRegistry()
+
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
 _CM_TO_M = 0.01  # 1 cm = 0.01 m
@@ -89,6 +93,7 @@ class BaseUnitConverter:
     UNIT_CLASS: str
     NORMALIZED_UNIT: str
     VALID_UNITS: set[str]
+    _PINT_UNIT_MAP: dict[str, str] = {}
 
     _UNIT_CONVERSION: dict[str, float]
 
@@ -98,27 +103,30 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return value
 
+        return value * cls.get_unit_ratio(from_unit, to_unit)
+
+    @classmethod
+    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
+        """Get unit ratio between units of measurement."""
         try:
-            from_ratio = cls._UNIT_CONVERSION[from_unit]
-        except KeyError as err:
+            pint_from: pint.Unit = getattr(
+                _UNIT_REGISTRY, cls._PINT_UNIT_MAP.get(from_unit, from_unit)
+            )
+        except pint.UndefinedUnitError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
             ) from err
 
         try:
-            to_ratio = cls._UNIT_CONVERSION[to_unit]
-        except KeyError as err:
+            pint_to: pint.Unit = getattr(
+                _UNIT_REGISTRY, cls._PINT_UNIT_MAP.get(to_unit, to_unit)
+            )
+        except pint.UndefinedUnitError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             ) from err
 
-        new_value = value / from_ratio
-        return new_value * to_ratio
-
-    @classmethod
-    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
-        """Get unit ratio between units of measurement."""
-        return cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit]
+        return (1 * pint_from).m_as(pint_to)  # type: ignore[no-any-return]
 
 
 class DistanceConverter(BaseUnitConverter):
@@ -375,3 +383,4 @@ class VolumeConverter(BaseUnitConverter):
         VOLUME_CUBIC_METERS,
         VOLUME_CUBIC_FEET,
     }
+    _PINT_UNIT_MAP = {VOLUME_FLUID_OUNCE: "US_liquid_ounce"}
