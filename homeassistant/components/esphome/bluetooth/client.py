@@ -39,6 +39,19 @@ def mac_to_int(address: str) -> int:
     return int(address.replace(":", ""), 16)
 
 
+def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
+    """Define a wrapper throw BleakError if not connected."""
+
+    async def _async_wrap_bluetooth_connected_operation(
+        self: "ESPHomeClient", *args: Any, **kwargs: Any
+    ) -> Any:
+        if not self._is_connected:  # pylint: disable=protected-access
+            raise BleakError("Not connected")
+        return await func(self, *args, **kwargs)
+
+    return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
+
+
 def api_error_as_bleak_error(func: _WrapFuncType) -> _WrapFuncType:
     """Define a wrapper throw esphome api errors as BleakErrors."""
 
@@ -183,6 +196,9 @@ class ESPHomeClient(BaseBleakClient):
         await self._client.bluetooth_device_disconnect(self._address_as_int)
         entry_data = self._async_get_entry_data()
         if not entry_data.ble_connections_free:
+            _LOGGER.debug(
+                "%s: Out of connection slots, waiting for disconnect", self._source
+            )
             async with async_timeout.timeout(DISCONNECT_TIMEOUT):
                 await entry_data.wait_for_ble_connections_free()
         return True
@@ -197,11 +213,13 @@ class ESPHomeClient(BaseBleakClient):
         """Get ATT MTU size for active connection."""
         return self._mtu or DEFAULT_MTU
 
+    @verify_connected
     @api_error_as_bleak_error
     async def pair(self, *args: Any, **kwargs: Any) -> bool:
         """Attempt to pair."""
         raise NotImplementedError("Pairing is not available in ESPHome.")
 
+    @verify_connected
     @api_error_as_bleak_error
     async def unpair(self) -> bool:
         """Attempt to unpair."""
@@ -278,6 +296,7 @@ class ESPHomeClient(BaseBleakClient):
             raise BleakError(f"Characteristic {char_specifier} was not found!")
         return characteristic
 
+    @verify_connected
     @api_error_as_bleak_error
     async def read_gatt_char(
         self,
@@ -298,6 +317,7 @@ class ESPHomeClient(BaseBleakClient):
             self._address_as_int, characteristic.handle
         )
 
+    @verify_connected
     @api_error_as_bleak_error
     async def read_gatt_descriptor(self, handle: int, **kwargs: Any) -> bytearray:
         """Perform read operation on the specified GATT descriptor.
@@ -311,6 +331,7 @@ class ESPHomeClient(BaseBleakClient):
             self._address_as_int, handle
         )
 
+    @verify_connected
     @api_error_as_bleak_error
     async def write_gatt_char(
         self,
@@ -332,6 +353,7 @@ class ESPHomeClient(BaseBleakClient):
             self._address_as_int, characteristic.handle, bytes(data), response
         )
 
+    @verify_connected
     @api_error_as_bleak_error
     async def write_gatt_descriptor(
         self, handle: int, data: bytes | bytearray | memoryview
@@ -346,6 +368,7 @@ class ESPHomeClient(BaseBleakClient):
             self._address_as_int, handle, bytes(data)
         )
 
+    @verify_connected
     @api_error_as_bleak_error
     async def start_notify(
         self,
