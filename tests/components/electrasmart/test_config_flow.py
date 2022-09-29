@@ -1,4 +1,5 @@
 """Test the Electra Smart config flow."""
+from json import loads
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -9,28 +10,18 @@ from homeassistant.components.electrasmart.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
-from tests.components.electrasmart.test_data import (
-    MOCK_DATA_GENERATE_TOKEN_RESP,
-    MOCK_DATA_INVALID_OTP,
-    MOCK_DATA_INVALID_PHONE_NUMBER,
-    MOCK_DATA_OTP_RESP,
-)
-
-# from .test_data import (
-#     MOCK_FAILED_TO_LOGIN_MSG,
-#     MOCK_GET_CONFIGURATION,
-#     MOCK_INVALID_TOKEN_MGS,
-# )
+from tests.common import load_fixture
 
 
 async def test_user(hass: HomeAssistant):
     """Test user config."""
 
+    mock_generate_token = loads(load_fixture("generate_token_response.json", DOMAIN))
     with patch(
         "electrasmart.api.ElectraAPI.generate_new_token",
-        return_value=MOCK_DATA_GENERATE_TOKEN_RESP,
+        return_value=mock_generate_token,
     ):
         # test with required
         result = await hass.config_entries.flow.async_init(
@@ -38,18 +29,21 @@ async def test_user(hass: HomeAssistant):
             context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567"},
         )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == CONF_OTP
 
 
 async def test_one_time_password(hass: HomeAssistant):
     """Test one time password."""
+
+    mock_generate_token = loads(load_fixture("generate_token_response.json", DOMAIN))
+    mock_otp_response = loads(load_fixture("otp_response.json", DOMAIN))
     with patch(
         "electrasmart.api.ElectraAPI.generate_new_token",
-        return_value=MOCK_DATA_GENERATE_TOKEN_RESP,
+        return_value=mock_generate_token,
     ), patch(
         "electrasmart.api.ElectraAPI.validate_one_time_password",
-        return_value=MOCK_DATA_OTP_RESP,
+        return_value=mock_otp_response,
     ), patch(
         "electrasmart.api.ElectraAPI.get_devices", return_value=[]
     ):
@@ -63,7 +57,7 @@ async def test_one_time_password(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_OTP: "1234"}
         )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_cannot_connect(hass: HomeAssistant):
@@ -79,7 +73,7 @@ async def test_cannot_connect(hass: HomeAssistant):
             context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567"},
         )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -87,9 +81,13 @@ async def test_cannot_connect(hass: HomeAssistant):
 async def test_invalid_phone_number(hass: HomeAssistant):
     """Test invalid phone number."""
 
+    mock_invalid_phone_number_response = loads(
+        load_fixture("invalid_phone_number_response.json", DOMAIN)
+    )
+
     with patch(
         "electrasmart.api.ElectraAPI.generate_new_token",
-        return_value=MOCK_DATA_INVALID_PHONE_NUMBER,
+        return_value=mock_invalid_phone_number_response,
     ):
         # test with required
         result = await hass.config_entries.flow.async_init(
@@ -98,7 +96,7 @@ async def test_invalid_phone_number(hass: HomeAssistant):
             data={CONF_PHONE_NUMBER: "0521234567"},
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"phone_number": "invalid_phone_number"}
 
@@ -106,12 +104,17 @@ async def test_invalid_phone_number(hass: HomeAssistant):
 async def test_invalid_auth(hass: HomeAssistant):
     """Test invalid auth."""
 
+    mock_generate_token_response = loads(
+        load_fixture("generate_token_response.json", DOMAIN)
+    )
+    mock_invalid_otp_response = loads(load_fixture("invalid_otp_response.json", DOMAIN))
+
     with patch(
         "electrasmart.api.ElectraAPI.generate_new_token",
-        return_value=MOCK_DATA_GENERATE_TOKEN_RESP,
+        return_value=mock_generate_token_response,
     ), patch(
         "electrasmart.api.ElectraAPI.validate_one_time_password",
-        return_value=MOCK_DATA_INVALID_OTP,
+        return_value=mock_invalid_otp_response,
     ):
         # test with required
         result = await hass.config_entries.flow.async_init(
@@ -123,6 +126,6 @@ async def test_invalid_auth(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_OTP: "1234"}
         )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == CONF_OTP
     assert result["errors"] == {CONF_OTP: "invalid_auth"}

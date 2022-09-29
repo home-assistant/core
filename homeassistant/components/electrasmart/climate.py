@@ -11,8 +11,7 @@ from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiE
 from electrasmart.device import ElectraAirConditioner, OperationMode
 from electrasmart.device.const import MAX_TEMP, MIN_TEMP, Feature
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -21,6 +20,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -81,6 +81,16 @@ HVAC_ACTION_ELECTRA_TO_HASS = {
     OperationMode.MODE_DRY: HVACAction.DRYING,
 }
 
+ELECTRA_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
+ELECTRA_MODES = [
+    HVACMode.OFF,
+    HVACMode.HEAT,
+    HVACMode.COOL,
+    HVACMode.DRY,
+    HVACMode.FAN_ONLY,
+    HVACMode.AUTO,
+]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -96,11 +106,11 @@ async def async_setup_entry(
     devices: list[ElectraAirConditioner] = await get_devices(api)
 
     _LOGGER.debug("Discovered %i Electra devices", len(devices))
-    async_add_entities((ElectraClimate(device, api) for device in devices), True)
+    async_add_entities((ElectraClimateEntity(device, api) for device in devices), True)
 
 
 async def get_devices(api: ElectraAPI) -> list[ElectraAirConditioner]:
-    """Return Electra."""
+    """Return Electra devices."""
     _LOGGER.debug("Fetching Electra AC devices")
     try:
         return await api.get_devices()
@@ -117,8 +127,15 @@ async def get_devices(api: ElectraAPI) -> list[ElectraAirConditioner]:
         raise ConfigEntryNotReady(err_message) from exp
 
 
-class ElectraClimate(ClimateEntity):
-    """Define an Electra sensor."""
+class ElectraClimateEntity(ClimateEntity):
+    """Define an Electra climate."""
+
+    _attr_fan_modes = ELECTRA_FAN_MODES
+    _attr_target_temperature_step = 1
+    _attr_max_temp = MAX_TEMP
+    _attr_min_temp = MIN_TEMP
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_hvac_modes = ELECTRA_MODES
 
     def __init__(self, device: ElectraAirConditioner, api: ElectraAPI) -> None:
         """Initialize Electra climate entity."""
@@ -127,15 +144,9 @@ class ElectraClimate(ClimateEntity):
         self._attr_name = device.name
         self._attr_unique_id = device.mac
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.SWING_MODE
-            | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         )
-        self._attr_fan_modes = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
-        self._attr_target_temperature_step = 1
-        self._attr_max_temp = MAX_TEMP
-        self._attr_min_temp = MIN_TEMP
-        self._attr_temperature_unit = TEMP_CELSIUS
+
         self._attr_swing_modes = []
 
         if Feature.V_SWING in self._electra_ac_device.features:
@@ -150,14 +161,8 @@ class ElectraClimate(ClimateEntity):
         if self._attr_swing_modes:
             self._attr_swing_modes.append(SWING_OFF)
 
-        self._attr_hvac_modes = [
-            HVACMode.OFF,
-            HVACMode.HEAT,
-            HVACMode.COOL,
-            HVACMode.DRY,
-            HVACMode.FAN_ONLY,
-            HVACMode.AUTO,
-        ]
+        if self.swing_modes:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._electra_ac_device.mac)},
@@ -208,7 +213,7 @@ class ElectraClimate(ClimateEntity):
                 return
 
             if not self._available:
-                _LOGGER.warning(
+                _LOGGER.info(
                     "%s (%s) is now available",
                     self._electra_ac_device.mac,
                     self._electra_ac_device.name,
@@ -235,9 +240,9 @@ class ElectraClimate(ClimateEntity):
                 raise HomeAssistantError(
                     f"Failed to get {self._electra_ac_device.name} state: {exp} for the {self._consecutive_failures} time",
                 ) from ElectraApiError
-        else:
-            self._consecutive_failures = 0
-            self._update_device_attrs()
+
+        self._consecutive_failures = 0
+        self._update_device_attrs()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set AC fand mode."""
@@ -261,7 +266,7 @@ class ElectraClimate(ClimateEntity):
         self._electra_ac_device.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
         await self._async_update_electra_ac_state()
 
-    def _update_device_attrs(self):
+    def _update_device_attrs(self) -> None:
 
         self._attr_fan_mode = FAN_ELECTRA_TO_HASS[
             self._electra_ac_device.get_fan_speed()
@@ -342,9 +347,7 @@ class ElectraClimate(ClimateEntity):
                 and resp[Attributes.DATA][Attributes.RES] == STATUS_SUCCESS
             ):
                 self._async_write_ha_state()
-                raise HomeAssistantError(
-                    f"Failed to update {self._attr_name}, error: {resp}"
-                )
+                raise HomeAssistantError(f"Failed to update {self.name}, error: {resp}")
 
             self._update_device_attrs()
             self._last_state_update = int(time.time())

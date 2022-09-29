@@ -23,14 +23,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Device settings."""
-        self._phone_number = None
+        self._phone_number: str | None = None
         self._description_placeholders = None
-        self._otp = None
-        self._imei = None
-        self._token = None
-        self._api = None
+        self._otp: str | None = None
+        self._imei: str | None = None
+        self._token: str | None = None
+        self._api: ElectraAPI | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -47,7 +47,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._validate_phone_number(user_input)
 
-    def _show_setup_form(self, user_input=None, errors=None, step_id="user"):
+    def _show_setup_form(
+        self,
+        user_input: dict[str, str] | None = None,
+        errors: dict[str, str] | None = None,
+        step_id: str = "user",
+    ) -> FlowResult:
         """Show the setup form to the user."""
         if user_input is None:
             user_input = {}
@@ -68,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=self._description_placeholders,
         )
 
-    async def _validate_phone_number(self, user_input):
+    async def _validate_phone_number(self, user_input: dict[str, str]) -> FlowResult:
         """Check if config is valid and create entry if so."""
 
         self._phone_number = user_input[CONF_PHONE_NUMBER]
@@ -78,6 +83,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self.unique_id is None:
             await self.async_set_unique_id(self._phone_number)
             self._abort_if_unique_id_configured()
+
+        assert isinstance(self._api, ElectraAPI)
 
         try:
             resp = await self._api.generate_new_token(self._phone_number, self._imei)
@@ -93,8 +100,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_one_time_password()
 
-    async def _validate_one_time_password(self, user_input):
+    async def _validate_one_time_password(
+        self, user_input: dict[str, str]
+    ) -> FlowResult:
         self._otp = user_input[CONF_OTP]
+
+        assert isinstance(self._api, ElectraAPI)
+        assert isinstance(self._imei, str)
+        assert isinstance(self._phone_number, str)
+        assert isinstance(self._otp, str)
 
         try:
             resp = await self._api.validate_one_time_password(
@@ -118,18 +132,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self._show_setup_form(user_input, {CONF_OTP: "invalid_auth"}, CONF_OTP)
 
     async def async_step_one_time_password(
-        self, user_input=None, errors=None
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
     ) -> FlowResult:
         """Ask the verification code to the user."""
         if errors is None:
             errors = {}
 
         if user_input is None:
-            return await self._show_otp_form(user_input, errors)
+            return await self._show_otp_form(errors)
 
         return await self._validate_one_time_password(user_input)
 
-    async def _show_otp_form(self, user_input=None, errors=None):
+    async def _show_otp_form(
+        self,
+        errors: dict[str, str] | None = None,
+    ) -> FlowResult:
         """Show the verification_code form to the user."""
 
         return self.async_show_form(

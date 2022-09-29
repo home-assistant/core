@@ -14,15 +14,13 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Electra Air Conditioner from a config entry."""
+    """Set up Electra Smart Air Conditioner from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     websession = async_get_clientsession(hass)
     electra_api = ElectraAPI(websession, entry.data[CONF_IMEI], entry.data[CONF_TOKEN])
-
     entry.async_on_unload(entry.add_update_listener(update_listener))
     hass.data[DOMAIN][entry.entry_id] = electra_api
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
