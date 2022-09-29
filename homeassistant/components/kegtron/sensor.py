@@ -39,6 +39,7 @@ SENSOR_DESCRIPTIONS = {
         key=KegtronSensorDeviceClass.KEG_SIZE,
         icon="mdi:keg",
         native_unit_of_measurement=VOLUME_LITERS,
+        device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     KegtronSensorDeviceClass.KEG_TYPE: SensorEntityDescription(
@@ -49,12 +50,14 @@ SENSOR_DESCRIPTIONS = {
         key=KegtronSensorDeviceClass.VOLUME_START,
         icon="mdi:keg",
         native_unit_of_measurement=VOLUME_LITERS,
+        device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     KegtronSensorDeviceClass.VOLUME_DISPENSED: SensorEntityDescription(
         key=KegtronSensorDeviceClass.VOLUME_DISPENSED,
         icon="mdi:keg",
         native_unit_of_measurement=VOLUME_LITERS,
+        device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL,
     ),
     KegtronSensorDeviceClass.PORT_STATE: SensorEntityDescription(
