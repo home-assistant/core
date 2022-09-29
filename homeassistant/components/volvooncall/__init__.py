@@ -329,3 +329,12 @@ class VolvoEntity(CoordinatorEntity):
         if self.instrument.slug_override is not None:
             slug_override = f"-{self.instrument.slug_override}"
         return f"{self.vin}-{self.component}-{self.attribute}{slug_override}"
+
+    @property
+    def device_info(self):
+        """Return a inique set of attributes for each vehicle."""
+        return {
+            "identifiers": {(DOMAIN, self.vehicle.vin)},
+            "name": self._vehicle_name,
+            "model": self.vehicle.vehicle_type,
+        }
