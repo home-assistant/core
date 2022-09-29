@@ -655,6 +655,8 @@ build.json @home-assistant/supervisor
 /tests/components/lyric/ @timmo001
 /homeassistant/components/mastodon/ @fabaff
 /homeassistant/components/matrix/ @tinloaf
+/homeassistant/components/matter/ @MartinHjelmare
+/tests/components/matter/ @MartinHjelmare
 /homeassistant/components/mazda/ @bdr99
 /tests/components/mazda/ @bdr99
 /homeassistant/components/meater/ @Sotolotl @emontnemery
