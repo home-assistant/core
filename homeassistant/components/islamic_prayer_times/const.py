@@ -15,7 +15,7 @@ SENSOR_TYPES = {
 
 CONF_CALC_METHOD = "calculation_method"
 
-CALC_METHODS = ["isna", "karachi", "mwl", "makkah", "moonsighting", "turkey"]
+CALC_METHODS: list[str] = list(PrayerTimesCalculator.CALCULATION_METHODS)
 DEFAULT_CALC_METHOD = "isna"
 
 DATA_UPDATED = "Islamic_prayer_data_updated"
