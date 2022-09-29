@@ -1,10 +1,8 @@
 """Support for SwitchBee thermostat button."""
 from __future__ import annotations
 
-import logging
-from typing import Any
+from typing import Any, cast
 
-from switchbee import SWITCHBEE_BRAND
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.const import (
     ApiAttribute,
@@ -12,7 +10,7 @@ from switchbee.const import (
     ThermostatMode,
     ThermostatTemperatureUnit,
 )
-from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeThermostat
+from switchbee.device import ApiStateCommand, SwitchBeeThermostat
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -28,15 +26,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SwitchBeeCoordinator
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
+from .entity import SwitchBeeDeviceEntity
 
 FAN_SB_TO_HASS = {
     ThermostatFanSpeed.AUTO: FAN_AUTO,
@@ -86,12 +80,17 @@ async def async_setup_entry(
     async_add_entities(
         SwitchBeeClimate(switchbee_device, coordinator)
         for switchbee_device in coordinator.data.values()
-        if switchbee_device.type == DeviceType.Thermostat
+        if isinstance(switchbee_device, SwitchBeeThermostat)
     )
 
 
-class SwitchBeeClimate(CoordinatorEntity[SwitchBeeCoordinator], ClimateEntity):
+class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity):
     """Representation of an Switchbee button."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
+    _attr_fan_modes = SUPPORTED_FAN_MODES
 
     def __init__(
         self,
@@ -99,40 +98,16 @@ class SwitchBeeClimate(CoordinatorEntity[SwitchBeeCoordinator], ClimateEntity):
         coordinator: SwitchBeeCoordinator,
     ) -> None:
         """Initialize the Switchbee switch."""
-        super().__init__(coordinator)
-        self._attr_name = f"{device.zone} {device.name}"
-        self._device_id = device.id
-        self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-        )
-
+        super().__init__(device, coordinator)
         # set HVAC capabilities
         self._attr_target_temperature_step = 1
         self._attr_max_temp = device.max_temperature
         self._attr_min_temp = device.min_temperature
-        self._attr_fan_modes = SUPPORTED_FAN_MODES
         self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.unit]
         self._attr_hvac_modes = [HVAC_MODE_SB_TO_HASS[mode] for mode in device.modes]
         self._attr_hvac_modes.append(HVACMode.OFF)
-        self._device: SwitchBeeThermostat = device
-        self._attr_device_info = DeviceInfo(
-            name=f"SwitchBee_{str(self._device.id)}",
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{str(self._device.id)}-{coordinator.mac_formated}",
-                )
-            },
-            manufacturer=SWITCHBEE_BRAND,
-            model=coordinator.api.module_display(device.unit_id),
-            suggested_area=device.zone,
-            via_device=(
-                DOMAIN,
-                f"{coordinator.api.name} ({coordinator.api.mac})",
-            ),
-        )
-        self._update_device_attrs(device)
+
+        self._update_device_attrs(self._device)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -142,7 +117,9 @@ class SwitchBeeClimate(CoordinatorEntity[SwitchBeeCoordinator], ClimateEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_device_attrs(self.coordinator.data[self._device_id])
+        self._update_device_attrs(
+            cast(SwitchBeeThermostat, self.coordinator.data[self._device.id])
+        )
         super()._handle_coordinator_update()
 
     def _update_device_attrs(self, device: SwitchBeeThermostat) -> None:
@@ -208,10 +185,10 @@ class SwitchBeeClimate(CoordinatorEntity[SwitchBeeCoordinator], ClimateEntity):
     async def operate(self, state: dict[str, str | int]) -> None:
         """Send request to central unit."""
         try:
-            await self.coordinator.api.set_state(self._device_id, state)
+            await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:
             raise HomeAssistantError(
-                f"Failed to set {self._attr_name} state {state}, error: {str(exp)}"
+                f"Failed to set {self.name} state {state}, error: {str(exp)}"
             ) from exp
         else:
             await self.coordinator.async_refresh()
