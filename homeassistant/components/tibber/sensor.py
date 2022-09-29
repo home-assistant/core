@@ -368,8 +368,8 @@ class TibberSensorElPrice(TibberSensor):
             await self._fetch_data()
 
         elif (
-            self._tibber_home.current_price_total is not None
-            and self._last_updated is not None
+            self._tibber_home.current_price_total
+            and self._last_updated
             and self._last_updated.hour == now.hour
             and self._tibber_home.last_data_timestamp
         ):
