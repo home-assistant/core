@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import subarulink.const as sc
 
@@ -14,6 +15,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
+    FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
+    FUEL_CONSUMPTION_MILES_PER_GALLON,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
@@ -49,10 +52,6 @@ _LOGGER = logging.getLogger(__name__)
 L_PER_GAL = VolumeConverter.convert(1, VOLUME_GALLONS, VOLUME_LITERS)
 KM_PER_MI = DistanceConverter.convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
 
-# Fuel Economy Constants
-FUEL_CONSUMPTION_L_PER_100KM = "L/100km"
-FUEL_CONSUMPTION_MPG = "mi/gal"
-FUEL_CONSUMPTION_UNITS = [FUEL_CONSUMPTION_L_PER_100KM, FUEL_CONSUMPTION_MPG]
 
 # Sensor available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
@@ -71,7 +70,7 @@ API_GEN_2_SENSORS = [
         key=sc.AVG_FUEL_CONSUMPTION,
         icon="mdi:leaf",
         name="Avg Fuel Consumption",
-        native_unit_of_measurement=FUEL_CONSUMPTION_L_PER_100KM,
+        native_unit_of_measurement=FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -189,7 +188,9 @@ def create_vehicle_sensors(
     ]
 
 
-class SubaruSensor(CoordinatorEntity, SensorEntity):
+class SubaruSensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]], SensorEntity
+):
     """Class for Subaru sensors."""
 
     def __init__(
@@ -203,7 +204,6 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
         self.vin = vehicle_info[VEHICLE_VIN]
         self.entity_description = description
         self._attr_device_info = get_device_info(vehicle_info)
-        self._attr_should_poll = False
         self._attr_unique_id = f"{self.vin}_{description.name}"
 
     @property
@@ -225,7 +225,14 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
                 1,
             )
 
-        if unit in FUEL_CONSUMPTION_UNITS and unit_system == IMPERIAL_SYSTEM:
+        if (
+            unit
+            in [
+                FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
+                FUEL_CONSUMPTION_MILES_PER_GALLON,
+            ]
+            and unit_system == IMPERIAL_SYSTEM
+        ):
             return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)
 
         return current_value
@@ -242,9 +249,12 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
             if self.hass.config.units == IMPERIAL_SYSTEM:
                 return self.hass.config.units.pressure_unit
 
-        if unit in FUEL_CONSUMPTION_UNITS:
+        if unit in [
+            FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
+            FUEL_CONSUMPTION_MILES_PER_GALLON,
+        ]:
             if self.hass.config.units == IMPERIAL_SYSTEM:
-                return FUEL_CONSUMPTION_MPG
+                return FUEL_CONSUMPTION_MILES_PER_GALLON
 
         return unit
 
@@ -258,10 +268,7 @@ class SubaruSensor(CoordinatorEntity, SensorEntity):
 
     def get_current_value(self) -> None | int | float:
         """Get raw value from the coordinator."""
-        value = None
-        if isinstance(data := self.coordinator.data, dict):
-            value = data.get(self.vin)
-            assert value is not None
-            value = value[VEHICLE_STATUS].get(self.entity_description.key)
-            _LOGGER.debug("Raw value for %s: %s", self.name, value)
+        value = self.coordinator.data[self.vin]
+        value = value[VEHICLE_STATUS].get(self.entity_description.key)
+        _LOGGER.debug("Raw value for %s: %s", self.name, value)
         return value
