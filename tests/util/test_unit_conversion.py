@@ -305,12 +305,12 @@ def test_energy_convert(
         (1, MASS_POUNDS, 453.59237, MASS_GRAMS),
         (1, MASS_POUNDS, 453592.37, MASS_MILLIGRAMS),
         (1, MASS_POUNDS, 453592370, MASS_MICROGRAMS),
-        (1, MASS_POUNDS, 16, MASS_OUNCES),
+        (1, MASS_POUNDS, pytest.approx(16), MASS_OUNCES),
         (16, MASS_OUNCES, 0.45359237, MASS_KILOGRAMS),
         (16, MASS_OUNCES, 453.59237, MASS_GRAMS),
         (16, MASS_OUNCES, 453592.37, MASS_MILLIGRAMS),
         (16, MASS_OUNCES, 453592370, MASS_MICROGRAMS),
-        (16, MASS_OUNCES, 1, MASS_POUNDS),
+        (16, MASS_OUNCES, pytest.approx(1), MASS_POUNDS),
     ],
 )
 def test_mass_convert(
@@ -389,11 +389,11 @@ def test_pressure_convert(
         # 5 mi/h * 1.609 km/mi = 8.04672 km/h
         (5, SPEED_MILES_PER_HOUR, 8.04672, SPEED_KILOMETERS_PER_HOUR),
         # 5 in/day * 25.4 mm/in = 127 mm/day
-        (5, SPEED_INCHES_PER_DAY, 127, SPEED_MILLIMETERS_PER_DAY),
+        (5, SPEED_INCHES_PER_DAY, pytest.approx(127), SPEED_MILLIMETERS_PER_DAY),
         # 5 mm/day / 25.4 mm/in = 0.19685 in/day
         (5, SPEED_MILLIMETERS_PER_DAY, pytest.approx(0.1968504), SPEED_INCHES_PER_DAY),
         # 5 in/hr * 24 hr/day = 3048 mm/day
-        (5, SPEED_INCHES_PER_HOUR, 3048, SPEED_MILLIMETERS_PER_DAY),
+        (5, SPEED_INCHES_PER_HOUR, pytest.approx(3048), SPEED_MILLIMETERS_PER_DAY),
         # 5 m/s * 39.3701 in/m * 3600 s/hr = 708661
         (5, SPEED_METERS_PER_SECOND, pytest.approx(708661.42), SPEED_INCHES_PER_HOUR),
         # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s
@@ -470,8 +470,8 @@ def test_temperature_convert_with_interval(
         (500, VOLUME_CUBIC_METERS, 500, VOLUME_CUBIC_METERS),
         (500, VOLUME_CUBIC_METERS, pytest.approx(16907011.35), VOLUME_FLUID_OUNCE),
         (500, VOLUME_CUBIC_METERS, pytest.approx(132086.02617), VOLUME_GALLONS),
-        (500, VOLUME_CUBIC_METERS, 500000, VOLUME_LITERS),
-        (500, VOLUME_CUBIC_METERS, 500000000, VOLUME_MILLILITERS),
+        (500, VOLUME_CUBIC_METERS, pytest.approx(500000), VOLUME_LITERS),
+        (500, VOLUME_CUBIC_METERS, pytest.approx(500000000), VOLUME_MILLILITERS),
         (500, VOLUME_FLUID_OUNCE, pytest.approx(0.52218967), VOLUME_CUBIC_FEET),
         (500, VOLUME_FLUID_OUNCE, pytest.approx(0.014786764), VOLUME_CUBIC_METERS),
         (500, VOLUME_FLUID_OUNCE, 3.90625, VOLUME_GALLONS),
@@ -483,7 +483,7 @@ def test_temperature_convert_with_interval(
         (500, VOLUME_GALLONS, pytest.approx(1892.70589), VOLUME_LITERS),
         (500, VOLUME_GALLONS, pytest.approx(1892705.89), VOLUME_MILLILITERS),
         (500, VOLUME_LITERS, pytest.approx(17.65733), VOLUME_CUBIC_FEET),
-        (500, VOLUME_LITERS, 0.5, VOLUME_CUBIC_METERS),
+        (500, VOLUME_LITERS, pytest.approx(0.5), VOLUME_CUBIC_METERS),
         (500, VOLUME_LITERS, pytest.approx(16907.011), VOLUME_FLUID_OUNCE),
         (500, VOLUME_LITERS, pytest.approx(132.086), VOLUME_GALLONS),
         (500, VOLUME_LITERS, 500000, VOLUME_MILLILITERS),
@@ -491,7 +491,7 @@ def test_temperature_convert_with_interval(
         (500, VOLUME_MILLILITERS, 0.0005, VOLUME_CUBIC_METERS),
         (500, VOLUME_MILLILITERS, pytest.approx(16.907), VOLUME_FLUID_OUNCE),
         (500, VOLUME_MILLILITERS, pytest.approx(0.132086), VOLUME_GALLONS),
-        (500, VOLUME_MILLILITERS, 0.5, VOLUME_LITERS),
+        (500, VOLUME_MILLILITERS, pytest.approx(0.5), VOLUME_LITERS),
     ],
 )
 def test_volume_convert(

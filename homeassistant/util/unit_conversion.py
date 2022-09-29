@@ -54,6 +54,8 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 
 _UNIT_REGISTRY = pint.UnitRegistry()
+_UNIT_REGISTRY.define("kn = knot")
+_PINT_UNIT_MAP: dict[str, str] = {VOLUME_FLUID_OUNCE: "US_liquid_ounce"}
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -93,7 +95,6 @@ class BaseUnitConverter:
     UNIT_CLASS: str
     NORMALIZED_UNIT: str
     VALID_UNITS: set[str]
-    _PINT_UNIT_MAP: dict[str, str] = {}
 
     _UNIT_CONVERSION: dict[str, float]
 
@@ -109,18 +110,14 @@ class BaseUnitConverter:
     def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
         """Get unit ratio between units of measurement."""
         try:
-            pint_from: pint.Unit = getattr(
-                _UNIT_REGISTRY, cls._PINT_UNIT_MAP.get(from_unit, from_unit)
-            )
+            pint_from = _UNIT_REGISTRY(_PINT_UNIT_MAP.get(from_unit, from_unit))
         except pint.UndefinedUnitError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
             ) from err
 
         try:
-            pint_to: pint.Unit = getattr(
-                _UNIT_REGISTRY, cls._PINT_UNIT_MAP.get(to_unit, to_unit)
-            )
+            pint_to = _UNIT_REGISTRY(_PINT_UNIT_MAP.get(to_unit, to_unit))
         except pint.UndefinedUnitError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
@@ -134,16 +131,6 @@ class DistanceConverter(BaseUnitConverter):
 
     UNIT_CLASS = "distance"
     NORMALIZED_UNIT = LENGTH_METERS
-    _UNIT_CONVERSION: dict[str, float] = {
-        LENGTH_METERS: 1,
-        LENGTH_MILLIMETERS: 1 / _MM_TO_M,
-        LENGTH_CENTIMETERS: 1 / _CM_TO_M,
-        LENGTH_KILOMETERS: 1 / _KM_TO_M,
-        LENGTH_INCHES: 1 / _IN_TO_M,
-        LENGTH_FEET: 1 / _FOOT_TO_M,
-        LENGTH_YARD: 1 / _YARD_TO_M,
-        LENGTH_MILES: 1 / _MILE_TO_M,
-    }
     VALID_UNITS = {
         LENGTH_KILOMETERS,
         LENGTH_MILES,
@@ -161,11 +148,6 @@ class EnergyConverter(BaseUnitConverter):
 
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
-    _UNIT_CONVERSION: dict[str, float] = {
-        ENERGY_WATT_HOUR: 1 * 1000,
-        ENERGY_KILO_WATT_HOUR: 1,
-        ENERGY_MEGA_WATT_HOUR: 1 / 1000,
-    }
     VALID_UNITS = {
         ENERGY_WATT_HOUR,
         ENERGY_KILO_WATT_HOUR,
@@ -178,14 +160,6 @@ class MassConverter(BaseUnitConverter):
 
     UNIT_CLASS = "mass"
     NORMALIZED_UNIT = MASS_GRAMS
-    _UNIT_CONVERSION: dict[str, float] = {
-        MASS_MICROGRAMS: 1 * 1000 * 1000,
-        MASS_MILLIGRAMS: 1 * 1000,
-        MASS_GRAMS: 1,
-        MASS_KILOGRAMS: 1 / 1000,
-        MASS_OUNCES: 1 / _OUNCE_TO_G,
-        MASS_POUNDS: 1 / _POUND_TO_G,
-    }
     VALID_UNITS = {
         MASS_GRAMS,
         MASS_KILOGRAMS,
@@ -201,10 +175,6 @@ class PowerConverter(BaseUnitConverter):
 
     UNIT_CLASS = "power"
     NORMALIZED_UNIT = POWER_WATT
-    _UNIT_CONVERSION: dict[str, float] = {
-        POWER_WATT: 1,
-        POWER_KILO_WATT: 1 / 1000,
-    }
     VALID_UNITS = {
         POWER_WATT,
         POWER_KILO_WATT,
@@ -216,17 +186,6 @@ class PressureConverter(BaseUnitConverter):
 
     UNIT_CLASS = "pressure"
     NORMALIZED_UNIT = PRESSURE_PA
-    _UNIT_CONVERSION: dict[str, float] = {
-        PRESSURE_PA: 1,
-        PRESSURE_HPA: 1 / 100,
-        PRESSURE_KPA: 1 / 1000,
-        PRESSURE_BAR: 1 / 100000,
-        PRESSURE_CBAR: 1 / 1000,
-        PRESSURE_MBAR: 1 / 100,
-        PRESSURE_INHG: 1 / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
-        PRESSURE_PSI: 1 / 6894.757,
-        PRESSURE_MMHG: 1 / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
-    }
     VALID_UNITS = {
         PRESSURE_PA,
         PRESSURE_HPA,
@@ -245,16 +204,6 @@ class SpeedConverter(BaseUnitConverter):
 
     UNIT_CLASS = "speed"
     NORMALIZED_UNIT = SPEED_METERS_PER_SECOND
-    _UNIT_CONVERSION: dict[str, float] = {
-        SPEED_FEET_PER_SECOND: 1 / _FOOT_TO_M,
-        SPEED_INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
-        SPEED_INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
-        SPEED_KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
-        SPEED_KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
-        SPEED_METERS_PER_SECOND: 1,
-        SPEED_MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
-        SPEED_MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
-    }
     VALID_UNITS = {
         SPEED_FEET_PER_SECOND,
         SPEED_INCHES_PER_DAY,
@@ -265,7 +214,6 @@ class SpeedConverter(BaseUnitConverter):
         SPEED_MILES_PER_HOUR,
         SPEED_MILLIMETERS_PER_DAY,
     }
-    _PINT_UNIT_MAP = {SPEED_KNOTS: "knot"}
 
 
 class TemperatureConverter(BaseUnitConverter):
@@ -367,15 +315,6 @@ class VolumeConverter(BaseUnitConverter):
 
     UNIT_CLASS = "volume"
     NORMALIZED_UNIT = VOLUME_CUBIC_METERS
-    # Units in terms of m³
-    _UNIT_CONVERSION: dict[str, float] = {
-        VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
-        VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
-        VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
-        VOLUME_FLUID_OUNCE: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
-        VOLUME_CUBIC_METERS: 1,
-        VOLUME_CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
-    }
     VALID_UNITS = {
         VOLUME_LITERS,
         VOLUME_MILLILITERS,
@@ -384,4 +323,3 @@ class VolumeConverter(BaseUnitConverter):
         VOLUME_CUBIC_METERS,
         VOLUME_CUBIC_FEET,
     }
-    _PINT_UNIT_MAP = {VOLUME_FLUID_OUNCE: "US_liquid_ounce"}

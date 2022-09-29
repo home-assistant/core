@@ -25,9 +25,11 @@ from .unit_conversion import (  # pylint: disable=unused-import # noqa: F401
     SpeedConverter,
 )
 
-# pylint: disable-next=protected-access
-UNIT_CONVERSION: dict[str, float] = SpeedConverter._UNIT_CONVERSION
 VALID_UNITS = SpeedConverter.VALID_UNITS
+UNIT_CONVERSION: dict[str, float] = {
+    key: SpeedConverter.get_unit_ratio(key, SpeedConverter.NORMALIZED_UNIT)
+    for key in VALID_UNITS
+}
 
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:

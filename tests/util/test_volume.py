@@ -27,7 +27,7 @@ def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
     "function_name, value, expected",
     [
         ("liter_to_gallon", 2, pytest.approx(0.528344)),
-        ("gallon_to_liter", 2, 7.570823568),
+        ("gallon_to_liter", 2, pytest.approx(7.570823)),
         ("cubic_meter_to_cubic_feet", 2, pytest.approx(70.629333)),
         ("cubic_feet_to_cubic_meter", 2, pytest.approx(0.0566337)),
     ],
