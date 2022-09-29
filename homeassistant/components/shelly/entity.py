@@ -223,6 +223,7 @@ def async_setup_entry_rest(
     wrapper: ShellyDeviceRestWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
         config_entry.entry_id
     ][REST]
+    block_wrapper: BlockDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
 
     entities = []
     for sensor_id in sensors:
@@ -236,7 +237,7 @@ def async_setup_entry_rest(
 
     async_add_entities(
         [
-            sensor_class(wrapper, sensor_id, description)
+            sensor_class(wrapper, block_wrapper, sensor_id, description)
             for sensor_id, description in entities
         ]
     )
@@ -449,13 +450,15 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 
     def __init__(
         self,
-        wrapper: BlockDeviceWrapper,
+        wrapper: ShellyDeviceRestWrapper,
+        block_wrapper: BlockDeviceWrapper,
         attribute: str,
         description: RestEntityDescription,
     ) -> None:
         """Initialize sensor."""
         super().__init__(wrapper)
         self.wrapper = wrapper
+        self.block_wrapper = block_wrapper
         self.attribute = attribute
         self.entity_description = description
         self._attr_name = get_block_entity_name(wrapper.device, None, description.name)
