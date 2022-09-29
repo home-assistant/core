@@ -12,5 +12,6 @@ HAS_SUPPORTED_BRANDS = [
     "renault",
     "thermobeacon",
     "wemo",
+    "xiaomi_miio",
     "yalexs_ble",
 ]
