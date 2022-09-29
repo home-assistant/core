@@ -83,7 +83,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wind_speed",
         name="Wind speed",
-        device_class=None,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
@@ -92,7 +91,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wind_direction",
         name="Wind direction",
-        device_class=None,
         native_unit_of_measurement=None,
         icon="mdi:compass-outline",
         entity_registry_enabled_default=False,
@@ -100,7 +98,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wind_gust",
         name="Wind gust",
-        device_class=None,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
