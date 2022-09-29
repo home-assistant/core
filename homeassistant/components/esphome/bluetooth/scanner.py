@@ -83,15 +83,22 @@ class ESPHomeScanner(BaseHaScanner):
         """Call the registered callback."""
         now = time.monotonic()
         address = ":".join(TWO_CHAR.findall("%012X" % adv.address))  # must be upper
+        name = adv.name
+        if prev_discovery := self._discovered_devices.get(address):
+            # If the last discovery had the full local name
+            # and this one doesn't, keep the old one
+            if len(prev_discovery.name) > len(adv.name):
+                name = prev_discovery.name
+
         advertisement_data = AdvertisementData(  # type: ignore[no-untyped-call]
-            local_name=None if adv.name == "" else adv.name,
+            local_name=None if name == "" else name,
             manufacturer_data=adv.manufacturer_data,
             service_data=adv.service_data,
             service_uuids=adv.service_uuids,
         )
         device = BLEDevice(  # type: ignore[no-untyped-call]
             address=address,
-            name=adv.name,
+            name=name,
             details=self._details,
             rssi=adv.rssi,
         )
