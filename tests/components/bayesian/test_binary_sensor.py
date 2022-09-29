@@ -621,7 +621,7 @@ async def test_missing_prob_given_false(hass):
     await hass.async_block_till_done()
     hass.states.async_set("sensor.test_monitored2", "on")
     await hass.async_block_till_done()
-    print(async_get(hass).issues)
+
     assert len(async_get(hass).issues) == 3
     assert (
         async_get(hass).issues[
