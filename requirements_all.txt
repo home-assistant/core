@@ -1087,7 +1087,7 @@ minio==5.0.10
 moat-ble==0.1.1
 
 # homeassistant.components.moehlenhoff_alpha2
-moehlenhoff-alpha2==1.2.1
+moehlenhoff-alpha2==1.3.0
 
 # homeassistant.components.motion_blinds
 motionblinds==0.6.13
