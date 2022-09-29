@@ -14,14 +14,21 @@ from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
     PRESSURE_PSI,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
+from homeassistant.helpers.frame import report
 
 from .unit_conversion import PressureConverter
 
-UNIT_CONVERSION: dict[str, float] = PressureConverter.UNIT_CONVERSION
+# pylint: disable-next=protected-access
+UNIT_CONVERSION: dict[str, float] = PressureConverter._UNIT_CONVERSION
 VALID_UNITS = PressureConverter.VALID_UNITS
 
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:
     """Convert one unit of measurement to another."""
-    # Need to add warning when core migration finished
+    report(
+        "uses pressure utility. This is deprecated since 2022.10 and will "
+        "stop working in Home Assistant 2022.4, it should be updated to use "
+        "unit_conversion.PressureConverter instead",
+        error_if_core=False,
+    )
     return PressureConverter.convert(value, from_unit, to_unit)

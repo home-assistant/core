@@ -62,7 +62,9 @@ omit =
     homeassistant/components/androidtv/diagnostics.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
-    homeassistant/components/apcupsd/*
+    homeassistant/components/apcupsd/__init__.py
+    homeassistant/components/apcupsd/binary_sensor.py
+    homeassistant/components/apcupsd/sensor.py
     homeassistant/components/apple_tv/__init__.py
     homeassistant/components/apple_tv/browse_media.py
     homeassistant/components/apple_tv/media_player.py
@@ -326,7 +328,7 @@ omit =
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/binary_sensor.py
-    homeassistant/components/esphome/bluetooth.py
+    homeassistant/components/esphome/bluetooth/*
     homeassistant/components/esphome/button.py
     homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/climate.py
@@ -1230,6 +1232,7 @@ omit =
     homeassistant/components/switchbee/button.py
     homeassistant/components/switchbee/coordinator.py
     homeassistant/components/switchbee/entity.py
+    homeassistant/components/switchbee/light.py
     homeassistant/components/switchbee/switch.py
     homeassistant/components/switchbot/__init__.py
     homeassistant/components/switchbot/binary_sensor.py
