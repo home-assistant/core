@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from switchbee.api import SwitchBeeError, SwitchBeeTokenError
 from switchbee.const import SomfyCommand
@@ -110,9 +110,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
     def _update_from_coordinator(self) -> None:
         """Update the entity attributes from the coordinator data."""
 
-        coordinator_device = cast(
-            SwitchBeeShutter, self.coordinator.data[self._device.id]
-        )
+        coordinator_device = self._get_coordinator_device()
 
         if coordinator_device.position == -1:
             self._check_if_became_offline()
@@ -123,7 +121,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
 
         self._attr_current_cover_position = coordinator_device.position
 
-        if self._attr_current_cover_position == 0:
+        if self.current_cover_position == 0:
             self._attr_is_closed = True
         else:
             self._attr_is_closed = False
@@ -131,14 +129,14 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if self._attr_current_cover_position == 100:
+        if self.current_cover_position == 100:
             return
 
         await self.async_set_cover_position(position=100)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if self._attr_current_cover_position == 0:
+        if self.current_cover_position == 0:
             return
 
         await self.async_set_cover_position(position=0)
@@ -147,7 +145,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
         """Stop a moving cover."""
         # to stop the shutter, we just interrupt it with any state during operation
         await self.async_set_cover_position(
-            position=self._attr_current_cover_position, force=True
+            position=self.current_cover_position, force=True
         )
 
         # fetch data from the Central Unit to get the new position
@@ -156,7 +154,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Async function to set position to cover."""
         if (
-            self._attr_current_cover_position == kwargs[ATTR_POSITION]
+            self.current_cover_position == kwargs[ATTR_POSITION]
             and "force" not in kwargs
         ):
             return
@@ -164,11 +162,9 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
             await self.coordinator.api.set_state(self._device.id, kwargs[ATTR_POSITION])
         except (SwitchBeeError, SwitchBeeTokenError) as exp:
             raise HomeAssistantError(
-                f"Failed to set {self._attr_name} position to {str(kwargs[ATTR_POSITION])}, error: {str(exp)}"
+                f"Failed to set {self.name} position to {kwargs[ATTR_POSITION]}, error: {str(exp)}"
             ) from exp
 
-        cast(
-            SwitchBeeShutter, self.coordinator.data[self._device.id]
-        ).position = kwargs[ATTR_POSITION]
+        self._get_coordinator_device().position = kwargs[ATTR_POSITION]
         self.coordinator.async_set_updated_data(self.coordinator.data)
         self.async_write_ha_state()
