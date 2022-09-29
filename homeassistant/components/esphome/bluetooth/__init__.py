@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 
 from aioesphomeapi import APIClient
-from awesomeversion import AwesomeVersion
 
 from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
@@ -24,7 +23,6 @@ from ..entry_data import RuntimeEntryData
 from .client import ESPHomeClient
 from .scanner import ESPHomeScanner
 
-CONNECTABLE_MIN_VERSION = AwesomeVersion("2022.10.0-dev")
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -53,10 +51,13 @@ async def async_connect_scanner(
     assert entry.unique_id is not None
     source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
-    connectable = bool(
-        entry_data.device_info
-        and AwesomeVersion(entry_data.device_info.esphome_version)
-        >= CONNECTABLE_MIN_VERSION
+    version = entry_data.device_info.bluetooth_proxy_version
+    connectable = version >= 2
+    _LOGGER.debug(
+        "Connecting scanner for %s, version=%s, connectable=%s",
+        source,
+        version,
+        connectable,
     )
     connector = HaBluetoothConnector(
         client=ESPHomeClient,
