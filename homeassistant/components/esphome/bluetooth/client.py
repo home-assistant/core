@@ -8,6 +8,7 @@ from typing import Any, TypeVar, cast
 import uuid
 
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
+import async_timeout
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.client import BaseBleakClient, NotifyCallback
 from bleak.backends.device import BLEDevice
@@ -24,6 +25,7 @@ from .service import BleakGATTServiceESPHome
 
 DEFAULT_MTU = 23
 GATT_HEADER_SIZE = 3
+DISCONNECT_TIMEOUT = 5
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
 
@@ -179,6 +181,10 @@ class ESPHomeClient(BaseBleakClient):
         """Disconnect from the peripheral device."""
         self._unsubscribe_connection_state()
         await self._client.bluetooth_device_disconnect(self._address_as_int)
+        entry_data = self._async_get_entry_data()
+        if not entry_data.ble_connections_free:
+            async with async_timeout.timeout(DISCONNECT_TIMEOUT):
+                await entry_data.wait_for_ble_connections_free()
         return True
 
     @property
