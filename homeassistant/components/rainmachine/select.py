@@ -43,7 +43,7 @@ class FreezeProtectionSelectOption:
 class FreezeProtectionTemperatureMixin:
     """Define an entity description mixin to include an options list."""
 
-    options: list[FreezeProtectionSelectOption]
+    extended_options: list[FreezeProtectionSelectOption]
 
 
 @dataclass
@@ -63,7 +63,7 @@ SELECT_DESCRIPTIONS = (
         entity_category=EntityCategory.CONFIG,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="freezeProtectTemp",
-        options=[
+        extended_options=[
             FreezeProtectionSelectOption(
                 api_value=0.0,
                 imperial_label="32°F",
@@ -128,7 +128,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
         self._api_value_to_label_map = {}
         self._label_to_api_value_map = {}
 
-        for option in description.options:
+        for option in description.extended_options:
             if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
                 label = option.imperial_label
             else:
