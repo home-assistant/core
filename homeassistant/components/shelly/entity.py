@@ -223,7 +223,9 @@ def async_setup_entry_rest(
     wrapper: ShellyDeviceRestWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
         config_entry.entry_id
     ][REST]
-    block_wrapper: BlockDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
+    block_wrapper: BlockDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry.entry_id
+    ][BLOCK]
 
     entities = []
     for sensor_id in sensors:
