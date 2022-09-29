@@ -25,7 +25,9 @@ from .service import BleakGATTServiceESPHome
 
 DEFAULT_MTU = 23
 GATT_HEADER_SIZE = 3
-DISCONNECT_TIMEOUT = 5
+DISCONNECT_TIMEOUT = 5.0
+CONNECT_FREE_SLOT_TIMEOUT = 2.0
+
 DEFAULT_MAX_WRITE_WITHOUT_RESPONSE = DEFAULT_MTU - GATT_HEADER_SIZE
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,6 +145,7 @@ class ESPHomeClient(BaseBleakClient):
         Returns:
             Boolean representing connection status.
         """
+        await self._wait_for_free_connection_slot(CONNECT_FREE_SLOT_TIMEOUT)
 
         connected_future: asyncio.Future[bool] = asyncio.Future()
 
@@ -194,14 +197,19 @@ class ESPHomeClient(BaseBleakClient):
         """Disconnect from the peripheral device."""
         self._unsubscribe_connection_state()
         await self._client.bluetooth_device_disconnect(self._address_as_int)
-        entry_data = self._async_get_entry_data()
-        if not entry_data.ble_connections_free:
-            _LOGGER.debug(
-                "%s: Out of connection slots, waiting for disconnect", self._source
-            )
-            async with async_timeout.timeout(DISCONNECT_TIMEOUT):
-                await entry_data.wait_for_ble_connections_free()
+        await self._wait_for_free_connection_slot(DISCONNECT_TIMEOUT)
         return True
+
+    async def _wait_for_free_connection_slot(self, timeout: float) -> None:
+        """Wait for a free connection slot."""
+        entry_data = self._async_get_entry_data()
+        if entry_data.ble_connections_free:
+            return
+        _LOGGER.debug(
+            "%s: Out of connection slots, waiting for a free one", self._source
+        )
+        async with async_timeout.timeout(timeout):
+            await entry_data.wait_for_ble_connections_free()
 
     @property
     def is_connected(self) -> bool:
