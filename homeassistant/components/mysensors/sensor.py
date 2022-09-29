@@ -99,6 +99,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "V_DISTANCE": SensorEntityDescription(
         key="V_DISTANCE",
         native_unit_of_measurement=LENGTH_METERS,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:ruler",
     ),
     "V_IMPEDANCE": SensorEntityDescription(
@@ -125,6 +126,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "V_FLOW": SensorEntityDescription(
         key="V_FLOW",
         native_unit_of_measurement=LENGTH_METERS,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:gauge",
     ),
     "V_VOLUME": SensorEntityDescription(
