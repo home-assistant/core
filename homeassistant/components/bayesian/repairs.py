@@ -38,7 +38,9 @@ def raise_mirrored_entries(
 
 
 # Should deprecate in some future version (2022.10 at time of writing) & make prob_given_false required in schemas.
-def raise_no_prob_given_false(hass: HomeAssistant, observation, text: str) -> None:
+def raise_no_prob_given_false(
+    hass: HomeAssistant, observation: Observation, text: str
+) -> None:
     """In previous 2022.9 and earlier, prob_given_false was optional and had a default version."""
     issue_registry.async_create_issue(
         hass,
