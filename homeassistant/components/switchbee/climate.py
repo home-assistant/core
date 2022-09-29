@@ -91,6 +91,7 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
     _attr_fan_modes = SUPPORTED_FAN_MODES
+    _attr_target_temperature_step = 1
 
     def __init__(
         self,
@@ -100,19 +101,30 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
         """Initialize the Switchbee switch."""
         super().__init__(device, coordinator)
         # set HVAC capabilities
-        self._attr_target_temperature_step = 1
         self._attr_max_temp = device.max_temperature
         self._attr_min_temp = device.min_temperature
         self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.unit]
         self._attr_hvac_modes = [HVAC_MODE_SB_TO_HASS[mode] for mode in device.modes]
         self._attr_hvac_modes.append(HVACMode.OFF)
-
         self._update_device_attrs(self._device)
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return hvac operation ie. heat, cool mode."""
+        return self._attr_hvac_mode
+
+    @property
+    def fan_mode(self) -> str:
+        """Return the fan setting.
+
+        Requires ClimateEntityFeature.FAN_MODE.
+        """
+        return self._attr_fan_mode
+
+    @property
+    def target_temperature(self) -> int:
+        """Return the temperature we try to reach."""
+        return self._attr_target_temperature
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -123,39 +135,39 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
         super()._handle_coordinator_update()
 
     def _update_device_attrs(self, device: SwitchBeeThermostat) -> None:
-        if device.state == ApiStateCommand.OFF:
-            self._attr_hvac_mode: HVACMode = HVACMode.OFF
-        else:
-            self._attr_hvac_mode = HVAC_MODE_SB_TO_HASS[device.mode]
+        self._attr_hvac_mode: HVACMode = (
+            HVACMode.OFF
+            if device.state == ApiStateCommand.OFF
+            else HVAC_MODE_SB_TO_HASS[device.mode]
+        )
         self._attr_fan_mode: str = FAN_SB_TO_HASS[device.fan]
         self._attr_current_temperature: float = device.temperature
         self._attr_target_temperature: int = device.target_temperature
 
     def _create_switchbee_request(
         self,
-        power: str = "",
-        mode: str = "",
-        fan: str = "",
-        target_temperature: int = 0,
+        power: str | None = None,
+        mode: str | None = None,
+        fan: str | None = None,
+        target_temperature: int | None = None,
     ) -> dict[str, Any]:
         """Create SwitchBee thermostat state object."""
 
         new_power = power
         if not new_power:
-            if self._attr_hvac_mode == HVACMode.OFF:
-                new_power = ApiStateCommand.OFF
-            else:
-                new_power = ApiStateCommand.ON
+            new_power = (
+                ApiStateCommand.OFF
+                if self.hvac_mode == HVACMode.OFF
+                else ApiStateCommand.ON
+            )
 
         data = {
             ApiAttribute.POWER: new_power,
-            ApiAttribute.MODE: mode
-            if mode
-            else HVAC_MODE_HASS_TO_SB[self._attr_hvac_mode],
-            ApiAttribute.FAN: fan if fan else FAN_HASS_TO_SB[self._attr_fan_mode],
+            ApiAttribute.MODE: mode if mode else HVAC_MODE_HASS_TO_SB[self.hvac_mode],
+            ApiAttribute.FAN: fan if fan else FAN_HASS_TO_SB[self.fan_mode],
             ApiAttribute.CONFIGURED_TEMPERATURE: target_temperature
             if target_temperature
-            else self._attr_target_temperature,
+            else self.target_temperature,
         }
 
         return data
