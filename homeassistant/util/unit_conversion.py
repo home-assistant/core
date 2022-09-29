@@ -104,10 +104,27 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return value
 
-        return value / cls.get_unit_ratio(from_unit, to_unit)
+        pint_from, pint_to = cls._get_pint_units(from_unit, to_unit)
+
+        try:
+            return (value * pint_from).m_as(pint_to)  # type: ignore[no-any-return]
+        except pint.DimensionalityError as err:
+            raise HomeAssistantError(str(err)) from err
 
     @classmethod
     def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
+        """Get unit ratio between units of measurement."""
+        pint_from, pint_to = cls._get_pint_units(from_unit, to_unit)
+
+        try:
+            return pint_to.m_as(pint_from)  # type: ignore[no-any-return]
+        except pint.DimensionalityError as err:
+            raise HomeAssistantError(str(err)) from err
+
+    @classmethod
+    def _get_pint_units(
+        cls, from_unit: str, to_unit: str
+    ) -> tuple[pint.Quantity, pint.Quantity]:
         """Get unit ratio between units of measurement."""
         try:
             pint_from = _UNIT_REGISTRY(_PINT_UNIT_MAP.get(from_unit, from_unit))
@@ -123,10 +140,7 @@ class BaseUnitConverter:
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             ) from err
 
-        try:
-            return (1 * pint_to).m_as(pint_from)  # type: ignore[no-any-return]
-        except pint.DimensionalityError as err:
-            raise HomeAssistantError(str(err)) from err
+        return (pint_from, pint_to)
 
 
 class DistanceConverter(BaseUnitConverter):
