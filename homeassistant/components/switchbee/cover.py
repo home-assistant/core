@@ -37,10 +37,7 @@ async def async_setup_entry(
         elif isinstance(device, SwitchBeeSomfy):
             entities.append(SwitchBeeSomfyEntity(device, coordinator))
 
-    async_add_entities(
-        device_class(device, coordinator)
-        for device, device_class in switchbee_covers_tuple
-    )
+    async_add_entities(entities)
 
 
 class SwitchBeeSomfyEntity(SwitchBeeDeviceEntity[SwitchBeeSomfy], CoverEntity):
