@@ -34,15 +34,32 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_available = self.device.available
         self._attr_unique_id = self.device.device_url
 
-        if (
-            "#" in self.device_url
-            and not self.device_url.endswith("#1")
-            and self.device.label
-        ):
-            # Set the name in order to have different name for every sensor on the same device
+        if self.is_sub_device and not self.is_sub_device_default_naming:
+            # Check if the provided label is "MAIN_DEVICE-XXX"
+            # In that case, don't use the provided label and use the standard name for each sub devices
             self._attr_name = self.device.label
 
         self._attr_device_info = self.generate_device_info()
+
+    @property
+    def is_sub_device(self) -> bool:
+        """Return True if device is a sub device."""
+        return "#" in self.device_url and not self.device_url.endswith("#1")
+
+    @property
+    def is_sub_device_default_naming(self) -> bool:
+        """Return True if device has a default name not updated by the user."""
+        if self.is_sub_device and self.device.label and "-" in self.device.label:
+            main_device = self.executor.linked_device(1)
+            if (
+                main_device
+                and main_device.label
+                and self.device.label.startswith(main_device.label + "-")
+                and self.device.label.split("-", 1)[1].isdigit()
+            ):
+                return True
+
+        return False
 
     @property
     def device(self) -> Device:
@@ -54,7 +71,7 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         # Some devices, such as the Smart Thermostat have several devices in one physical device,
         # with same device url, terminated by '#' and a number.
         # In this case, we use the base device url as the device identifier.
-        if "#" in self.device_url and not self.device_url.endswith("#1"):
+        if self.is_sub_device:
             # Only return the url of the base device, to inherit device name and model from parent device.
             return {
                 "identifiers": {(DOMAIN, self.executor.base_device_url)},
