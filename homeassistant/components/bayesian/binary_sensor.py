@@ -475,7 +475,8 @@ class BayesianBinarySensor(BinarySensorEntity):
         ]
 
         return {
-            ATTR_OBSERVATIONS: attr_observations_list,
+            ATTR_PROBABILITY: round(self.probability, 2),
+            ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
                 {
                     obs.entity_id
@@ -485,8 +486,7 @@ class BayesianBinarySensor(BinarySensorEntity):
                     and obs.observed is not None
                 }
             ),
-            ATTR_PROBABILITY: round(self.probability, 2),
-            ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
+            ATTR_OBSERVATIONS: attr_observations_list,
         }
 
     async def async_update(self) -> None:
