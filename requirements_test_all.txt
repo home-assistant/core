@@ -475,6 +475,9 @@ elmax_api==0.0.2
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
+# homeassistant.components.huisbaasje
+energyflip-client==0.2.1
+
 # homeassistant.components.enocean
 enocean==0.50
 
@@ -658,9 +661,6 @@ httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.6.1
-
-# homeassistant.components.huisbaasje
-huisbaasje-client==0.1.0
 
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
