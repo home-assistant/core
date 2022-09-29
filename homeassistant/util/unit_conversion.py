@@ -158,7 +158,7 @@ class EnergyConverter(BaseUnitConverter):
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
     _UNIT_CONVERSION = {
-        ENERGY_WATT_HOUR: 1 * 1000,
+        ENERGY_WATT_HOUR: 1000,
         ENERGY_KILO_WATT_HOUR: 1,
         ENERGY_MEGA_WATT_HOUR: Fraction(1, 1000),
     }
@@ -175,8 +175,8 @@ class MassConverter(BaseUnitConverter):
     UNIT_CLASS = "mass"
     NORMALIZED_UNIT = MASS_GRAMS
     _UNIT_CONVERSION = {
-        MASS_MICROGRAMS: 1 * 1000 * 1000,
-        MASS_MILLIGRAMS: 1 * 1000,
+        MASS_MICROGRAMS: 1000 * 1000,
+        MASS_MILLIGRAMS: 1000,
         MASS_GRAMS: 1,
         MASS_KILOGRAMS: Fraction(1, 1000),
         MASS_OUNCES: Fraction(1, _OUNCE_TO_G),
@@ -277,10 +277,10 @@ class TemperatureConverter(BaseUnitConverter):
         TEMP_FAHRENHEIT,
         TEMP_KELVIN,
     }
-    _UNIT_CONVERSION = {
-        TEMP_CELSIUS: 1.0,
-        TEMP_FAHRENHEIT: 1.8,
-        TEMP_KELVIN: 1.0,
+    _UNIT_CONVERSION: dict[str, Fraction | int] = {
+        TEMP_CELSIUS: 1,
+        TEMP_FAHRENHEIT: Fraction(1.8),
+        TEMP_KELVIN: 1,
     }
 
     @classmethod
