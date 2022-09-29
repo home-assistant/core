@@ -163,7 +163,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         new_version = self.entity_description.latest_version(
             self.wrapper.device.status,
         )
-        if new_version is not None:
+        if new_version not in (None, ""):
             return cast(str, new_version)
 
         return self.installed_version

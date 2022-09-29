@@ -15,5 +15,4 @@ HAS_SUPPORTED_BRANDS = [
     "thermobeacon",
     "wemo",
     "yalexs_ble",
-    "zwave_js",
 ]
