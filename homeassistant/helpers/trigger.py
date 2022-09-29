@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
 import voluptuous as vol
 
@@ -107,30 +107,51 @@ async def async_validate_trigger_config(
 def _trigger_action_wrapper(
     hass: HomeAssistant, action: Callable, conf: ConfigType
 ) -> Callable:
-    """Wrap trigger action with extra vars if configured."""
+    """Wrap trigger action with extra vars if configured.
+
+    If action is a coroutine function, a coroutine function will be returned.
+    If action is a callback, a callback will be returned.
+    """
     if CONF_VARIABLES not in conf:
         return action
 
-    @functools.wraps(action)
-    async def with_vars(
-        run_variables: dict[str, Any], context: Context | None = None
-    ) -> None:
-        """Wrap action with extra vars."""
-        trigger_variables = conf[CONF_VARIABLES]
-        run_variables.update(trigger_variables.async_render(hass, run_variables))
+    # Check for partials to properly determine if coroutine function
+    check_func = action
+    while isinstance(check_func, functools.partial):
+        check_func = check_func.func
 
-        if asyncio.iscoroutinefunction(action):
+    wrapper_func: Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]
+    if asyncio.iscoroutinefunction(check_func):
+        async_action = cast(Callable[..., Coroutine[Any, Any, None]], action)
+
+        @functools.wraps(async_action)
+        async def async_with_vars(
+            run_variables: dict[str, Any], context: Context | None = None
+        ) -> None:
+            """Wrap action with extra vars."""
+            trigger_variables = conf[CONF_VARIABLES]
+            run_variables.update(trigger_variables.async_render(hass, run_variables))
             await action(run_variables, context)
-        elif is_callback(action):
 
-            def wrapper() -> None:
-                action(run_variables, context)
+        wrapper_func = async_with_vars
 
-            callback(wrapper)
-        else:
+    else:
+
+        @functools.wraps(action)
+        async def with_vars(
+            run_variables: dict[str, Any], context: Context | None = None
+        ) -> None:
+            """Wrap action with extra vars."""
+            trigger_variables = conf[CONF_VARIABLES]
+            run_variables.update(trigger_variables.async_render(hass, run_variables))
             action(run_variables, context)
 
-    return with_vars
+        if is_callback(check_func):
+            with_vars = callback(with_vars)
+
+        wrapper_func = with_vars
+
+    return wrapper_func
 
 
 async def async_initialize_triggers(
