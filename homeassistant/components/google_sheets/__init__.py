@@ -12,11 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
@@ -112,13 +108,9 @@ async def async_setup_service(hass: HomeAssistant) -> None:
             call.data[DATA_CONFIG_ENTRY]
         )
         if not entry:
-            raise HomeAssistantError(
-                "Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}"
-            )
+            raise ValueError("Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
         if not (session := hass.data[DOMAIN].get(entry.entry_id)):
-            raise HomeAssistantError(
-                "Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}"
-            )
+            raise ValueError("Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}")
         await session.async_ensure_token_valid()
         await hass.async_add_executor_job(_append_to_sheet, call, entry)
 

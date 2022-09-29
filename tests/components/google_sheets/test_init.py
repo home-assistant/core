@@ -14,7 +14,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.google_sheets import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -76,17 +76,6 @@ async def mock_setup_integration(
 
     yield func
 
-    # Verify clean unload
-    entries = hass.config_entries.async_entries(DOMAIN)
-    for entry in entries:
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert not hass.data.get(DOMAIN)
-        assert entry.state is ConfigEntryState.NOT_LOADED
-
-    assert not len(hass.services.async_services().get(DOMAIN, {}))
-
 
 async def test_setup_success(
     hass: HomeAssistant, setup_integration: ComponentSetup
@@ -97,6 +86,13 @@ async def test_setup_success(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(entries[0].entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.data.get(DOMAIN)
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
+    assert not len(hass.services.async_services().get(DOMAIN, {}))
 
 
 @pytest.mark.parametrize(
@@ -225,6 +221,19 @@ async def test_append_sheet_invalid_config_entry(
     """Test successful setup and unload."""
     await setup_integration()
 
+    # Exercise service call on a config entry that does not exist
+    with pytest.raises(ValueError, match=r"Invalid config entry.*"):
+        await hass.services.async_call(
+            DOMAIN,
+            "append_sheet",
+            {
+                "config_entry": config_entry.entry_id + "XXX",
+                "worksheet": "Sheet1",
+                "data": {"foo": "bar"},
+            },
+            blocking=True,
+        )
+
     # Unload the config entry invoke the service on the unloaded entry id
     assert config_entry.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entry.entry_id)
@@ -232,25 +241,12 @@ async def test_append_sheet_invalid_config_entry(
     assert not hass.data.get(DOMAIN)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(HomeAssistantError, match=r"Config entry not loaded.*"):
+    with pytest.raises(ServiceNotFound):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
             {
                 "config_entry": config_entry.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
-            },
-            blocking=True,
-        )
-
-    # Exercise service call on a config entry that does not exist
-    with pytest.raises(HomeAssistantError, match=r"Invalid config entry.*"):
-        await hass.services.async_call(
-            DOMAIN,
-            "append_sheet",
-            {
-                "config_entry": config_entry.entry_id + "XXX",
                 "worksheet": "Sheet1",
                 "data": {"foo": "bar"},
             },
