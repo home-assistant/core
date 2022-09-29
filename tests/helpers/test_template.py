@@ -2442,10 +2442,6 @@ async def test_entry_id(hass):
     assert_result_info(info, config_entry.entry_id)
     assert info.rate_limit is None
 
-    info = render_to_info(hass, "{{ entry_id('Some integration') }}")
-    assert_result_info(info, config_entry.entry_id)
-    assert info.rate_limit is None
-
 
 async def test_device_id(hass):
     """Test device_id function."""

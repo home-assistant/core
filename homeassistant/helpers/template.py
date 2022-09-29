@@ -1062,21 +1062,12 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     ]
 
 
-def entry_id(hass: HomeAssistant, entity_id_or_entry_name: str) -> str | None:
-    """Get an entry ID from an entity ID or entry name."""
+def entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get an entry ID from an entity ID."""
     entity_reg = entity_registry.async_get(hass)
-    entity = entity_reg.async_get(entity_id_or_entry_name)
-    if entity is not None:
+    if entity := entity_reg.async_get(entity_id):
         return entity.config_entry_id
-
-    return next(
-        (
-            entry.entry_id
-            for entry in hass.config_entries.async_entries()
-            if str(entity_id_or_entry_name) == entry.title
-        ),
-        None,
-    )
+    return None
 
 
 def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
