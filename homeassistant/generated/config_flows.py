@@ -3,8 +3,6 @@
 To update, run python3 -m script.hassfest
 """
 
-# fmt: off
-
 FLOWS = {
     "integration": [
         "abode",
@@ -24,13 +22,13 @@ FLOWS = {
         "aladdin_connect",
         "alarmdecoder",
         "almond",
-        "ambee",
         "amberelectric",
         "ambiclimate",
         "ambient_station",
         "android_ip_webcam",
         "androidtv",
         "anthemav",
+        "apcupsd",
         "apple_tv",
         "arcam_fmj",
         "aseko_pool_live",
@@ -86,6 +84,7 @@ FLOWS = {
         "dnsip",
         "doorbird",
         "dsmr",
+        "dsmr_reader",
         "dunehd",
         "dynalite",
         "eafm",
@@ -117,7 +116,6 @@ FLOWS = {
         "flipr",
         "flo",
         "flume",
-        "flunearyou",
         "flux_led",
         "forecast_solar",
         "forked_daapd",
@@ -143,6 +141,7 @@ FLOWS = {
         "gogogate2",
         "goodwe",
         "google",
+        "google_sheets",
         "google_travel_time",
         "govee_ble",
         "gpslogger",
@@ -172,6 +171,7 @@ FLOWS = {
         "hyperion",
         "ialarm",
         "iaqualink",
+        "ibeacon",
         "icloud",
         "ifttt",
         "inkbird",
@@ -191,6 +191,8 @@ FLOWS = {
         "justnimbus",
         "kaleidescape",
         "keenetic_ndms2",
+        "kegtron",
+        "keymitt_ble",
         "kmtronic",
         "knx",
         "kodi",
@@ -205,6 +207,7 @@ FLOWS = {
         "laundrify",
         "led_ble",
         "lg_soundbar",
+        "lidarr",
         "life360",
         "lifx",
         "litejet",
@@ -253,6 +256,7 @@ FLOWS = {
         "nexia",
         "nextdns",
         "nfandroidtv",
+        "nibe_heatpump",
         "nightscout",
         "nina",
         "nmap_tracker",
@@ -303,6 +307,7 @@ FLOWS = {
         "qingping",
         "qnap_qsw",
         "rachio",
+        "radarr",
         "radio_browser",
         "radiotherm",
         "rainforest_eagle",
@@ -456,7 +461,7 @@ FLOWS = {
         "zerproc",
         "zha",
         "zwave_js",
-        "zwave_me"
+        "zwave_me",
     ],
     "helper": [
         "derivative",
@@ -466,6 +471,6 @@ FLOWS = {
         "switch_as_x",
         "threshold",
         "tod",
-        "utility_meter"
-    ]
+        "utility_meter",
+    ],
 }

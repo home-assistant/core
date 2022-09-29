@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Issue effect for all LEDs",
+            "issue_individual_led_effect": "Issue effect for individual LED",
             "squawk": "Squawk",
             "warn": "Warn"
         },

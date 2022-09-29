@@ -6,12 +6,15 @@ from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, Robot
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .hub import LitterRobotHub
 
 PLATFORMS_BY_TYPE = {
     Robot: (
+        Platform.BINARY_SENSOR,
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
@@ -33,11 +36,26 @@ def get_platforms_for_robots(robots: list[Robot]) -> set[Platform]:
     }
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Litter-Robot integration."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "migrated_attributes",
+        breaks_in_ha_version="2022.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="migrated_attributes",
+    )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hub = hass.data[DOMAIN][entry.entry_id] = LitterRobotHub(hass, entry.data)
-    await hub.login(load_robots=True)
+    await hub.login(load_robots=True, subscribe_for_updates=True)
 
     if platforms := get_platforms_for_robots(hub.account.robots):
         await hass.config_entries.async_forward_entry_setups(entry, platforms)

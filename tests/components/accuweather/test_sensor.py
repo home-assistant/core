@@ -32,8 +32,9 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
+from . import init_integration
+
 from tests.common import async_fire_time_changed, load_fixture
-from tests.components.accuweather import init_integration
 
 
 async def test_sensor_without_forecast(hass):

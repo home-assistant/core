@@ -107,7 +107,7 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input text."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputText](_LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED

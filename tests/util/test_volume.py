@@ -10,10 +10,34 @@ from homeassistant.const import (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.volume as volume_util
 
 INVALID_SYMBOL = "bob"
 VALID_SYMBOL = VOLUME_LITERS
+
+
+def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert volume_util.convert(2, VOLUME_LITERS, VOLUME_LITERS) == 2
+    assert "use unit_conversion.VolumeConverter instead" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "function_name, value, expected",
+    [
+        ("liter_to_gallon", 2, pytest.approx(0.528344)),
+        ("gallon_to_liter", 2, 7.570823568),
+        ("cubic_meter_to_cubic_feet", 2, pytest.approx(70.629333)),
+        ("cubic_feet_to_cubic_meter", 2, pytest.approx(0.0566337)),
+    ],
+)
+def test_deprecated_functions(
+    function_name: str, value: float, expected: float
+) -> None:
+    """Test that deprecated function still work."""
+    convert = getattr(volume_util, function_name)
+    assert convert(value) == expected
 
 
 def test_convert_same_unit():
@@ -26,10 +50,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         volume_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         volume_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 

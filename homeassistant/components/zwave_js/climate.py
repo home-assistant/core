@@ -43,7 +43,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -388,7 +388,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         except (IndexError, ValueError, TypeError):
             pass
 
-        return convert_temperature(min_temp, base_unit, self.temperature_unit)
+        return TemperatureConverter.convert(min_temp, base_unit, self.temperature_unit)
 
     @property
     def max_temp(self) -> float:
@@ -404,7 +404,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         except (IndexError, ValueError, TypeError):
             pass
 
-        return convert_temperature(max_temp, base_unit, self.temperature_unit)
+        return TemperatureConverter.convert(max_temp, base_unit, self.temperature_unit)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""

@@ -9,7 +9,7 @@ It should have 2 entities - the actual switch and a sensor for power usage.
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import POWER_WATT
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,

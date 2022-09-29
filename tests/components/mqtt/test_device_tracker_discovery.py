@@ -6,7 +6,6 @@ import pytest
 
 from homeassistant.components import device_tracker, mqtt
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
 from homeassistant.setup import async_setup_component
 
@@ -60,7 +59,7 @@ async def test_discover_device_tracker(hass, mqtt_mock_entry_no_yaml_config, cap
 
     assert state is not None
     assert state.name == "test"
-    assert ("device_tracker", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("device_tracker", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @pytest.mark.no_fail_on_log_exception

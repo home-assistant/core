@@ -1,8 +1,10 @@
 {
   "domain": "dsmr_reader",
   "name": "DSMR Reader",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dsmr_reader",
   "dependencies": ["mqtt"],
-  "codeowners": ["@depl0y"],
+  "mqtt": ["dsmr/#"],
+  "codeowners": ["@depl0y", "@glodenox"],
   "iot_class": "local_push"
 }

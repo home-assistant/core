@@ -13,6 +13,7 @@ from pybravia import (
     BraviaTVConnectionTimeout,
     BraviaTVError,
     BraviaTVNotFound,
+    BraviaTVTurnedOff,
 )
 from typing_extensions import Concatenate, ParamSpec
 
@@ -59,12 +60,14 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         client: BraviaTV,
         pin: str,
+        use_psk: bool,
         ignored_sources: list[str],
     ) -> None:
         """Initialize Bravia TV Client."""
 
         self.client = client
         self.pin = pin
+        self.use_psk = use_psk
         self.ignored_sources = ignored_sources
         self.source: str | None = None
         self.source_list: list[str] = []
@@ -110,9 +113,12 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Connect and fetch data."""
         try:
             if not self.connected:
-                await self.client.connect(
-                    pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
-                )
+                if self.use_psk:
+                    await self.client.connect(psk=self.pin)
+                else:
+                    await self.client.connect(
+                        pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+                    )
                 self.connected = True
 
             power_status = await self.client.get_power_status()
@@ -133,7 +139,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.debug("Update skipped, Bravia API service is reloading")
                 return
             raise UpdateFailed("Error communicating with device") from err
-        except (BraviaTVConnectionError, BraviaTVConnectionTimeout):
+        except (BraviaTVConnectionError, BraviaTVConnectionTimeout, BraviaTVTurnedOff):
             self.is_on = False
             self.connected = False
             _LOGGER.debug("Update skipped, Bravia TV is off")
@@ -282,3 +288,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                         cmd,
                         commands_keys,
                     )
+
+    @catch_braviatv_errors
+    async def async_reboot_device(self) -> None:
+        """Send command to reboot the device."""
+        await self.client.reboot()
+
+    @catch_braviatv_errors
+    async def async_terminate_apps(self) -> None:
+        """Send command to terminate all applications."""
+        await self.client.terminate_apps()

@@ -96,7 +96,6 @@ class VlcDevice(MediaPlayerEntity):
         self._name = name
         self._volume: float | None = None
         self._muted: bool | None = None
-        self._state: str | None = None
         self._media_position_updated_at: datetime | None = None
         self._media_position: int | None = None
         self._media_duration: int | None = None
@@ -134,7 +133,7 @@ class VlcDevice(MediaPlayerEntity):
                 )
                 return
 
-            self._state = MediaPlayerState.IDLE
+            self._attr_state = MediaPlayerState.IDLE
             self._available = True
             LOGGER.info("Connected to vlc host: %s", self._vlc.host)
 
@@ -144,13 +143,13 @@ class VlcDevice(MediaPlayerEntity):
         self._volume = status.audio_volume / MAX_VOLUME
         state = status.state
         if state == "playing":
-            self._state = MediaPlayerState.PLAYING
+            self._attr_state = MediaPlayerState.PLAYING
         elif state == "paused":
-            self._state = MediaPlayerState.PAUSED
+            self._attr_state = MediaPlayerState.PAUSED
         else:
-            self._state = MediaPlayerState.IDLE
+            self._attr_state = MediaPlayerState.IDLE
 
-        if self._state != MediaPlayerState.IDLE:
+        if self._attr_state != MediaPlayerState.IDLE:
             self._media_duration = (await self._vlc.get_length()).length
             time_output = await self._vlc.get_time()
             vlc_position = time_output.time
@@ -190,11 +189,6 @@ class VlcDevice(MediaPlayerEntity):
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the device."""
-        return self._state
 
     @property
     def available(self) -> bool:
@@ -266,25 +260,29 @@ class VlcDevice(MediaPlayerEntity):
     @catch_vlc_errors
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._vlc.play()
-        self._state = MediaPlayerState.PLAYING
+        status = await self._vlc.status()
+        if status.state == "paused":
+            # If already paused, play by toggling pause.
+            await self._vlc.pause()
+        else:
+            await self._vlc.play()
+        self._attr_state = MediaPlayerState.PLAYING
 
     @catch_vlc_errors
     async def async_media_pause(self) -> None:
         """Send pause command."""
         status = await self._vlc.status()
         if status.state != "paused":
-            # Make sure we're not already paused since VLCTelnet.pause() toggles
-            # pause.
+            # Make sure we're not already paused as pausing again will unpause.
             await self._vlc.pause()
 
-        self._state = MediaPlayerState.PAUSED
+        self._attr_state = MediaPlayerState.PAUSED
 
     @catch_vlc_errors
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._vlc.stop()
-        self._state = MediaPlayerState.IDLE
+        self._attr_state = MediaPlayerState.IDLE
 
     @catch_vlc_errors
     async def async_play_media(
@@ -310,7 +308,7 @@ class VlcDevice(MediaPlayerEntity):
         )
 
         await self._vlc.add(media_id)
-        self._state = MediaPlayerState.PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
 
     @catch_vlc_errors
     async def async_media_previous_track(self) -> None:

@@ -23,6 +23,7 @@ from typing import Any, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
+from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
@@ -1529,6 +1530,11 @@ def arc_tangent2(*args, default=_SENTINEL):
         return default
 
 
+def version(value):
+    """Filter and function to get version object of the value."""
+    return AwesomeVersion(value)
+
+
 def square_root(value, default=_SENTINEL):
     """Filter and function to get square root of the value."""
     try:
@@ -1713,7 +1719,13 @@ def regex_match(value, find="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return bool(re.match(find, value, flags))
+    return bool(_regex_cache(find, flags).match(value))
+
+
+@lru_cache(maxsize=128)
+def _regex_cache(find: str, flags: int) -> re.Pattern:
+    """Cache compiled regex."""
+    return re.compile(find, flags)
 
 
 def regex_replace(value="", find="", replace="", ignorecase=False):
@@ -1721,8 +1733,7 @@ def regex_replace(value="", find="", replace="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    regex = re.compile(find, flags)
-    return regex.sub(replace, value)
+    return _regex_cache(find, flags).sub(replace, value)
 
 
 def regex_search(value, find="", ignorecase=False):
@@ -1730,7 +1741,7 @@ def regex_search(value, find="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return bool(re.search(find, value, flags))
+    return bool(_regex_cache(find, flags).search(value))
 
 
 def regex_findall_index(value, find="", index=0, ignorecase=False):
@@ -1743,7 +1754,7 @@ def regex_findall(value, find="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return re.findall(find, value, flags)
+    return _regex_cache(find, flags).findall(value)
 
 
 def bitwise_and(first_value, second_value):
@@ -2001,6 +2012,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["slugify"] = slugify
         self.filters["iif"] = iif
         self.filters["bool"] = forgiving_boolean
+        self.filters["version"] = version
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2033,6 +2045,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["slugify"] = slugify
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
+        self.globals["version"] = version
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search

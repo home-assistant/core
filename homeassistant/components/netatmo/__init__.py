@@ -8,6 +8,7 @@ import secrets
 
 import aiohttp
 import pyatmo
+from pyatmo.const import ALL_SCOPES as NETATMO_SCOPES
 import voluptuous as vol
 
 from homeassistant.components import cloud
@@ -51,7 +52,6 @@ from .const import (
     DATA_PERSONS,
     DATA_SCHEDULES,
     DOMAIN,
-    NETATMO_SCOPES,
     PLATFORMS,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
@@ -150,10 +150,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     data_handler = NetatmoDataHandler(hass, entry)
-    await data_handler.async_setup()
     hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await data_handler.async_setup()
 
     async def unregister_webhook(
         call_or_event_or_dt: ServiceCall | Event | datetime | None,
@@ -208,10 +206,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
-
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
-        )
+        else:
+            entry.async_on_unload(
+                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+            )
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
