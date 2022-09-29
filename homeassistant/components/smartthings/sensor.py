@@ -553,7 +553,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add binary sensors for a config entry."""
+    """Add sensors for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     entities: list[SensorEntity] = []
     for device in broker.devices.values():
@@ -641,7 +641,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the binary sensor."""
+        """Return the name of the sensor."""
         return f"{self._device.label} {self._name}"
 
     @property
@@ -681,7 +681,7 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the binary sensor."""
+        """Return the name of the sensor."""
         return f"{self._device.label} {THREE_AXIS_NAMES[self._index]}"
 
     @property
@@ -716,7 +716,7 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the binary sensor."""
+        """Return the name of the sensor."""
         return f"{self._device.label} {self.report_name}"
 
     @property
@@ -747,3 +747,19 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         if self.report_name == "power":
             return POWER_WATT
         return ENERGY_KILO_WATT_HOUR
+
+    @property
+    def extra_state_attributes(self):
+        """Return specific state attributes."""
+        if self.report_name == "power":
+            attributes = [
+                "power_consumption_start",
+                "power_consumption_end",
+            ]
+            state_attributes = {}
+            for attribute in attributes:
+                value = getattr(self._device.status, attribute)
+                if value is not None:
+                    state_attributes[attribute] = value
+            return state_attributes
+        return None

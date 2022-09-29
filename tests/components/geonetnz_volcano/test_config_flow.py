@@ -32,7 +32,7 @@ async def test_show_form(hass):
 
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -55,7 +55,7 @@ async def test_step_import(hass):
         "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
     ):
         result = await flow.async_step_import(import_config=conf)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
         CONF_LATITUDE: -41.2,
@@ -81,7 +81,7 @@ async def test_step_user(hass):
         "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
     ):
         result = await flow.async_step_user(user_input=conf)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
         CONF_LATITUDE: -41.2,

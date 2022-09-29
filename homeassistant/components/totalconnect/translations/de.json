@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Automatische Umgehung bei schwacher Batterie"
+                },
+                "description": "Automatische Umgehung von Zonen, sobald sie einen niedrigen Batteriestand melden.",
+                "title": "TotalConnect-Optionen"
+            }
+        }
     }
 }

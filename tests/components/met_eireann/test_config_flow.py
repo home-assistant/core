@@ -64,7 +64,7 @@ async def test_create_entry(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == test_data.get("name")
     assert result["data"] == test_data
 
@@ -85,11 +85,11 @@ async def test_flow_entry_already_exists(hass):
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
-    assert result1["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result1["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     # Create the second entry and assert that it is aborted
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

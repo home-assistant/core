@@ -9,6 +9,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -49,5 +50,7 @@ class ElgatoIdentifyButton(ElgatoEntity, ButtonEntity):
         """Identify the light, will make it blink."""
         try:
             await self.client.identify()
-        except ElgatoError:
-            _LOGGER.exception("An error occurred while identifying the Elgato Light")
+        except ElgatoError as error:
+            raise HomeAssistantError(
+                "An error occurred while identifying the Elgato Light"
+            ) from error

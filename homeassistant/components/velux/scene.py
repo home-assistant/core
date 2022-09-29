@@ -10,6 +10,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import _LOGGER, DATA_VELUX
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_platform(
     hass: HomeAssistant,

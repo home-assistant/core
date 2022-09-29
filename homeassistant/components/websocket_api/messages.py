@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.core import Event, State
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util.json import (
     find_paths_unserializable_data,
     format_unserializable_data,
@@ -61,7 +62,7 @@ def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
     }
 
 
-def event_message(iden: JSON_TYPE, event: Any) -> dict[str, Any]:
+def event_message(iden: JSON_TYPE | int, event: Any) -> dict[str, Any]:
     """Return an event message."""
     return {"id": iden, "type": "event", "event": event}
 
@@ -193,15 +194,15 @@ def compressed_state_dict_add(state: State) -> dict[str, Any]:
 def message_to_json(message: dict[str, Any]) -> str:
     """Serialize a websocket message to json."""
     try:
-        return const.JSON_DUMP(message)
+        return JSON_DUMP(message)
     except (ValueError, TypeError):
         _LOGGER.error(
             "Unable to serialize to JSON. Bad data found at %s",
             format_unserializable_data(
-                find_paths_unserializable_data(message, dump=const.JSON_DUMP)
+                find_paths_unserializable_data(message, dump=JSON_DUMP)
             ),
         )
-        return const.JSON_DUMP(
+        return JSON_DUMP(
             error_message(
                 message["id"], const.ERR_UNKNOWN_ERROR, "Invalid JSON in response"
             )

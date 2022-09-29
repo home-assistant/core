@@ -16,23 +16,23 @@ async def test_vehicle_binary_sensors(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("binary_sensor.liability_insured")
-    entry = entity_registry.async_get("binary_sensor.liability_insured")
+    state = hass.states.get("binary_sensor.skoda_11zkz3_liability_insured")
+    entry = entity_registry.async_get("binary_sensor.skoda_11zkz3_liability_insured")
     assert entry
     assert state
     assert entry.unique_id == "11ZKZ3_liability_insured"
     assert state.state == "off"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Liability Insured"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Skoda 11ZKZ3 Liability insured"
     assert state.attributes.get(ATTR_ICON) == "mdi:shield-car"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
-    state = hass.states.get("binary_sensor.pending_recall")
-    entry = entity_registry.async_get("binary_sensor.pending_recall")
+    state = hass.states.get("binary_sensor.skoda_11zkz3_pending_recall")
+    entry = entity_registry.async_get("binary_sensor.skoda_11zkz3_pending_recall")
     assert entry
     assert state
     assert entry.unique_id == "11ZKZ3_pending_recall"
     assert state.state == "off"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Pending Recall"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Skoda 11ZKZ3 Pending recall"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.PROBLEM
     assert ATTR_ICON not in state.attributes
 
@@ -41,7 +41,7 @@ async def test_vehicle_binary_sensors(
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, "11ZKZ3")}
     assert device_entry.manufacturer == "Skoda"
-    assert device_entry.name == "Skoda: 11ZKZ3"
+    assert device_entry.name == "Skoda 11ZKZ3"
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.model == "Citigo"
     assert (

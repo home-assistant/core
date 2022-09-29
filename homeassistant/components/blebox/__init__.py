@@ -1,8 +1,9 @@
 """The BleBox devices integration."""
 import logging
 
+from blebox_uniapi.box import Box
 from blebox_uniapi.error import Error
-from blebox_uniapi.products import Products
+from blebox_uniapi.feature import Feature
 from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,12 +18,13 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
+    Platform.AIR_QUALITY,
+    Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.AIR_QUALITY,
-    Platform.LIGHT,
-    Platform.CLIMATE,
 ]
 
 PARALLEL_UPDATES = 0
@@ -30,7 +32,6 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BleBox devices from a config entry."""
-
     websession = async_get_clientsession(hass)
 
     host = entry.data[CONF_HOST]
@@ -40,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_host = ApiHost(host, port, timeout, websession, hass.loop)
 
     try:
-        product = await Products.async_from_host(api_host)
+        product = await Box.async_from_host(api_host)
     except Error as ex:
         _LOGGER.error("Identify failed at %s:%d (%s)", api_host.host, api_host.port, ex)
         raise ConfigEntryNotReady from ex
@@ -49,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_entry = domain.setdefault(entry.entry_id, {})
     product = domain_entry.setdefault(PRODUCT, product)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -71,8 +72,8 @@ def create_blebox_entities(
     """Create entities from a BleBox product's features."""
 
     product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-
     entities = []
+
     if entity_type in product.features:
         for feature in product.features[entity_type]:
             entities.append(entity_klass(feature))
@@ -83,7 +84,7 @@ def create_blebox_entities(
 class BleBoxEntity(Entity):
     """Implements a common class for entities representing a BleBox feature."""
 
-    def __init__(self, feature):
+    def __init__(self, feature: Feature) -> None:
         """Initialize a BleBox entity."""
         self._feature = feature
         self._attr_name = feature.full_name
@@ -97,7 +98,7 @@ class BleBoxEntity(Entity):
             sw_version=product.firmware_version,
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity state."""
         try:
             await self._feature.async_update()

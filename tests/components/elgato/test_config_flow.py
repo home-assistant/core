@@ -8,11 +8,7 @@ from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -28,7 +24,7 @@ async def test_full_user_flow_implementation(
         context={"source": SOURCE_USER},
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -36,7 +32,7 @@ async def test_full_user_flow_implementation(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 9123}
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "CN11A1A00001"
     assert result2.get("data") == {
         CONF_HOST: "127.0.0.1",
@@ -72,7 +68,7 @@ async def test_full_zeroconf_flow_implementation(
 
     assert result.get("description_placeholders") == {"serial_number": "CN11A1A00001"}
     assert result.get("step_id") == "zeroconf_confirm"
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert "flow_id" in result
 
     progress = hass.config_entries.flow.async_progress()
@@ -85,7 +81,7 @@ async def test_full_zeroconf_flow_implementation(
         result["flow_id"], user_input={}
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "CN11A1A00001"
     assert result2.get("data") == {
         CONF_HOST: "127.0.0.1",
@@ -111,7 +107,7 @@ async def test_connection_error(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 9123},
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}
     assert result.get("step_id") == "user"
 
@@ -137,7 +133,7 @@ async def test_zeroconf_connection_error(
     )
 
     assert result.get("reason") == "cannot_connect"
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
 
 
 async def test_user_device_exists_abort(
@@ -153,7 +149,7 @@ async def test_user_device_exists_abort(
         data={CONF_HOST: "127.0.0.1", CONF_PORT: 9123},
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -178,7 +174,7 @@ async def test_zeroconf_device_exists_abort(
         ),
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -199,8 +195,44 @@ async def test_zeroconf_device_exists_abort(
         ),
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].data[CONF_HOST] == "127.0.0.2"
+
+
+async def test_zeroconf_during_onboarding(
+    hass: HomeAssistant,
+    mock_elgato_config_flow: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_onboarding: MagicMock,
+) -> None:
+    """Test the zeroconf creates an entry during onboarding."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="127.0.0.1",
+            addresses=["127.0.0.1"],
+            hostname="example.local.",
+            name="mock_name",
+            port=9123,
+            properties={"id": "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
+        ),
+    )
+
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "CN11A1A00001"
+    assert result.get("data") == {
+        CONF_HOST: "127.0.0.1",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        CONF_PORT: 9123,
+    }
+    assert "result" in result
+    assert result["result"].unique_id == "CN11A1A00001"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_elgato_config_flow.info.mock_calls) == 1
+    assert len(mock_onboarding.mock_calls) == 1

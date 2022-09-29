@@ -25,8 +25,9 @@ UNIT_LUMEN: Final = "lm"
 PLATFORMS_GATEWAY: Final[list[str]] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
-    Platform.SENSOR,
+    Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 ZEROCONF_MAP: Final[dict[str, str]] = {
@@ -47,7 +48,7 @@ DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
 }
 DEFAULT_USERNAME: Final = "smile"
 
-THERMOSTAT_CLASSES: Final[list[str]] = [
+MASTER_THERMOSTATS: Final[list[str]] = [
     "thermostat",
     "thermostatic_radiator_valve",
     "zone_thermometer",

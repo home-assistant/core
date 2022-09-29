@@ -13,6 +13,7 @@
                 "data": {
                     "password": "Has\u0142o"
                 },
+                "description": "Integracja Aladdin Connect wymaga ponownego uwierzytelnienia Twojego konta",
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {

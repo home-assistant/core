@@ -16,5 +16,15 @@
                 "description": "Do you want to set up Tasmota?"
             }
         }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "Several Tasmota devices are sharing the topic {topic}.\n\n Tasmota devices with this problem: {offenders}.",
+            "title": "Several Tasmota devices are sharing the same topic"
+        },
+        "topic_no_prefix": {
+            "description": "Tasmota device {name} with IP {ip} does not include `%prefix%` in its fulltopic.\n\nEntities for this devices are disabled until the configuration has been corrected.",
+            "title": "Tasmota device {name} has an invalid MQTT topic"
+        }
     }
 }

@@ -5,9 +5,10 @@ import asyncio
 from enum import Enum
 from functools import partialmethod, wraps
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import zigpy.exceptions
+import zigpy.zcl
 from zigpy.zcl.foundation import (
     CommandSchema,
     ConfigureReportingResponseRecord,
@@ -19,7 +20,6 @@ from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .. import typing as zha_typing
 from ..const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE_ID,
@@ -40,7 +40,20 @@ from ..const import (
 )
 from ..helpers import LogMixin, retryable_req, safe_read
 
+if TYPE_CHECKING:
+    from . import ChannelPool
+
 _LOGGER = logging.getLogger(__name__)
+
+
+class AttrReportConfig(TypedDict, total=True):
+    """Configuration to report for the attributes."""
+
+    # Could be either an attribute name or attribute id
+    attr: str | int
+    # The config for the attribute reporting configuration consists of a tuple for
+    # (minimum_reported_time_interval_s, maximum_reported_time_interval_s, value_delta)
+    config: tuple[int, int, int | float]
 
 
 def parse_and_log_command(channel, tsn, command_id, args):
@@ -96,7 +109,7 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    REPORT_CONFIG: tuple[dict[int | str, tuple[int, int, int | float]]] = ()
+    REPORT_CONFIG: tuple[AttrReportConfig, ...] = ()
     BIND: bool = True
 
     # Dict of attributes to read on channel initialization.
@@ -104,9 +117,7 @@ class ZigbeeChannel(LogMixin):
     # attribute read is acceptable.
     ZCL_INIT_ATTRS: dict[int | str, bool] = {}
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize ZigbeeChannel."""
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
         self._ch_pool = ch_pool
@@ -126,7 +137,7 @@ class ZigbeeChannel(LogMixin):
                 self.value_attribute = attr
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
-        self.data_cache = {}
+        self.data_cache: dict[str, Enum] = {}
 
     @property
     def id(self) -> str:
@@ -267,7 +278,7 @@ class ZigbeeChannel(LogMixin):
         )
 
     def _configure_reporting_status(
-        self, attrs: dict[int | str, tuple], res: list | tuple
+        self, attrs: dict[int | str, tuple[int, int, float | int]], res: list | tuple
     ) -> None:
         """Parse configure reporting result."""
         if isinstance(res, (Exception, ConfigureReportingResponseRecord)):
@@ -293,10 +304,10 @@ class ZigbeeChannel(LogMixin):
             for r in res
             if r.status != Status.SUCCESS
         ]
-        attrs = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
+        attributes = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
         self.debug(
             "Successfully configured reporting for '%s' on '%s' cluster",
-            attrs - set(failed),
+            attributes - set(failed),
             self.name,
         )
         self.debug(
@@ -382,6 +393,7 @@ class ZigbeeChannel(LogMixin):
     def zha_send_event(self, command: str, arg: list | dict | CommandSchema) -> None:
         """Relay events to hass."""
 
+        args: list | dict
         if isinstance(arg, CommandSchema):
             args = [a for a in arg if a is not None]
             params = arg.as_dict()

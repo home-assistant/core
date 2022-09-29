@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Nende URL-i seadetega kaamera on juba olemas.",
             "invalid_still_image": "URL ei tagastanud kehtivat pilti",
+            "malformed_url": "Vigane URL",
             "no_still_image_or_stream_url": "Pead m\u00e4\u00e4rama v\u00e4hemalt liikumatu pildi v\u00f5i voo URL-i",
+            "relative_url": "Osalised URL-id pole lubatud",
             "stream_file_not_found": "Vooga \u00fchenduse loomisel ei leitud faili (kas ffmpeg on installitud?)",
             "stream_http_not_found": "HTTP 404 viga kui \u00fcritatakse vooga \u00fchendust luua",
             "stream_io_error": "Sisend-/v\u00e4ljundviga vooga \u00fchenduse loomisel. Vale RTSP transpordiprotokoll?",
@@ -15,6 +17,7 @@
             "stream_no_video": "Voos pole videot",
             "stream_not_permitted": "Vooga \u00fchenduse loomisel pole toiming lubatud. Vale RTSP transpordiprotokoll?",
             "stream_unauthorised": "Autoriseerimine eba\u00f5nnestus vooga \u00fchendamise ajal",
+            "template_error": "Viga malli renderdamisel. Lisateabe saamiseks vaata logi.",
             "timeout": "URL-i laadimise ajal\u00f5pp",
             "unable_still_load": "Pilti ei saa laadida URL-ist (nt kehtetu host, URL v\u00f5i autentimise t\u00f5rge).  Lisateabe saamiseks vaata logi.",
             "unknown": "Ootamatu t\u00f5rge"
@@ -49,7 +52,9 @@
         "error": {
             "already_exists": "Nende URL-i seadetega kaamera on juba olemas.",
             "invalid_still_image": "URL ei tagastanud kehtivat pilti",
+            "malformed_url": "Vigane URL",
             "no_still_image_or_stream_url": "Pead m\u00e4\u00e4rama v\u00e4hemalt liikumatu pildi v\u00f5i voo URL-i",
+            "relative_url": "Osalised URL-id pole lubatud",
             "stream_file_not_found": "Vooga \u00fchenduse loomisel ei leitud faili (kas ffmpeg on installitud?)",
             "stream_http_not_found": "HTTP 404 viga kui \u00fcritatakse vooga \u00fchendust luua",
             "stream_io_error": "Sisend-/v\u00e4ljundviga vooga \u00fchenduse loomisel. Vale RTSP transpordiprotokoll?",
@@ -57,6 +62,7 @@
             "stream_no_video": "Voos pole videot",
             "stream_not_permitted": "Vooga \u00fchenduse loomisel pole toiming lubatud. Vale RTSP transpordiprotokoll?",
             "stream_unauthorised": "Autoriseerimine eba\u00f5nnestus vooga \u00fchendamise ajal",
+            "template_error": "Viga malli renderdamisel. Lisateabe saamiseks vaata logi.",
             "timeout": "URL-i laadimise ajal\u00f5pp",
             "unable_still_load": "Pilti ei saa laadida URL-ist (nt kehtetu host, URL v\u00f5i autentimise t\u00f5rge).  Lisateabe saamiseks vaata logi.",
             "unknown": "Ootamatu t\u00f5rge"

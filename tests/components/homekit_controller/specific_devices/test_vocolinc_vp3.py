@@ -3,7 +3,7 @@
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import POWER_WATT
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -31,8 +31,8 @@ async def test_vocolinc_vp3_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="switch.vocolinc_vp3_123456",
-                    friendly_name="VOCOlinc-VP3-123456",
+                    entity_id="switch.vocolinc_vp3_123456_outlet",
+                    friendly_name="VOCOlinc-VP3-123456 Outlet",
                     unique_id="homekit-EU0121203xxxxx07-48",
                     state="on",
                 ),

@@ -1,6 +1,9 @@
 """Config flow for MQTT."""
+from __future__ import annotations
+
 from collections import OrderedDict
 import queue
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,9 +18,11 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import ConfigType
 
-from . import MqttClientSetup
+from .client import MqttClientSetup
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -26,13 +31,12 @@ from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_WILL_MESSAGE,
-    DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_WILL,
     DOMAIN,
 )
-from .util import MQTT_WILL_BIRTH_SCHEMA
+from .util import MQTT_WILL_BIRTH_SCHEMA, get_mqtt_data
 
 MQTT_TIMEOUT = 5
 
@@ -45,25 +49,32 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     _hassio_discovery = None
 
     @staticmethod
-    def async_get_options_flow(config_entry):
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> MQTTOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MQTTOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_broker()
 
-    async def async_step_broker(self, user_input=None):
+    async def async_step_broker(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm the setup."""
         errors = {}
 
         if user_input is not None:
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
+                get_mqtt_data(self.hass, True).config or {},
                 user_input[CONF_BROKER],
                 user_input[CONF_PORT],
                 user_input.get(CONF_USERNAME),
@@ -96,15 +107,18 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_hassio_confirm()
 
-    async def async_step_hassio_confirm(self, user_input=None):
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm a Hass.io discovery."""
         errors = {}
+        assert self._hassio_discovery
 
         if user_input is not None:
             data = self._hassio_discovery
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
+                get_mqtt_data(self.hass, True).config or {},
                 data[CONF_HOST],
                 data[CONF_PORT],
                 data.get(CONF_USERNAME),
@@ -120,7 +134,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PORT: data[CONF_PORT],
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
-                        CONF_PROTOCOL: data.get(CONF_PROTOCOL),
                         CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
@@ -137,25 +150,28 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize MQTT options flow."""
         self.config_entry = config_entry
-        self.broker_config = {}
+        self.broker_config: dict[str, str | int] = {}
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: None = None) -> FlowResult:
         """Manage the MQTT options."""
         return await self.async_step_broker()
 
-    async def async_step_broker(self, user_input=None):
+    async def async_step_broker(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the MQTT broker configuration."""
+        mqtt_data = get_mqtt_data(self.hass, True)
+        yaml_config = mqtt_data.config or {}
         errors = {}
         current_config = self.config_entry.data
-        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
         if user_input is not None:
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
+                yaml_config,
                 user_input[CONF_BROKER],
                 user_input[CONF_PORT],
                 user_input.get(CONF_USERNAME),
@@ -195,12 +211,15 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             last_step=False,
         )
 
-    async def async_step_options(self, user_input=None):
+    async def async_step_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the MQTT options."""
+        mqtt_data = get_mqtt_data(self.hass, True)
         errors = {}
         current_config = self.config_entry.data
-        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
-        options_config = {}
+        yaml_config = mqtt_data.config or {}
+        options_config: dict[str, Any] = {}
         if user_input is not None:
             bad_birth = False
             bad_will = False
@@ -244,9 +263,11 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=updated_config
+                    self.config_entry,
+                    data=updated_config,
+                    title=str(self.broker_config[CONF_BROKER]),
                 )
-                return self.async_create_entry(title="", data=None)
+                return self.async_create_entry(title="", data={})
 
         birth = {
             **DEFAULT_BIRTH,
@@ -264,7 +285,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_DISCOVERY, yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
         )
 
-        fields = OrderedDict()
+        fields: OrderedDict[vol.Marker, Any] = OrderedDict()
         fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = bool
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
@@ -317,14 +338,20 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-def try_connection(hass, broker, port, username, password, protocol="3.1"):
+def try_connection(
+    yaml_config: ConfigType,
+    broker: str,
+    port: int,
+    username: str | None,
+    password: str | None,
+    protocol: str = "3.1",
+) -> bool:
     """Test if we can connect to an MQTT broker."""
     # We don't import on the top because some integrations
     # should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
     # Get the config from configuration.yaml
-    yaml_config = hass.data.get(DATA_MQTT_CONFIG, {})
     entry_config = {
         CONF_BROKER: broker,
         CONF_PORT: port,
@@ -334,7 +361,7 @@ def try_connection(hass, broker, port, username, password, protocol="3.1"):
     }
     client = MqttClientSetup({**yaml_config, **entry_config}).client
 
-    result = queue.Queue(maxsize=1)
+    result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
     def on_connect(client_, userdata, flags, result_code):
         """Handle connection result."""

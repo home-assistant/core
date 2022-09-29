@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from datetime import timedelta
+from http import HTTPStatus
 from typing import Any, Final, cast
 
+from aiohttp import ClientResponseError
 import aioshelly
 from aioshelly.block_device import BlockDevice
+from aioshelly.exceptions import AuthRequired, InvalidAuthError
 from aioshelly.rpc_device import RpcDevice
 import async_timeout
 import voluptuous as vol
@@ -21,7 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
@@ -76,6 +80,7 @@ BLOCK_PLATFORMS: Final = [
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 BLOCK_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -90,6 +95,7 @@ RPC_PLATFORMS: Final = [
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 
@@ -190,12 +196,18 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await device.initialize()
+                await device.update_status()
         except asyncio.TimeoutError as err:
             raise ConfigEntryNotReady(
                 str(err) or "Timeout during device setup"
             ) from err
         except OSError as err:
             raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
+        except AuthRequired as err:
+            raise ConfigEntryAuthFailed from err
+        except ClientResponseError as err:
+            if err.status == HTTPStatus.UNAUTHORIZED:
+                raise ConfigEntryAuthFailed from err
 
         async_block_device_setup(hass, entry, device)
     elif sleep_period is None or device_entry is None:
@@ -252,6 +264,8 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
         raise ConfigEntryNotReady(str(err) or "Timeout during device setup") from err
     except OSError as err:
         raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
+    except (AuthRequired, InvalidAuthError) as err:
+        raise ConfigEntryAuthFailed from err
 
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         RPC
@@ -296,7 +310,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._debounced_reload = Debouncer(
+        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,
@@ -636,7 +650,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.entry = entry
         self.device = device
 
-        self._debounced_reload = Debouncer(
+        self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
             hass,
             LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,
@@ -766,14 +780,13 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             self.device.firmware_version,
             new_version,
         )
-        result = None
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                result = await self.device.trigger_ota_update(beta=beta)
+                await self.device.trigger_ota_update(beta=beta)
         except (asyncio.TimeoutError, OSError) as err:
             LOGGER.exception("Error while perform ota update: %s", err)
 
-        LOGGER.debug("Result of OTA update call: %s", result)
+        LOGGER.debug("OTA update call successful")
 
     async def shutdown(self) -> None:
         """Shutdown the wrapper."""

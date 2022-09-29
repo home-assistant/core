@@ -17,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USERCODES, DOMAIN
+from .const import AUTO_BYPASS, CONF_USERCODES, DOMAIN
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
@@ -31,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
+    bypass = entry.options.get(AUTO_BYPASS, False)
 
     if CONF_USERCODES not in conf:
         # should only happen for those who used UI before we added usercodes
@@ -41,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         client = await hass.async_add_executor_job(
-            TotalConnectClient, username, password, usercodes
+            TotalConnectClient, username, password, usercodes, bypass
         )
     except AuthenticationError as exception:
         raise ConfigEntryAuthFailed(
@@ -54,6 +55,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
 
 
@@ -64,6 +68,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Update listener."""
+    bypass = entry.options.get(AUTO_BYPASS, False)
+    client = hass.data[DOMAIN][entry.entry_id].client
+    for location_id in client.locations:
+        client.locations[location_id].auto_bypass_low_battery = bypass
 
 
 class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator):

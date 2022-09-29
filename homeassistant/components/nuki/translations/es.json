@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -13,7 +13,7 @@
                 "data": {
                     "token": "Token de acceso"
                 },
-                "description": "La integraci\u00f3n de Nuki debe volver a autenticarse con tu bridge.",
+                "description": "La integraci\u00f3n Nuki debe volver a autenticarse con tu bridge.",
                 "title": "Volver a autenticar la integraci\u00f3n"
             },
             "user": {

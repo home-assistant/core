@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "decryption_failed": "\u6240\u63d0\u4f9b\u7684\u7d81\u5b9a\u78bc\u7121\u6cd5\u4f7f\u7528\u3001\u50b3\u611f\u5668\u8cc7\u6599\u7121\u6cd5\u89e3\u5bc6\u3002\u8acb\u4fee\u6b63\u5f8c\u3001\u518d\u8a66\u4e00\u6b21\u3002",
+            "expected_32_characters": "\u9700\u8981 32 \u500b\u5b57\u5143\u4e4b\u5341\u516d\u9032\u4f4d\u7d81\u5b9a\u78bc\u3002"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
+            "get_encryption_key": {
+                "data": {
+                    "bindkey": "\u7d81\u5b9a\u78bc"
+                },
+                "description": "\u7531\u50b3\u611f\u5668\u6240\u5ee3\u64ad\u4e4b\u8cc7\u6599\u70ba\u52a0\u5bc6\u8cc7\u6599\u3002\u82e5\u8981\u89e3\u78bc\u3001\u9700\u8981 32 \u500b\u5b57\u5143\u4e4b\u7d81\u5b9a\u78bc\u3002"
+            },
+            "user": {
+                "data": {
+                    "address": "\u88dd\u7f6e"
+                },
+                "description": "\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u88dd\u7f6e"
+            }
+        }
+    }
+}

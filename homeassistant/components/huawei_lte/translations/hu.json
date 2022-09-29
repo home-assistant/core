@@ -9,7 +9,7 @@
             "incorrect_username": "Helytelen felhaszn\u00e1l\u00f3n\u00e9v",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "invalid_url": "\u00c9rv\u00e9nytelen URL",
-            "login_attempts_exceeded": "T\u00fall\u00e9pte a maxim\u00e1lis bejelentkez\u00e9si k\u00eds\u00e9rleteket. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja \u00fajra k\u00e9s\u0151bb",
+            "login_attempts_exceeded": "T\u00fall\u00e9pte a maxim\u00e1lis bejelentkez\u00e9si k\u00eds\u00e9rleteket. K\u00e9rem, pr\u00f3b\u00e1lja \u00fajra k\u00e9s\u0151bb.",
             "response_error": "Ismeretlen hiba az eszk\u00f6zr\u0151l",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },

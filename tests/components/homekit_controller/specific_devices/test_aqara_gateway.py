@@ -3,15 +3,11 @@ Regression tests for Aqara Gateway V3.
 
 https://github.com/home-assistant/core/issues/20957
 """
-from homeassistant.components.alarm_control_panel import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.number import NumberMode
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -39,17 +35,17 @@ async def test_aqara_gateway_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    "alarm_control_panel.aqara_hub_1563",
-                    friendly_name="Aqara Hub-1563",
+                    "alarm_control_panel.aqara_hub_1563_security_system",
+                    friendly_name="Aqara Hub-1563 Security System",
                     unique_id="homekit-0000000123456789-66304",
-                    supported_features=SUPPORT_ALARM_ARM_NIGHT
-                    | SUPPORT_ALARM_ARM_HOME
-                    | SUPPORT_ALARM_ARM_AWAY,
+                    supported_features=AlarmControlPanelEntityFeature.ARM_NIGHT
+                    | AlarmControlPanelEntityFeature.ARM_HOME
+                    | AlarmControlPanelEntityFeature.ARM_AWAY,
                     state="disarmed",
                 ),
                 EntityTestInfo(
-                    "light.aqara_hub_1563",
-                    friendly_name="Aqara Hub-1563",
+                    "light.aqara_hub_1563_lightbulb_1563",
+                    friendly_name="Aqara Hub-1563 Lightbulb-1563",
                     unique_id="homekit-0000000123456789-65792",
                     supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
@@ -98,12 +94,12 @@ async def test_aqara_gateway_e1_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    "alarm_control_panel.aqara_hub_e1_00a0",
-                    friendly_name="Aqara-Hub-E1-00A0",
+                    "alarm_control_panel.aqara_hub_e1_00a0_security_system",
+                    friendly_name="Aqara-Hub-E1-00A0 Security System",
                     unique_id="homekit-00aa00000a0-16",
-                    supported_features=SUPPORT_ALARM_ARM_NIGHT
-                    | SUPPORT_ALARM_ARM_HOME
-                    | SUPPORT_ALARM_ARM_AWAY,
+                    supported_features=AlarmControlPanelEntityFeature.ARM_NIGHT
+                    | AlarmControlPanelEntityFeature.ARM_HOME
+                    | AlarmControlPanelEntityFeature.ARM_AWAY,
                     state="disarmed",
                 ),
                 EntityTestInfo(

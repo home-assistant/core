@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AWAY_TIMEOUT, default=DEFAULT_AWAY_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
-).extend(mqtt.MQTT_RO_PLATFORM_SCHEMA.schema)
+).extend(mqtt.config.MQTT_RO_SCHEMA.schema)
 
 MQTT_PAYLOAD = vol.Schema(
     vol.All(
@@ -95,7 +95,7 @@ class MQTTRoomSensor(SensorEntity):
         self._distance = None
         self._updated = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
 
         @callback
@@ -133,9 +133,7 @@ class MQTTRoomSensor(SensorEntity):
                     ):
                         update_state(**device)
 
-        return await mqtt.async_subscribe(
-            self.hass, self._state_topic, message_received, 1
-        )
+        await mqtt.async_subscribe(self.hass, self._state_topic, message_received, 1)
 
     @property
     def name(self):
@@ -152,7 +150,7 @@ class MQTTRoomSensor(SensorEntity):
         """Return the current room of the entity."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Update the state for absent devices."""
         if (
             self._updated

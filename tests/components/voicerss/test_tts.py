@@ -7,7 +7,7 @@ import shutil
 import pytest
 
 from homeassistant.components import media_source, tts
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
@@ -33,7 +33,7 @@ async def get_media_source_url(hass, media_content_id):
     if media_source.DOMAIN not in hass.config.components:
         assert await async_setup_component(hass, media_source.DOMAIN, {})
 
-    resolved = await media_source.async_resolve_media(hass, media_content_id)
+    resolved = await media_source.async_resolve_media(hass, media_content_id, None)
     return resolved.url
 
 

@@ -96,7 +96,7 @@ def report_integration(
 
     index = found_frame.filename.index(path)
     if path == "custom_components/":
-        extra = " to the custom component author"
+        extra = " to the custom integration author"
     else:
         extra = ""
 

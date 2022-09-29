@@ -5,6 +5,7 @@ import asyncio
 
 from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
+import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, Platform
@@ -14,7 +15,15 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN, QUERY_INTERVAL, RUN_TIMEOUT
 from .models import BAFData
 
-PLATFORMS: list[Platform] = [Platform.FAN, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -26,13 +35,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     run_future = device.async_run()
 
     try:
-        await asyncio.wait_for(device.async_wait_available(), timeout=RUN_TIMEOUT)
+        async with async_timeout.timeout(RUN_TIMEOUT):
+            await device.async_wait_available()
     except asyncio.TimeoutError as ex:
         run_future.cancel()
         raise ConfigEntryNotReady(f"Timed out connecting to {ip_address}") from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BAFData(device, run_future)
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

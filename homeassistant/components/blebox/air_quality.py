@@ -1,10 +1,14 @@
 """BleBox air quality entity."""
+from datetime import timedelta
+
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(

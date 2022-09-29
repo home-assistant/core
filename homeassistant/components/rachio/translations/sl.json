@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Klju\u010d API za ra\u010dun Rachio."
+                    "api_key": "API Klju\u010d"
                 },
                 "description": "Potrebovali boste API klju\u010d iz https://app.rach.io/. Izberite ' nastavitve ra\u010duna in kliknite 'get API KEY'.",
                 "title": "Pove\u017eite se z napravo Rachio"

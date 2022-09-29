@@ -1,9 +1,12 @@
 """Config flow for Netatmo."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 import uuid
 
+from pyatmo.const import ALL_SCOPES
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -23,7 +26,6 @@ from .const import (
     CONF_UUID,
     CONF_WEATHER_AREAS,
     DOMAIN,
-    NETATMO_SCOPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +54,7 @@ class NetatmoFlowHandler(
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        return {"scope": " ".join(NETATMO_SCOPES)}
+        return {"scope": " ".join(ALL_SCOPES)}
 
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle a flow start."""
@@ -66,7 +68,7 @@ class NetatmoFlowHandler(
 
         return await super().async_step_user(user_input)
 
-    async def async_step_reauth(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 

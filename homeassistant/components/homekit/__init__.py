@@ -8,7 +8,6 @@ import ipaddress
 import logging
 import os
 from typing import Any, cast
-from uuid import UUID
 
 from aiohttp import web
 from pyhap.const import STANDALONE_AID
@@ -24,7 +23,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.network.const import MDNS_TARGET_IP
+from homeassistant.components.network import MDNS_TARGET_IP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -510,7 +509,7 @@ class HomeKit:
 
         self.bridge: HomeBridge | None = None
 
-    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: UUID) -> None:
+    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
         """Set up bridge and accessory driver."""
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 

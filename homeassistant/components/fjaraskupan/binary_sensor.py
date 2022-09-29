@@ -30,13 +30,13 @@ class EntityDescription(BinarySensorEntityDescription):
 SENSORS = (
     EntityDescription(
         key="grease-filter",
-        name="Grease Filter",
+        name="Grease filter",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on=lambda state: state.grease_filter_full,
     ),
     EntityDescription(
         key="carbon-filter",
-        name="Carbon Filter",
+        name="Carbon filter",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on=lambda state: state.carbon_filter_full,
     ),
@@ -68,6 +68,7 @@ class BinarySensor(CoordinatorEntity[Coordinator], BinarySensorEntity):
     """Grease filter sensor."""
 
     entity_description: EntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -82,7 +83,6 @@ class BinarySensor(CoordinatorEntity[Coordinator], BinarySensorEntity):
 
         self._attr_unique_id = f"{device.address}-{entity_description.key}"
         self._attr_device_info = device_info
-        self._attr_name = f"{device_info['name']} {entity_description.name}"
 
     @property
     def is_on(self) -> bool | None:

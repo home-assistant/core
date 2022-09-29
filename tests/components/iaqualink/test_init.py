@@ -24,8 +24,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.util import dt as dt_util
 
+from .conftest import get_aqualink_device, get_aqualink_system
+
 from tests.common import async_fire_time_changed
-from tests.components.iaqualink.conftest import get_aqualink_device, get_aqualink_system
 
 
 async def _ffwd_next_update_interval(hass):

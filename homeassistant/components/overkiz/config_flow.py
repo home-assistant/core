@@ -1,6 +1,7 @@
 """Config flow for Overkiz (by Somfy) integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 from aiohttp import ClientError
@@ -11,6 +12,7 @@ from pyoverkiz.exceptions import (
     MaintenanceException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
+    UnknownUserException,
 )
 from pyoverkiz.models import obfuscate_id
 import voluptuous as vol
@@ -82,6 +84,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "server_in_maintenance"
             except TooManyAttemptsBannedException:
                 errors["base"] = "too_many_attempts"
+            except UnknownUserException:
+                errors["base"] = "unknown_user"
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 LOGGER.exception(exception)
@@ -154,9 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth."""
         self._config_entry = cast(
             ConfigEntry,
@@ -170,4 +172,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._default_user = self._config_entry.data[CONF_USERNAME]
         self._default_hub = self._config_entry.data[CONF_HUB]
 
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(dict(entry_data))

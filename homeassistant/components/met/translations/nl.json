@@ -4,7 +4,7 @@
             "no_home": "Er zijn geen thuisco\u00f6rdinaten ingesteld in de Home Assistant-configuratie"
         },
         "error": {
-            "already_configured": "Service is al geconfigureerd"
+            "already_configured": "Dienst is al geconfigureerd"
         },
         "step": {
             "user": {

@@ -91,7 +91,7 @@ class LastfmSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         self._cover = self._user.get_image()
         self._playcount = self._user.get_playcount()
@@ -101,10 +101,11 @@ class LastfmSensor(SensorEntity):
             self._lastplayed = f"{last.track.artist} - {last.track.title}"
 
         if top_tracks := self._user.get_top_tracks(limit=1):
-            top = top_tracks[0]
-            toptitle = re.search("', '(.+?)',", str(top))
-            topartist = re.search("'(.+?)',", str(top))
-            self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
+            top = str(top_tracks[0])
+            if (toptitle := re.search("', '(.+?)',", top)) and (
+                topartist := re.search("'(.+?)',", top)
+            ):
+                self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
 
         if (now_playing := self._user.get_now_playing()) is None:
             self._state = STATE_NOT_SCROBBLING

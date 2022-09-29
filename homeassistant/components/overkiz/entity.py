@@ -19,6 +19,8 @@ from .executor import OverkizExecutor
 class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     """Representation of an Overkiz device entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
     ) -> None:
@@ -31,7 +33,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_assumed_state = not self.device.states
         self._attr_available = self.device.available
         self._attr_unique_id = self.device.device_url
-        self._attr_name = self.device.label
 
         self._attr_device_info = self.generate_device_info()
 
@@ -102,9 +103,6 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
 
-        if self.entity_description.name:
-            self._attr_name = f"{super().name} {self.entity_description.name}"
-
 
 # Used by state translations for sensor and select entities
 @unique
@@ -118,3 +116,4 @@ class OverkizDeviceClass(StrEnum):
     PRIORITY_LOCK_ORIGINATOR = "overkiz__priority_lock_originator"
     SENSOR_DEFECT = "overkiz__sensor_defect"
     SENSOR_ROOM = "overkiz__sensor_room"
+    THREE_WAY_HANDLE_DIRECTION = "overkiz__three_way_handle_direction"

@@ -18,8 +18,8 @@
         "_": {
             "auto": "Auto",
             "cool": "Koelen",
-            "dry": "Droog",
-            "fan_only": "Alleen ventilatie",
+            "dry": "Drogen",
+            "fan_only": "Alleen ventilator",
             "heat": "Verwarmen",
             "heat_cool": "Verwarmen/Koelen",
             "off": "Uit"

@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "M\u00e1r l\u00e9tezik egy kamera ezekkel az URL-be\u00e1ll\u00edt\u00e1sokkal.",
             "invalid_still_image": "Az URL nem adott vissza \u00e9rv\u00e9nyes \u00e1ll\u00f3k\u00e9pet",
+            "malformed_url": "Hib\u00e1s URL",
             "no_still_image_or_stream_url": "Legal\u00e1bb egy \u00e1ll\u00f3k\u00e9pet vagy stream URL-c\u00edmet kell megadnia.",
+            "relative_url": "A relat\u00edv URL-ek nem enged\u00e9lyezettek",
             "stream_file_not_found": "F\u00e1jl nem tal\u00e1lhat\u00f3 a streamhez val\u00f3 csatlakoz\u00e1s sor\u00e1n (telep\u00edtve van az ffmpeg?)",
             "stream_http_not_found": "HTTP 404 Not found - hiba az adatfolyamhoz val\u00f3 csatlakoz\u00e1s k\u00f6zben",
             "stream_io_error": "Bemeneti/kimeneti hiba t\u00f6rt\u00e9nt az adatfolyamhoz val\u00f3 kapcsol\u00f3d\u00e1s k\u00f6zben. Rossz RTSP sz\u00e1ll\u00edt\u00e1si protokoll?",
@@ -15,6 +17,7 @@
             "stream_no_video": "Az adatfolyamban nincs vide\u00f3",
             "stream_not_permitted": "A m\u0171velet nem enged\u00e9lyezett, mik\u00f6zben megpr\u00f3b\u00e1l csatlakozni a folyamhoz. Rossz fajta RTSP protokoll?",
             "stream_unauthorised": "A hiteles\u00edt\u00e9s meghi\u00fasult, mik\u00f6zben megpr\u00f3b\u00e1lt csatlakozni az adatfolyamhoz",
+            "template_error": "Hiba t\u00f6rt\u00e9nt a sablon renderel\u00e9se k\u00f6zben. Tov\u00e1bbi inform\u00e1ci\u00f3\u00e9rt tekintse \u00e1t a napl\u00f3t.",
             "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az URL bet\u00f6lt\u00e9se k\u00f6zben",
             "unable_still_load": "Nem siker\u00fclt \u00e9rv\u00e9nyes k\u00e9pet bet\u00f6lteni az \u00e1ll\u00f3k\u00e9p URL-c\u00edm\u00e9r\u0151l (pl. \u00e9rv\u00e9nytelen host, URL vagy hiteles\u00edt\u00e9si hiba).  Tov\u00e1bbi inform\u00e1ci\u00f3\u00e9rt tekintse \u00e1t a napl\u00f3t.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
@@ -49,7 +52,9 @@
         "error": {
             "already_exists": "M\u00e1r l\u00e9tezik egy kamera ezekkel az URL-be\u00e1ll\u00edt\u00e1sokkal.",
             "invalid_still_image": "Az URL nem adott vissza \u00e9rv\u00e9nyes \u00e1ll\u00f3k\u00e9pet",
+            "malformed_url": "Hib\u00e1s URL",
             "no_still_image_or_stream_url": "Legal\u00e1bb egy \u00e1ll\u00f3k\u00e9pet vagy stream URL-c\u00edmet kell megadnia.",
+            "relative_url": "A relat\u00edv URL-ek nem enged\u00e9lyezettek",
             "stream_file_not_found": "F\u00e1jl nem tal\u00e1lhat\u00f3 a streamhez val\u00f3 csatlakoz\u00e1s sor\u00e1n (telep\u00edtve van az ffmpeg?)",
             "stream_http_not_found": "HTTP 404 Not found - hiba az adatfolyamhoz val\u00f3 csatlakoz\u00e1s k\u00f6zben",
             "stream_io_error": "Bemeneti/kimeneti hiba t\u00f6rt\u00e9nt az adatfolyamhoz val\u00f3 kapcsol\u00f3d\u00e1s k\u00f6zben. Rossz RTSP sz\u00e1ll\u00edt\u00e1si protokoll?",
@@ -57,6 +62,7 @@
             "stream_no_video": "Az adatfolyamban nincs vide\u00f3",
             "stream_not_permitted": "A m\u0171velet nem enged\u00e9lyezett, mik\u00f6zben megpr\u00f3b\u00e1l csatlakozni a folyamhoz. Rossz fajta RTSP protokoll?",
             "stream_unauthorised": "A hiteles\u00edt\u00e9s meghi\u00fasult, mik\u00f6zben megpr\u00f3b\u00e1lt csatlakozni az adatfolyamhoz",
+            "template_error": "Hiba t\u00f6rt\u00e9nt a sablon renderel\u00e9se k\u00f6zben. Tov\u00e1bbi inform\u00e1ci\u00f3\u00e9rt tekintse \u00e1t a napl\u00f3t.",
             "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az URL bet\u00f6lt\u00e9se k\u00f6zben",
             "unable_still_load": "Nem siker\u00fclt \u00e9rv\u00e9nyes k\u00e9pet bet\u00f6lteni az \u00e1ll\u00f3k\u00e9p URL-c\u00edm\u00e9r\u0151l (pl. \u00e9rv\u00e9nytelen host, URL vagy hiteles\u00edt\u00e9si hiba).  Tov\u00e1bbi inform\u00e1ci\u00f3\u00e9rt tekintse \u00e1t a napl\u00f3t.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"

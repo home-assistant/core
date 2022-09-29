@@ -115,10 +115,13 @@ class CommandCover(CoverEntity):
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = call_shell_with_timeout(command, self._timeout) == 0
+        returncode = call_shell_with_timeout(command, self._timeout)
+        success = returncode == 0
 
         if not success:
-            _LOGGER.error("Command failed: %s", command)
+            _LOGGER.error(
+                "Command failed (with return code %s): %s", returncode, command
+            )
 
         return success
 
@@ -153,14 +156,14 @@ class CommandCover(CoverEntity):
                 payload = self._value_template.render_with_possible_json_value(payload)
             self._state = int(payload)
 
-    def open_cover(self, **kwargs) -> None:
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._move_cover(self._command_open)
 
-    def close_cover(self, **kwargs) -> None:
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._move_cover(self._command_close)
 
-    def stop_cover(self, **kwargs) -> None:
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._move_cover(self._command_stop)

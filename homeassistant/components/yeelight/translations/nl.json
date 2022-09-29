@@ -5,7 +5,7 @@
             "no_devices_found": "Geen apparaten gevonden op het netwerk"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "{model} {id} ({host})",
         "step": {

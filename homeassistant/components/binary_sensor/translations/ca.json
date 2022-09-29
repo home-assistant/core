@@ -81,7 +81,7 @@
             "not_moist": "{entity_name} es torna sec",
             "not_moving": "{entity_name} ha parat de moure's",
             "not_occupied": "{entity_name} es desocupa",
-            "not_opened": "{entity_name} es tanca",
+            "not_opened": "{entity_name} tancat/tancada",
             "not_plugged_in": "{entity_name} desendollat",
             "not_powered": "{entity_name} no est\u00e0 alimentat",
             "not_present": "{entity_name} no est\u00e0 present",

@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Ja hi ha una c\u00e0mera amb aquest URL de configuraci\u00f3.",
             "invalid_still_image": "L'URL no ha retornat una imatge fixa v\u00e0lida",
+            "malformed_url": "URL mal format",
             "no_still_image_or_stream_url": "Has d'especificar almenys una imatge un URL de flux",
+            "relative_url": "Els URL relatius no s'admeten",
             "stream_file_not_found": "Fitxer no trobat mentre s'intentava connectar al flux de dades (est\u00e0 instal\u00b7lat ffmpeg?)",
             "stream_http_not_found": "HTTP 404 'Not found' a l'intentar connectar-se al flux de dades ('stream')",
             "stream_io_error": "Error d'entrada/sortida mentre s'intentava connectar al flux de dades. Protocol de transport RTSP incorrecte?",
@@ -15,6 +17,7 @@
             "stream_no_video": "El flux no cont\u00e9 v\u00eddeo",
             "stream_not_permitted": "Operaci\u00f3 no permesa mentre s'intentava connectar al flux de dades. Protocol de transport RTSP incorrecte?",
             "stream_unauthorised": "L'autoritzaci\u00f3 ha fallat mentre s'intentava connectar amb el flux de dades",
+            "template_error": "Error renderitzant plantilla. Consulta els registres per m\u00e9s informaci\u00f3.",
             "timeout": "El temps m\u00e0xim de c\u00e0rrega de l'URL ha expirat",
             "unable_still_load": "No s'ha pogut carregar cap imatge v\u00e0lida des de l'URL d'imatge fixa (pot ser per un amfitri\u00f3 o URL inv\u00e0lid o un error d'autenticaci\u00f3). Revisa els registres per a m\u00e9s informaci\u00f3.",
             "unknown": "Error inesperat"
@@ -49,7 +52,9 @@
         "error": {
             "already_exists": "Ja hi ha una c\u00e0mera amb aquest URL de configuraci\u00f3.",
             "invalid_still_image": "L'URL no ha retornat una imatge fixa v\u00e0lida",
+            "malformed_url": "URL mal format",
             "no_still_image_or_stream_url": "Has d'especificar almenys una imatge un URL de flux",
+            "relative_url": "Els URL relatius no s'admeten",
             "stream_file_not_found": "Fitxer no trobat mentre s'intentava connectar al flux de dades (est\u00e0 instal\u00b7lat ffmpeg?)",
             "stream_http_not_found": "HTTP 404 'Not found' a l'intentar connectar-se al flux de dades ('stream')",
             "stream_io_error": "Error d'entrada/sortida mentre s'intentava connectar al flux de dades. Protocol de transport RTSP incorrecte?",
@@ -57,6 +62,7 @@
             "stream_no_video": "El flux no cont\u00e9 v\u00eddeo",
             "stream_not_permitted": "Operaci\u00f3 no permesa mentre s'intentava connectar al flux de dades. Protocol de transport RTSP incorrecte?",
             "stream_unauthorised": "L'autoritzaci\u00f3 ha fallat mentre s'intentava connectar amb el flux de dades",
+            "template_error": "Error renderitzant plantilla. Consulta els registres per m\u00e9s informaci\u00f3.",
             "timeout": "El temps m\u00e0xim de c\u00e0rrega de l'URL ha expirat",
             "unable_still_load": "No s'ha pogut carregar cap imatge v\u00e0lida des de l'URL d'imatge fixa (pot ser per un amfitri\u00f3 o URL inv\u00e0lid o un error d'autenticaci\u00f3). Revisa els registres per a m\u00e9s informaci\u00f3.",
             "unknown": "Error inesperat"

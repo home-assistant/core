@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -9,6 +10,13 @@
             "name_exists": "\u8a72\u540d\u7a31\u5df2\u5b58\u5728"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "{username} \u5bc6\u78bc\u7121\u6548\u3002",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
             "user": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",

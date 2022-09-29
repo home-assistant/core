@@ -6,7 +6,11 @@ import statistics
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -35,6 +39,7 @@ ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
+ATTR_RANGE = "range"
 
 ICON = "mdi:calculator"
 
@@ -44,6 +49,7 @@ SENSOR_TYPES = {
     ATTR_MEAN: "mean",
     ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
+    ATTR_RANGE: "range",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -154,8 +160,25 @@ def calc_median(sensor_values, round_digits):
     return round(statistics.median(result), round_digits)
 
 
+def calc_range(sensor_values, round_digits):
+    """Calculate range value, honoring unknown states."""
+    result = [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+    if not result:
+        return None
+    return round(max(result) - min(result), round_digits)
+
+
 class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
+
+    _attr_icon = ICON
+    _attr_should_poll = False
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, entity_ids, name, sensor_type, round_digits, unique_id):
         """Initialize the min/max sensor."""
@@ -165,18 +188,19 @@ class MinMaxSensor(SensorEntity):
         self._round_digits = round_digits
 
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = f"{sensor_type} sensor".capitalize()
+            self._attr_name = f"{sensor_type} sensor".capitalize()
         self._sensor_attr = SENSOR_TYPE_TO_ATTR[self._sensor_type]
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = self.last = self.median = None
+        self.range = None
         self.min_entity_id = self.max_entity_id = self.last_entity_id = None
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
             async_track_state_change_event(
@@ -193,11 +217,6 @@ class MinMaxSensor(SensorEntity):
         self._calc_values()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
@@ -212,11 +231,6 @@ class MinMaxSensor(SensorEntity):
         return self._unit_of_measurement
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._sensor_type == "min":
@@ -226,11 +240,6 @@ class MinMaxSensor(SensorEntity):
         if self._sensor_type == "last":
             return {ATTR_LAST_ENTITY_ID: self.last_entity_id}
         return None
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @callback
     def _async_min_max_sensor_state_listener(self, event, update_state=True):
@@ -295,3 +304,4 @@ class MinMaxSensor(SensorEntity):
         self.max_entity_id, self.max_value = calc_max(sensor_values)
         self.mean = calc_mean(sensor_values, self._round_digits)
         self.median = calc_median(sensor_values, self._round_digits)
+        self.range = calc_range(sensor_values, self._round_digits)

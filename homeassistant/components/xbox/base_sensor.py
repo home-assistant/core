@@ -33,7 +33,7 @@ class XboxBaseSensorEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         return self.coordinator.data.presence.get(self.xuid)
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the sensor."""
         if not self.data:
             return None
@@ -45,7 +45,7 @@ class XboxBaseSensorEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         return f"{self.data.gamertag} {attr_name}"
 
     @property
-    def entity_picture(self) -> str:
+    def entity_picture(self) -> str | None:
         """Return the gamer pic."""
         if not self.data:
             return None

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken"

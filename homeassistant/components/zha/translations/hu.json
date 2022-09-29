@@ -6,12 +6,63 @@
             "usb_probe_failed": "Nem siker\u00fclt megvizsg\u00e1lni az USB eszk\u00f6zt"
         },
         "error": {
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_backup_json": "\u00c9rv\u00e9nytelen JSON biztons\u00e1gi m\u00e1solat"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Automatikus biztons\u00e1gi ment\u00e9s kiv\u00e1laszt\u00e1sa"
+                },
+                "description": "H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok vissza\u00e1ll\u00edt\u00e1sa automatikus biztons\u00e1gi ment\u00e9sb\u0151l",
+                "title": "Automatikus biztons\u00e1gi ment\u00e9s vissza\u00e1ll\u00edt\u00e1sa"
+            },
+            "choose_formation_strategy": {
+                "description": "V\u00e1lassza ki a r\u00e1di\u00f3 h\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sait.",
+                "menu_options": {
+                    "choose_automatic_backup": "Automatikus biztons\u00e1gi ment\u00e9s vissza\u00e1ll\u00edt\u00e1sa",
+                    "form_new_network": "H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok t\u00f6rl\u00e9se \u00e9s \u00faj h\u00e1l\u00f3zat l\u00e9trehoz\u00e1sa",
+                    "reuse_settings": "R\u00e1di\u00f3h\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok megtart\u00e1sa",
+                    "upload_manual_backup": "Manu\u00e1lis biztons\u00e1gi ment\u00e9s felt\u00f6lt\u00e9se"
+                },
+                "title": "H\u00e1l\u00f3zat kialak\u00edt\u00e1sa"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Soros eszk\u00f6z el\u00e9r\u00e9si \u00fatja"
+                },
+                "description": "V\u00e1lassza ki a soros portot a Zigbee r\u00e1di\u00f3j\u00e1hoz.",
+                "title": "Soros port kiv\u00e1laszt\u00e1sa"
+            },
             "confirm": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
+            },
+            "confirm_hardware": {
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "R\u00e1di\u00f3 t\u00edpusa"
+                },
+                "description": "V\u00e1lassza ki a Zigbee r\u00e1di\u00f3 t\u00edpus\u00e1t",
+                "title": "R\u00e1di\u00f3 t\u00edpusa"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "port sebess\u00e9g",
+                    "flow_control": "adat\u00e1raml\u00e1s szab\u00e1lyoz\u00e1sa",
+                    "path": "Soros eszk\u00f6z el\u00e9r\u00e9si \u00fatja"
+                },
+                "description": "Adja meg a soros port be\u00e1ll\u00edt\u00e1sait",
+                "title": "Soros port be\u00e1ll\u00edt\u00e1sai"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "A r\u00e1di\u00f3 IEEE-c\u00edm\u00e9nek v\u00e9gleges cser\u00e9je"
+                },
+                "description": "A biztons\u00e1gi m\u00e1solat IEEE-c\u00edme elt\u00e9r a r\u00e1di\u00f3\u00e9t\u00f3l. A h\u00e1l\u00f3zat megfelel\u0151 m\u0171k\u00f6d\u00e9s\u00e9hez a r\u00e1di\u00f3 IEEE-c\u00edm\u00e9t is meg kell v\u00e1ltoztatni. \n\n Ez egy v\u00e9gleles m\u0171velet.",
+                "title": "A r\u00e1di\u00f3 IEEE-c\u00edm\u00e9nek fel\u00fcl\u00edr\u00e1sa"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +79,13 @@
                 },
                 "description": "Adja meg a port specifikus be\u00e1ll\u00edt\u00e1sokat",
                 "title": "Be\u00e1ll\u00edt\u00e1sok"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "F\u00e1jl felt\u00f6lt\u00e9se"
+                },
+                "description": "H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok vissza\u00e1ll\u00edt\u00e1sa egy felt\u00f6lt\u00f6tt JSON biztons\u00e1gi m\u00e1solatb\u00f3l. Let\u00f6lthet egyet egy m\u00e1sik ZHA telep\u00edt\u00e9sb\u0151l a **H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok** men\u00fcpontb\u00f3l, vagy haszn\u00e1lhat egy Zigbee2MQTT `coordinator_backup.json` f\u00e1jlt.",
+                "title": "K\u00e9zi biztons\u00e1gi m\u00e1solat felt\u00f6lt\u00e9se"
             },
             "user": {
                 "data": {
@@ -46,10 +104,13 @@
             "title": "Riaszt\u00f3 vez\u00e9rl\u0151panel opci\u00f3k"
         },
         "zha_options": {
+            "always_prefer_xy_color_mode": "Az XY sz\u00ednm\u00f3dot el\u0151nyben r\u00e9szes\u00edtse",
             "consider_unavailable_battery": "Elemmel ell\u00e1tott eszk\u00f6z\u00f6k nem el\u00e9rhet\u0151 \u00e1llapot\u00faak ennyi id\u0151 ut\u00e1n (mp.)",
             "consider_unavailable_mains": "H\u00e1l\u00f3zati t\u00e1pell\u00e1t\u00e1s\u00fa eszk\u00f6z\u00f6k nem el\u00e9rhet\u0151 \u00e1llapot\u00faak ennyi id\u0151 ut\u00e1n (mp.)",
             "default_light_transition": "Alap\u00e9rtelmezett f\u00e9ny-\u00e1tmeneti id\u0151 (m\u00e1sodpercben)",
             "enable_identify_on_join": "Azonos\u00edt\u00f3 hat\u00e1s, amikor az eszk\u00f6z\u00f6k csatlakoznak a h\u00e1l\u00f3zathoz",
+            "enhanced_light_transition": "F\u00e9ny sz\u00edn/sz\u00ednh\u0151m\u00e9rs\u00e9klet \u00e1tmenete kikapcsolt \u00e1llapotb\u00f3l",
+            "light_transitioning_flag": "Fokozott f\u00e9nyer\u0151-szab\u00e1lyoz\u00f3 enged\u00e9lyez\u00e9se f\u00e9nyv\u00e1lt\u00e1skor",
             "title": "Glob\u00e1lis be\u00e1ll\u00edt\u00e1sok"
         }
     },
@@ -107,6 +168,78 @@
             "remote_button_short_press": "\"{subtype}\" gomb lenyomva",
             "remote_button_short_release": "\"{subtype}\" gomb elengedve",
             "remote_button_triple_press": "\"{subtype}\" gombra h\u00e1romszor kattintottak"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Ez az eszk\u00f6z nem zha eszk\u00f6z",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "usb_probe_failed": "Nem siker\u00fclt megvizsg\u00e1lni az USB eszk\u00f6zt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_backup_json": "\u00c9rv\u00e9nytelen JSON biztons\u00e1gi m\u00e1solat"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Automatikus biztons\u00e1gi ment\u00e9s kiv\u00e1laszt\u00e1sa"
+                },
+                "description": "H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok vissza\u00e1ll\u00edt\u00e1sa automatikus biztons\u00e1gi ment\u00e9sb\u0151l",
+                "title": "Automatikus biztons\u00e1gi ment\u00e9s vissza\u00e1ll\u00edt\u00e1sa"
+            },
+            "choose_formation_strategy": {
+                "description": "V\u00e1lassza ki a r\u00e1di\u00f3 h\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sait.",
+                "menu_options": {
+                    "choose_automatic_backup": "Automatikus biztons\u00e1gi ment\u00e9s vissza\u00e1ll\u00edt\u00e1sa",
+                    "form_new_network": "H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok t\u00f6rl\u00e9se \u00e9s \u00faj h\u00e1l\u00f3zat l\u00e9trehoz\u00e1sa",
+                    "reuse_settings": "R\u00e1di\u00f3h\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok megtart\u00e1sa",
+                    "upload_manual_backup": "Manu\u00e1lis biztons\u00e1gi ment\u00e9s felt\u00f6lt\u00e9se"
+                },
+                "title": "H\u00e1l\u00f3zat kialak\u00edt\u00e1sa"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Soros eszk\u00f6z el\u00e9r\u00e9si \u00fatja"
+                },
+                "description": "V\u00e1lassza ki a soros portot a Zigbee r\u00e1di\u00f3j\u00e1hoz.",
+                "title": "Soros port kiv\u00e1laszt\u00e1sa"
+            },
+            "init": {
+                "description": "A ZHA le\u00e1ll. Biztos benne, hogy folytatja?",
+                "title": "A ZHA \u00fajrakonfigur\u00e1l\u00e1sa"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "R\u00e1di\u00f3 t\u00edpusa"
+                },
+                "description": "V\u00e1lassza ki a Zigbee r\u00e1di\u00f3 t\u00edpus\u00e1t",
+                "title": "R\u00e1di\u00f3 t\u00edpusa"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "port sebess\u00e9g",
+                    "flow_control": "adat\u00e1raml\u00e1s szab\u00e1lyoz\u00e1sa",
+                    "path": "Soros eszk\u00f6z el\u00e9r\u00e9si \u00fatja"
+                },
+                "description": "Adja meg a soros port be\u00e1ll\u00edt\u00e1sait",
+                "title": "Soros port be\u00e1ll\u00edt\u00e1sai"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "A r\u00e1di\u00f3 IEEE-c\u00edm\u00e9nek v\u00e9gleges cser\u00e9je"
+                },
+                "description": "A biztons\u00e1gi m\u00e1solat IEEE-c\u00edme elt\u00e9r a r\u00e1di\u00f3\u00e9t\u00f3l. A h\u00e1l\u00f3zat megfelel\u0151 m\u0171k\u00f6d\u00e9s\u00e9hez a r\u00e1di\u00f3 IEEE-c\u00edm\u00e9t is meg kell v\u00e1ltoztatni. \n\n Ez egy v\u00e9gleles m\u0171velet.",
+                "title": "A r\u00e1di\u00f3 IEEE-c\u00edm\u00e9nek fel\u00fcl\u00edr\u00e1sa"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "F\u00e1jl felt\u00f6lt\u00e9se"
+                },
+                "description": "H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok vissza\u00e1ll\u00edt\u00e1sa egy felt\u00f6lt\u00f6tt JSON biztons\u00e1gi m\u00e1solatb\u00f3l. Let\u00f6lthet egyet egy m\u00e1sik ZHA telep\u00edt\u00e9sb\u0151l a **H\u00e1l\u00f3zati be\u00e1ll\u00edt\u00e1sok** men\u00fcpontb\u00f3l, vagy haszn\u00e1lhat egy Zigbee2MQTT `coordinator_backup.json` f\u00e1jlt.",
+                "title": "K\u00e9zi biztons\u00e1gi m\u00e1solat felt\u00f6lt\u00e9se"
+            }
         }
     }
 }

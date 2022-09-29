@@ -7,7 +7,14 @@ from homeassistant.components.sensor import SensorEntityDescription
 
 
 @dataclass
-class SolarEdgeSensorEntityDescription(SensorEntityDescription):
-    """Sensor entity description for SolarEdge."""
+class SolarEdgeSensorEntityRequiredKeyMixin:
+    """Sensor entity description with json_key for SolarEdge."""
 
-    json_key: str | None = None
+    json_key: str
+
+
+@dataclass
+class SolarEdgeSensorEntityDescription(
+    SensorEntityDescription, SolarEdgeSensorEntityRequiredKeyMixin
+):
+    """Sensor entity description for SolarEdge."""

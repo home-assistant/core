@@ -1,9 +1,9 @@
 {
     "config": {
         "error": {
-            "invalid_account_format": "A sz\u00e1mla nem hexa\u00e9rt\u00e9k, k\u00e9rj\u00fck, csak a 0-9 \u00e9s az A-F \u00e9rt\u00e9keket haszn\u00e1ljon.",
+            "invalid_account_format": "A megadott fi\u00f3k nem hexa\u00e9rt\u00e9k, k\u00e9rem, csak a 0-9 \u00e9s az A-F \u00e9rt\u00e9keket haszn\u00e1ljon.",
             "invalid_account_length": "A fi\u00f3k nem megfelel\u0151 hossz\u00fas\u00e1g\u00fa, 3 \u00e9s 16 karakter k\u00f6z\u00f6tt kell lennie.",
-            "invalid_key_format": "A kulcs nem hexa\u00e9rt\u00e9k, k\u00e9rj\u00fck, csak a 0-9 \u00e9s az A-F \u00e9rt\u00e9keket haszn\u00e1ljon.",
+            "invalid_key_format": "A megadott kulcs nem hexa\u00e9rt\u00e9k, k\u00e9rem, csak a 0-9 \u00e9s az A-F \u00e9rt\u00e9keket haszn\u00e1ljon.",
             "invalid_key_length": "A kulcs nem megfelel\u0151 hossz\u00fas\u00e1g\u00fa, 16, 24 vagy 32 hexa karakterb\u0151l kell \u00e1llnia.",
             "invalid_ping": "A ping intervallumnak 1 \u00e9s 1440 perc k\u00f6z\u00f6tt kell lennie.",
             "invalid_zones": "Legal\u00e1bb 1 z\u00f3n\u00e1nak kell lennie.",

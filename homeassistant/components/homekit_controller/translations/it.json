@@ -18,7 +18,7 @@
             "unable_to_pair": "Impossibile abbinare, riprova.",
             "unknown_error": "Il dispositivo ha riportato un errore sconosciuto. L'abbinamento non \u00e8 riuscito."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({category})",
         "step": {
             "busy_error": {
                 "description": "Interrompi l'associazione su tutti i controller o provare a riavviare il dispositivo, quindi continua a riprendere l'associazione.",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "Consenti l'associazione con codici di installazione non sicuri.",
                     "pairing_code": "Codice di abbinamento"
                 },
-                "description": "Il controller HomeKit comunica con {name} sulla rete locale utilizzando una connessione cifrata sicura senza un controller HomeKit separato o iCloud. Inserisci il tuo codice di associazione HomeKit (nel formato XXX-XX-XXX) per utilizzare questo accessorio. Questo codice si trova solitamente sul dispositivo stesso o nella confezione.",
+                "description": "Il controller HomeKit comunica con {name} ({category}) sulla rete locale utilizzando una connessione cifrata sicura senza un controller HomeKit separato o iCloud. Inserisci il tuo codice di associazione HomeKit (nel formato XXX-XX-XXX) per utilizzare questo accessorio. Questo codice si trova solitamente sul dispositivo stesso o nella confezione.",
                 "title": "Associazione con un dispositivo tramite il Protocollo degli Accessori HomeKit"
             },
             "protocol_error": {

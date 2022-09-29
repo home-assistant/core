@@ -350,7 +350,7 @@ class TibberSensorElPrice(TibberSensor):
 
         self._device_name = self._home_name
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         now = dt_util.now()
         if (
@@ -448,7 +448,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
             self._attr_native_unit_of_measurement = tibber_home.currency
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._tibber_home.rt_subscription_running
 
@@ -558,17 +558,21 @@ class TibberDataCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via API."""
         await self._tibber_connection.fetch_consumption_data_active_homes()
+        await self._tibber_connection.fetch_production_data_active_homes()
         await self._insert_statistics()
 
     async def _insert_statistics(self):
         """Insert Tibber statistics."""
         for home in self._tibber_connection.get_homes():
-            if not home.hourly_consumption_data:
-                continue
-            for sensor_type in (
-                "consumption",
-                "totalCost",
-            ):
+            sensors = []
+            if home.hourly_consumption_data:
+                sensors.append(("consumption", False, ENERGY_KILO_WATT_HOUR))
+                sensors.append(("totalCost", False, home.currency))
+            if home.hourly_production_data:
+                sensors.append(("production", True, ENERGY_KILO_WATT_HOUR))
+                sensors.append(("profit", True, home.currency))
+
+            for sensor_type, is_production, unit in sensors:
                 statistic_id = (
                     f"{TIBBER_DOMAIN}:energy_"
                     f"{sensor_type.lower()}_"
@@ -581,20 +585,26 @@ class TibberDataCoordinator(DataUpdateCoordinator):
 
                 if not last_stats:
                     # First time we insert 5 years of data (if available)
-                    hourly_consumption_data = await home.get_historic_data(5 * 365 * 24)
+                    hourly_data = await home.get_historic_data(
+                        5 * 365 * 24, production=is_production
+                    )
 
                     _sum = 0
                     last_stats_time = None
                 else:
-                    # hourly_consumption_data contains the last 30 days
-                    # of consumption data.
+                    # hourly_consumption/production_data contains the last 30 days
+                    # of consumption/production data.
                     # We update the statistics with the last 30 days
                     # of data to handle corrections in the data.
-                    hourly_consumption_data = home.hourly_consumption_data
+                    hourly_data = (
+                        home.hourly_production_data
+                        if is_production
+                        else home.hourly_consumption_data
+                    )
 
-                    start = dt_util.parse_datetime(
-                        hourly_consumption_data[0]["from"]
-                    ) - timedelta(hours=1)
+                    start = dt_util.parse_datetime(hourly_data[0]["from"]) - timedelta(
+                        hours=1
+                    )
                     stat = await get_instance(self.hass).async_add_executor_job(
                         statistics_during_period,
                         self.hass,
@@ -609,7 +619,7 @@ class TibberDataCoordinator(DataUpdateCoordinator):
 
                 statistics = []
 
-                for data in hourly_consumption_data:
+                for data in hourly_data:
                     if data.get(sensor_type) is None:
                         continue
 
@@ -627,15 +637,12 @@ class TibberDataCoordinator(DataUpdateCoordinator):
                         )
                     )
 
-                if sensor_type == "consumption":
-                    unit = ENERGY_KILO_WATT_HOUR
-                else:
-                    unit = home.currency
                 metadata = StatisticMetaData(
                     has_mean=False,
                     has_sum=True,
                     name=f"{home.name} {sensor_type}",
                     source=TIBBER_DOMAIN,
+                    state_unit_of_measurement=unit,
                     statistic_id=statistic_id,
                     unit_of_measurement=unit,
                 )

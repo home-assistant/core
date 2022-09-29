@@ -182,7 +182,7 @@ class SenseActiveSensor(SensorEntity):
         self._variant_id = variant_id
         self._variant_name = variant_name
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -230,7 +230,7 @@ class SenseVoltageSensor(SensorEntity):
         self._sense_monitor_id = sense_monitor_id
         self._voltage_index = index
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -323,7 +323,7 @@ class SenseEnergyDevice(SensorEntity):
         self._attr_icon = sense_to_mdi(device["icon"])
         self._sense_devices_data = sense_devices_data
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

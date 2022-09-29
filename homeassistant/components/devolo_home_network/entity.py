@@ -15,6 +15,8 @@ from .const import DOMAIN
 class DevoloEntity(CoordinatorEntity):
     """Representation of a devolo home network device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: Device, device_name: str
     ) -> None:

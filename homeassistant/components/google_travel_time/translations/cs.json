@@ -19,6 +19,7 @@
         "step": {
             "init": {
                 "data": {
+                    "language": "Jazyk",
                     "time": "\u010cas",
                     "units": "Jednotky"
                 }

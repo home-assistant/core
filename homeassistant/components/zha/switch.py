@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import functools
-from typing import Any
+import logging
+from typing import TYPE_CHECKING, Any, TypeVar
 
+import zigpy.exceptions
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
@@ -12,10 +14,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CHANNEL_INOVELLI,
     CHANNEL_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
@@ -24,8 +28,21 @@ from .core.const import (
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
+
+_ZHASwitchConfigurationEntitySelfT = TypeVar(
+    "_ZHASwitchConfigurationEntitySelfT", bound="ZHASwitchConfigurationEntity"
+)
+
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SWITCH)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.SWITCH)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.SWITCH
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -50,10 +67,16 @@ async def async_setup_entry(
 class Switch(ZhaEntity, SwitchEntity):
     """ZHA switch."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
         """Initialize the ZHA switch."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
 
     @property
     def is_on(self) -> bool:
@@ -62,14 +85,14 @@ class Switch(ZhaEntity, SwitchEntity):
             return False
         return self._on_off_channel.on_off
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         result = await self._on_off_channel.turn_on()
         if not result:
             return
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         result = await self._on_off_channel.turn_off()
         if not result:
@@ -100,7 +123,12 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
     """Representation of a switch group."""
 
     def __init__(
-        self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
+        self,
+        entity_ids: list[str],
+        unique_id: str,
+        group_id: int,
+        zha_device: ZHADevice,
+        **kwargs: Any,
     ) -> None:
         """Initialize a switch group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
@@ -114,7 +142,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
         """Return if the switch is on based on the statemachine."""
         return bool(self._state)
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         result = await self._on_off_channel.on()
         if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -122,7 +150,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
         self._state = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         result = await self._on_off_channel.off()
         if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -138,3 +166,225 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
 
         self._state = len(on_states) > 0
         self._available = any(state.state != STATE_UNAVAILABLE for state in states)
+
+
+class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
+    """Representation of a ZHA switch configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _zcl_attribute: str
+    _zcl_inverter_attribute: str = ""
+
+    @classmethod
+    def create_entity(
+        cls: type[_ZHASwitchConfigurationEntitySelfT],
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> _ZHASwitchConfigurationEntitySelfT | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        channel = channels[0]
+        if (
+            cls._zcl_attribute in channel.cluster.unsupported_attributes
+            or channel.cluster.get(cls._zcl_attribute) is None
+        ):
+            _LOGGER.debug(
+                "%s is not supported - skipping %s entity creation",
+                cls._zcl_attribute,
+                cls.__name__,
+            )
+            return None
+
+        return cls(unique_id, zha_device, channels, **kwargs)
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
+        """Init this number configuration entity."""
+        self._channel: ZigbeeChannel = channels[0]
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        self.async_accept_signal(
+            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+        )
+
+    @callback
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any):
+        """Handle state update from channel."""
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the switch is on based on the statemachine."""
+        val = bool(self._channel.cluster.get(self._zcl_attribute))
+        invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
+        return (not val) if invert else val
+
+    async def async_turn_on_off(self, state: bool) -> None:
+        """Turn the entity on or off."""
+        try:
+            invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
+            result = await self._channel.cluster.write_attributes(
+                {self._zcl_attribute: not state if invert else state}
+            )
+        except zigpy.exceptions.ZigbeeException as ex:
+            self.error("Could not set value: %s", ex)
+            return
+        if not isinstance(result, Exception) and all(
+            record.status == Status.SUCCESS for record in result[0]
+        ):
+            self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self.async_turn_on_off(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self.async_turn_on_off(False)
+
+    async def async_update(self) -> None:
+        """Attempt to retrieve the state of the entity."""
+        await super().async_update()
+        _LOGGER.error("Polling current state")
+        if self._channel:
+            value = await self._channel.get_attribute_value(
+                self._zcl_attribute, from_cache=False
+            )
+            invert = await self._channel.get_attribute_value(
+                self._zcl_inverter_attribute, from_cache=False
+            )
+            _LOGGER.debug("read value=%s, inverter=%s", value, bool(invert))
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_b6wax7g0",
+    },
+)
+class OnOffWindowDetectionFunctionConfigurationEntity(
+    ZHASwitchConfigurationEntity, id_suffix="on_off_window_opened_detection"
+):
+    """Representation of a ZHA window detection configuration entity."""
+
+    _zcl_attribute: str = "window_detection_function"
+    _zcl_inverter_attribute: str = "window_detection_function_inverter"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+class P1MotionTriggerIndicatorSwitch(
+    ZHASwitchConfigurationEntity, id_suffix="trigger_indicator"
+):
+    """Representation of a ZHA motion triggering configuration entity."""
+
+    _zcl_attribute: str = "trigger_indicator"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="ikea_airpurifier",
+    models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
+)
+class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """ZHA BinarySensor."""
+
+    _zcl_attribute: str = "child_lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="ikea_airpurifier",
+    models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
+)
+class DisableLed(ZHASwitchConfigurationEntity, id_suffix="disable_led"):
+    """ZHA BinarySensor."""
+
+    _zcl_attribute: str = "disable_led"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliInvertSwitch(ZHASwitchConfigurationEntity, id_suffix="invert_switch"):
+    """Inovelli invert switch control."""
+
+    _zcl_attribute: str = "invert_switch"
+    _attr_name: str = "Invert switch"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliSmartBulbMode(ZHASwitchConfigurationEntity, id_suffix="smart_bulb_mode"):
+    """Inovelli smart bulb mode control."""
+
+    _zcl_attribute: str = "smart_bulb_mode"
+    _attr_name: str = "Smart bulb mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliDoubleTapForFullBrightness(
+    ZHASwitchConfigurationEntity, id_suffix="double_tap_up_for_full_brightness"
+):
+    """Inovelli double tap for full brightness control."""
+
+    _zcl_attribute: str = "double_tap_up_for_full_brightness"
+    _attr_name: str = "Double tap full brightness"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliLocalProtection(
+    ZHASwitchConfigurationEntity, id_suffix="local_protection"
+):
+    """Inovelli local protection control."""
+
+    _zcl_attribute: str = "local_protection"
+    _attr_name: str = "Local protection"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliOnOffLEDMode(ZHASwitchConfigurationEntity, id_suffix="on_off_led_mode"):
+    """Inovelli only 1 LED mode control."""
+
+    _zcl_attribute: str = "on_off_led_mode"
+    _attr_name: str = "Only 1 LED mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliFirmwareProgressLED(
+    ZHASwitchConfigurationEntity, id_suffix="firmware_progress_led"
+):
+    """Inovelli firmware progress LED control."""
+
+    _zcl_attribute: str = "firmware_progress_led"
+    _attr_name: str = "Firmware progress LED"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliRelayClickInOnOffMode(
+    ZHASwitchConfigurationEntity, id_suffix="relay_click_in_on_off_mode"
+):
+    """Inovelli relay click in on off mode control."""
+
+    _zcl_attribute: str = "relay_click_in_on_off_mode"
+    _attr_name: str = "Disable relay click in on off mode"

@@ -42,7 +42,7 @@ class SchemaFlowFormStep:
     # The next_step function is called if the schema validates successfully or if no
     # schema is defined. The next_step function is passed the union of config entry
     # options and user input from previous steps.
-    # If next_step returns None, the flow is ended with RESULT_TYPE_CREATE_ENTRY.
+    # If next_step returns None, the flow is ended with FlowResultType.CREATE_ENTRY.
     next_step: Callable[[dict[str, Any]], str | None] = lambda _: None
 
     # Optional function to allow amending a form schema.
@@ -134,7 +134,7 @@ class SchemaCommonFlowHandler:
             self._options.update(user_input)
 
         next_step_id: str = step_id
-        if form_step.next_step and (user_input is not None or form_step.schema is None):
+        if user_input is not None or form_step.schema is None:
             # Get next step
             next_step_id_or_end_flow = form_step.next_step(self._options)
             if next_step_id_or_end_flow is None:

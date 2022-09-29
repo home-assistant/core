@@ -4,7 +4,6 @@ from unittest.mock import patch
 import pytest
 import respx
 
-from homeassistant import data_entry_flow
 from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
@@ -31,11 +30,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from .test_device import (
     DEFAULT_HOST,
@@ -57,7 +52,7 @@ async def test_flow_manual_configuration(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with respx.mock:
@@ -72,7 +67,7 @@ async def test_flow_manual_configuration(hass):
             },
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -93,7 +88,7 @@ async def test_manual_configuration_update_configuration(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
@@ -112,7 +107,7 @@ async def test_manual_configuration_update_configuration(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert device.host == "2.3.4.5"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -124,11 +119,11 @@ async def test_flow_fails_faulty_credentials(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_device",
+        "homeassistant.components.axis.config_flow.get_axis_device",
         side_effect=config_flow.AuthenticationRequired,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -150,11 +145,11 @@ async def test_flow_fails_cannot_connect(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_device",
+        "homeassistant.components.axis.config_flow.get_axis_device",
         side_effect=config_flow.CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -187,7 +182,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with respx.mock:
@@ -202,7 +197,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
             },
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -227,7 +222,7 @@ async def test_reauth_flow_update_configuration(hass):
         data=config_entry.data,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with respx.mock:
@@ -243,7 +238,7 @@ async def test_reauth_flow_update_configuration(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert device.host == "2.3.4.5"
     assert device.username == "user2"
@@ -317,7 +312,7 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     flows = hass.config_entries.flow.async_progress()
@@ -336,7 +331,7 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
             },
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -398,7 +393,7 @@ async def test_discovered_device_already_configured(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == DEFAULT_HOST
 
@@ -467,7 +462,7 @@ async def test_discovery_flow_updated_configuration(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data == {
         CONF_HOST: "2.3.4.5",
@@ -525,7 +520,7 @@ async def test_discovery_flow_ignore_non_axis_device(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_axis_device"
 
 
@@ -574,7 +569,7 @@ async def test_discovery_flow_ignore_link_local_address(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "link_local_address"
 
 
@@ -591,7 +586,7 @@ async def test_option_flow(hass):
             device.config_entry.entry_id
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "configure_stream"
     assert set(result["data_schema"].schema[CONF_STREAM_PROFILE].container) == {
         DEFAULT_STREAM_PROFILE,
@@ -608,7 +603,7 @@ async def test_option_flow(hass):
         user_input={CONF_STREAM_PROFILE: "profile_1", CONF_VIDEO_SOURCE: 1},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_EVENTS: True,
         CONF_STREAM_PROFILE: "profile_1",

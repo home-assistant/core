@@ -25,6 +25,7 @@
                 "data": {
                     "fallback": "Aktivera reservl\u00e4ge."
                 },
+                "description": "Med Fallback-l\u00e4get kan du v\u00e4lja n\u00e4r du vill \u00e5terg\u00e5 till Smart Schedule fr\u00e5n din manuella zon\u00f6verl\u00e4ggning. (NEXT_TIME_BLOCK:= Byt vid n\u00e4sta \u00e4ndring av Smart Schedule; MANUAL:= Byt inte f\u00f6rr\u00e4n du avbryter; TADO_DEFAULT:= Byt baserat p\u00e5 din inst\u00e4llning i Tado App).",
                 "title": "Justera Tado inst\u00e4llningarna."
             }
         }

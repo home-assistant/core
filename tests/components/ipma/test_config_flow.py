@@ -3,13 +3,20 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.ipma import DOMAIN, config_flow
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .test_weather import MockLocation
 
 from tests.common import MockConfigEntry, mock_registry
+
+ENTRY_CONFIG = {
+    CONF_NAME: "Home Town",
+    CONF_LATITUDE: "1",
+    CONF_LONGITUDE: "2",
+    CONF_MODE: "hourly",
+}
 
 
 async def test_show_config_form():
@@ -159,7 +166,7 @@ async def test_config_entry_migration(hass):
     )
 
     with patch(
-        "homeassistant.components.ipma.weather.async_get_location",
+        "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
         assert await async_setup_component(hass, DOMAIN, {})

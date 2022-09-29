@@ -5,6 +5,9 @@
             "incomplete_discovery": "\u4e0d\u5b8c\u5168\u306a\u691c\u51fa",
             "no_devices_found": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u4e0a\u306b\u30c7\u30d0\u30a4\u30b9\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093"
         },
+        "error": {
+            "other": "\u7a7a"
+        },
         "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {

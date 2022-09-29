@@ -1,0 +1,73 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "resource": "Resource",
+          "select": "Select",
+          "attribute": "Attribute",
+          "index": "Index",
+          "value_template": "Value Template",
+          "unit_of_measurement": "Unit of Measurement",
+          "device_class": "Device Class",
+          "state_class": "State Class",
+          "authentication": "Authentication",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "headers": "Headers"
+        },
+        "data_description": {
+          "resource": "The URL to the website that contains the value",
+          "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
+          "attribute": "Get value of an attribute on the selected tag",
+          "index": "Defines which of the elements returned by the CSS selector to use",
+          "value_template": "Defines a template to get the state of the sensor",
+          "device_class": "The type/class of the sensor to set the icon in the frontend",
+          "state_class": "The state_class of the sensor",
+          "authentication": "Type of the HTTP authentication. Either basic or digest",
+          "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed",
+          "headers": "Headers to use for the web request"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "name": "[%key:component::scrape::config::step::user::data::name%]",
+          "resource": "[%key:component::scrape::config::step::user::data::resource%]",
+          "select": "[%key:component::scrape::config::step::user::data::select%]",
+          "attribute": "[%key:component::scrape::config::step::user::data::attribute%]",
+          "index": "[%key:component::scrape::config::step::user::data::index%]",
+          "value_template": "[%key:component::scrape::config::step::user::data::value_template%]",
+          "unit_of_measurement": "[%key:component::scrape::config::step::user::data::unit_of_measurement%]",
+          "device_class": "[%key:component::scrape::config::step::user::data::device_class%]",
+          "state_class": "[%key:component::scrape::config::step::user::data::state_class%]",
+          "authentication": "[%key:component::scrape::config::step::user::data::authentication%]",
+          "verify_ssl": "[%key:component::scrape::config::step::user::data::verify_ssl%]",
+          "username": "[%key:component::scrape::config::step::user::data::username%]",
+          "password": "[%key:component::scrape::config::step::user::data::password%]",
+          "headers": "[%key:component::scrape::config::step::user::data::headers%]"
+        },
+        "data_description": {
+          "resource": "[%key:component::scrape::config::step::user::data_description::resource%]",
+          "select": "[%key:component::scrape::config::step::user::data_description::select%]",
+          "attribute": "[%key:component::scrape::config::step::user::data_description::attribute%]",
+          "index": "[%key:component::scrape::config::step::user::data_description::index%]",
+          "value_template": "[%key:component::scrape::config::step::user::data_description::value_template%]",
+          "device_class": "[%key:component::scrape::config::step::user::data_description::device_class%]",
+          "state_class": "[%key:component::scrape::config::step::user::data_description::state_class%]",
+          "authentication": "[%key:component::scrape::config::step::user::data_description::authentication%]",
+          "verify_ssl": "[%key:component::scrape::config::step::user::data_description::verify_ssl%]",
+          "headers": "[%key:component::scrape::config::step::user::data_description::headers%]"
+        }
+      }
+    }
+  }
+}

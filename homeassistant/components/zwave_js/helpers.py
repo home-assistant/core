@@ -2,18 +2,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import astuple, dataclass
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import ConfigurationValueType
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
     ConfigurationValue,
     Value as ZwaveValue,
-    get_value_id,
+    get_value_id_str,
 )
 
 from homeassistant.components.group import expand_entity_ids
@@ -29,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -47,15 +49,10 @@ from .const import (
 class ZwaveValueID:
     """Class to represent a value ID."""
 
-    property_: str | int | None = None
-    command_class: int | None = None
+    property_: str | int
+    command_class: int
     endpoint: int | None = None
     property_key: str | int | None = None
-
-    def __post_init__(self) -> None:
-        """Post initialization check."""
-        if all(val is None for val in astuple(self)):
-            raise ValueError("At least one of the fields must be set.")
 
 
 @callback
@@ -92,10 +89,10 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
     return value.value if value else None
 
 
-async def async_enable_statistics(client: ZwaveClient) -> None:
+async def async_enable_statistics(driver: Driver) -> None:
     """Enable statistics on the driver."""
-    await client.driver.async_enable_statistics("Home Assistant", HA_VERSION)
-    await client.driver.async_enable_error_reporting()
+    await driver.async_enable_statistics("Home Assistant", HA_VERSION)
+    await driver.async_enable_error_reporting()
 
 
 @callback
@@ -109,29 +106,29 @@ def update_data_collection_preference(
 
 
 @callback
-def get_valueless_base_unique_id(client: ZwaveClient, node: ZwaveNode) -> str:
+def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
     """Return the base unique ID for an entity that is not based on a value."""
-    return f"{client.driver.controller.home_id}.{node.node_id}"
+    return f"{driver.controller.home_id}.{node.node_id}"
 
 
-def get_unique_id(client: ZwaveClient, value_id: str) -> str:
+def get_unique_id(driver: Driver, value_id: str) -> str:
     """Get unique ID from client and value ID."""
-    return f"{client.driver.controller.home_id}.{value_id}"
+    return f"{driver.controller.home_id}.{value_id}"
 
 
 @callback
-def get_device_id(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str]:
+def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
     """Get device registry identifier for Z-Wave node."""
-    return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
+    return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
 
 
 @callback
-def get_device_id_ext(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str] | None:
+def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
     """Get extended device registry identifier for Z-Wave node."""
     if None in (node.manufacturer_id, node.product_type, node.product_id):
         return None
 
-    domain, dev_id = get_device_id(client, node)
+    domain, dev_id = get_device_id(driver, node)
     return (
         domain,
         f"{dev_id}-{node.manufacturer_id}:{node.product_type}:{node.product_id}",
@@ -194,7 +191,11 @@ def async_get_node_from_device_id(
             f"Device {device_id} is not from an existing zwave_js config entry"
         )
 
-    client = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    driver = client.driver
+
+    if driver is None:
+        raise ValueError("Driver is not ready.")
 
     # Get node ID from device identifier, perform some validation, and then get the
     # node
@@ -202,10 +203,10 @@ def async_get_node_from_device_id(
 
     node_id = identifiers[1] if identifiers else None
 
-    if node_id is None or node_id not in client.driver.controller.nodes:
+    if node_id is None or node_id not in driver.controller.nodes:
         raise ValueError(f"Node for device {device_id} can't be found")
 
-    return client.driver.controller.nodes[node_id]
+    return driver.controller.nodes[node_id]
 
 
 @callback
@@ -316,7 +317,7 @@ def get_zwave_value_from_config(node: ZwaveNode, config: ConfigType) -> ZwaveVal
     property_key = None
     if config.get(ATTR_PROPERTY_KEY):
         property_key = config[ATTR_PROPERTY_KEY]
-    value_id = get_value_id(
+    value_id = get_value_id_str(
         node,
         config[ATTR_COMMAND_CLASS],
         config[ATTR_PROPERTY],
@@ -412,4 +413,16 @@ def get_value_state_schema(
     return vol.All(
         vol.Coerce(int),
         vol.Range(min=value.metadata.min, max=value.metadata.max),
+    )
+
+
+def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
+    """Get DeviceInfo for node."""
+    return DeviceInfo(
+        identifiers={get_device_id(driver, node)},
+        sw_version=node.firmware_version,
+        name=node.name or node.device_config.description or f"Node {node.node_id}",
+        model=node.device_config.label,
+        manufacturer=node.device_config.manufacturer,
+        suggested_area=node.location if node.location else None,
     )

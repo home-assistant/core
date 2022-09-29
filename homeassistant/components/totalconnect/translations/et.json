@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Aku t\u00fchjenemise automaatne eiramine"
+                },
+                "description": "Eira tsoone automaatselt kui nad teatavad t\u00fchjast akust.",
+                "title": "TotalConnecti valikud"
+            }
+        }
     }
 }

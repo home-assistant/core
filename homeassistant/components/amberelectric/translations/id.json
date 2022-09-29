@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Kunci API tidak valid",
+            "no_site": "Tidak ada situs yang disediakan",
+            "unknown_error": "Kesalahan yang tidak diharapkan"
+        },
         "step": {
             "site": {
                 "data": {

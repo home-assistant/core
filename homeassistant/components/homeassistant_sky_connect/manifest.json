@@ -1,0 +1,17 @@
+{
+  "domain": "homeassistant_sky_connect",
+  "name": "Home Assistant Sky Connect",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/homeassistant_sky_connect",
+  "dependencies": ["hardware", "usb"],
+  "codeowners": ["@home-assistant/core"],
+  "integration_type": "hardware",
+  "usb": [
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*skyconnect v1.0*",
+      "known_devices": ["SkyConnect v1.0"]
+    }
+  ]
+}

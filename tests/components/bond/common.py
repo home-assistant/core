@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohttp.client_exceptions import ClientResponseError
-from bond_api import DeviceType
+from bond_async import DeviceType
 
 from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN
@@ -17,6 +17,20 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def remove_device(ws_client, device_id, config_entry_id):
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
 
 
 def ceiling_fan_with_breeze(name: str):
@@ -113,7 +127,7 @@ def patch_bond_version(
         return nullcontext()
 
     if return_value is None:
-        return_value = {"bondid": "test-bond-id"}
+        return_value = {"bondid": "ZXXX12345"}
 
     return patch(
         "homeassistant.components.bond.Bond.version",
@@ -246,3 +260,12 @@ async def help_test_entity_available(
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+def ceiling_fan(name: str):
+    """Create a ceiling fan with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": ["SetSpeed", "SetDirection"],
+    }

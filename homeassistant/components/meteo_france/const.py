@@ -183,7 +183,7 @@ SENSOR_TYPES_PROBABILITY: tuple[MeteoFranceSensorEntityDescription, ...] = (
 )
 
 
-CONDITION_CLASSES = {
+CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_CLEAR_NIGHT: ["Nuit Claire", "Nuit claire"],
     ATTR_CONDITION_CLOUDY: ["Très nuageux", "Couvert"],
     ATTR_CONDITION_FOG: [
