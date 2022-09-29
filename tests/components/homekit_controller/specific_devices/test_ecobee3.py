@@ -9,7 +9,7 @@ from unittest import mock
 from aiohomekit import AccessoryNotFoundError
 from aiohomekit.testing import FakePairing
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,

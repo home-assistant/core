@@ -213,6 +213,7 @@ homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.repairs.*
+homeassistant.components.rfxtrx.*
 homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
@@ -240,6 +241,7 @@ homeassistant.components.stream.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
+homeassistant.components.switchbee.*
 homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*

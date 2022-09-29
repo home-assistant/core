@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
 from homeassistant.components.cover import CoverDeviceClass
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,

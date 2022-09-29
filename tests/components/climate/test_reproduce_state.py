@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,

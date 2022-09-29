@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
             "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },

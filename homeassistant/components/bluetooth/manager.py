@@ -24,6 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
+    NO_RSSI_VALUE,
     STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
@@ -88,7 +89,7 @@ def _prefer_previous_adv(
                 STALE_ADVERTISEMENT_SECONDS,
             )
         return False
-    if new.device.rssi - RSSI_SWITCH_THRESHOLD > old.device.rssi:
+    if new.device.rssi - RSSI_SWITCH_THRESHOLD > (old.device.rssi or NO_RSSI_VALUE):
         # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
         if new.source != old.source:
             _LOGGER.debug(
@@ -110,7 +111,7 @@ def _prefer_previous_adv(
 
 
 def _dispatch_bleak_callback(
-    callback: AdvertisementDataCallback,
+    callback: AdvertisementDataCallback | None,
     filters: dict[str, set[str]],
     device: BLEDevice,
     advertisement_data: AdvertisementData,
@@ -118,7 +119,7 @@ def _dispatch_bleak_callback(
     """Dispatch the callback."""
     if not callback:
         # Callback destroyed right before being called, ignore
-        return  # type: ignore[unreachable] # pragma: no cover
+        return  # pragma: no cover
 
     if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
         advertisement_data.service_uuids
@@ -234,6 +235,23 @@ class BluetoothManager:
             self._cancel_unavailable_tracking.clear()
         uninstall_multiple_bleak_catcher()
 
+    async def async_get_devices_by_address(
+        self, address: str, connectable: bool
+    ) -> list[BLEDevice]:
+        """Get devices by address."""
+        types_ = (True,) if connectable else (True, False)
+        return [
+            device
+            for device in await asyncio.gather(
+                *(
+                    scanner.async_get_device_by_address(address)
+                    for type_ in types_
+                    for scanner in self._get_scanners_by_type(type_)
+                )
+            )
+            if device is not None
+        ]
+
     @hass_callback
     def async_all_discovered_devices(self, connectable: bool) -> Iterable[BLEDevice]:
         """Return all of discovered devices from all the scanners including duplicates."""
@@ -339,6 +357,7 @@ class BluetoothManager:
             service_info.manufacturer_data != old_service_info.manufacturer_data
             or service_info.service_data != old_service_info.service_data
             or service_info.service_uuids != old_service_info.service_uuids
+            or service_info.name != old_service_info.name
         ):
             return
 

@@ -56,6 +56,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "govee_ble",
+        "manufacturer_id": 63391,
+        "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+        "connectable": False,
+    },
+    {
+        "domain": "govee_ble",
         "manufacturer_id": 26589,
         "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
         "connectable": False,
@@ -76,6 +82,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "domain": "govee_ble",
         "manufacturer_id": 818,
         "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
+        "connectable": False,
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 43682,
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
         "connectable": False,
     },
     {
@@ -147,6 +159,23 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "domain": "inkbird",
         "local_name": "tps",
         "connectable": False,
+    },
+    {
+        "domain": "kegtron",
+        "connectable": False,
+        "manufacturer_id": 65535,
+    },
+    {
+        "domain": "keymitt_ble",
+        "service_uuid": "00001831-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "keymitt_ble",
+        "service_data_uuid": "00001831-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "keymitt_ble",
+        "local_name": "mib*",
     },
     {
         "domain": "led_ble",
@@ -232,6 +261,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
         "domain": "sensorpush",
         "local_name": "SensorPush*",
+        "connectable": False,
+    },
+    {
+        "domain": "switchbot",
+        "service_data_uuid": "00000d00-0000-1000-8000-00805f9b34fb",
         "connectable": False,
     },
     {

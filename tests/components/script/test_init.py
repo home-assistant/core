@@ -1023,3 +1023,99 @@ async def test_setup_with_duplicate_scripts(
     )
     assert "Duplicate script detected with name: 'duplicate'" in caplog.text
     assert len(hass.states.async_entity_ids("script")) == 1
+
+
+async def test_websocket_config(hass, hass_ws_client):
+    """Test config command."""
+    config = {
+        "alias": "hello",
+        "sequence": [{"service": "light.turn_on"}],
+    }
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "hello": config,
+            },
+        },
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "script/config",
+            "entity_id": "script.hello",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"config": config}
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "script/config",
+            "entity_id": "script.not_exist",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+
+async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
+    """Test the script service works for scripts with overridden entity_id."""
+    entity_reg = er.async_get(hass)
+    entry = entity_reg.async_get_or_create("script", "script", "test")
+    entry = entity_reg.async_update_entity(
+        entry.entity_id, new_entity_id="script.custom_entity_id"
+    )
+    assert entry.entity_id == "script.custom_entity_id"
+
+    calls = []
+
+    @callback
+    def record_call(service):
+        """Add recorded event to set."""
+        calls.append(service)
+
+    hass.services.async_register("test", "script", record_call)
+
+    # Make sure the service of a script with overridden entity_id works
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test": {
+                    "sequence": {
+                        "service": "test.script",
+                        "data_template": {"entity_id": "{{ this.entity_id }}"},
+                    }
+                }
+            }
+        },
+    )
+
+    await hass.services.async_call(DOMAIN, "test", {"greeting": "world"})
+
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["entity_id"] == "script.custom_entity_id"
+
+    # Change entity while the script entity is loaded, and make sure the service still works
+    entry = entity_reg.async_update_entity(
+        entry.entity_id, new_entity_id="script.custom_entity_id_2"
+    )
+    assert entry.entity_id == "script.custom_entity_id_2"
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(DOMAIN, "test", {"greeting": "world"})
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[1].data["entity_id"] == "script.custom_entity_id_2"
