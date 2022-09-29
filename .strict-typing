@@ -92,6 +92,7 @@ homeassistant.components.dnsip.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
+homeassistant.components.electrasmart.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*

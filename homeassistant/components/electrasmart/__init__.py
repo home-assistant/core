@@ -16,13 +16,8 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Electra Air Conditioner from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-
-    imei = entry.data[CONF_IMEI]
-    token = entry.data[CONF_TOKEN]
-
     websession = async_get_clientsession(hass)
-
-    electra_api = ElectraAPI(websession, imei, token)
+    electra_api = ElectraAPI(websession, entry.data[CONF_IMEI], entry.data[CONF_TOKEN])
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
     hass.data[DOMAIN][entry.entry_id] = electra_api
