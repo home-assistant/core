@@ -82,6 +82,10 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set speed."""
+
+        # Proactively update percentage to mange successive increases
+        self._percentage = percentage
+
         async with self.coordinator.async_connect_and_update() as device:
             if percentage == 0:
                 await device.send_command(COMMAND_STOP_FAN)
