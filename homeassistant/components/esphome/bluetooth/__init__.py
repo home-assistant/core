@@ -51,6 +51,7 @@ async def async_connect_scanner(
     assert entry.unique_id is not None
     source = str(entry.unique_id)
     new_info_callback = async_get_advertisement_callback(hass)
+    assert entry_data.device_info is not None
     version = entry_data.device_info.bluetooth_proxy_version
     connectable = version >= 2
     _LOGGER.debug(
