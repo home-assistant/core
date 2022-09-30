@@ -404,6 +404,7 @@ class ZeroconfDiscovery:
 
         _LOGGER.debug("Discovered new device %s %s", name, info)
         props: dict[str, str] = info.properties
+        domain = None
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES and (
@@ -458,10 +459,17 @@ class ZeroconfDiscovery:
 
             matcher_domain = matcher["domain"]
             assert isinstance(matcher_domain, str)
+            context = {
+                "source": config_entries.SOURCE_ZEROCONF,
+            }
+            if domain:
+                # Domain of integration that offers alternative API to handle this device.
+                context["alternative_domain"] = domain
+
             discovery_flow.async_create_flow(
                 self.hass,
                 matcher_domain,
-                {"source": config_entries.SOURCE_ZEROCONF},
+                context,
                 info,
             )
 
