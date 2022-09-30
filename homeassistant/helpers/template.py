@@ -991,9 +991,7 @@ def get_statistic(
 
     # Import has to occur here to prevent circular import
     # pylint: disable=import-outside-toplevel
-    from homeassistant.components.recorder.statistics import (
-        statistics_during_period,
-    )
+    from homeassistant.components.recorder.statistics import statistics_during_period
 
     statistics_results: list[TemplateStatistic] = []
     if longterm_statistics := statistics_during_period(
