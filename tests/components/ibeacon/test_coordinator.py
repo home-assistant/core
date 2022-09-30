@@ -139,7 +139,7 @@ async def test_rotating_major_minor_and_mac(hass):
     before_entity_count = len(hass.states.async_entity_ids("device_tracker"))
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    for i in range(51):
+    for i in range(100):
         service_info = BluetoothServiceInfo(
             name="BlueCharm_177999",
             address=f"AA:BB:CC:DD:EE:{i:02X}",
