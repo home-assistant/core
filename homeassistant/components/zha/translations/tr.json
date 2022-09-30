@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "T\u00fcm LED'ler i\u00e7in sorun efekti",
+            "issue_individual_led_effect": "Bireysel LED i\u00e7in sorun efekti",
             "squawk": "Squawk",
             "warn": "Uyarmak"
         },
