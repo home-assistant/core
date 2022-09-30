@@ -1,7 +1,6 @@
 """Tests for Shelly update platform."""
 from homeassistant.components.shelly.const import DOMAIN
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
-from homeassistant.components.update.const import SERVICE_INSTALL
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
@@ -16,8 +15,8 @@ async def test_block_update(hass: HomeAssistant, coap_wrapper, monkeypatch):
     entity_registry.async_get_or_create(
         UPDATE_DOMAIN,
         DOMAIN,
-        "test_name_update",
-        suggested_object_id="test_name_update",
+        "test-mac-fwupdate",
+        suggested_object_id="test_name_firmware_update",
         disabled_by=None,
     )
     hass.async_create_task(
@@ -62,8 +61,8 @@ async def test_rpc_update(hass: HomeAssistant, rpc_wrapper, monkeypatch):
     entity_registry.async_get_or_create(
         UPDATE_DOMAIN,
         DOMAIN,
-        "test_name_update",
-        suggested_object_id="test_name_update",
+        "12345678-sys-fwupdate",
+        suggested_object_id="test_name_firmware_update",
         disabled_by=None,
     )
 
