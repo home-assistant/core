@@ -485,11 +485,13 @@ class Recorder(threading.Thread):
         statistic_id: str,
         start_time: datetime,
         sum_adjustment: float,
-        display_unit: str,
+        adjustment_unit: str,
     ) -> None:
         """Adjust statistics."""
         self.queue_task(
-            AdjustStatisticsTask(statistic_id, start_time, sum_adjustment, display_unit)
+            AdjustStatisticsTask(
+                statistic_id, start_time, sum_adjustment, adjustment_unit
+            )
         )
 
     @callback
