@@ -15,8 +15,6 @@ from homeassistant.helpers.frame import report
 
 from .unit_conversion import VolumeConverter
 
-# pylint: disable-next=protected-access
-UNIT_CONVERSION = VolumeConverter._UNIT_CONVERSION
 VALID_UNITS = VolumeConverter.VALID_UNITS
 
 
