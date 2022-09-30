@@ -159,16 +159,16 @@ class IBeaconCoordinator:
         """Ignore an UUID that does not follow the spec and any entities created by it."""
         self._ignore_uuids.add(uuid)
         major_minor_by_uuid = self._major_minor_by_uuid.pop(uuid)
+        unique_ids_to_purge = set()
         for major, minor in major_minor_by_uuid:
             group_id = f"{uuid}_{major}_{minor}"
-            self._async_purge_untrackable_entities(
-                self._unique_ids_by_group_id[group_id]
-            )
+            if unique_ids := self._unique_ids_by_group_id.pop(group_id, None):
+                unique_ids_to_purge.update(unique_ids)
             for address in self._addresses_by_group_id.pop(group_id, []):
                 self._async_cancel_unavailable_tracker(address)
                 self._unique_ids_by_address.pop(address)
                 self._group_ids_by_address.pop(address)
-            self._unique_ids_by_group_id.pop(group_id, None)
+        self._async_purge_untrackable_entities(unique_ids_to_purge)
         entry_data = self._entry.data
         new_data = entry_data | {CONF_IGNORE_UUIDS: list(self._ignore_uuids)}
         self.hass.config_entries.async_update_entry(self._entry, data=new_data)
@@ -238,11 +238,11 @@ class IBeaconCoordinator:
         major = ibeacon_advertisement.major
         minor = ibeacon_advertisement.minor
         major_minor_by_uuid = self._major_minor_by_uuid.setdefault(uuid_str, set())
-        major_minor_by_uuid.add((major, minor))
-        if len(major_minor_by_uuid) > MAX_IDS_PER_UUID:
+        if len(major_minor_by_uuid) + 1 > MAX_IDS_PER_UUID:
             self._async_ignore_uuid(uuid_str)
             return
 
+        major_minor_by_uuid.add((major, minor))
         group_id = f"{uuid_str}_{major}_{minor}"
 
         if group_id in self._group_ids_random_macs:
