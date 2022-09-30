@@ -1337,11 +1337,11 @@ def test_currency():
 @pytest.mark.parametrize(
     "time_period_str_pass",
     (
-        ("23:42", timedelta(hours=23, minutes=42)),
+        ("23:42:00", timedelta(hours=23, minutes=42)),
         ("-23:42:25", -timedelta(hours=23, minutes=42, seconds=25)),
         ("23:42:25.987654", timedelta(hours=23, minutes=42, seconds=25.987654)),
-        ("1 23:42", timedelta(days=1, hours=23, minutes=42)),
-        ("-1 23:42:25", -timedelta(days=1, hours=23, minutes=42, seconds=25)),
+        ("1 23:42:00", timedelta(days=1, hours=23, minutes=42)),
+        ("-1 -23:42:25", -timedelta(days=1, hours=23, minutes=42, seconds=25)),
         (
             "1 23:42:25.987654",
             timedelta(days=1, hours=23, minutes=42, seconds=25.987654),

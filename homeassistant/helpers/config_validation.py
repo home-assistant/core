@@ -439,41 +439,13 @@ def time_period_str(value: str) -> timedelta:
     if not isinstance(value, str):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
-    negative_offset = False
-    if value.startswith("-"):
-        negative_offset = True
-        value = value[1:]
-    elif value.startswith("+"):
-        value = value[1:]
-
-    day = 0
-    date_parsed = value.partition(" ")
-    if date_parsed[1]:
-        try:
-            day = int(date_parsed[0])
-        except ValueError as err:
-            raise vol.Invalid(TIME_PERIOD_ERROR.format(value)) from err
-        value = date_parsed[2]
-
-    parsed = value.split(":")
-    if len(parsed) not in (2, 3):
-        raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
     try:
-        hour = int(parsed[0])
-        minute = int(parsed[1])
-        try:
-            second = float(parsed[2])
-        except IndexError:
-            second = 0
-    except ValueError as err:
-        raise vol.Invalid(TIME_PERIOD_ERROR.format(value)) from err
-
-    offset = timedelta(days=day, hours=hour, minutes=minute, seconds=second)
-
-    if negative_offset:
-        offset *= -1
-
-    return offset
+        offset = dt_util.parse_duration(value)
+        if offset:
+            return offset
+        raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
+    except Exception as err:
+        raise vol.Invalid(err)
 
 
 def time_period_seconds(value: float | str) -> timedelta:
