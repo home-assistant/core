@@ -1,19 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
+            "invalid_server_version": "The Matter server is not the correct version",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
+                    "url": "URL"
                 }
             }
         }
