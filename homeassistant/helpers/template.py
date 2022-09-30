@@ -8,6 +8,7 @@ import collections.abc
 from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache, lru_cache, partial, wraps
 import json
@@ -19,7 +20,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from typing import Any, NoReturn, TypeVar, cast, overload
+from typing import Any, Literal, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -30,6 +31,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
 
+from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
@@ -200,6 +202,7 @@ class TupleWrapper(tuple, ResultWrapper):
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
+    # pylint: disable=super-init-not-called
     def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
         self.render_result = render_result
@@ -945,6 +948,68 @@ def _resolve_state(
     if isinstance(entity_id_or_state, str):
         return _get_state(hass, entity_id_or_state)
     return None
+
+
+@dataclass
+class TemplateStatistic:
+    """Class to represesent a statistic entry."""
+
+    start: str
+    end: str
+    last_reset: str
+    mean: float
+    min: float
+    max: float
+    state: float
+    sum: float
+
+
+def get_statistic(
+    hass: HomeAssistant,
+    entity_id: str,
+    start_time_str: str,
+    end_time_str: str | None = None,
+    period: Literal["5minute", "day", "hour", "month"] = "hour",
+    units: dict[str, str] | None = None,
+) -> list[TemplateStatistic]:
+    """Retrieve statistics data for entity."""
+
+    if start_time := dt_util.parse_datetime(start_time_str):
+        start_time = dt_util.as_utc(start_time)
+    else:
+        raise TemplateError("Invalid start time")  # type: ignore[arg-type]
+
+    if end_time_str:
+        if end_time := dt_util.parse_datetime(end_time_str):
+            end_time = dt_util.as_utc(end_time)
+        else:
+            raise TemplateError("Invalid end time")  # type: ignore[arg-type]
+    else:
+        end_time = None
+
+    if period not in ["5minute", "day", "hour", "month"]:
+        raise TemplateError("Invalid period")  # type: ignore[arg-type]
+
+    # Determine statistics ID for entity ID provided.
+    statistics_results: list[TemplateStatistic] = []
+    if longterm_statistics := statistics_during_period(
+        hass, start_time, end_time, list(entity_id), period, units=units
+    ):
+        for statistic_entry in list(longterm_statistics.items())[0][1]:
+            statistics_results.append(
+                TemplateStatistic(
+                    statistic_entry["start"],
+                    statistic_entry["end"],
+                    statistic_entry["last_reset"],
+                    statistic_entry["mean"],
+                    statistic_entry["min"],
+                    statistic_entry["max"],
+                    statistic_entry["state"],
+                    statistic_entry["sum"],
+                )
+            )
+
+    return statistics_results
 
 
 @overload
@@ -2102,6 +2167,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["integration_entities"] = pass_context(
             self.globals["integration_entities"]
         )
+
+        self.globals["statistic"] = hassfunction(get_statistic)
 
         if limited:
             # Only device_entities is available to limited templates, mark other

@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import UnitSystem
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, UnitSystem
 
 from tests.common import (
     MockConfigEntry,
@@ -37,6 +37,17 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    do_adhoc_statistics,
+)
+
+POWER_SENSOR_KW_ATTRIBUTES = {
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit_of_measurement": "kW",
+}
 
 
 def _set_up_units(hass):
@@ -3942,3 +3953,43 @@ async def test_template_states_can_serialize(hass):
     template_state = template.TemplateState(hass, state, True)
     assert template_state.as_dict() is template_state.as_dict()
     assert json_dumps(template_state) == json_dumps(template_state)
+
+
+async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
+    """Test statistics_during_period."""
+    now = dt_util.utcnow()
+
+    hass.config.units = IMPERIAL_SYSTEM
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    stat_template = (
+        "{{ statistic('sensor.test', "
+        + now.isoformat()
+        + ", "
+        + now.isoformat()
+        + ", 'hour') }}"
+    )
+    result = template.Template(stat_template, hass).async_render()
+
+    assert ["result"] == []
+
+    stat_template = (
+        "{{ statistic('sensor.test', " + now.isoformat() + ", period='5minute') }}"
+    )
+    result = template.Template(stat_template, hass).async_render()
+
+    assert len(result) == 1
+    assert result[0].start == now.isoformat()
+    assert result[0].end == (now + timedelta(minutes=5)).isoformat()
+    assert result[0].mean == pytest.approx(10)
+    assert result[0].min == pytest.approx(10)
+    assert result[0].max == pytest.approx(10)
+    assert result[0].last_reset is None
+    assert result[0].state is None
+    assert result[0].sum is None
