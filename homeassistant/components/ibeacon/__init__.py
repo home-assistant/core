@@ -28,6 +28,9 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove iBeacon config entry from a device."""
-    # There is little risk in allowing remove since they will
-    # come back if they are still there anyways.
-    return True
+    coordinator: IBeaconCoordinator = hass.data[DOMAIN]
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN and coordinator.async_device_id_seen(identifier[1])
+    )

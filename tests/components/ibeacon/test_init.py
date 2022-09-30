@@ -56,5 +56,15 @@ async def test_device_remove_devices(hass, hass_ws_client):
     )
     assert (
         await remove_device(await hass_ws_client(hass), device_entry.id, entry.entry_id)
+        is False
+    )
+    dead_device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "not_seen")},
+    )
+    assert (
+        await remove_device(
+            await hass_ws_client(hass), dead_device_entry.id, entry.entry_id
+        )
         is True
     )

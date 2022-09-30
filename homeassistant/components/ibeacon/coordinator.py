@@ -132,6 +132,14 @@ class IBeaconCoordinator:
         self._unavailable_group_ids: set[str] = set()
 
     @callback
+    def async_device_id_seen(self, device_id: str) -> bool:
+        """Return True if the device_id has been seen since boot."""
+        return bool(
+            device_id in self._last_ibeacon_advertisement_by_unique_id
+            or device_id in self._last_seen_by_group_id
+        )
+
+    @callback
     def _async_handle_unavailable(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
