@@ -49,6 +49,7 @@ ENTRY_CONFIG_NO_RESULTS = {
 
 YAML_CONFIG = {
     "sql": {
+        CONF_DB_URL: "sqlite://",
         CONF_NAME: "Get Value",
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
@@ -60,10 +61,19 @@ YAML_CONFIG = {
 
 YAML_CONFIG_INVALID = {
     "sql": {
+        CONF_DB_URL: "sqlite://",
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
         CONF_UNIT_OF_MEASUREMENT: "MiB",
         CONF_UNIQUE_ID: "unique_id_12345",
+    }
+}
+
+YAML_CONFIG_NO_DB = {
+    "sql": {
+        CONF_NAME: "Get Value",
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
     }
 }
 

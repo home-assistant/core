@@ -208,6 +208,7 @@ async def test_invalid_url_on_update(
 
 async def test_query_from_yaml(hass: HomeAssistant, recorder_mock) -> None:
     """Test the SQL sensor from yaml config."""
+
     assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
     await hass.async_block_till_done()
 
