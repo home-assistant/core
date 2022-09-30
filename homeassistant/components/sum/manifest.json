@@ -1,0 +1,10 @@
+{
+  "domain": "sum",
+  "integration_type": "helper",
+  "name": "Sum",
+  "documentation": "https://www.home-assistant.io/integrations/sum",
+  "codeowners": ["@gjohansson-ST"],
+  "quality_scale": "internal",
+  "iot_class": "local_push",
+  "config_flow": true
+}
