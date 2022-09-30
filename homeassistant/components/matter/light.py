@@ -19,13 +19,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .adapter import MatterAdapter
 from .const import DOMAIN
 from .entity import MatterEntity, MatterEntityDescriptionBaseClass
 from .util import renormalize
 
 if TYPE_CHECKING:
     from matter_server.client.matter import Matter
+
+    from .adapter import MatterAdapter
 
 
 async def async_setup_entry(
