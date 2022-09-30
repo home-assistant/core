@@ -1,12 +1,11 @@
 """Matter to Home Assistant adapter."""
 from __future__ import annotations
 
-from abc import abstractmethod
 import asyncio
 from collections.abc import Callable
 import json
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from matter_server.client.adapter import AbstractMatterAdapter
@@ -34,7 +33,9 @@ STORAGE_MINOR_VERSION = 0
 
 
 def load_json(
-    filename: str, default: list | dict | None = None, decoder=None
+    filename: str,
+    default: list | dict | None = None,
+    decoder: type[json.JSONDecoder] | None = None,
 ) -> list | dict:
     """Load JSON data from a file and return as dict or list.
 
@@ -44,7 +45,7 @@ def load_json(
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read(), cls=decoder)
+            return json.loads(fdesc.read(), cls=decoder)  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         logging.getLogger(__name__).debug("JSON file not found: %s", filename)
@@ -59,17 +60,17 @@ def load_json(
     return {} if default is None else default
 
 
-class MatterStore(Store):
+class MatterStore(Store[dict]):
     """Temporary fork to add support for using our JSON decoder."""
 
-    async def _async_load_data(self):
+    async def _async_load_data(self) -> Any | None:
         """Load the data with custom decoder."""
         # Check if we have a pending write
         if self._data is not None:
-            return await super()._async_load_data()
+            return await super()._async_load_data()  # type: ignore[no-untyped-call]
 
-        data = await self.hass.async_add_executor_job(
-            load_json, self.path, None, CHIPJSONDecoder
+        data: dict = await self.hass.async_add_executor_job(
+            load_json, self.path, None, CHIPJSONDecoder  # type: ignore[arg-type]
         )
 
         if data == {}:
@@ -78,7 +79,7 @@ class MatterStore(Store):
         # We store it as a to-be-saved data so the load function will pick it up
         # and run migration etc.
         self._data = data
-        return await super()._async_load_data()
+        return await super()._async_load_data()  # type: ignore[no-untyped-call]
 
 
 def get_matter_store(hass: HomeAssistant, config_entry: ConfigEntry) -> MatterStore:
@@ -92,7 +93,9 @@ def get_matter_store(hass: HomeAssistant, config_entry: ConfigEntry) -> MatterSt
     )
 
 
-def get_matter_fallback_store(hass: HomeAssistant, config_entry: ConfigEntry) -> Store:
+def get_matter_fallback_store(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> Store[dict]:
     """Get the store for the config entry."""
     return Store(
         hass,
@@ -102,7 +105,7 @@ def get_matter_fallback_store(hass: HomeAssistant, config_entry: ConfigEntry) ->
     )
 
 
-class MatterAdapter(AbstractMatterAdapter):
+class MatterAdapter(AbstractMatterAdapter):  # type: ignore[misc]
     """Connect Matter into Home Assistant."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -123,7 +126,6 @@ class MatterAdapter(AbstractMatterAdapter):
         if len(self.platform_handlers) == len(DEVICE_PLATFORM):
             self._platforms_set_up.set()
 
-    @abstractmethod
     async def load_data(self) -> dict | None:
         """Load data."""
         try:
@@ -138,25 +140,23 @@ class MatterAdapter(AbstractMatterAdapter):
                 del data["node_interview_version"]
             return data
 
-    @abstractmethod
     async def save_data(self, data: dict) -> None:
         """Save data."""
         await self._store.async_save(data)
 
-    @abstractmethod
     def delay_save_data(self, get_data: Callable[[], dict]) -> None:
         """Save data, but not right now."""
         self._store.async_delay_save(get_data, 60)
 
     def get_server_url(self) -> str:
         """Get the server URL."""
-        return self.config_entry.data[CONF_URL]
+        return cast(str, self.config_entry.data[CONF_URL])
 
     def get_client_session(self) -> aiohttp.ClientSession:
         """Get the client session."""
         return async_get_clientsession(self.hass)
 
-    def get_node_lock(self, nodeid) -> asyncio.Lock:
+    def get_node_lock(self, nodeid: int) -> asyncio.Lock:
         """Get the lock for a node."""
         if nodeid not in self._node_lock:
             self._node_lock[nodeid] = asyncio.Lock()

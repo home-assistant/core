@@ -45,7 +45,7 @@ class MatterLight(MatterEntity, LightEntity):
 
     entity_description: MatterLightEntityDescription
 
-    def _supports_brightness(self):
+    def _supports_brightness(self) -> bool:
         """Return if device supports brightness."""
         return (
             clusters.LevelControl.Attributes.CurrentLevel

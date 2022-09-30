@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from typing import cast
 
 import async_timeout
 from matter_server.client.exceptions import CannotConnect, FailedCommand
@@ -182,7 +183,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
     )
 
     @callback
-    def _node_id_from_ha_device_id(ha_device_id: str) -> str | None:
+    def _node_id_from_ha_device_id(ha_device_id: str) -> int | None:
         """Get node id from ha device id."""
         dev_reg = dr.async_get(hass)
         device = dev_reg.async_get(ha_device_id)
@@ -202,7 +203,7 @@ def _async_init_services(hass: HomeAssistant) -> None:
         # This could be more efficient
         for node in matter.get_nodes():
             if node.unique_id == unique_id:
-                return node.node_id
+                return cast(int, node.node_id)
 
         return None
 
