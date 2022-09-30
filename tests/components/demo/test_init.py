@@ -96,7 +96,6 @@ async def test_demo_statistics_growth(hass, recorder_mock):
     metadata = {
         "source": DOMAIN,
         "name": "Energy consumption 1",
-        "state_unit_of_measurement": "m³",
         "statistic_id": statistic_id,
         "unit_of_measurement": "m³",
         "has_mean": False,

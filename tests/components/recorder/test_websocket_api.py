@@ -651,7 +651,6 @@ async def test_list_statistic_ids(
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "state_unit_of_measurement": display_unit,
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
         }
@@ -673,7 +672,6 @@ async def test_list_statistic_ids(
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "state_unit_of_measurement": display_unit,
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
         }
@@ -698,7 +696,6 @@ async def test_list_statistic_ids(
                 "has_sum": has_sum,
                 "name": None,
                 "source": "recorder",
-                "state_unit_of_measurement": display_unit,
                 "statistics_unit_of_measurement": statistics_unit,
                 "unit_class": unit_class,
             }
@@ -719,7 +716,6 @@ async def test_list_statistic_ids(
                 "has_sum": has_sum,
                 "name": None,
                 "source": "recorder",
-                "state_unit_of_measurement": display_unit,
                 "statistics_unit_of_measurement": statistics_unit,
                 "unit_class": unit_class,
             }
@@ -907,7 +903,6 @@ async def test_update_statistics_metadata(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "state_unit_of_measurement": "kW",
             "statistics_unit_of_measurement": "kW",
             "unit_class": None,
         }
@@ -935,7 +930,6 @@ async def test_update_statistics_metadata(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "state_unit_of_measurement": "kW",
             "statistics_unit_of_measurement": new_unit,
             "unit_class": new_unit_class,
         }
@@ -999,7 +993,6 @@ async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "state_unit_of_measurement": "kW",
             "statistics_unit_of_measurement": "kW",
             "unit_class": None,
         }
@@ -1055,7 +1048,6 @@ async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "state_unit_of_measurement": "kW",
             "statistics_unit_of_measurement": "W",
             "unit_class": "power",
         }
@@ -1108,7 +1100,6 @@ async def test_change_statistics_unit_errors(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "state_unit_of_measurement": "kW",
             "statistics_unit_of_measurement": "kW",
             "unit_class": None,
         }
@@ -1461,7 +1452,6 @@ async def test_get_statistics_metadata(
         "has_sum": has_sum,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": unit,
         "statistic_id": "test:total_gas",
         "unit_of_measurement": unit,
     }
@@ -1487,7 +1477,6 @@ async def test_get_statistics_metadata(
             "has_sum": has_sum,
             "name": "Total imported energy",
             "source": "test",
-            "state_unit_of_measurement": unit,
             "statistics_unit_of_measurement": unit,
             "unit_class": unit_class,
         }
@@ -1515,7 +1504,6 @@ async def test_get_statistics_metadata(
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "state_unit_of_measurement": attributes["unit_of_measurement"],
             "statistics_unit_of_measurement": unit,
             "unit_class": unit_class,
         }
@@ -1543,7 +1531,6 @@ async def test_get_statistics_metadata(
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "state_unit_of_measurement": attributes["unit_of_measurement"],
             "statistics_unit_of_measurement": unit,
             "unit_class": unit_class,
         }
@@ -1640,7 +1627,6 @@ async def test_import_statistics(
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "state_unit_of_measurement": "kWh",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
         }
@@ -1654,7 +1640,6 @@ async def test_import_statistics(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
@@ -1869,7 +1854,6 @@ async def test_adjust_sum_statistics_energy(
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "state_unit_of_measurement": "kWh",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
         }
@@ -1883,7 +1867,6 @@ async def test_adjust_sum_statistics_energy(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
@@ -2067,7 +2050,6 @@ async def test_adjust_sum_statistics_gas(
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "state_unit_of_measurement": "m³",
             "statistics_unit_of_measurement": "m³",
             "unit_class": "volume",
         }
@@ -2081,7 +2063,6 @@ async def test_adjust_sum_statistics_gas(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "m³",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "m³",
             },
@@ -2281,7 +2262,6 @@ async def test_adjust_sum_statistics_errors(
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "state_unit_of_measurement": state_unit,
             "statistics_unit_of_measurement": statistic_unit,
             "unit_class": unit_class,
         }
@@ -2295,7 +2275,6 @@ async def test_adjust_sum_statistics_errors(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": state_unit,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": statistic_unit,
             },
