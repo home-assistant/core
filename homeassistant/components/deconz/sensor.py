@@ -33,7 +33,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
-    CONCENTRATION_PARTS_PER_BILLION,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
@@ -120,7 +119,6 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         old_unique_id_suffix="ppb",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
     ),
     DeconzSensorDescription[Consumption](
         key="consumption",
@@ -196,7 +194,6 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         value_fn=lambda device: dt_util.parse_datetime(device.last_set),
         instance_check=Time,
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DeconzSensorDescription[SensorResources](
         key="battery",

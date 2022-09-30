@@ -343,7 +343,7 @@ bleak-retry-connector==2.1.3
 bleak==0.18.1
 
 # homeassistant.components.blebox
-blebox_uniapi==2.0.2
+blebox_uniapi==2.1.0
 
 # homeassistant.components.ble_parser
 bleparser==3.3.0
@@ -515,7 +515,7 @@ file-read-backwards==2.0.0
 fivem-api==0.1.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==2.0.0
+fjaraskupan==2.1.0
 
 # homeassistant.components.flipr
 flipr-api==1.4.2
@@ -593,7 +593,7 @@ google-nest-sdm==2.0.0
 googlemaps==2.5.1
 
 # homeassistant.components.govee_ble
-govee-ble==0.19.0
+govee-ble==0.19.1
 
 # homeassistant.components.gree
 greeclimate==1.3.0
