@@ -200,7 +200,6 @@ class TupleWrapper(tuple, ResultWrapper):
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
-    # pylint: disable=super-init-not-called
     def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
         self.render_result = render_result
@@ -1659,8 +1658,8 @@ def average(*args: Any, default: Any = _SENTINEL) -> Any:
     if len(args) == 0:
         raise TypeError("average expected at least 1 argument, got 0")
 
-    # If first argument is iterable, more then 1 argument provided but not named default
-    # than use 2nd argument as default.
+    # If first argument is iterable and more then 1 argument provided but not a named default,
+    # then use 2nd argument as default.
     if isinstance(args[0], Iterable):
         average_list = args[0]
         if len(args) > 1 and default is _SENTINEL:
