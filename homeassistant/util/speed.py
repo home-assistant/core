@@ -15,7 +15,7 @@ from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
 )
 from homeassistant.helpers.frame import report
 
-from .unit_conversion import (
+from .unit_conversion import (  # pylint: disable=unused-import # noqa: F401
     _FOOT_TO_M as FOOT_TO_M,
     _HRS_TO_SECS as HRS_TO_SECS,
     _IN_TO_M as IN_TO_M,
@@ -25,17 +25,9 @@ from .unit_conversion import (
     SpeedConverter,
 )
 
+# pylint: disable-next=protected-access
+UNIT_CONVERSION: dict[str, float] = SpeedConverter._UNIT_CONVERSION
 VALID_UNITS = SpeedConverter.VALID_UNITS
-UNIT_CONVERSION: dict[str, float] = {
-    SPEED_FEET_PER_SECOND: 1 / FOOT_TO_M,
-    SPEED_INCHES_PER_DAY: (24 * HRS_TO_SECS) / IN_TO_M,
-    SPEED_INCHES_PER_HOUR: HRS_TO_SECS / IN_TO_M,
-    SPEED_KILOMETERS_PER_HOUR: HRS_TO_SECS / KM_TO_M,
-    SPEED_KNOTS: HRS_TO_SECS / NAUTICAL_MILE_TO_M,
-    SPEED_METERS_PER_SECOND: 1,
-    SPEED_MILES_PER_HOUR: HRS_TO_SECS / MILE_TO_M,
-    SPEED_MILLIMETERS_PER_DAY: (24 * HRS_TO_SECS) * 1000,
-}
 
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:
