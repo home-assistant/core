@@ -49,15 +49,13 @@ async def async_setup_entry(
 
 
 def calc_sum(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
-    """Calculate sum value, honoring unknown states."""
-    result = [
-        sensor_value
-        for _, sensor_value in sensor_values
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-    ]
+    """Calculate sum value, not honoring unknown states."""
+    result = []
+    for _, sensor_value in sensor_values:
+        if sensor_value in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            return None
+        result.append(sensor_value)
 
-    if not result:
-        return None
     return round(sum(result), round_digits)
 
 

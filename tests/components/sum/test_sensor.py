@@ -44,8 +44,8 @@ async def test_sum_sensor(hass: HomeAssistant):
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
-async def test_not_enough_sensor_value(hass: HomeAssistant):
-    """Test that there is nothing done if not enough values available."""
+async def test_incorrect_states(hass: HomeAssistant):
+    """Test that returns state unknown on missing values."""
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -62,19 +62,17 @@ async def test_not_enough_sensor_value(hass: HomeAssistant):
 
     entity_ids = config_entry.options["entity_ids"]
 
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
     hass.states.async_set(entity_ids[0], STATE_UNKNOWN)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.my_sum")
     assert state.state == STATE_UNKNOWN
 
-    hass.states.async_set(entity_ids[1], VALUES[1])
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.my_sum")
-    assert STATE_UNKNOWN != state.state
-
-    hass.states.async_set(entity_ids[2], STATE_UNKNOWN)
+    hass.states.async_set(entity_ids[0], VALUES[0])
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.my_sum")
