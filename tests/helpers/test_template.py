@@ -43,6 +43,11 @@ from tests.components.recorder.common import (
     do_adhoc_statistics,
 )
 
+ENERGY_SENSOR_KWH_ATTRIBUTES = {
+    "device_class": "energy",
+    "state_class": "total",
+    "unit_of_measurement": "kWh",
+}
 POWER_SENSOR_KW_ATTRIBUTES = {
     "device_class": "power",
     "state_class": "measurement",
@@ -3955,7 +3960,7 @@ async def test_template_states_can_serialize(hass):
     assert json_dumps(template_state) == json_dumps(template_state)
 
 
-async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
+async def test_statistics_during_period(hass, recorder_mock):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
@@ -3968,22 +3973,15 @@ async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
     do_adhoc_statistics(hass, start=now)
     await async_wait_recording_done(hass)
 
-    stat_template = (
-        "{{ statistic('sensor.test', "
-        + now.isoformat()
-        + ", "
-        + now.isoformat()
-        + ", 'hour') }}"
+    result = template.get_statistic(
+        hass, "sensor.test", now.isoformat(), now.isoformat(), "hour"
     )
-    result = template.Template(stat_template, hass).async_render()
 
-    assert ["result"] == []
+    assert result == []
 
-    stat_template = (
-        "{{ statistic('sensor.test', " + now.isoformat() + ", period='5minute') }}"
+    result = template.get_statistic(
+        hass, "sensor.test", now.isoformat(), period="5minute"
     )
-    result = template.Template(stat_template, hass).async_render()
-
     assert len(result) == 1
     assert result[0].start == now.isoformat()
     assert result[0].end == (now + timedelta(minutes=5)).isoformat()
@@ -3993,3 +3991,169 @@ async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
     assert result[0].last_reset is None
     assert result[0].state is None
     assert result[0].sum is None
+
+    # Test logic to retrieve statistics.
+    stat_template = (
+        "{{ statistic('sensor.test', '"
+        + now.isoformat()
+        + "', '"
+        + now.isoformat()
+        + "', 'hour') }}"
+    )
+    result = template.Template(stat_template, hass).async_render()
+    assert result == []
+
+    stat_template = (
+        "{{ statistic('sensor.test', '"
+        + now.isoformat()
+        + "', period='5minute') | map(attribute='mean') | sum }}"
+    )
+    result = template.Template(stat_template, hass).async_render()
+    assert result == 10
+
+
+async def test_statistics_during_period_unit_conversion(hass, recorder_mock):
+    """Test statistics_during_period."""
+    now = dt_util.utcnow()
+
+    hass.config.units = IMPERIAL_SYSTEM
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    result = template.get_statistic(
+        hass, "sensor.test", now.isoformat(), period="5minute", units={"power": "W"}
+    )
+    assert len(result) == 1
+    assert result[0].start == now.isoformat()
+    assert result[0].end == (now + timedelta(minutes=5)).isoformat()
+    assert result[0].mean == pytest.approx(10000)
+    assert result[0].min == pytest.approx(10000)
+    assert result[0].max == pytest.approx(10000)
+    assert result[0].last_reset is None
+    assert result[0].state is None
+    assert result[0].sum is None
+
+    stat_template = (
+        "{{ statistic('sensor.test', '"
+        + now.isoformat()
+        + "', period='5minute', units={'power': 'W'}) | map(attribute='mean') | sum }}"
+    )
+    result = template.Template(stat_template, hass).async_render()
+    assert result == 10000
+
+
+async def test_sum_statistics_during_period(hass, recorder_mock):
+    """Test statistics_during_period."""
+    now = dt_util.utcnow()
+    hass.config.units = IMPERIAL_SYSTEM
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", 5, attributes=ENERGY_SENSOR_KWH_ATTRIBUTES)
+    await async_wait_recording_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    one = now + timedelta(minutes=5)
+    two = one + timedelta(minutes=5)
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=one
+    ):
+        hass.states.async_set("sensor.test", 8, attributes=ENERGY_SENSOR_KWH_ATTRIBUTES)
+        await async_wait_recording_done(hass)
+        do_adhoc_statistics(hass, start=one)
+        await async_wait_recording_done(hass)
+
+    with patch(
+        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=two
+    ):
+        hass.states.async_set(
+            "sensor.test", 11, attributes=ENERGY_SENSOR_KWH_ATTRIBUTES
+        )
+        await async_wait_recording_done(hass)
+        do_adhoc_statistics(hass, start=two)
+        await async_wait_recording_done(hass)
+
+    result = template.get_statistic(
+        hass, "sensor.test", now.isoformat(), period="5minute"
+    )
+    assert len(result) == 3
+    assert result[0].start == now.isoformat()
+    assert result[0].end == (now + timedelta(minutes=5)).isoformat()
+    assert result[0].mean is None
+    assert result[0].min is None
+    assert result[0].max is None
+    assert result[0].last_reset is None
+    assert result[0].state == 5
+    assert result[0].sum == 0
+    assert result[1].start == one.isoformat()
+    assert result[1].end == (one + timedelta(minutes=5)).isoformat()
+    assert result[1].mean is None
+    assert result[1].min is None
+    assert result[1].max is None
+    assert result[1].last_reset is None
+    assert result[1].state == 8
+    assert result[1].sum == 3
+    assert result[2].start == two.isoformat()
+    assert result[2].end == (two + timedelta(minutes=5)).isoformat()
+    assert result[2].mean is None
+    assert result[2].min is None
+    assert result[2].max is None
+    assert result[2].last_reset is None
+    assert result[2].state == 11
+    assert result[2].sum == 6
+
+    stat_template = (
+        "{{ statistic('sensor.test', '"
+        + now.isoformat()
+        + "', period='5minute') | map(attribute='state') | sum }}"
+    )
+    result = template.Template(stat_template, hass).async_render()
+    assert result == 5 + 8 + 11
+
+    stat_template = (
+        "{{ statistic('sensor.test', '"
+        + now.isoformat()
+        + "', period='5minute') | map(attribute='sum') | list | last }}"
+    )
+    result = template.Template(stat_template, hass).async_render()
+    assert result == 6
+
+
+async def test_statistics_invalid_start_time(hass, recorder_mock):
+    """Test statistics_during_period."""
+
+    stat_template = "{{ statistic('sensor.test', start_time_str='invalid' }}"
+
+    with pytest.raises(TemplateError):
+        template.Template(stat_template, hass).async_render()
+
+
+async def test_statistics_invalid_end_time(hass, recorder_mock):
+    """Test statistics_during_period."""
+
+    now = dt_util.utcnow()
+    stat_template = (
+        "{{ statistic('sensor.test', '"
+        + now.isoformat()
+        + "', end_time_str='invalid' }}"
+    )
+
+    with pytest.raises(TemplateError):
+        template.Template(stat_template, hass).async_render()
+
+
+async def test_statistics_invalid_period(hass, recorder_mock):
+    """Test statistics_during_period."""
+
+    now = dt_util.utcnow()
+    stat_template = (
+        "{{ statistic('sensor.test', '" + now.isoformat() + "', period='invalid' }}"
+    )
+
+    with pytest.raises(TemplateError):
+        template.Template(stat_template, hass).async_render()

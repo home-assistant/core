@@ -31,7 +31,6 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
 
-from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
@@ -990,11 +989,17 @@ def get_statistic(
     if period not in ["5minute", "day", "hour", "month"]:
         raise TemplateError("Invalid period")  # type: ignore[arg-type]
 
-    # Determine statistics ID for entity ID provided.
+    # Import has to occur here to prevent circular import
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.recorder.statistics import (
+        statistics_during_period,
+    )
+
     statistics_results: list[TemplateStatistic] = []
     if longterm_statistics := statistics_during_period(
-        hass, start_time, end_time, list(entity_id), period, units=units
+        hass, start_time, end_time, [entity_id], period, units=units
     ):
+        # Go through statistics received and put in object making it easily accessible.
         for statistic_entry in list(longterm_statistics.items())[0][1]:
             statistics_results.append(
                 TemplateStatistic(
