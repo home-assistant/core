@@ -422,18 +422,7 @@ async def test_update_entity_install_failed(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": False}
 
-    async def call_install():
-        await hass.services.async_call(
-            UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {
-                ATTR_ENTITY_ID: UPDATE_ENTITY,
-            },
-            blocking=True,
-        )
-
     # Test install call - we expect it to finish fail
-    # install_task = hass.async_create_task(call_install())
     install_task = hass.async_create_task(
         hass.services.async_call(
             UPDATE_DOMAIN,
