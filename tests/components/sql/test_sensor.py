@@ -9,8 +9,9 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.setup import async_setup_component
 
-from . import init_integration
+from . import YAML_CONFIG, init_integration
 
 from tests.common import MockConfigEntry
 
@@ -203,3 +204,79 @@ async def test_invalid_url_on_update(
 
     assert "sqlite://homeassistant:hunter2@homeassistant.local" not in caplog.text
     assert "sqlite://****:****@homeassistant.local" in caplog.text
+
+
+async def test_query_from_yaml(hass: HomeAssistant, recorder_mock) -> None:
+    """Test the SQL sensor from yaml config."""
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_value")
+    assert state.state == "5"
+
+
+async def test_config_from_old_yaml(hass: HomeAssistant, recorder_mock) -> None:
+    """Test the SQL sensor from old yaml config does not create any entity."""
+    config = {
+        "sensor": {
+            "platform": "sql",
+            "db_url": "sqlite://",
+            "queries": [
+                {
+                    "name": "count_tables",
+                    "query": "SELECT 5 as value",
+                    "column": "value",
+                }
+            ],
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.count_tables")
+    assert not state
+
+
+@pytest.mark.parametrize(
+    "url,expected_patterns,not_expected_patterns",
+    [
+        (
+            "sqlite://homeassistant:hunter2@homeassistant.local",
+            ["sqlite://****:****@homeassistant.local"],
+            ["sqlite://homeassistant:hunter2@homeassistant.local"],
+        ),
+        (
+            "sqlite://homeassistant.local",
+            ["sqlite://homeassistant.local"],
+            [],
+        ),
+    ],
+)
+async def test_invalid_url_setup_from_yaml(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    url: str,
+    expected_patterns: str,
+    not_expected_patterns: str,
+):
+    """Test invalid db url with redacted credentials from yaml setup."""
+    config = {
+        "sql": {
+            "db_url": url,
+            "query": "SELECT 5 as value",
+            "column": "value",
+            "name": "count_tables",
+        }
+    }
+
+    with patch(
+        "homeassistant.components.sql.sensor.sqlalchemy.create_engine",
+        side_effect=SQLAlchemyError(url),
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    for pattern in not_expected_patterns:
+        assert pattern not in caplog.text
+    for pattern in expected_patterns:
+        assert pattern in caplog.text

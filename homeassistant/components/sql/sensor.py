@@ -10,16 +10,22 @@ from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from homeassistant.components.recorder import CONF_DB_URL
+from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DB_URL_RE, DOMAIN
 
@@ -31,10 +37,80 @@ def redact_credentials(data: str) -> str:
     return DB_URL_RE.sub("//****:****@", data)
 
 
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the SQL sensor from yaml."""
+    if discovery_info is None:
+        return
+
+    conf = discovery_info
+
+    if not (db_url := conf.get(CONF_DB_URL)):
+        db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+
+    sess: scoped_session | None = None
+    try:
+        engine = sqlalchemy.create_engine(db_url)
+        sessmaker = scoped_session(sessionmaker(bind=engine))
+
+        # Run a dummy query just to test the db_url
+        sess = sessmaker()
+        sess.execute("SELECT 1;")
+
+    except SQLAlchemyError as err:
+        _LOGGER.error(
+            "Couldn't connect using %s DB_URL: %s",
+            redact_credentials(db_url),
+            redact_credentials(str(err)),
+        )
+        return
+    finally:
+        if sess:
+            sess.close()
+
+    name: str = conf[CONF_NAME]
+    query_str: str = conf[CONF_QUERY]
+    unit: str | None = conf.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template: Template | None = conf.get(CONF_VALUE_TEMPLATE)
+    column_name: str = conf[CONF_COLUMN_NAME]
+    unique_id: str | None = conf.get(CONF_UNIQUE_ID)
+
+    if value_template is not None:
+        value_template.hass = hass
+
+    # MSSQL uses TOP and not LIMIT
+    if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
+        query_str = (
+            query_str.replace("SELECT", "SELECT TOP 1")
+            if "mssql" in db_url
+            else query_str.replace(";", " LIMIT 1;")
+        )
+
+    async_add_entities(
+        [
+            SQLSensor(
+                name,
+                sessmaker,
+                query_str,
+                column_name,
+                unit,
+                value_template,
+                unique_id,
+                True,
+            )
+        ],
+        True,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the SQL sensor entry."""
+    """Set up the SQL sensor from config entry."""
 
     db_url: str = entry.options[CONF_DB_URL]
     name: str = entry.options[CONF_NAME]
@@ -77,6 +153,7 @@ async def async_setup_entry(
                 unit,
                 value_template,
                 entry.entry_id,
+                False,
             )
         ],
         True,
@@ -97,22 +174,25 @@ class SQLSensor(SensorEntity):
         column: str,
         unit: str | None,
         value_template: Template | None,
-        entry_id: str,
+        unique_id: str | None,
+        yaml: bool,
     ) -> None:
         """Initialize the SQL sensor."""
         self._query = query
+        self._attr_name = name if yaml else None
         self._attr_native_unit_of_measurement = unit
         self._template = value_template
         self._column_name = column
         self.sessionmaker = sessmaker
         self._attr_extra_state_attributes = {}
-        self._attr_unique_id = entry_id
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
-            manufacturer="SQL",
-            name=name,
-        )
+        self._attr_unique_id = unique_id
+        if not yaml and unique_id:
+            self._attr_device_info = DeviceInfo(
+                entry_type=DeviceEntryType.SERVICE,
+                identifiers={(DOMAIN, unique_id)},
+                manufacturer="SQL",
+                name=name,
+            )
 
     def update(self) -> None:
         """Retrieve sensor data from the query."""
