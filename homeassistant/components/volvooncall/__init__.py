@@ -23,6 +23,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -315,6 +316,15 @@ class VolvoEntity(CoordinatorEntity):
         return True
 
     @property
+    def device_info(self) -> DeviceInfo:
+        """Return a inique set of attributes for each vehicle."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.vehicle.vin)},
+            name=self._vehicle_name,
+            model=self.vehicle.vehicle_type,
+        )
+
+    @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         return dict(
@@ -329,12 +339,3 @@ class VolvoEntity(CoordinatorEntity):
         if self.instrument.slug_override is not None:
             slug_override = f"-{self.instrument.slug_override}"
         return f"{self.vin}-{self.component}-{self.attribute}{slug_override}"
-
-    @property
-    def device_info(self):
-        """Return a inique set of attributes for each vehicle."""
-        return {
-            "identifiers": {(DOMAIN, self.vehicle.vin)},
-            "name": self._vehicle_name,
-            "model": self.vehicle.vehicle_type,
-        }
