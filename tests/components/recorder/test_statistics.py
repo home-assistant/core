@@ -525,12 +525,12 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
+            "state_unit_of_measurement": "kWh",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
         }
@@ -621,12 +621,12 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "MWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy renamed",
             "source": source,
+            "state_unit_of_measurement": "MWh",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
         }
@@ -682,7 +682,7 @@ async def test_import_statistics(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
-            "display_unit": "MWh",
+            "adjustment_unit_of_measurement": "MWh",
         }
     )
     response = await client.receive_json()

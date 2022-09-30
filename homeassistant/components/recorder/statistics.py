@@ -899,7 +899,7 @@ def list_statistic_ids(
 
         result = {
             meta["statistic_id"]: {
-                "display_unit_of_measurement": meta["state_unit_of_measurement"],
+                "state_unit_of_measurement": meta["state_unit_of_measurement"],
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
@@ -926,7 +926,7 @@ def list_statistic_ids(
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
-                "display_unit_of_measurement": meta["state_unit_of_measurement"],
+                "state_unit_of_measurement": meta["state_unit_of_measurement"],
                 "unit_class": _get_unit_class(meta["unit_of_measurement"]),
                 "unit_of_measurement": meta["unit_of_measurement"],
             }
@@ -939,7 +939,7 @@ def list_statistic_ids(
             "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
-            "display_unit_of_measurement": info["display_unit_of_measurement"],
+            "state_unit_of_measurement": info["state_unit_of_measurement"],
             "statistics_unit_of_measurement": info["unit_of_measurement"],
             "unit_class": info["unit_class"],
         }
@@ -1605,7 +1605,7 @@ def adjust_statistics(
     statistic_id: str,
     start_time: datetime,
     sum_adjustment: float,
-    display_unit: str,
+    adjustment_unit: str,
 ) -> bool:
     """Process an add_statistics job."""
 
@@ -1617,7 +1617,9 @@ def adjust_statistics(
             return True
 
         statistic_unit = metadata[statistic_id][1]["unit_of_measurement"]
-        convert = _get_display_to_statistic_unit_converter(display_unit, statistic_unit)
+        convert = _get_display_to_statistic_unit_converter(
+            adjustment_unit, statistic_unit
+        )
         sum_adjustment = convert(sum_adjustment)
 
         _adjust_sum_statistics(
