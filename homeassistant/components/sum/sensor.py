@@ -21,16 +21,6 @@ from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MIN_VALUE = "min_value"
-ATTR_MIN_ENTITY_ID = "min_entity_id"
-ATTR_MAX_VALUE = "max_value"
-ATTR_MAX_ENTITY_ID = "max_entity_id"
-ATTR_MEAN = "mean"
-ATTR_MEDIAN = "median"
-ATTR_LAST = "last"
-ATTR_LAST_ENTITY_ID = "last_entity_id"
-ATTR_RANGE = "range"
-
 ICON = "mdi:calculator"
 
 
@@ -79,12 +69,12 @@ class SumSensor(SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
-        self, entity_ids: list[str], name: str, round_digits: int, unique_id: str
+        self, entity_ids: list[str], name: str, round_digits: float, unique_id: str
     ) -> None:
         """Initialize the sum sensor."""
         self._attr_unique_id = unique_id
         self._entity_ids = entity_ids
-        self._round_digits = round_digits
+        self._round_digits = int(round_digits)
 
         self._attr_name = name
 
@@ -122,10 +112,7 @@ class SumSensor(SensorEntity):
     ) -> None:
         """Handle the sensor state changes."""
         new_state: State | None = event.data.get("new_state")
-        entity: str | None = event.data.get("entity_id")
-
-        if not entity:
-            return
+        entity: str = event.data["entity_id"]
 
         if (
             new_state is None
