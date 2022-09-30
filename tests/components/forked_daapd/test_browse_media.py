@@ -4,7 +4,11 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant.components import media_source, spotify
-from homeassistant.components.forked_daapd.browse_media import create_media_content_id
+from homeassistant.components.forked_daapd.browse_media import (
+    MediaContent,
+    create_media_content_id,
+    is_owntone_media_content_id,
+)
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.components.spotify.const import (
     MEDIA_PLAYER_PREFIX as SPOTIFY_MEDIA_PLAYER_PREFIX,
@@ -111,6 +115,16 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
                 "length_ms": 2951554,
                 "uri": "library:artist:3815427709949443149",
             },
+            {
+                "id": "456",
+                "name": "Spotify Artist",
+                "name_sort": "Spotify Artist",
+                "album_count": 1,
+                "track_count": 10,
+                "length_ms": 2254,
+                "uri": "spotify:artist:abc123",
+                "data_kind": "spotify",
+            },
         ]
         mock_api.return_value.get_genres.return_value = [
             {"name": "Classical"},
@@ -126,6 +140,13 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
                 "path": "/music/srv/radio.m3u",
                 "smart_playlist": False,
                 "uri": "library:playlist:1",
+            },
+            {
+                "id": 2,
+                "name": "Spotify Playlist",
+                "path": "spotify:playlist:abc123",
+                "smart_playlist": False,
+                "uri": "library:playlist:2",
             },
         ]
 
@@ -150,6 +171,11 @@ async def test_async_browse_media(hass, hass_ws_client, config_entry):
             """Browse the children of this BrowseMedia."""
             nonlocal msg_id
             for child in children:
+                # Assert Spotify content is not passed through as Owntone media
+                assert not (
+                    is_owntone_media_content_id(child["media_content_id"])
+                    and "Spotify" in MediaContent(child["media_content_id"]).title
+                )
                 if child["can_expand"]:
                     await client.send_json(
                         {
