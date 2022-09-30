@@ -104,7 +104,6 @@ TEST_DATA = [
             "state_class": SensorStateClass.MEASUREMENT,
             "attributes": {
                 "state_class": "measurement",
-                "unit_of_measurement": "ppb",
                 "device_class": "aqi",
                 "friendly_name": "BOSCH Air quality sensor PPB",
             },
@@ -521,9 +520,7 @@ TEST_DATA = [
             "state": "2020-11-19T08:07:08+00:00",
             "entity_category": None,
             "device_class": SensorDeviceClass.TIMESTAMP,
-            "state_class": SensorStateClass.TOTAL_INCREASING,
             "attributes": {
-                "state_class": "total_increasing",
                 "device_class": "timestamp",
                 "friendly_name": "eTRV Séjour",
             },
