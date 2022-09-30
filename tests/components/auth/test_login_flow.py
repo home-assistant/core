@@ -66,7 +66,7 @@ async def test_invalid_username_password(hass, aiohttp_client):
             },
         )
 
-    assert resp.status == HTTPStatus.OK
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     step = await resp.json()
     assert len(mock_process_wrong_login.mock_calls) == 1
 
@@ -86,7 +86,7 @@ async def test_invalid_username_password(hass, aiohttp_client):
             },
         )
 
-    assert resp.status == HTTPStatus.OK
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     step = await resp.json()
     assert len(mock_process_wrong_login.mock_calls) == 1
 
@@ -106,7 +106,7 @@ async def test_invalid_username_password(hass, aiohttp_client):
             },
         )
 
-    assert resp.status == HTTPStatus.OK
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     step = await resp.json()
     assert len(mock_process_wrong_login.mock_calls) == 1
 

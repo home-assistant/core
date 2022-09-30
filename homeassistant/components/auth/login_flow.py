@@ -197,8 +197,8 @@ class LoginFlowBaseView(HomeAssistantView):
     ) -> web.Response:
         """Convert the flow result to a response."""
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
-            # @log_invalid_auth does not work here since it returns HTTP 200.
-            # We need to manually log failed login attempts.
+            # return HTTP 200 by default, return other HTTP status codes e.g. on bad credentials
+            status_code = HTTPStatus.OK
             if (
                 result["type"] == data_entry_flow.FlowResultType.FORM
                 and (errors := result.get("errors"))
@@ -208,8 +208,9 @@ class LoginFlowBaseView(HomeAssistantView):
                     "invalid_code",
                 )
             ):
+                status_code = HTTPStatus.UNAUTHORIZED
                 await process_wrong_login(request)
-            return self.json(_prepare_result_json(result))
+            return self.json(_prepare_result_json(result), status_code)
 
         hass: HomeAssistant = request.app["hass"]
 
