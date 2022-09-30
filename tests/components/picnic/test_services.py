@@ -73,13 +73,14 @@ async def test_add_product_using_id(
     picnic_config_entry: MockConfigEntry,
 ):
     """Test adding a product by id."""
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    picnic_service = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
-
     await hass.services.async_call(
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
-        {"device_id": picnic_service.id, "product_id": "5109348572", "amount": 3},
+        {
+            "config_entry_id": picnic_config_entry.entry_id,
+            "product_id": "5109348572",
+            "amount": 3,
+        },
         blocking=True,
     )
 
@@ -93,8 +94,6 @@ async def test_add_product_using_name(
     picnic_config_entry: MockConfigEntry,
 ):
     """Test adding a product by name."""
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    picnic_service = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
 
     # Set the return value of the search api endpoint
     picnic_api_client.search.return_value = [
@@ -119,7 +118,7 @@ async def test_add_product_using_name(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
-        {"device_id": picnic_service.id, "product_name": "Tea"},
+        {"config_entry_id": picnic_config_entry.entry_id, "product_name": "Tea"},
         blocking=True,
     )
 
@@ -134,9 +133,6 @@ async def test_add_product_using_name_no_results(
 ):
     """Test adding a product by name that can't be found."""
 
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    picnic_service = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
-
     # Set the search return value and check that the right exception is raised during the service call
     picnic_api_client.search.return_value = []
     with pytest.raises(PicnicServiceException):
@@ -144,7 +140,7 @@ async def test_add_product_using_name_no_results(
             DOMAIN,
             SERVICE_ADD_PRODUCT_TO_CART,
             {
-                "device_id": picnic_service.id,
+                "config_entry_id": picnic_config_entry.entry_id,
                 "product_name": "Random non existing product",
             },
             blocking=True,
@@ -158,9 +154,6 @@ async def test_add_product_using_name_no_named_results(
 ):
     """Test adding a product by name for which no named results are returned."""
 
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    picnic_service = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
-
     # Set the search return value and check that the right exception is raised during the service call
     picnic_api_client.search.return_value = [{"items": [{"attr": "test"}]}]
     with pytest.raises(PicnicServiceException):
@@ -168,7 +161,7 @@ async def test_add_product_using_name_no_named_results(
             DOMAIN,
             SERVICE_ADD_PRODUCT_TO_CART,
             {
-                "device_id": picnic_service.id,
+                "config_entry_id": picnic_config_entry.entry_id,
                 "product_name": "Random product",
             },
             blocking=True,
@@ -186,17 +179,12 @@ async def test_add_product_multiple_config_entries(
     ) as create_picnic_client_mock:
         picnic_api_client_2 = create_picnic_api_client("3fj9-9gju-236")
         create_picnic_client_mock.return_value = picnic_api_client_2
-        await create_picnic_config_entry(hass, "3fj9-9gju-236")
-
-    device_registry = hass.helpers.device_registry.async_get(hass)
-    picnic_service = device_registry.async_get_device(
-        identifiers={(DOMAIN, "3fj9-9gju-236")}
-    )
+        picnic_config_entry_2 = await create_picnic_config_entry(hass, "3fj9-9gju-236")
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
-        {"product_id": "5109348572", "device_id": picnic_service.id},
+        {"product_id": "5109348572", "config_entry_id": picnic_config_entry_2.entry_id},
         blocking=True,
     )
 
@@ -215,7 +203,7 @@ async def test_add_product_device_doesnt_exist(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_PRODUCT_TO_CART,
-            {"product_id": "5109348572", "device_id": 12345},
+            {"product_id": "5109348572", "config_entry_id": 12345},
             blocking=True,
         )
 

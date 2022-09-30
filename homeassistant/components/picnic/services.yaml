@@ -5,12 +5,12 @@ add_product:
     The search string and product ID are exclusive.
 
   fields:
-    device_id:
+    config_entry_id:
       name: Picnic service
       description: The product will be added to the selected service.
       required: true
       selector:
-        device:
+        config_entry:
           integration: picnic
     product_id:
       name: Product ID

@@ -5,12 +5,11 @@ from python_picnic_api import PicnicAPI
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_AMOUNT,
-    ATTR_DEVICE_ID,
+    ATTR_CONFIG_ENTRY_ID,
     ATTR_PRODUCT_ID,
     ATTR_PRODUCT_IDENTIFIERS,
     ATTR_PRODUCT_NAME,
@@ -31,7 +30,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
         return
 
     async def async_add_product_service(call: ServiceCall):
-        api_client = await get_api_client(hass, call.data["device_id"])
+        api_client = await get_api_client(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         await handle_add_product(hass, api_client, call)
 
     hass.services.async_register(
@@ -40,7 +39,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
         async_add_product_service,
         schema=vol.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): cv.string,
+                vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
                 vol.Exclusive(
                     ATTR_PRODUCT_ID, ATTR_PRODUCT_IDENTIFIERS
                 ): cv.positive_int,
@@ -51,15 +50,14 @@ async def async_register_services(hass: HomeAssistant) -> None:
     )
 
 
-async def get_api_client(hass: HomeAssistant, device_id: str) -> PicnicAPI:
+async def get_api_client(hass: HomeAssistant, config_entry_id: str) -> PicnicAPI:
     """Get the right Picnic API client based on the device id, else get the default one."""
-    registry = device_registry.async_get(hass)
-    if not (device := registry.async_get(device_id)):
-        raise PicnicServiceException(f"Device with id {device_id} not found!")
-
-    if config_entry_id := next(iter(device.config_entries), None):
+    try:
         return hass.data[DOMAIN][config_entry_id][CONF_API]
-    raise PicnicServiceException(f"Device with id {device_id} not found!")
+    except KeyError:
+        raise PicnicServiceException(
+            f"Config entry with id {config_entry_id} not found!"
+        )
 
 
 async def handle_add_product(
