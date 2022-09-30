@@ -12,8 +12,8 @@ from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, get_ffmpeg_man
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    RTSP_TRANSPORTS,
 )
-from homeassistant.components.stream.const import RTSP_TRANSPORTS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant
@@ -109,7 +109,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             device.config_entry.data.get(CONF_SNAPSHOT_AUTH)
             == HTTP_BASIC_AUTHENTICATION
         )
-        self._stream_uri = None
+        self._stream_uri: str | None = None
 
     @property
     def name(self) -> str:
@@ -136,13 +136,16 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        image = None
+
+        if self.stream and self.stream.keepalive:
+            return await self.stream.async_get_image(width, height)
 
         if self.device.capabilities.snapshot:
             try:
                 image = await self.device.device.get_snapshot(
                     self.profile.token, self._basic_auth
                 )
+                return image
             except ONVIFError as err:
                 LOGGER.error(
                     "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
@@ -150,17 +153,14 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                     err,
                 )
 
-        if image is None:
-            assert self._stream_uri
-            return await ffmpeg.async_get_image(
-                self.hass,
-                self._stream_uri,
-                extra_cmd=self.device.config_entry.options.get(CONF_EXTRA_ARGUMENTS),
-                width=width,
-                height=height,
-            )
-
-        return image
+        assert self._stream_uri
+        return await ffmpeg.async_get_image(
+            self.hass,
+            self._stream_uri,
+            extra_cmd=self.device.config_entry.options.get(CONF_EXTRA_ARGUMENTS),
+            width=width,
+            height=height,
+        )
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
@@ -185,7 +185,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         finally:
             await stream.close()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         uri_no_auth = await self.device.async_get_stream_uri(self.profile)
         url = URL(uri_no_auth)

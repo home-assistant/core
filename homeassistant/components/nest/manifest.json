@@ -1,8 +1,8 @@
 {
   "domain": "nest",
-  "name": "Nest",
+  "name": "Google Nest",
   "config_flow": true,
-  "dependencies": ["ffmpeg", "http", "application_credentials", "repairs"],
+  "dependencies": ["ffmpeg", "http", "application_credentials"],
   "after_dependencies": ["media_source"],
   "documentation": "https://www.home-assistant.io/integrations/nest",
   "requirements": ["python-nest==4.2.0", "google-nest-sdm==2.0.0"],

@@ -194,6 +194,8 @@ class AqualinkEntity(Entity):
     class.
     """
 
+    _attr_should_poll = False
+
     def __init__(self, dev: AqualinkDevice) -> None:
         """Initialize the entity."""
         self.dev = dev
@@ -203,15 +205,6 @@ class AqualinkEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as entities shouldn't be polled.
-
-        Entities are checked periodically as the integration runs periodic
-        updates on a timer.
-        """
-        return False
 
     @property
     def unique_id(self) -> str:

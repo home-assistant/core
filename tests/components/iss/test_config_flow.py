@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.iss.const import DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
@@ -46,22 +45,6 @@ async def test_integration_already_exists(hass: HomeAssistant):
 
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
-
-
-async def test_abort_no_home(hass: HomeAssistant):
-    """Test we don't create an entry if no coordinates are set."""
-
-    await async_process_ha_core_config(
-        hass,
-        {"latitude": 0.0, "longitude": 0.0},
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={}
-    )
-
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "latitude_longitude_not_defined"
 
 
 async def test_options(hass: HomeAssistant):

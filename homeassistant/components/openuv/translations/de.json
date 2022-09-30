@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Aktualisiere alle Automatisierungen oder Skripte, die diesen Dienst verwenden, um stattdessen den Dienst `{alternate_service}` mit einer dieser Entit\u00e4ts-IDs als Ziel zu verwenden: `{alternate_targets}`.",
+            "title": "Der Dienst {deprecated_service} wird entfernt"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Aktualisiere alle Automatisierungen oder Skripte, die diesen Dienst verwenden, um stattdessen den Dienst `{alternate_service}` mit `{alternate_targets}` als Ziel zu verwenden.",
+            "title": "Der Dienst {deprecated_service} wird entfernt"
+        }
+    },
     "options": {
         "step": {
             "init": {

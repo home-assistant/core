@@ -50,10 +50,18 @@ QUERY_RETRY_WAIT = 0.1
 SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 DEFAULT_YIELD_STATES_ROWS = 32768
 
-MIN_VERSION_MARIA_DB = AwesomeVersion("10.3.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_MYSQL = AwesomeVersion("8.0.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_PGSQL = AwesomeVersion("12.0", AwesomeVersionStrategy.SIMPLEVER)
-MIN_VERSION_SQLITE = AwesomeVersion("3.31.0", AwesomeVersionStrategy.SIMPLEVER)
+MIN_VERSION_MARIA_DB = AwesomeVersion(
+    "10.3.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_MYSQL = AwesomeVersion(
+    "8.0.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_PGSQL = AwesomeVersion(
+    "12.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
+MIN_VERSION_SQLITE = AwesomeVersion(
+    "3.31.0", ensure_strategy=AwesomeVersionStrategy.SIMPLEVER
+)
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we

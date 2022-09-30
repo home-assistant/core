@@ -67,12 +67,13 @@ class MoatConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=self._discovered_devices[address], data={}
             )
 
         current_addresses = self._async_current_ids()
-        for discovery_info in async_discovered_service_info(self.hass):
+        for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
                 continue

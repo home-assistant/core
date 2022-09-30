@@ -4,16 +4,16 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "config": "Error de conexi\u00f3n o de inicio de sesi\u00f3n: compruebe su configuraci\u00f3n"
+            "config": "Error de conexi\u00f3n o de inicio de sesi\u00f3n: por favor, comprueba tu configuraci\u00f3n"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host (Opcional)",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario (Opcional)"
+                    "username": "Nombre de usuario (Opcional)"
                 },
-                "description": "Host predeterminado: {host} \nNombre de usuario predeterminado: {username}"
+                "description": "Host por defecto: {host}\nNombre de usuario por defecto: {username}"
             }
         }
     },
@@ -21,9 +21,9 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Considere el tiempo en casa (segundos)"
+                    "consider_home": "Considerar la hora local (segundos)"
                 },
-                "description": "Especifica los ajustes opcionales"
+                "description": "Especificar configuraciones opcionales"
             }
         }
     }

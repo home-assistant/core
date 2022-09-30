@@ -1,5 +1,7 @@
 """Remote control support for Apple TV."""
 import asyncio
+from collections.abc import Iterable
+from typing import Any
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
@@ -58,7 +60,7 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
             self._tv.on and (self._tv.powerstate == "On" or self._tv.powerstate is None)
         )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._tv.on and self._tv.powerstate:
             await self._tv.setPowerState("On")
@@ -66,7 +68,7 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
             await self.coordinator.turn_on.async_run(self.hass, self._context)
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._tv.on:
             await self._tv.sendKey("Standby")
@@ -74,7 +76,7 @@ class PhilipsTVRemote(CoordinatorEntity[PhilipsTVDataUpdateCoordinator], RemoteE
         else:
             LOGGER.debug("Tv was already turned off")
 
-    async def async_send_command(self, command, **kwargs):
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)

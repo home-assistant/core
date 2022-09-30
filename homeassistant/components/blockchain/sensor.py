@@ -65,6 +65,6 @@ class BlockchainSensor(SensorEntity):
         self._attr_name = name
         self.addresses = addresses
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state of the sensor."""
         self._attr_native_value = get_balance(self.addresses)

@@ -248,7 +248,10 @@ IKEA_NAME_TO_PRESET_MODE = {v: k for k, v in IKEA_PRESET_MODES_TO_NAME.items()}
 IKEA_PRESET_MODES = list(IKEA_NAME_TO_PRESET_MODE)
 
 
-@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
+@MULTI_MATCH(
+    channel_names="ikea_airpurifier",
+    models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
+)
 class IkeaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
@@ -257,7 +260,7 @@ class IkeaFan(BaseFan, ZhaEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._fan_channel = self.cluster_channels.get("ikea_airpurifier")
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -314,7 +317,7 @@ class IkeaFan(BaseFan, ZhaEntity):
             ]
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.async_set_percentage(0)
 

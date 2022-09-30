@@ -1,4 +1,5 @@
 """Number entities for musiccast."""
+from __future__ import annotations
 
 from aiomusiccast.capabilities import NumberSetter
 
@@ -41,7 +42,7 @@ class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
         self,
         coordinator: MusicCastDataUpdateCoordinator,
         capability: NumberSetter,
-        zone_id: str = None,
+        zone_id: str | None = None,
     ) -> None:
         """Initialize the number entity."""
         super().__init__(coordinator, capability, zone_id)
@@ -50,10 +51,10 @@ class NumberCapability(MusicCastCapabilityEntity, NumberEntity):
         self._attr_native_step = capability.value_range.step
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the current value."""
         return self.capability.current
 
-    async def async_set_native_value(self, value: float):
+    async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         await self.capability.set(value)

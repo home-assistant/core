@@ -12,7 +12,7 @@ from homeassistant.components.weather import (
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
-from homeassistant.util.temperature import kelvin_to_celsius
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     ATTR_API_CLOUDS,
@@ -191,7 +191,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _fmt_dewpoint(dewpoint):
         """Format the dewpoint data."""
         if dewpoint is not None:
-            return round(kelvin_to_celsius(dewpoint), 1)
+            return round(TemperatureConverter.kelvin_to_celsius(dewpoint), 1)
         return None
 
     @staticmethod

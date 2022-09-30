@@ -3,13 +3,10 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import DOMAIN
@@ -39,8 +36,8 @@ TRIGGER_SCHEMA = vol.All(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = PLATFORM_TYPE,
 ) -> CALLBACK_TYPE | None:
@@ -57,7 +54,7 @@ async def async_attach_trigger(
             }
         )
 
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
 
     unsubs = []
 

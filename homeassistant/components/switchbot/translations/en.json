@@ -9,6 +9,15 @@
         },
         "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Do you want to setup {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The {name} device requires a password"
+            },
             "user": {
                 "data": {
                     "address": "Device address",

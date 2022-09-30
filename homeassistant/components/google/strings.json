@@ -41,15 +41,5 @@
   },
   "application_credentials": {
     "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Calendar. You also need to create Application Credentials linked to your Calendar:\n1. Go to [Credentials]({oauth_creds_url}) and click **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **TV and Limited Input devices** for the Application Type.\n\n"
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Google Calendar YAML configuration is being removed",
-      "description": "Configuring the Google Calendar in configuration.yaml is being removed in Home Assistant 2022.9.\n\nYour existing OAuth Application Credentials and access settings have been imported into the UI automatically. Remove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    },
-    "removed_track_new_yaml": {
-      "title": "Google Calendar entity tracking has changed",
-      "description": "You have disabled entity tracking for Google Calendar in configuration.yaml, which is no longer supported. You must manually change the integration System Options in the UI to disable newly discovered entities going forward. Remove the track_new setting from configuration.yaml and restart Home Assistant to fix this issue."
-    }
   }
 }

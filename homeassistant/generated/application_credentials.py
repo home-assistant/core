@@ -3,12 +3,12 @@
 To update, run python3 -m script.hassfest
 """
 
-# fmt: off
-
 APPLICATION_CREDENTIALS = [
     "geocaching",
     "google",
+    "google_sheets",
     "home_connect",
+    "lametric",
     "lyric",
     "neato",
     "nest",
@@ -17,5 +17,5 @@ APPLICATION_CREDENTIALS = [
     "spotify",
     "withings",
     "xbox",
-    "yolink"
+    "yolink",
 ]

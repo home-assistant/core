@@ -28,10 +28,6 @@ async def async_setup_entry(
     )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
-
-
 class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
     """A select implementation for esphome."""
 
@@ -40,6 +36,7 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
         """Return a set of selectable options."""
         return self._static_info.options
 
+    @property
     @esphome_state_property
     def current_option(self) -> str | None:
         """Return the state of the entity."""

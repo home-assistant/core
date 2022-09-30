@@ -8,8 +8,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import utcnow
 
-from tests.common import async_fire_time_changed
-from tests.components.ruckus_unleashed import (
+from . import (
     DEFAULT_AP_INFO,
     DEFAULT_SYSTEM_INFO,
     DEFAULT_TITLE,
@@ -19,6 +18,8 @@ from tests.components.ruckus_unleashed import (
     init_integration,
     mock_config_entry,
 )
+
+from tests.common import async_fire_time_changed
 
 
 async def test_client_connected(hass):

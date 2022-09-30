@@ -1,13 +1,14 @@
 """Sensor platform for hvv."""
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID
+from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
@@ -53,20 +54,27 @@ async def async_setup_entry(
 class HVVDepartureSensor(SensorEntity):
     """HVVDepartureSensor class."""
 
+    _attr_attribution = ATTRIBUTION
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = ICON
+
     def __init__(self, hass, config_entry, session, hub):
         """Initialize."""
         self.config_entry = config_entry
         self.station_name = self.config_entry.data[CONF_STATION]["name"]
-        self.attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._available = False
-        self._state = None
-        self._name = f"Departures at {self.station_name}"
+        self._attr_extra_state_attributes = {}
+        self._attr_available = False
+        self._attr_name = f"Departures at {self.station_name}"
         self._last_error = None
 
         self.gti = hub.gti
 
+        station_id = config_entry.data[CONF_STATION]["id"]
+        station_type = config_entry.data[CONF_STATION]["type"]
+        self._attr_unique_id = f"{config_entry.entry_id}-{station_id}-{station_type}"
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self, **kwargs):
+    async def async_update(self, **kwargs: Any) -> None:
         """Update the sensor."""
         departure_time = utcnow() + timedelta(
             minutes=self.config_entry.options.get("offset", 0)
@@ -94,20 +102,20 @@ class HVVDepartureSensor(SensorEntity):
             if self._last_error != InvalidAuth:
                 _LOGGER.error("Authentication failed: %r", error)
                 self._last_error = InvalidAuth
-            self._available = False
+            self._attr_available = False
         except ClientConnectorError as error:
             if self._last_error != ClientConnectorError:
                 _LOGGER.warning("Network unavailable: %r", error)
                 self._last_error = ClientConnectorError
-            self._available = False
+            self._attr_available = False
         except Exception as error:  # pylint: disable=broad-except
             if self._last_error != error:
                 _LOGGER.error("Error occurred while fetching data: %r", error)
                 self._last_error = error
-            self._available = False
+            self._attr_available = False
 
         if not (data["returnCode"] == "OK" and data.get("departures")):
-            self._available = False
+            self._attr_available = False
             return
 
         if self._last_error == ClientConnectorError:
@@ -118,14 +126,14 @@ class HVVDepartureSensor(SensorEntity):
         departure = data["departures"][0]
         line = departure["line"]
         delay = departure.get("delay", 0)
-        self._available = True
-        self._state = (
+        self._attr_available = True
+        self._attr_native_value = (
             departure_time
             + timedelta(minutes=departure["timeOffset"])
             + timedelta(seconds=delay)
         )
 
-        self.attr.update(
+        self._attr_extra_state_attributes.update(
             {
                 ATTR_LINE: line["name"],
                 ATTR_ORIGIN: line["origin"],
@@ -153,15 +161,7 @@ class HVVDepartureSensor(SensorEntity):
                     ATTR_DELAY: delay,
                 }
             )
-        self.attr[ATTR_NEXT] = departures
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this sensor."""
-        station_id = self.config_entry.data[CONF_STATION]["id"]
-        station_type = self.config_entry.data[CONF_STATION]["type"]
-
-        return f"{self.config_entry.entry_id}-{station_id}-{station_type}"
+        self._attr_extra_state_attributes[ATTR_NEXT] = departures
 
     @property
     def device_info(self):
@@ -176,35 +176,5 @@ class HVVDepartureSensor(SensorEntity):
                 )
             },
             manufacturer=MANUFACTURER,
-            name=self._name,
+            name=self.name,
         )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return ICON
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return SensorDeviceClass.TIMESTAMP
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self.attr

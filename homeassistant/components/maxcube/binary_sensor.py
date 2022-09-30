@@ -43,7 +43,7 @@ class MaxCubeBinarySensorBase(BinarySensorEntity):
         self._device = device
         self._room = handler.cube.room_by_id(device.room_id)
 
-    def update(self):
+    def update(self) -> None:
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
 

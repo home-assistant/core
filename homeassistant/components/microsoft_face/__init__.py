@@ -207,6 +207,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class MicrosoftFaceGroupEntity(Entity):
     """Person-Group state/data Entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, api, g_id, name):
         """Initialize person/group entity."""
         self.hass = hass
@@ -228,11 +230,6 @@ class MicrosoftFaceGroupEntity(Entity):
     def state(self):
         """Return the state of the entity."""
         return len(self._api.store[self._id])
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
 
     @property
     def extra_state_attributes(self):

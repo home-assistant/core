@@ -51,7 +51,7 @@ DEFAULT_NAME = "zamg"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 VIENNA_TIME_ZONE = dt_util.get_time_zone("Europe/Vienna")
 
-DTypeT = Union[type[int], type[float], type[str]]
+_DType = Union[type[int], type[float], type[str]]
 
 
 @dataclass
@@ -59,7 +59,7 @@ class ZamgRequiredKeysMixin:
     """Mixin for required keys."""
 
     col_heading: str
-    dtype: DTypeT
+    dtype: _DType
 
 
 @dataclass
@@ -178,7 +178,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-API_FIELDS: dict[str, tuple[str, DTypeT]] = {
+API_FIELDS: dict[str, tuple[str, _DType]] = {
     desc.col_heading: (desc.key, desc.dtype) for desc in SENSOR_TYPES
 }
 
@@ -264,7 +264,7 @@ class ZamgSensor(SensorEntity):
             ATTR_UPDATED: self.probe.last_update.isoformat(),
         }
 
-    def update(self):
+    def update(self) -> None:
         """Delegate update to probe."""
         self.probe.update()
 

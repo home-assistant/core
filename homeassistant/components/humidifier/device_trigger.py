@@ -3,10 +3,6 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     toggle_entity,
@@ -27,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
@@ -82,8 +79,8 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if config[CONF_TYPE] == "target_humidity_changed":
@@ -106,12 +103,10 @@ async def async_attach_trigger(
             )
         )
         return await numeric_state_trigger.async_attach_trigger(
-            hass, numeric_state_config, action, automation_info, platform_type="device"
+            hass, numeric_state_config, action, trigger_info, platform_type="device"
         )
 
-    return await toggle_entity.async_attach_trigger(
-        hass, config, action, automation_info
-    )
+    return await toggle_entity.async_attach_trigger(hass, config, action, trigger_info)
 
 
 async def async_get_trigger_capabilities(

@@ -14,6 +14,7 @@
             "invalid_serial": "Ogiltig serieport",
             "invalid_subscribe_topic": "Ogiltigt \u00e4mne f\u00f6r prenumeration",
             "invalid_version": "Ogiltig version av MySensors",
+            "mqtt_required": "MQTT-integrationen \u00e4r inte konfigurerad",
             "not_a_number": "Ange ett nummer",
             "port_out_of_range": "Portnummer m\u00e5ste vara minst 1 och h\u00f6gst 65535",
             "same_topic": "\u00c4mnen f\u00f6r prenumeration och publicering \u00e4r desamma",
@@ -67,6 +68,14 @@
                     "version": "MySensors version"
                 },
                 "description": "Ethernet-gateway-inst\u00e4llning"
+            },
+            "select_gateway_type": {
+                "description": "V\u00e4lj vilken gateway som ska konfigureras.",
+                "menu_options": {
+                    "gw_mqtt": "Konfigurera en MQTT-gateway",
+                    "gw_serial": "Konfigurera en seriell gateway",
+                    "gw_tcp": "Konfigurera en TCP-gateway"
+                }
             },
             "user": {
                 "data": {

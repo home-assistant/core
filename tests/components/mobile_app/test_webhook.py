@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
@@ -783,7 +783,9 @@ async def test_webhook_camera_stream_stream_available(
 ):
     """Test fetching camera stream URLs for an HLS/stream-supporting camera."""
     hass.states.async_set(
-        "camera.stream_camera", "idle", {"supported_features": CAMERA_SUPPORT_STREAM}
+        "camera.stream_camera",
+        "idle",
+        {"supported_features": CameraEntityFeature.STREAM},
     )
 
     webhook_id = create_registrations[1]["webhook_id"]
@@ -811,7 +813,9 @@ async def test_webhook_camera_stream_stream_available_but_errors(
 ):
     """Test fetching camera stream URLs for an HLS/stream-supporting camera but that streaming errors."""
     hass.states.async_set(
-        "camera.stream_camera", "idle", {"supported_features": CAMERA_SUPPORT_STREAM}
+        "camera.stream_camera",
+        "idle",
+        {"supported_features": CameraEntityFeature.STREAM},
     )
 
     webhook_id = create_registrations[1]["webhook_id"]

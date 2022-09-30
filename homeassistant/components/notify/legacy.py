@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from functools import partial
-from typing import Any, cast
+from typing import Any, Optional, Protocol, cast
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -32,7 +33,30 @@ NOTIFY_SERVICES = "notify_services"
 NOTIFY_DISCOVERY_DISPATCHER = "notify_discovery_dispatcher"
 
 
-async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
+class LegacyNotifyPlatform(Protocol):
+    """Define the format of legacy notify platforms."""
+
+    async def async_get_service(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = ...,
+    ) -> BaseNotificationService:
+        """Set up notification service."""
+
+    def get_service(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = ...,
+    ) -> BaseNotificationService:
+        """Set up notification service."""
+
+
+@callback
+def async_setup_legacy(
+    hass: HomeAssistant, config: ConfigType
+) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy notify services."""
     hass.data.setdefault(NOTIFY_SERVICES, {})
     hass.data.setdefault(NOTIFY_DISCOVERY_DISPATCHER, None)
@@ -46,8 +70,9 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
         if p_config is None:
             p_config = {}
 
-        platform = await async_prepare_setup_platform(
-            hass, config, DOMAIN, integration_name
+        platform = cast(
+            Optional[LegacyNotifyPlatform],
+            await async_prepare_setup_platform(hass, config, DOMAIN, integration_name),
         )
 
         if platform is None:
@@ -101,15 +126,6 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
             )
             hass.config.components.add(f"{DOMAIN}.{integration_name}")
 
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(integration_name, p_config))
-        for integration_name, p_config in config_per_platform(config, DOMAIN)
-        if integration_name is not None
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
-
     async def async_platform_discovered(
         platform: str, info: DiscoveryInfoType | None
     ) -> None:
@@ -119,6 +135,12 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
     hass.data[NOTIFY_DISCOVERY_DISPATCHER] = discovery.async_listen_platform(
         hass, DOMAIN, async_platform_discovered
     )
+
+    return [
+        async_setup_platform(integration_name, p_config)
+        for integration_name, p_config in config_per_platform(config, DOMAIN)
+        if integration_name is not None
+    ]
 
 
 @callback
@@ -140,9 +162,11 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
     if not _async_integration_has_notify_services(hass, integration_name):
         return
 
+    notify_services: list[BaseNotificationService] = hass.data[NOTIFY_SERVICES][
+        integration_name
+    ]
     tasks = [
-        notify_service.async_register_services()
-        for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
+        notify_service.async_register_services() for notify_service in notify_services
     ]
 
     await asyncio.gather(*tasks)
@@ -151,15 +175,20 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
 @bind_hass
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
-    if NOTIFY_DISCOVERY_DISPATCHER in hass.data:
-        hass.data[NOTIFY_DISCOVERY_DISPATCHER]()
+    notify_discovery_dispatcher: Callable[[], None] | None = hass.data.get(
+        NOTIFY_DISCOVERY_DISPATCHER
+    )
+    if notify_discovery_dispatcher:
+        notify_discovery_dispatcher()
         hass.data[NOTIFY_DISCOVERY_DISPATCHER] = None
     if not _async_integration_has_notify_services(hass, integration_name):
         return
 
+    notify_services: list[BaseNotificationService] = hass.data[NOTIFY_SERVICES][
+        integration_name
+    ]
     tasks = [
-        notify_service.async_unregister_services()
-        for notify_service in hass.data[NOTIFY_SERVICES][integration_name]
+        notify_service.async_unregister_services() for notify_service in notify_services
     ]
 
     await asyncio.gather(*tasks)
