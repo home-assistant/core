@@ -196,7 +196,7 @@ def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
 def _async_get_imported_entries_indices(
     current_entries: list[ConfigEntry],
 ) -> tuple[dict[str, ConfigEntry], dict[int, ConfigEntry]]:
-    """Return a dict of the entries by name."""
+    """Return a dicts of the entries by name and port."""
 
     # For backwards compat, its possible the first bridge is using the default
     # name.
