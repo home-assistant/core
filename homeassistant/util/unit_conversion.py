@@ -297,19 +297,19 @@ class TemperatureConverter(BaseUnitConverter):
 
         if from_unit == TEMP_CELSIUS:
             if to_unit == TEMP_FAHRENHEIT:
-                return cls.celsius_to_fahrenheit(value, interval)
+                return cls._celsius_to_fahrenheit(value, interval)
             if to_unit == TEMP_KELVIN:
-                return cls.celsius_to_kelvin(value, interval)
+                return cls._celsius_to_kelvin(value, interval)
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
         if from_unit == TEMP_FAHRENHEIT:
             if to_unit == TEMP_CELSIUS:
-                return cls.fahrenheit_to_celsius(value, interval)
+                return cls._fahrenheit_to_celsius(value, interval)
             if to_unit == TEMP_KELVIN:
-                return cls.celsius_to_kelvin(
-                    cls.fahrenheit_to_celsius(value, interval), interval
+                return cls._celsius_to_kelvin(
+                    cls._fahrenheit_to_celsius(value, interval), interval
                 )
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
@@ -317,10 +317,10 @@ class TemperatureConverter(BaseUnitConverter):
 
         if from_unit == TEMP_KELVIN:
             if to_unit == TEMP_CELSIUS:
-                return cls.kelvin_to_celsius(value, interval)
+                return cls._kelvin_to_celsius(value, interval)
             if to_unit == TEMP_FAHRENHEIT:
-                return cls.celsius_to_fahrenheit(
-                    cls.kelvin_to_celsius(value, interval), interval
+                return cls._celsius_to_fahrenheit(
+                    cls._kelvin_to_celsius(value, interval), interval
                 )
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
@@ -330,28 +330,28 @@ class TemperatureConverter(BaseUnitConverter):
         )
 
     @classmethod
-    def fahrenheit_to_celsius(cls, fahrenheit: float, interval: bool = False) -> float:
+    def _fahrenheit_to_celsius(cls, fahrenheit: float, interval: bool = False) -> float:
         """Convert a temperature in Fahrenheit to Celsius."""
         if interval:
             return fahrenheit / 1.8
         return (fahrenheit - 32.0) / 1.8
 
     @classmethod
-    def kelvin_to_celsius(cls, kelvin: float, interval: bool = False) -> float:
+    def _kelvin_to_celsius(cls, kelvin: float, interval: bool = False) -> float:
         """Convert a temperature in Kelvin to Celsius."""
         if interval:
             return kelvin
         return kelvin - 273.15
 
     @classmethod
-    def celsius_to_fahrenheit(cls, celsius: float, interval: bool = False) -> float:
+    def _celsius_to_fahrenheit(cls, celsius: float, interval: bool = False) -> float:
         """Convert a temperature in Celsius to Fahrenheit."""
         if interval:
             return celsius * 1.8
         return celsius * 1.8 + 32.0
 
     @classmethod
-    def celsius_to_kelvin(cls, celsius: float, interval: bool = False) -> float:
+    def _celsius_to_kelvin(cls, celsius: float, interval: bool = False) -> float:
         """Convert a temperature in Celsius to Kelvin."""
         if interval:
             return celsius
