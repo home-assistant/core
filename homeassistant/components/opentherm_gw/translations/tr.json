@@ -3,7 +3,8 @@
         "error": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "id_exists": "A\u011f ge\u00e7idi kimli\u011fi zaten var"
+            "id_exists": "A\u011f ge\u00e7idi kimli\u011fi zaten var",
+            "timeout_connect": "Ba\u011flant\u0131 kurulurken zaman a\u015f\u0131m\u0131"
         },
         "step": {
             "init": {

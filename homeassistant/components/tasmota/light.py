@@ -230,11 +230,6 @@ class TasmotaLight(
         return (hs_color[0], hs_color[1])
 
     @property
-    def force_update(self) -> bool:
-        """Force update."""
-        return False
-
-    @property
     def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
         return self._supported_color_modes

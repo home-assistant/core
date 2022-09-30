@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import logging
+from typing import Any
 
 from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
@@ -146,19 +147,19 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._command_off = command_off
         self._attr_name = f"{device.name} Switch"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when the switch is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is not None and state.state == STATE_ON
         await super().async_added_to_hass()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         if await self._async_send_packet(self._command_on):
             self._attr_is_on = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         if await self._async_send_packet(self._command_off):
             self._attr_is_on = False

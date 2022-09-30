@@ -76,7 +76,7 @@ class Folder(SensorEntity):
         self._unit_of_measurement = DATA_MEGABYTES
         self._file_list = None
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         files_list = get_files_list(self._folder_path, self._filter_term)
         self._file_list = files_list

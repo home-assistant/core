@@ -18,6 +18,14 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "title": "Le service {deprecated_service} sera bient\u00f4t supprim\u00e9"
+        },
+        "deprecated_service_single_alternate_target": {
+            "title": "Le service {deprecated_service} sera bient\u00f4t supprim\u00e9"
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -105,7 +105,7 @@ httpcore==0.15.0
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.23.1
+numpy==1.23.2
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
@@ -139,6 +139,9 @@ pubnub!=6.4.0
 # Package's __init__.pyi stub has invalid syntax and breaks mypy
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
+
+# Pandas 1.4.4 has issues with wheels om armhf + Py3.10
+pandas==1.4.3
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

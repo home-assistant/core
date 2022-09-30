@@ -98,7 +98,7 @@ class Ted5000Sensor(SensorEntity):
         with suppress(KeyError):
             return self._gateway.data[self._mtu][self._unit]
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from REST API."""
         self._gateway.update()
 

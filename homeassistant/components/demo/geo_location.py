@@ -112,6 +112,8 @@ class DemoManager:
 class DemoGeolocationEvent(GeolocationEvent):
     """This represents a demo geolocation event."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         name: str,
@@ -121,7 +123,7 @@ class DemoGeolocationEvent(GeolocationEvent):
         unit_of_measurement: str,
     ) -> None:
         """Initialize entity with data provided."""
-        self._name = name
+        self._attr_name = name
         self._distance = distance
         self._latitude = latitude
         self._longitude = longitude
@@ -131,16 +133,6 @@ class DemoGeolocationEvent(GeolocationEvent):
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the event."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for a demo geolocation event."""
-        return False
 
     @property
     def distance(self) -> float | None:

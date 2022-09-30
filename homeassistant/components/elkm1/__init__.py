@@ -444,6 +444,7 @@ class ElkEntity(Entity):
     """Base class for all Elk entities."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize the base of all Elk devices."""
@@ -471,11 +472,6 @@ class ElkEntity(Entity):
     def unique_id(self) -> str:
         """Return unique id of the element."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Don't poll this device."""
-        return False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

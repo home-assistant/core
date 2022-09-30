@@ -30,12 +30,10 @@ async def async_setup_entry(
         CONST.TYPE_OPENING,
     ]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=device_types):
-        entities.append(AbodeBinarySensor(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeBinarySensor(data, device)
+        for device in data.abode.get_devices(generic_type=device_types)
+    )
 
 
 class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):

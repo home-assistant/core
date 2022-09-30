@@ -274,6 +274,7 @@ class Entity(ABC):
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
     _attr_available: bool = True
+    _attr_capability_attributes: Mapping[str, Any] | None = None
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
@@ -337,7 +338,7 @@ class Entity(ABC):
         Implemented by component base class. Convention for attribute names
         is lowercase snake_case.
         """
-        return None
+        return self._attr_capability_attributes
 
     @property
     def state_attributes(self) -> dict[str, Any] | None:

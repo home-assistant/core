@@ -18,7 +18,13 @@ from aioqsw.const import (
     API_ERROR_MESSAGE,
     API_FAN1_SPEED,
     API_FAN2_SPEED,
+    API_FCS_ERRORS,
+    API_FULL_DUPLEX,
+    API_KEY,
+    API_LINK,
     API_MAC_ADDR,
+    API_MAX_PORT_CHANNELS,
+    API_MAX_PORTS_PER_PORT_CHANNEL,
     API_MAX_SWITCH_TEMP,
     API_MESSAGE,
     API_MODEL,
@@ -28,10 +34,16 @@ from aioqsw.const import (
     API_PRODUCT,
     API_PUB_DATE,
     API_RESULT,
+    API_RX_ERRORS,
+    API_RX_OCTETS,
     API_SERIAL,
+    API_SPEED,
+    API_START_INDEX,
     API_SWITCH_TEMP,
     API_TRUNK_NUM,
+    API_TX_OCTETS,
     API_UPTIME,
+    API_VAL,
     API_VERSION,
 )
 
@@ -111,6 +123,336 @@ FIRMWARE_UPDATE_CHECK_MOCK = {
     },
 }
 
+LACP_INFO_MOCK = {
+    API_ERROR_CODE: 200,
+    API_ERROR_MESSAGE: "OK",
+    API_RESULT: {
+        API_START_INDEX: 28,
+        API_MAX_PORT_CHANNELS: 8,
+        API_MAX_PORTS_PER_PORT_CHANNEL: 8,
+    },
+}
+
+PORTS_STATISTICS_MOCK = {
+    API_ERROR_CODE: 200,
+    API_ERROR_MESSAGE: "OK",
+    API_RESULT: [
+        {
+            API_KEY: "1",
+            API_VAL: {
+                API_RX_OCTETS: 20000,
+                API_RX_ERRORS: 20,
+                API_TX_OCTETS: 10000,
+                API_FCS_ERRORS: 10,
+            },
+        },
+        {
+            API_KEY: "2",
+            API_VAL: {
+                API_RX_OCTETS: 2000,
+                API_RX_ERRORS: 2,
+                API_TX_OCTETS: 1000,
+                API_FCS_ERRORS: 1,
+            },
+        },
+        {
+            API_KEY: "3",
+            API_VAL: {
+                API_RX_OCTETS: 200,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 100,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "4",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "5",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "6",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "7",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "8",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "9",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "10",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "11",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "12",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "29",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "30",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "31",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "32",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "33",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+        {
+            API_KEY: "34",
+            API_VAL: {
+                API_RX_OCTETS: 0,
+                API_RX_ERRORS: 0,
+                API_TX_OCTETS: 0,
+                API_FCS_ERRORS: 0,
+            },
+        },
+    ],
+}
+
+PORTS_STATUS_MOCK = {
+    API_ERROR_CODE: 200,
+    API_ERROR_MESSAGE: "OK",
+    API_RESULT: [
+        {
+            API_KEY: "1",
+            API_VAL: {
+                API_LINK: True,
+                API_FULL_DUPLEX: True,
+                API_SPEED: "10000",
+            },
+        },
+        {
+            API_KEY: "2",
+            API_VAL: {
+                API_LINK: True,
+                API_FULL_DUPLEX: True,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "3",
+            API_VAL: {
+                API_LINK: True,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "100",
+            },
+        },
+        {
+            API_KEY: "4",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "5",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "6",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "7",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "8",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "9",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "10",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "11",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "12",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "1000",
+            },
+        },
+        {
+            API_KEY: "29",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "0",
+            },
+        },
+        {
+            API_KEY: "30",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "0",
+            },
+        },
+        {
+            API_KEY: "31",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "0",
+            },
+        },
+        {
+            API_KEY: "32",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "0",
+            },
+        },
+        {
+            API_KEY: "33",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "0",
+            },
+        },
+        {
+            API_KEY: "34",
+            API_VAL: {
+                API_LINK: False,
+                API_FULL_DUPLEX: False,
+                API_SPEED: "0",
+            },
+        },
+    ],
+}
+
 SYSTEM_COMMAND_MOCK = {
     API_ERROR_CODE: 200,
     API_ERROR_MESSAGE: "OK",
@@ -170,6 +512,15 @@ async def async_init_integration(
     ), patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_update_check",
         return_value=FIRMWARE_UPDATE_CHECK_MOCK,
+    ), patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_lacp_info",
+        return_value=LACP_INFO_MOCK,
+    ), patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_statistics",
+        return_value=PORTS_STATISTICS_MOCK,
+    ), patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_status",
+        return_value=PORTS_STATUS_MOCK,
     ), patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_system_board",
         return_value=SYSTEM_BOARD_MOCK,

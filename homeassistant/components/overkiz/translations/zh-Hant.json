@@ -11,7 +11,8 @@
             "server_in_maintenance": "\u4f3a\u670d\u5668\u7dad\u8b77\u4e2d",
             "too_many_attempts": "\u4f7f\u7528\u7121\u6548\u6b0a\u6756\u5617\u8a66\u6b21\u6578\u904e\u591a\uff0c\u66ab\u6642\u906d\u5230\u5c01\u9396",
             "too_many_requests": "\u8acb\u6c42\u6b21\u6578\u904e\u591a\uff0c\u8acb\u7a0d\u5f8c\u91cd\u8a66\u3002",
-            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
+            "unknown_user": "\u672a\u77e5\u4f7f\u7528\u8005\u3001\u6b64\u6574\u5408\u4e0d\u652f\u63f4 Somfy Protect \u5e33\u865f\u3002"
         },
         "flow_title": "\u9598\u9053\u5668\uff1a{gateway_id}",
         "step": {

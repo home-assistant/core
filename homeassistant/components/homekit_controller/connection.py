@@ -30,7 +30,6 @@ from .const import (
     CHARACTERISTIC_PLATFORMS,
     CONTROLLER,
     DOMAIN,
-    ENTITY_MAP,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_LEGACY_ACCESSORY_ID,
@@ -38,7 +37,6 @@ from .const import (
     IDENTIFIER_SERIAL_NUMBER,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
-from .storage import EntityMapStorage
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
@@ -182,13 +180,9 @@ class HKDevice:
 
     async def async_setup(self) -> None:
         """Prepare to use a paired HomeKit device in Home Assistant."""
-        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
         pairing = self.pairing
         transport = pairing.transport
         entry = self.config_entry
-
-        if cache := entity_storage.get_map(self.unique_id):
-            pairing.restore_accessories_state(cache["accessories"], cache["config_num"])
 
         # We need to force an update here to make sure we have
         # the latest values since the async_update we do in
@@ -203,7 +197,7 @@ class HKDevice:
         try:
             await self.pairing.async_populate_accessories_state(force_update=True)
         except AccessoryNotFoundError:
-            if transport != Transport.BLE or not cache:
+            if transport != Transport.BLE or not pairing.accessories:
                 # BLE devices may sleep and we can't force a connection
                 raise
 
@@ -217,9 +211,6 @@ class HKDevice:
 
         await self.async_process_entity_map()
 
-        if not cache:
-            # If its missing from the cache, make sure we save it
-            self.async_save_entity_map()
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
         await self.async_add_new_entities()
@@ -240,6 +231,9 @@ class HKDevice:
                 self.async_update_available_state,
                 timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
             )
+            # BLE devices always get an RSSI sensor as well
+            if "sensor" not in self.platforms:
+                await self.async_load_platform("sensor")
 
     async def async_add_new_entities(self) -> None:
         """Add new entities to Home Assistant."""
@@ -432,15 +426,11 @@ class HKDevice:
         if self._polling_interval_remover:
             self._polling_interval_remover()
 
-        await self.pairing.close()
+        await self.pairing.shutdown()
 
         await self.hass.config_entries.async_unload_platforms(
             self.config_entry, self.platforms
         )
-
-    def async_notify_config_changed(self, config_num: int) -> None:
-        """Notify the pairing of a config change."""
-        self.pairing.notify_config_changed(config_num)
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
@@ -448,20 +438,11 @@ class HKDevice:
 
     async def async_update_new_accessories_state(self) -> None:
         """Process a change in the pairings accessories state."""
-        self.async_save_entity_map()
         await self.async_process_entity_map()
         if self.watchable_characteristics:
             await self.pairing.subscribe(self.watchable_characteristics)
         await self.async_update()
         await self.async_add_new_entities()
-
-    @callback
-    def async_save_entity_map(self) -> None:
-        """Save the entity map."""
-        entity_storage: EntityMapStorage = self.hass.data[ENTITY_MAP]
-        entity_storage.async_create_or_update_map(
-            self.unique_id, self.config_num, self.entity_map.serialize()
-        )
 
     def add_accessory_factory(self, add_entities_cb) -> None:
         """Add a callback to run when discovering new entities for accessories."""
@@ -477,7 +458,7 @@ class HKDevice:
                     self.entities.append((accessory.aid, None, None))
                     break
 
-    def add_char_factory(self, add_entities_cb) -> None:
+    def add_char_factory(self, add_entities_cb: AddCharacteristicCb) -> None:
         """Add a callback to run when discovering new entities for accessories."""
         self.char_factories.append(add_entities_cb)
         self._add_new_entities_for_char([add_entities_cb])
@@ -493,7 +474,7 @@ class HKDevice:
                             self.entities.append((accessory.aid, service.iid, char.iid))
                             break
 
-    def add_listener(self, add_entities_cb) -> None:
+    def add_listener(self, add_entities_cb: AddServiceCb) -> None:
         """Add a callback to run when discovering new entities for services."""
         self.listeners.append(add_entities_cb)
         self._add_new_entities([add_entities_cb])
@@ -535,22 +516,24 @@ class HKDevice:
 
     async def async_load_platforms(self) -> None:
         """Load any platforms needed by this HomeKit device."""
-        tasks = []
+        to_load: set[str] = set()
         for accessory in self.entity_map.accessories:
             for service in accessory.services:
                 if service.type in HOMEKIT_ACCESSORY_DISPATCH:
                     platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
                     if platform not in self.platforms:
-                        tasks.append(self.async_load_platform(platform))
+                        to_load.add(platform)
 
                 for char in service.characteristics:
                     if char.type in CHARACTERISTIC_PLATFORMS:
                         platform = CHARACTERISTIC_PLATFORMS[char.type]
                         if platform not in self.platforms:
-                            tasks.append(self.async_load_platform(platform))
+                            to_load.add(platform)
 
-        if tasks:
-            await asyncio.gather(*tasks)
+        if to_load:
+            await asyncio.gather(
+                *[self.async_load_platform(platform) for platform in to_load]
+            )
 
     @callback
     def async_update_available_state(self, *_: Any) -> None:
