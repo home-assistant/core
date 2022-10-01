@@ -92,7 +92,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2022.10.0",
+        breaks_in_ha_version="2022.11.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -114,7 +114,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays: list[str] = entry.options[CONF_ADD_HOLIDAYS]
+    add_holidays: list[DateLike] = entry.options[CONF_ADD_HOLIDAYS]
     remove_holidays: list[str] = entry.options[CONF_REMOVE_HOLIDAYS]
     country: str = entry.options[CONF_COUNTRY]
     days_offset: int = int(entry.options[CONF_OFFSET])
