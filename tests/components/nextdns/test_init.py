@@ -3,14 +3,17 @@ from unittest.mock import patch
 
 from nextdns import ApiError
 
-from homeassistant.components.nextdns.const import DOMAIN
+from homeassistant.components.nextdns.const import CONF_PROFILE_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 
 from . import init_integration
 
+from tests.common import MockConfigEntry
 
-async def test_async_setup_entry(hass):
+
+async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry."""
     await init_integration(hass)
 
@@ -20,9 +23,14 @@ async def test_async_setup_entry(hass):
     assert state.state == "20.0"
 
 
-async def test_config_not_ready(hass):
+async def test_config_not_ready(hass: HomeAssistant) -> None:
     """Test for setup failure if the connection to the service fails."""
-    entry = await init_integration(hass, add_to_hass=False)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Fake Profile",
+        unique_id="xyz12",
+        data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
+    )
 
     with patch(
         "homeassistant.components.nextdns.NextDns.get_profiles",
@@ -33,7 +41,7 @@ async def test_config_not_ready(hass):
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 

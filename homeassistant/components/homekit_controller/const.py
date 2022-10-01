@@ -88,6 +88,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.DENSITY_SO2: "sensor",
     CharacteristicsTypes.DENSITY_VOC: "sensor",
     CharacteristicsTypes.IDENTIFY: "button",
+    CharacteristicsTypes.THREAD_NODE_CAPABILITIES: "sensor",
 }
 
 

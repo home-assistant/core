@@ -2,9 +2,15 @@
 import logging
 import math
 
-from miio.airhumidifier import OperationMode as AirhumidifierOperationMode
-from miio.airhumidifier_miot import OperationMode as AirhumidifierMiotOperationMode
-from miio.airhumidifier_mjjsq import OperationMode as AirhumidifierMjjsqOperationMode
+from miio.integrations.humidifier.deerma.airhumidifier_mjjsq import (
+    OperationMode as AirhumidifierMjjsqOperationMode,
+)
+from miio.integrations.humidifier.zhimi.airhumidifier import (
+    OperationMode as AirhumidifierOperationMode,
+)
+from miio.integrations.humidifier.zhimi.airhumidifier_miot import (
+    OperationMode as AirhumidifierMiotOperationMode,
+)
 
 from homeassistant.components.humidifier import (
     HumidifierDeviceClass,

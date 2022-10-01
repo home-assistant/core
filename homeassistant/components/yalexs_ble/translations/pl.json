@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
+            "no_unconfigured_devices": "Nie znaleziono nieskonfigurowanych urz\u0105dze\u0144."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "invalid_key_format": "Klucz offline musi by\u0107 32-bajtowym ci\u0105giem szesnastkowym.",
+            "invalid_key_index": "Slot klucza offline musi by\u0107 liczb\u0105 ca\u0142kowit\u0105 z zakresu od 0 do 255.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "integration_discovery_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name} przez Bluetooth z adresem {address}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Adres Bluetooth",
+                    "key": "Klucz offline (32-bajtowy ci\u0105g szesnastkowy)",
+                    "slot": "Slot klucza offline (liczba ca\u0142kowita od 0 do 255)"
+                },
+                "description": "Sprawd\u017a dokumentacj\u0119 na {docs_url}, aby dowiedzie\u0107 si\u0119, jak znale\u017a\u0107 klucz offline."
+            }
+        }
+    }
+}

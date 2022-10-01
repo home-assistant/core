@@ -7,13 +7,14 @@ from typing import Any
 import radiotherm
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_HOME,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -28,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
@@ -125,13 +127,22 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Radio Thermostat."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.9.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
     _LOGGER.warning(
-        # config flow added in 2022.7 and should be removed in 2022.9
         "Configuration of the Radio Thermostat climate platform in YAML is deprecated and "
         "will be removed in Home Assistant 2022.9; Your existing configuration "
         "has been imported into the UI automatically and can be safely removed "
         "from your configuration.yaml file"
     )
+
     hosts: list[str] = []
     if CONF_HOST in config:
         hosts = config[CONF_HOST]

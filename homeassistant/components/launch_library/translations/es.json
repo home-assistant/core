@@ -5,7 +5,7 @@
         },
         "step": {
             "user": {
-                "description": "\u00bfDesea configurar la biblioteca de lanzamiento?"
+                "description": "\u00bfQuieres configurar Launch Library?"
             }
         }
     }

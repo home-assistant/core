@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },

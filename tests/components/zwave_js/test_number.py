@@ -31,21 +31,9 @@ async def test_number(hass, client, aeotec_radiator_thermostat, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 4
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
-        "ccVersion": 1,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"] == 30.0
 
@@ -101,20 +89,7 @@ async def test_volume_number(hass, client, aeotec_zw164_siren, integration):
     assert args["valueId"] == {
         "endpoint": 2,
         "commandClass": 121,
-        "commandClassName": "Sound Switch",
         "property": "defaultVolume",
-        "propertyName": "defaultVolume",
-        "ccVersion": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Default volume",
-            "min": 0,
-            "max": 100,
-            "unit": "%",
-        },
-        "value": 100,
     }
     assert args["value"] == 30
 

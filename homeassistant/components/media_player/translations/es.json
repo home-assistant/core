@@ -1,26 +1,26 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_buffering": "{entity_name} se est\u00e1 cargando en memoria",
+            "is_buffering": "{entity_name} est\u00e1 almacenando en b\u00fafer",
             "is_idle": "{entity_name} est\u00e1 inactivo",
             "is_off": "{entity_name} est\u00e1 apagado",
-            "is_on": "{entity_name} est\u00e1 activado",
+            "is_on": "{entity_name} est\u00e1 encendido",
             "is_paused": "{entity_name} est\u00e1 en pausa",
             "is_playing": "{entity_name} est\u00e1 reproduciendo"
         },
         "trigger_type": {
-            "buffering": "{entity_name} comienza a cargarse en memoria",
-            "changed_states": "{entity_name} ha cambiado de estado",
+            "buffering": "{entity_name} comienza a almacenar en b\u00fafer",
+            "changed_states": "{entity_name} cambi\u00f3 de estado",
             "idle": "{entity_name} est\u00e1 inactivo",
             "paused": "{entity_name} est\u00e1 en pausa",
-            "playing": "{entity_name} comienza a reproducirse",
-            "turned_off": "{entity_name} desactivado",
-            "turned_on": "{entity_name} activado"
+            "playing": "{entity_name} comienza a reproducir",
+            "turned_off": "{entity_name} apagado",
+            "turned_on": "{entity_name} encendido"
         }
     },
     "state": {
         "_": {
-            "buffering": "Cargando",
+            "buffering": "almacenando en b\u00fafer",
             "idle": "Inactivo",
             "off": "Apagado",
             "on": "Encendido",

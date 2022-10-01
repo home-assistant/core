@@ -6,6 +6,13 @@
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "description": "Please update your password for {email}",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -16,6 +23,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "issues": {
+    "removed_yaml": {
+      "title": "The Skybell YAML configuration has been removed",
+      "description": "Configuring Skybell using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }

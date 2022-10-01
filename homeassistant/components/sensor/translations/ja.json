@@ -1,7 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_apparent_power": "\u73fe\u5728\u306e {entity_name} \u898b\u304b\u3051\u306e\u96fb\u529b(apparent power)",
+            "is_apparent_power": "\u73fe\u5728\u306e{entity_name}\u306e\u76ae\u76f8\u96fb\u529b",
             "is_battery_level": "\u73fe\u5728\u306e {entity_name} \u96fb\u6c60\u6b8b\u91cf",
             "is_carbon_dioxide": "\u73fe\u5728\u306e {entity_name} \u4e8c\u9178\u5316\u70ad\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
             "is_carbon_monoxide": "\u73fe\u5728\u306e {entity_name} \u4e00\u9178\u5316\u70ad\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
@@ -11,6 +11,7 @@
             "is_gas": "\u73fe\u5728\u306e {entity_name} \u30ac\u30b9",
             "is_humidity": "\u73fe\u5728\u306e {entity_name} \u6e7f\u5ea6",
             "is_illuminance": "\u73fe\u5728\u306e {entity_name} \u7167\u5ea6",
+            "is_moisture": "\u73fe\u5728\u306e\u3001{entity_name} \u306e\u6c34\u5206",
             "is_nitrogen_dioxide": "\u73fe\u5728\u306e {entity_name} \u4e8c\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
             "is_nitrogen_monoxide": "\u73fe\u5728\u306e {entity_name} \u4e00\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
             "is_nitrous_oxide": "\u73fe\u5728\u306e {entity_name} \u4e9c\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u30ec\u30d9\u30eb",
@@ -21,7 +22,7 @@
             "is_power": "\u73fe\u5728\u306e {entity_name} \u96fb\u6e90",
             "is_power_factor": "\u73fe\u5728\u306e {entity_name} \u529b\u7387",
             "is_pressure": "\u73fe\u5728\u306e {entity_name} \u5727\u529b",
-            "is_reactive_power": "\u73fe\u5728\u306e {entity_name} \u30ea\u30a2\u30af\u30c6\u30a3\u30d6\u96fb\u6e90(reactive power)",
+            "is_reactive_power": "\u73fe\u5728\u306e{entity_name}\u7121\u52b9\u96fb\u529b",
             "is_signal_strength": "\u73fe\u5728\u306e {entity_name} \u4fe1\u53f7\u5f37\u5ea6",
             "is_sulphur_dioxide": "\u73fe\u5728\u306e {entity_name} \u4e8c\u9178\u5316\u786b\u9ec4\u6fc3\u5ea6\u30ec\u30d9\u30eb",
             "is_temperature": "\u73fe\u5728\u306e {entity_name} \u6e29\u5ea6",
@@ -30,7 +31,7 @@
             "is_voltage": "\u73fe\u5728\u306e {entity_name} \u96fb\u5727"
         },
         "trigger_type": {
-            "apparent_power": "{entity_name} \u898b\u304b\u3051\u306e\u96fb\u529b(apparent power)\u306e\u5909\u5316",
+            "apparent_power": "{entity_name}\u76ae\u76f8\u96fb\u529b\u306e\u5909\u5316",
             "battery_level": "{entity_name} \u96fb\u6c60\u6b8b\u91cf\u306e\u5909\u5316",
             "carbon_dioxide": "{entity_name} \u4e8c\u9178\u5316\u70ad\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
             "carbon_monoxide": "{entity_name} \u4e00\u9178\u5316\u70ad\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
@@ -40,6 +41,7 @@
             "gas": "{entity_name} \u30ac\u30b9\u306e\u5909\u5316",
             "humidity": "{entity_name} \u6e7f\u5ea6\u306e\u5909\u5316",
             "illuminance": "{entity_name} \u7167\u5ea6\u306e\u5909\u5316",
+            "moisture": "{entity_name} \u306e\u6c34\u5206\u5909\u5316",
             "nitrogen_dioxide": "{entity_name} \u4e8c\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
             "nitrogen_monoxide": "{entity_name} \u4e00\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
             "nitrous_oxide": "{entity_name} \u4e9c\u9178\u5316\u7a92\u7d20\u6fc3\u5ea6\u306e\u5909\u5316",
@@ -50,7 +52,7 @@
             "power": "{entity_name} \u96fb\u6e90(power)\u306e\u5909\u5316",
             "power_factor": "{entity_name} \u529b\u7387\u304c\u5909\u5316",
             "pressure": "{entity_name} \u5727\u529b\u306e\u5909\u5316",
-            "reactive_power": "{entity_name} \u30ea\u30a2\u30af\u30c6\u30a3\u30d6\u96fb\u6e90\u306e\u5909\u66f4(reactive power)",
+            "reactive_power": "{entity_name}\u7121\u52b9\u96fb\u529b\u306e\u5909\u66f4",
             "signal_strength": "{entity_name} \u4fe1\u53f7\u5f37\u5ea6\u306e\u5909\u5316",
             "sulphur_dioxide": "{entity_name} \u4e8c\u9178\u5316\u786b\u9ec4\u6fc3\u5ea6\u306e\u5909\u5316",
             "temperature": "{entity_name} \u6e29\u5ea6\u5909\u5316",

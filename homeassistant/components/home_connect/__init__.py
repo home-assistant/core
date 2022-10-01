@@ -117,34 +117,39 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Home Connect component."""
     hass.data[DOMAIN] = {}
 
-    if DOMAIN not in config:
-        return True
-
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-        ),
-    )
-    _LOGGER.warning(
-        "Configuration of Home Connect integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing OAuth "
-        "Application Credentials have been imported into the UI "
-        "automatically and can be safely removed from your "
-        "configuration.yaml file"
-    )
+    if DOMAIN in config:
+        await async_import_client_credential(
+            hass,
+            DOMAIN,
+            ClientCredential(
+                config[DOMAIN][CONF_CLIENT_ID],
+                config[DOMAIN][CONF_CLIENT_SECRET],
+            ),
+        )
+        _LOGGER.warning(
+            "Configuration of Home Connect integration in YAML is deprecated and "
+            "will be removed in a future release; Your existing OAuth "
+            "Application Credentials have been imported into the UI "
+            "automatically and can be safely removed from your "
+            "configuration.yaml file"
+        )
 
     async def _async_service_program(call, method):
         """Execute calls to services taking a program."""
         program = call.data[ATTR_PROGRAM]
         device_id = call.data[ATTR_DEVICE_ID]
-        options = {
-            ATTR_KEY: call.data.get(ATTR_KEY),
-            ATTR_VALUE: call.data.get(ATTR_VALUE),
-            ATTR_UNIT: call.data.get(ATTR_UNIT),
-        }
+
+        options = []
+
+        option_key = call.data.get(ATTR_KEY)
+        if option_key is not None:
+            option = {ATTR_KEY: option_key, ATTR_VALUE: call.data[ATTR_VALUE]}
+
+            option_unit = call.data.get(ATTR_UNIT)
+            if option_unit is not None:
+                option[ATTR_UNIT] = option_unit
+
+            options.append(option)
 
         appliance = _get_appliance_by_device_id(hass, device_id)
         await hass.async_add_executor_job(getattr(appliance, method), program, options)

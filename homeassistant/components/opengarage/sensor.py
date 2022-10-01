@@ -29,6 +29,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="dist",
         native_unit_of_measurement=LENGTH_CENTIMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

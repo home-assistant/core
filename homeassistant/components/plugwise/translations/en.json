@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is already configured"
+            "already_configured": "Service is already configured",
+            "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna"
         },
         "error": {
             "cannot_connect": "Failed to connect",

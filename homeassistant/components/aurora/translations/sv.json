@@ -1,4 +1,18 @@
 {
+    "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Namn"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {
@@ -7,5 +21,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "NOAA Aurora Sensor"
 }

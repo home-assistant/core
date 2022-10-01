@@ -13,7 +13,7 @@ from pywilight.const import (
     WL_SPEED_LOW,
     WL_SPEED_MEDIUM,
 )
-from pywilight.wilight_device import Device as PyWiLightDevice
+from pywilight.wilight_device import PyWiLightDevice
 
 from homeassistant.components.fan import DIRECTION_FORWARD, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry

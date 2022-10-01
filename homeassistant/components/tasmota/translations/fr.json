@@ -16,5 +16,13 @@
                 "description": "Voulez-vous configurer Tasmota ?"
             }
         }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "title": "Plusieurs appareils Tasmota partagent le m\u00eame sujet"
+        },
+        "topic_no_prefix": {
+            "title": "Le sujet MQTT de l'appareil Tasmota {name} n'est pas valide"
+        }
     }
 }

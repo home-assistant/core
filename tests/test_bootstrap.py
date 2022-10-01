@@ -212,6 +212,82 @@ async def test_setup_after_deps_in_stage_1_ignored(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_setup_frontend_before_recorder(hass):
+    """Test frontend is setup before recorder."""
+    order = []
+
+    def gen_domain_setup(domain):
+        async def async_setup(hass, config):
+            order.append(domain)
+            return True
+
+        return async_setup
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="normal_integration",
+            async_setup=gen_domain_setup("normal_integration"),
+            partial_manifest={"after_dependencies": ["an_after_dep"]},
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="an_after_dep",
+            async_setup=gen_domain_setup("an_after_dep"),
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="frontend",
+            async_setup=gen_domain_setup("frontend"),
+            partial_manifest={
+                "dependencies": ["http"],
+                "after_dependencies": ["an_after_dep"],
+            },
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="http",
+            async_setup=gen_domain_setup("http"),
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="recorder",
+            async_setup=gen_domain_setup("recorder"),
+        ),
+    )
+
+    await bootstrap._async_set_up_integrations(
+        hass,
+        {
+            "frontend": {},
+            "http": {},
+            "recorder": {},
+            "normal_integration": {},
+            "an_after_dep": {},
+        },
+    )
+
+    assert "frontend" in hass.config.components
+    assert "normal_integration" in hass.config.components
+    assert "recorder" in hass.config.components
+    assert order == [
+        "http",
+        "frontend",
+        "recorder",
+        "an_after_dep",
+        "normal_integration",
+    ]
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_setup_after_deps_via_platform(hass):
     """Test after_dependencies set up via platform."""
     order = []
@@ -424,6 +500,8 @@ async def test_setup_hass(
     assert len(mock_mount_local_lib_path.mock_calls) == 1
     assert len(mock_ensure_config_exists.mock_calls) == 1
     assert len(mock_process_ha_config_upgrade.mock_calls) == 1
+
+    assert hass == core.async_get_hass()
 
 
 async def test_setup_hass_takes_longer_than_log_slow_startup(

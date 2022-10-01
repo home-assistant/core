@@ -67,5 +67,10 @@
             "camera_sound": "Geluid gedetecteerd",
             "doorbell_chime": "Deurbel is ingedrukt"
         }
+    },
+    "issues": {
+        "removed_app_auth": {
+            "description": "Om de beveiliging te verbeteren en het risico op phishing te verminderen, heeft Google de authenticatiemethode die door Home Assistant wordt gebruikt, be\u00ebindigd. \n\n **Dit vereist actie van jou om dit op te lossen** ([meer info]( {more_info_url} )) \n\n 1. Bezoek de integratiepagina.\n 2. Klik op Opnieuw configureren in de Nest-integratie.\n 3. Home Assistant leidt je door de stappen om te upgraden naar webauthenticatie. \n\n Zie de Nest [integratie-instructies]( {documentation_url} ) voor informatie over het oplossen van problemen."
+        }
     }
 }

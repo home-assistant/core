@@ -123,11 +123,11 @@ class VolkszaehlerSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self.vz_api.available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from REST API."""
         await self.vz_api.async_update()
 

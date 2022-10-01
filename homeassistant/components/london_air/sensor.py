@@ -141,7 +141,7 @@ class AirSensor(SensorEntity):
         attrs["data"] = self._site_data
         return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         sites_status = []
         self._api_data.update()

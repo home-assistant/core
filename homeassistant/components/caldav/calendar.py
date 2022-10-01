@@ -135,11 +135,13 @@ class WebDavCalendarEntity(CalendarEntity):
         """Return the next upcoming event."""
         return self._event
 
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.data.async_get_events(hass, start_date, end_date)
 
-    def update(self):
+    def update(self) -> None:
         """Update event data."""
         self.data.update()
         self._event = self.data.event

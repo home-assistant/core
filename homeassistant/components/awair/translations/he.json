@@ -16,6 +16,12 @@
                     "email": "\u05d3\u05d5\u05d0\"\u05dc"
                 }
             },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "\u05d0\u05e1\u05d9\u05de\u05d5\u05df \u05d2\u05d9\u05e9\u05d4",
+                    "email": "\u05d3\u05d5\u05d0\"\u05dc"
+                }
+            },
             "user": {
                 "data": {
                     "access_token": "\u05d0\u05e1\u05d9\u05de\u05d5\u05df \u05d2\u05d9\u05e9\u05d4",

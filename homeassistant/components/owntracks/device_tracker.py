@@ -1,10 +1,6 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
+from homeassistant.components.device_tracker import ATTR_SOURCE_TYPE, DOMAIN, SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import (
-    ATTR_SOURCE_TYPE,
-    DOMAIN,
-    SOURCE_TYPE_GPS,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -115,16 +111,16 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("host_name")
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return self._data.get("source_type", SOURCE_TYPE_GPS)
+        return self._data.get("source_type", SourceType.GPS)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(identifiers={(OT_DOMAIN, self._dev_id)}, name=self.name)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
 

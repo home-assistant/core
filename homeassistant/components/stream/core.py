@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 from aiohttp import web
 import async_timeout
 import attr
+import numpy as np
 
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -43,6 +44,7 @@ class StreamSettings:
     part_target_duration: float = attr.ib()
     hls_advance_part_limit: int = attr.ib()
     hls_part_timeout: float = attr.ib()
+    orientation: int = attr.ib()
 
 
 STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
@@ -51,6 +53,7 @@ STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
     part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
     hls_advance_part_limit=3,
     hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+    orientation=1,
 )
 
 
@@ -383,6 +386,19 @@ class StreamView(HomeAssistantView):
         raise NotImplementedError()
 
 
+TRANSFORM_IMAGE_FUNCTION = (
+    lambda image: image,  # Unused
+    lambda image: image,  # No transform
+    lambda image: np.fliplr(image).copy(),  # Mirror
+    lambda image: np.rot90(image, 2).copy(),  # Rotate 180
+    lambda image: np.flipud(image).copy(),  # Flip
+    lambda image: np.flipud(np.rot90(image)).copy(),  # Rotate left and flip
+    lambda image: np.rot90(image).copy(),  # Rotate left
+    lambda image: np.flipud(np.rot90(image, -1)).copy(),  # Rotate right and flip
+    lambda image: np.rot90(image, -1).copy(),  # Rotate right
+)
+
+
 class KeyFrameConverter:
     """
     Enables generating and getting an image from the last keyframe seen in the stream.
@@ -397,7 +413,7 @@ class KeyFrameConverter:
     If unsuccessful, get_image will return the previous image
     """
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, stream_settings: StreamSettings) -> None:
         """Initialize."""
 
         # Keep import here so that we can import stream integration without installing reqs
@@ -410,6 +426,7 @@ class KeyFrameConverter:
         self._turbojpeg = TurboJPEGSingleton.instance()
         self._lock = asyncio.Lock()
         self._codec_context: CodecContext | None = None
+        self._stream_settings = stream_settings
 
     def create_codec_context(self, codec_context: CodecContext) -> None:
         """
@@ -429,6 +446,11 @@ class KeyFrameConverter:
         self._codec_context.extradata = codec_context.extradata
         self._codec_context.skip_frame = "NONKEY"
         self._codec_context.thread_type = "NONE"
+
+    @staticmethod
+    def transform_image(image: np.ndarray, orientation: int) -> np.ndarray:
+        """Transform image to a given orientation."""
+        return TRANSFORM_IMAGE_FUNCTION[orientation](image)
 
     def _generate_image(self, width: int | None, height: int | None) -> None:
         """
@@ -462,8 +484,13 @@ class KeyFrameConverter:
         if frames:
             frame = frames[0]
             if width and height:
-                frame = frame.reformat(width=width, height=height)
-            bgr_array = frame.to_ndarray(format="bgr24")
+                if self._stream_settings.orientation >= 5:
+                    frame = frame.reformat(width=height, height=width)
+                else:
+                    frame = frame.reformat(width=width, height=height)
+            bgr_array = self.transform_image(
+                frame.to_ndarray(format="bgr24"), self._stream_settings.orientation
+            )
             self._image = bytes(self._turbojpeg.encode(bgr_array))
 
     async def async_get_image(

@@ -205,7 +205,7 @@ def test_integration_properties(hass):
                 {"hostname": "tesla_*", "macaddress": "98ED5C*"},
                 {"registered_devices": True},
             ],
-            "bluetooth": [{"manufacturer_id": 76, "manufacturer_data_first_byte": 6}],
+            "bluetooth": [{"manufacturer_id": 76, "manufacturer_data_start": [0x06]}],
             "usb": [
                 {"vid": "10C4", "pid": "EA60"},
                 {"vid": "1CF1", "pid": "0030"},
@@ -244,7 +244,7 @@ def test_integration_properties(hass):
         {"vid": "10C4", "pid": "8A2A"},
     ]
     assert integration.bluetooth == [
-        {"manufacturer_id": 76, "manufacturer_data_first_byte": 6}
+        {"manufacturer_id": 76, "manufacturer_data_start": [0x06]}
     ]
     assert integration.ssdp == [
         {

@@ -26,8 +26,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component
 
+from . import common
+
 from tests.common import MockConfigEntry, assert_setup_component
-from tests.components.group import common
 
 
 async def test_setup_group_with_mixed_groupable_states(hass):

@@ -9,8 +9,9 @@ from homeassistant.components.gios import config_flow
 from homeassistant.components.gios.const import CONF_STATION_ID
 from homeassistant.const import CONF_NAME
 
+from . import STATIONS
+
 from tests.common import load_fixture
-from tests.components.gios import STATIONS
 
 CONFIG = {
     CONF_NAME: "Foo",

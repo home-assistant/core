@@ -10,7 +10,7 @@ from zwave_js_server.model.node import Node
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.trigger import async_validate_trigger_config
-from homeassistant.components.zwave_js.triggers.helpers import (
+from homeassistant.components.zwave_js.triggers.trigger_helpers import (
     async_bypass_dynamic_config_validation,
 )
 from homeassistant.const import SERVICE_RELOAD

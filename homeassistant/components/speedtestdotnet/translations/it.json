@@ -9,6 +9,19 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aggiorna tutte le automazioni o gli script che utilizzano questo servizio per utilizzare invece il servizio `homeassistant.update_entity` con un entity_id Speedtest di destinazione. Quindi, fai clic su INVIA di seguito per contrassegnare questo problema come risolto.",
+                        "title": "Il servizio speedtest \u00e8 stato rimosso"
+                    }
+                }
+            },
+            "title": "Il servizio speedtest \u00e8 stato rimosso"
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -70,7 +70,7 @@ class RippleSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state of the sensor."""
         if (balance := get_balance(self.address)) is not None:
             self._state = balance

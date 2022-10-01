@@ -1,13 +1,19 @@
 """Common test objects."""
 import asyncio
+from datetime import timedelta
 import math
-from unittest.mock import AsyncMock, Mock
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 
 import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
+from homeassistant.components.zha.core.helpers import async_get_zha_config_value
 from homeassistant.helpers import entity_registry
+import homeassistant.util.dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 def patch_cluster(cluster):
@@ -232,3 +238,27 @@ async def async_wait_for_updates(hass):
     await asyncio.sleep(0)
     await asyncio.sleep(0)
     await hass.async_block_till_done()
+
+
+async def async_shift_time(hass):
+    """Shift time to cause call later tasks to run."""
+    next_update = dt_util.utcnow() + timedelta(seconds=11)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+
+def patch_zha_config(component: str, overrides: dict[tuple[str, str], Any]):
+    """Patch the ZHA custom configuration defaults."""
+
+    def new_get_config(config_entry, section, config_key, default):
+        if (section, config_key) in overrides:
+            return overrides[section, config_key]
+        else:
+            return async_get_zha_config_value(
+                config_entry, section, config_key, default
+            )
+
+    return patch(
+        f"homeassistant.components.zha.{component}.async_get_zha_config_value",
+        side_effect=new_get_config,
+    )

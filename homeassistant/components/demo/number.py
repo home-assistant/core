@@ -131,7 +131,7 @@ class DemoNumber(NumberEntity):
             name=self.name,
         )
 
-    async def async_set_native_value(self, value):
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         self._attr_native_value = value
         self.async_write_ha_state()

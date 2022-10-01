@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
@@ -12,6 +13,7 @@ from .const import DOMAIN, ENTITY_MAP
 ENTITY_MAP_STORAGE_KEY = f"{DOMAIN}-entity-map"
 ENTITY_MAP_STORAGE_VERSION = 1
 ENTITY_MAP_SAVE_DELAY = 10
+_LOGGER = logging.getLogger(__name__)
 
 
 class Pairing(TypedDict):
@@ -68,6 +70,7 @@ class EntityMapStorage:
         self, homekit_id: str, config_num: int, accessories: list[Any]
     ) -> Pairing:
         """Create a new pairing cache."""
+        _LOGGER.debug("Creating or updating entity map for %s", homekit_id)
         data = Pairing(config_num=config_num, accessories=accessories)
         self.storage_data[homekit_id] = data
         self._async_schedule_save()
@@ -76,11 +79,17 @@ class EntityMapStorage:
     @callback
     def async_delete_map(self, homekit_id: str) -> None:
         """Delete pairing cache."""
-        if homekit_id not in self.storage_data:
-            return
-
-        self.storage_data.pop(homekit_id)
-        self._async_schedule_save()
+        removed_one = False
+        # Previously there was a bug where a lowercase homekit_id was stored
+        # in the storage. We need to account for that.
+        for hkid in (homekit_id, homekit_id.lower()):
+            if hkid not in self.storage_data:
+                continue
+            _LOGGER.debug("Deleting entity map for %s", hkid)
+            self.storage_data.pop(hkid)
+            removed_one = True
+        if removed_one:
+            self._async_schedule_save()
 
     @callback
     def _async_schedule_save(self) -> None:

@@ -10,14 +10,11 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    ATTR_WHITE_VALUE,
     ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_WHITE_VALUE,
+    ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.const import (
     CONF_NAME,
@@ -84,7 +81,6 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
         }
     )
     .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -93,18 +89,20 @@ _PLATFORM_SCHEMA_BASE = (
 
 # Configuring MQTT Lights under the light platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA_TEMPLATE = vol.All(
-    # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
-    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
     cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
 )
 
 DISCOVERY_SCHEMA_TEMPLATE = vol.All(
-    # CONF_WHITE_VALUE_TEMPLATE is deprecated, support will be removed in release 2022.9
-    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    # CONF_WHITE_VALUE_TEMPLATE is no longer supported, support was removed in 2022.9
+    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
-PLATFORM_SCHEMA_MODERN_TEMPLATE = _PLATFORM_SCHEMA_BASE
+PLATFORM_SCHEMA_MODERN_TEMPLATE = vol.All(
+    # CONF_WHITE_VALUE_TEMPLATE is no longer supported, support was removed in 2022.9
+    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
+    _PLATFORM_SCHEMA_BASE,
+)
 
 
 async def async_setup_entity_template(
@@ -130,8 +128,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         # features
         self._brightness = None
+        self._fixed_color_mode = None
         self._color_temp = None
-        self._white_value = None
         self._hs = None
         self._effect = None
 
@@ -159,7 +157,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 CONF_GREEN_TEMPLATE,
                 CONF_RED_TEMPLATE,
                 CONF_STATE_TEMPLATE,
-                CONF_WHITE_VALUE_TEMPLATE,
             )
         }
         optimistic = config[CONF_OPTIMISTIC]
@@ -168,6 +165,21 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or self._topics[CONF_STATE_TOPIC] is None
             or self._templates[CONF_STATE_TEMPLATE] is None
         )
+
+        color_modes = {ColorMode.ONOFF}
+        if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
+            color_modes.add(ColorMode.BRIGHTNESS)
+        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
+            color_modes.add(ColorMode.COLOR_TEMP)
+        if (
+            self._templates[CONF_RED_TEMPLATE] is not None
+            and self._templates[CONF_GREEN_TEMPLATE] is not None
+            and self._templates[CONF_BLUE_TEMPLATE] is not None
+        ):
+            color_modes.add(ColorMode.HS)
+        self._supported_color_modes = filter_supported_color_modes(color_modes)
+        if len(self._supported_color_modes) == 1:
+            self._fixed_color_mode = next(iter(self._supported_color_modes))
 
     def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -203,11 +215,10 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
             if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
                 try:
-                    self._color_temp = int(
-                        self._templates[
-                            CONF_COLOR_TEMP_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
-                    )
+                    color_temp = self._templates[
+                        CONF_COLOR_TEMP_TEMPLATE
+                    ].async_render_with_possible_json_value(msg.payload)
+                    self._color_temp = int(color_temp) if color_temp != "None" else None
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
 
@@ -217,34 +228,23 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 and self._templates[CONF_BLUE_TEMPLATE] is not None
             ):
                 try:
-                    red = int(
-                        self._templates[
-                            CONF_RED_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
-                    )
-                    green = int(
-                        self._templates[
-                            CONF_GREEN_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
-                    )
-                    blue = int(
-                        self._templates[
-                            CONF_BLUE_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
-                    )
-                    self._hs = color_util.color_RGB_to_hs(red, green, blue)
+                    red = self._templates[
+                        CONF_RED_TEMPLATE
+                    ].async_render_with_possible_json_value(msg.payload)
+                    green = self._templates[
+                        CONF_GREEN_TEMPLATE
+                    ].async_render_with_possible_json_value(msg.payload)
+                    blue = self._templates[
+                        CONF_BLUE_TEMPLATE
+                    ].async_render_with_possible_json_value(msg.payload)
+                    if red == "None" and green == "None" and blue == "None":
+                        self._hs = None
+                    else:
+                        self._hs = color_util.color_RGB_to_hs(
+                            int(red), int(green), int(blue)
+                        )
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
-
-            if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
-                try:
-                    self._white_value = int(
-                        self._templates[
-                            CONF_WHITE_VALUE_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
-                    )
-                except ValueError:
-                    _LOGGER.warning("Invalid white value received")
 
             if self._templates[CONF_EFFECT_TEMPLATE] is not None:
                 effect = self._templates[
@@ -287,8 +287,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
             if last_state.attributes.get(ATTR_EFFECT):
                 self._effect = last_state.attributes.get(ATTR_EFFECT)
-            if last_state.attributes.get(ATTR_WHITE_VALUE):
-                self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
 
     @property
     def brightness(self):
@@ -314,11 +312,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     def hs_color(self):
         """Return the hs color value [int, int]."""
         return self._hs
-
-    @property
-    def white_value(self):
-        """Return the white property."""
-        return self._white_value
 
     @property
     def is_on(self):
@@ -360,6 +353,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
             if self._optimistic:
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
+                self._hs = None
 
         if ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
@@ -383,13 +377,8 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["sat"] = hs_color[1]
 
             if self._optimistic:
+                self._color_temp = None
                 self._hs = kwargs[ATTR_HS_COLOR]
-
-        if ATTR_WHITE_VALUE in kwargs:
-            values["white_value"] = int(kwargs[ATTR_WHITE_VALUE])
-
-            if self._optimistic:
-                self._white_value = kwargs[ATTR_WHITE_VALUE]
 
         if ATTR_EFFECT in kwargs:
             values["effect"] = kwargs.get(ATTR_EFFECT)
@@ -442,22 +431,25 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
     @property
+    def color_mode(self):
+        """Return current color mode."""
+        if self._fixed_color_mode:
+            return self._fixed_color_mode
+        # Support for ct + hs, prioritize hs
+        if self._hs is not None:
+            return ColorMode.HS
+        return ColorMode.COLOR_TEMP
+
+    @property
+    def supported_color_modes(self):
+        """Flag supported color modes."""
+        return self._supported_color_modes
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         features = LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
-        if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
-            features = features | SUPPORT_BRIGHTNESS
-        if (
-            self._templates[CONF_RED_TEMPLATE] is not None
-            and self._templates[CONF_GREEN_TEMPLATE] is not None
-            and self._templates[CONF_BLUE_TEMPLATE] is not None
-        ):
-            features = features | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         if self._config.get(CONF_EFFECT_LIST) is not None:
             features = features | LightEntityFeature.EFFECT
-        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
-            features = features | SUPPORT_COLOR_TEMP
-        if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
-            features = features | SUPPORT_WHITE_VALUE
 
         return features

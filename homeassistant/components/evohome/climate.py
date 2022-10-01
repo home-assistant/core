@@ -5,12 +5,12 @@ from datetime import datetime as dt
 import logging
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -126,25 +126,18 @@ async def async_setup_platform(
 class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
-    def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a Climate device."""
-        super().__init__(evo_broker, evo_device)
-
-        self._preset_modes = None
+    _attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def hvac_modes(self) -> list[str]:
         """Return a list of available hvac operation modes."""
         return list(HA_HVAC_TO_TCS)
 
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        return self._preset_modes
-
 
 class EvoZone(EvoChild, EvoClimateEntity):
     """Base for a Honeywell TCC Zone."""
+
+    _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Honeywell TCC Zone."""
@@ -231,7 +224,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         """
         return self._evo_device.setpointCapabilities["maxHeatSetpoint"]
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         temperature = kwargs["temperature"]
 
@@ -247,7 +240,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             self._evo_device.set_temperature(temperature, until=until)
         )
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a Zone to one of its native EVO_* operating modes.
 
         Zones inherit their _effective_ operating mode from their Controller.
@@ -316,7 +309,6 @@ class EvoController(EvoClimateEntity):
 
     _attr_icon = "mdi:thermostat"
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
@@ -386,7 +378,7 @@ class EvoController(EvoClimateEntity):
         """Return the current preset mode, e.g., home, away, temp."""
         return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Raise exception as Controllers don't have a target temperature."""
         raise NotImplementedError("Evohome Controllers don't have target temperatures.")
 

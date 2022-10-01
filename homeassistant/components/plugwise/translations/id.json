@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Layanan sudah dikonfigurasi"
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "anna_with_adam": "Baik Anna dan Adam terdeteksi. Tambahkan Adam, bukan Anna"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",

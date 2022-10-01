@@ -1566,6 +1566,45 @@ def test_timedelta(mock_is_safe, hass):
         assert result == "15 days"
 
 
+def test_version(hass):
+    """Test version filter and function."""
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version}}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9')}}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result == "2099.9.9"
+
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version < '2099.9.10' }}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9') < '2099.9.10' }}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result is True
+
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version == '2099.9.9' }}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9') == '2099.9.9' }}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result is True
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            "{{ version(None) < '2099.9.10' }}",
+            hass,
+        ).async_render()
+
+
 def test_regex_match(hass):
     """Test regex_match method."""
     tpl = template.Template(
@@ -2419,6 +2458,30 @@ async def test_integration_entities(hass):
     assert info.rate_limit is None
 
 
+async def test_entry_id(hass):
+    """Test entry_id function."""
+    config_entry = MockConfigEntry(domain="light", title="Some integration")
+    config_entry.add_to_hass(hass)
+    entity_registry = mock_registry(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
+    )
+
+    info = render_to_info(hass, "{{ 'sensor.fail' | entry_id }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 56 | entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, f"{{{{ entry_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, config_entry.entry_id)
+    assert info.rate_limit is None
+
+
 async def test_device_id(hass):
     """Test device_id function."""
     config_entry = MockConfigEntry(domain="light")
@@ -2768,13 +2831,13 @@ async def test_area_entities(hass):
     assert info.rate_limit is None
 
     area_entry = area_registry.async_get_or_create("sensor.fake")
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "light",
         "hue",
         "5678",
         config_entry=config_entry,
-        area_id=area_entry.id,
     )
+    entity_registry.async_update_entity(entity_entry.entity_id, area_id=area_entry.id)
 
     info = render_to_info(hass, f"{{{{ area_entities('{area_entry.id}') }}}}")
     assert_result_info(info, ["light.hue_5678"])

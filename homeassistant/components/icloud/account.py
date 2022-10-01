@@ -15,9 +15,9 @@ from pyicloud.exceptions import (
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
@@ -103,6 +103,8 @@ class IcloudAccount:
         self._devices: dict[str, IcloudDevice] = {}
         self._retried_fetch = False
         self._config_entry = config_entry
+
+        self.listeners: list[CALLBACK_TYPE] = []
 
     def setup(self) -> None:
         """Set up an iCloud account."""
@@ -230,16 +232,7 @@ class IcloudAccount:
 
     def _require_reauth(self):
         """Require the user to log in again."""
-        self.hass.add_job(
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data={
-                    **self._config_entry.data,
-                    "unique_id": self._config_entry.unique_id,
-                },
-            )
-        )
+        self.hass.add_job(self._config_entry.async_start_reauth, self.hass)
 
     def _determine_interval(self) -> int:
         """Calculate new interval between two API fetch (in minutes)."""

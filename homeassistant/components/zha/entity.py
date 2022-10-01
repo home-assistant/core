@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
@@ -35,6 +35,9 @@ if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
+_ZhaEntitySelfT = TypeVar("_ZhaEntitySelfT", bound="ZhaEntity")
+_ZhaGroupEntitySelfT = TypeVar("_ZhaGroupEntitySelfT", bound="ZhaGroupEntity")
+
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
@@ -46,12 +49,11 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     unique_id_suffix: str | None = None
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, unique_id: str, zha_device: ZHADevice, **kwargs: Any) -> None:
         """Init ZHA entity."""
         self._name: str = ""
-        self._force_update: bool = False
-        self._should_poll: bool = False
         self._unique_id: str = unique_id
         if self.unique_id_suffix:
             self._unique_id += f"-{self.unique_id_suffix}"
@@ -64,6 +66,8 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     @property
     def name(self) -> str:
         """Return Entity's default name."""
+        if hasattr(self, "_attr_name") and self._attr_name is not None:
+            return self._attr_name
         return self._name
 
     @property
@@ -80,16 +84,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return self._extra_state_attributes
-
-    @property
-    def force_update(self) -> bool:
-        """Force update this entity."""
-        return self._force_update
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll state from device."""
-        return self._should_poll
 
     @property
     def device_info(self) -> entity.DeviceInfo:
@@ -155,7 +149,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 class ZhaEntity(BaseZhaEntity, RestoreEntity):
     """A base class for non group ZHA entities."""
 
-    def __init_subclass__(cls, id_suffix: str | None = None, **kwargs) -> None:
+    def __init_subclass__(cls, id_suffix: str | None = None, **kwargs: Any) -> None:
         """Initialize subclass.
 
         :param id_suffix: suffix to add to the unique_id of the entity. Used for multi
@@ -187,12 +181,12 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZhaEntitySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ZhaEntitySelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -257,7 +251,12 @@ class ZhaGroupEntity(BaseZhaEntity):
     """A base class for ZHA group entities."""
 
     def __init__(
-        self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
+        self,
+        entity_ids: list[str],
+        unique_id: str,
+        group_id: int,
+        zha_device: ZHADevice,
+        **kwargs: Any,
     ) -> None:
         """Initialize a light group."""
         super().__init__(unique_id, zha_device, **kwargs)
@@ -279,8 +278,13 @@ class ZhaGroupEntity(BaseZhaEntity):
 
     @classmethod
     def create_entity(
-        cls, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
-    ) -> ZhaGroupEntity | None:
+        cls: type[_ZhaGroupEntitySelfT],
+        entity_ids: list[str],
+        unique_id: str,
+        group_id: int,
+        zha_device: ZHADevice,
+        **kwargs: Any,
+    ) -> _ZhaGroupEntitySelfT | None:
         """Group Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None

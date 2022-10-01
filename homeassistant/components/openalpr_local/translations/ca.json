@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "La integraci\u00f3 d'OpenALPR Local s'eliminar\u00e0 de Home Assistant i deixar\u00e0 d'estar disponible a la versi\u00f3 de Home Assistant 2022.10.\n\nElimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per arreglar aquest error.",
+            "title": "La integraci\u00f3 OpenALPR Local est\u00e0 sent eliminada"
+        }
+    }
+}

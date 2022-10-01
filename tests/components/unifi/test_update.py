@@ -5,7 +5,7 @@ from aiounifi.controller import MESSAGE_DEVICE
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 from yarl import URL
 
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi.const import CONF_SITE_ID
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_HOST,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -166,8 +167,7 @@ async def test_install(hass, aioclient_mock):
     device_state = hass.states.get("update.device_1")
     assert device_state.state == STATE_ON
 
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    url = f"https://{controller.host}:1234/api/s/{controller.site}/cmd/devmgr"
+    url = f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr"
     aioclient_mock.clear_requests()
     aioclient_mock.post(url)
 

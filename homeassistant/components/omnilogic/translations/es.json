@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }
@@ -21,7 +21,7 @@
         "step": {
             "init": {
                 "data": {
-                    "ph_offset": "Desplazamiento del pH (positivo o negativo)",
+                    "ph_offset": "Compensaci\u00f3n del pH (positivo o negativo)",
                     "polling_interval": "Intervalo de sondeo (en segundos)"
                 }
             }
