@@ -478,6 +478,7 @@ async def test_default_keepalive(hass, monkeypatch, caplog):
     )  # no keepalive config will default it
     assert "TCP Keepalive IDLE timer was provided" not in caplog.text
 
+
 async def test_unique_id(hass, monkeypatch):
     """Validate the device unique_id."""
 
@@ -496,7 +497,7 @@ async def test_unique_id(hass, monkeypatch):
                     "name": "temperature_device",
                     "sensor_type": "temperature",
                     "aliases": ["test_alias_02_0"],
-                }
+                },
             },
         },
     }
