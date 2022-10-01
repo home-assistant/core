@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .common import ElmaxCoordinator
@@ -41,6 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Store a global reference to the coordinator for later use
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+
+    # Add the cover feature only if supported by the current panel.
+    if coordinator.data is not None and coordinator.data.cover_feature:
+        ELMAX_PLATFORMS.append(Platform.COVER)
 
     # Perform platform initialization.
     await hass.config_entries.async_forward_entry_setups(entry, ELMAX_PLATFORMS)
