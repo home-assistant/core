@@ -15,7 +15,12 @@ from .api_responses import (
     EXPECTED_STATE_EV_UNAVAILABLE,
     VEHICLE_STATUS_EV,
 )
-from .conftest import MOCK_API_FETCH, MOCK_API_GET_DATA, advance_time_to_next_fetch
+from .conftest import (
+    MOCK_API_FETCH,
+    MOCK_API_GET_DATA,
+    TEST_DEVICE_NAME,
+    advance_time_to_next_fetch,
+)
 
 
 async def test_sensors_ev_imperial(hass, ev_entry):
@@ -51,7 +56,9 @@ def _assert_data(hass, expected_state):
     sensor_list.extend(SAFETY_SENSORS)
     expected_states = {}
     for item in sensor_list:
-        expected_states[f"sensor.{slugify(item.name)}"] = expected_state[item.key]
+        expected_states[
+            f"sensor.{slugify(f'{TEST_DEVICE_NAME} {item.name}')}"
+        ] = expected_state[item.key]
 
     for sensor, value in expected_states.items():
         actual = hass.states.get(sensor)

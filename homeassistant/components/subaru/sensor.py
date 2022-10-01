@@ -194,6 +194,8 @@ class SubaruSensor(
 ):
     """Class for Subaru sensors."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         vehicle_info: dict,
