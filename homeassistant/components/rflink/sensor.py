@@ -4,7 +4,11 @@ from __future__ import annotations
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
@@ -36,6 +40,15 @@ SENSOR_ICONS = {
     "humidity": "mdi:water-percent",
     "battery": "mdi:battery",
     "temperature": "mdi:thermometer",
+}
+
+DEVICE_CLASS_TYPES = {
+    "distance": SensorDeviceClass.DISTANCE,
+    "barometric_pressure": SensorDeviceClass.PRESSURE,
+    "windspeed": SensorDeviceClass.SPEED,
+    "temperature": SensorDeviceClass.TEMPERATURE,
+    # SensorDeviceClass.VOLUME,
+    # SensorDeviceClass.WEIGHT,
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -117,6 +130,8 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
         self._unit_of_measurement = unit_of_measurement
+        if sensor_type in DEVICE_CLASS_TYPES:
+            self._attr_device_class = DEVICE_CLASS_TYPES[sensor_type]
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
     def _handle_event(self, event):

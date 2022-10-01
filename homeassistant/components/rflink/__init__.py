@@ -373,6 +373,11 @@ class RflinkDevice(Entity):
         raise NotImplementedError()
 
     @property
+    def unique_id(self):
+        """Return the unique ID of this entity."""
+        return self._device_id
+
+    @property
     def name(self):
         """Return a name for the device."""
         return self._name
