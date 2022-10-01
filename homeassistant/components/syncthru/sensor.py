@@ -166,7 +166,7 @@ class SyncThruTonerSensor(SyncThruSensor):
 
 
 class SyncThruDrumSensor(SyncThruSensor):
-    """Implementation of a Samsung Printer toner sensor platform."""
+    """Implementation of a Samsung Printer drum sensor platform."""
 
     def __init__(self, syncthru, name, color):
         """Initialize the sensor."""
@@ -214,7 +214,7 @@ class SyncThruInputTraySensor(SyncThruSensor):
 
 
 class SyncThruOutputTraySensor(SyncThruSensor):
-    """Implementation of a Samsung Printer input tray sensor platform."""
+    """Implementation of a Samsung Printer output tray sensor platform."""
 
     def __init__(self, syncthru, name, number):
         """Initialize the sensor."""
