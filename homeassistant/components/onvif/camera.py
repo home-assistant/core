@@ -142,15 +142,20 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
 
         if self.device.capabilities.snapshot:
             try:
-                image = await self.device.device.get_snapshot(
+                if image := await self.device.device.get_snapshot(
                     self.profile.token, self._basic_auth
-                )
-                return image
+                ):
+                    return image
             except ONVIFError as err:
                 LOGGER.error(
                     "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
                     self.device.name,
                     err,
+                )
+            else:
+                LOGGER.error(
+                    "Fetch snapshot image failed from %s, falling back to FFmpeg",
+                    self.device.name,
                 )
 
         assert self._stream_uri
