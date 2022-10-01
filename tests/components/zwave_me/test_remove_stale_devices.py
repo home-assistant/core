@@ -1,3 +1,4 @@
+"""Test the zwave_me removal of stale devices."""
 import pytest as pytest
 
 from homeassistant.components.zwave_me import ZWaveMeController

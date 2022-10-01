@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from ...helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.device_registry import DeviceRegistry
 from .const import DOMAIN, PLATFORMS, ZWaveMePlatform
 
 _LOGGER = logging.getLogger(__name__)
