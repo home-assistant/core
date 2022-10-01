@@ -133,9 +133,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
+                    vol.Optional(
                         CONF_STUN_SERVER,
-                        default=self.config_entry.options.get(CONF_STUN_SERVER),
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_STUN_SERVER
+                            ),
+                        },
                     ): str,
                 }
             ),

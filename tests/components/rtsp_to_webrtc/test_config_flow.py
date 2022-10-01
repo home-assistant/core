@@ -247,3 +247,14 @@ async def test_options_flow(
     assert result["type"] == "create_entry"
     await hass.async_block_till_done()
     assert config_entry.options == {"stun_server": "example.com:1234"}
+
+    # Clear the value
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == "create_entry"
+    await hass.async_block_till_done()
+    assert config_entry.options == {}
