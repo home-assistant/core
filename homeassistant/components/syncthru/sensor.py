@@ -55,7 +55,10 @@ async def async_setup_entry(
     supp_output_tray = printer.output_tray_status()
 
     name = config_entry.data[CONF_NAME]
-    entities: list[SyncThruSensor] = [SyncThruMainSensor(coordinator, name)]
+    entities: list[SyncThruSensor] = [
+        SyncThruMainSensor(coordinator, name),
+        SyncThruActiveAlertSensor(coordinator, name),
+    ]
 
     for key in supp_toner:
         entities.append(SyncThruTonerSensor(coordinator, name, key))
@@ -237,3 +240,18 @@ class SyncThruOutputTraySensor(SyncThruSensor):
         if tray_state == "":
             tray_state = "Ready"
         return tray_state
+
+
+class SyncThruActiveAlertSensor(SyncThruSensor):
+    """Implementation of a Samsung Printer active alerts sensor platform."""
+
+    def __init__(self, syncthru, name):
+        """Initialize the sensor."""
+        super().__init__(syncthru, name)
+        self._name = f"{name} Active Alerts"
+        self._id_suffix = "_active_alerts"
+
+    @property
+    def native_value(self):
+        """Show number of active alerts."""
+        return self.syncthru.raw().get("GXI_ACTIVE_ALERT_TOTAL")
