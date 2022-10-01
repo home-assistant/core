@@ -37,6 +37,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import (
     TEMPLATE_SENSOR_BASE_SCHEMA,
@@ -89,10 +90,14 @@ async def async_setup_platform(
     resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(config)
     rest = create_rest_data_from_config(hass, resource_config)
     if discovery_info is None:
-        _LOGGER.warning(
-            "Loading Scrape via platform key has been deprecated. "
-            "Please move your config yaml to the scrape key or migrate to UI. "
-            "See https://www.home-assistant.io/integrations/scrape/ for details"
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "moved_yaml",
+            breaks_in_ha_version="2022.11.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="moved_yaml",
         )
 
     coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
