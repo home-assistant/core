@@ -139,10 +139,6 @@ class SnoozFan(FanEntity, RestoreEntity):
         """Extra state attributes for the device."""
         return {ATTR_LAST_COMMAND_SUCCESSFUL: self._last_command_successful}
 
-    async def async_disconnect(self, **kwargs: Any) -> None:
-        """Disconnect the underlying bluetooth device."""
-        await self._device.async_disconnect()
-
     async def async_turn_on(
         self,
         percentage: int | None = None,
