@@ -228,12 +228,13 @@ async def test_authorize_model_unsupported(hass):
 
 async def test_authorize_no_ip_control(hass):
     """Test that errors are shown when IP Control is disabled on the TV."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
-    )
+    with patch("pybravia.BraviaTV.pair", side_effect=BraviaTVError):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
+        )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "no_ip_control"
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "no_ip_control"
 
 
 async def test_duplicate_error(hass):
