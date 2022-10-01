@@ -181,10 +181,19 @@ class MqttSensor(MqttEntity, RestoreSensor):
         else:
             self._expired = None
 
-        shared_topic = config[CONF_STATE_TOPIC] == config.get(CONF_AVAILABILITY_TOPIC)
+        shared_topic = (
+            config[CONF_STATE_TOPIC]
+            if (config[CONF_STATE_TOPIC] == config.get(CONF_AVAILABILITY_TOPIC))
+            else None
+        )
 
         MqttEntity.__init__(
-            self, hass, config, config_entry, discovery_data, shared_topic=shared_topic
+            self,
+            hass,
+            config,
+            config_entry,
+            discovery_data,
+            shared_topic=shared_topic,
         )
 
     async def mqtt_async_added_to_hass(self) -> None:

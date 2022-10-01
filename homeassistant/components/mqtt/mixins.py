@@ -475,7 +475,7 @@ class MqttAttributes(Entity):
 class MqttAvailability(Entity):
     """Mixin used for platforms that report availability."""
 
-    def __init__(self, config: dict, shared_topic: bool) -> None:
+    def __init__(self, config: dict, shared_topic: str | None = None) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
         self._shared_topic = shared_topic
@@ -548,9 +548,8 @@ class MqttAvailability(Entity):
                 self._available[topic] = False
                 self._available_latest = False
 
-            if self._shared_topic and self._available_latest:
-                if self.state:
-                    return
+            if (topic == self._shared_topic) and self._available_latest and self.state:
+                return
 
             self.async_write_ha_state()
 
@@ -1000,7 +999,7 @@ class MqttEntity(
     _attr_should_poll = False
     _entity_id_format: str
 
-    def __init__(self, hass, config, config_entry, discovery_data, shared_topic=False):
+    def __init__(self, hass, config, config_entry, discovery_data, shared_topic=None):
         """Init the MQTT Entity."""
         self.hass = hass
         self._config = config
