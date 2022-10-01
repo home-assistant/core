@@ -380,7 +380,6 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     """Test Scrape sensor with unique_id."""
     config = {
         DOMAIN: [
-<<<<<<< HEAD
             return_integration_config(
                 sensors=[
                     {
@@ -389,13 +388,6 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
                         "unique_id": "ha_version_unique_id",
                     }
                 ]
-=======
-            return_config(
-                select=".current-version h1",
-                name="HA version",
-                remove_platform=True,
-                unique_id="ha_version_unique_id",
->>>>>>> b0b0becf47 (Fix name, add tests)
             )
         ]
     }
