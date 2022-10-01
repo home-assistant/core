@@ -35,6 +35,10 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_available = self.device.available
         self._attr_unique_id = self.device.device_url
 
+        if self.is_sub_device and not self.is_sub_device_default_naming:
+            # In case of sub entity without default naming, use the provided label as name
+            self._attr_name = self.device.label
+
         self._attr_device_info = self.generate_device_info()
 
     @property
@@ -122,15 +126,10 @@ class OverkizDescriptiveEntity(OverkizEntity):
         """Initialize the device."""
         super().__init__(device_url, coordinator)
 
-        if self.is_sub_device:
-            # Check if the provided label is "MAIN_DEVICE-XXX"
+        if self.is_sub_device and self.is_sub_device_default_naming:
+            # In case of sub device  with description using the default naming, use the provided label and append the name of the type of entity
             description = copy.copy(description)
-            if self.is_sub_device_default_naming:
-                # In that case, use the provided label and append the name of the type of entity
-                description.name = f"{self.device.label} {description.name}"
-            else:
-                # In that case, don't use the provided label and use the standard name for each sub devices
-                description.name = self.device.label
+            description.name = f"{self.device.label} {description.name}"
 
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
