@@ -127,7 +127,7 @@ class OverkizDescriptiveEntity(OverkizEntity):
             description = copy.copy(description)
             if self.is_sub_device_default_naming:
                 # In that case, use the provided label and append the name of the type of entity
-                description.name = f"{self.device.label} {self.entity_description.name}"
+                description.name = f"{self.device.label} {description.name}"
             else:
                 # In that case, don't use the provided label and use the standard name for each sub devices
                 description.name = self.device.label
