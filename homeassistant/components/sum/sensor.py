@@ -26,12 +26,11 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN, PLATFORMS
+from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DEFAULT_NAME, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:calculator"
-DEFAULT_NAME = "Sum sensor"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {

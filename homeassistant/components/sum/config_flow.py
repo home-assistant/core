@@ -13,7 +13,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
+from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DEFAULT_NAME, DOMAIN
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -30,7 +30,7 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): selector.TextSelector(),
+        vol.Required("name", default=DEFAULT_NAME): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
