@@ -47,25 +47,11 @@ class LaCrosseSensorEntityDescription(
 def get_value(sensor: Sensor, field: str) -> float | int | str:
     """Get the value of a sensor field."""
     value = sensor.data[field]["values"][-1]["s"]
-    # Check if it is already a float or int
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return value
-
-    if (value.find("-") <= 0) and value.replace(
-        "-", "", 1
-    ).isdigit():  # Check if int, then return int
-        return int(value)
-    if (
-        (value.find("-") <= 0)
-        and (value.count(".") < 2)
-        and (value.replace("-", "", 1).replace(".", "", 1).isdigit())
-    ):  # Check if float, then return float
-        return float(value)
-
-    # Return string value of field
-    return str(value)
+    try:
+        value = float(value)
+    except ValueError:
+        return str(value)  # str
+    return int(value) if value.is_integer() else value  # int, else float
 
 
 PARALLEL_UPDATES = 0
