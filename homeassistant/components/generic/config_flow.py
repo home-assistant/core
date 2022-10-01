@@ -337,18 +337,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.context["preview_cam"] = GenericCamera(
                         self.hass, user_input, self.flow_id, "preview"
                     )
-                    register_preview(hass)
-                    preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
-                    return self.async_show_form(
-                        step_id="user_confirm_still",
-                        data_schema=vol.Schema(
-                            {
-                                vol.Required(CONF_CONFIRMED_OK, default=False): bool,
-                            }
-                        ),
-                        description_placeholders={"preview_url": preview_url},
-                        errors=None,
-                    )
+                    return await self.async_step_user_confirm_still()
         else:
             user_input = DEFAULT_DATA.copy()
         return self.async_show_form(
@@ -358,17 +347,30 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user_confirm_still(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user clicking confirm after still preview."""
-        if not user_input.get(CONF_CONFIRMED_OK):
-            return self.async_show_form(
-                step_id="user",
-                data_schema=build_schema(self.user_input),
-                errors={},
+        if user_input:
+            if not user_input.get(CONF_CONFIRMED_OK):
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=build_schema(self.user_input),
+                    errors={},
+                )
+            return self.async_create_entry(
+                title=self.title, data={}, options=self.user_input
             )
-        return self.async_create_entry(
-            title=self.title, data={}, options=self.user_input
+        register_preview(self.hass)
+        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
+        return self.async_show_form(
+            step_id="user_confirm_still",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CONFIRMED_OK, default=False): bool,
+                }
+            ),
+            description_placeholders={"preview_url": preview_url},
+            errors=None,
         )
 
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
