@@ -92,7 +92,7 @@ DEPRECATION_WARNING_CHARACTERISTIC = (
     "https://www.home-assistant.io/integrations/statistics/"
 )
 DEPRECATION_WARNING_SIZE = (
-    "The configuration of either 'sampling_size' or 'max_age' will become "
+    "The configuration of 'sampling_size', 'max_age', or both will become "
     "mandatory in Home Assistant Core 2022.12 for the statistics integration. "
     "Please add 'sampling_size: 20' to the configuration of sensor '%s' to keep "
     "the current behavior. Read the documentation for further details: "
