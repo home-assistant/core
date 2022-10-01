@@ -5,7 +5,12 @@ import logging
 from pathlib import PurePath
 from typing import Optional, cast
 
-from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
+from motioneye_client.const import (
+    KEY_MEDIA_LIST,
+    KEY_MEDIA_SORT_ATTR,
+    KEY_MIME_TYPE,
+    KEY_PATH,
+)
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import MediaSourceError, Unresolvable
@@ -284,7 +289,13 @@ class MotionEyeMediaSource(MediaSource):
 
         sub_dirs: set[str] = set()
         parts = parsed_path.parts
-        for media in resp.get(KEY_MEDIA_LIST, []):
+        media_list = resp.get(KEY_MEDIA_LIST, [])
+
+        def get_media_sort_key(media: dict) -> str:
+            """Get media sort key."""
+            return media.get(KEY_MEDIA_SORT_ATTR, "")
+
+        for media in sorted(media_list, key=get_media_sort_key):
             if (
                 KEY_PATH not in media
                 or KEY_MIME_TYPE not in media
