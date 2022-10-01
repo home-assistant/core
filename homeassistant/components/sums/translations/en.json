@@ -10,7 +10,7 @@
                 "data_description": {
                     "round_digits": "Controls the number of decimal digits in the output."
                 },
-                "description": "Create a sensor that summarize values from a list of input sensors.",
+                "description": "Create a sensor that sums values from a list of input sensors.",
                 "title": "Add sum sensor"
             }
         }
@@ -23,7 +23,7 @@
                     "round_digits": "Precision"
                 },
                 "data_description": {
-                    "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median."
+                    "round_digits": "Controls the number of decimal digits in the output."
                 }
             }
         }

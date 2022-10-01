@@ -6,7 +6,6 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_TYPE
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -15,11 +14,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
-
-SELECTION_TYPES = [
-    selector.SelectOptionDict(value="add", label="Add"),
-    selector.SelectOptionDict(value="sub", label="Subtract"),
-]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -31,9 +25,6 @@ OPTIONS_SCHEMA = vol.Schema(
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
         ),
-        vol.Required(CONF_TYPE): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=SELECTION_TYPES),
-        ),
     }
 )
 
@@ -42,6 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required("name"): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
+
 
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowFormStep(CONFIG_SCHEMA)
