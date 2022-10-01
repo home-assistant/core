@@ -3,21 +3,21 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+from pysnooz.commands import SnoozCommandData
 import pytest
 
 from homeassistant.components.snooz import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import (
+from tests.common import MockConfigEntry
+from tests.components.snooz import (
     SNOOZ_SERVICE_INFO_NOT_PAIRING,
     TEST_ADDRESS,
     TEST_PAIRING_TOKEN,
     MockSnoozClient,
     SnoozFixture,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -26,11 +26,14 @@ def mock_bluetooth(enable_bluetooth):
 
 
 @pytest.fixture()
-async def mock_snooz(hass: HomeAssistant):
+@pytest.mark.asyncio()
+async def mock_connected_snooz(hass: HomeAssistant):
     """Mock a Snooz configuration entry and returns its fan entity."""
 
     ble_device = SNOOZ_SERVICE_INFO_NOT_PAIRING
-    client = MockSnoozClient(ble_device.address)
+    client = MockSnoozClient(
+        ble_device.address
+    )  # pylint: disable=abstract-class-instantiated
 
     with patch(
         "homeassistant.components.snooz.async_ble_device_from_address",
@@ -48,5 +51,9 @@ async def mock_snooz(hass: HomeAssistant):
 
         data = hass.data[DOMAIN][entry.entry_id]
         assert data
+
+        # set the initial state of the device to off - volume 0%
+        # this will also make the mock device connected
+        await data.device.async_execute_command(SnoozCommandData(on=False, volume=0))
 
         yield SnoozFixture(entry, client, data)

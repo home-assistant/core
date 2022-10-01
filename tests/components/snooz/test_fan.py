@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from pysnooz.api import SnoozDeviceState
-from pysnooz.commands import SnoozCommandData
 import pytest
 
 from homeassistant.components import fan
@@ -167,24 +166,24 @@ async def test_service_disconnect(hass: HomeAssistant, snooz_fan: FanEntity):
 
 
 async def test_push_events(
-    hass: HomeAssistant, mock_snooz: SnoozFixture, snooz_fan: FanEntity
+    hass: HomeAssistant, mock_connected_snooz: SnoozFixture, snooz_fan: FanEntity
 ):
     """Test state update events from snooz device."""
-    mock_snooz.client.trigger_state(SnoozDeviceState(False, 64))
+    mock_connected_snooz.client.trigger_state(SnoozDeviceState(False, 64))
 
     state = hass.states.get(snooz_fan.entity_id)
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.state == STATE_OFF
     assert state.attributes[fan.ATTR_PERCENTAGE] == 64
 
-    mock_snooz.client.trigger_state(SnoozDeviceState(True, 12))
+    mock_connected_snooz.client.trigger_state(SnoozDeviceState(True, 12))
 
     state = hass.states.get(snooz_fan.entity_id)
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_PERCENTAGE] == 12
 
-    mock_snooz.client.trigger_disconnect()
+    mock_connected_snooz.client.trigger_disconnect()
 
     state = hass.states.get(snooz_fan.entity_id)
     assert state.attributes[ATTR_ASSUMED_STATE] is True
@@ -192,13 +191,9 @@ async def test_push_events(
 
 @pytest.fixture(name="snooz_fan")
 async def fixture_snooz_fan_entity(
-    hass: HomeAssistant, mock_snooz: SnoozFixture
+    hass: HomeAssistant, mock_connected_snooz: SnoozFixture
 ) -> FanEntity:
     """Mock a Snooz fan entity that's connected and turned off."""
-    await mock_snooz.data.device.async_execute_command(
-        SnoozCommandData(on=False, volume=0)
-    )
-
     fan_entities = list(hass.data[fan.DOMAIN].entities)
 
     assert fan_entities[0]

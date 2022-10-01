@@ -264,17 +264,17 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
     },
     {
+        "domain": "snooz",
+        "local_name": "Snooz*",
+    },
+    {
+        "domain": "snooz",
+        "service_uuid": "729f0608-496a-47fe-a124-3a62aaa3fbc0",
+    },
+    {
         "domain": "switchbot",
         "service_data_uuid": "00000d00-0000-1000-8000-00805f9b34fb",
         "connectable": False,
-    },
-    {
-        "domain": "snooz",
-        "local_name": "Snooz*"
-    },
-    {
-        "domain": "snooz",
-        "service_uuid": "729f0608-496a-47fe-a124-3a62aaa3fbc0"
     },
     {
         "domain": "switchbot",

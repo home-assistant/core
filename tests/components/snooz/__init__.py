@@ -50,23 +50,6 @@ SNOOZ_SERVICE_INFO_NOT_PAIRING = BluetoothServiceInfo(
 )
 
 
-def create_device_with_rssi(rssi: int) -> BluetoothServiceInfo:
-    """Create a Snooz device with the specified signal strength."""
-
-    return BluetoothServiceInfo(
-        name=TEST_SNOOZ_LOCAL_NAME,
-        address=TEST_ADDRESS,
-        rssi=rssi,
-        manufacturer_data={65552: bytes([4]) + bytes.fromhex(TEST_PAIRING_TOKEN)},
-        service_uuids=[
-            "80c37f00-cc16-11e4-8830-0800200c9a66",
-            "90759319-1668-44da-9ef3-492d593bd1e5",
-        ],
-        service_data={},
-        source="local",
-    )
-
-
 class SnoozFixture:
     """Snooz test fixture."""
 

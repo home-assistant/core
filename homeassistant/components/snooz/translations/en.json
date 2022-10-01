@@ -3,9 +3,13 @@
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "no_devices_found": "No SNOOZ devices discovered."
+            "no_devices_found": "No devices found on the network"
         },
+        "error": {},
         "flow_title": "{name}",
+        "progress": {
+            "wait_for_pairing_mode": "To complete setup, put this device in pairing mode.\n\n### How to enter pairing mode\n1. Force quit SNOOZ mobile apps.\n2. Press and hold the power button on the device. Release when the lights start blinking (approximately 5 seconds)."
+        },
         "step": {
             "bluetooth_confirm": {
                 "description": "Do you want to setup {name}?"
@@ -19,9 +23,6 @@
                 },
                 "description": "Choose a device to setup"
             }
-        },
-        "progress": {
-            "wait_for_pairing_mode": "To complete setup, put this device in pairing mode.\n\n### How to enter pairing mode\n1. Force quit SNOOZ mobile apps.\n2. Press and hold the power button on the device.\n3. Release when the lights start blinking (approximately 5 seconds)."
         }
     }
 }
