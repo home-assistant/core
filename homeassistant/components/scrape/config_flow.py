@@ -30,7 +30,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
-    SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -115,7 +114,3 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         """Check for duplicate records."""
         data: dict[str, Any] = dict(options)
         self._async_abort_entries_match(data)
-
-
-class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
-    """Handle a options flow for Scrape."""
