@@ -10,14 +10,15 @@ from homeassistant.components.snooz import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-from tests.components.snooz import (
+from . import (
     SNOOZ_SERVICE_INFO_NOT_PAIRING,
     TEST_ADDRESS,
     TEST_PAIRING_TOKEN,
     MockSnoozClient,
     SnoozFixture,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -31,9 +32,7 @@ async def mock_connected_snooz(hass: HomeAssistant):
     """Mock a Snooz configuration entry and returns its fan entity."""
 
     ble_device = SNOOZ_SERVICE_INFO_NOT_PAIRING
-    client = MockSnoozClient(
-        ble_device.address
-    )  # pylint: disable=abstract-class-instantiated
+    client = MockSnoozClient(ble_device.address)
 
     with patch(
         "homeassistant.components.snooz.async_ble_device_from_address",
