@@ -494,7 +494,6 @@ class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
     id = Column(Integer, Identity(), primary_key=True)
     statistic_id = Column(String(255), index=True, unique=True)
     source = Column(String(32))
-    state_unit_of_measurement = Column(String(255))
     unit_of_measurement = Column(String(255))
     has_mean = Column(Boolean)
     has_sum = Column(Boolean)

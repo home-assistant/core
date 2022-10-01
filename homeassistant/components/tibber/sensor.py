@@ -642,7 +642,6 @@ class TibberDataCoordinator(DataUpdateCoordinator):
                     has_sum=True,
                     name=f"{home.name} {sensor_type}",
                     source=TIBBER_DOMAIN,
-                    state_unit_of_measurement=unit,
                     statistic_id=statistic_id,
                     unit_of_measurement=unit,
                 )
