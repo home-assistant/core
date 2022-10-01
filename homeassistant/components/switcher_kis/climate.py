@@ -4,16 +4,11 @@ from __future__ import annotations
 import asyncio
 from typing import Any, cast
 
-from aioswitcher.api import (
-    BreezeRemote,
-    BreezeRemoteManager,
-    SwitcherBaseResponse,
-    SwitcherType2Api,
-)
+from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
+from aioswitcher.api.remotes import SwitcherBreezeRemote, SwitcherBreezeRemoteManager
 from aioswitcher.device import (
     DeviceCategory,
     DeviceState,
-    SwitcherThermostat,
     ThermostatFanLevel,
     ThermostatMode,
     ThermostatSwing,
@@ -69,12 +64,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Switcher climate from config entry."""
-    remote_manager = BreezeRemoteManager()
+    remote_manager = SwitcherBreezeRemoteManager()
 
     async def async_add_climate(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Get remote and add climate from Switcher device."""
         if coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
-            remote: BreezeRemote = await hass.async_add_executor_job(
+            remote: SwitcherBreezeRemote = await hass.async_add_executor_job(
                 remote_manager.get_remote, coordinator.data.remote_id
             )
             async_add_entities([SwitcherClimateEntity(coordinator, remote)])
@@ -90,7 +85,7 @@ class SwitcherClimateEntity(
     """Representation of a Switcher climate entity."""
 
     def __init__(
-        self, coordinator: SwitcherDataUpdateCoordinator, remote: BreezeRemote
+        self, coordinator: SwitcherDataUpdateCoordinator, remote: SwitcherBreezeRemote
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -161,33 +156,16 @@ class SwitcherClimateEntity(
             if data.swing == ThermostatSwing.ON:
                 self._attr_swing_mode = SWING_VERTICAL
 
-    async def _async_control_breeze_device(
-        self,
-        state: DeviceState | None = None,
-        mode: ThermostatMode | None = None,
-        target_temp: int | None = None,
-        fan_mode: ThermostatFanLevel | None = None,
-        swing_mode: ThermostatSwing | None = None,
-    ) -> None:
+    async def _async_control_breeze_device(self, **kwargs: Any) -> None:
         """Call Switcher Control Breeze API."""
         response: SwitcherBaseResponse = None
         error = None
-        current_state: SwitcherThermostat = self.coordinator.data
 
         try:
-            command = self._remote.get_command(
-                state or current_state.device_state,
-                mode or current_state.mode,
-                target_temp or current_state.target_temperature,
-                fan_mode or current_state.fan_level,
-                swing_mode or current_state.swing,
-                current_state.device_state,
-            )
-
             async with SwitcherType2Api(
                 self.coordinator.data.ip_address, self.coordinator.data.device_id
             ) as swapi:
-                response = await swapi.control_breeze_device(command)
+                response = await swapi.control_breeze_device(self._remote, **kwargs)
         except (asyncio.TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
