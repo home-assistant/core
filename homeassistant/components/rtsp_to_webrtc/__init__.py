@@ -82,6 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, DOMAIN, async_offer_for_stream_source
         )
     )
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     websocket_api.async_register_command(hass, ws_get_settings)
 
@@ -93,6 +94,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN in hass.data:
         del hass.data[DOMAIN]
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry when options change."""
+    if hass.data[DOMAIN][CONF_STUN_SERVER] != entry.options.get(CONF_STUN_SERVER, ""):
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 @websocket_api.websocket_command(
