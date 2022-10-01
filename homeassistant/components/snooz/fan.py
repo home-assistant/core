@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -15,19 +14,11 @@ from pysnooz.commands import (
     turn_on,
 )
 from pysnooz.device import SnoozConnectionStatus, SnoozDevice
-import voluptuous as vol
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ADDRESS,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_ADDRESS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -40,10 +31,7 @@ logging.getLogger("transitions.core").setLevel(logging.WARNING)
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
-ATTR_TRANSITION = "transition"
-ATTR_VOLUME = "volume"
 ATTR_LAST_COMMAND_SUCCESSFUL = "last_command_successful"
-SERVICE_DISCONNECT = "disconnect"
 
 
 async def async_setup_entry(
@@ -53,36 +41,6 @@ async def async_setup_entry(
 
     address: str = entry.data[CONF_ADDRESS]
     data: SnoozConfigurationData = hass.data[DOMAIN][entry.entry_id]
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_TURN_ON,
-        {
-            vol.Optional(ATTR_VOLUME): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
-            ),
-            vol.Optional(ATTR_TRANSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=5 * 60)
-            ),
-        },
-        "async_turn_on",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_OFF,
-        {
-            vol.Optional(ATTR_TRANSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=5 * 60)
-            ),
-        },
-        "async_turn_off",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_DISCONNECT,
-        {},
-        "async_disconnect",
-    )
 
     async_add_entities(
         [
@@ -192,15 +150,11 @@ class SnoozFan(FanEntity, RestoreEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the device."""
-        transition = self._get_transition(kwargs)
-        await self._async_execute_command(
-            turn_on(percentage or kwargs.get(ATTR_VOLUME), transition)
-        )
+        await self._async_execute_command(turn_on(percentage))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
-        transition = self._get_transition(kwargs)
-        await self._async_execute_command(turn_off(transition))
+        await self._async_execute_command(turn_off())
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the volume of the device."""
@@ -212,7 +166,3 @@ class SnoozFan(FanEntity, RestoreEntity):
             result.status == SnoozCommandResultStatus.SUCCESSFUL
         )
         self._write_state_changed()
-
-    def _get_transition(self, kwargs: Mapping[str, Any]) -> timedelta | None:
-        seconds = kwargs.get(ATTR_TRANSITION)
-        return timedelta(seconds=seconds) if seconds else None
