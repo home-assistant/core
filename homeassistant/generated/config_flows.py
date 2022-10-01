@@ -490,7 +490,7 @@ FLOWS = {
         "group",
         "integration",
         "min_max",
-        "sum",
+        "sums",
         "switch_as_x",
         "threshold",
         "tod",

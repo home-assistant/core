@@ -1,7 +1,7 @@
 {
-  "domain": "sum",
+  "domain": "sums",
   "integration_type": "helper",
-  "name": "Sum",
+  "name": "Sums",
   "documentation": "https://www.home-assistant.io/integrations/sum",
   "codeowners": ["@gjohansson-ST"],
   "quality_scale": "internal",
