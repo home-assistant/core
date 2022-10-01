@@ -14,7 +14,7 @@
             "coordinates": {
                 "data": {
                     "latitude": "Latitudine",
-                    "longitude": "Logitudine"
+                    "longitude": "Longitudine"
                 }
             },
             "country": {
