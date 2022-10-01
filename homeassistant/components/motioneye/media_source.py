@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from . import get_media_url, split_motioneye_device_identifier
-from .const import CONF_CLIENT, DOMAIN, KEY_MEDIA_SORT_ATTR
+from .const import CONF_CLIENT, DOMAIN
 
 MIME_TYPE_MAP = {
     "movies": "video/mp4",
@@ -288,7 +288,7 @@ class MotionEyeMediaSource(MediaSource):
 
         def get_media_sort_key(media: dict) -> str:
             """Get media sort key."""
-            return media.get(KEY_MEDIA_SORT_ATTR, "")
+            return media.get(KEY_PATH, "")
 
         for media in sorted(media_list, key=get_media_sort_key):
             if (
