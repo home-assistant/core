@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import contextlib
-from datetime import datetime, timedelta
+from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
@@ -37,12 +37,11 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult, UnknownFlow
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
 
 from .camera import GenericCamera, generate_auth
 from .const import (
@@ -68,7 +67,7 @@ DEFAULT_DATA = {
 }
 
 SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
-PREVIEWS = "previews"
+IMAGE_PREVIEWS_ACTIVE = "previews"
 PREVIEW_EXPIRY_TIME = 5  # minutes
 
 
@@ -268,26 +267,14 @@ async def async_test_stream(
     return {}
 
 
-def register_preview(hass: HomeAssistant, flow_id: str, user_input: dict[str, Any]):
+def register_preview(hass: HomeAssistant):
     """Set up previews for camera feeds during config flow."""
     hass.data.setdefault(DOMAIN, {})
 
-    if not hass.data[DOMAIN].get(PREVIEWS):
+    if not hass.data[DOMAIN].get(IMAGE_PREVIEWS_ACTIVE):
         _LOGGER.debug("Registering camera image preview handler")
         hass.http.register_view(CameraImagePreview(hass))
-    hass.data[DOMAIN][PREVIEWS] = {}
-    hass.data[DOMAIN][PREVIEWS][flow_id] = {}
-    hass.data[DOMAIN][PREVIEWS][flow_id]["user_input"] = user_input
-    expiry = dt_util.utcnow() + timedelta(minutes=PREVIEW_EXPIRY_TIME)
-    hass.data[DOMAIN][PREVIEWS][flow_id]["expiry"] = expiry
-
-
-def unregister_preview(hass: HomeAssistant, flow_id: str):
-    """Remove a preview that is no longer needed."""
-    if hass.data.get(DOMAIN):
-        if PREVIEWS in hass.data[DOMAIN]:
-            if flow_id in hass.data[DOMAIN][PREVIEWS]:
-                hass.data[DOMAIN][PREVIEWS].pop(flow_id)
+    hass.data[DOMAIN][IMAGE_PREVIEWS_ACTIVE] = True
 
 
 class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -346,8 +333,11 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.user_input = user_input
                     self.title = name
 
-                    # Register a temporary view so that we can show a preview
-                    register_preview(hass, self.flow_id, user_input)
+                    # temporary preview for user to check the image
+                    self.context["preview_cam"] = GenericCamera(
+                        self.hass, user_input, self.flow_id, "preview"
+                    )
+                    register_preview(hass)
                     preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
                     return self.async_show_form(
                         step_id="user_confirm_still",
@@ -361,7 +351,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
         else:
             user_input = DEFAULT_DATA.copy()
-        unregister_preview(hass, self.flow_id)
         return self.async_show_form(
             step_id="user",
             data_schema=build_schema(user_input),
@@ -372,7 +361,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> FlowResult:
         """Handle user clicking confirm after still preview."""
-        unregister_preview(self.hass, self.flow_id)
         if not user_input.get(CONF_CONFIRMED_OK):
             return self.async_show_form(
                 step_id="user",
@@ -479,22 +467,14 @@ class CameraImagePreview(HomeAssistantView):
         """Initialise."""
         self.hass = hass
 
-    def utc_time(self) -> datetime:
-        """Get the current datetime."""
-        return dt_util.utcnow()
-
     async def get(self, request: web.Request, flow_id: str) -> web.Response:
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
         try:
-            data = self.hass.data[DOMAIN][PREVIEWS][flow_id]
-        except KeyError as exc:
+            flow: FlowResult = self.hass.config_entries.flow.async_get(flow_id)
+        except UnknownFlow as exc:
             raise web.HTTPNotFound() from exc
-        if self.utc_time() > data["expiry"]:
-            self.hass.data[DOMAIN][PREVIEWS].pop(flow_id)
-            raise web.HTTPNotFound()
-        camera = GenericCamera(self.hass, data["user_input"], flow_id, "preview")
-
+        camera = flow["context"]["preview_cam"]
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
             raise web.HTTPServiceUnavailable()
