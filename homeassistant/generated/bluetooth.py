@@ -6,6 +6,10 @@ from __future__ import annotations
 
 BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     {
+        "domain": "airthings_ble",
+        "manufacturer_id": 820,
+    },
+    {
         "domain": "bluemaestro",
         "manufacturer_id": 307,
         "connectable": False,
@@ -82,6 +86,12 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "domain": "govee_ble",
         "manufacturer_id": 818,
         "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
+        "connectable": False,
+    },
+    {
+        "domain": "govee_ble",
+        "manufacturer_id": 53579,
+        "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
         "connectable": False,
     },
     {

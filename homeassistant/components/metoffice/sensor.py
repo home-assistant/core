@@ -83,15 +83,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wind_speed",
         name="Wind speed",
-        device_class=None,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
         key="wind_direction",
         name="Wind direction",
-        device_class=None,
         native_unit_of_measurement=None,
         icon="mdi:compass-outline",
         entity_registry_enabled_default=False,
@@ -99,8 +98,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="wind_gust",
         name="Wind gust",
-        device_class=None,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
         entity_registry_enabled_default=False,
     ),
@@ -115,8 +114,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="visibility_distance",
         name="Visibility distance",
-        device_class=None,
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:eye",
         entity_registry_enabled_default=False,
     ),

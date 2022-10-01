@@ -37,6 +37,8 @@ omit =
     homeassistant/components/airnow/sensor.py
     homeassistant/components/airthings/__init__.py
     homeassistant/components/airthings/sensor.py
+    homeassistant/components/airthings_ble/__init__.py
+    homeassistant/components/airthings_ble/sensor.py
     homeassistant/components/airtouch4/__init__.py
     homeassistant/components/airtouch4/climate.py
     homeassistant/components/airtouch4/const.py
@@ -328,7 +330,7 @@ omit =
     homeassistant/components/escea/discovery.py
     homeassistant/components/esphome/__init__.py
     homeassistant/components/esphome/binary_sensor.py
-    homeassistant/components/esphome/bluetooth.py
+    homeassistant/components/esphome/bluetooth/*
     homeassistant/components/esphome/button.py
     homeassistant/components/esphome/camera.py
     homeassistant/components/esphome/climate.py
@@ -1231,6 +1233,7 @@ omit =
     homeassistant/components/switchbee/__init__.py
     homeassistant/components/switchbee/button.py
     homeassistant/components/switchbee/coordinator.py
+    homeassistant/components/switchbee/cover.py
     homeassistant/components/switchbee/entity.py
     homeassistant/components/switchbee/light.py
     homeassistant/components/switchbee/switch.py
