@@ -115,7 +115,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Shutdown mqtt message subscription."""
         await yolink_mqtt_client.shutdown_home_subscription()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_subscription)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_subscription)
+    )
+
     return True
 
 
