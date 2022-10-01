@@ -489,7 +489,7 @@ class HomeKit:
         advertise_ip: str | None,
         entry_id: str,
         entry_title: str,
-        devices: Iterable[str] | None = None,
+        devices: list[str] | None = None,
     ) -> None:
         """Initialize a HomeKit object."""
         self.hass = hass

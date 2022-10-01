@@ -143,7 +143,7 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==10.14.0
+aioesphomeapi==11.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -512,7 +512,7 @@ file-read-backwards==2.0.0
 fivem-api==0.1.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==2.0.0
+fjaraskupan==2.1.0
 
 # homeassistant.components.flipr
 flipr-api==1.4.2
@@ -672,7 +672,7 @@ hyperion-py==0.7.5
 iaqualink==0.4.1
 
 # homeassistant.components.ibeacon
-ibeacon_ble==0.7.1
+ibeacon_ble==0.7.2
 
 # homeassistant.components.ping
 icmplib==3.0
