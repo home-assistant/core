@@ -108,9 +108,9 @@ async def async_setup_service(hass: HomeAssistant) -> None:
             call.data[DATA_CONFIG_ENTRY]
         )
         if not entry:
-            raise ValueError("Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
+            raise ValueError(f"Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
         if not (session := hass.data[DOMAIN].get(entry.entry_id)):
-            raise ValueError("Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}")
+            raise ValueError(f"Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}")
         await session.async_ensure_token_valid()
         await hass.async_add_executor_job(_append_to_sheet, call, entry)
 

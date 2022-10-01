@@ -192,7 +192,7 @@ async def test_append_sheet(
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test successful setup and unload."""
+    """Test service call appending to a sheet."""
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -217,12 +217,32 @@ async def test_append_sheet_invalid_config_entry(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
+    expires_at: int,
+    scopes: list[str],
 ) -> None:
-    """Test successful setup and unload."""
+    """Test service call with invalid config entries."""
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SHEET_ID + "2",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(scopes),
+            },
+        },
+    )
+    config_entry2.add_to_hass(hass)
+
     await setup_integration()
 
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry2.state is ConfigEntryState.LOADED
+
     # Exercise service call on a config entry that does not exist
-    with pytest.raises(ValueError, match=r"Invalid config entry.*"):
+    with pytest.raises(ValueError, match="Invalid config entry"):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -235,10 +255,25 @@ async def test_append_sheet_invalid_config_entry(
         )
 
     # Unload the config entry invoke the service on the unloaded entry id
-    assert config_entry.state is ConfigEntryState.LOADED
+    await hass.config_entries.async_unload(config_entry2.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry2.state is ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(ValueError, match="Config entry not loaded"):
+        await hass.services.async_call(
+            DOMAIN,
+            "append_sheet",
+            {
+                "config_entry": config_entry2.entry_id,
+                "worksheet": "Sheet1",
+                "data": {"foo": "bar"},
+            },
+            blocking=True,
+        )
+
+    # Unloading the other config entry will de-register the service
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.data.get(DOMAIN)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     with pytest.raises(ServiceNotFound):
