@@ -25,15 +25,20 @@ from .const import (
     CONF_FORCE,
     DATA_ADGUARD_CLIENT,
     DOMAIN,
-    SERVICE_ADD_URL,
+    SERVICE_ADD_ALLOW_URL,
+    SERVICE_ADD_BLOCK_URL,
     SERVICE_DISABLE_URL,
     SERVICE_ENABLE_URL,
     SERVICE_REFRESH,
-    SERVICE_REMOVE_URL,
+    SERVICE_REMOVE_ALLOW_URL,
+    SERVICE_REMOVE_BLOCK_URL,
 )
 
 SERVICE_URL_SCHEMA = vol.Schema({vol.Required(CONF_URL): cv.url})
-SERVICE_ADD_URL_SCHEMA = vol.Schema(
+SERVICE_ADD_ALLOW_URL_SCHEMA = vol.Schema(
+    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_URL): cv.url}
+)
+SERVICE_ADD_BLOCK_URL_SCHEMA = vol.Schema(
     {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_URL): cv.url}
 )
 SERVICE_REFRESH_SCHEMA = vol.Schema(
@@ -65,13 +70,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def add_url(call: ServiceCall) -> None:
+    async def add_allow_url(call: ServiceCall) -> None:
+        """Service call to add a new filter subscription to AdGuard Home."""
+        await adguard.filtering.add_url(
+            allowlist=True, name=call.data[CONF_NAME], url=call.data[CONF_URL]
+        )
+
+    async def add_block_url(call: ServiceCall) -> None:
         """Service call to add a new filter subscription to AdGuard Home."""
         await adguard.filtering.add_url(
             allowlist=False, name=call.data[CONF_NAME], url=call.data[CONF_URL]
         )
 
-    async def remove_url(call: ServiceCall) -> None:
+    async def remove_allow_url(call: ServiceCall) -> None:
+        """Service call to remove a filter subscription from AdGuard Home."""
+        await adguard.filtering.remove_url(allowlist=True, url=call.data[CONF_URL])
+
+    async def remove_block_url(call: ServiceCall) -> None:
         """Service call to remove a filter subscription from AdGuard Home."""
         await adguard.filtering.remove_url(allowlist=False, url=call.data[CONF_URL])
 
@@ -88,10 +103,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await adguard.filtering.refresh(allowlist=False, force=call.data[CONF_FORCE])
 
     hass.services.async_register(
-        DOMAIN, SERVICE_ADD_URL, add_url, schema=SERVICE_ADD_URL_SCHEMA
+        DOMAIN,
+        SERVICE_ADD_ALLOW_URL,
+        add_allow_url,
+        schema=SERVICE_ADD_ALLOW_URL_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE_URL, remove_url, schema=SERVICE_URL_SCHEMA
+        DOMAIN,
+        SERVICE_ADD_BLOCK_URL,
+        add_block_url,
+        schema=SERVICE_ADD_BLOCK_URL_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_REMOVE_ALLOW_URL, remove_allow_url, schema=SERVICE_URL_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_REMOVE_BLOCK_URL, remove_block_url, schema=SERVICE_URL_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SERVICE_ENABLE_URL, enable_url, schema=SERVICE_URL_SCHEMA
@@ -112,8 +139,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     if not hass.data[DOMAIN]:
-        hass.services.async_remove(DOMAIN, SERVICE_ADD_URL)
-        hass.services.async_remove(DOMAIN, SERVICE_REMOVE_URL)
+        hass.services.async_remove(DOMAIN, SERVICE_ADD_ALLOW_URL)
+        hass.services.async_remove(DOMAIN, SERVICE_ADD_BLOCK_URL)
+        hass.services.async_remove(DOMAIN, SERVICE_REMOVE_ALLOW_URL)
+        hass.services.async_remove(DOMAIN, SERVICE_REMOVE_BLOCK_URL)
         hass.services.async_remove(DOMAIN, SERVICE_ENABLE_URL)
         hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
         hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
