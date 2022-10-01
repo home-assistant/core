@@ -376,7 +376,6 @@ def ws_import_statistics(
     """Import statistics."""
     metadata = msg["metadata"]
     stats = msg["stats"]
-    metadata["state_unit_of_measurement"] = metadata["unit_of_measurement"]
 
     if valid_entity_id(metadata["statistic_id"]):
         async_import_statistics(hass, metadata, stats)
