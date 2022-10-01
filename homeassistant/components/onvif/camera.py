@@ -152,10 +152,11 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                     self.device.name,
                     err,
                 )
-            LOGGER.error(
-                "Fetch snapshot image failed from %s, falling back to FFmpeg",
-                self.device.name,
-            )
+            else:
+                LOGGER.error(
+                    "Fetch snapshot image failed from %s, falling back to FFmpeg",
+                    self.device.name,
+                )
 
         assert self._stream_uri
         return await ffmpeg.async_get_image(
