@@ -271,8 +271,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     )
                 elif self.device_class == SensorDeviceClass.DATE:
                     payload = payload.date()
-
-            self._state = payload
+            if payload != "":
+                self._state = payload
 
         def _update_last_reset(msg):
             payload = self._last_reset_template(msg.payload)
