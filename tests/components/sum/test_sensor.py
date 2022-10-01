@@ -7,6 +7,7 @@ from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.sum.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -141,3 +142,29 @@ async def test_sensor_incorrect_values(
     log = caplog.text
 
     assert "Unable to store state. Only numerical states are supported" in log
+
+
+async def test_sum_sensor_from_yaml(hass: HomeAssistant):
+    """Test the sum sensor setup from yaml."""
+    config = {
+        "sensor": {
+            "platform": "sum",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id",
+            "name": "My Sum",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_sum")
+
+    assert str(float(SUM_VALUE)) == state.state
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT

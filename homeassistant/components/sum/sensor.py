@@ -4,24 +4,43 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+import voluptuous as vol
+
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import EventType
+from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS
+from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:calculator"
+DEFAULT_NAME = "Sum sensor"
+
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
+        vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+    }
+)
 
 
 async def async_setup_entry(
@@ -48,6 +67,23 @@ async def async_setup_entry(
     )
 
 
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the min/max/mean sensor."""
+    entity_ids: list[str] = config[CONF_ENTITY_IDS]
+    name: str = config[CONF_NAME]
+    round_digits: float = config[CONF_ROUND_DIGITS]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
+    async_add_entities([SumSensor(entity_ids, name, round_digits, unique_id)])
+
+
 def calc_sum(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
     """Calculate sum value, not honoring unknown states."""
     result = []
@@ -67,7 +103,11 @@ class SumSensor(SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
-        self, entity_ids: list[str], name: str, round_digits: float, unique_id: str
+        self,
+        entity_ids: list[str],
+        name: str,
+        round_digits: float,
+        unique_id: str | None,
     ) -> None:
         """Initialize the sum sensor."""
         self._attr_unique_id = unique_id
