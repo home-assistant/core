@@ -747,6 +747,10 @@ def _apply_update(  # noqa: C901
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
             )
+    elif new_version == 30:
+        # This added a column to the statistics_meta table, removed again before
+        # release of HA Core 2022.10.0
+        pass
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

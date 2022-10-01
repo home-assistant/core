@@ -8,6 +8,7 @@ from typing import Any, Final, TypedDict, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components.camera import Image
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -30,11 +31,19 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "image_processing"
 SCAN_INTERVAL = timedelta(seconds=10)
 
-DEVICE_CLASSES = [
-    "alpr",  # Automatic license plate recognition
-    "face",  # Face
-    "ocr",  # OCR
-]
+
+class ImageProcessingDeviceClass(StrEnum):
+    """Device class for image processing entities."""
+
+    # Automatic license plate recognition
+    ALPR = "alpr"
+
+    # Face
+    FACE = "face"
+
+    # OCR
+    OCR = "ocr"
+
 
 SERVICE_SCAN = "scan"
 
@@ -85,7 +94,9 @@ class FaceInformation(TypedDict, total=False):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the image processing."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent[ImageProcessingEntity](
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
 
     await component.async_setup(config)
 
@@ -111,6 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class ImageProcessingEntity(Entity):
     """Base entity class for image processing."""
 
+    _attr_device_class: ImageProcessingDeviceClass | str | None
     timeout = DEFAULT_TIMEOUT
 
     @property
@@ -123,11 +135,11 @@ class ImageProcessingEntity(Entity):
         """Return minimum confidence for do some things."""
         return None
 
-    def process_image(self, image: Image) -> None:
+    def process_image(self, image: bytes) -> None:
         """Process image."""
         raise NotImplementedError()
 
-    async def async_process_image(self, image: Image) -> None:
+    async def async_process_image(self, image: bytes) -> None:
         """Process image."""
         return await self.hass.async_add_executor_job(self.process_image, image)
 
@@ -137,10 +149,9 @@ class ImageProcessingEntity(Entity):
         This method is a coroutine.
         """
         camera = self.hass.components.camera
-        image = None
 
         try:
-            image = await camera.async_get_image(
+            image: Image = await camera.async_get_image(
                 self.camera_entity, timeout=self.timeout
             )
 
@@ -154,6 +165,8 @@ class ImageProcessingEntity(Entity):
 
 class ImageProcessingFaceEntity(ImageProcessingEntity):
     """Base entity class for face image processing."""
+
+    _attr_device_class = ImageProcessingDeviceClass.FACE
 
     def __init__(self) -> None:
         """Initialize base face identify/verify entity."""
@@ -183,11 +196,6 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                         break
 
         return state
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return "face"
 
     @final
     @property

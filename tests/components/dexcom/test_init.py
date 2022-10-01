@@ -6,8 +6,9 @@ from pydexcom import AccountError, SessionError
 from homeassistant.components.dexcom.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
+from . import CONFIG, init_integration
+
 from tests.common import MockConfigEntry
-from tests.components.dexcom import CONFIG, init_integration
 
 
 async def test_setup_entry_account_error(hass):

@@ -18,6 +18,19 @@
             }
         }
     },
+    "issues": {
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Oppdater eventuelle automatiseringer eller skript som bruker denne enheten til i stedet \u00e5 bruke ` {replacement_entity_id} `.",
+                        "title": "{old_entity_id} vil bli fjernet"
+                    }
+                }
+            },
+            "title": "{old_entity_id} vil bli fjernet"
+        }
+    },
     "options": {
         "step": {
             "init": {

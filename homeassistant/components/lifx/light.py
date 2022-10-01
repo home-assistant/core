@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -29,17 +29,20 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.color as color_util
 
 from .const import (
+    _LOGGER,
     ATTR_DURATION,
     ATTR_INFRARED,
     ATTR_POWER,
     ATTR_ZONES,
     DATA_LIFX_MANAGER,
     DOMAIN,
+    INFRARED_BRIGHTNESS,
 )
-from .coordinator import LIFXUpdateCoordinator
+from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_STOP,
     LIFXManager,
@@ -137,6 +140,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             color_mode = ColorMode.BRIGHTNESS
         self._attr_color_mode = color_mode
         self._attr_supported_color_modes = {color_mode}
+        self._attr_effect = None
 
     @property
     def brightness(self) -> int:
@@ -161,6 +165,8 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Return the name of the currently running effect."""
         if effect := self.effects_conductor.effect(self.bulb):
             return f"effect_{effect.name}"
+        if effect := self.coordinator.async_get_active_effect():
+            return f"effect_{FirmwareEffect(effect).name.lower()}"
         return None
 
     async def update_during_transition(self, when: int) -> None:
@@ -212,6 +218,13 @@ class LIFXLight(LIFXEntity, LightEntity):
                 return
 
             if ATTR_INFRARED in kwargs:
+                infrared_entity_id = self.coordinator.async_get_entity_id(
+                    Platform.SELECT, INFRARED_BRIGHTNESS
+                )
+                _LOGGER.warning(
+                    "The 'infrared' attribute of 'lifx.set_state' is deprecated: call 'select.select_option' targeting '%s' instead",
+                    infrared_entity_id,
+                )
                 bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
 
             if ATTR_TRANSITION in kwargs:
@@ -351,6 +364,13 @@ class LIFXColor(LIFXLight):
 
 class LIFXStrip(LIFXColor):
     """Representation of a LIFX light strip with multiple zones."""
+
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_MOVE,
+        SERVICE_EFFECT_STOP,
+    ]
 
     async def set_color(
         self,

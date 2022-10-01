@@ -1,5 +1,4 @@
 """Test Mikrotik setup process."""
-from datetime import timedelta
 from unittest.mock import patch
 
 import librouteros
@@ -14,7 +13,6 @@ from homeassistant.components.mikrotik.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -24,28 +22,14 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry
 
 DEMO_USER_INPUT = {
-    CONF_NAME: "Home router",
     CONF_HOST: "0.0.0.0",
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
     CONF_PORT: 8278,
     CONF_VERIFY_SSL: False,
-}
-
-DEMO_CONFIG = {
-    CONF_NAME: "Home router",
-    CONF_HOST: "0.0.0.0",
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-    CONF_PORT: 8278,
-    CONF_VERIFY_SSL: False,
-    CONF_FORCE_DHCP: False,
-    CONF_ARP_PING: False,
-    CONF_DETECTION_TIME: timedelta(seconds=30),
 }
 
 DEMO_CONFIG_ENTRY = {
-    CONF_NAME: "Home router",
     CONF_HOST: "0.0.0.0",
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
@@ -97,8 +81,7 @@ async def test_flow_works(hass, api):
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home router"
-    assert result["data"][CONF_NAME] == "Home router"
+    assert result["title"] == "Mikrotik (0.0.0.0)"
     assert result["data"][CONF_HOST] == "0.0.0.0"
     assert result["data"][CONF_USERNAME] == "username"
     assert result["data"][CONF_PASSWORD] == "password"
@@ -149,25 +132,6 @@ async def test_host_already_configured(hass, auth_error):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-
-
-async def test_name_exists(hass, api):
-    """Test name already configured."""
-
-    entry = MockConfigEntry(domain=DOMAIN, data=DEMO_CONFIG_ENTRY)
-    entry.add_to_hass(hass)
-    user_input = DEMO_USER_INPUT.copy()
-    user_input[CONF_HOST] = "0.0.0.1"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input
-    )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {CONF_NAME: "name_exists"}
 
 
 async def test_connection_error(hass, conn_error):

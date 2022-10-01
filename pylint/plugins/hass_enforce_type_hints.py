@@ -1366,7 +1366,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="process_image",
-                    arg_types={1: "Image"},
+                    arg_types={1: "bytes"},
                     return_type=None,
                     has_async_counterpart=True,
                 ),

@@ -24,12 +24,9 @@ from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .common import async_decrement, async_increment, async_reset
+
 from tests.common import mock_restore_cache
-from tests.components.counter.common import (
-    async_decrement,
-    async_increment,
-    async_reset,
-)
 
 _LOGGER = logging.getLogger(__name__)
 

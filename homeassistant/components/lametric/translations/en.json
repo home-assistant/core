@@ -7,7 +7,8 @@
             "link_local_address": "Link local addresses are not supported",
             "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
             "no_devices": "The authorized user has no LaMetric devices",
-            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "unknown": "Unexpected error"
         },
         "error": {
             "cannot_connect": "Failed to connect",

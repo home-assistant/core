@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Final
 
-from homeassistant.components.media_player import MediaClass, MediaType
+from homeassistant.components.media_player import MediaClass
 
 LOGGER = logging.getLogger(__package__)
 
@@ -41,7 +41,7 @@ PROTOCOL_ANY: Final = "*"
 STREAMABLE_PROTOCOLS: Final = [PROTOCOL_HTTP, PROTOCOL_RTSP, PROTOCOL_ANY]
 
 # Map UPnP object class to media_player media class
-MEDIA_CLASS_MAP: Mapping[str, str] = {
+MEDIA_CLASS_MAP: Mapping[str, MediaClass] = {
     "object": MediaClass.URL,
     "object.item": MediaClass.URL,
     "object.item.imageItem": MediaClass.IMAGE,
@@ -71,8 +71,8 @@ MEDIA_CLASS_MAP: Mapping[str, str] = {
     "object.container.genre.musicGenre": MediaClass.GENRE,
     "object.container.genre.movieGenre": MediaClass.GENRE,
     "object.container.channelGroup": MediaClass.CHANNEL,
-    "object.container.channelGroup.audioChannelGroup": MediaType.CHANNELS,
-    "object.container.channelGroup.videoChannelGroup": MediaType.CHANNELS,
+    "object.container.channelGroup.audioChannelGroup": MediaClass.CHANNEL,
+    "object.container.channelGroup.videoChannelGroup": MediaClass.CHANNEL,
     "object.container.epgContainer": MediaClass.DIRECTORY,
     "object.container.storageSystem": MediaClass.DIRECTORY,
     "object.container.storageVolume": MediaClass.DIRECTORY,

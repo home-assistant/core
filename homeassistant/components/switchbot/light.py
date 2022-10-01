@@ -29,7 +29,7 @@ SWITCHBOT_COLOR_MODE_TO_HASS = {
     SwitchBotColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
 }
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
