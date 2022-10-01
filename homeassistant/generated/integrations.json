@@ -6347,7 +6347,7 @@
       "integration_type": "helper",
       "config_flow": false
     },
-    "sums": {
+    "sum": {
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6408,12 +6408,7 @@
     "rpi_power",
     "schedule",
     "shopping_list",
-<<<<<<< HEAD
     "sum",
-=======
-    "siren",
-    "sums",
->>>>>>> 772d9e7529 (Rename folder)
     "sun",
     "switch_as_x",
     "tag",
