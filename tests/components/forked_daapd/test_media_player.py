@@ -66,10 +66,9 @@ from homeassistant.const import (
 
 from tests.common import async_mock_signal
 
-TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
+TEST_MASTER_ENTITY_NAME = "media_player.owntone_server"
 TEST_ZONE_ENTITY_NAMES = [
-    "media_player.forked_daapd_output_" + x
-    for x in ("kitchen", "computer", "daapd_fifo")
+    "media_player.owntone_output_" + x for x in ("kitchen", "computer", "daapd_fifo")
 ]
 
 OPTIONS_DATA = {
@@ -354,7 +353,7 @@ def test_master_state(hass, mock_api_object):
     """Test master state attributes."""
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert state.state == STATE_PAUSED
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "forked-daapd server"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Owntone server"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
@@ -413,7 +412,7 @@ async def test_zone(hass, mock_api_object):
     """Test zone attributes and methods."""
     zone_entity_name = TEST_ZONE_ENTITY_NAMES[0]
     state = hass.states.get(zone_entity_name)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "forked-daapd output (kitchen)"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Owntone output (kitchen)"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES_ZONE
     assert state.state == STATE_ON
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.5
