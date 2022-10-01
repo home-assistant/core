@@ -8,9 +8,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
+from ...helpers.device_registry import DeviceRegistry
 from .const import DOMAIN, PLATFORMS, ZWaveMePlatform
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     controller = hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
     if await controller.async_establish_connection():
         hass.async_create_task(async_setup_platforms(hass, entry, controller))
+        registry = device_registry.async_get(hass)
+        controller.remove_stale_devices(registry)
         return True
     raise ConfigEntryNotReady()
 
@@ -42,13 +46,13 @@ class ZWaveMeController:
 
     def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
         """Create the API instance."""
-        self.device_ids: set = set()
+        self.entity_ids: set = set()
         self._hass = hass
         self.config = config
         self.zwave_api = ZWaveMe(
-            on_device_create=self.on_device_create,
-            on_device_update=self.on_device_update,
-            on_new_device=self.add_device,
+            on_device_create=self.on_entity_create,
+            on_device_update=self.on_entity_update,
+            on_new_device=self.add_entity,
             token=self.config.data[CONF_TOKEN],
             url=self.config.data[CONF_URL],
             platforms=ZWAVE_ME_PLATFORMS,
@@ -60,25 +64,34 @@ class ZWaveMeController:
         is_connected = await self.zwave_api.get_connection()
         return is_connected
 
-    def add_device(self, device: ZWaveMeData) -> None:
-        """Send signal to create device."""
-        if device.deviceType in ZWAVE_ME_PLATFORMS and self.platforms_inited:
-            if device.id in self.device_ids:
-                dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{device.id}", device)
+    def add_entity(self, entity: ZWaveMeData) -> None:
+        """Send signal to create entity."""
+        if entity.deviceType in ZWAVE_ME_PLATFORMS and self.platforms_inited:
+            if entity.id in self.entity_ids:
+                dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{entity.id}", entity)
             else:
                 dispatcher_send(
-                    self._hass, f"ZWAVE_ME_NEW_{device.deviceType.upper()}", device
+                    self._hass, f"ZWAVE_ME_NEW_{entity.deviceType.upper()}", entity
                 )
-                self.device_ids.add(device.id)
+                self.entity_ids.add(entity.id)
 
-    def on_device_create(self, devices: list) -> None:
-        """Create multiple devices."""
-        for device in devices:
-            self.add_device(device)
+    def on_entity_create(self, entities: list[ZWaveMeData]) -> None:
+        """Create multiple entities."""
+        for entity in entities:
+            self.add_entity(entity)
 
-    def on_device_update(self, new_info: ZWaveMeData) -> None:
-        """Send signal to update device."""
+    def on_entity_update(self, new_info: ZWaveMeData) -> None:
+        """Send signal to update entity."""
         dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{new_info.id}", new_info)
+
+    def remove_stale_devices(self, registry: DeviceRegistry):
+        """Remove old-format devices in the registry."""
+        for entity_id in self.entity_ids:
+            device = registry.async_get_device(
+                {(DOMAIN, f"{self.config.unique_id}-{entity_id}")}
+            )
+            if device is not None:
+                registry.async_remove_device(device.id)
 
 
 async def async_setup_platforms(
