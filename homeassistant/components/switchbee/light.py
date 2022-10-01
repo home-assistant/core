@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeDimmer
@@ -72,9 +72,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
 
     def _update_attrs_from_coordinator(self) -> None:
 
-        coordinator_device = cast(
-            SwitchBeeDimmer, self.coordinator.data[self._device.id]
-        )
+        coordinator_device = self._get_coordinator_device()
         brightness = coordinator_device.brightness
 
         # module is offline
@@ -112,7 +110,7 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
             return
 
         # update the coordinator data manually we already know the Central Unit brightness data for this light
-        cast(SwitchBeeDimmer, self.coordinator.data[self._device.id]).brightness = state
+        self._get_coordinator_device().brightness = state
         self.coordinator.async_set_updated_data(self.coordinator.data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -125,5 +123,5 @@ class SwitchBeeLightEntity(SwitchBeeDeviceEntity[SwitchBeeDimmer], LightEntity):
             ) from exp
 
         # update the coordinator manually
-        cast(SwitchBeeDimmer, self.coordinator.data[self._device.id]).brightness = 0
+        self._get_coordinator_device().brightness = 0
         self.coordinator.async_set_updated_data(self.coordinator.data)

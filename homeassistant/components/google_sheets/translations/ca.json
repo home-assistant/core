@@ -27,6 +27,7 @@
                 "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
             },
             "reauth_confirm": {
+                "description": "La integraci\u00f3 Google Sheets ha de tornar a autenticar-se amb el teu compte",
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             }
         }

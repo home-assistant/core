@@ -480,7 +480,6 @@ def _compile_statistics(  # noqa: C901
             "has_sum": "sum" in wanted_statistics[entity_id],
             "name": None,
             "source": RECORDER_DOMAIN,
-            "state_unit_of_measurement": state_unit,
             "statistic_id": entity_id,
             "unit_of_measurement": normalized_unit,
         }
@@ -621,7 +620,6 @@ def list_statistic_ids(
                 "has_sum": "sum" in provided_statistics,
                 "name": None,
                 "source": RECORDER_DOMAIN,
-                "state_unit_of_measurement": state_unit,
                 "statistic_id": state.entity_id,
                 "unit_of_measurement": state_unit,
             }
@@ -637,7 +635,6 @@ def list_statistic_ids(
             "has_sum": "sum" in provided_statistics,
             "name": None,
             "source": RECORDER_DOMAIN,
-            "state_unit_of_measurement": state_unit,
             "statistic_id": state.entity_id,
             "unit_of_measurement": statistics_unit,
         }

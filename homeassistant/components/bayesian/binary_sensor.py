@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -34,6 +35,7 @@ from homeassistant.helpers.template import result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
+from .repairs import raise_mirrored_entries, raise_no_prob_given_false
 
 ATTR_OBSERVATIONS = "observations"
 ATTR_OCCURRED_OBSERVATION_ENTITIES = "occurred_observation_entities"
@@ -61,7 +63,7 @@ NUMERIC_STATE_SCHEMA = vol.Schema(
         vol.Optional(CONF_ABOVE): vol.Coerce(float),
         vol.Optional(CONF_BELOW): vol.Coerce(float),
         vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Required(CONF_P_GIVEN_F): vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
     },
     required=True,
 )
@@ -72,7 +74,7 @@ STATE_SCHEMA = vol.Schema(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TO_STATE): cv.string,
         vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Required(CONF_P_GIVEN_F): vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
     },
     required=True,
 )
@@ -82,7 +84,7 @@ TEMPLATE_SCHEMA = vol.Schema(
         CONF_PLATFORM: CONF_TEMPLATE,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Required(CONF_P_GIVEN_F): vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
     },
     required=True,
 )
@@ -126,6 +128,16 @@ async def async_setup_platform(
     prior = config[CONF_PRIOR]
     probability_threshold = config[CONF_PROBABILITY_THRESHOLD]
     device_class = config.get(CONF_DEVICE_CLASS)
+
+    # Should deprecate in some future version (2022.10 at time of writing) & make prob_given_false required in schemas.
+    broken_observations: list[dict[str, Any]] = []
+    for observation in observations:
+        if CONF_P_GIVEN_F not in observation:
+            text: str = f"{name}/{observation.get(CONF_ENTITY_ID,'')}{observation.get(CONF_VALUE_TEMPLATE,'')}"
+            raise_no_prob_given_false(hass, observation, text)
+            _LOGGER.error("Missing prob_given_false YAML entry for %s", text)
+            broken_observations.append(observation)
+    observations = [x for x in observations if x not in broken_observations]
 
     async_add_entities(
         [
@@ -244,6 +256,22 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.current_observations.update(self._initialize_current_observations())
         self.probability = self._calculate_new_probability()
         self._attr_is_on = bool(self.probability >= self._probability_threshold)
+
+        # detect mirrored entries
+        for entity, observations in self.observations_by_entity.items():
+            raise_mirrored_entries(
+                self.hass, observations, text=f"{self._attr_name}/{entity}"
+            )
+
+        all_template_observations = []
+        for value in self.observations_by_template.values():
+            all_template_observations.append(value[0])
+        if len(all_template_observations) == 2:
+            raise_mirrored_entries(
+                self.hass,
+                all_template_observations,
+                text=f"{self._attr_name}/{all_template_observations[0]['value_template']}",
+            )
 
     @callback
     def _recalculate_and_write_state(self):

@@ -25,6 +25,10 @@
             },
             "pick_implementation": {
                 "title": "Wybierz metod\u0119 uwierzytelniania"
+            },
+            "reauth_confirm": {
+                "description": "Integracja Arkusze Google wymaga ponownego uwierzytelnienia Twojego konta",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             }
         }
     }

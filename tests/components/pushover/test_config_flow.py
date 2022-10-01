@@ -48,12 +48,11 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     assert result["data"] == MOCK_CONFIG
 
 
-async def test_flow_user_key_already_configured(hass: HomeAssistant) -> None:
-    """Test user initialized flow with duplicate user key."""
+async def test_flow_user_key_api_key_exists(hass: HomeAssistant) -> None:
+    """Test user initialized flow with duplicate user key / api key pair."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
-        unique_id="MYUSERKEY",
     )
 
     entry.add_to_hass(hass)
@@ -171,7 +170,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -181,7 +180,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result2["type"] == "abort"
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -213,7 +212,47 @@ async def test_reauth_failed(hass: HomeAssistant, mock_pushover: MagicMock) -> N
         },
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {
         CONF_API_KEY: "invalid_api_key",
     }
+
+
+async def test_reauth_with_existing_config(hass: HomeAssistant) -> None:
+    """Test reauth fails if the api key entered exists in another entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    second_entry = MOCK_CONFIG.copy()
+    second_entry[CONF_API_KEY] = "MYAPIKEY2"
+
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data=second_entry,
+    )
+    entry2.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "MYAPIKEY2",
+        },
+    )
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"

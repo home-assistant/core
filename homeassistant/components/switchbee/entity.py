@@ -1,6 +1,6 @@
 """Support for SwitchBee entity."""
 import logging
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, cast
 
 from switchbee import SWITCHBEE_BRAND
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
@@ -108,3 +108,6 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
                 self.name,
             )
             self._is_online = True
+
+    def _get_coordinator_device(self) -> _DeviceTypeT:
+        return cast(_DeviceTypeT, self.coordinator.data[self._device.id])
