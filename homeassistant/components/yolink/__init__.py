@@ -12,7 +12,7 @@ from yolink.model import BRDP
 from yolink.mqtt_client import MqttClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
@@ -110,11 +110,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_coordinators[device.device_id] = device_coordinator
     hass.data[DOMAIN][entry.entry_id][ATTR_COORDINATORS] = device_coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async def shutdown_subscription(event) -> None:
+        """Shutdown mqtt message subscription."""
+        await yolink_mqtt_client.shutdown_home_subscription()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_subscription)
+    )
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await hass.data[DOMAIN][entry.entry_id][
+            ATTR_MQTT_CLIENT
+        ].shutdown_home_subscription()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
