@@ -5,12 +5,7 @@ import logging
 from pathlib import PurePath
 from typing import Optional, cast
 
-from motioneye_client.const import (
-    KEY_MEDIA_LIST,
-    KEY_MEDIA_SORT_ATTR,
-    KEY_MIME_TYPE,
-    KEY_PATH,
-)
+from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import MediaSourceError, Unresolvable
@@ -25,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from . import get_media_url, split_motioneye_device_identifier
-from .const import CONF_CLIENT, DOMAIN
+from .const import CONF_CLIENT, DOMAIN, KEY_MEDIA_SORT_ATTR
 
 MIME_TYPE_MAP = {
     "movies": "video/mp4",

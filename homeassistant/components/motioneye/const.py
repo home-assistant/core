@@ -98,3 +98,5 @@ TYPE_MOTIONEYE_SWITCH_BASE: Final = f"{DOMAIN}_switch"
 
 WEB_HOOK_SENTINEL_KEY: Final = "src"
 WEB_HOOK_SENTINEL_VALUE: Final = "hass-motioneye"
+
+KEY_MEDIA_SORT_ATTR: Final = "path"
