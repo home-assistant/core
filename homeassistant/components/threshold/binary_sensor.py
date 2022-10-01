@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -10,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -115,19 +117,27 @@ class ThresholdSensor(BinarySensorEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, hass, entity_id, name, lower, upper, hysteresis, device_class, unique_id
+        self,
+        hass: HomeAssistant,
+        entity_id,
+        name: str | None,
+        lower: float | None,
+        upper: float | None,
+        hysteresis: float | None,
+        device_class,
+        unique_id,
     ):
         """Initialize the Threshold sensor."""
-        self._attr_unique_id = unique_id
-        self._entity_id = entity_id
-        self._name = name
-        self._threshold_lower = lower
-        self._threshold_upper = upper
-        self._hysteresis = hysteresis
-        self._device_class = device_class
+        self._attr_unique_id: str = unique_id
+        self._entity_id: str = entity_id
+        self._attr_name: str | None = name
+        self._threshold_lower: float | None = lower
+        self._threshold_upper: float | None = upper
+        self._hysteresis: float | None = hysteresis
+        self._attr_device_class: SensorDeviceClass | str | None = device_class
 
         self._state_position = POSITION_UNKNOWN
-        self._state = None
+        self._state: bool | None = None
         self.sensor_value = None
 
         def _update_sensor_state():
@@ -161,22 +171,12 @@ class ThresholdSensor(BinarySensorEntity):
         _update_sensor_state()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state
 
     @property
-    def device_class(self):
-        """Return the sensor class of the sensor."""
-        return self._device_class
-
-    @property
-    def threshold_type(self):
+    def threshold_type(self) -> Any:
         """Return the type of threshold this sensor represents."""
         if self._threshold_lower is not None and self._threshold_upper is not None:
             return TYPE_RANGE
@@ -186,7 +186,7 @@ class ThresholdSensor(BinarySensorEntity):
             return TYPE_UPPER
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
@@ -199,14 +199,14 @@ class ThresholdSensor(BinarySensorEntity):
         }
 
     @callback
-    def _update_state(self):
+    def _update_state(self) -> bool:
         """Update the state."""
 
-        def below(threshold):
+        def below(threshold: Any) -> bool:
             """Determine if the sensor value is below a threshold."""
             return self.sensor_value < (threshold - self._hysteresis)
 
-        def above(threshold):
+        def above(threshold: Any) -> bool:
             """Determine if the sensor value is above a threshold."""
             return self.sensor_value > (threshold + self._hysteresis)
 
@@ -240,3 +240,5 @@ class ThresholdSensor(BinarySensorEntity):
             elif above(self._threshold_lower) and below(self._threshold_upper):
                 self._state_position = POSITION_IN_RANGE
                 self._state = True
+
+        return False
