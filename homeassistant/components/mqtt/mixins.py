@@ -475,9 +475,10 @@ class MqttAttributes(Entity):
 class MqttAvailability(Entity):
     """Mixin used for platforms that report availability."""
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: dict, shared_topic: bool) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
+        self._shared_topic = shared_topic
         self._available: dict = {}
         self._available_latest = False
         self._availability_setup_from_config(config)
@@ -546,6 +547,10 @@ class MqttAvailability(Entity):
             elif payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
                 self._available[topic] = False
                 self._available_latest = False
+
+            if self._shared_topic and self._available_latest:
+                if self.state:
+                    return
 
             self.async_write_ha_state()
 
@@ -995,7 +1000,7 @@ class MqttEntity(
     _attr_should_poll = False
     _entity_id_format: str
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data, shared_topic=False):
         """Init the MQTT Entity."""
         self.hass = hass
         self._config = config
@@ -1010,7 +1015,7 @@ class MqttEntity(
 
         # Initialize mixin classes
         MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
+        MqttAvailability.__init__(self, config, shared_topic)
         MqttDiscoveryUpdate.__init__(self, hass, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
 

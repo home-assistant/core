@@ -38,6 +38,7 @@ from .config import MQTT_RO_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC
 from .debug_info import log_messages
 from .mixins import (
+    CONF_AVAILABILITY_TOPIC,
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
@@ -180,7 +181,11 @@ class MqttSensor(MqttEntity, RestoreSensor):
         else:
             self._expired = None
 
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
+        shared_topic = config[CONF_STATE_TOPIC] == config.get(CONF_AVAILABILITY_TOPIC)
+
+        MqttEntity.__init__(
+            self, hass, config, config_entry, discovery_data, shared_topic=shared_topic
+        )
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
