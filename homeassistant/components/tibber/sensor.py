@@ -6,7 +6,7 @@ import datetime
 from datetime import timedelta
 import logging
 from random import randrange
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 import tibber
@@ -455,7 +455,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._tibber_home.rt_subscription_running
+        return cast(bool, self._tibber_home.rt_subscription_running)
 
     @callback
     def _handle_coordinator_update(self) -> None:
