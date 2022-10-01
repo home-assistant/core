@@ -15,8 +15,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
-    FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
-    FUEL_CONSUMPTION_MILES_PER_GALLON,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
@@ -49,9 +47,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Fuel consumption units
+FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS = "L/100km"
+FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
+
 L_PER_GAL = VolumeConverter.convert(1, VOLUME_GALLONS, VOLUME_LITERS)
 KM_PER_MI = DistanceConverter.convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
-
 
 # Sensor available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
@@ -209,7 +210,8 @@ class SubaruSensor(
     @property
     def native_value(self) -> None | int | float:
         """Return the state of the sensor."""
-        current_value = self.get_current_value()
+        vehicle_data = self.coordinator.data[self.vin]
+        current_value = vehicle_data[VEHICLE_STATUS].get(self.entity_description.key)
         unit = self.entity_description.native_unit_of_measurement
         unit_system = self.hass.config.units
 
@@ -265,10 +267,3 @@ class SubaruSensor(
         if last_update_success and self.vin not in self.coordinator.data:
             return False
         return last_update_success
-
-    def get_current_value(self) -> None | int | float:
-        """Get raw value from the coordinator."""
-        value = self.coordinator.data[self.vin]
-        value = value[VEHICLE_STATUS].get(self.entity_description.key)
-        _LOGGER.debug("Raw value for %s: %s", self.name, value)
-        return value
