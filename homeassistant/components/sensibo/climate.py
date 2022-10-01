@@ -26,7 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -36,7 +35,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN, LOGGER
 from .coordinator import SensiboDataUpdateCoordinator
@@ -484,10 +483,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         low_temp = low_temperature_threshold
 
         if high_temperature_state.get("temperatureUnit") == "F":
-            high_temp = convert_temperature(
+            high_temp = TemperatureConverter.convert(
                 high_temperature_threshold, TEMP_FAHRENHEIT, TEMP_CELSIUS
             )
-            low_temp = convert_temperature(
+            low_temp = TemperatureConverter.convert(
                 low_temperature_threshold, TEMP_FAHRENHEIT, TEMP_CELSIUS
             )
 
