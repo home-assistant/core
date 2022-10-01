@@ -4,8 +4,6 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.scrape.sensor import SCAN_INTERVAL
 
 from homeassistant.components.sensor import (
@@ -333,23 +331,3 @@ async def test_scrape_sensor_config_entry(hass: HomeAssistant) -> None:
     entity = entity_reg.async_get("sensor.ha_version")
 
     assert entity.unique_id == entry.entry_id
-
-
-async def test_scrape_sensor_deprecated(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test Scrape sensor logs deprecated."""
-    config = {"sensor": return_config(select=".current-version h1", name="HA version")}
-
-    mocker = MockRestData("test_scrape_sensor")
-    with patch(
-        "homeassistant.components.scrape.RestData",
-        return_value=mocker,
-    ):
-        assert await async_setup_component(hass, "sensor", config)
-        await hass.async_block_till_done()
-
-    assert "Loading Scrape via platform key has been deprecated" in caplog.text
-
-    state = hass.states.get("sensor.ha_version")
-    assert state.state == "Current Version: 2021.12.10"
