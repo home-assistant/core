@@ -24,6 +24,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Subquery
 import voluptuous as vol
 
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
@@ -116,7 +117,6 @@ QUERY_STATISTIC_META = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
     StatisticsMeta.source,
-    StatisticsMeta.state_unit_of_measurement,
     StatisticsMeta.unit_of_measurement,
     StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
@@ -342,8 +342,6 @@ def _update_or_add_metadata(
         old_metadata["has_mean"] != new_metadata["has_mean"]
         or old_metadata["has_sum"] != new_metadata["has_sum"]
         or old_metadata["name"] != new_metadata["name"]
-        or old_metadata["state_unit_of_measurement"]
-        != new_metadata["state_unit_of_measurement"]
         or old_metadata["unit_of_measurement"] != new_metadata["unit_of_measurement"]
     ):
         session.query(StatisticsMeta).filter_by(statistic_id=statistic_id).update(
@@ -351,9 +349,6 @@ def _update_or_add_metadata(
                 StatisticsMeta.has_mean: new_metadata["has_mean"],
                 StatisticsMeta.has_sum: new_metadata["has_sum"],
                 StatisticsMeta.name: new_metadata["name"],
-                StatisticsMeta.state_unit_of_measurement: new_metadata[
-                    "state_unit_of_measurement"
-                ],
                 StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
             },
             synchronize_session=False,
@@ -820,7 +815,6 @@ def get_metadata_with_session(
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
-                "state_unit_of_measurement": meta["state_unit_of_measurement"],
                 "statistic_id": meta["statistic_id"],
                 "unit_of_measurement": meta["unit_of_measurement"],
             },
@@ -899,7 +893,6 @@ def list_statistic_ids(
 
         result = {
             meta["statistic_id"]: {
-                "display_unit_of_measurement": meta["state_unit_of_measurement"],
                 "has_mean": meta["has_mean"],
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
@@ -926,7 +919,6 @@ def list_statistic_ids(
                 "has_sum": meta["has_sum"],
                 "name": meta["name"],
                 "source": meta["source"],
-                "display_unit_of_measurement": meta["state_unit_of_measurement"],
                 "unit_class": _get_unit_class(meta["unit_of_measurement"]),
                 "unit_of_measurement": meta["unit_of_measurement"],
             }
@@ -939,7 +931,6 @@ def list_statistic_ids(
             "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
-            "display_unit_of_measurement": info["display_unit_of_measurement"],
             "statistics_unit_of_measurement": info["unit_of_measurement"],
             "unit_class": info["unit_class"],
         }
@@ -1386,9 +1377,10 @@ def _sorted_statistics_to_dict(
 
     # Append all statistic entries, and optionally do unit conversion
     for meta_id, group in groupby(stats, lambda stat: stat.metadata_id):  # type: ignore[no-any-return]
-        unit = metadata[meta_id]["unit_of_measurement"]
-        state_unit = metadata[meta_id]["state_unit_of_measurement"]
+        state_unit = unit = metadata[meta_id]["unit_of_measurement"]
         statistic_id = metadata[meta_id]["statistic_id"]
+        if state := hass.states.get(statistic_id):
+            state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if unit is not None and convert_units:
             convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
         else:
@@ -1470,18 +1462,6 @@ def _async_import_statistics(
     get_instance(hass).async_import_statistics(metadata, statistics)
 
 
-def _validate_units(statistics_unit: str | None, state_unit: str | None) -> None:
-    """Raise if the statistics unit and state unit are not compatible."""
-    if statistics_unit == state_unit:
-        return
-    if (
-        unit_converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
-    ) is None:
-        raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
-    if state_unit not in unit_converter.VALID_UNITS:
-        raise HomeAssistantError(f"Invalid units {statistics_unit},{state_unit}")
-
-
 @callback
 def async_import_statistics(
     hass: HomeAssistant,
@@ -1498,10 +1478,6 @@ def async_import_statistics(
     # The source must not be empty and must be aligned with the statistic_id
     if not metadata["source"] or metadata["source"] != DOMAIN:
         raise HomeAssistantError("Invalid source")
-
-    _validate_units(
-        metadata["unit_of_measurement"], metadata["state_unit_of_measurement"]
-    )
 
     _async_import_statistics(hass, metadata, statistics)
 
@@ -1524,10 +1500,6 @@ def async_add_external_statistics(
     domain, _object_id = split_statistic_id(metadata["statistic_id"])
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
-
-    _validate_units(
-        metadata["unit_of_measurement"], metadata["state_unit_of_measurement"]
-    )
 
     _async_import_statistics(hass, metadata, statistics)
 
@@ -1605,7 +1577,7 @@ def adjust_statistics(
     statistic_id: str,
     start_time: datetime,
     sum_adjustment: float,
-    display_unit: str,
+    adjustment_unit: str,
 ) -> bool:
     """Process an add_statistics job."""
 
@@ -1617,7 +1589,9 @@ def adjust_statistics(
             return True
 
         statistic_unit = metadata[statistic_id][1]["unit_of_measurement"]
-        convert = _get_display_to_statistic_unit_converter(display_unit, statistic_unit)
+        convert = _get_display_to_statistic_unit_converter(
+            adjustment_unit, statistic_unit
+        )
         sum_adjustment = convert(sum_adjustment)
 
         _adjust_sum_statistics(

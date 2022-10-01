@@ -80,6 +80,7 @@ async def mock_setup_integration(
     assert len(entries) == 1
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
+    assert not len(hass.services.async_services().get(DOMAIN, {}))
 
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED

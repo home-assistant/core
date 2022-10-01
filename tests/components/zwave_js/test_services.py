@@ -78,27 +78,10 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -122,27 +105,10 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -165,27 +131,10 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -208,27 +157,10 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 41,
-        "propertyName": "Temperature Threshold (Unit)",
         "propertyKey": 15,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 3,
-            "min": 1,
-            "max": 2,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": False,
-            "states": {"1": "Celsius", "2": "Fahrenheit"},
-            "label": "Temperature Threshold (Unit)",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 2
 
@@ -254,27 +186,10 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 41,
-        "propertyName": "Temperature Threshold (Unit)",
         "propertyKey": 15,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 3,
-            "min": 1,
-            "max": 2,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": False,
-            "states": {"1": "Celsius", "2": "Fahrenheit"},
-            "label": "Temperature Threshold (Unit)",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 2
 
@@ -298,27 +213,10 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -344,27 +242,10 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -431,27 +312,10 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -477,27 +341,10 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -551,32 +398,7 @@ async def test_set_config_parameter_gather(
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 112,
-        "commandClassName": "Configuration",
         "property": 1,
-        "propertyName": "Temperature Reporting Threshold",
-        "ccVersion": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "description": "Reporting threshold for changes in the ambient temperature",
-            "label": "Temperature Reporting Threshold",
-            "default": 2,
-            "min": 0,
-            "max": 4,
-            "states": {
-                "0": "Disabled",
-                "1": "0.5\u00b0 F",
-                "2": "1.0\u00b0 F",
-                "3": "1.5\u00b0 F",
-                "4": "2.0\u00b0 F",
-            },
-            "valueSize": 1,
-            "format": 0,
-            "allowManualEntry": False,
-            "isFromConfig": True,
-        },
-        "value": 1,
     }
     assert args["value"] == 1
 
@@ -847,26 +669,9 @@ async def test_refresh_value(
     assert args["command"] == "node.poll_value"
     assert args["nodeId"] == 26
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Mode",
         "commandClass": 64,
         "endpoint": 1,
         "property": "mode",
-        "propertyName": "mode",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 255,
-            "label": "Thermostat mode",
-            "states": {
-                "0": "Off",
-                "1": "Heat",
-                "2": "Cool",
-            },
-        },
-        "value": 2,
-        "ccVersion": 0,
     }
 
     client.async_send_command.reset_mock()
@@ -950,20 +755,9 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
     assert args["valueId"] == {
-        "commandClassName": "Protection",
         "commandClass": 117,
         "endpoint": 0,
         "property": "local",
-        "propertyName": "local",
-        "ccVersion": 2,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Local protection state",
-            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
-        },
-        "value": 0,
     }
     assert args["value"] == 2
 
@@ -988,20 +782,9 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
     assert args["valueId"] == {
-        "commandClassName": "Protection",
         "commandClass": 117,
         "endpoint": 0,
         "property": "local",
-        "propertyName": "local",
-        "ccVersion": 2,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Local protection state",
-            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
-        },
-        "value": 0,
     }
     assert args["value"] == 2
 
@@ -1029,20 +812,9 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
     assert args["valueId"] == {
-        "commandClassName": "Protection",
         "commandClass": 117,
         "endpoint": 0,
         "property": "local",
-        "propertyName": "local",
-        "ccVersion": 2,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Local protection state",
-            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
-        },
-        "value": 0,
     }
     assert args["value"] == 2
 
@@ -1069,20 +841,9 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
     assert args["valueId"] == {
-        "commandClassName": "Protection",
         "commandClass": 117,
         "endpoint": 0,
         "property": "local",
-        "propertyName": "local",
-        "ccVersion": 2,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Local protection state",
-            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
-        },
-        "value": 0,
     }
     assert args["value"] == 2
 
@@ -1111,20 +872,9 @@ async def test_set_value(hass, client, climate_danfoss_lc_13, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
     assert args["valueId"] == {
-        "commandClassName": "Protection",
         "commandClass": 117,
         "endpoint": 0,
         "property": "local",
-        "propertyName": "local",
-        "ccVersion": 2,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Local protection state",
-            "states": {"0": "Unprotected", "2": "NoOperationPossible"},
-        },
-        "value": 0,
     }
     assert args["value"] == 2
 
@@ -1170,22 +920,10 @@ async def test_set_value_string(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == lock_schlage_be469.node_id
     assert args["valueId"] == {
-        "commandClassName": "User Code",
         "commandClass": 99,
         "endpoint": 0,
         "property": "userCode",
-        "propertyName": "userCode",
         "propertyKey": 1,
-        "propertyKeyName": "1",
-        "metadata": {
-            "type": "string",
-            "readable": True,
-            "writeable": True,
-            "minLength": 4,
-            "maxLength": 10,
-            "label": "User Code (1)",
-        },
-        "value": "**********",
     }
     assert args["value"] == "12345"
 
@@ -1212,17 +950,7 @@ async def test_set_value_options(hass, client, aeon_smart_switch_6, integration)
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 37,
-        "commandClassName": "Binary Switch",
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "ccVersion": 1,
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-            "valueChangeOptions": ["transitionDuration"],
-        },
     }
     assert args["value"] == 2
     assert args["options"] == {"transitionDuration": 1}
@@ -1263,27 +991,10 @@ async def test_set_value_gather(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
         "propertyKey": 1,
-        "propertyName": "Group 2: Send battery reports",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
