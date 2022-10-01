@@ -26,14 +26,7 @@
                     "ssl": "\u4f7f\u7528 SSL \u8bc1\u4e66",
                     "username": "\u7528\u6237\u540d"
                 },
-                "description": "\u60a8\u60f3\u8981\u914d\u7f6e {name} ({host}) \u5417\uff1f",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "\u5bc6\u7801",
-                    "username": "\u7528\u6237\u540d"
-                }
+                "description": "\u60a8\u60f3\u8981\u914d\u7f6e {name} ({host}) \u5417\uff1f"
             },
             "user": {
                 "data": {
@@ -43,8 +36,7 @@
                     "ssl": "\u4f7f\u7528 SSL \u8bc1\u4e66",
                     "username": "\u7528\u6237\u540d",
                     "verify_ssl": "\u9a8c\u8bc1 SSL \u8bc1\u4e66"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Sisendolemid",
+                    "name": "Nimi",
+                    "round_digits": "T\u00e4psus",
+                    "type": "Statistiline tunnus"
+                },
+                "data_description": {
+                    "round_digits": "M\u00e4\u00e4rab k\u00fcmnendkohtade arvu v\u00e4ljundis kui statistika tunnus on keskmine v\u00f5i mediaan."
+                },
+                "description": "Loo andur mis arvutab sisendandurite loendist minimaalse, maksimaalse, keskmise v\u00f5i mediaanv\u00e4\u00e4rtuse.",
+                "title": "Lisa min / max / keskmine / mediaanandur"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Sisendolemid",
+                    "round_digits": "T\u00e4psus",
+                    "type": "Statistiline omadus"
+                },
+                "data_description": {
+                    "round_digits": "M\u00e4\u00e4rab k\u00fcmnendkohtade arvu v\u00e4ljundis kui statistika tunnus on keskmine v\u00f5i mediaan."
+                }
+            }
+        }
+    },
+    "title": "Min / max / keskmine / mediaanandur"
+}

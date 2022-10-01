@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "flow_title": "{model} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "data_description": {
+                    "host": "Pure Energie Meter IP \u4f4d\u5740\u6216\u4e3b\u6a5f\u540d\u7a31\u3002"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "\u662f\u5426\u8981\u65b0\u589e Pure Energie Meter (`{model}`) \u81f3 Home Assistant\uff1f",
+                "title": "\u81ea\u52d5\u641c\u7d22\u5230 Pure Energie Meter \u88dd\u7f6e"
+            }
+        }
+    }
+}

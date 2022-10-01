@@ -6,27 +6,22 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -38,22 +33,26 @@ from .const import (
     ATTR_API_CAQI,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
+    ATTR_API_CO,
     ATTR_API_HUMIDITY,
+    ATTR_API_NO2,
+    ATTR_API_O3,
     ATTR_API_PM1,
     ATTR_API_PM10,
     ATTR_API_PM25,
     ATTR_API_PRESSURE,
+    ATTR_API_SO2,
     ATTR_API_TEMPERATURE,
     ATTR_DESCRIPTION,
     ATTR_LEVEL,
     ATTR_LIMIT,
     ATTR_PERCENT,
     ATTRIBUTION,
-    DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
     SUFFIX_LIMIT,
     SUFFIX_PERCENT,
+    URL,
 )
 
 PARALLEL_UPDATES = 1
@@ -69,53 +68,80 @@ class AirlySensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
-        device_class=DEVICE_CLASS_AQI,
+        icon="mdi:air-filter",
         name=ATTR_API_CAQI,
         native_unit_of_measurement="CAQI",
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM1,
-        device_class=DEVICE_CLASS_PM1,
+        device_class=SensorDeviceClass.PM1,
         name=ATTR_API_PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM25,
-        device_class=DEVICE_CLASS_PM25,
+        device_class=SensorDeviceClass.PM25,
         name="PM2.5",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PM10,
-        device_class=DEVICE_CLASS_PM10,
+        device_class=SensorDeviceClass.PM10,
         name=ATTR_API_PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_HUMIDITY,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         name=ATTR_API_HUMIDITY.capitalize(),
         native_unit_of_measurement=PERCENTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value, 1),
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_PRESSURE,
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
         name=ATTR_API_PRESSURE.capitalize(),
         native_unit_of_measurement=PRESSURE_HPA,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_TEMPERATURE,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name=ATTR_API_TEMPERATURE.capitalize(),
         native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         value=lambda value: round(value, 1),
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_CO,
+        name=ATTR_API_CO,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_NO2,
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        name=ATTR_API_NO2,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_SO2,
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        name=ATTR_API_SO2,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AirlySensorEntityDescription(
+        key=ATTR_API_O3,
+        device_class=SensorDeviceClass.OZONE,
+        name=ATTR_API_O3,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -137,10 +163,11 @@ async def async_setup_entry(
     async_add_entities(sensors, False)
 
 
-class AirlySensor(CoordinatorEntity, SensorEntity):
+class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
     """Define an Airly sensor."""
 
-    coordinator: AirlyDataUpdateCoordinator
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
     entity_description: AirlySensorEntityDescription
 
     def __init__(
@@ -151,19 +178,19 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = {
-            "identifiers": {
-                (DOMAIN, f"{coordinator.latitude}-{coordinator.longitude}")
-            },
-            "name": DEFAULT_NAME,
-            "manufacturer": MANUFACTURER,
-            "entry_type": "service",
-        }
-        self._attr_name = f"{name} {description.name}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{coordinator.latitude}-{coordinator.longitude}")},
+            manufacturer=MANUFACTURER,
+            name=name,
+            configuration_url=URL.format(
+                latitude=coordinator.latitude, longitude=coordinator.longitude
+            ),
+        )
         self._attr_unique_id = (
             f"{coordinator.latitude}-{coordinator.longitude}-{description.key}".lower()
         )
-        self._attrs: dict[str, Any] = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attrs: dict[str, Any] = {}
         self.entity_description = description
 
     @property
@@ -194,5 +221,33 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
             ]
             self._attrs[ATTR_PERCENT] = round(
                 self.coordinator.data[f"{ATTR_API_PM10}_{SUFFIX_PERCENT}"]
+            )
+        if self.entity_description.key == ATTR_API_CO:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_CO}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_CO}_{SUFFIX_PERCENT}"]
+            )
+        if self.entity_description.key == ATTR_API_NO2:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_NO2}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_NO2}_{SUFFIX_PERCENT}"]
+            )
+        if self.entity_description.key == ATTR_API_SO2:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_SO2}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_SO2}_{SUFFIX_PERCENT}"]
+            )
+        if self.entity_description.key == ATTR_API_O3:
+            self._attrs[ATTR_LIMIT] = self.coordinator.data[
+                f"{ATTR_API_O3}_{SUFFIX_LIMIT}"
+            ]
+            self._attrs[ATTR_PERCENT] = round(
+                self.coordinator.data[f"{ATTR_API_O3}_{SUFFIX_PERCENT}"]
             )
         return self._attrs

@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from typing import Any
 
 from pyairvisual import CloudAPI, NodeSamba
 from pyairvisual.errors import (
     AirVisualError,
     InvalidKeyError,
+    KeyExpiredError,
     NodeProError,
     NotFoundError,
+    UnauthorizedError,
 )
 import voluptuous as vol
 
@@ -70,7 +74,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._entry_data_for_reauth: dict[str, str] = {}
+        self._entry_data_for_reauth: Mapping[str, Any] = {}
         self._geo_id: str | None = None
 
     @property
@@ -91,6 +95,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str], integration_type: str
     ) -> FlowResult:
         """Validate a Cloud API key."""
+        errors = {}
         websession = aiohttp_client.async_get_clientsession(self.hass)
         cloud_api = CloudAPI(user_input[CONF_API_KEY], session=websession)
 
@@ -116,31 +121,27 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[CONF_API_KEY] not in valid_keys:
                 try:
                     await coro
-                except InvalidKeyError:
-                    return self.async_show_form(
-                        step_id=error_step,
-                        data_schema=error_schema,
-                        errors={CONF_API_KEY: "invalid_api_key"},
-                    )
+                except (InvalidKeyError, KeyExpiredError, UnauthorizedError):
+                    errors[CONF_API_KEY] = "invalid_api_key"
                 except NotFoundError:
-                    return self.async_show_form(
-                        step_id=error_step,
-                        data_schema=error_schema,
-                        errors={CONF_CITY: "location_not_found"},
-                    )
+                    errors[CONF_CITY] = "location_not_found"
                 except AirVisualError as err:
                     LOGGER.error(err)
-                    return self.async_show_form(
-                        step_id=error_step,
-                        data_schema=error_schema,
-                        errors={"base": "unknown"},
-                    )
+                    errors["base"] = "unknown"
 
                 valid_keys.add(user_input[CONF_API_KEY])
+
+        if errors:
+            return self.async_show_form(
+                step_id=error_step, data_schema=error_schema, errors=errors
+            )
 
         existing_entry = await self.async_set_unique_id(self._geo_id)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
+            )
             return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
@@ -222,10 +223,10 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={**user_input, CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO},
         )
 
-    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._entry_data_for_reauth = data
-        self._geo_id = async_get_geography_id(data)
+        self._entry_data_for_reauth = entry_data
+        self._geo_id = async_get_geography_id(entry_data)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -237,7 +238,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm", data_schema=API_KEY_DATA_SCHEMA
             )
 
-        conf = {CONF_API_KEY: user_input[CONF_API_KEY], **self._entry_data_for_reauth}
+        conf = {**self._entry_data_for_reauth, CONF_API_KEY: user_input[CONF_API_KEY]}
 
         return await self._async_finish_geography(
             conf, self._entry_data_for_reauth[CONF_INTEGRATION_TYPE]
@@ -262,9 +263,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle an AirVisual options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize."""
-        self.config_entry = config_entry
+        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -279,7 +280,7 @@ class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_SHOW_ON_MAP,
-                        default=self.config_entry.options.get(CONF_SHOW_ON_MAP),
+                        default=self.entry.options.get(CONF_SHOW_ON_MAP),
                     ): bool
                 }
             ),

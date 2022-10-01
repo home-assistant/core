@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "invalid_hosts": "Ge\u00e7ersiz Ana Bilgisayarlar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Tarama d\u0131\u015f\u0131nda b\u0131rak\u0131lacak a\u011f adresleri (virg\u00fclle ayr\u0131lm\u0131\u015f)",
+                    "home_interval": "Aktif cihazlar\u0131n taranmas\u0131 aras\u0131ndaki minimum dakika say\u0131s\u0131 (pilden tasarruf edin)",
+                    "hosts": "Taranacak a\u011f adresleri (virg\u00fclle ayr\u0131lm\u0131\u015f)",
+                    "scan_options": "Nmap i\u00e7in ham yap\u0131land\u0131r\u0131labilir tarama se\u00e7enekleri"
+                },
+                "description": "Nmap taraf\u0131ndan taranacak ana bilgisayarlar\u0131 yap\u0131land\u0131r\u0131n. A\u011f adresi ve hari\u00e7 tutulanlar, IP Adresleri (192.168.1.1), IP A\u011flar\u0131 (192.168.0.0/24) veya IP Aral\u0131klar\u0131 (192.168.1.0-32) olabilir."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "Ge\u00e7ersiz Ana Bilgisayarlar"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Bir cihaz izleyicisi g\u00f6r\u00fclmedikten sonra evde de\u011fil olarak i\u015faretlenene kadar beklemek i\u00e7in saniyeler kald\u0131.",
+                    "exclude": "Tarama d\u0131\u015f\u0131nda b\u0131rak\u0131lacak a\u011f adresleri (virg\u00fclle ayr\u0131lm\u0131\u015f)",
+                    "home_interval": "Aktif cihazlar\u0131n taranmas\u0131 aras\u0131ndaki minimum dakika say\u0131s\u0131 (pilden tasarruf edin)",
+                    "hosts": "Taranacak a\u011f adresleri (virg\u00fclle ayr\u0131lm\u0131\u015f)",
+                    "interval_seconds": "Tarama aral\u0131\u011f\u0131",
+                    "scan_options": "Nmap i\u00e7in ham yap\u0131land\u0131r\u0131labilir tarama se\u00e7enekleri"
+                },
+                "description": "Nmap taraf\u0131ndan taranacak ana bilgisayarlar\u0131 yap\u0131land\u0131r\u0131n. A\u011f adresi ve hari\u00e7 tutulanlar, IP Adresleri (192.168.1.1), IP A\u011flar\u0131 (192.168.0.0/24) veya IP Aral\u0131klar\u0131 (192.168.1.0-32) olabilir."
+            }
+        }
+    },
+    "title": "Nmap \u0130zleyici"
+}

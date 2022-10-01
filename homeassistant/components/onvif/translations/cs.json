@@ -11,13 +11,6 @@
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Heslo",
-                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                },
-                "title": "Konfigurace ov\u011b\u0159ov\u00e1n\u00ed"
-            },
             "configure": {
                 "data": {
                     "host": "Hostitel",
@@ -39,14 +32,6 @@
                     "host": "Vyberte nalezen\u00e1 za\u0159\u00edzen\u00ed ONVIF"
                 },
                 "title": "Vyberte za\u0159\u00edzen\u00ed ONVIF"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "Hostitel",
-                    "name": "Jm\u00e9no",
-                    "port": "Port"
-                },
-                "title": "Konfigurovat za\u0159\u00edzen\u00ed ONVIF"
             },
             "user": {
                 "description": "Kliknut\u00edm na tla\u010d\u00edtko Odeslat vyhled\u00e1me ve va\u0161\u00ed s\u00edti za\u0159\u00edzen\u00ed ONVIF, kter\u00e1 podporuj\u00ed profil S. \n\nN\u011bkte\u0159\u00ed v\u00fdrobci vypli funkci ONVIF v z\u00e1kladn\u00edm nastaven\u00ed. Ujist\u011bte se, \u017ee je v konfiguraci kamery povolena funkce ONVIF.",

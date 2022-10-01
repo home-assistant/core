@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi"
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
+            "different_account": "Akun harus sama dengan yang digunakan untuk menyiapkan integrasi",
             "invalid_auth": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
@@ -17,6 +19,5 @@
                 }
             }
         }
-    },
-    "title": "Picnic"
+    }
 }

@@ -1,0 +1,46 @@
+{
+    "state": {
+        "overkiz__battery": {
+            "full": "Pieno",
+            "low": "Basso",
+            "normal": "Normale",
+            "verylow": "Molto basso"
+        },
+        "overkiz__discrete_rssi_level": {
+            "good": "Buono",
+            "low": "Basso",
+            "normal": "Normale",
+            "verylow": "Molto basso"
+        },
+        "overkiz__priority_lock_originator": {
+            "external_gateway": "Gateway esterno",
+            "local_user": "Utente locale",
+            "lsc": "LSC",
+            "myself": "Me stesso",
+            "rain": "Pioggia",
+            "saac": "SAAC",
+            "security": "Sicurezza",
+            "sfc": "SFC",
+            "temperature": "Temperatura",
+            "timer": "Timer",
+            "ups": "UPS",
+            "user": "Utente",
+            "wind": "Vento"
+        },
+        "overkiz__sensor_defect": {
+            "dead": "Morto",
+            "low_battery": "Batteria scarica",
+            "maintenance_required": "Manutenzione necessaria",
+            "no_defect": "Nessun difetto"
+        },
+        "overkiz__sensor_room": {
+            "clean": "Pulito",
+            "dirty": "Sporco"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Chiuso",
+            "open": "Aperto",
+            "tilt": "Inclinazione"
+        }
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "no_selection": "Pilih setidaknya satu kota/kabupaten",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "_a_to_d": "Kota/kabupaten (A-D)",
+                    "_e_to_h": "Kota/kabupaten (E-H)",
+                    "_i_to_l": "Kota/kabupaten (I-L)",
+                    "_m_to_q": "Kota/kabupaten (M-Q)",
+                    "_r_to_u": "Kota/kabupaten (R-U)",
+                    "_v_to_z": "Kota/kabupaten (V-Z)",
+                    "corona_filter": "Hapus Peringatan Corona",
+                    "slots": "Peringatan maksimum per kota/kabupaten"
+                },
+                "title": "Pilih kota/kabupaten"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "no_selection": "Pilih setidaknya satu kota/kabupaten",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_a_to_d": "Kota/kabupaten (A-D)",
+                    "_e_to_h": "Kota/kabupaten (E-H)",
+                    "_i_to_l": "Kota/kabupaten (I-L)",
+                    "_m_to_q": "Kota/kabupaten (M-Q)",
+                    "_r_to_u": "Kota/kabupaten (R-U)",
+                    "_v_to_z": "Kota/kabupaten (V-Z)",
+                    "corona_filter": "Hapus Peringatan Corona",
+                    "slots": "Peringatan maksimum per kota/kabupaten"
+                },
+                "title": "Opsi"
+            }
+        }
+    }
+}

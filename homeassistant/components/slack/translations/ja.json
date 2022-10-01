@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "default_channel": "\u30c7\u30d5\u30a9\u30eb\u30c8\u306e\u30c1\u30e3\u30f3\u30cd\u30eb",
+                    "icon": "\u30a2\u30a4\u30b3\u30f3",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                },
+                "data_description": {
+                    "api_key": "Slack\u30e1\u30c3\u30bb\u30fc\u30b8\u306e\u9001\u4fe1\u306b\u4f7f\u7528\u3059\u308b\u3001Slack API\u30c8\u30fc\u30af\u30f3\u3002",
+                    "default_channel": "\u30e1\u30c3\u30bb\u30fc\u30b8\u306e\u9001\u4fe1\u6642\u306b\u3001\u30c1\u30e3\u30f3\u30cd\u30eb\u304c\u6307\u5b9a\u3055\u308c\u3066\u3044\u306a\u304b\u3063\u305f\u5834\u5408\u306b\u6295\u7a3f\u3059\u308b\u30c1\u30e3\u30f3\u30cd\u30eb\u3002",
+                    "icon": "Slack\u306e\u7d75\u6587\u5b57\u3092\u3001\u6307\u5b9a\u3055\u308c\u305f\u30e6\u30fc\u30b6\u30fc\u540d\u306e\u30a2\u30a4\u30b3\u30f3\u3068\u3057\u3066\u4f7f\u7528\u3057\u307e\u3059\u3002",
+                    "username": "Home Assistant\u306f\u3001\u6307\u5b9a\u3055\u308c\u305f\u30e6\u30fc\u30b6\u30fc\u540d\u3092\u4f7f\u7528\u3057\u3066Slack\u306b\u6295\u7a3f\u3057\u307e\u3059\u3002"
+                },
+                "description": "Slack API\u30ad\u30fc\u306e\u53d6\u5f97\u306b\u3064\u3044\u3066\u306f\u3001\u30c9\u30ad\u30e5\u30e1\u30f3\u30c8\u3092\u53c2\u7167\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            }
+        }
+    }
+}

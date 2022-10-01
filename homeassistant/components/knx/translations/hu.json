@@ -1,0 +1,121 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "file_not_found": "A megadott '.knxkeys' f\u00e1jl nem tal\u00e1lhat\u00f3 a config/.storage/knx/ el\u00e9r\u00e9si \u00fatvonalon.",
+            "invalid_individual_address": "Az \u00e9rt\u00e9k nem felel meg a KNX egyedi c\u00edm mint\u00e1j\u00e1nak.\n'area.line.device'",
+            "invalid_ip_address": "\u00c9rv\u00e9nytelen IPv4-c\u00edm.",
+            "invalid_signature": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez haszn\u00e1lt jelsz\u00f3 helytelen."
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "C\u00edm",
+                    "local_ip": "Home Assistant lok\u00e1lis IP c\u00edme",
+                    "port": "Port",
+                    "tunneling_type": "KNX alag\u00fat t\u00edpusa"
+                },
+                "data_description": {
+                    "host": "A KNX/IP tunnel eszk\u00f6z IP-c\u00edme.",
+                    "local_ip": "Az automatikus felder\u00edt\u00e9s haszn\u00e1lat\u00e1hoz hagyja \u00fcresen.",
+                    "port": "A KNX/IP tunnel eszk\u00f6z portsz\u00e1ma."
+                },
+                "description": "Adja meg az alag\u00fatkezel\u0151 (tunneling) eszk\u00f6z csatlakoz\u00e1si adatait."
+            },
+            "routing": {
+                "data": {
+                    "individual_address": "Egy\u00e9ni c\u00edm",
+                    "local_ip": "Home Assistant lok\u00e1lis IP c\u00edme",
+                    "multicast_group": "Multicast csoport",
+                    "multicast_port": "Multicast portsz\u00e1m"
+                },
+                "data_description": {
+                    "individual_address": "A Home Assistant \u00e1ltal haszn\u00e1land\u00f3 KNX-c\u00edm, pl. \"0.0.4\".",
+                    "local_ip": "Az automatikus felder\u00edt\u00e9s haszn\u00e1lat\u00e1hoz hagyja \u00fcresen."
+                },
+                "description": "K\u00e9rem, konfigur\u00e1lja az \u00fatv\u00e1laszt\u00e1si (routing) be\u00e1ll\u00edt\u00e1sokat."
+            },
+            "secure_knxkeys": {
+                "data": {
+                    "knxkeys_filename": "A '.knxkeys' f\u00e1jl teljes neve (kiterjeszt\u00e9ssel)",
+                    "knxkeys_password": "A '.knxkeys' f\u00e1jl visszafejt\u00e9s\u00e9hez sz\u00fcks\u00e9ges jelsz\u00f3"
+                },
+                "data_description": {
+                    "knxkeys_filename": "A f\u00e1jl a `.storage/knx/` konfigur\u00e1ci\u00f3s k\u00f6nyvt\u00e1r\u00e1ban helyezend\u0151.\nHome Assistant oper\u00e1ci\u00f3s rendszer eset\u00e9n ez a k\u00f6vetkez\u0151 lenne: `/config/.storage/knx/`\nP\u00e9lda: \"my_project.knxkeys\".",
+                    "knxkeys_password": "Ez a be\u00e1ll\u00edt\u00e1s a f\u00e1jl ETS-b\u0151l t\u00f6rt\u00e9n\u0151 export\u00e1l\u00e1sakor t\u00f6rt\u00e9nt."
+                },
+                "description": "K\u00e9rem, adja meg a '.knxkeys' f\u00e1jl adatait."
+            },
+            "secure_manual": {
+                "data": {
+                    "device_authentication": "Eszk\u00f6z hiteles\u00edt\u00e9si jelsz\u00f3",
+                    "user_id": "Felhaszn\u00e1l\u00f3i azonos\u00edt\u00f3",
+                    "user_password": "Felhaszn\u00e1l\u00f3i jelsz\u00f3"
+                },
+                "data_description": {
+                    "device_authentication": "Ezt az ETS-ben az interf\u00e9sz \"IP\" panelj\u00e9n kell be\u00e1ll\u00edtani.",
+                    "user_id": "Ez gyakran a tunnel sz\u00e1ma +1. Teh\u00e1t a \"Tunnel 2\" felhaszn\u00e1l\u00f3i azonos\u00edt\u00f3ja \"3\".",
+                    "user_password": "Jelsz\u00f3 az adott tunnelhez, amely a tunnel \u201eProperties\u201d panelj\u00e9n van be\u00e1ll\u00edtva az ETS-ben."
+                },
+                "description": "K\u00e9rem, adja meg az IP secure adatokat."
+            },
+            "secure_tunneling": {
+                "description": "V\u00e1lassza ki, hogyan szeretn\u00e9 konfigur\u00e1lni az KNX/IP secure-t.",
+                "menu_options": {
+                    "secure_knxkeys": "IP secure kulcsokat tartalmaz\u00f3 '.knxkeys' f\u00e1jl haszn\u00e1lata",
+                    "secure_manual": "IP secure kulcsok manu\u00e1lis be\u00e1ll\u00edt\u00e1sa"
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "gateway": "KNX alag\u00fat (tunnel) kapcsolat"
+                },
+                "description": "V\u00e1lasszon egy \u00e1tj\u00e1r\u00f3t a list\u00e1b\u00f3l."
+            },
+            "type": {
+                "data": {
+                    "connection_type": "KNX csatlakoz\u00e1s t\u00edpusa"
+                },
+                "description": "K\u00e9rem, adja meg a KNX-kapcsolathoz haszn\u00e1land\u00f3 kapcsolatt\u00edpust. \n AUTOMATIKUS - Az integr\u00e1ci\u00f3 gondoskodik a KNX buszhoz val\u00f3 kapcsol\u00f3d\u00e1sr\u00f3l egy \u00e1tj\u00e1r\u00f3 keres\u00e9s elv\u00e9gz\u00e9s\u00e9vel. \n TUNNELING - Az integr\u00e1ci\u00f3 alag\u00faton kereszt\u00fcl csatlakozik a KNX buszhoz. \n ROUTING - Az integr\u00e1ci\u00f3 a KNX buszhoz \u00fatv\u00e1laszt\u00e1ssal csatlakozik."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "connection_type": "KNX csatlakoz\u00e1s t\u00edpusa",
+                    "individual_address": "Alap\u00e9rtelmezett egy\u00e9ni c\u00edm",
+                    "local_ip": "Home Assistant lok\u00e1lis IP c\u00edme",
+                    "multicast_group": "Multicast csoport",
+                    "multicast_port": "Multicast portsz\u00e1m",
+                    "rate_limit": "Lek\u00e9r\u00e9si korl\u00e1toz\u00e1s",
+                    "state_updater": "\u00c1llapot friss\u00edt\u0151"
+                },
+                "data_description": {
+                    "individual_address": "A Home Assistant \u00e1ltal haszn\u00e1land\u00f3 KNX-c\u00edm, pl. \"0.0.4\".",
+                    "local_ip": "Haszn\u00e1lja a `0.0.0.0` c\u00edmet az automatikus felder\u00edt\u00e9shez.",
+                    "multicast_group": "\u00datv\u00e1laszt\u00e1shoz \u00e9s felder\u00edt\u00e9shez haszn\u00e1latos. Alap\u00e9rtelmezett: `224.0.23.12`.",
+                    "multicast_port": "\u00datv\u00e1laszt\u00e1shoz \u00e9s felder\u00edt\u00e9shez haszn\u00e1latos. Alap\u00e9rtelmezett: `3671`",
+                    "rate_limit": "Maxim\u00e1lis kimen\u0151 \u00fczenet m\u00e1sodpercenk\u00e9nt.\nAj\u00e1nlott: 20 \u00e9s 40 k\u00f6z\u00f6tt",
+                    "state_updater": "Alap\u00e9rtelmezett be\u00e1ll\u00edt\u00e1s a KNX busz \u00e1llapotainak olvas\u00e1s\u00e1hoz. Ha le va tiltva, Home Assistant nem fog akt\u00edvan lek\u00e9rdezni egys\u00e9g\u00e1llapotokat a KNX buszr\u00f3l. Fel\u00fclb\u00edr\u00e1lhat\u00f3 a `sync_state` entit\u00e1s opci\u00f3kkal."
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "host": "C\u00edm",
+                    "port": "Port",
+                    "tunneling_type": "KNX alag\u00fat t\u00edpusa"
+                },
+                "data_description": {
+                    "host": "A KNX/IP tunnel eszk\u00f6z IP-c\u00edme.",
+                    "port": "A KNX/IP tunnel eszk\u00f6z portsz\u00e1ma."
+                }
+            }
+        }
+    }
+}

@@ -1,23 +1,21 @@
 """Offer MQTT listening automation rules."""
 from contextlib import suppress
-import json
 import logging
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.json import json_loads
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .. import mqtt
+from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING, DEFAULT_QOS
 
 # mypy: allow-untyped-defs
 
-CONF_ENCODING = "encoding"
-CONF_QOS = "qos"
-CONF_TOPIC = "topic"
-DEFAULT_ENCODING = "utf-8"
-DEFAULT_QOS = 0
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -35,9 +33,14 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
     topic = config[CONF_TOPIC]
     wanted_payload = config.get(CONF_PAYLOAD)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -45,8 +48,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
     qos = config[CONF_QOS]
     job = HassJob(action)
     variables = None
-    if automation_info:
-        variables = automation_info.get("variables")
+    if trigger_info:
+        variables = trigger_info.get("variables")
 
     template.attach(hass, wanted_payload)
     if wanted_payload:
@@ -83,7 +86,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
             }
 
             with suppress(ValueError):
-                data["payload_json"] = json.loads(mqttmsg.payload)
+                data["payload_json"] = json_loads(mqttmsg.payload)
 
             hass.async_run_hass_job(job, {"trigger": data})
 

@@ -1,4 +1,7 @@
 """Support for EnOcean binary sensors."""
+from __future__ import annotations
+
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -7,7 +10,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .device import EnOceanEntity
 
@@ -24,7 +30,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Binary Sensor platform for EnOcean."""
     dev_id = config.get(CONF_ID)
     dev_name = config.get(CONF_NAME)
@@ -47,6 +58,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self._device_class = device_class
         self.which = -1
         self.onoff = -1
+        self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
 
     @property
     def name(self):

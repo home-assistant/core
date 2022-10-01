@@ -1,0 +1,43 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u540d\u79f0",
+                    "round": "\u7cbe\u5ea6",
+                    "source": "\u8f93\u5165\u4f20\u611f\u5668",
+                    "time_window": "\u65f6\u95f4\u7a97\u53e3",
+                    "unit_prefix": "\u5355\u4f4d\u524d\u7f00",
+                    "unit_time": "\u65f6\u95f4\u5355\u4f4d"
+                },
+                "data_description": {
+                    "round": "\u63a7\u5236\u8f93\u51fa\u7684\u5c0f\u6570\u4f4d\u6570\u3002",
+                    "time_window": "\u5982\u679c\u8bbe\u7f6e\uff0c\u4f20\u611f\u5668\u5c06\u8f93\u51fa\u6b64\u65f6\u95f4\u7a97\u53e3\u5185\u7684\u53d8\u5316\u7387\u6309\u7167\u201c\u65f6\u95f4\u52a0\u6743\u79fb\u52a8\u5e73\u5747\u6cd5\u201d\u5904\u7406\u540e\u7684\u503c\u3002",
+                    "unit_prefix": "\u8f93\u51fa\u503c\u5c06\u6839\u636e\u6240\u9009\u7684\u5355\u4f4d\u524d\u7f00\u548c\u65f6\u95f4\u5355\u4f4d\u8fdb\u884c\u7f29\u653e\u3002"
+                },
+                "description": "\u521b\u5efa\u4f20\u611f\u5668\u6765\u4f30\u7b97\u53e6\u4e00\u4e2a\u4f20\u611f\u5668\u7684\u53d8\u5316\u7387\u3002",
+                "title": "\u6dfb\u52a0\u53d8\u5316\u7387\uff08\u5bfc\u6570\uff09\u4f20\u611f\u5668"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "\u540d\u79f0",
+                    "round": "\u7cbe\u5ea6",
+                    "source": "\u8f93\u5165\u4f20\u611f\u5668",
+                    "time_window": "\u65f6\u95f4\u7a97\u53e3",
+                    "unit_prefix": "\u5355\u4f4d\u524d\u7f00",
+                    "unit_time": "\u65f6\u95f4\u5355\u4f4d"
+                },
+                "data_description": {
+                    "round": "\u63a7\u5236\u8f93\u51fa\u7684\u5c0f\u6570\u4f4d\u6570\u3002",
+                    "time_window": "\u5982\u679c\u8bbe\u7f6e\uff0c\u4f20\u611f\u5668\u5c06\u8f93\u51fa\u6b64\u65f6\u95f4\u7a97\u53e3\u5185\u7684\u53d8\u5316\u7387\u6309\u7167\u201c\u65f6\u95f4\u52a0\u6743\u79fb\u52a8\u5e73\u5747\u6cd5\u201d\u5904\u7406\u540e\u7684\u503c\u3002",
+                    "unit_prefix": "\u8f93\u51fa\u503c\u5c06\u6839\u636e\u6240\u9009\u7684\u5355\u4f4d\u524d\u7f00\u548c\u65f6\u95f4\u5355\u4f4d\u8fdb\u884c\u7f29\u653e\u3002"
+                }
+            }
+        }
+    },
+    "title": "\u53d8\u5316\u7387\u4f20\u611f\u5668"
+}

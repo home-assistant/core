@@ -1,11 +1,10 @@
 """Constants for the ezviz integration."""
 
 DOMAIN = "ezviz"
-MANUFACTURER = "Ezviz"
+MANUFACTURER = "EZVIZ"
 
 # Configuration
 ATTR_SERIAL = "serial"
-CONF_CAMERAS = "cameras"
 CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 ATTR_HOME = "HOME_MODE"
 ATTR_AWAY = "AWAY_MODE"
@@ -25,7 +24,7 @@ ATTR_TYPE = "type_value"
 
 # Service names
 SERVICE_PTZ = "ptz"
-SERVICE_ALARM_TRIGER = "sound_alarm"
+SERVICE_ALARM_TRIGGER = "sound_alarm"
 SERVICE_WAKE_DEVICE = "wake_device"
 SERVICE_ALARM_SOUND = "alarm_sound"
 SERVICE_DETECTION_SENSITIVITY = "set_alarm_detection_sensibility"

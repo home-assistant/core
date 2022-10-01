@@ -1,9 +1,14 @@
 """Support for a demo mailbox."""
+from __future__ import annotations
+
 from hashlib import sha1
 import logging
 import os
+from typing import Any
 
 from homeassistant.components.mailbox import CONTENT_TYPE_MPEG, Mailbox, StreamError
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -11,7 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 MAILBOX_NAME = "DemoMailbox"
 
 
-async def async_get_handler(hass, config, discovery_info=None):
+async def async_get_handler(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> Mailbox:
     """Set up the Demo mailbox."""
     return DemoMailbox(hass, MAILBOX_NAME)
 
@@ -19,10 +28,10 @@ async def async_get_handler(hass, config, discovery_info=None):
 class DemoMailbox(Mailbox):
     """Demo Mailbox."""
 
-    def __init__(self, hass, name):
+    def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize Demo mailbox."""
         super().__init__(hass, name)
-        self._messages = {}
+        self._messages: dict[str, dict[str, Any]] = {}
         txt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
         for idx in range(0, 10):
             msgtime = int(dt.as_timestamp(dt.utcnow()) - 3600 * 24 * (10 - idx))
@@ -40,21 +49,21 @@ class DemoMailbox(Mailbox):
             self._messages[msgsha] = msg
 
     @property
-    def media_type(self):
+    def media_type(self) -> str:
         """Return the supported media type."""
         return CONTENT_TYPE_MPEG
 
     @property
-    def can_delete(self):
+    def can_delete(self) -> bool:
         """Return if messages can be deleted."""
         return True
 
     @property
-    def has_media(self):
+    def has_media(self) -> bool:
         """Return if messages have attached media files."""
         return True
 
-    async def async_get_media(self, msgid):
+    async def async_get_media(self, msgid: str) -> bytes:
         """Return the media blob for the msgid."""
         if msgid not in self._messages:
             raise StreamError("Message not found")
@@ -63,15 +72,15 @@ class DemoMailbox(Mailbox):
         with open(audio_path, "rb") as file:
             return file.read()
 
-    async def async_get_messages(self):
+    async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""
         return sorted(
             self._messages.values(),
-            key=lambda item: item["info"]["origtime"],
+            key=lambda item: item["info"]["origtime"],  # type: ignore[no-any-return]
             reverse=True,
         )
 
-    async def async_delete(self, msgid):
+    async def async_delete(self, msgid: str) -> bool:
         """Delete the specified messages."""
         if msgid in self._messages:
             _LOGGER.info("Deleting: %s", msgid)

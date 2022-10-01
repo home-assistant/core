@@ -9,13 +9,15 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "Ingin memulai penyiapan?"
-            },
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Siapkan kipas Modern Forms untuk diintegrasikan dengan Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Ingin menambahkan kipas Modern Forms `{name}` ke Home Assistant?",
+                "title": "Perangkat kipas Modern Forms yang Ditemukan"
             }
         }
     }

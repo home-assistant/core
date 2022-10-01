@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Input entities",
+                    "name": "Name",
+                    "round_digits": "Precision",
+                    "type": "Statistic characteristic"
+                },
+                "data_description": {
+                    "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median."
+                },
+                "description": "Create a sensor that calculates a min, max, mean or median value from a list of input sensors.",
+                "title": "Add min / max / mean / median sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Input entities",
+                    "round_digits": "Precision",
+                    "type": "Statistic characteristic"
+                },
+                "data_description": {
+                    "round_digits": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median."
+                }
+            }
+        }
+    },
+    "title": "Min / max / mean / median sensor"
+}

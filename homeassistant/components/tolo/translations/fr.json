@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Voulez-vous commencer la configuration\u00a0?"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "description": "Saisissez le nom d'h\u00f4te ou l'adresse IP de votre appareil TOLO Sauna."
+            }
+        }
+    }
+}

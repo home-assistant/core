@@ -28,8 +28,9 @@ The following cases will never be passed to your function:
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from types import MappingProxyType
-from typing import Any, Callable, Optional, Union
+from typing import Any, Optional, Union
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, callback

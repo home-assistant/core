@@ -5,17 +5,18 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from python_awair.devices import AwairDevice
+from python_awair.air_data import AirData
+from python_awair.devices import AwairBaseDevice
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
     SOUND_PRESSURE_WEIGHTED_DBA,
@@ -42,12 +43,13 @@ DUST_ALIASES = [API_PM25, API_PM10]
 
 LOGGER = logging.getLogger(__package__)
 
-UPDATE_INTERVAL = timedelta(minutes=5)
+UPDATE_INTERVAL_CLOUD = timedelta(minutes=5)
+UPDATE_INTERVAL_LOCAL = timedelta(seconds=30)
 
 
 @dataclass
 class AwairRequiredKeysMixin:
-    """Mixinf for required keys."""
+    """Mixin for required keys."""
 
     unique_id_tag: str
 
@@ -61,24 +63,27 @@ SENSOR_TYPE_SCORE = AwairSensorEntityDescription(
     key=API_SCORE,
     icon="mdi:blur",
     native_unit_of_measurement=PERCENTAGE,
-    name="Awair score",
+    name="Score",
     unique_id_tag="score",  # matches legacy format
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_HUMID,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         name="Humidity",
         unique_id_tag="HUMID",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AwairSensorEntityDescription(
         key=API_LUX,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         name="Illuminance",
         unique_id_tag="illuminance",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AwairSensorEntityDescription(
         key=API_SPL_A,
@@ -86,45 +91,50 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
         native_unit_of_measurement=SOUND_PRESSURE_WEIGHTED_DBA,
         name="Sound level",
         unique_id_tag="sound_level",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AwairSensorEntityDescription(
         key=API_VOC,
-        icon="mdi:cloud",
+        icon="mdi:molecule",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         name="Volatile organic compounds",
         unique_id_tag="VOC",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AwairSensorEntityDescription(
         key=API_TEMP,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         name="Temperature",
         unique_id_tag="TEMP",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AwairSensorEntityDescription(
         key=API_CO2,
-        device_class=DEVICE_CLASS_CO2,
-        icon="mdi:cloud",
+        device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         name="Carbon dioxide",
         unique_id_tag="CO2",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
 SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
     AwairSensorEntityDescription(
         key=API_PM25,
-        icon="mdi:blur",
+        device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         name="PM2.5",
         unique_id_tag="PM25",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AwairSensorEntityDescription(
         key=API_PM10,
-        icon="mdi:blur",
+        device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         name="PM10",
         unique_id_tag="PM10",  # matches legacy format
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -133,5 +143,5 @@ SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
 class AwairResult:
     """Wrapper class to hold an awair device and set of air data."""
 
-    device: AwairDevice
-    air_data: dict
+    device: AwairBaseDevice
+    air_data: AirData

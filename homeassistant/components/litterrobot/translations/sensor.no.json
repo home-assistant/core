@@ -1,0 +1,31 @@
+{
+    "state": {
+        "litterrobot__status_code": {
+            "br": "Panser fjernet",
+            "ccc": "Rengj\u00f8ringssyklus fullf\u00f8rt",
+            "ccp": "Rengj\u00f8ringssyklus p\u00e5g\u00e5r",
+            "cd": "Katt oppdaget",
+            "csf": "Feil p\u00e5 kattesensor",
+            "csi": "Kattesensor avbrutt",
+            "cst": "Tidsberegning for kattesensor",
+            "df1": "Skuff nesten full - 2 sykluser igjen",
+            "df2": "Skuff nesten full - 1 syklus til venstre",
+            "dfs": "Skuff full",
+            "dhf": "Dump + Hjemmeposisjonsfeil",
+            "dpf": "Dumpposisjonsfeil",
+            "ec": "Tom syklus",
+            "hpf": "Hjemmeposisjonsfeil",
+            "off": "Av",
+            "offline": "Frakoblet",
+            "otf": "Over dreiemomentfeil",
+            "p": "Pauset",
+            "pd": "Knip gjenkjenning",
+            "pwrd": "Sl\u00e5r av",
+            "pwru": "Sl\u00e5r p\u00e5",
+            "rdy": "Klar",
+            "scf": "Kattesensorfeil ved oppstart",
+            "sdf": "Skuff full ved oppstart",
+            "spf": "Knipegjenkjenning ved oppstart"
+        }
+    }
+}

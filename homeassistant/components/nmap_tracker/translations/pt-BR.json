@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Localiza\u00e7\u00e3o j\u00e1 est\u00e1 configurada"
+        },
+        "error": {
+            "invalid_hosts": "Hosts inv\u00e1lidos"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Endere\u00e7os de rede (separados por v\u00edrgula) para excluir da verifica\u00e7\u00e3o",
+                    "home_interval": "N\u00famero m\u00ednimo de minutos entre escaneamento de dispositivos ativos (preservar bateria)",
+                    "hosts": "Endere\u00e7os de rede (separados por v\u00edrgula) para digitalizar",
+                    "scan_options": "Op\u00e7\u00f5es de escaneamento bruto configur\u00e1veis para Nmap"
+                },
+                "description": "Configure os hosts a serem verificados pelo Nmap. O endere\u00e7o de rede e as exclus\u00f5es podem ser endere\u00e7os IP (192.168.1.1), redes IP (192.168.0.0/24) ou intervalos de IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "Hosts inv\u00e1lidos"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segundos para esperar at\u00e9 marcar um rastreador de dispositivo como fora de casa depois de n\u00e3o ser visto.",
+                    "exclude": "Endere\u00e7os de rede (separados por v\u00edrgula) para excluir da verifica\u00e7\u00e3o",
+                    "home_interval": "N\u00famero m\u00ednimo de minutos entre escaneamento de dispositivos ativos (preservar bateria)",
+                    "hosts": "Endere\u00e7os de rede (separados por v\u00edrgula) para digitalizar",
+                    "interval_seconds": "Intervalo de varredura",
+                    "scan_options": "Op\u00e7\u00f5es de escaneamento bruto configur\u00e1veis para Nmap"
+                },
+                "description": "Configure os hosts a serem verificados pelo Nmap. O endere\u00e7o de rede e as exclus\u00f5es podem ser endere\u00e7os IP (192.168.1.1), redes IP (192.168.0.0/24) ou intervalos de IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "title": "Nmap Tracker"
+}

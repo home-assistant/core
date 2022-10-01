@@ -1,7 +1,7 @@
 """Generate dhcp file."""
 from __future__ import annotations
 
-import json
+import black
 
 from .model import Config, Integration
 
@@ -10,10 +10,9 @@ BASE = """
 
 To update, run python3 -m script.hassfest
 \"\"\"
+from __future__ import annotations
 
-# fmt: off
-
-DHCP = {}
+DHCP: list[dict[str, str | bool]] = {}
 """.strip()
 
 
@@ -35,7 +34,7 @@ def generate_and_validate(integrations: list[dict[str, str]]):
         for entry in match_types:
             match_list.append({"domain": domain, **entry})
 
-    return BASE.format(json.dumps(match_list, indent=4))
+    return black.format_str(BASE.format(str(match_list)), mode=black.Mode())
 
 
 def validate(integrations: dict[str, Integration], config: Config):
@@ -47,7 +46,7 @@ def validate(integrations: dict[str, Integration], config: Config):
         return
 
     with open(str(dhcp_path)) as fp:
-        current = fp.read().strip()
+        current = fp.read()
         if current != content:
             config.add_error(
                 "dhcp",
@@ -61,4 +60,4 @@ def generate(integrations: dict[str, Integration], config: Config):
     """Generate dhcp file."""
     dhcp_path = config.root / "homeassistant/generated/dhcp.py"
     with open(str(dhcp_path), "w") as fp:
-        fp.write(f"{config.cache['dhcp']}\n")
+        fp.write(f"{config.cache['dhcp']}")

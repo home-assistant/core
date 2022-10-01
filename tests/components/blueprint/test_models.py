@@ -47,7 +47,9 @@ def blueprint_2():
 @pytest.fixture
 def domain_bps(hass):
     """Domain blueprints fixture."""
-    return models.DomainBlueprints(hass, "automation", logging.getLogger(__name__))
+    return models.DomainBlueprints(
+        hass, "automation", logging.getLogger(__name__), None
+    )
 
 
 def test_blueprint_model_init():
@@ -118,18 +120,15 @@ def test_blueprint_validate():
         is None
     )
 
-    assert (
-        models.Blueprint(
-            {
-                "blueprint": {
-                    "name": "Hello",
-                    "domain": "automation",
-                    "homeassistant": {"min_version": "100000.0.0"},
-                },
-            }
-        ).validate()
-        == ["Requires at least Home Assistant 100000.0.0"]
-    )
+    assert models.Blueprint(
+        {
+            "blueprint": {
+                "name": "Hello",
+                "domain": "automation",
+                "homeassistant": {"min_version": "100000.0.0"},
+            },
+        }
+    ).validate() == ["Requires at least Home Assistant 100000.0.0"]
 
 
 def test_blueprint_inputs(blueprint_2):

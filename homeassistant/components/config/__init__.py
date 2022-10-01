@@ -6,11 +6,14 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import ATTR_COMPONENT
+from homeassistant.util.file import write_utf8_file_atomic
 from homeassistant.util.yaml import dump, load_yaml
 
 DOMAIN = "config"
@@ -21,22 +24,19 @@ SECTIONS = (
     "automation",
     "config_entries",
     "core",
-    "customize",
     "device_registry",
     "entity_registry",
-    "group",
     "script",
     "scene",
 )
-ON_DEMAND = ("zwave",)
 ACTION_CREATE_UPDATE = "create_update"
 ACTION_DELETE = "delete"
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the config component."""
-    hass.components.frontend.async_register_built_in_panel(
-        "config", "config", "hass:cog", require_admin=True
+    frontend.async_register_built_in_panel(
+        hass, "config", "config", "hass:cog", require_admin=True
     )
 
     async def setup_panel(panel_name):
@@ -52,20 +52,7 @@ async def async_setup(hass, config):
             key = f"{DOMAIN}.{panel_name}"
             hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: key})
 
-    @callback
-    def component_loaded(event):
-        """Respond to components being loaded."""
-        panel_name = event.data.get(ATTR_COMPONENT)
-        if panel_name in ON_DEMAND:
-            hass.async_create_task(setup_panel(panel_name))
-
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
-
     tasks = [asyncio.create_task(setup_panel(panel_name)) for panel_name in SECTIONS]
-
-    for panel_name in ON_DEMAND:
-        if panel_name in hass.config.components:
-            tasks.append(asyncio.create_task(setup_panel(panel_name)))
 
     if tasks:
         await asyncio.wait(tasks)
@@ -226,9 +213,7 @@ class EditIdBasedConfigView(BaseEditConfigView):
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
-        value = self._get_value(hass, data, config_key)
-
-        if value is None:
+        if (value := self._get_value(hass, data, config_key)) is None:
             value = {CONF_ID: config_key}
             data.append(value)
 
@@ -254,6 +239,5 @@ def _write(path, data):
     """Write YAML helper."""
     # Do it before opening file. If dump causes error it will now not
     # truncate the file.
-    data = dump(data)
-    with open(path, "w", encoding="utf-8") as outfile:
-        outfile.write(data)
+    contents = dump(data)
+    write_utf8_file_atomic(path, contents)

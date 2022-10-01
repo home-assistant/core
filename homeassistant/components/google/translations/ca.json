@@ -1,0 +1,55 @@
+{
+    "application_credentials": {
+        "description": "Segueix les [instruccions]({more_info_url}) de [la pantalla de consentiment OAuth]({oauth_consent_url}) perqu\u00e8 Home Assistant tingui acc\u00e9s al teu calendari de Google. Tamb\u00e9 has de crear les credencials d'aplicaci\u00f3 enlla\u00e7ades al calendari:\n 1. V\u00e9s a [Credencials]({oauth_creds_url}) i fes clic a **Crear credencials**.\n 2 A la llista desplegable, selecciona **ID de client OAuth**.\n 3. Selecciona **Dispositius TV i d'entrada limitada** al tipus d'aplicaci\u00f3.\n \n "
+    },
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "code_expired": "El codi d'autenticaci\u00f3 ha caducat o la configuraci\u00f3 de credencials no \u00e9s v\u00e0lida. Torna-ho a provar.",
+            "invalid_access_token": "Token d'acc\u00e9s inv\u00e0lid",
+            "missing_configuration": "El component no est\u00e0 configurat. Mira'n la documentaci\u00f3.",
+            "oauth_error": "S'han rebut dades token inv\u00e0lides.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "timeout_connect": "S'ha esgotat el temps m\u00e0xim d'espera per establir connexi\u00f3"
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3 exitosa"
+        },
+        "progress": {
+            "exchange": "Per enlla\u00e7ar un compte de Google, v\u00e9s a [{url}]({url}) i introdueix el codi: \n\n{user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Vinculaci\u00f3 amb compte de Google"
+            },
+            "pick_implementation": {
+                "title": "Selecciona el m\u00e8tode d'autenticaci\u00f3"
+            },
+            "reauth_confirm": {
+                "description": "La integraci\u00f3 Google Calendar ha de tornar a autenticar-se amb el teu compte",
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "La configuraci\u00f3 de Google Calentdar mitjan\u00e7ant YAML s'eliminar\u00e0 de Home Assistant a la versi\u00f3 2022.9. \n\nLa configuraci\u00f3 existent de credencials d'aplicaci\u00f3 OAuth i d'acc\u00e9s s'ha importat autom\u00e0ticament a la interf\u00edcie d'usuari. Elimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "La configuraci\u00f3 YAML de Google Calendar est\u00e0 sent eliminada"
+        },
+        "removed_track_new_yaml": {
+            "description": "Has desactivat el seguiment d'entitats de Google Calendar a configuration.yaml, que ja no \u00e9s compatible. Per desactivar les entitats descobertes recentment, a partir d'ara, has de canviar manualment les opcions de sistema de la integraci\u00f3 a trav\u00e9s de la interf\u00edcie d'usuari. Elimina la configuraci\u00f3 'track_new' de configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "El seguiment d'entitats de Google Calendar ha canviat"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Acc\u00e9s de Home Assistant a Google Calendar"
+                }
+            }
+        }
+    }
+}

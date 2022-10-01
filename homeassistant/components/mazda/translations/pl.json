@@ -17,10 +17,8 @@
                     "password": "Has\u0142o",
                     "region": "Region"
                 },
-                "description": "Wprowad\u017a adres e-mail i has\u0142o, kt\u00f3rych u\u017cywasz do logowania si\u0119 do aplikacji mobilnej MyMazda.",
-                "title": "Mazda Connected Services - Dodawanie konta"
+                "description": "Wprowad\u017a adres e-mail i has\u0142o, kt\u00f3rych u\u017cywasz do logowania si\u0119 do aplikacji mobilnej MyMazda."
             }
         }
-    },
-    "title": "Mazda Connected Services"
+    }
 }

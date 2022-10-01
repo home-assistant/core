@@ -26,13 +26,13 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Nettverksn\u00f8kkel",
                     "s0_legacy_key": "S0-n\u00f8kkel (eldre)",
                     "s2_access_control_key": "N\u00f8kkel for S2-tilgangskontroll",
                     "s2_authenticated_key": "S2 Autentisert n\u00f8kkel",
                     "s2_unauthenticated_key": "S2 Uautentisert n\u00f8kkel",
                     "usb_path": "USB enhetsbane"
                 },
+                "description": "Tillegget vil generere sikkerhetsn\u00f8kler hvis disse feltene er tomme.",
                 "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
             },
             "hassio_confirm": {
@@ -58,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "Vil du konfigurere {name} med Z-Wave JS-tillegget?"
+            },
+            "zeroconf_confirm": {
+                "description": "Vil du legge til Z-Wave JS Server med hjemme-ID {home_id} funnet p\u00e5 {url} til Home Assistant?",
+                "title": "Oppdaget Z-Wave JS Server"
             }
         }
     },
@@ -87,6 +91,12 @@
             "zwave_js.value_updated.value": "Verdiendring p\u00e5 en Z-Wave JS-verdi"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "Versjonen av Z-Wave JS Server du kj\u00f8rer er for gammel for denne versjonen av Home Assistant. Oppdater Z-Wave JS Server til den nyeste versjonen for \u00e5 fikse dette problemet.",
+            "title": "Nyere versjon av Z-Wave JS Server er n\u00f8dvendig"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Kunne ikke hente oppdagelsesinformasjon om Z-Wave JS-tillegg",
@@ -112,13 +122,13 @@
                 "data": {
                     "emulate_hardware": "Emuler maskinvare",
                     "log_level": "Loggniv\u00e5",
-                    "network_key": "Nettverksn\u00f8kkel",
                     "s0_legacy_key": "S0-n\u00f8kkel (eldre)",
                     "s2_access_control_key": "N\u00f8kkel for S2-tilgangskontroll",
                     "s2_authenticated_key": "S2 Autentisert n\u00f8kkel",
                     "s2_unauthenticated_key": "S2 Uautentisert n\u00f8kkel",
                     "usb_path": "USB enhetsbane"
                 },
+                "description": "Tillegget vil generere sikkerhetsn\u00f8kler hvis disse feltene er tomme.",
                 "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
             },
             "install_addon": {
@@ -140,6 +150,5 @@
                 "title": "Z-Wave JS-tillegget starter"
             }
         }
-    },
-    "title": ""
+    }
 }

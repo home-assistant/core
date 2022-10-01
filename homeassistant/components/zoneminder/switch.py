@@ -1,12 +1,19 @@
 """Support for ZoneMinder switches."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import voluptuous as vol
-from zoneminder.monitor import MonitorState
+from zoneminder.monitor import Monitor, MonitorState
+from zoneminder.zm import ZoneMinder
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
@@ -20,16 +27,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZoneMinder switch platform."""
 
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
 
     switches = []
+    zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
-        monitors = zm_client.get_monitors()
-        if not monitors:
+        if not (monitors := zm_client.get_monitors()):
             _LOGGER.warning("Could not fetch monitors from ZoneMinder")
             return
 
@@ -43,31 +55,27 @@ class ZMSwitchMonitors(SwitchEntity):
 
     icon = "mdi:record-rec"
 
-    def __init__(self, monitor, on_state, off_state):
+    def __init__(self, monitor: Monitor, on_state: str, off_state: str) -> None:
         """Initialize the switch."""
         self._monitor = monitor
         self._on_state = on_state
         self._off_state = off_state
-        self._state = None
+        self._state: bool | None = None
+        self._attr_name = f"{monitor.name} State"
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self._monitor.name} State"
-
-    def update(self):
+    def update(self) -> None:
         """Update the switch value."""
         self._state = self._monitor.function == self._on_state
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._monitor.function = self._on_state
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._monitor.function = self._off_state

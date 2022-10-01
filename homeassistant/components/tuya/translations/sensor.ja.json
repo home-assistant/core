@@ -1,0 +1,21 @@
+{
+    "state": {
+        "tuya__air_quality": {
+            "good": "\u30b0\u30c3\u30c9",
+            "great": "\u30b0\u30ec\u30fc\u30c8",
+            "mild": "\u30de\u30a4\u30eb\u30c9",
+            "severe": "\u30b7\u30d3\u30a2"
+        },
+        "tuya__status": {
+            "boiling_temp": "\u6cb8\u70b9",
+            "cooling": "\u51b7\u5374",
+            "heating": "\u6696\u623f(\u52a0\u71b1)",
+            "heating_temp": "\u6696\u623f(\u52a0\u71b1)\u6e29\u5ea6",
+            "reserve_1": "Reserve 1",
+            "reserve_2": "Reserve 2",
+            "reserve_3": "Reserve 3",
+            "standby": "\u30b9\u30bf\u30f3\u30d0\u30a4",
+            "warm": "\u4fdd\u6e29"
+        }
+    }
+}

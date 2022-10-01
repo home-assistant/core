@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30a2\u30ab\u30a6\u30f3\u30c8\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "reauth_failed_existing": "\u69cb\u6210\u30a8\u30f3\u30c8\u30ea\u30fc\u3092\u66f4\u65b0\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\u3002\u7d71\u5408\u3092\u524a\u9664\u3057\u3066\u518d\u5ea6\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_api_key": "\u7121\u52b9\u306aAPI\u30ad\u30fc",
+            "not_main_key": "\u9593\u9055\u3063\u305fAPI\u30ad\u30fc\u30bf\u30a4\u30d7\u304c\u691c\u51fa\u3055\u308c\u307e\u3057\u305f\u3002 'main' API\u30ad\u30fc\u3092\u4f7f\u7528\u3057\u3066\u304f\u3060\u3055\u3044",
+            "reauth_failed_matching_account": "\u6307\u5b9a\u3055\u308c\u305fAPI\u30ad\u30fc\u304c\u3001\u3059\u3067\u306b\u3042\u308b\u8a2d\u5b9a\u306e\u30a2\u30ab\u30a6\u30f3\u30c8ID\u3068\u4e00\u81f4\u3057\u307e\u305b\u3093\u3002",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc"
+                },
+                "description": "UptimeRobot \u304b\u3089\u65b0\u3057\u3044\u300c\u30e1\u30a4\u30f3\u300dAPI \u30ad\u30fc\u3092\u63d0\u4f9b\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059",
+                "title": "\u7d71\u5408\u306e\u518d\u8a8d\u8a3c"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc"
+                },
+                "description": "UptimeRobot \u304b\u3089\u300c\u30e1\u30a4\u30f3\u300dAPI \u30ad\u30fc\u3092\u63d0\u4f9b\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059"
+            }
+        }
+    }
+}

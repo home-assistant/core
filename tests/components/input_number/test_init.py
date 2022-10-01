@@ -255,6 +255,29 @@ async def test_restore_state(hass):
     assert float(state.state) == 10
 
 
+async def test_restore_invalid_state(hass):
+    """Ensure an invalid restore state is handled."""
+    mock_restore_cache(
+        hass, (State("input_number.b1", "="), State("input_number.b2", "200"))
+    )
+
+    hass.state = CoreState.starting
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"b1": {"min": 2, "max": 100}, "b2": {"min": 10, "max": 100}}},
+    )
+
+    state = hass.states.get("input_number.b1")
+    assert state
+    assert float(state.state) == 2
+
+    state = hass.states.get("input_number.b2")
+    assert state
+    assert float(state.state) == 10
+
+
 async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
@@ -393,7 +416,7 @@ async def test_load_from_storage(hass, storage_setup):
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
-    assert float(state.state) == 10
+    assert float(state.state) == 0  # initial is not supported when loading from storage
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
     assert state.attributes.get(ATTR_EDITABLE)
 
@@ -415,7 +438,7 @@ async def test_editable_state_attribute(hass, storage_setup):
     )
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
-    assert float(state.state) == 10
+    assert float(state.state) == 0
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
     assert state.attributes.get(ATTR_EDITABLE)
 
@@ -484,16 +507,14 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 async def test_update_min_max(hass, hass_ws_client, storage_setup):
     """Test updating min/max updates the state."""
 
-    items = [
-        {
-            "id": "from_storage",
-            "name": "from storage",
-            "max": 100,
-            "min": 0,
-            "step": 1,
-            "mode": "slider",
-        }
-    ]
+    settings = {
+        "name": "from storage",
+        "max": 100,
+        "min": 0,
+        "step": 1,
+        "mode": "slider",
+    }
+    items = [{"id": "from_storage"} | settings]
     assert await storage_setup(items)
 
     input_id = "from_storage"
@@ -507,26 +528,34 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
 
     client = await hass_ws_client(hass)
 
+    updated_settings = settings | {"min": 9}
     await client.send_json(
-        {"id": 6, "type": f"{DOMAIN}/update", f"{DOMAIN}_id": f"{input_id}", "min": 9}
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": f"{input_id}",
+            **updated_settings,
+        }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 9
 
+    updated_settings = settings | {"max": 5}
     await client.send_json(
         {
             "id": 7,
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": f"{input_id}",
-            "max": 5,
-            "min": 0,
+            **updated_settings,
         }
     )
     resp = await client.receive_json()
     assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 5

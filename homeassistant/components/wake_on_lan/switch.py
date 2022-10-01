@@ -1,7 +1,9 @@
 """Support for wake on lan."""
+from __future__ import annotations
+
 import logging
-import platform
 import subprocess as sp
+from typing import Any
 
 import voluptuous as vol
 import wakeonlan
@@ -14,9 +16,14 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +44,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a wake on lan switch."""
     broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
     broadcast_port = config.get(CONF_BROADCAST_PORT)
@@ -82,9 +94,8 @@ class WolSwitch(SwitchEntity):
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
-        domain = __name__.split(".")[-2]
         self._off_script = (
-            Script(hass, off_action, name, domain) if off_action else None
+            Script(hass, off_action, name, DOMAIN) if off_action else None
         )
         self._state = False
         self._assumed_state = host is None
@@ -115,7 +126,7 @@ class WolSwitch(SwitchEntity):
         """Return the unique id of this switch."""
         return self._unique_id
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         service_kwargs = {}
         if self._broadcast_address is not None:
@@ -136,7 +147,7 @@ class WolSwitch(SwitchEntity):
             self._state = True
             self.async_write_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
             self._off_script.run(context=self._context)
@@ -145,26 +156,16 @@ class WolSwitch(SwitchEntity):
             self._state = False
             self.async_write_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Check if device is on and update the state. Only called if assumed state is false."""
-        if platform.system().lower() == "windows":
-            ping_cmd = [
-                "ping",
-                "-n",
-                "1",
-                "-w",
-                str(DEFAULT_PING_TIMEOUT * 1000),
-                str(self._host),
-            ]
-        else:
-            ping_cmd = [
-                "ping",
-                "-c",
-                "1",
-                "-W",
-                str(DEFAULT_PING_TIMEOUT),
-                str(self._host),
-            ]
+        ping_cmd = [
+            "ping",
+            "-c",
+            "1",
+            "-W",
+            str(DEFAULT_PING_TIMEOUT),
+            str(self._host),
+        ]
 
         status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
         self._state = not bool(status)

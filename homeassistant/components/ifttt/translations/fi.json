@@ -2,7 +2,8 @@
     "config": {
         "step": {
             "user": {
-                "description": "Haluatko varmasti m\u00e4\u00e4ritt\u00e4\u00e4 IFTTT:n?"
+                "description": "Haluatko varmasti m\u00e4\u00e4ritt\u00e4\u00e4 IFTTT:n?",
+                "title": "M\u00e4\u00e4rit\u00e4 IFTTT Webhook -sovelma"
             }
         }
     }

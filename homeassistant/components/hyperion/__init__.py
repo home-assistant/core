@@ -10,11 +10,8 @@ from typing import Any, cast
 from awesomeversion import AwesomeVersion
 from hyperion import client, const as hyperion_const
 
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -36,7 +33,7 @@ from .const import (
     SIGNAL_INSTANCE_REMOVE,
 )
 
-PLATFORMS = [LIGHT_DOMAIN, SWITCH_DOMAIN, CAMERA_DOMAIN]
+PLATFORMS = [Platform.LIGHT, Platform.SWITCH, Platform.CAMERA]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -272,21 +269,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
     )
 
-    async def setup_then_listen() -> None:
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        assert hyperion_client
-        if hyperion_client.instances is not None:
-            await async_instances_to_clients_raw(hyperion_client.instances)
-        hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
-            entry.add_update_listener(_async_entry_updated)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    assert hyperion_client
+    if hyperion_client.instances is not None:
+        await async_instances_to_clients_raw(hyperion_client.instances)
+    hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].append(
+        entry.add_update_listener(_async_entry_updated)
+    )
 
-    hass.async_create_task(setup_then_listen())
     return True
 
 

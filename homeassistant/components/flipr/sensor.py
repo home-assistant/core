@@ -1,15 +1,16 @@
 """Sensor platform for the Flipr's pool_sensor."""
 from __future__ import annotations
 
-from datetime import datetime
-
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ELECTRIC_POTENTIAL_MILLIVOLT, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FliprEntity
 from .const import DOMAIN
@@ -20,33 +21,41 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Chlorine",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
         name="pH",
         icon="mdi:pool",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="temperature",
         name="Water Temp",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="date_time",
         name="Last Measured",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="red_ox",
         name="Red OX",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_MILLIVOLT,
         icon="mdi:pool",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Defer sensor setup to the shared sensor module."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -60,7 +69,4 @@ class FliprSensor(FliprEntity, SensorEntity):
     @property
     def native_value(self):
         """State of the sensor."""
-        state = self.coordinator.data[self.entity_description.key]
-        if isinstance(state, datetime):
-            return state.isoformat()
-        return state
+        return self.coordinator.data[self.entity_description.key]

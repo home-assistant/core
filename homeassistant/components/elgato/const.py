@@ -1,15 +1,18 @@
 """Constants for the Elgato Light integration."""
+from __future__ import annotations
+
+from datetime import timedelta
+import logging
+from typing import Final
 
 # Integration domain
-DOMAIN = "elgato"
+DOMAIN: Final = "elgato"
 
-# Home Assistant data keys
-DATA_ELGATO_CLIENT = "elgato_client"
+LOGGER = logging.getLogger(__package__)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 # Attributes
 ATTR_ON = "on"
-
-CONF_SERIAL_NUMBER = "serial_number"
 
 # Services
 SERVICE_IDENTIFY = "identify"

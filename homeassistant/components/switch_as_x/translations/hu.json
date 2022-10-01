@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Kapcsol\u00f3",
+                    "target_domain": "\u00daj t\u00edpus"
+                },
+                "description": "V\u00e1lassza ki azt a kapcsol\u00f3t, amelyet meg szeretne jelen\u00edteni a Home Assistantban l\u00e1mpak\u00e9nt, \u00e1rny\u00e9kol\u00f3k\u00e9nt vagy b\u00e1rmi m\u00e1sk\u00e9nt. Az eredeti kapcsol\u00f3 el lesz rejtve."
+            }
+        }
+    },
+    "title": "Kapcsol\u00f3 mint m\u00e1s eszk\u00f6z"
+}

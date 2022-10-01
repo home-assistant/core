@@ -11,13 +11,6 @@
             "cannot_connect": "Gagal terhubung"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Kata Sandi",
-                    "username": "Nama Pengguna"
-                },
-                "title": "Konfigurasikan autentikasi"
-            },
             "configure": {
                 "data": {
                     "host": "Host",
@@ -25,7 +18,8 @@
                     "password": "Kata Sandi",
                     "port": "Port",
                     "username": "Nama Pengguna"
-                }
+                },
+                "title": "Konfigurasikan perangkat ONVIF"
             },
             "configure_profile": {
                 "data": {
@@ -40,15 +34,10 @@
                 },
                 "title": "Pilih perangkat ONVIF"
             },
-            "manual_input": {
-                "data": {
-                    "host": "Host",
-                    "name": "Nama",
-                    "port": "Port"
-                },
-                "title": "Konfigurasikan perangkat ONVIF"
-            },
             "user": {
+                "data": {
+                    "auto": "Cari secara otomatis"
+                },
                 "description": "Dengan mengklik kirim, kami akan mencari perangkat ONVIF pada jaringan Anda yang mendukung Profil S.\n\nBeberapa produsen mulai menonaktifkan ONVIF secara default. Pastikan ONVIF diaktifkan dalam konfigurasi kamera Anda.",
                 "title": "Penyiapan perangkat ONVIF"
             }

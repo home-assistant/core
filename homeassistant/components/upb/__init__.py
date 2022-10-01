@@ -1,10 +1,10 @@
 """Support the UPB PIM."""
-
 import upb_lib
 
-from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST
-from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     ATTR_ADDRESS,
@@ -14,10 +14,10 @@ from .const import (
     EVENT_UPB_SCENE_CHANGED,
 )
 
-PLATFORMS = ["light", "scene"]
+PLATFORMS = [Platform.LIGHT, Platform.SCENE]
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a new config_entry for UPB PIM."""
 
     url = config_entry.data[CONF_HOST]
@@ -28,11 +28,10 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     def _element_changed(element, changeset):
-        change = changeset.get("last_change")
-        if change is None:
+        if (change := changeset.get("last_change")) is None:
             return
         if change.get("command") is None:
             return
@@ -54,7 +53,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config_entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -69,6 +68,8 @@ async def async_unload_entry(hass, config_entry):
 class UpbEntity(Entity):
     """Base class for all UPB entities."""
 
+    _attr_should_poll = False
+
     def __init__(self, element, unique_id, upb):
         """Initialize the base of all UPB devices."""
         self._upb = upb
@@ -77,19 +78,9 @@ class UpbEntity(Entity):
         self._unique_id = f"{unique_id}_{element_type}_{element.addr}"
 
     @property
-    def name(self):
-        """Name of the element."""
-        return self._element.name
-
-    @property
     def unique_id(self):
         """Return unique id of the element."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Don't poll this device."""
-        return False
 
     @property
     def extra_state_attributes(self):
@@ -120,12 +111,12 @@ class UpbAttachedEntity(UpbEntity):
     """Base class for UPB attached entities."""
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for the entity."""
-        return {
-            "name": self._element.name,
-            "identifiers": {(DOMAIN, self._element.index)},
-            "sw_version": self._element.version,
-            "manufacturer": self._element.manufacturer,
-            "model": self._element.product,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._element.index)},
+            manufacturer=self._element.manufacturer,
+            model=self._element.product,
+            name=self._element.name,
+            sw_version=self._element.version,
+        )

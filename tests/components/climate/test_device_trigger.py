@@ -3,9 +3,18 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.climate import DOMAIN, const, device_trigger
+from homeassistant.components.climate import (
+    DOMAIN,
+    HVACAction,
+    HVACMode,
+    const,
+    device_trigger,
+)
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -49,9 +58,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     entity_id = f"{DOMAIN}.test_5678"
     hass.states.async_set(
         entity_id,
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_IDLE,
+            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -60,26 +69,82 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "hvac_mode_changed",
+            "type": trigger,
             "device_id": device_entry.id,
             "entity_id": entity_id,
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "current_temperature_changed",
-            "device_id": device_entry.id,
-            "entity_id": entity_id,
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "current_humidity_changed",
-            "device_id": device_entry.id,
-            "entity_id": entity_id,
-        },
+            "metadata": {"secondary": False},
+        }
+        for trigger in [
+            "hvac_mode_changed",
+            "current_temperature_changed",
+            "current_humidity_changed",
+        ]
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert_lists_same(triggers, expected_triggers)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_triggers_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected triggers from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+    )
+    entity_id = f"{DOMAIN}.test_5678"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.COOL,
+        {
+            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
+            const.ATTR_CURRENT_HUMIDITY: 23,
+            const.ATTR_CURRENT_TEMPERATURE: 18,
+        },
+    )
+    expected_triggers = [
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": trigger,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for trigger in [
+            "hvac_mode_changed",
+            "current_temperature_changed",
+            "current_humidity_changed",
+        ]
+    ]
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -87,9 +152,9 @@ async def test_if_fires_on_state_change(hass, calls):
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_IDLE,
+            const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -107,7 +172,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "device_id": "",
                         "entity_id": "climate.entity",
                         "type": "hvac_mode_changed",
-                        "to": const.HVAC_MODE_AUTO,
+                        "to": HVACMode.AUTO,
                     },
                     "action": {
                         "service": "test.automation",
@@ -149,9 +214,9 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the HVAC mode is changing
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_COOL,
+            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 18,
         },
@@ -163,9 +228,9 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the temperature is changing
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_COOL,
+            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 23,
             const.ATTR_CURRENT_TEMPERATURE: 23,
         },
@@ -177,9 +242,9 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the humidity is changing
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
-            const.ATTR_HVAC_ACTION: const.CURRENT_HVAC_COOL,
+            const.ATTR_HVAC_ACTION: HVACAction.COOLING,
             const.ATTR_CURRENT_HUMIDITY: 7,
             const.ATTR_CURRENT_TEMPERATURE: 23,
         },

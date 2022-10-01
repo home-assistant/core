@@ -1,12 +1,19 @@
 """Support for information about the German train system."""
+from __future__ import annotations
+
 from datetime import timedelta
+import logging
 
 import schiene
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_OFFSET
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 CONF_DESTINATION = "to"
@@ -28,14 +35,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Deutsche Bahn Sensor."""
     start = config.get(CONF_START)
     destination = config[CONF_DESTINATION]
     offset = config[CONF_OFFSET]
     only_direct = config[CONF_ONLY_DIRECT]
-
+    create_issue(
+        hass,
+        "deutsche_bahn",
+        "pending_removal",
+        breaks_in_ha_version="2022.11.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="pending_removal",
+    )
+    _LOGGER.warning(
+        "The Deutsche Bahn sensor component is deprecated and will be removed in Home Assistant 2022.11"
+    )
     add_entities([DeutscheBahnSensor(start, destination, offset, only_direct)], True)
 
 
@@ -73,7 +98,7 @@ class DeutscheBahnSensor(SensorEntity):
             connections["next_on"] = self.data.connections[2]["departure"]
         return connections
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest delay from bahn.de and updates the state."""
         self.data.update()
         self._state = self.data.connections[0].get("departure", "Unknown")

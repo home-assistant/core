@@ -1,0 +1,96 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "already_exists": "Es existiert bereits eine Kamera mit diesen URL-Einstellungen.",
+            "invalid_still_image": "URL hat kein g\u00fcltiges Standbild zur\u00fcckgegeben",
+            "malformed_url": "Falsch formatierte URL",
+            "no_still_image_or_stream_url": "Du musst mindestens eine Standbild- oder Stream-URL angeben",
+            "relative_url": "Relative URLs sind nicht zul\u00e4ssig",
+            "stream_file_not_found": "Datei nicht gefunden beim Versuch, eine Verbindung zum Stream herzustellen (ist ffmpeg installiert?)",
+            "stream_http_not_found": "HTTP 404 Not found beim Versuch, eine Verbindung zum Stream herzustellen",
+            "stream_io_error": "Eingabe-/Ausgabefehler beim Versuch, eine Verbindung zum Stream herzustellen. Falsches RTSP-Transportprotokoll?",
+            "stream_no_route_to_host": "Beim Versuch, eine Verbindung zum Stream herzustellen, konnte der Host nicht gefunden werden",
+            "stream_no_video": "Stream enth\u00e4lt kein Video",
+            "stream_not_permitted": "Beim Versuch, eine Verbindung zum Stream herzustellen, ist ein Vorgang nicht zul\u00e4ssig. Falsches RTSP-Transportprotokoll?",
+            "stream_unauthorised": "Autorisierung beim Versuch, eine Verbindung zum Stream herzustellen, fehlgeschlagen",
+            "template_error": "Fehler beim Rendern der Vorlage. \u00dcberpr\u00fcfe das Protokoll f\u00fcr weitere Informationen.",
+            "timeout": "Zeit\u00fcberschreitung beim Laden der URL",
+            "unable_still_load": "Es konnte kein g\u00fcltiges Bild von der Standbild-URL geladen werden (z. B. ung\u00fcltiger Host, URL oder Authentifizierungsfehler). \u00dcberpr\u00fcfe das Protokoll f\u00fcr weitere Informationen.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"
+            },
+            "content_type": {
+                "data": {
+                    "content_type": "Inhaltstyp"
+                },
+                "description": "Gib den Inhaltstyp des Streams an."
+            },
+            "user": {
+                "data": {
+                    "authentication": "Authentifizierung",
+                    "framerate": "Bildfrequenz (Hz)",
+                    "limit_refetch_to_url_change": "Neuabruf auf URL-\u00c4nderung beschr\u00e4nken",
+                    "password": "Passwort",
+                    "rtsp_transport": "RTSP-Transportprotokoll",
+                    "still_image_url": "Standbild-URL (z.B. http://...)",
+                    "stream_source": "Stream-Quell-URL (z.B. rtsp://...)",
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                },
+                "description": "Gib die Einstellungen f\u00fcr die Verbindung mit der Kamera ein."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_exists": "Es existiert bereits eine Kamera mit diesen URL-Einstellungen.",
+            "invalid_still_image": "URL hat kein g\u00fcltiges Standbild zur\u00fcckgegeben",
+            "malformed_url": "Falsch formatierte URL",
+            "no_still_image_or_stream_url": "Du musst mindestens eine Standbild- oder Stream-URL angeben",
+            "relative_url": "Relative URLs sind nicht zul\u00e4ssig",
+            "stream_file_not_found": "Datei nicht gefunden beim Versuch, eine Verbindung zum Stream herzustellen (ist ffmpeg installiert?)",
+            "stream_http_not_found": "HTTP 404 Not found beim Versuch, eine Verbindung zum Stream herzustellen",
+            "stream_io_error": "Eingabe-/Ausgabefehler beim Versuch, eine Verbindung zum Stream herzustellen. Falsches RTSP-Transportprotokoll?",
+            "stream_no_route_to_host": "Beim Versuch, eine Verbindung zum Stream herzustellen, konnte der Host nicht gefunden werden",
+            "stream_no_video": "Stream enth\u00e4lt kein Video",
+            "stream_not_permitted": "Beim Versuch, eine Verbindung zum Stream herzustellen, ist ein Vorgang nicht zul\u00e4ssig. Falsches RTSP-Transportprotokoll?",
+            "stream_unauthorised": "Autorisierung beim Versuch, eine Verbindung zum Stream herzustellen, fehlgeschlagen",
+            "template_error": "Fehler beim Rendern der Vorlage. \u00dcberpr\u00fcfe das Protokoll f\u00fcr weitere Informationen.",
+            "timeout": "Zeit\u00fcberschreitung beim Laden der URL",
+            "unable_still_load": "Es konnte kein g\u00fcltiges Bild von der Standbild-URL geladen werden (z. B. ung\u00fcltiger Host, URL oder Authentifizierungsfehler). \u00dcberpr\u00fcfe das Protokoll f\u00fcr weitere Informationen.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Inhaltstyp"
+                },
+                "description": "Gib den Inhaltstyp des Streams an."
+            },
+            "init": {
+                "data": {
+                    "authentication": "Authentifizierung",
+                    "framerate": "Bildfrequenz (Hz)",
+                    "limit_refetch_to_url_change": "Neuabruf auf URL-\u00c4nderung beschr\u00e4nken",
+                    "password": "Passwort",
+                    "rtsp_transport": "RTSP-Transportprotokoll",
+                    "still_image_url": "Standbild-URL (z.B. http://...)",
+                    "stream_source": "Stream-Quell-URL (z.B. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Wanduhr als Zeitstempel verwenden",
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "Diese Option kann Segmentierungs- oder Absturzprobleme beheben, die durch fehlerhafte Zeitstempel-Implementierungen auf einigen Kameras entstehen"
+                }
+            }
+        }
+    }
+}

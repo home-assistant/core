@@ -5,24 +5,20 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
-from homeassistant.components.trace import ActionTrace, async_store_trace
-from homeassistant.components.trace.const import CONF_STORED_TRACES
+from homeassistant.components.trace import (
+    CONF_STORED_TRACES,
+    ActionTrace,
+    async_store_trace,
+)
 from homeassistant.core import Context, HomeAssistant
+
+from .const import DOMAIN
 
 
 class ScriptTrace(ActionTrace):
-    """Container for automation trace."""
+    """Container for script trace."""
 
-    def __init__(
-        self,
-        item_id: str,
-        config: dict[str, Any],
-        blueprint_inputs: dict[str, Any],
-        context: Context,
-    ) -> None:
-        """Container for automation trace."""
-        key = ("script", item_id)
-        super().__init__(key, config, blueprint_inputs, context)
+    _domain = DOMAIN
 
 
 @contextmanager

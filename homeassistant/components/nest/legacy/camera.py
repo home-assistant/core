@@ -1,4 +1,6 @@
 """Support for Nest Cameras."""
+# mypy: ignore-errors
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,7 +8,8 @@ import logging
 
 import requests
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_ON_OFF, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_NEST, DOMAIN
@@ -35,6 +38,9 @@ async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
 class NestCamera(Camera):
     """Representation of a Nest Camera."""
 
+    _attr_should_poll = True  # Cameras default to False
+    _attr_supported_features = CameraEntityFeature.ON_OFF
+
     def __init__(self, structure, device):
         """Initialize a Nest Camera."""
         super().__init__()
@@ -61,19 +67,14 @@ class NestCamera(Camera):
         return self.device.device_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.device.device_id)},
-            "name": self.device.name_long,
-            "manufacturer": "Nest Labs",
-            "model": "Camera",
-        }
-
-    @property
-    def should_poll(self):
-        """Nest camera should poll periodically."""
-        return True
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.device_id)},
+            manufacturer="Nest Labs",
+            model="Camera",
+            name=self.device.name_long,
+        )
 
     @property
     def is_recording(self):
@@ -84,11 +85,6 @@ class NestCamera(Camera):
     def brand(self):
         """Return the brand of the camera."""
         return NEST_BRAND
-
-    @property
-    def supported_features(self):
-        """Nest Cam support turn on and off."""
-        return SUPPORT_ON_OFF
 
     @property
     def is_on(self):
@@ -142,7 +138,7 @@ class NestCamera(Camera):
             url = self.device.snapshot_url
 
             try:
-                response = requests.get(url)
+                response = requests.get(url, timeout=10)
             except requests.exceptions.RequestException as error:
                 _LOGGER.error("Error getting camera image: %s", error)
                 return None

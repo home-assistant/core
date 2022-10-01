@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "\u00c9chec de connexion",
+            "not_insteon_device": "L'appareil d\u00e9couvert n'est pas un appareil Insteon",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
             "select_single": "S\u00e9lectionnez une option."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Voulez-vous configurer {name}\u00a0?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Adresse IP",
@@ -38,8 +43,7 @@
                 "data": {
                     "modem_type": "Type de modem."
                 },
-                "description": "S\u00e9lectionnez le type de modem Insteon.",
-                "title": "Insteon"
+                "description": "S\u00e9lectionnez le type de modem Insteon."
             }
         }
     },
@@ -54,10 +58,9 @@
                 "data": {
                     "address": "Adresse de l'appareil (par exemple 1a2b3c)",
                     "cat": "Cat\u00e9gorie d'appareil (c.-\u00e0-d. 0x10)",
-                    "subcat": "Sous-cat\u00e9gorie de p\u00e9riph\u00e9rique (par exemple 0x0a)"
+                    "subcat": "Sous-cat\u00e9gorie d'appareil (par exemple 0x0a)"
                 },
-                "description": "Ajoutez un remplacement de p\u00e9riph\u00e9rique.",
-                "title": "Insteon"
+                "description": "Ajouter un remplacement d'appareil."
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "Pas de gradateur (pour les appareils d'\u00e9clairage uniquement, par d\u00e9faut 22)",
                     "unitcode": "Code de l'unit\u00e9 (1-16)"
                 },
-                "description": "Modifiez le mot de passe Insteon Hub.",
-                "title": "Insteon"
+                "description": "Modifiez le mot de passe Insteon Hub."
             },
             "change_hub_config": {
                 "data": {
@@ -76,33 +78,28 @@
                     "port": "Port",
                     "username": "Nom d'utilisateur"
                 },
-                "description": "Modifiez les informations de connexion Insteon Hub. Vous devez red\u00e9marrer Home Assistant apr\u00e8s avoir effectu\u00e9 cette modification. Cela ne change pas la configuration du Hub lui-m\u00eame. Pour modifier la configuration dans le Hub, utilisez l'application Hub.",
-                "title": "Insteon"
+                "description": "Modifiez les informations de connexion Insteon Hub. Vous devez red\u00e9marrer Home Assistant apr\u00e8s avoir effectu\u00e9 cette modification. Cela ne change pas la configuration du Hub lui-m\u00eame. Pour modifier la configuration dans le Hub, utilisez l'application Hub."
             },
             "init": {
                 "data": {
-                    "add_override": "Ajoutez un remplacement de p\u00e9riph\u00e9rique.",
+                    "add_override": "Ajouter un remplacement d'appareil.",
                     "add_x10": "Ajouter un appareil X10.",
                     "change_hub_config": "Modifier la configuration du Hub.",
                     "remove_override": "Supprimer un remplacement d'appareil",
-                    "remove_x10": "Retirez un p\u00e9riph\u00e9rique X10."
-                },
-                "description": "S\u00e9lectionnez une option \u00e0 configurer.",
-                "title": "Insteon"
+                    "remove_x10": "Retirer un appareil X10."
+                }
             },
             "remove_override": {
                 "data": {
-                    "address": "S\u00e9lectionner une adresse de p\u00e9riph\u00e9rique \u00e0 retirer"
+                    "address": "S\u00e9lectionnez l'adresse d'un appareil \u00e0 retirer"
                 },
-                "description": "Supprimer un remplacement d'appareil",
-                "title": "Insteon"
+                "description": "Supprimer un remplacement d'appareil"
             },
             "remove_x10": {
                 "data": {
-                    "address": "S\u00e9lectionner une adresse de p\u00e9riph\u00e9rique \u00e0 retirer"
+                    "address": "S\u00e9lectionnez l'adresse d'un appareil \u00e0 retirer"
                 },
-                "description": "Retirer un p\u00e9riph\u00e9rique X10",
-                "title": "Insteon"
+                "description": "Retirer un appareil X10"
             }
         }
     }

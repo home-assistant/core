@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "fallback": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                },
+                "description": "Roon\u30b5\u30fc\u30d0\u30fc\u3092\u691c\u51fa\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\u3002\u30db\u30b9\u30c8\u540d\u3068\u30dd\u30fc\u30c8\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            },
+            "link": {
+                "description": "Roon\u3067Home Assistant\u3092\u8a8d\u8a3c\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059\u3002\u9001\u4fe1(submit) \u3092\u30af\u30ea\u30c3\u30af\u3057\u305f\u5f8c\u3001Roon Core\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3\u3067\u3001\u8a2d\u5b9a(Settings )\u3092\u958b\u304d\u3001\u6a5f\u80fd\u62e1\u5f35\u30bf\u30d6(extensions tab)\u3067Home Assistant\u3092\u6709\u52b9(enable )\u306b\u3057\u307e\u3059\u3002",
+                "title": "Roon\u3067HomeAssistant\u3092\u8a8d\u8a3c\u3059\u308b"
+            },
+            "user": {
+                "other": "\u7a7a"
+            }
+        }
+    }
+}

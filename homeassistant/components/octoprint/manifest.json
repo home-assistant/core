@@ -1,8 +1,17 @@
 {
   "domain": "octoprint",
   "name": "OctoPrint",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/octoprint",
-  "after_dependencies": ["discovery"],
-  "codeowners": [],
-  "iot_class": "local_polling"
+  "requirements": ["pyoctoprintapi==0.1.8"],
+  "codeowners": ["@rfleming71"],
+  "zeroconf": ["_octoprint._tcp.local."],
+  "ssdp": [
+    {
+      "manufacturer": "The OctoPrint Project",
+      "deviceType": "urn:schemas-upnp-org:device:Basic:1"
+    }
+  ],
+  "iot_class": "local_polling",
+  "loggers": ["pyoctoprintapi"]
 }

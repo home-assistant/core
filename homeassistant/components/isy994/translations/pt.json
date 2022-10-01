@@ -8,7 +8,14 @@
             "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "unknown": "Erro inesperado"
         },
+        "flow_title": "{name} ({host})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Palavra-passe"
+                },
+                "description": "As credenciais para {host} n\u00e3o s\u00e3o mais v\u00e1lidas."
+            },
             "user": {
                 "data": {
                     "host": "",

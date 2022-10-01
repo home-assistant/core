@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "See WLED seade on juba h\u00e4\u00e4lestatud.",
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "cct_unsupported": "See WLED-seade kasutab CCT-kanaleid, mida see sidumine ei toeta."
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"

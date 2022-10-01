@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La cuenta ya ha sido configurada"
+            "already_configured": "La cuenta ya est\u00e1 configurada"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -13,10 +13,10 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "server": "Servidor",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 },
                 "description": "Introducir las credenciales de Dexcom Share",
-                "title": "Configurar integraci\u00f3n de Dexcom"
+                "title": "Configurar la integraci\u00f3n Dexcom"
             }
         }
     },

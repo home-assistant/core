@@ -1,0 +1,38 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "Alt ve \u00fcst limitlerin ikisi de bo\u015f olamaz"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Giri\u015f sens\u00f6r\u00fc",
+                    "hysteresis": "Histeresis",
+                    "lower": "Alt s\u0131n\u0131r",
+                    "name": "Ad",
+                    "upper": "\u00dcst s\u0131n\u0131r"
+                },
+                "description": "Bir sens\u00f6r\u00fcn de\u011ferine ba\u011fl\u0131 olarak a\u00e7\u0131l\u0131p kapanan bir ikili sens\u00f6r olu\u015fturun \n\n Yaln\u0131zca alt limit konfig\u00fcre edildi - Giri\u015f sens\u00f6r\u00fcn\u00fcn de\u011feri alt limitten d\u00fc\u015f\u00fck oldu\u011funda a\u00e7\u0131n.\n Yaln\u0131zca \u00fcst limit konfig\u00fcre edildi - Giri\u015f sens\u00f6r\u00fcn\u00fcn de\u011feri \u00fcst limitten b\u00fcy\u00fck oldu\u011funda a\u00e7\u0131n.\n Hem alt hem de \u00fcst limit konfig\u00fcre edildi - Giri\u015f sens\u00f6r\u00fcn\u00fcn de\u011feri [alt limit .. \u00fcst limit] aral\u0131\u011f\u0131nda oldu\u011funda a\u00e7\u0131n.",
+                "title": "E\u015fik Sens\u00f6r\u00fc Ekle"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "need_lower_upper": "Alt ve \u00fcst limitlerin ikisi de bo\u015f olamaz"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Giri\u015f sens\u00f6r\u00fc",
+                    "hysteresis": "Histeresis",
+                    "lower": "Alt s\u0131n\u0131r",
+                    "name": "Ad",
+                    "upper": "\u00dcst s\u0131n\u0131r"
+                },
+                "description": "Yaln\u0131zca alt limit konfig\u00fcre edildi - Giri\u015f sens\u00f6r\u00fcn\u00fcn de\u011feri alt limitten d\u00fc\u015f\u00fck oldu\u011funda a\u00e7\u0131n.\n Yaln\u0131zca \u00fcst limit konfig\u00fcre edildi - Giri\u015f sens\u00f6r\u00fcn\u00fcn de\u011feri \u00fcst limitten b\u00fcy\u00fck oldu\u011funda a\u00e7\u0131n.\n Hem alt hem de \u00fcst limit konfig\u00fcre edildi - Giri\u015f sens\u00f6r\u00fcn\u00fcn de\u011feri [alt limit .. \u00fcst limit] aral\u0131\u011f\u0131nda oldu\u011funda a\u00e7\u0131n."
+            }
+        }
+    },
+    "title": "E\u015fik Sens\u00f6r\u00fc"
+}

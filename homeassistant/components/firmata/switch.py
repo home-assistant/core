@@ -1,11 +1,12 @@
 """Support for Firmata switch output."""
-
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_INITIAL_STATE, CONF_NEGATE_STATE, CONF_PIN_MODE, DOMAIN
 from .entity import FirmataPinEntity
@@ -15,7 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Firmata switches."""
     new_entities = []
@@ -55,12 +58,12 @@ class FirmataSwitch(FirmataPinEntity, SwitchEntity):
         """Return true if switch is on."""
         return self._api.is_on
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._api.turn_on()
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self._api.turn_off()
         self.async_write_ha_state()

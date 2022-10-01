@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
@@ -11,17 +11,17 @@ from gios import ApiError, Gios, InvalidSensorsData, NoStationError
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=str(station_id))  # type: ignore[unreachable]
 
     # We used to use int in device_entry identifiers, convert this to str.
-    device_registry = await async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     old_ids = (DOMAIN, station_id)
     device_entry = device_registry.async_get_device({old_ids})  # type: ignore[arg-type]
     if device_entry and entry.entry_id in device_entry.config_entries:
@@ -49,10 +49,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Remove air_quality entities from registry if they exist
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     unique_id = str(coordinator.gios.station_id)
     if entity_id := ent_reg.async_get_entity_id(
         AIR_QUALITY_PLATFORM, DOMAIN, unique_id
@@ -87,8 +87,8 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
-            with timeout(API_TIMEOUT):
-                return cast(Dict[str, Any], await self.gios.async_update())
+            async with timeout(API_TIMEOUT):
+                return cast(dict[str, Any], await self.gios.async_update())
         except (
             ApiError,
             NoStationError,

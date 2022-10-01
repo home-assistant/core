@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "alternative_integration": "Naprava je bolje podprta z drugo integracijo",
+            "cannot_connect": "Povezava ni uspela"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Gostitelj"
+                }
+            }
+        }
+    }
+}

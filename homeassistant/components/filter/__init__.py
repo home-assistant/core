@@ -1,4 +1,6 @@
 """The filter component."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "filter"
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]

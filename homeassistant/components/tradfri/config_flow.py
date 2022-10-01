@@ -11,19 +11,14 @@ from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import (
-    CONF_GATEWAY_ID,
-    CONF_HOST,
-    CONF_IDENTITY,
-    CONF_IMPORT_GROUPS,
-    CONF_KEY,
-    DOMAIN,
-    KEY_SECURITY_CODE,
-)
+from .const import CONF_GATEWAY_ID, CONF_IDENTITY, CONF_KEY, DOMAIN
+
+KEY_SECURITY_CODE = "security_code"
 
 
 class AuthError(Exception):
@@ -42,8 +37,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._host = None
-        self._import_groups = False
+        self._host: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -63,11 +57,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 auth = await authenticate(
                     self.hass, host, user_input[KEY_SECURITY_CODE]
                 )
-
-                # We don't ask for import group anymore as group state
-                # is not reliable, don't want to show that to the user.
-                # But we still allow specifying import group via config yaml.
-                auth[CONF_IMPORT_GROUPS] = self._import_groups
 
                 return await self._entry_from_data(auth)
 
@@ -92,12 +81,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_homekit(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle homekit discovery."""
-        await self.async_set_unique_id(discovery_info["properties"]["id"])
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
+        await self.async_set_unique_id(
+            discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
+        )
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.host})
 
-        host = discovery_info["host"]
+        host = discovery_info.host
 
         for entry in self._async_current_entries():
             if entry.data.get(CONF_HOST) != host:
@@ -106,7 +99,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Backwards compat, we update old entries
             if not entry.unique_id:
                 self.hass.config_entries.async_update_entry(
-                    entry, unique_id=discovery_info["properties"]["id"]
+                    entry,
+                    unique_id=discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID],
                 )
 
             return self.async_abort(reason="already_configured")
@@ -121,7 +115,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Happens if user has host directly in configuration.yaml
         if "key" not in user_input:
             self._host = user_input["host"]
-            self._import_groups = user_input[CONF_IMPORT_GROUPS]
             return await self.async_step_auth()
 
         try:
@@ -132,8 +125,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get("identity", "homeassistant"),
                 user_input["key"],
             )
-
-            data[CONF_IMPORT_GROUPS] = user_input[CONF_IMPORT_GROUPS]
 
             return await self._entry_from_data(data)
         except AuthError:
@@ -174,7 +165,7 @@ async def authenticate(
     api_factory = await APIFactory.init(host, psk_id=identity)
 
     try:
-        with async_timeout.timeout(5):
+        async with async_timeout.timeout(5):
             key = await api_factory.generate_psk(security_code)
     except RequestError as err:
         raise AuthError("invalid_security_code") from err
@@ -182,7 +173,8 @@ async def authenticate(
         raise AuthError("timeout") from err
     finally:
         await api_factory.shutdown()
-
+    if key is None:
+        raise AuthError("cannot_authenticate")
     return await get_gateway_info(hass, host, identity, key)
 
 

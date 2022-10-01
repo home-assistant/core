@@ -20,7 +20,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TIME_DAYS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,7 +111,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Google Wifi sensor."""
     name = config[CONF_NAME]
     host = config[CONF_HOST]
@@ -128,18 +136,23 @@ class GoogleWifiSensor(SensorEntity):
 
     entity_description: GoogleWifiSensorEntityDescription
 
-    def __init__(self, api, name, description: GoogleWifiSensorEntityDescription):
+    def __init__(
+        self,
+        api: GoogleWifiAPI,
+        name: str,
+        description: GoogleWifiSensorEntityDescription,
+    ) -> None:
         """Initialize a Google Wifi sensor."""
         self.entity_description = description
         self._api = api
         self._attr_name = f"{name}_{description.key}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return availability of Google Wifi API."""
         return self._api.available
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the Google Wifi API."""
         self._api.update()
         if self.available:

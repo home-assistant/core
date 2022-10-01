@@ -17,16 +17,18 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
 CONF_REALM = "realm"
@@ -177,9 +179,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for component in PLATFORMS:
         await hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(
-                component, DOMAIN, {"config": config}, config
-            )
+            async_load_platform(hass, component, DOMAIN, {"config": config}, config)
         )
 
     return True

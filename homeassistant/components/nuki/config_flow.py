@@ -1,5 +1,7 @@
 """Config flow to configure the Nuki integration."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from pynuki import NukiBridge
 from pynuki.bridge import InvalidCredentialsException
@@ -7,10 +9,12 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .helpers import parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +45,7 @@ async def validate_input(hass, data):
             DEFAULT_TIMEOUT,
         )
 
-        info = bridge.info()
+        info = await hass.async_add_executor_job(bridge.info)
     except InvalidCredentialsException as err:
         raise InvalidAuth from err
     except RequestException as err:
@@ -58,23 +62,19 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_schema = {}
         self._data = {}
 
-    async def async_step_import(self, user_input=None):
-        """Handle a flow initiated by import."""
-        return await self.async_step_validate(user_input)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
 
-    async def async_step_dhcp(self, discovery_info: dict):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Nuki bridge."""
-        await self.async_set_unique_id(int(discovery_info.get(HOSTNAME)[12:], 16))
+        await self.async_set_unique_id(discovery_info.hostname[12:].upper())
 
         self._abort_if_unique_id_configured()
 
         self.discovery_schema = vol.Schema(
             {
-                vol.Required(CONF_HOST, default=discovery_info[IP_ADDRESS]): str,
+                vol.Required(CONF_HOST, default=discovery_info.ip): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_TOKEN): str,
             }
@@ -82,9 +82,9 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_validate()
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._data = data
+        self._data = entry_data
 
         return await self.async_step_reauth_confirm()
 
@@ -113,7 +113,9 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         if not errors:
-            existing_entry = await self.async_set_unique_id(info["ids"]["hardwareId"])
+            existing_entry = await self.async_set_unique_id(
+                parse_id(info["ids"]["hardwareId"])
+            )
             if existing_entry:
                 self.hass.config_entries.async_update_entry(existing_entry, data=conf)
                 self.hass.async_create_task(
@@ -142,11 +144,10 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                await self.async_set_unique_id(info["ids"]["hardwareId"])
+                bridge_id = parse_id(info["ids"]["hardwareId"])
+                await self.async_set_unique_id(bridge_id)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=info["ids"]["hardwareId"], data=user_input
-                )
+                return self.async_create_entry(title=bridge_id, data=user_input)
 
         data_schema = self.discovery_schema or USER_SCHEMA
         return self.async_show_form(

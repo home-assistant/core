@@ -2,33 +2,39 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from typing import Any
 
 import aiohttp
 import async_timeout
-from sharkiqpy import SharkIqAuthError, get_ayla_api
+from sharkiq import SharkIqAuthError, get_ayla_api
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
 SHARKIQ_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def _validate_input(
+    hass: core.HomeAssistant, data: Mapping[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     ayla_api = get_ayla_api(
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
-        websession=hass.helpers.aiohttp_client.async_get_clientsession(hass),
+        websession=async_get_clientsession(hass),
     )
 
     try:
-        with async_timeout.timeout(10):
-            _LOGGER.debug("Initialize connection to Ayla networks API")
+        async with async_timeout.timeout(10):
+            LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except (asyncio.TimeoutError, aiohttp.ClientError) as errors:
         raise CannotConnect from errors
@@ -44,26 +50,30 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_validate_input(self, user_input):
+    async def _async_validate_input(
+        self, user_input: Mapping[str, Any]
+    ) -> tuple[dict[str, str] | None, dict[str, str]]:
         """Validate form input."""
         errors = {}
         info = None
 
         # noinspection PyBroadException
         try:
-            info = await validate_input(self.hass, user_input)
+            info = await _validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return info, errors
 
-    async def async_step_user(self, user_input: dict | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             info, errors = await self._async_validate_input(user_input)
             if info:
@@ -75,18 +85,18 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=SHARKIQ_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: dict | None = None):
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Handle re-auth if login is invalid."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             _, errors = await self._async_validate_input(user_input)
 
             if not errors:
-                entry = await self.async_set_unique_id(self.unique_id)
-                self.hass.config_entries.async_update_entry(entry, data=user_input)
-
-                return self.async_abort(reason="reauth_successful")
+                errors = {"base": "unknown"}
+                if entry := await self.async_set_unique_id(self.unique_id):
+                    self.hass.config_entries.async_update_entry(entry, data=user_input)
+                    return self.async_abort(reason="reauth_successful")
 
             if errors["base"] != "invalid_auth":
                 return self.async_abort(reason=errors["base"])

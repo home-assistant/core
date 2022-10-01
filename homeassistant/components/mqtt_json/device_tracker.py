@@ -1,4 +1,6 @@
 """Support for GPS tracking MQTT enabled devices."""
+from __future__ import annotations
+
 import json
 import logging
 
@@ -7,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
 )
 from homeassistant.components.mqtt import CONF_QOS
 from homeassistant.const import (
@@ -16,8 +19,9 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_DEVICES,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,12 +35,17 @@ GPS_JSON_PAYLOAD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(mqtt.config.SCHEMA_BASE).extend(
     {vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic}}
 )
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the MQTT JSON tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]

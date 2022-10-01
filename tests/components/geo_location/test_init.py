@@ -20,5 +20,5 @@ async def test_event(hass):
     assert entity.distance is None
     assert entity.latitude is None
     assert entity.longitude is None
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(AttributeError):
         assert entity.source is None

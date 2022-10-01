@@ -20,6 +20,13 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 from tests.common import async_capture_events
 
 
+@pytest.fixture(autouse=True)
+def disable_platform_only():
+    """Disable platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", []):
+        yield
+
+
 @pytest.fixture
 def ieee():
     """IEEE fixture."""
@@ -101,6 +108,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
     [
         (0x0000, 0, {}),
         (0x0001, 1, {"battery_voltage", "battery_percentage_remaining"}),
+        (0x0002, 1, {"current_temperature"}),
         (0x0003, 0, {}),
         (0x0004, 0, {}),
         (0x0005, 1, {}),
@@ -129,7 +137,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
             0x0201,
             1,
             {
-                "local_temp",
+                "local_temperature",
                 "occupied_cooling_setpoint",
                 "occupied_heating_setpoint",
                 "unoccupied_cooling_setpoint",
@@ -143,7 +151,18 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
             },
         ),
         (0x0202, 1, {"fan_mode"}),
-        (0x0300, 1, {"current_x", "current_y", "color_temperature"}),
+        (
+            0x0300,
+            1,
+            {
+                "current_x",
+                "current_y",
+                "color_temperature",
+                "current_hue",
+                "enhanced_current_hue",
+                "current_saturation",
+            },
+        ),
         (0x0400, 1, {"measured_value"}),
         (0x0401, 1, {"level_status"}),
         (0x0402, 1, {"measured_value"}),
@@ -158,6 +177,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
             {
                 "active_power",
                 "active_power_max",
+                "apparent_power",
                 "rms_current",
                 "rms_current_max",
                 "rms_voltage",
@@ -202,6 +222,7 @@ async def test_in_channel_config(
     [
         (0x0000, 0),
         (0x0001, 1),
+        (0x0002, 1),
         (0x0003, 0),
         (0x0004, 0),
         (0x0005, 1),
@@ -507,7 +528,7 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     checkin_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
-    events = async_capture_events(hass, "zha_event")
+    events = async_capture_events(hass, zha_const.ZHA_EVENT)
 
     with mock.patch.object(poll_control_ch, "check_in_response", checkin_mock):
         tsn = 22
@@ -583,13 +604,23 @@ async def test_zll_device_groups(
     cluster = zigpy_zll_device.endpoints[1].lightlink
     channel = zha_channels.lightlink.LightLink(cluster, channel_pool)
 
+    get_group_identifiers_rsp = zigpy.zcl.clusters.lightlink.LightLink.commands_by_name[
+        "get_group_identifiers_rsp"
+    ].schema
+
     with patch.object(
-        cluster, "command", AsyncMock(return_value=[1, 0, []])
+        cluster,
+        "command",
+        AsyncMock(
+            return_value=get_group_identifiers_rsp(
+                total=0, start_index=0, group_info_records=[]
+            )
+        ),
     ) as cmd_mock:
         await channel.async_configure()
         assert cmd_mock.await_count == 1
         assert (
-            cluster.server_commands[cmd_mock.await_args[0][0]][0]
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
             == "get_group_identifiers"
         )
         assert cluster.bind.call_count == 0
@@ -600,12 +631,18 @@ async def test_zll_device_groups(
     group_1 = zigpy.zcl.clusters.lightlink.GroupInfoRecord(0xABCD, 0x00)
     group_2 = zigpy.zcl.clusters.lightlink.GroupInfoRecord(0xAABB, 0x00)
     with patch.object(
-        cluster, "command", AsyncMock(return_value=[1, 0, [group_1, group_2]])
+        cluster,
+        "command",
+        AsyncMock(
+            return_value=get_group_identifiers_rsp(
+                total=2, start_index=0, group_info_records=[group_1, group_2]
+            )
+        ),
     ) as cmd_mock:
         await channel.async_configure()
         assert cmd_mock.await_count == 1
         assert (
-            cluster.server_commands[cmd_mock.await_args[0][0]][0]
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
             == "get_group_identifiers"
         )
         assert cluster.bind.call_count == 0
@@ -618,3 +655,23 @@ async def test_zll_device_groups(
             zigpy_coordinator_device.add_to_group.await_args_list[1][0][0]
             == group_2.group_id
         )
+
+
+@mock.patch(
+    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+)
+@mock.patch(
+    "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
+    mock.MagicMock(),
+)
+async def test_cluster_no_ep_attribute(m1, zha_device_mock):
+    """Test channels for clusters without ep_attribute."""
+
+    zha_device = zha_device_mock(
+        {1: {SIG_EP_INPUT: [0x042E], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
+    )
+
+    channels = zha_channels.Channels.new(zha_device)
+    pools = {pool.id: pool for pool in channels.pools}
+    assert "1:0x042e" in pools[1].all_channels
+    assert pools[1].all_channels["1:0x042e"].name

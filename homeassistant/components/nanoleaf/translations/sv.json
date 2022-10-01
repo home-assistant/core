@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_token": "Ogiltig \u00e5tkomstnyckel",
+            "reauth_successful": "\u00c5terautentisering lyckades",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "not_allowing_new_tokens": "Nanoleaf till\u00e5ter inte nya tokens, f\u00f6lj instruktionerna ovan.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Tryck och h\u00e5ll in str\u00f6mbrytaren p\u00e5 din Nanoleaf i 5 sekunder tills knappens lysdioder b\u00f6rjar blinka, klicka sedan p\u00e5 **Skicka** inom 30 sekunder.",
+                "title": "L\u00e4nka Nanoleaf"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "Svep ned\u00e5t",
+            "swipe_left": "Svep \u00e5t v\u00e4nster",
+            "swipe_right": "Svep \u00e5t h\u00f6ger",
+            "swipe_up": "Svep upp\u00e5t"
+        }
+    }
+}

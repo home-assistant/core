@@ -2,6 +2,7 @@
 import asyncio
 
 from pyheos import CommandFailedError, const
+from pyheos.error import HeosError
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
@@ -9,7 +10,8 @@ from homeassistant.components.heos.const import (
     DOMAIN,
     SIGNAL_HEOS_UPDATED,
 )
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -25,17 +27,13 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_URL,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
+    SERVICE_UNJOIN,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -54,6 +52,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 
@@ -72,7 +71,7 @@ async def test_state_attributes(hass, config_entry, config, controller):
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.25
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_CONTENT_ID] == "1"
-    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     assert ATTR_MEDIA_DURATION not in state.attributes
     assert ATTR_MEDIA_POSITION not in state.attributes
     assert state.attributes[ATTR_MEDIA_TITLE] == "Song"
@@ -87,11 +86,11 @@ async def test_state_attributes(hass, config_entry, config, controller):
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Player"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_PLAY
-        | SUPPORT_PAUSE
-        | SUPPORT_STOP
-        | SUPPORT_NEXT_TRACK
-        | SUPPORT_PREVIOUS_TRACK
+        == MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | media_player.BASE_SUPPORTED_FEATURES
     )
     assert ATTR_INPUT_SOURCE not in state.attributes
@@ -151,7 +150,7 @@ async def test_updates_from_connection_event(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     # Connected
     player.available = True
@@ -197,7 +196,7 @@ async def test_updates_from_sources_updated(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     input_sources.clear()
     player.heos.dispatcher.send(
@@ -221,7 +220,7 @@ async def test_updates_from_players_changed(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     assert hass.states.get("media_player.test_player").state == STATE_IDLE
     player.state = const.PLAY_STATE_PLAY
@@ -255,7 +254,7 @@ async def test_updates_from_players_changed_new_ids(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
     player.heos.dispatcher.send(
         const.SIGNAL_CONTROLLER_EVENT,
         const.EVENT_PLAYERS_CHANGED,
@@ -264,10 +263,10 @@ async def test_updates_from_players_changed_new_ids(
     await event.wait()
 
     # Assert device registry identifiers were updated
-    assert len(device_registry.devices) == 1
+    assert len(device_registry.devices) == 2
     assert device_registry.async_get_device({(DOMAIN, 101)})
     # Assert entity registry unique id was updated
-    assert len(entity_registry.entities) == 1
+    assert len(entity_registry.entities) == 2
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "101")
         == "media_player.test_player"
@@ -283,7 +282,7 @@ async def test_updates_from_user_changed(hass, config_entry, config, controller)
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     controller.is_signed_in = False
     controller.signed_in_username = None
@@ -606,7 +605,7 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             blocking=True,
@@ -629,7 +628,7 @@ async def test_play_media_music(hass, config_entry, config, controller, caplog):
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             blocking=True,
@@ -703,7 +702,7 @@ async def test_play_media_playlist(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: playlist.name,
         },
         blocking=True,
@@ -718,7 +717,7 @@ async def test_play_media_playlist(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: playlist.name,
             ATTR_MEDIA_ENQUEUE: True,
         },
@@ -732,7 +731,7 @@ async def test_play_media_playlist(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_PLAYLIST,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
             ATTR_MEDIA_CONTENT_ID: "Invalid",
         },
         blocking=True,
@@ -805,3 +804,99 @@ async def test_play_media_invalid_type(hass, config_entry, config, controller, c
         blocking=True,
     )
     assert "Unable to play media: Unsupported media type 'Other'" in caplog.text
+
+
+async def test_media_player_join_group(hass, config_entry, config, controller, caplog):
+    """Test grouping of media players through the join service."""
+    await setup_platform(hass, config_entry, config)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+        },
+        blocking=True,
+    )
+    controller.create_group.assert_called_once_with(
+        1,
+        [
+            2,
+        ],
+    )
+    assert "Failed to group media_player.test_player with" not in caplog.text
+
+    controller.create_group.side_effect = HeosError("error")
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+        },
+        blocking=True,
+    )
+    assert "Failed to group media_player.test_player with" in caplog.text
+
+
+async def test_media_player_group_members(
+    hass, config_entry, config, controller, caplog
+):
+    """Test group_members attribute."""
+    await setup_platform(hass, config_entry, config)
+    await hass.async_block_till_done()
+    player_entity = hass.states.get("media_player.test_player")
+    assert player_entity.attributes[ATTR_GROUP_MEMBERS] == [
+        "media_player.test_player",
+        "media_player.test_player_2",
+    ]
+    controller.get_groups.assert_called_once()
+    assert "Unable to get HEOS group info" not in caplog.text
+
+
+async def test_media_player_group_members_error(
+    hass, config_entry, config, controller, caplog
+):
+    """Test error in HEOS API."""
+    controller.get_groups.side_effect = HeosError("error")
+    await setup_platform(hass, config_entry, config)
+    await hass.async_block_till_done()
+    assert "Unable to get HEOS group info" in caplog.text
+    player_entity = hass.states.get("media_player.test_player")
+    assert player_entity.attributes[ATTR_GROUP_MEMBERS] == []
+
+
+async def test_media_player_unjoin_group(
+    hass, config_entry, config, controller, caplog
+):
+    """Test ungrouping of media players through the join service."""
+    await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+
+    player.heos.dispatcher.send(
+        const.SIGNAL_PLAYER_EVENT,
+        player.player_id,
+        const.EVENT_PLAYER_STATE_CHANGED,
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+        },
+        blocking=True,
+    )
+    controller.create_group.assert_called_once_with(1, [])
+    assert "Failed to ungroup media_player.test_player" not in caplog.text
+
+    controller.create_group.side_effect = HeosError("error")
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+        },
+        blocking=True,
+    )
+    assert "Failed to ungroup media_player.test_player" in caplog.text

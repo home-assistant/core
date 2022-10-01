@@ -8,16 +8,9 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Resources"
-                },
-                "title": "Choose the Resources to Monitor"
-            },
             "ups": {
                 "data": {
-                    "alias": "Alias",
-                    "resources": "Resources"
+                    "alias": "Alias"
                 },
                 "title": "Choose the UPS to Monitor"
             },
@@ -33,17 +26,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "unknown": "Unexpected error"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Resources",
                     "scan_interval": "Scan Interval (seconds)"
-                },
-                "description": "Choose Sensor Resources."
+                }
             }
         }
     }

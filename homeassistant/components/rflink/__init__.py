@@ -1,4 +1,6 @@
 """Support for Rflink devices."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
@@ -18,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -27,6 +29,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType
 
 from .utils import brightness_to_rflink
 
@@ -121,7 +124,7 @@ def identify_event_type(event):
     return "unknown"
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rflink component."""
     # Allow entities to register themselves by device_id to be looked up when
     # new rflink events arrive to be handled
@@ -134,7 +137,7 @@ async def async_setup(hass, config):
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
 
-    async def async_send_command(call):
+    async def async_send_command(call: ServiceCall) -> None:
         """Send Rflink command."""
         _LOGGER.debug("Rflink command for %s", str(call.data))
         if not (
@@ -270,7 +273,7 @@ async def async_setup(hass, config):
         )
 
         try:
-            with async_timeout.timeout(CONNECTION_TIMEOUT):
+            async with async_timeout.timeout(CONNECTION_TIMEOUT):
                 transport, protocol = await connection
 
         except (
@@ -314,8 +317,9 @@ class RflinkDevice(Entity):
     """
 
     platform = None
-    _state = None
+    _state: bool | None = None
     _available = True
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -367,11 +371,6 @@ class RflinkDevice(Entity):
     def _handle_event(self, event):
         """Platform specific event handler."""
         raise NotImplementedError()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):
@@ -580,9 +579,7 @@ class SwitchableRflinkDevice(RflinkCommand, RestoreEntity):
     async def async_added_to_hass(self):
         """Restore RFLink device state (ON/OFF)."""
         await super().async_added_to_hass()
-
-        old_state = await self.async_get_last_state()
-        if old_state is not None:
+        if (old_state := await self.async_get_last_state()) is not None:
             self._state = old_state.state == STATE_ON
 
     def _handle_event(self, event):

@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "invalid_auth_key": "API-inloggningsuppgifter avvisades av Coinbase p\u00e5 grund av en ogiltig API-nyckel.",
+            "invalid_auth_secret": "API-inloggningsuppgifter avvisades av Coinbase p\u00e5 grund av en ogiltig API-hemlighet.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "api_token": "API-hemlighet"
+                },
+                "description": "Ange uppgifterna om din API-nyckel som tillhandah\u00e5lls av Coinbase.",
+                "title": "Coinbase API-nyckeldetaljer"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "currency_unavailable": "En eller flera av de beg\u00e4rda valutasaldona tillhandah\u00e5lls inte av ditt Coinbase API.",
+            "exchange_rate_unavailable": "En eller flera av de beg\u00e4rda v\u00e4xelkurserna tillhandah\u00e5lls inte av Coinbase.",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "account_balance_currencies": "Balans i pl\u00e5nboken att rapportera.",
+                    "exchange_base": "Basvaluta f\u00f6r v\u00e4xelkurssensorer.",
+                    "exchange_rate_currencies": "Valutakurser att rapportera.",
+                    "exchnage_rate_precision": "Antal decimaler f\u00f6r v\u00e4xelkurser."
+                },
+                "description": "Justera Coinbase-alternativ"
+            }
+        }
+    }
+}

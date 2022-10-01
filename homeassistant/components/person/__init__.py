@@ -2,16 +2,15 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 import voluptuous as vol
 
 from homeassistant.auth import EVENT_USER_REMOVED
-from homeassistant.components import websocket_api
+from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    SOURCE_TYPE_GPS,
+    SourceType,
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
@@ -107,7 +106,7 @@ async def async_add_user_device_tracker(
     hass: HomeAssistant, user_id: str, device_tracker_entity_id: str
 ):
     """Add a device tracker to a person linked to a user."""
-    coll = cast(PersonStorageCollection, hass.data[DOMAIN][1])
+    coll: PersonStorageCollection = hass.data[DOMAIN][1]
 
     for person in coll.async_items():
         if person.get(ATTR_USER_ID) != user_id:
@@ -119,10 +118,42 @@ async def async_add_user_device_tracker(
             return
 
         await coll.async_update_item(
-            person[collection.CONF_ID],
+            person[CONF_ID],
             {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
         )
         break
+
+
+@callback
+def persons_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all persons that reference the entity."""
+    if (
+        DOMAIN not in hass.data
+        or split_entity_id(entity_id)[0] != DEVICE_TRACKER_DOMAIN
+    ):
+        return []
+
+    component: EntityComponent[Person] = hass.data[DOMAIN][2]
+
+    return [
+        person_entity.entity_id
+        for person_entity in component.entities
+        if entity_id in person_entity.device_trackers
+    ]
+
+
+@callback
+def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Return all entities belonging to a person."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component: EntityComponent[Person] = hass.data[DOMAIN][2]
+
+    if (person_entity := component.get_entity(entity_id)) is None:
+        return []
+
+    return person_entity.device_trackers
 
 
 CREATE_FIELDS = {
@@ -148,7 +179,7 @@ UPDATE_FIELDS = {
 class PersonStore(Store):
     """Person storage."""
 
-    async def _async_migrate_func(self, old_version, old_data):
+    async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
         """Migrate to the new version.
 
         Migrate storage to use format of collection helper.
@@ -212,7 +243,7 @@ class PersonStorageCollection(collection.StorageCollection):
                 continue
 
             await self.async_update_item(
-                person[collection.CONF_ID],
+                person[CONF_ID],
                 {
                     CONF_DEVICE_TRACKERS: [
                         devt
@@ -226,9 +257,7 @@ class PersonStorageCollection(collection.StorageCollection):
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
 
-        user_id = data.get(CONF_USER_ID)
-
-        if user_id is not None:
+        if (user_id := data.get(CONF_USER_ID)) is not None:
             await self._validate_user_id(user_id)
 
         return data
@@ -270,17 +299,18 @@ async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dic
         if user_id is not None and await hass.auth.async_get_user(user_id) is None:
             _LOGGER.error(
                 "Invalid user_id detected for person %s",
-                person_conf[collection.CONF_ID],
+                person_conf[CONF_ID],
             )
             person_invalid_user.append(
-                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[collection.CONF_ID]}) points at invalid user {user_id}"
+                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[CONF_ID]}) points at invalid user {user_id}"
             )
             continue
 
         filtered.append(person_conf)
 
     if person_invalid_user:
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             f"""
 The following persons point at invalid users:
 
@@ -295,7 +325,7 @@ The following persons point at invalid users:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the person component."""
-    entity_component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity_component = EntityComponent[Person](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
@@ -311,7 +341,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, DOMAIN, entity_component, yaml_collection, Person
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, entity_component, storage_collection, Person.from_yaml
+        hass, DOMAIN, DOMAIN, entity_component, storage_collection, Person
     )
 
     await yaml_collection.async_load(
@@ -319,7 +349,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    hass.data[DOMAIN] = (yaml_collection, storage_collection)
+    hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
 
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
@@ -338,7 +368,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
 
-    async def async_reload_yaml(call: ServiceCall):
+    async def async_reload_yaml(call: ServiceCall) -> None:
         """Reload YAML."""
         conf = await entity_component.async_prepare_reload(skip_reset=True)
         if conf is None:
@@ -354,13 +384,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Person(RestoreEntity):
+class Person(collection.CollectionEntity, RestoreEntity):
     """Represent a tracked person."""
+
+    _attr_should_poll = False
+    editable: bool
 
     def __init__(self, config):
         """Set up person."""
         self._config = config
-        self.editable = True
         self._latitude = None
         self._longitude = None
         self._gps_accuracy = None
@@ -369,8 +401,15 @@ class Person(RestoreEntity):
         self._unsub_track_device = None
 
     @classmethod
-    def from_yaml(cls, config):
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType):
+        """Return entity instance initialized from storage."""
+        person = cls(config)
+        person.editable = True
+        return person
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType):
+        """Return entity instance initialized from yaml."""
         person = cls(config)
         person.editable = False
         return person
@@ -384,14 +423,6 @@ class Person(RestoreEntity):
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         return self._config.get(CONF_PICTURE)
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
 
     @property
     def state(self):
@@ -410,8 +441,7 @@ class Person(RestoreEntity):
             data[ATTR_GPS_ACCURACY] = self._gps_accuracy
         if self._source is not None:
             data[ATTR_SOURCE] = self._source
-        user_id = self._config.get(CONF_USER_ID)
-        if user_id is not None:
+        if (user_id := self._config.get(CONF_USER_ID)) is not None:
             data[ATTR_USER_ID] = user_id
         return data
 
@@ -420,11 +450,15 @@ class Person(RestoreEntity):
         """Return a unique ID for the person."""
         return self._config[CONF_ID]
 
+    @property
+    def device_trackers(self):
+        """Return the device trackers for the person."""
+        return self._config[CONF_DEVICE_TRACKERS]
+
     async def async_added_to_hass(self):
         """Register device trackers."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._parse_source_state(state)
 
         if self.hass.is_running:
@@ -440,7 +474,7 @@ class Person(RestoreEntity):
                 EVENT_HOMEASSISTANT_START, person_start_hass
             )
 
-    async def async_update_config(self, config):
+    async def async_update_config(self, config: ConfigType):
         """Handle when the config is updated."""
         self._config = config
 
@@ -448,9 +482,7 @@ class Person(RestoreEntity):
             self._unsub_track_device()
             self._unsub_track_device = None
 
-        trackers = self._config[CONF_DEVICE_TRACKERS]
-
-        if trackers:
+        if trackers := self._config[CONF_DEVICE_TRACKERS]:
             _LOGGER.debug("Subscribe to device trackers for %s", self.entity_id)
 
             self._unsub_track_device = async_track_state_change_event(
@@ -474,7 +506,7 @@ class Person(RestoreEntity):
             if not state or state.state in IGNORE_STATES:
                 continue
 
-            if state.attributes.get(ATTR_SOURCE_TYPE) == SOURCE_TYPE_GPS:
+            if state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS:
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 latest_non_gps_home = _get_latest(latest_non_gps_home, state)
@@ -517,7 +549,7 @@ def ws_list_person(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
 ):
     """List persons."""
-    yaml, storage = hass.data[DOMAIN]
+    yaml, storage, _ = hass.data[DOMAIN]
     connection.send_result(
         msg[ATTR_ID], {"storage": storage.async_items(), "config": yaml.async_items()}
     )

@@ -18,8 +18,7 @@
                     "name": "Seadme nimi",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                },
-                "title": "Loo \u00fchendus DoorBird-ga"
+                }
             }
         }
     },
@@ -29,7 +28,9 @@
                 "data": {
                     "events": "Komadega eraldatud s\u00fcndmuste loend."
                 },
-                "description": "Lisa komaga eraldatud s\u00fcndmuse nimi igale j\u00e4lgitavale s\u00fcndmusele. P\u00e4rast nende sisestamist kasuta rakendust DoorBird, et siduda need konkreetse s\u00fcndmusega. Vaata dokumentatsiooni aadressil https://www.home-assistant.io/integrations/doorbird/#events. N\u00e4ide: somebody_pressed_the_button, motion"
+                "data_description": {
+                    "events": "Lisa iga s\u00fcndmuse jaoks, mida soovid j\u00e4lgida, komaga eraldatud s\u00fcndmuse nimi. P\u00e4rast nende sisestamist siia kasuta DoorBirdi rakendust, et m\u00e4\u00e4rata need konkreetsele s\u00fcndmusele.\n\nN\u00e4ide: somebody_pressed_the_button, liikumine"
+                }
             }
         }
     }

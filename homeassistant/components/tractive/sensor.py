@@ -4,22 +4,23 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    DEVICE_CLASS_BATTERY,
-    PERCENTAGE,
-    TIME_MINUTES,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_BATTERY_LEVEL, PERCENTAGE, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables
 from .const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
+    ATTR_TRACKER_STATE,
     CLIENT,
     DOMAIN,
     SERVER_UNAVAILABLE,
@@ -47,6 +48,8 @@ class TractiveSensorEntityDescription(
 class TractiveSensor(TractiveEntity, SensorEntity):
     """Tractive sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         user_id: str,
@@ -56,7 +59,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         """Initialize sensor entity."""
         super().__init__(user_id, item.trackable, item.tracker_details)
 
-        self._attr_name = f"{item.trackable['details']['name']} {description.name}"
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
         self.entity_description = description
 
@@ -73,7 +75,9 @@ class TractiveHardwareSensor(TractiveSensor):
     @callback
     def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
         """Handle hardware status update."""
-        self._attr_native_value = event[self.entity_description.key]
+        if (_state := event[self.entity_description.key]) is None:
+            return
+        self._attr_native_value = _state
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -130,21 +134,30 @@ class TractiveActivitySensor(TractiveSensor):
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_BATTERY_LEVEL,
-        name="Battery Level",
+        name="Tracker battery level",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_class=TractiveHardwareSensor,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TractiveSensorEntityDescription(
+        # Currently, only state operational and not_reporting are used
+        # More states are available by polling the data
+        key=ATTR_TRACKER_STATE,
+        name="Tracker state",
+        device_class="tractive__tracker_state",
         entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,
-        name="Minutes Active",
+        name="Minutes active",
         icon="mdi:clock-time-eight-outline",
         native_unit_of_measurement=TIME_MINUTES,
         entity_class=TractiveActivitySensor,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,
-        name="Daily Goal",
+        name="Daily goal",
         icon="mdi:flag-checkered",
         native_unit_of_measurement=TIME_MINUTES,
         entity_class=TractiveActivitySensor,

@@ -1,17 +1,31 @@
 """Integration tests for the auth component."""
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import Credentials
 from homeassistant.components import auth
-from homeassistant.components.auth import RESULT_TYPE_USER
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import async_setup_auth
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
+
+
+@pytest.fixture
+def mock_credential():
+    """Return a mock credential."""
+    return Credentials(
+        id="mock-credential-id",
+        auth_provider_type="insecure_example",
+        auth_provider_id=None,
+        data={"username": "test-user"},
+        is_new=False,
+    )
 
 
 async def async_setup_user_refresh_token(hass):
@@ -43,15 +57,19 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
             "redirect_uri": CLIENT_REDIRECT_URI,
         },
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
     resp = await client.post(
         f"/auth/login_flow/{step['flow_id']}",
-        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     step = await resp.json()
     code = step["result"]
 
@@ -61,12 +79,13 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
         data={"client_id": CLIENT_ID, "grant_type": "authorization_code", "code": code},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
 
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
     )
+    assert tokens["ha_auth_provider"] == "insecure_example"
 
     # Use refresh token to get more tokens.
     resp = await client.post(
@@ -78,7 +97,7 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
     assert "refresh_token" not in tokens
     assert (
@@ -87,37 +106,92 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
 
     # Test using access token to hit API.
     resp = await client.get("/api/")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
     resp = await client.get(
         "/api/", headers={"authorization": f"Bearer {tokens['access_token']}"}
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
-def test_auth_code_store_expiration():
+async def test_auth_code_checks_local_only_user(hass, aiohttp_client):
+    """Test local only user cannot exchange auth code for refresh tokens when external."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
+    resp = await client.post(
+        f"/auth/login_flow/{step['flow_id']}",
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+    code = step["result"]
+
+    # Exchange code for tokens
+    with patch(
+        "homeassistant.components.auth.async_user_not_allowed_do_auth",
+        return_value="User is local only",
+    ):
+        resp = await client.post(
+            "/auth/token",
+            data={
+                "client_id": CLIENT_ID,
+                "grant_type": "authorization_code",
+                "code": code,
+            },
+        )
+
+    assert resp.status == HTTPStatus.FORBIDDEN
+    error = await resp.json()
+    assert error["error"] == "access_denied"
+
+
+def test_auth_code_store_expiration(mock_credential):
     """Test that the auth code store will not return expired tokens."""
     store, retrieve = auth._create_auth_code_store()
     client_id = "bla"
-    user = MockUser(id="mock_user")
     now = utcnow()
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        code = store(client_id, user)
+        code = store(client_id, mock_credential)
 
     with patch(
         "homeassistant.util.dt.utcnow", return_value=now + timedelta(minutes=10)
     ):
-        assert retrieve(client_id, RESULT_TYPE_USER, code) is None
+        assert retrieve(client_id, code) is None
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        code = store(client_id, user)
+        code = store(client_id, mock_credential)
 
     with patch(
         "homeassistant.util.dt.utcnow",
         return_value=now + timedelta(minutes=9, seconds=59),
     ):
-        assert retrieve(client_id, RESULT_TYPE_USER, code) == user
+        assert retrieve(client_id, code) == mock_credential
+
+
+def test_auth_code_store_requires_credentials(mock_credential):
+    """Test we require credentials."""
+    store, _retrieve = auth._create_auth_code_store()
+
+    with pytest.raises(ValueError):
+        store(None, MockUser())
+
+    store(None, mock_credential)
 
 
 async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
@@ -128,7 +202,7 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     user = refresh_token.user
     client = await hass_ws_client(hass, hass_access_token)
 
-    await client.send_json({"id": 5, "type": auth.WS_TYPE_CURRENT_USER})
+    await client.send_json({"id": 5, "type": "auth/current_user"})
 
     result = await client.receive_json()
     assert result["success"], result
@@ -179,7 +253,7 @@ async def test_refresh_token_system_generated(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert result["error"] == "invalid_request"
 
@@ -188,7 +262,7 @@ async def test_refresh_token_system_generated(hass, aiohttp_client):
         data={"grant_type": "refresh_token", "refresh_token": refresh_token.token},
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
@@ -206,7 +280,7 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
         data={"grant_type": "refresh_token", "refresh_token": refresh_token.token},
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert result["error"] == "invalid_request"
 
@@ -220,7 +294,7 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
     result = await resp.json()
     assert result["error"] == "invalid_request"
 
@@ -234,11 +308,35 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
     )
+
+
+async def test_refresh_token_checks_local_only_user(hass, aiohttp_client):
+    """Test that we can't refresh token for a local only user when external."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    refresh_token = await async_setup_user_refresh_token(hass)
+    refresh_token.user.local_only = True
+
+    with patch(
+        "homeassistant.components.auth.async_user_not_allowed_do_auth",
+        return_value="User is local only",
+    ):
+        resp = await client.post(
+            "/auth/token",
+            data={
+                "client_id": CLIENT_ID,
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token.token,
+            },
+        )
+
+    assert resp.status == HTTPStatus.FORBIDDEN
+    result = await resp.json()
+    assert result["error"] == "access_denied"
 
 
 async def test_refresh_token_provider_rejected(
@@ -262,13 +360,16 @@ async def test_refresh_token_provider_rejected(
             },
         )
 
-    assert resp.status == 403
+    assert resp.status == HTTPStatus.FORBIDDEN
     result = await resp.json()
     assert result["error"] == "access_denied"
     assert result["error_description"] == "Invalid access"
 
 
-async def test_revoking_refresh_token(hass, aiohttp_client):
+@pytest.mark.parametrize(
+    "url,base_data", [("/auth/token", {"action": "revoke"}), ("/auth/revoke", {})]
+)
+async def test_revoking_refresh_token(url, base_data, hass, aiohttp_client):
     """Test that we can revoke refresh tokens."""
     client = await async_setup_auth(hass, aiohttp_client)
     refresh_token = await async_setup_user_refresh_token(hass)
@@ -283,17 +384,15 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     tokens = await resp.json()
     assert (
         await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
     )
 
     # Revoke refresh token
-    resp = await client.post(
-        "/auth/token", data={"token": refresh_token.token, "action": "revoke"}
-    )
-    assert resp.status == 200
+    resp = await client.post(url, data={**base_data, "token": refresh_token.token})
+    assert resp.status == HTTPStatus.OK
 
     # Old access token should be no longer valid
     assert await hass.auth.async_validate_access_token(tokens["access_token"]) is None
@@ -308,7 +407,7 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
         },
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_ws_long_lived_access_token(hass, hass_ws_client, hass_access_token):
@@ -321,7 +420,7 @@ async def test_ws_long_lived_access_token(hass, hass_ws_client, hass_access_toke
     await ws_client.send_json(
         {
             "id": 5,
-            "type": auth.WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
+            "type": "auth/long_lived_access_token",
             "client_name": "GPS Logger",
             "lifespan": 365,
         }
@@ -345,7 +444,7 @@ async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
 
     ws_client = await hass_ws_client(hass, hass_access_token)
 
-    await ws_client.send_json({"id": 5, "type": auth.WS_TYPE_REFRESH_TOKENS})
+    await ws_client.send_json({"id": 5, "type": "auth/refresh_tokens"})
 
     result = await ws_client.receive_json()
     assert result["success"], result
@@ -361,6 +460,7 @@ async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
     assert token["is_current"] is True
     assert token["last_used_at"] == refresh_token.last_used_at.isoformat()
     assert token["last_used_ip"] == refresh_token.last_used_ip
+    assert token["auth_provider_type"] == "homeassistant"
 
 
 async def test_ws_delete_refresh_token(
@@ -379,7 +479,7 @@ async def test_ws_delete_refresh_token(
     await ws_client.send_json(
         {
             "id": 5,
-            "type": auth.WS_TYPE_DELETE_REFRESH_TOKEN,
+            "type": "auth/delete_refresh_token",
             "refresh_token_id": refresh_token.id,
         }
     )
@@ -395,15 +495,13 @@ async def test_ws_sign_path(hass, hass_ws_client, hass_access_token):
     assert await async_setup_component(hass, "auth", {"http": {}})
     ws_client = await hass_ws_client(hass, hass_access_token)
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
-
     with patch(
         "homeassistant.components.auth.async_sign_path", return_value="hello_world"
     ) as mock_sign:
         await ws_client.send_json(
             {
                 "id": 5,
-                "type": auth.WS_TYPE_SIGN_PATH,
+                "type": "auth/sign_path",
                 "path": "/api/hello",
                 "expires": 20,
             }
@@ -413,7 +511,6 @@ async def test_ws_sign_path(hass, hass_ws_client, hass_access_token):
     assert result["success"], result
     assert result["result"] == {"path": "hello_world"}
     assert len(mock_sign.mock_calls) == 1
-    hass, p_refresh_token, path, expires = mock_sign.mock_calls[0][1]
-    assert p_refresh_token == refresh_token.id
+    hass, path, expires = mock_sign.mock_calls[0][1]
     assert path == "/api/hello"
     assert expires.total_seconds() == 20

@@ -14,17 +14,7 @@ from homeassistant.helpers.significant_change import (
     check_percentage_change,
 )
 
-from . import (
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-)
+from . import SensorDeviceClass
 
 
 def _absolute_and_relative_change(
@@ -48,40 +38,48 @@ def async_check_significant_change(
     **kwargs: Any,
 ) -> bool | None:
     """Test if state significantly changed."""
-    device_class = new_attrs.get(ATTR_DEVICE_CLASS)
-
-    if device_class is None:
+    if (device_class := new_attrs.get(ATTR_DEVICE_CLASS)) is None:
         return None
 
     absolute_change: float | None = None
     percentage_change: float | None = None
-    if device_class == DEVICE_CLASS_TEMPERATURE:
+    if device_class == SensorDeviceClass.TEMPERATURE:
         if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
             absolute_change = 1.0
         else:
             absolute_change = 0.5
 
-    if device_class in (DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY):
+    if device_class in (SensorDeviceClass.BATTERY, SensorDeviceClass.HUMIDITY):
         absolute_change = 1.0
 
     if device_class in (
-        DEVICE_CLASS_AQI,
-        DEVICE_CLASS_CO,
-        DEVICE_CLASS_CO2,
-        DEVICE_CLASS_PM25,
-        DEVICE_CLASS_PM10,
-        DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+        SensorDeviceClass.AQI,
+        SensorDeviceClass.CO,
+        SensorDeviceClass.CO2,
+        SensorDeviceClass.PM25,
+        SensorDeviceClass.PM10,
+        SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
     ):
         absolute_change = 1.0
         percentage_change = 2.0
 
+    try:
+        # New state is invalid, don't report it
+        new_state_f = float(new_state)
+    except ValueError:
+        return False
+
+    try:
+        # Old state was invalid, we should report again
+        old_state_f = float(old_state)
+    except ValueError:
+        return True
+
     if absolute_change is not None and percentage_change is not None:
         return _absolute_and_relative_change(
-            float(old_state), float(new_state), absolute_change, percentage_change
+            old_state_f, new_state_f, absolute_change, percentage_change
         )
     if absolute_change is not None:
-        return check_absolute_change(
-            float(old_state), float(new_state), absolute_change
-        )
+        return check_absolute_change(old_state_f, new_state_f, absolute_change)
 
     return None

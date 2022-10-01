@@ -1,11 +1,15 @@
 """Support for Twilio."""
+from aiohttp import web
 from twilio.rest import Client
-from twilio.twiml import TwiML
 import voluptuous as vol
 
+from homeassistant.components import webhook
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -29,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Twilio component."""
     if DOMAIN not in config:
         return True
@@ -47,20 +51,20 @@ async def handle_webhook(hass, webhook_id, request):
     data["webhook_id"] = webhook_id
     hass.bus.async_fire(RECEIVED_DATA, dict(data))
 
-    return TwiML().to_xml()
+    return web.Response(text="")
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.components.webhook.async_register(
-        DOMAIN, "Twilio", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    webhook.async_register(
+        hass, DOMAIN, "Twilio", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     return True
 
 

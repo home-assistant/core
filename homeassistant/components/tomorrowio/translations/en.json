@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_api_key": "Invalid API key",
+            "rate_limited": "Currently rate limited, please try again later.",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "location": "Location",
+                    "name": "Name"
+                },
+                "description": "To get an API key, sign up at [Tomorrow.io](https://app.tomorrow.io/signup)."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Min. Between NowCast Forecasts"
+                },
+                "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
+                "title": "Update Tomorrow.io Options"
+            }
+        }
+    }
+}

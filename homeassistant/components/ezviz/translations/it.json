@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "L'account \u00e8 gi\u00e0 configurato",
-            "ezviz_cloud_account_missing": "Ezviz cloud account mancante. Si prega di riconfigurare l'account Ezviz cloud",
+            "ezviz_cloud_account_missing": "Ezviz cloud account mancante. Riconfigura l'account Ezviz cloud",
             "unknown": "Errore imprevisto"
         },
         "error": {
@@ -34,7 +34,7 @@
                     "url": "URL",
                     "username": "Nome utente"
                 },
-                "description": "Specificare manualmente l'URL dell'area geografica",
+                "description": "Specifica manualmente l'URL dell'area geografica",
                 "title": "Connettiti all'URL personalizzato di Ezviz"
             }
         }

@@ -8,11 +8,12 @@ import logging
 from rpi_bad_power import UnderVoltage, new_under_voltage
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,8 @@ async def async_setup_entry(
 class RaspberryChargerBinarySensor(BinarySensorEntity):
     """Binary sensor representing the rpi power status."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:raspberry-pi"
     _attr_name = "RPi Power status"
     _attr_unique_id = "rpi_power"  # only one sensor possible

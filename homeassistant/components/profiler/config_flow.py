@@ -1,6 +1,4 @@
 """Config flow for Profiler integration."""
-import voluptuous as vol
-
 from homeassistant import config_entries
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -19,4 +17,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(title=DEFAULT_NAME, data={})
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema({}))
+        return self.async_show_form(step_id="user")

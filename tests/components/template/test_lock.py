@@ -5,6 +5,24 @@ from homeassistant import setup
 from homeassistant.components import lock
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
+OPTIMISTIC_LOCK_CONFIG = {
+    "platform": "template",
+    "lock": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "lock",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+    "unlock": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "unlock",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+}
+
 
 @pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
 @pytest.mark.parametrize(
@@ -12,17 +30,9 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVA
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "name": "Test template lock",
                 "value_template": "{{ states.switch.test_state.state }}",
-                "lock": {
-                    "service": "switch.turn_on",
-                    "entity_id": "switch.test_state",
-                },
-                "unlock": {
-                    "service": "switch.turn_off",
-                    "entity_id": "switch.test_state",
-                },
             }
         },
     ],
@@ -48,16 +58,8 @@ async def test_template_state(hass, start_ha):
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ 1 == 1 }}",
-                "lock": {
-                    "service": "switch.turn_on",
-                    "entity_id": "switch.test_state",
-                },
-                "unlock": {
-                    "service": "switch.turn_off",
-                    "entity_id": "switch.test_state",
-                },
             }
         },
     ],
@@ -74,16 +76,8 @@ async def test_template_state_boolean_on(hass, start_ha):
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ 1 == 2 }}",
-                "lock": {
-                    "service": "switch.turn_on",
-                    "entity_id": "switch.test_state",
-                },
-                "unlock": {
-                    "service": "switch.turn_off",
-                    "entity_id": "switch.test_state",
-                },
             }
         },
     ],
@@ -155,16 +149,8 @@ async def test_template_syntax_error(hass, start_ha):
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ 1 + 1 }}",
-                "lock": {
-                    "service": "switch.turn_on",
-                    "entity_id": "switch.test_state",
-                },
-                "unlock": {
-                    "service": "switch.turn_off",
-                    "entity_id": "switch.test_state",
-                },
             }
         },
     ],
@@ -186,19 +172,15 @@ async def test_template_static(hass, start_ha):
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ states.switch.test_state.state }}",
-                "lock": {"service": "test.automation"},
-                "unlock": {
-                    "service": "switch.turn_off",
-                    "entity_id": "switch.test_state",
-                },
             }
         },
     ],
 )
 async def test_lock_action(hass, start_ha, calls):
     """Test lock action."""
+    await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_OFF)
     await hass.async_block_till_done()
 
@@ -211,6 +193,8 @@ async def test_lock_action(hass, start_ha, calls):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
+    assert calls[0].data["action"] == "lock"
+    assert calls[0].data["caller"] == "lock.template_lock"
 
 
 @pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
@@ -219,19 +203,15 @@ async def test_lock_action(hass, start_ha, calls):
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ states.switch.test_state.state }}",
-                "lock": {
-                    "service": "switch.turn_on",
-                    "entity_id": "switch.test_state",
-                },
-                "unlock": {"service": "test.automation"},
             }
         },
     ],
 )
 async def test_unlock_action(hass, start_ha, calls):
     """Test unlock action."""
+    await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_ON)
     await hass.async_block_till_done()
 
@@ -244,6 +224,8 @@ async def test_unlock_action(hass, start_ha, calls):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
+    assert calls[0].data["action"] == "unlock"
+    assert calls[0].data["caller"] == "lock.template_lock"
 
 
 @pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
@@ -252,10 +234,8 @@ async def test_unlock_action(hass, start_ha, calls):
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ states.input_select.test_state.state }}",
-                "lock": {"service": "test.automation"},
-                "unlock": {"service": "test.automation"},
             }
         },
     ],
@@ -264,7 +244,7 @@ async def test_unlock_action(hass, start_ha, calls):
     "test_state", [lock.STATE_UNLOCKING, lock.STATE_LOCKING, lock.STATE_JAMMED]
 )
 async def test_lock_state(hass, test_state, start_ha):
-    """Test unlocking."""
+    """Test value template."""
     hass.states.async_set("input_select.test_state", test_state)
     await hass.async_block_till_done()
 
@@ -278,13 +258,8 @@ async def test_lock_state(hass, test_state, start_ha):
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ states('switch.test_state') }}",
-                "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
-                "unlock": {
-                    "service": "switch.turn_off",
-                    "entity_id": "switch.test_state",
-                },
                 "availability_template": "{{ is_state('availability_state.state', 'on') }}",
             }
         },
@@ -313,14 +288,9 @@ async def test_available_template_with_entities(hass, start_ha):
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ 1 + 1 }}",
                 "availability_template": "{{ x - 12 }}",
-                "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
-                "unlock": {
-                    "service": "switch.turn_off",
-                    "entity_id": "switch.test_state",
-                },
             }
         },
     ],
@@ -339,15 +309,10 @@ async def test_invalid_availability_template_keeps_component_available(
     [
         {
             lock.DOMAIN: {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "name": "test_template_lock_01",
                 "unique_id": "not-so-unique-anymore",
                 "value_template": "{{ true }}",
-                "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
-                "unlock": {
-                    "service": "switch.turn_off",
-                    "entity_id": "switch.test_state",
-                },
             }
         },
     ],
@@ -359,15 +324,10 @@ async def test_unique_id(hass, start_ha):
         lock.DOMAIN,
         {
             "lock": {
-                "platform": "template",
+                **OPTIMISTIC_LOCK_CONFIG,
                 "name": "test_template_lock_02",
                 "unique_id": "not-so-unique-anymore",
                 "value_template": "{{ false }}",
-                "lock": {"service": "switch.turn_on", "entity_id": "switch.test_state"},
-                "unlock": {
-                    "service": "switch.turn_off",
-                    "entity_id": "switch.test_state",
-                },
             },
         },
     )

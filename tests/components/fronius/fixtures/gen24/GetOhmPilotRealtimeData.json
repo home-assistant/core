@@ -1,0 +1,16 @@
+{
+  "Body": {
+    "Data": {}
+  },
+  "Head": {
+    "RequestArguments": {
+      "Scope": "System"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-11-26T11:07:53+00:00"
+  }
+}

@@ -6,7 +6,7 @@ from homeassistant.components import switch
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
-from tests.components.switch import common
+from . import common
 
 
 @pytest.fixture(autouse=True)
@@ -72,13 +72,3 @@ async def test_switch_context(
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
-
-
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomSwitch(switch.SwitchDevice):
-        pass
-
-    CustomSwitch()
-    assert "SwitchDevice is deprecated, modify CustomSwitch" in caplog.text

@@ -1,12 +1,13 @@
 """Entity object for shared properties of Gree entities."""
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .bridge import DeviceDataUpdateCoordinator
 from .const import DOMAIN
 
 
-class GreeEntity(CoordinatorEntity):
+class GreeEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     """Generic Gree entity (base class)."""
 
     def __init__(self, coordinator: DeviceDataUpdateCoordinator, desc: str) -> None:
@@ -27,11 +28,11 @@ class GreeEntity(CoordinatorEntity):
         return f"{self._mac}_{self._desc}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return info about the device."""
-        return {
-            "identifiers": {(DOMAIN, self._mac)},
-            "name": self._name,
-            "manufacturer": "Gree",
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            identifiers={(DOMAIN, self._mac)},
+            manufacturer="Gree",
+            name=self._name,
+        )

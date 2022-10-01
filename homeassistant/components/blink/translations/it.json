@@ -32,7 +32,7 @@
                 "data": {
                     "scan_interval": "Intervallo di scansione (secondi)"
                 },
-                "description": "Configurare l'integrazione di Blink",
+                "description": "Configura l'integrazione di Blink",
                 "title": "Opzioni di Blink"
             }
         }

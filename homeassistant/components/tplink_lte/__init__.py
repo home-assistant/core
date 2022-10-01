@@ -13,10 +13,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RECIPIENT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +82,7 @@ class LTEData:
         return None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up TP-Link LTE component."""
     if DATA_KEY not in hass.data:
         websession = async_create_clientsession(
@@ -98,7 +100,7 @@ async def async_setup(hass, config):
         for notify_conf in conf.get(CONF_NOTIFY, []):
             hass.async_create_task(
                 discovery.async_load_platform(
-                    hass, "notify", DOMAIN, notify_conf, config
+                    hass, Platform.NOTIFY, DOMAIN, notify_conf, config
                 )
             )
 

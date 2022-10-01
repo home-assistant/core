@@ -1,4 +1,4 @@
-"""Test UniFi config flow."""
+"""Test UniFi Network config flow."""
 
 import socket
 from unittest.mock import patch
@@ -6,7 +6,8 @@ from unittest.mock import patch
 import aiounifi
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.unifi.config_flow import async_discover_unifi
+from homeassistant.components import ssdp
+from homeassistant.components.unifi.config_flow import _async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -94,7 +95,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
         CONF_HOST: "unifi",
@@ -134,7 +135,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Site name"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -160,7 +161,7 @@ async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discover
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
         CONF_HOST: "",
@@ -177,7 +178,7 @@ async def test_flow_multiple_sites(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -211,7 +212,7 @@ async def test_flow_multiple_sites(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "site"
     assert result["data_schema"]({"site": "1"})
     assert result["data_schema"]({"site": "2"})
@@ -225,7 +226,7 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.clear_requests()
@@ -260,7 +261,7 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -280,7 +281,7 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -314,7 +315,7 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
             },
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "configuration_updated"
 
 
@@ -324,7 +325,7 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -341,7 +342,7 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
             },
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "faulty_credentials"}
 
 
@@ -351,7 +352,7 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
         UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
@@ -368,7 +369,7 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
             },
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "service_unavailable"}
 
 
@@ -388,7 +389,7 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
         data=config_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     aioclient_mock.clear_requests()
@@ -423,7 +424,7 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
     assert config_entry.data[CONF_USERNAME] == "new_name"
@@ -446,7 +447,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         config_entry.entry_id, context={"show_advanced_options": True}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "device_tracker"
     assert not result["last_step"]
     assert set(
@@ -464,7 +465,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "client_control"
     assert not result["last_step"]
 
@@ -477,7 +478,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "statistics_sensors"
     assert result["last_step"]
 
@@ -489,7 +490,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
@@ -520,7 +521,7 @@ async def test_simple_option_flow(hass, aioclient_mock):
         config_entry.entry_id, context={"show_advanced_options": False}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "simple_options"
     assert result["last_step"]
 
@@ -533,12 +534,23 @@ async def test_simple_option_flow(hass, aioclient_mock):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
     }
+
+
+async def test_option_flow_integration_not_setup(hass, aioclient_mock):
+    """Test advanced config flow options."""
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
+
+    hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "integration_not_setup"
 
 
 async def test_form_ssdp(hass):
@@ -547,16 +559,29 @@ async def test_form_ssdp(hass):
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "friendlyName": "UniFi Dream Machine",
-            "modelDescription": "UniFi Dream Machine Pro",
-            "ssdp_location": "http://192.168.208.1:41417/rootDesc.xml",
-            "serialNumber": "e0:63:da:20:14:a9",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
+            upnp={
+                "friendlyName": "UniFi Dream Machine",
+                "modelDescription": "UniFi Dream Machine Pro",
+                "serialNumber": "e0:63:da:20:14:a9",
+            },
+        ),
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {}
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    assert (
+        flows[0].get("context", {}).get("configuration_url")
+        == "https://192.168.208.1:443"
+    )
+
     context = next(
         flow["context"]
         for flow in hass.config_entries.flow.async_progress()
@@ -579,12 +604,16 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass):
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "friendlyName": "UniFi Dream Machine",
-            "modelDescription": "UniFi Dream Machine Pro",
-            "ssdp_location": "http://192.168.208.1:41417/rootDesc.xml",
-            "serialNumber": "e0:63:da:20:14:a9",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
+            upnp={
+                "friendlyName": "UniFi Dream Machine",
+                "modelDescription": "UniFi Dream Machine Pro",
+                "serialNumber": "e0:63:da:20:14:a9",
+            },
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -602,12 +631,16 @@ async def test_form_ssdp_aborts_if_serial_already_exists(hass):
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "friendlyName": "UniFi Dream Machine",
-            "modelDescription": "UniFi Dream Machine Pro",
-            "ssdp_location": "http://192.168.208.1:41417/rootDesc.xml",
-            "serialNumber": "e0:63:da:20:14:a9",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
+            upnp={
+                "friendlyName": "UniFi Dream Machine",
+                "modelDescription": "UniFi Dream Machine Pro",
+                "serialNumber": "e0:63:da:20:14:a9",
+            },
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -625,12 +658,16 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "friendlyName": "UniFi Dream Machine New",
-            "modelDescription": "UniFi Dream Machine Pro",
-            "ssdp_location": "http://1.2.3.4:41417/rootDesc.xml",
-            "serialNumber": "e0:63:da:20:14:a9",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:41417/rootDesc.xml",
+            upnp={
+                "friendlyName": "UniFi Dream Machine New",
+                "modelDescription": "UniFi Dream Machine Pro",
+                "serialNumber": "e0:63:da:20:14:a9",
+            },
+        ),
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -649,10 +686,10 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
 async def test_discover_unifi_positive(hass):
     """Verify positive run of UniFi discovery."""
     with patch("socket.gethostbyname", return_value=True):
-        assert await async_discover_unifi(hass)
+        assert await _async_discover_unifi(hass)
 
 
 async def test_discover_unifi_negative(hass):
     """Verify negative run of UniFi discovery."""
     with patch("socket.gethostbyname", side_effect=socket.gaierror):
-        assert await async_discover_unifi(hass) is None
+        assert await _async_discover_unifi(hass) is None

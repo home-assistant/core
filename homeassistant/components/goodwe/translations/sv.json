@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det \u00e4r redan p\u00e5g\u00e5ende"
+        },
+        "error": {
+            "connection_error": "Kunde inte ansluta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP-adress"
+                },
+                "description": "Anslut till v\u00e4xelriktare",
+                "title": "GoodWe v\u00e4xelriktare"
+            }
+        }
+    }
+}

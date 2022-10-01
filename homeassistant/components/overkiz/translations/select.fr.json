@@ -1,0 +1,13 @@
+{
+    "state": {
+        "overkiz__memorized_simple_volume": {
+            "highest": "Maximum",
+            "standard": "Standard"
+        },
+        "overkiz__open_closed_pedestrian": {
+            "closed": "Ferm\u00e9",
+            "open": "Ouvert",
+            "pedestrian": "Pi\u00e9ton"
+        }
+    }
+}

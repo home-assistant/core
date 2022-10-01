@@ -1,0 +1,55 @@
+{
+    "application_credentials": {
+        "description": "Az [OAuth beleegyez\u00e9si k\u00e9perny\u0151]({oauth_consent_url}) az [utas\u00edt\u00e1sok]({more_info_url}) k\u00f6vet\u00e9s\u00e9vel hozz\u00e1f\u00e9r\u00e9st biztos\u00edthat a Home Assistant-nak a Google Napt\u00e1rhoz. L\u00e9tre kell hoznia a napt\u00e1rhoz csatolt alkalmaz\u00e1s-hiteles\u00edt\u0151 adatokat is:\n1. Nyissa meg a [Credentials]({oauth_creds_url}) webhelyet, \u00e9s kattintson a **Hiteles\u00edt\u0151 adatok l\u00e9trehoz\u00e1sa**-ra.\n1. A leg\u00f6rd\u00fcl\u0151 list\u00e1b\u00f3l v\u00e1lassza a **OAuth \u00fcgyf\u00e9lazonos\u00edt\u00f3**-t.\n1. V\u00e1lassza a **TV \u00e9s a korl\u00e1tozott beviteli eszk\u00f6z\u00f6k** lehet\u0151s\u00e9get az alkalmaz\u00e1st\u00edpushoz."
+    },
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "code_expired": "A hiteles\u00edt\u00e9si k\u00f3d lej\u00e1rt vagy a hiteles\u00edt\u0151 adatok be\u00e1ll\u00edt\u00e1sa \u00e9rv\u00e9nytelen, k\u00e9rem, pr\u00f3b\u00e1lja meg \u00fajra.",
+            "invalid_access_token": "\u00c9rv\u00e9nytelen hozz\u00e1f\u00e9r\u00e9si token",
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
+            "oauth_error": "\u00c9rv\u00e9nytelen token adatok \u00e9rkeztek.",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "timeout_connect": "Id\u0151t\u00fall\u00e9p\u00e9s a kapcsolat l\u00e9trehoz\u00e1sa sor\u00e1n"
+        },
+        "create_entry": {
+            "default": "Sikeres hiteles\u00edt\u00e9s"
+        },
+        "progress": {
+            "exchange": "Google-fi\u00f3kja \u00f6sszekapcsol\u00e1s\u00e1hoz keresse fel a [{url}]({url}) c\u00edmet, \u00e9s \u00edrja be a k\u00f3dot: \n\n{user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "\u00d6sszekapcsol\u00e1s Google-al"
+            },
+            "pick_implementation": {
+                "title": "V\u00e1lasszon egy hiteles\u00edt\u00e9si m\u00f3dszert"
+            },
+            "reauth_confirm": {
+                "description": "A Google Napt\u00e1r integr\u00e1ci\u00f3nak \u00fajra kell hiteles\u00edtenie fi\u00f3kj\u00e1t",
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "A Google Napt\u00e1r konfigur\u00e1l\u00e1sa a configuration.yaml f\u00e1jlban a 2022.9-es Home Assistant verzi\u00f3ban elt\u00e1vol\u00edt\u00e1sra ker\u00fcl.\n\nA megl\u00e9v\u0151 OAuth alkalmaz\u00e1s hiteles\u00edt\u0151 adatai \u00e9s hozz\u00e1f\u00e9r\u00e9si be\u00e1ll\u00edt\u00e1sai automatikusan import\u00e1l\u00e1sra ker\u00fcltek a felhaszn\u00e1l\u00f3i fel\u00fcletbe. A probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Google Calendar YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        },
+        "removed_track_new_yaml": {
+            "description": "A configuration.yaml f\u00e1jlban a Google Calendar sz\u00e1m\u00e1ra az entit\u00e1sk\u00f6vet\u00e9s ki lett kapcsolva, ami m\u00e1r nem t\u00e1mogatott. Manu\u00e1lisan sz\u00fcks\u00e9ges m\u00f3dos\u00edtani az integr\u00e1ci\u00f3s rendszerbe\u00e1ll\u00edt\u00e1sokat a felhaszn\u00e1l\u00f3i fel\u00fcleten, hogy a j\u00f6v\u0151ben letiltsa az \u00fajonnan felfedezett entit\u00e1sokat. A probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a track_new be\u00e1ll\u00edt\u00e1st a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Google Napt\u00e1r entit\u00e1sk\u00f6vet\u00e9se megv\u00e1ltozott"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant hozz\u00e1f\u00e9r\u00e9s a Google Napt\u00e1rhoz"
+                }
+            }
+        }
+    }
+}

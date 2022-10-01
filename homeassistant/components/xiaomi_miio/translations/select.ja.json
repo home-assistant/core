@@ -1,0 +1,19 @@
+{
+    "state": {
+        "xiaomi_miio__display_orientation": {
+            "forward": "\u9032\u3080",
+            "left": "\u5de6",
+            "right": "\u53f3"
+        },
+        "xiaomi_miio__led_brightness": {
+            "bright": "\u660e\u308b\u3044",
+            "dim": "\u8584\u6697\u3044",
+            "off": "\u30aa\u30d5"
+        },
+        "xiaomi_miio__ptc_level": {
+            "high": "\u9ad8",
+            "low": "\u4f4e",
+            "medium": "\u4e2d"
+        }
+    }
+}

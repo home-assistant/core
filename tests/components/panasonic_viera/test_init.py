@@ -130,7 +130,7 @@ async def test_setup_entry_unencrypted_missing_device_info(hass, mock_remote):
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_CONFIG_DATA[CONF_HOST],
-        data=MOCK_CONFIG_DATA,
+        data={**MOCK_CONFIG_DATA},
     )
 
     mock_entry.add_to_hass(hass)
@@ -156,7 +156,7 @@ async def test_setup_entry_unencrypted_missing_device_info_none(hass):
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_CONFIG_DATA[CONF_HOST],
-        data=MOCK_CONFIG_DATA,
+        data={**MOCK_CONFIG_DATA},
     )
 
     mock_entry.add_to_hass(hass)
@@ -207,7 +207,9 @@ async def test_setup_config_flow_initiated(hass):
 async def test_setup_unload_entry(hass, mock_remote):
     """Test if config entry is unloaded."""
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=MOCK_DEVICE_INFO[ATTR_UDN], data=MOCK_CONFIG_DATA
+        domain=DOMAIN,
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
+        data={**MOCK_CONFIG_DATA},
     )
 
     mock_entry.add_to_hass(hass)

@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "codelock": "kodel\u00e5skode mottatt",
+            "fingerprint": "fingeravtrykkkode mottatt",
+            "send_keys": "sende n\u00f8kler mottatt",
+            "transmitter": "senderkode mottatt",
+            "transponder": "transponderkode mottatt"
+        }
+    }
+}

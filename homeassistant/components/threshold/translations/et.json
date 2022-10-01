@@ -1,0 +1,38 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "Alam- ja \u00fclempiir ei saa korraga puududa"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Sisendandur",
+                    "hysteresis": "H\u00fcsterees",
+                    "lower": "Alampiir",
+                    "name": "Nimi",
+                    "upper": "\u00dclempiir"
+                },
+                "description": "Loo olekuandur mis l\u00fcltub sisse v\u00f5i v\u00e4lja vastavalt m\u00e4\u00e4ratud ajale.\n\nAinult alampiir - l\u00fclitu sisse kui anduri v\u00e4\u00e4rtus on alla almpiiri.\nAinult \u00fclempiir - l\u00fclitu sisse kui anduri v\u00e4\u00e4rtus on \u00fcle \u00fclempiiri.\nAlam- ja \u00fclempiir m\u00f5lemad m\u00e4\u00e4ratud - l\u00fclitu sisse kui anduri v\u00e4\u00e4rtus on vahemikus [alampiir .. \u00fclempiir]",
+                "title": "Lisa uus l\u00e4vendiandur"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "need_lower_upper": "Alam- ja \u00fclempiir ei saa korraga puududa"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Sisendandur",
+                    "hysteresis": "H\u00fcsterees",
+                    "lower": "Alampiir",
+                    "name": "Nimi",
+                    "upper": "\u00dclempiir"
+                },
+                "description": "Ainult alampiir - l\u00fclitu sisse kui anduri v\u00e4\u00e4rtus on alla almpiiri.\nAinult \u00fclempiir - l\u00fclitu sisse kui anduri v\u00e4\u00e4rtus on \u00fcle \u00fclempiiri.\nAlam- ja \u00fclempiir m\u00f5lemad m\u00e4\u00e4ratud - l\u00fclitu sisse kui anduri v\u00e4\u00e4rtus on vahemikus [alampiir .. \u00fclempiir]"
+            }
+        }
+    },
+    "title": "L\u00e4vendiandur"
+}

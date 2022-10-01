@@ -8,16 +8,21 @@ import hmac
 from logging import getLogger
 from typing import Any
 
-from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from . import models
-from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY, GROUP_ID_USER
-from .permissions import PermissionLookup, system_policies
+from .const import (
+    ACCESS_TOKEN_EXPIRATION,
+    GROUP_ID_ADMIN,
+    GROUP_ID_READ_ONLY,
+    GROUP_ID_USER,
+)
+from .permissions import system_policies
+from .permissions.models import PermissionLookup
 from .permissions.types import PolicyType
-
-# mypy: disallow-any-generics
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth"
@@ -41,8 +46,8 @@ class AuthStore:
         self._users: dict[str, models.User] | None = None
         self._groups: dict[str, models.Group] | None = None
         self._perm_lookup: PermissionLookup | None = None
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True
+        self._store = Store[dict[str, list[dict[str, Any]]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._lock = asyncio.Lock()
 
@@ -86,6 +91,7 @@ class AuthStore:
         system_generated: bool | None = None,
         credentials: models.Credentials | None = None,
         group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> models.User:
         """Create a new user."""
         if self._users is None:
@@ -108,14 +114,14 @@ class AuthStore:
             "perm_lookup": self._perm_lookup,
         }
 
-        if is_owner is not None:
-            kwargs["is_owner"] = is_owner
-
-        if is_active is not None:
-            kwargs["is_active"] = is_active
-
-        if system_generated is not None:
-            kwargs["system_generated"] = system_generated
+        for attr_name, value in (
+            ("is_owner", is_owner),
+            ("is_active", is_active),
+            ("local_only", local_only),
+            ("system_generated", system_generated),
+        ):
+            if value is not None:
+                kwargs[attr_name] = value
 
         new_user = models.User(**kwargs)
 
@@ -152,6 +158,7 @@ class AuthStore:
         name: str | None = None,
         is_active: bool | None = None,
         group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> None:
         """Update a user."""
         assert self._groups is not None
@@ -166,7 +173,11 @@ class AuthStore:
             user.groups = groups
             user.invalidate_permission_cache()
 
-        for attr_name, value in (("name", name), ("is_active", is_active)):
+        for attr_name, value in (
+            ("name", name),
+            ("is_active", is_active),
+            ("local_only", local_only),
+        ):
             if value is not None:
                 setattr(user, attr_name, value)
 
@@ -294,11 +305,9 @@ class AuthStore:
 
     async def _async_load_task(self) -> None:
         """Load the users."""
-        [ent_reg, dev_reg, data] = await asyncio.gather(
-            self.hass.helpers.entity_registry.async_get_registry(),
-            self.hass.helpers.device_registry.async_get_registry(),
-            self._store.async_load(),
-        )
+        dev_reg = dr.async_get(self.hass)
+        ent_reg = er.async_get(self.hass)
+        data = await self._store.async_load()
 
         # Make sure that we're not overriding data if 2 loads happened at the
         # same time
@@ -307,7 +316,7 @@ class AuthStore:
 
         self._perm_lookup = perm_lookup = PermissionLookup(ent_reg, dev_reg)
 
-        if data is None:
+        if data is None or not isinstance(data, dict):
             self._set_defaults()
             return
 
@@ -417,6 +426,8 @@ class AuthStore:
                 is_active=user_dict["is_active"],
                 system_generated=user_dict["system_generated"],
                 perm_lookup=perm_lookup,
+                # New in 2021.11
+                local_only=user_dict.get("local_only", False),
             )
 
         for cred_dict in data["credentials"]:
@@ -472,9 +483,10 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
-                credential=credentials.get(rt_dict.get("credential_id")),
                 version=rt_dict.get("version"),
             )
+            if "credential_id" in rt_dict:
+                token.credential = credentials.get(rt_dict["credential_id"])
             users[rt_dict["user_id"]].refresh_tokens[token.id] = token
 
         self._groups = groups
@@ -502,6 +514,7 @@ class AuthStore:
                 "is_active": user.is_active,
                 "name": user.name,
                 "system_generated": user.system_generated,
+                "local_only": user.local_only,
             }
             for user in self._users.values()
         ]

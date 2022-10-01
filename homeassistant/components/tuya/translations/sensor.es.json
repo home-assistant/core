@@ -1,0 +1,21 @@
+{
+    "state": {
+        "tuya__air_quality": {
+            "good": "Bueno",
+            "great": "Genial",
+            "mild": "Moderado",
+            "severe": "Severo"
+        },
+        "tuya__status": {
+            "boiling_temp": "Temperatura de ebullici\u00f3n",
+            "cooling": "Refrigeraci\u00f3n",
+            "heating": "Calefacci\u00f3n",
+            "heating_temp": "Temperatura de calentamiento",
+            "reserve_1": "Reserva 1",
+            "reserve_2": "Reserva 2",
+            "reserve_3": "Reserva 3",
+            "standby": "En espera",
+            "warm": "Conservaci\u00f3n del calor"
+        }
+    }
+}

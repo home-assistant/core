@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/deutsche_bahn",
   "requirements": ["schiene==0.23"],
   "codeowners": [],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["schiene"]
 }

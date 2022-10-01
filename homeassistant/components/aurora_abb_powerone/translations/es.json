@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "no_serial_ports": "No se encontraron puertos de comunicaciones. Necesitas un dispositivo RS485 v\u00e1lido para comunicarse."
+        },
+        "error": {
+            "cannot_connect": "No se puede conectar, por favor, comprueba el puerto serie, la direcci\u00f3n, la conexi\u00f3n el\u00e9ctrica y que el inversor est\u00e9 encendido (durante la luz del d\u00eda)",
+            "cannot_open_serial_port": "No se puede abrir el puerto serie, por favor, compru\u00e9balo e int\u00e9ntalo de nuevo",
+            "invalid_serial_port": "El puerto serie no es un dispositivo v\u00e1lido o no se pudo abrir"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Direcci\u00f3n del inversor",
+                    "port": "Puerto adaptador RS485 o USB-RS485"
+                },
+                "description": "El inversor debe estar conectado a trav\u00e9s de un adaptador RS485. Por favor, selecciona el puerto serie y la direcci\u00f3n del inversor seg\u00fan lo configurado en el panel LCD"
+            }
+        }
+    }
+}

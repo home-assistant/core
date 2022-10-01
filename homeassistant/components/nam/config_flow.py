@@ -2,24 +2,73 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
-from nettigo_air_monitor import ApiError, CannotGetMac, NettigoAirMonitor
+from nettigo_air_monitor import (
+    ApiError,
+    AuthFailed,
+    CannotGetMac,
+    ConnectionOptions,
+    NettigoAirMonitor,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_NAME, CONF_HOST
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 
+
+@dataclass
+class NamConfig:
+    """NAM device configuration class."""
+
+    mac_address: str
+    auth_enabled: bool
+
+
 _LOGGER = logging.getLogger(__name__)
+
+AUTH_SCHEMA = vol.Schema(
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+)
+
+
+async def async_get_config(hass: HomeAssistant, host: str) -> NamConfig:
+    """Get device MAC address and auth_enabled property."""
+    websession = async_get_clientsession(hass)
+
+    options = ConnectionOptions(host)
+    nam = await NettigoAirMonitor.create(websession, options)
+
+    async with async_timeout.timeout(10):
+        mac = await nam.async_get_mac_address()
+
+    return NamConfig(mac, nam.auth_enabled)
+
+
+async def async_check_credentials(
+    hass: HomeAssistant, host: str, data: dict[str, Any]
+) -> None:
+    """Check if credentials are valid."""
+    websession = async_get_clientsession(hass)
+
+    options = ConnectionOptions(host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD))
+
+    nam = await NettigoAirMonitor.create(websession, options)
+
+    async with async_timeout.timeout(10):
+        await nam.async_check_credentials()
 
 
 class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -29,18 +78,21 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self.host: str | None = None
+        self.host: str
+        self.entry: config_entries.ConfigEntry
+        self._config: NamConfig
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self.host = user_input[CONF_HOST]
+
             try:
-                mac = await self._async_get_mac(cast(str, self.host))
+                config = await async_get_config(self.hass, self.host)
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
             except CannotGetMac:
@@ -49,44 +101,69 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-
-                await self.async_set_unique_id(format_mac(mac))
+                await self.async_set_unique_id(format_mac(config.mac_address))
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
+                if config.auth_enabled is True:
+                    return await self.async_step_credentials()
+
                 return self.async_create_entry(
-                    title=cast(str, self.host),
+                    title=self.host,
                     data=user_input,
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=""): str,
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
 
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the credentials step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await async_check_credentials(self.hass, self.host, user_input)
+            except AuthFailed:
+                errors["base"] = "invalid_auth"
+            except (ApiError, ClientConnectorError, asyncio.TimeoutError):
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+
+                return self.async_create_entry(
+                    title=self.host,
+                    data={**user_input, CONF_HOST: self.host},
+                )
+
+        return self.async_show_form(
+            step_id="credentials", data_schema=AUTH_SCHEMA, errors=errors
+        )
+
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        self.host = discovery_info[CONF_HOST]
+        self.host = discovery_info.host
+        self.context["title_placeholders"] = {"host": self.host}
+
+        # Do not probe the device if the host is already configured
+        self._async_abort_entries_match({CONF_HOST: self.host})
 
         try:
-            mac = await self._async_get_mac(cast(str, self.host))
+            self._config = await async_get_config(self.hass, self.host)
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except CannotGetMac:
             return self.async_abort(reason="device_unsupported")
 
-        await self.async_set_unique_id(format_mac(mac))
+        await self.async_set_unique_id(format_mac(self._config.mac_address))
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
-
-        self.context["title_placeholders"] = {
-            ATTR_NAME: discovery_info[ATTR_NAME].split(".")[0]
-        }
 
         return await self.async_step_confirm_discovery()
 
@@ -94,28 +171,54 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle discovery confirm."""
-        errors: dict = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             return self.async_create_entry(
-                title=cast(str, self.host),
+                title=self.host,
                 data={CONF_HOST: self.host},
             )
+
+        if self._config.auth_enabled is True:
+            return await self.async_step_credentials()
 
         self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
-            description_placeholders={CONF_HOST: self.host},
+            description_placeholders={"host": self.host},
             errors=errors,
         )
 
-    async def _async_get_mac(self, host: str) -> str:
-        """Get device MAC address."""
-        websession = async_get_clientsession(self.hass)
-        nam = NettigoAirMonitor(websession, host)
-        # Device firmware uses synchronous code and doesn't respond to http queries
-        # when reading data from sensors. The nettigo-air-monitor library tries to get
-        # the data 4 times, so we use a longer than usual timeout here.
-        with async_timeout.timeout(30):
-            return await nam.async_get_mac_address()
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
+            self.entry = entry
+        self.host = entry_data[CONF_HOST]
+        self.context["title_placeholders"] = {"host": self.host}
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                await async_check_credentials(self.hass, self.host, user_input)
+            except (ApiError, AuthFailed, ClientConnectorError, asyncio.TimeoutError):
+                return self.async_abort(reason="reauth_unsuccessful")
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry, data={**user_input, CONF_HOST: self.host}
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            description_placeholders={"host": self.host},
+            data_schema=AUTH_SCHEMA,
+            errors=errors,
+        )

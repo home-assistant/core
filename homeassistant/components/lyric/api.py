@@ -1,14 +1,24 @@
 """API for Honeywell Lyric bound to Home Assistant OAuth."""
-import logging
 from typing import cast
 
 from aiohttp import BasicAuth, ClientSession
 from aiolyric.client import LyricClient
 
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-_LOGGER = logging.getLogger(__name__)
+
+class OAuth2SessionLyric(config_entry_oauth2_flow.OAuth2Session):
+    """OAuth2Session for Lyric."""
+
+    async def force_refresh_token(self) -> None:
+        """Force a token refresh."""
+        new_token = await self.implementation.async_refresh_token(self.token)
+
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, data={**self.config_entry.data, "token": new_token}
+        )
 
 
 class ConfigEntryLyricClient(LyricClient):
@@ -32,7 +42,7 @@ class ConfigEntryLyricClient(LyricClient):
 
 
 class LyricLocalOAuth2Implementation(
-    config_entry_oauth2_flow.LocalOAuth2Implementation
+    AuthImplementation,
 ):
     """Lyric Local OAuth2 implementation."""
 

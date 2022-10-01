@@ -10,16 +10,14 @@
         },
         "step": {
             "usb_confirm": {
-                "description": "Integraci\u00f3 per a trucades fixes amb el m\u00f2dem de veu CX93001. Pot obtenir l'identificador del que truca i pot rebutjar trucades entrants.",
-                "title": "M\u00f2dem telef\u00f2nic"
+                "description": "Integraci\u00f3 per a trucades fixes amb el m\u00f2dem de veu CX93001. Pot obtenir l'identificador del que truca i pot rebutjar trucades entrants."
             },
             "user": {
                 "data": {
                     "name": "Nom",
                     "port": "Port"
                 },
-                "description": "Integraci\u00f3 per a trucades fixes amb el m\u00f2dem de veu CX93001. Pot obtenir l'identificador del que truca i pot rebutjar trucades entrants.",
-                "title": "M\u00f2dem telef\u00f2nic"
+                "description": "Integraci\u00f3 per a trucades fixes amb el m\u00f2dem de veu CX93001. Pot obtenir l'identificador del que truca i pot rebutjar trucades entrants."
             }
         }
     }

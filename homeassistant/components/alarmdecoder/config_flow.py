@@ -1,4 +1,6 @@
 """Config flow for AlarmDecoder."""
+from __future__ import annotations
+
 import logging
 
 from adext import AdExt
@@ -7,7 +9,9 @@ from alarmdecoder.util import NoDeviceError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import DEVICE_CLASSES
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 
@@ -56,7 +60,9 @@ class AlarmDecoderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> AlarmDecoderOptionsFlowHandler:
         """Get the options flow for AlarmDecoder."""
         return AlarmDecoderOptionsFlowHandler(config_entry)
 
@@ -248,7 +254,7 @@ class AlarmDecoderOptionsFlowHandler(config_entries.OptionsFlow):
                         default=existing_zone_settings.get(
                             CONF_ZONE_TYPE, DEFAULT_ZONE_TYPE
                         ),
-                    ): vol.In(DEVICE_CLASSES),
+                    ): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
                     vol.Optional(
                         CONF_ZONE_RFID,
                         description={

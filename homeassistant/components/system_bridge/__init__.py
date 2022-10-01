@@ -3,96 +3,109 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import shlex
 
 import async_timeout
-from systembridge import Bridge
-from systembridge.client import BridgeClient
-from systembridge.exceptions import BridgeAuthenticationException
-from systembridge.objects.command.response import CommandResponse
+from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    ConnectionClosedException,
+    ConnectionErrorException,
+)
+from systembridgeconnector.models.keyboard_key import KeyboardKey
+from systembridgeconnector.models.keyboard_text import KeyboardText
+from systembridgeconnector.models.open_path import OpenPath
+from systembridgeconnector.models.open_url import OpenUrl
+from systembridgeconnector.version import SUPPORTED_VERSION, Version
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_COMMAND,
     CONF_HOST,
     CONF_PATH,
     CONF_PORT,
+    CONF_URL,
+    Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_validation as cv,
-    device_registry as dr,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
+from .const import DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+]
 
-CONF_ARGUMENTS = "arguments"
 CONF_BRIDGE = "bridge"
-CONF_WAIT = "wait"
+CONF_KEY = "key"
+CONF_TEXT = "text"
 
-SERVICE_SEND_COMMAND = "send_command"
-SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_BRIDGE): cv.string,
-        vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_ARGUMENTS, []): cv.string,
-    }
-)
-SERVICE_OPEN = "open"
-SERVICE_OPEN_SCHEMA = vol.Schema(
-    {vol.Required(CONF_BRIDGE): cv.string, vol.Required(CONF_PATH): cv.string}
-)
+SERVICE_OPEN_PATH = "open_path"
+SERVICE_OPEN_URL = "open_url"
+SERVICE_SEND_KEYPRESS = "send_keypress"
+SERVICE_SEND_TEXT = "send_text"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up System Bridge from a config entry."""
-    bridge = Bridge(
-        BridgeClient(aiohttp_client.async_get_clientsession(hass)),
-        f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
-        entry.data[CONF_API_KEY],
-    )
 
+    # Check version before initialising
+    version = Version(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_API_KEY],
+        session=async_get_clientsession(hass),
+    )
     try:
-        async with async_timeout.timeout(30):
-            await bridge.async_get_information()
-    except BridgeAuthenticationException as exception:
-        raise ConfigEntryAuthFailed(
-            f"Authentication failed for {entry.title} ({entry.data[CONF_HOST]})"
-        ) from exception
-    except BRIDGE_CONNECTION_ERRORS as exception:
+        if not await version.check_supported():
+            raise ConfigEntryNotReady(
+                f"You are not running a supported version of System Bridge. Please update to {SUPPORTED_VERSION} or higher."
+            )
+    except AuthenticationException as exception:
+        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
+        raise ConfigEntryAuthFailed from exception
+    except (ConnectionClosedException, ConnectionErrorException) as exception:
         raise ConfigEntryNotReady(
             f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
+    except asyncio.TimeoutError as exception:
+        raise ConfigEntryNotReady(
+            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+        ) from exception
 
-    coordinator = SystemBridgeDataUpdateCoordinator(hass, bridge, _LOGGER, entry=entry)
+    coordinator = SystemBridgeDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        entry=entry,
+    )
+    try:
+        async with async_timeout.timeout(30):
+            await coordinator.async_get_data(MODULES)
+    except AuthenticationException as exception:
+        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
+        raise ConfigEntryAuthFailed from exception
+    except (ConnectionClosedException, ConnectionErrorException) as exception:
+        raise ConfigEntryNotReady(
+            f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
+        ) from exception
+    except asyncio.TimeoutError as exception:
+        raise ConfigEntryNotReady(
+            f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
+        ) from exception
+
     await coordinator.async_config_entry_first_refresh()
 
-    # Wait for initial data
     try:
-        async with async_timeout.timeout(60):
-            while (
-                coordinator.bridge.battery is None
-                or coordinator.bridge.cpu is None
-                or coordinator.bridge.filesystem is None
-                or coordinator.bridge.graphics is None
-                or coordinator.bridge.information is None
-                or coordinator.bridge.memory is None
-                or coordinator.bridge.network is None
-                or coordinator.bridge.os is None
-                or coordinator.bridge.processes is None
-                or coordinator.bridge.system is None
-            ):
+        # Wait for initial data
+        async with async_timeout.timeout(30):
+            while not coordinator.is_ready():
                 _LOGGER.debug(
                     "Waiting for initial data from %s (%s)",
                     entry.title,
@@ -104,91 +117,118 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
 
+    _LOGGER.debug(
+        "Initial coordinator data for %s (%s):\n%s",
+        entry.title,
+        entry.data[CONF_HOST],
+        coordinator.data.json(),
+    )
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if hass.services.has_service(DOMAIN, SERVICE_SEND_COMMAND):
+    if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
         return True
 
-    async def handle_send_command(call):
-        """Handle the send_command service call."""
+    def valid_device(device: str):
+        """Check device is valid."""
         device_registry = dr.async_get(hass)
-        device_id = call.data[CONF_BRIDGE]
-        device_entry = device_registry.async_get(device_id)
-        if device_entry is None:
-            _LOGGER.warning("Missing device: %s", device_id)
-            return
-
-        command = call.data[CONF_COMMAND]
-        arguments = shlex.split(call.data.get(CONF_ARGUMENTS, ""))
-
-        entry_id = next(
-            entry.entry_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device_entry.config_entries
-        )
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-        bridge: Bridge = coordinator.bridge
-
-        _LOGGER.debug(
-            "Command payload: %s",
-            {CONF_COMMAND: command, CONF_ARGUMENTS: arguments, CONF_WAIT: False},
-        )
-        try:
-            response: CommandResponse = await bridge.async_send_command(
-                {CONF_COMMAND: command, CONF_ARGUMENTS: arguments, CONF_WAIT: False}
-            )
-            if response.success:
-                _LOGGER.debug(
-                    "Sent command. Response message was: %s", response.message
+        device_entry = device_registry.async_get(device)
+        if device_entry is not None:
+            try:
+                return next(
+                    entry.entry_id
+                    for entry in hass.config_entries.async_entries(DOMAIN)
+                    if entry.entry_id in device_entry.config_entries
                 )
-            else:
-                _LOGGER.warning(
-                    "Error sending command. Response message was: %s", response.message
-                )
-        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.warning("Error sending command. Error was: %s", exception)
+            except StopIteration as exception:
+                raise vol.Invalid from exception
+        raise vol.Invalid(f"Device {device} does not exist")
 
-    async def handle_open(call):
-        """Handle the open service call."""
-        device_registry = dr.async_get(hass)
-        device_id = call.data[CONF_BRIDGE]
-        device_entry = device_registry.async_get(device_id)
-        if device_entry is None:
-            _LOGGER.warning("Missing device: %s", device_id)
-            return
-
-        path = call.data[CONF_PATH]
-
-        entry_id = next(
-            entry.entry_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device_entry.config_entries
+    async def handle_open_path(call: ServiceCall) -> None:
+        """Handle the open path service call."""
+        _LOGGER.info("Open: %s", call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await coordinator.websocket_client.open_path(
+            OpenPath(path=call.data[CONF_PATH])
         )
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-        bridge: Bridge = coordinator.bridge
 
-        _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
-        try:
-            await bridge.async_open({CONF_PATH: path})
-            _LOGGER.debug("Sent open request")
-        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.warning("Error sending. Error was: %s", exception)
+    async def handle_open_url(call: ServiceCall) -> None:
+        """Handle the open url service call."""
+        _LOGGER.info("Open: %s", call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await coordinator.websocket_client.open_url(OpenUrl(url=call.data[CONF_URL]))
+
+    async def handle_send_keypress(call: ServiceCall) -> None:
+        """Handle the send_keypress service call."""
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await coordinator.websocket_client.keyboard_keypress(
+            KeyboardKey(key=call.data[CONF_KEY])
+        )
+
+    async def handle_send_text(call: ServiceCall) -> None:
+        """Handle the send_keypress service call."""
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await coordinator.websocket_client.keyboard_text(
+            KeyboardText(text=call.data[CONF_TEXT])
+        )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SEND_COMMAND,
-        handle_send_command,
-        schema=SERVICE_SEND_COMMAND_SCHEMA,
+        SERVICE_OPEN_PATH,
+        handle_open_path,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_PATH): cv.string,
+            },
+        ),
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_OPEN,
-        handle_open,
-        schema=SERVICE_OPEN_SCHEMA,
+        SERVICE_OPEN_URL,
+        handle_open_url,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_URL): cv.string,
+            },
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_KEYPRESS,
+        handle_send_keypress,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_KEY): cv.string,
+            },
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_TEXT,
+        handle_send_text,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_TEXT): cv.string,
+            },
+        ),
     )
 
     # Reload entry when its updated.
@@ -206,15 +246,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ]
 
         # Ensure disconnected and cleanup stop sub
-        await coordinator.bridge.async_close_websocket()
+        await coordinator.websocket_client.close()
         if coordinator.unsub:
             coordinator.unsub()
 
         del hass.data[DOMAIN][entry.entry_id]
 
     if not hass.data[DOMAIN]:
-        hass.services.async_remove(DOMAIN, SERVICE_SEND_COMMAND)
-        hass.services.async_remove(DOMAIN, SERVICE_OPEN)
+        hass.services.async_remove(DOMAIN, SERVICE_OPEN_PATH)
+        hass.services.async_remove(DOMAIN, SERVICE_OPEN_URL)
+        hass.services.async_remove(DOMAIN, SERVICE_SEND_KEYPRESS)
+        hass.services.async_remove(DOMAIN, SERVICE_SEND_TEXT)
 
     return unload_ok
 
@@ -224,25 +266,28 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class SystemBridgeEntity(CoordinatorEntity):
+class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
     """Defines a base System Bridge entity."""
 
     def __init__(
         self,
         coordinator: SystemBridgeDataUpdateCoordinator,
+        api_port: int,
         key: str,
         name: str | None,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
-        bridge: Bridge = coordinator.data
-        self._key = f"{bridge.information.host}_{key}"
-        self._name = f"{bridge.information.host} {name}"
-        self._hostname = bridge.information.host
-        self._mac = bridge.information.mac
-        self._manufacturer = bridge.system.system.manufacturer
-        self._model = bridge.system.system.model
-        self._version = bridge.system.system.version
+
+        self._hostname = coordinator.data.system.hostname
+        self._key = f"{self._hostname}_{key}"
+        self._name = f"{self._hostname} {name}"
+        self._configuration_url = (
+            f"http://{self._hostname}:{api_port}/app/settings.html"
+        )
+        self._mac_address = coordinator.data.system.mac_address
+        self._uuid = coordinator.data.system.uuid
+        self._version = coordinator.data.system.version
 
     @property
     def unique_id(self) -> str:
@@ -254,17 +299,13 @@ class SystemBridgeEntity(CoordinatorEntity):
         """Return the name of the entity."""
         return self._name
 
-
-class SystemBridgeDeviceEntity(SystemBridgeEntity):
-    """Defines a System Bridge device entity."""
-
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "manufacturer": self._manufacturer,
-            "model": self._model,
-            "name": self._hostname,
-            "sw_version": self._version,
-        }
+        return DeviceInfo(
+            configuration_url=self._configuration_url,
+            connections={(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
+            identifiers={(DOMAIN, self._uuid)},
+            name=self._hostname,
+            sw_version=self._version,
+        )

@@ -66,3 +66,26 @@ async def test_async_response_request_context(hass, websocket_client):
     assert msg["id"] == 7
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
+
+
+async def test_supervisor_only(hass, websocket_client):
+    """Test that only the Supervisor can make requests."""
+
+    @websocket_api.ws_require_user(only_supervisor=True)
+    @websocket_api.websocket_command({"type": "test-require-supervisor-user"})
+    def require_supervisor_request(hass, connection, msg):
+        connection.send_result(msg["id"])
+
+    websocket_api.async_register_command(hass, require_supervisor_request)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "test-require-supervisor-user",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "only_supervisor"

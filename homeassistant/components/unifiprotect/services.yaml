@@ -1,0 +1,111 @@
+add_doorbell_text:
+  name: Add Custom Doorbell Text
+  description: Adds a new custom message for Doorbells.
+  fields:
+    device_id:
+      name: UniFi Protect NVR
+      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+    message:
+      name: Custom Message
+      description: New custom message to add for Doorbells. Must be less than 30 characters.
+      example: Come In
+      required: true
+      selector:
+        text:
+remove_doorbell_text:
+  name: Remove Custom Doorbell Text
+  description: Removes an existing message for Doorbells.
+  fields:
+    device_id:
+      name: UniFi Protect NVR
+      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+    message:
+      name: Custom Message
+      description: Existing custom message to remove for Doorbells.
+      example: Go Away!
+      required: true
+      selector:
+        text:
+set_default_doorbell_text:
+  name: Set Default Doorbell Text
+  description: Sets the default doorbell message. This will be the message that is automatically selected when a message "expires".
+  fields:
+    device_id:
+      name: UniFi Protect NVR
+      description: Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances.
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+    message:
+      name: Default Message
+      description: The default message for your Doorbell. Must be less than 30 characters.
+      example: Welcome!
+      required: true
+      selector:
+        text:
+set_doorbell_message:
+  name: Set Doorbell message
+  description: >
+    Use to dynamically set the message on a Doorbell LCD screen. This service should only be used to set dynamic messages (i.e. setting the current outdoor temperature on your Doorbell). Static messages should still be set using the Select entity and can be added/removed using the add_doorbell_text/remove_doorbell_text services.
+  fields:
+    entity_id:
+      name: Doorbell Text
+      description: The Doorbell Text select entity for your Doorbell.
+      example: "select.front_doorbell_camera_doorbell_text"
+      required: true
+      selector:
+        entity:
+          integration: unifiprotect
+          domain: select
+    message:
+      name: Message to display
+      description: The message you would like to display on the LCD screen of your Doorbell. Must be less than 30 characters.
+      example: "Welcome | 09:23 | 25°C"
+      required: true
+      selector:
+        text:
+    duration:
+      name: Duration
+      description: Number of minutes to display the message for before returning to the default message. The default is to not expire.
+      example: 5
+      selector:
+        number:
+          min: 1
+          max: 120
+          step: 1
+          mode: slider
+          unit_of_measurement: minutes
+set_chime_paired_doorbells:
+  name: Set Chime Paired Doorbells
+  description: >
+    Use to set the paired doorbell(s) with a smart chime.
+  fields:
+    device_id:
+      name: Chime
+      description: The Chimes to link to the doorbells to
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+          entity:
+            device_class: unifiprotect__chime_button
+    doorbells:
+      name: Doorbells
+      description: The Doorbells to link to the chime
+      example: "binary_sensor.front_doorbell_doorbell"
+      required: false
+      selector:
+        target:
+          entity:
+            integration: unifiprotect
+            domain: binary_sensor
+            device_class: occupancy

@@ -2,12 +2,13 @@
 
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
-from homeassistant.components.cover import DEVICE_CLASS_GATE
-from homeassistant.components.media_player.const import (
+from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -25,19 +26,20 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, TEMP_FAHRENHEIT
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from . import (
-    DEFAULT_CONFIG,
+from .test_common import (
     MockConfig,
     ReportedProperties,
     assert_power_controller_works,
     assert_request_calls_service,
     assert_request_fails,
     assert_scene_controller_works,
+    get_default_config,
     get_new_request,
     reported_properties,
 )
@@ -68,7 +70,7 @@ async def mock_stream(hass):
 
 
 def test_create_api_message_defaults(hass):
-    """Create a API message response of a request with defaults."""
+    """Create an API message response of a request with defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
     directive_header = request["directive"]["header"]
     directive = messages.AlexaDirective(request)
@@ -93,7 +95,7 @@ def test_create_api_message_defaults(hass):
 
 
 def test_create_api_message_special():
-    """Create a API message response of a request with non defaults."""
+    """Create an API message response of a request with non defaults."""
     request = get_new_request("Alexa.PowerController", "TurnOn")
     directive_header = request["directive"]["header"]
     directive_header.pop("correlationToken")
@@ -121,7 +123,7 @@ async def test_wrong_version(hass):
     msg["directive"]["header"]["payloadVersion"] = "2"
 
     with pytest.raises(AssertionError):
-        await smart_home.async_handle_message(hass, DEFAULT_CONFIG, msg)
+        await smart_home.async_handle_message(hass, get_default_config(hass), msg)
 
 
 async def discovery_test(device, hass, expected_endpoints=1):
@@ -131,7 +133,7 @@ async def discovery_test(device, hass, expected_endpoints=1):
     # setup test devices
     hass.states.async_set(*device)
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
 
     assert "event" in msg
     msg = msg["event"]
@@ -172,6 +174,7 @@ def assert_endpoint_capabilities(endpoint, *interfaces):
     return capabilities
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_switch(hass, events):
     """Test switch discovery."""
     device = ("switch.test", "on", {"friendly_name": "Test switch"})
@@ -180,16 +183,28 @@ async def test_switch(hass, events):
     assert appliance["endpointId"] == "switch#test"
     assert appliance["displayCategories"][0] == "SWITCH"
     assert appliance["friendlyName"] == "Test switch"
-    assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.ContactSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     await assert_power_controller_works(
-        "switch#test", "switch.turn_on", "switch.turn_off", hass
+        "switch#test", "switch.turn_on", "switch.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
     properties = await reported_properties(hass, "switch#test")
     properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+    properties.assert_equal("Alexa.ContactSensor", "detectionState", "DETECTED")
+    properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
+
+    contact_sensor_capability = get_capability(capabilities, "Alexa.ContactSensor")
+    assert contact_sensor_capability is not None
+    properties = contact_sensor_capability["properties"]
+    assert properties["retrievable"] is True
+    assert {"name": "detectionState"} in properties["supported"]
 
 
 async def test_outlet(hass, events):
@@ -205,10 +220,15 @@ async def test_outlet(hass, events):
     assert appliance["displayCategories"][0] == "SMARTPLUG"
     assert appliance["friendlyName"] == "Test switch"
     assert_endpoint_capabilities(
-        appliance, "Alexa", "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance,
+        "Alexa",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa.ContactSensor",
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_light(hass):
     """Test light discovery."""
     device = ("light.test_1", "on", {"friendly_name": "Test light 1"})
@@ -222,7 +242,7 @@ async def test_light(hass):
     )
 
     await assert_power_controller_works(
-        "light#test_1", "light.turn_on", "light.turn_off", hass
+        "light#test_1", "light.turn_on", "light.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
 
@@ -302,6 +322,7 @@ async def test_color_light(hass, supported_color_modes):
     # tests
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_script(hass):
     """Test script discovery."""
     device = ("script.test", "off", {"friendly_name": "Test script"})
@@ -318,10 +339,11 @@ async def test_script(hass):
     assert scene_capability["supportsDeactivation"]
 
     await assert_scene_controller_works(
-        "script#test", "script.turn_on", "script.turn_off", hass
+        "script#test", "script.turn_on", "script.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_input_boolean(hass):
     """Test input boolean discovery."""
     device = ("input_boolean.test", "off", {"friendly_name": "Test input boolean"})
@@ -330,15 +352,35 @@ async def test_input_boolean(hass):
     assert appliance["endpointId"] == "input_boolean#test"
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test input boolean"
-    assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.ContactSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     await assert_power_controller_works(
-        "input_boolean#test", "input_boolean.turn_on", "input_boolean.turn_off", hass
+        "input_boolean#test",
+        "input_boolean.turn_on",
+        "input_boolean.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
     )
 
+    properties = await reported_properties(hass, "input_boolean#test")
+    properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
+    properties.assert_equal("Alexa.ContactSensor", "detectionState", "NOT_DETECTED")
+    properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
 
+    contact_sensor_capability = get_capability(capabilities, "Alexa.ContactSensor")
+    assert contact_sensor_capability is not None
+    properties = contact_sensor_capability["properties"]
+    assert properties["retrievable"] is True
+    assert {"name": "detectionState"} in properties["supported"]
+
+
+@freeze_time("2022-04-19 07:53:05")
 async def test_scene(hass):
     """Test scene discovery."""
     device = ("scene.test", "off", {"friendly_name": "Test scene"})
@@ -354,9 +396,12 @@ async def test_scene(hass):
     scene_capability = get_capability(capabilities, "Alexa.SceneController")
     assert not scene_capability["supportsDeactivation"]
 
-    await assert_scene_controller_works("scene#test", "scene.turn_on", None, hass)
+    await assert_scene_controller_works(
+        "scene#test", "scene.turn_on", None, hass, "2022-04-19T07:53:05Z"
+    )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_fan(hass):
     """Test fan discovery."""
     device = ("fan.test_1", "off", {"friendly_name": "Test fan 1"})
@@ -365,7 +410,7 @@ async def test_fan(hass):
     assert appliance["endpointId"] == "fan#test_1"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
-    # Alexa.RangeController is added to make a van controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -379,7 +424,7 @@ async def test_fan(hass):
     assert "configuration" not in power_capability
 
     await assert_power_controller_works(
-        "fan#test_1", "fan.turn_on", "fan.turn_off", hass
+        "fan#test_1", "fan.turn_on", "fan.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
     await assert_request_calls_service(
@@ -400,6 +445,39 @@ async def test_fan(hass):
         payload={"rangeValue": "0"},
         instance="fan.percentage",
     )
+
+
+async def test_fan2(hass):
+    """Test fan discovery with percentage_step."""
+
+    # Test fan discovery with percentage_step
+    device = (
+        "fan.test_2",
+        "on",
+        {
+            "friendly_name": "Test fan 2",
+            "percentage": 66,
+            "supported_features": 1,
+            "percentage_step": 33.3333,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "fan#test_2"
+    assert appliance["displayCategories"][0] == "FAN"
+    assert appliance["friendlyName"] == "Test fan 2"
+    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    power_capability = get_capability(capabilities, "Alexa.PowerController")
+    assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
 
 
 async def test_variable_fan(hass):
@@ -903,6 +981,7 @@ async def test_lock(hass):
     assert properties["value"] == "UNLOCKED"
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_media_player(hass):
     """Test media player discovery."""
     device = (
@@ -951,7 +1030,11 @@ async def test_media_player(hass):
         assert operation in supported_operations
 
     await assert_power_controller_works(
-        "media_player#test", "media_player.turn_on", "media_player.turn_off", hass
+        "media_player#test",
+        "media_player.turn_on",
+        "media_player.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
     )
 
     await assert_request_calls_service(
@@ -1499,6 +1582,7 @@ async def test_media_player_seek_error(hass):
         assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_alert(hass):
     """Test alert discovery."""
     device = ("alert.test", "off", {"friendly_name": "Test alert"})
@@ -1512,10 +1596,11 @@ async def test_alert(hass):
     )
 
     await assert_power_controller_works(
-        "alert#test", "alert.turn_on", "alert.turn_off", hass
+        "alert#test", "alert.turn_on", "alert.turn_off", hass, "2022-04-19T07:53:05Z"
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_automation(hass):
     """Test automation discovery."""
     device = ("automation.test", "off", {"friendly_name": "Test automation"})
@@ -1529,10 +1614,15 @@ async def test_automation(hass):
     )
 
     await assert_power_controller_works(
-        "automation#test", "automation.turn_on", "automation.turn_off", hass
+        "automation#test",
+        "automation.turn_on",
+        "automation.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
     )
 
 
+@freeze_time("2022-04-19 07:53:05")
 async def test_group(hass):
     """Test group discovery."""
     device = ("group.test", "off", {"friendly_name": "Test group"})
@@ -1546,7 +1636,11 @@ async def test_group(hass):
     )
 
     await assert_power_controller_works(
-        "group#test", "homeassistant.turn_on", "homeassistant.turn_off", hass
+        "group#test",
+        "homeassistant.turn_on",
+        "homeassistant.turn_off",
+        hass,
+        "2022-04-19T07:53:05Z",
     )
 
 
@@ -1926,7 +2020,7 @@ async def test_unknown_sensor(hass):
 
 async def test_thermostat(hass):
     """Test thermostat discovery."""
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+    hass.config.units = IMPERIAL_SYSTEM
     device = (
         "climate.test_thermostat",
         "cool",
@@ -1937,7 +2031,7 @@ async def test_thermostat(hass):
             "current_temperature": 75.0,
             "friendly_name": "Test Thermostat",
             "supported_features": 1 | 2 | 4 | 128,
-            "hvac_modes": ["off", "heat", "cool", "auto", "dry"],
+            "hvac_modes": ["off", "heat", "cool", "auto", "dry", "fan_only"],
             "preset_mode": None,
             "preset_modes": ["eco"],
             "min_temp": 50,
@@ -2127,7 +2221,7 @@ async def test_thermostat(hass):
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "HEAT")
 
-    # Assert we can call custom modes
+    # Assert we can call custom modes for dry and fan_only
     call, msg = await assert_request_calls_service(
         "Alexa.ThermostatController",
         "SetThermostatMode",
@@ -2137,6 +2231,18 @@ async def test_thermostat(hass):
         payload={"thermostatMode": {"value": "CUSTOM", "customName": "DEHUMIDIFY"}},
     )
     assert call.data["hvac_mode"] == "dry"
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.ThermostatController",
+        "SetThermostatMode",
+        "climate#test_thermostat",
+        "climate.set_hvac_mode",
+        hass,
+        payload={"thermostatMode": {"value": "CUSTOM", "customName": "FAN"}},
+    )
+    assert call.data["hvac_mode"] == "fan_only"
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
 
@@ -2181,9 +2287,6 @@ async def test_thermostat(hass):
         payload={"thermostatMode": "ECO"},
     )
     assert call.data["preset_mode"] == "eco"
-
-    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
-    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 async def test_exclude_filters(hass):
@@ -2275,7 +2378,7 @@ async def test_api_entity_not_exists(hass):
 
     call_switch = async_mock_service(hass, "switch", "turn_on")
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -2290,7 +2393,7 @@ async def test_api_entity_not_exists(hass):
 async def test_api_function_not_implemented(hass):
     """Test api call that is not implemented to us."""
     request = get_new_request("Alexa.HAHAAH", "Sweet")
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
 
     assert "event" in msg
     msg = msg["event"]
@@ -2314,7 +2417,7 @@ async def test_api_accept_grant(hass):
     }
 
     # setup test devices
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
     await hass.async_block_till_done()
 
     assert "event" in msg
@@ -2367,7 +2470,9 @@ async def test_logging_request(hass, events):
     """Test that we log requests."""
     context = Context()
     request = get_new_request("Alexa.Discovery", "Discover")
-    await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    await smart_home.async_handle_message(
+        hass, get_default_config(hass), request, context
+    )
 
     # To trigger event listener
     await hass.async_block_till_done()
@@ -2387,7 +2492,9 @@ async def test_logging_request_with_entity(hass, events):
     """Test that we log requests."""
     context = Context()
     request = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
-    await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    await smart_home.async_handle_message(
+        hass, get_default_config(hass), request, context
+    )
 
     # To trigger event listener
     await hass.async_block_till_done()
@@ -2413,7 +2520,7 @@ async def test_disabled(hass):
     call_switch = async_mock_service(hass, "switch", "turn_on")
 
     msg = await smart_home.async_handle_message(
-        hass, DEFAULT_CONFIG, request, enabled=False
+        hass, get_default_config(hass), request, enabled=False
     )
     await hass.async_block_till_done()
 
@@ -2596,7 +2703,9 @@ async def test_range_unsupported_domain(hass):
     request["directive"]["payload"] = {"rangeValue": 1}
     request["directive"]["header"]["instance"] = "switch.speed"
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(hass), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -2615,7 +2724,9 @@ async def test_mode_unsupported_domain(hass):
     request["directive"]["payload"] = {"mode": "testMode"}
     request["directive"]["header"]["instance"] = "switch.direction"
 
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(hass), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -2654,7 +2765,7 @@ async def test_cover_gate(hass):
         {
             "friendly_name": "Test cover gate",
             "supported_features": 3,
-            "device_class": DEVICE_CLASS_GATE,
+            "device_class": CoverDeviceClass.GATE,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3355,7 +3466,9 @@ async def test_media_player_eq_bands_not_supported(hass):
         "Alexa.EqualizerController", "SetBands", "media_player#test_bands"
     )
     request["directive"]["payload"] = {"bands": [{"name": "BASS", "value": -2}]}
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(hass), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -3370,7 +3483,9 @@ async def test_media_player_eq_bands_not_supported(hass):
     request["directive"]["payload"] = {
         "bands": [{"name": "BASS", "levelDelta": 3, "levelDirection": "UP"}]
     }
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(hass), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -3385,7 +3500,9 @@ async def test_media_player_eq_bands_not_supported(hass):
     request["directive"]["payload"] = {
         "bands": [{"name": "BASS", "levelDelta": 3, "levelDirection": "UP"}]
     }
-    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(hass), request, context
+    )
 
     assert "event" in msg
     msg = msg["event"]
@@ -3885,7 +4002,9 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="rtsp://example.local",
     ):
-        msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+        msg = await smart_home.async_handle_message(
+            hass, get_default_config(hass), request
+        )
         await hass.async_block_till_done()
 
     assert "event" in msg
@@ -3904,3 +4023,66 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
         "https://mycamerastream.test/api/camera_proxy/camera.demo_camera?token="
         in response["payload"]["imageUri"]
     )
+
+
+@freeze_time("2022-04-19 07:53:05")
+@pytest.mark.parametrize(
+    "domain",
+    ["button", "input_button"],
+)
+async def test_button(hass, domain):
+    """Test button discovery."""
+    device = (
+        f"{domain}.ring_doorbell",
+        STATE_UNKNOWN,
+        {"friendly_name": "Ring Doorbell"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == f"{domain}#ring_doorbell"
+    assert appliance["displayCategories"][0] == "ACTIVITY_TRIGGER"
+    assert appliance["friendlyName"] == "Ring Doorbell"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.SceneController",
+        "Alexa.EventDetectionSensor",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+    scene_capability = get_capability(capabilities, "Alexa.SceneController")
+    assert scene_capability["supportsDeactivation"] is False
+
+    await assert_scene_controller_works(
+        f"{domain}#ring_doorbell",
+        f"{domain}.press",
+        False,
+        hass,
+        "2022-04-19T07:53:05Z",
+    )
+
+    event_detection_capability = get_capability(
+        capabilities, "Alexa.EventDetectionSensor"
+    )
+    assert event_detection_capability is not None
+    properties = event_detection_capability["properties"]
+    assert properties["proactivelyReported"] is True
+    assert not properties["retrievable"]
+    assert {"name": "humanPresenceDetectionState"} in properties["supported"]
+    assert (
+        event_detection_capability["configuration"]["detectionModes"]["humanPresence"][
+            "supportsNotDetected"
+        ]
+        is False
+    )
+
+
+async def test_api_message_sets_authorized(hass):
+    """Test an incoming API messages sets the authorized flag."""
+    msg = get_new_request("Alexa.PowerController", "TurnOn", "switch#xy")
+    async_mock_service(hass, "switch", "turn_on")
+
+    config = get_default_config(hass)
+    config._store.set_authorized.assert_not_called()
+    await smart_home.async_handle_message(hass, config, msg)
+    config._store.set_authorized.assert_called_once_with(True)

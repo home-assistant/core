@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Du h\u00e5ller p\u00e5 att l\u00e4gga till SoundTouch-enheten med namnet ` {name} ` till Home Assistant.",
+                "title": "Bekr\u00e4fta att du l\u00e4gger till Bose SoundTouch-enhet"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigurering av Bose SoundTouch med YAML tas bort. \n\n Din befintliga YAML-konfiguration har automatiskt importerats till anv\u00e4ndargr\u00e4nssnittet. \n\n Ta bort Bose SoundTouch YAML-konfigurationen fr\u00e5n filen configuration.yaml och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet.",
+            "title": "Bose SoundTouch YAML-konfigurationen tas bort"
+        }
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "no_selection": "Bitte w\u00e4hle mindestens eine Stadt/einen Landkreis aus",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "_a_to_d": "Stadt/Landkreis (A-D)",
+                    "_e_to_h": "Stadt/Landkreis (E-H)",
+                    "_i_to_l": "Stadt/Landkreis (I-L)",
+                    "_m_to_q": "Stadt/Landkreis (M-Q)",
+                    "_r_to_u": "Stadt/Landkreis (R-U)",
+                    "_v_to_z": "Stadt/Landkreis (V-Z)",
+                    "corona_filter": "Corona-Warnungen entfernen",
+                    "slots": "Maximale Warnungen pro Stadt/Landkreis"
+                },
+                "title": "Stadt/Landkreis ausw\u00e4hlen"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "no_selection": "Bitte w\u00e4hle mindestens eine Stadt/einen Landkreis aus",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_a_to_d": "Stadt/Landkreis (A-D)",
+                    "_e_to_h": "Stadt/Landkreis (E-H)",
+                    "_i_to_l": "Stadt/Landkreis (I-L)",
+                    "_m_to_q": "Stadt/Landkreis (M-Q)",
+                    "_r_to_u": "Stadt/Landkreis (R-U)",
+                    "_v_to_z": "Stadt/Landkreis (V-Z)",
+                    "corona_filter": "Corona-Warnungen entfernen",
+                    "slots": "Maximale Warnungen pro Stadt/Landkreis"
+                },
+                "title": "Optionen"
+            }
+        }
+    }
+}

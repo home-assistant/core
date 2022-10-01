@@ -5,6 +5,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND, TIME_SECONDS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpDataUpdateCoordinator, UpnpEntity, UpnpSensorEntityDescription
@@ -15,6 +16,7 @@ from .const import (
     DATA_RATE_PACKETS_PER_SECOND,
     DOMAIN,
     KIBIBYTE,
+    LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     ROUTER_IP,
@@ -30,6 +32,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_BYTES,
         format="d",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
@@ -37,6 +40,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_BYTES,
         format="d",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_RECEIVED,
@@ -44,6 +48,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_PACKETS,
         format="d",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
@@ -51,6 +56,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_PACKETS,
         format="d",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
         key=ROUTER_IP,
@@ -64,42 +70,51 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         native_unit_of_measurement=TIME_SECONDS,
         entity_registry_enabled_default=False,
         format="d",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     UpnpSensorEntityDescription(
         key=WAN_STATUS,
         name="wan status",
         icon="mdi:server-network",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 
 DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
-        key="KiB/sec_received",
+        key=BYTES_RECEIVED,
+        unique_id="KiB/sec_received",
         name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
         format=".1f",
     ),
     UpnpSensorEntityDescription(
-        key="KiB/sent",
+        key=BYTES_SENT,
+        unique_id="KiB/sec_sent",
         name=f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
         format=".1f",
     ),
     UpnpSensorEntityDescription(
-        key="packets/sec_received",
+        key=PACKETS_RECEIVED,
+        unique_id="packets/sec_received",
         name=f"{DATA_RATE_PACKETS_PER_SECOND} received",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
         format=".1f",
+        entity_registry_enabled_default=False,
     ),
     UpnpSensorEntityDescription(
-        key="packets/sent",
+        key=PACKETS_SENT,
+        unique_id="packets/sec_sent",
         name=f"{DATA_RATE_PACKETS_PER_SECOND} sent",
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
         format=".1f",
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -131,11 +146,14 @@ async def async_setup_entry(
         ]
     )
 
+    LOGGER.debug("Adding sensor entities: %s", entities)
     async_add_entities(entities)
 
 
 class UpnpSensor(UpnpEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
+
+    entity_description: UpnpSensorEntityDescription
 
 
 class RawUpnpSensor(UpnpSensor):
@@ -152,8 +170,6 @@ class RawUpnpSensor(UpnpSensor):
 
 class DerivedUpnpSensor(UpnpSensor):
     """Representation of a UNIT Sent/Received per second sensor."""
-
-    entity_description: UpnpSensorEntityDescription
 
     def __init__(
         self,
@@ -184,7 +200,10 @@ class DerivedUpnpSensor(UpnpSensor):
 
         # Calculate derivative.
         delta_value = current_value - self._last_value
-        if self.entity_description.native_unit_of_measurement == DATA_BYTES:
+        if (
+            self.entity_description.native_unit_of_measurement
+            == DATA_RATE_KIBIBYTES_PER_SECOND
+        ):
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
         if delta_time.total_seconds() == 0:

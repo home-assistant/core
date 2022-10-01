@@ -1,0 +1,53 @@
+{
+  "mac": "D7F1C8D3FCDD",
+  "host": "192.168.10.86",
+  "connectionHost": "192.168.178.217",
+  "type": "UP FloodLight",
+  "name": "Test Light",
+  "upSince": 1638128991022,
+  "uptime": 1894890,
+  "lastSeen": 1640023881022,
+  "connectedSince": 1640020579711,
+  "state": "CONNECTED",
+  "hardwareRevision": null,
+  "firmwareVersion": "1.9.3",
+  "latestFirmwareVersion": "1.9.3",
+  "firmwareBuild": "g990c553.211105.251",
+  "isUpdating": false,
+  "isAdopting": false,
+  "isAdopted": true,
+  "isAdoptedByOther": false,
+  "isProvisioned": false,
+  "isRebooting": false,
+  "isSshEnabled": false,
+  "canAdopt": false,
+  "isAttemptingToConnect": false,
+  "isPirMotionDetected": false,
+  "lastMotion": 1640022006069,
+  "isDark": false,
+  "isLightOn": false,
+  "isLocating": false,
+  "wiredConnectionState": {
+    "phyRate": 100
+  },
+  "lightDeviceSettings": {
+    "isIndicatorEnabled": false,
+    "ledLevel": 6,
+    "luxSensitivity": "medium",
+    "pirDuration": 45000,
+    "pirSensitivity": 45
+  },
+  "lightOnSettings": {
+    "isLedForceOn": false
+  },
+  "lightModeSettings": {
+    "mode": "motion",
+    "enableAt": "fulltime"
+  },
+  "camera": null,
+  "id": "37dd610720816cfb5c547967",
+  "isConnected": true,
+  "isCameraPaired": true,
+  "marketName": "UP FloodLight",
+  "modelKey": "light"
+}

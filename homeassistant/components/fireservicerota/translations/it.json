@@ -15,7 +15,7 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "I token di autenticazione non sono validi, effettua il login per ricrearli."
+                "description": "I token di autenticazione non sono validi, esegui l'accesso per ricrearli."
             },
             "user": {
                 "data": {

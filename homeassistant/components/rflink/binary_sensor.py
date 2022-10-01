@@ -1,9 +1,14 @@
 """Support for Rflink binary sensors."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import (
@@ -11,9 +16,14 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_FORCE_UPDATE,
     CONF_NAME,
+    STATE_ON,
 )
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_ALIASES, RflinkDevice
 
@@ -52,24 +62,43 @@ def devices_from_config(domain_config):
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Rflink platform."""
     async_add_entities(devices_from_config(config))
 
 
-class RflinkBinarySensor(RflinkDevice, BinarySensorEntity):
+class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
     """Representation of an Rflink binary sensor."""
 
     def __init__(
-        self, device_id, device_class=None, force_update=False, off_delay=None, **kwargs
-    ):
+        self,
+        device_id: str,
+        device_class: BinarySensorDeviceClass | None = None,
+        force_update: bool = False,
+        off_delay: int | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Handle sensor specific args and super init."""
         self._state = None
-        self._device_class = device_class
-        self._force_update = force_update
+        self._attr_device_class = device_class
+        self._attr_force_update = force_update
         self._off_delay = off_delay
         self._delay_listener = None
         super().__init__(device_id, **kwargs)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore RFLink BinarySensor state."""
+        await super().async_added_to_hass()
+        if (old_state := await self.async_get_last_state()) is not None:
+            if self._off_delay is None:
+                self._state = old_state.state == STATE_ON
+            else:
+                self._state = False
 
     def _handle_event(self, event):
         """Domain specific event handler."""
@@ -81,6 +110,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity):
 
         if self._state and self._off_delay is not None:
 
+            @callback
             def off_delay_listener(now):
                 """Switch device off after a delay."""
                 self._delay_listener = None
@@ -97,13 +127,3 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update

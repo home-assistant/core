@@ -1,17 +1,23 @@
 """Support for Rflink lights."""
+from __future__ import annotations
+
 import logging
 import re
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_ALIASES,
@@ -141,7 +147,12 @@ def devices_from_config(domain_config):
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Rflink light platform."""
     async_add_entities(devices_from_config(config))
 
@@ -163,13 +174,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class RflinkLight(SwitchableRflinkDevice, LightEntity):
     """Representation of a Rflink light."""
 
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+
 
 class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device that support dimming."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _brightness = 255
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore RFLink light brightness attribute."""
         await super().async_added_to_hass()
 
@@ -181,7 +197,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
             # restore also brightness in dimmables devices
             self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
             # rflink only support 16 brightness levels
@@ -211,13 +227,8 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
 
-
-class HybridRflinkLight(DimmableRflinkLight, LightEntity):
+class HybridRflinkLight(DimmableRflinkLight):
     """Rflink light device that sends out both dim and on/off commands.
 
     Used for protocols which support lights that are not exclusively on/off
@@ -232,7 +243,7 @@ class HybridRflinkLight(DimmableRflinkLight, LightEntity):
     Which results in a nice house disco :)
     """
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on and set dim level."""
         await super().async_turn_on(**kwargs)
         # if the receiving device does not support dimlevel this
@@ -241,7 +252,7 @@ class HybridRflinkLight(DimmableRflinkLight, LightEntity):
             await self._async_handle_command("turn_on")
 
 
-class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
+class ToggleRflinkLight(RflinkLight):
     """Rflink light device which sends out only 'on' commands.
 
     Some switches like for example Livolo light switches use the
@@ -254,16 +265,15 @@ class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
 
-        command = event["command"]
-        if command == "on":
+        if event["command"] == "on":
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
             self._state = self._state in [None, False]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._async_handle_command("toggle")
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._async_handle_command("toggle")

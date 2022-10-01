@@ -1,0 +1,38 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "Les limites inf\u00e9rieure et sup\u00e9rieure ne peuvent pas \u00eatre toutes les deux vides"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Capteur d'entr\u00e9e",
+                    "hysteresis": "Hyst\u00e9r\u00e9sis",
+                    "lower": "Limite inf\u00e9rieure",
+                    "name": "Nom",
+                    "upper": "Limite sup\u00e9rieure"
+                },
+                "description": "Cr\u00e9ez un capteur binaire qui s'active et se d\u00e9sactive en fonction de la valeur d'un autre capteur.\n\nSi seule la limite inf\u00e9rieure est configur\u00e9e, le capteur est activ\u00e9 lorsque la valeur du capteur d'entr\u00e9e est inf\u00e9rieure \u00e0 cette limite.\nSi seule la limite sup\u00e9rieure est configur\u00e9e, le capteur est activ\u00e9 lorsque la valeur du capteur d'entr\u00e9e est sup\u00e9rieure \u00e0 cette limite.\nSi les deux limites sont configur\u00e9es, le capteur est activ\u00e9 lorsque la valeur du capteur d'entr\u00e9e est comprise entre les limites inf\u00e9rieure et sup\u00e9rieure.",
+                "title": "Ajouter un capteur de seuil"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "need_lower_upper": "Les limites inf\u00e9rieure et sup\u00e9rieure ne peuvent pas \u00eatre toutes les deux vides"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Capteur d'entr\u00e9e",
+                    "hysteresis": "Hyst\u00e9r\u00e9sis",
+                    "lower": "Limite inf\u00e9rieure",
+                    "name": "Nom",
+                    "upper": "Limite sup\u00e9rieure"
+                },
+                "description": "Si seule la limite inf\u00e9rieure est configur\u00e9e, le capteur est activ\u00e9 lorsque la valeur du capteur d'entr\u00e9e est inf\u00e9rieure \u00e0 cette limite.\nSi seule la limite sup\u00e9rieure est configur\u00e9e, le capteur est activ\u00e9 lorsque la valeur du capteur d'entr\u00e9e est sup\u00e9rieure \u00e0 cette limite.\nSi les deux limites sont configur\u00e9es, le capteur est activ\u00e9 lorsque la valeur du capteur d'entr\u00e9e est comprise entre les limites inf\u00e9rieure et sup\u00e9rieure."
+            }
+        }
+    },
+    "title": "Capteur de seuil"
+}

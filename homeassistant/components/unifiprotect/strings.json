@@ -1,0 +1,58 @@
+{
+  "config": {
+    "flow_title": "{name} ({ip_address})",
+    "step": {
+      "user": {
+        "title": "UniFi Protect Setup",
+        "description": "You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "UniFi Protect Reauth",
+        "data": {
+          "host": "IP/Host of UniFi Protect Server",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "discovery_confirm": {
+        "title": "UniFi Protect Discovered",
+        "description": "Do you want to setup {name} ({ip_address})? [%key:component::unifiprotect::config::step::user::description%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "discovery_started": "Discovery started"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "UniFi Protect Options",
+        "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If not enabled, they will only update once every 15 minutes.",
+        "data": {
+          "disable_rtsp": "Disable the RTSP stream",
+          "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
+          "override_connection_host": "Override Connection Host",
+          "max_media": "Max number of event to load for Media Browser (increases RAM usage)"
+        }
+      }
+    }
+  }
+}

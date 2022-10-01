@@ -1,4 +1,6 @@
 """Sensor for Xbox Live account status."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,9 +9,11 @@ from xboxapi import Client
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Xbox platform."""
     api = Client(api_key=config[CONF_API_KEY])
     entities = []
@@ -47,8 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     interval = config.get(CONF_SCAN_INTERVAL, interval)
 
     for xuid in users:
-        gamercard = get_user_gamercard(api, xuid)
-        if gamercard is None:
+        if (gamercard := get_user_gamercard(api, xuid)) is None:
             continue
         entities.append(XboxSensor(api, xuid, gamercard, interval))
 
@@ -75,6 +83,8 @@ def get_user_gamercard(api, xuid):
 class XboxSensor(SensorEntity):
     """A class for the Xbox account."""
 
+    _attr_should_poll = False
+
     def __init__(self, api, xuid, gamercard, interval):
         """Initialize the sensor."""
         self._state = None
@@ -91,11 +101,6 @@ class XboxSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._gamertag
-
-    @property
-    def should_poll(self):
-        """Return False as this entity has custom polling."""
-        return False
 
     @property
     def native_value(self):
@@ -123,7 +128,7 @@ class XboxSensor(SensorEntity):
         """Return the icon to use in the frontend."""
         return ICON
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Start custom polling."""
 
         @callback
@@ -133,7 +138,7 @@ class XboxSensor(SensorEntity):
 
         async_track_time_interval(self.hass, async_update, self._interval)
 
-    def update(self):
+    def update(self) -> None:
         """Update state data from Xbox API."""
         presence = self._api.gamer(gamertag="", xuid=self._xuid).get("presence")
         _LOGGER.debug("User presence: %s", presence)

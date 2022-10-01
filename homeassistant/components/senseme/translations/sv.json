@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_host": "Ogiltigt v\u00e4rdnamn eller IP-adress"
+        },
+        "flow_title": "{name} - {model} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vill du konfigurera {name} - {model} ({host})?"
+            },
+            "manual": {
+                "data": {
+                    "host": "V\u00e4rd"
+                },
+                "description": "Ange en IP-adress."
+            },
+            "user": {
+                "data": {
+                    "device": "Enhet"
+                },
+                "description": "V\u00e4lj en enhet eller v\u00e4lj \"IP-adress\" f\u00f6r att manuellt ange en IP-adress."
+            }
+        }
+    }
+}

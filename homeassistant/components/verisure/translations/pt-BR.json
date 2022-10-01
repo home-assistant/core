@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A conta j\u00e1 foi configurada",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado",
+            "unknown_mfa": "Ocorreu um erro desconhecido durante a configura\u00e7\u00e3o da MFA"
+        },
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Instala\u00e7\u00e3o"
+                },
+                "description": "O Home Assistant encontrou v\u00e1rias instala\u00e7\u00f5es da Verisure na sua conta do My Pages. Por favor, selecione a instala\u00e7\u00e3o para adicionar ao Home Assistant."
+            },
+            "mfa": {
+                "data": {
+                    "code": "C\u00f3digo de verifica\u00e7\u00e3o",
+                    "description": "Sua conta tem a verifica\u00e7\u00e3o em duas etapas ativada. Insira o c\u00f3digo de verifica\u00e7\u00e3o que a Verisure envia para voc\u00ea."
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Re-autentique com sua conta Verisure My Pages.",
+                    "email": "Email",
+                    "password": "Senha"
+                }
+            },
+            "reauth_mfa": {
+                "data": {
+                    "code": "C\u00f3digo de verifica\u00e7\u00e3o",
+                    "description": "Sua conta tem a verifica\u00e7\u00e3o em duas etapas ativada. Insira o c\u00f3digo de verifica\u00e7\u00e3o que a Verisure envia para voc\u00ea."
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Fa\u00e7a login com sua conta Verisure My Pages.",
+                    "email": "Email",
+                    "password": "Senha"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "O c\u00f3digo PIN padr\u00e3o n\u00e3o corresponde ao n\u00famero necess\u00e1rio de d\u00edgitos"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "N\u00famero de d\u00edgitos no c\u00f3digo PIN para fechaduras",
+                    "lock_default_code": "C\u00f3digo PIN padr\u00e3o para bloqueios, usado se nenhum for fornecido"
+                }
+            }
+        }
+    }
+}

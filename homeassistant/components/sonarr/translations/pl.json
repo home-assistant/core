@@ -12,16 +12,13 @@
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "Integracja Sonarr musi by\u0107 r\u0119cznie ponownie uwierzytelniona za pomoc\u0105 API Sonarr pod adresem: {host}",
+                "description": "Integracja Sonarr musi by\u0107 r\u0119cznie ponownie uwierzytelniona za pomoc\u0105 API Sonarr pod adresem: {url}",
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {
                 "data": {
                     "api_key": "Klucz API",
-                    "base_path": "\u015acie\u017cka do API",
-                    "host": "Nazwa hosta lub adres IP",
-                    "port": "Port",
-                    "ssl": "Certyfikat SSL",
+                    "url": "URL",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 }
             }

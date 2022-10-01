@@ -58,8 +58,6 @@ MOCK_USERINPUT = {
     "host": "1.1.1.1",
 }
 
-MOCK_IMPORT = {"host": "1.1.1.1", "api_version": 6}
-
 MOCK_CONFIG = {
     "host": "1.1.1.1",
     "api_version": 1,

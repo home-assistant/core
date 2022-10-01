@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "cloud": {
+                "data": {
+                    "password": "Senha",
+                    "pin": "C\u00f3digo PIN",
+                    "username": "Usu\u00e1rio"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Nome do host",
+                    "pin": "C\u00f3digo PIN",
+                    "port": "Porta"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "pin": "C\u00f3digo PIN",
+                    "username": "Usu\u00e1rio"
+                },
+                "menu_options": {
+                    "cloud": "Risco Cloud (recomendado)",
+                    "local": "Painel de Risco Local (avan\u00e7ado)"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "ha_to_risco": {
+                "data": {
+                    "armed_away": "Armado Fora",
+                    "armed_custom_bypass": "Bypass Armado Personalizado",
+                    "armed_home": "Armado (Casa)",
+                    "armed_night": "Armado (Noite)"
+                },
+                "description": "Selecione o estado para definir seu alarme Risco ao armar o alarme do Home Assistant",
+                "title": "Mapear os estados do Home Assistant para os estados do Risco"
+            },
+            "init": {
+                "data": {
+                    "code_arm_required": "C\u00f3digo PIN",
+                    "code_disarm_required": "C\u00f3digo PIN",
+                    "scan_interval": "Quantas vezes pesquisar Risco (em segundos)"
+                },
+                "title": "Configurar op\u00e7\u00f5es"
+            },
+            "risco_to_ha": {
+                "data": {
+                    "A": "Grupo A",
+                    "B": "Grupo B",
+                    "C": "Grupo C",
+                    "D": "Grupo D",
+                    "arm": "Armado (FORA)",
+                    "partial_arm": "Parcialmente Armado (STAY)"
+                },
+                "description": "Selecione qual estado o alarme do Home Assistant reportar\u00e1 para cada estado reportado pelo Risco",
+                "title": "Mapear os estados do Risco para os estados do Home Assistant"
+            }
+        }
+    }
+}

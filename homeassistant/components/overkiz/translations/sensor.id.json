@@ -1,0 +1,46 @@
+{
+    "state": {
+        "overkiz__battery": {
+            "full": "Penuh",
+            "low": "Rendah",
+            "normal": "Normal",
+            "verylow": "Sangat rendah"
+        },
+        "overkiz__discrete_rssi_level": {
+            "good": "Bagus",
+            "low": "Rendah",
+            "normal": "Normal",
+            "verylow": "Sangat rendah"
+        },
+        "overkiz__priority_lock_originator": {
+            "external_gateway": "Gateway eksternal",
+            "local_user": "Pengguna lokal",
+            "lsc": "LSC",
+            "myself": "Saya sendiri",
+            "rain": "Hujan",
+            "saac": "SAAC",
+            "security": "Keamanan",
+            "sfc": "SFC",
+            "temperature": "Suhu",
+            "timer": "Timer",
+            "ups": "UPS",
+            "user": "Pengguna",
+            "wind": "Angin"
+        },
+        "overkiz__sensor_defect": {
+            "dead": "Mati",
+            "low_battery": "Baterai lemah",
+            "maintenance_required": "Diperlukan perawatan",
+            "no_defect": "Tidak ada cacat"
+        },
+        "overkiz__sensor_room": {
+            "clean": "Bersih",
+            "dirty": "Kotor"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Tutup",
+            "open": "Buka",
+            "tilt": "Miring"
+        }
+    }
+}

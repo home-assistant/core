@@ -102,12 +102,12 @@ async def async_reproduce_state(
             return
 
         try:
-            platform: ModuleType | None = integration.get_platform("reproduce_state")
+            platform: ModuleType = integration.get_platform("reproduce_state")
         except ImportError:
             _LOGGER.warning("Integration %s does not support reproduce state", domain)
             return
 
-        await platform.async_reproduce_states(  # type: ignore
+        await platform.async_reproduce_states(
             hass, states_by_domain, context=context, reproduce_options=reproduce_options
         )
 

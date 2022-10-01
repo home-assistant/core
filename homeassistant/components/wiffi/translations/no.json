@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "addr_in_use": "Serverport allerede i bruk.",
+            "already_configured": "Serverporten er allerede konfigurert.",
             "start_server_failed": "Startserveren mislyktes."
         },
         "step": {

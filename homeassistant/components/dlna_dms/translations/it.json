@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "bad_ssdp": "Ai dati SSDP manca un valore richiesto",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete",
+            "not_dms": "Il dispositivo non \u00e8 un server multimediale supportato"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Vuoi iniziare la configurazione?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Seleziona un dispositivo da configurare",
+                "title": "Dispositivi DLNA DMA rilevati"
+            }
+        }
+    }
+}

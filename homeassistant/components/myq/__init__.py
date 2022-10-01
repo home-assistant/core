@@ -1,4 +1,6 @@
 """The MyQ integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -17,6 +19,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -62,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = {MYQ_GATEWAY: myq, MYQ_COORDINATOR: coordinator}
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -93,22 +96,22 @@ class MyQEntity(CoordinatorEntity):
     @property
     def device_info(self):
         """Return the device_info of the device."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "name": self._device.name,
-            "manufacturer": MANUFACTURER,
-            "sw_version": self._device.firmware_version,
-        }
         model = (
             KNOWN_MODELS.get(self._device.device_id[2:4])
             if self._device.device_id is not None
             else None
         )
-        if model:
-            device_info["model"] = model
+        via_device: tuple[str, str] | None = None
         if self._device.parent_device_id:
-            device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
-        return device_info
+            via_device = (DOMAIN, self._device.parent_device_id)
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.device_id)},
+            manufacturer=MANUFACTURER,
+            model=model,
+            name=self._device.name,
+            sw_version=self._device.firmware_version,
+            via_device=via_device,
+        )
 
     @property
     def available(self):

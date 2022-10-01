@@ -1,0 +1,36 @@
+{
+  "config": {
+    "flow_title": "{host}",
+    "step": {
+      "reauth_confirm": {
+        "description": "Please enter the correct password for host: {host}",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "hassio_confirm": {
+        "description": "Do you want to connect to add-on {addon}?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

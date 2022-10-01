@@ -2,31 +2,24 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import eiscp
 from eiscp import eISCP
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     DOMAIN,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,23 +31,19 @@ DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 100
 DEFAULT_RECEIVER_MAX_VOLUME = 80
 
-SUPPORT_ONKYO = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-)
 
 SUPPORT_ONKYO_WO_VOLUME = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
+    MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+)
+SUPPORT_ONKYO = (
+    SUPPORT_ONKYO_WO_VOLUME
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
 KNOWN_HOSTS: list[str] = []
@@ -171,19 +160,23 @@ def determine_zones(receiver):
     return out
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Onkyo platform."""
-    host = config.get(CONF_HOST)
-    hosts = []
+    hosts: list[OnkyoDevice] = []
 
-    def service_handle(service):
+    def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entity_ids = service.data[ATTR_ENTITY_ID]
         devices = [d for d in hosts if d.entity_id in entity_ids]
 
         for device in devices:
             if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-                device.select_output(service.data.get(ATTR_HDMI_OUTPUT))
+                device.select_output(service.data[ATTR_HDMI_OUTPUT])
 
     hass.services.register(
         DOMAIN,
@@ -192,7 +185,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         schema=ONKYO_SELECT_OUTPUT_SCHEMA,
     )
 
-    if CONF_HOST in config and host not in KNOWN_HOSTS:
+    if CONF_HOST in config and (host := config[CONF_HOST]) not in KNOWN_HOSTS:
         try:
             receiver = eiscp.eISCP(host)
             hosts.append(
@@ -247,6 +240,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class OnkyoDevice(MediaPlayerEntity):
     """Representation of an Onkyo device."""
 
+    _attr_supported_features = SUPPORT_ONKYO
+
     def __init__(
         self,
         receiver,
@@ -259,7 +254,7 @@ class OnkyoDevice(MediaPlayerEntity):
         self._receiver = receiver
         self._muted = False
         self._volume = 0
-        self._pwstate = STATE_OFF
+        self._pwstate = MediaPlayerState.OFF
         if name:
             # not discovered
             self._name = name
@@ -296,16 +291,16 @@ class OnkyoDevice(MediaPlayerEntity):
         _LOGGER.debug("Result for %s: %s", command, result)
         return result
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state from the device."""
         status = self.command("system-power query")
 
         if not status:
             return
         if status[1] == "on":
-            self._pwstate = STATE_ON
+            self._pwstate = MediaPlayerState.ON
         else:
-            self._pwstate = STATE_OFF
+            self._pwstate = MediaPlayerState.OFF
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
             self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
             self._attributes.pop(ATTR_PRESET, None)
@@ -383,11 +378,6 @@ class OnkyoDevice(MediaPlayerEntity):
         return self._muted
 
     @property
-    def supported_features(self):
-        """Return media player features that are supported."""
-        return SUPPORT_ONKYO
-
-    @property
     def source(self):
         """Return the current input source of the device."""
         return self._current_source
@@ -402,11 +392,11 @@ class OnkyoDevice(MediaPlayerEntity):
         """Return device specific state attributes."""
         return self._attributes
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self.command("system-power standby")
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """
         Set volume level, input is range 0..1.
 
@@ -420,32 +410,32 @@ class OnkyoDevice(MediaPlayerEntity):
             f"volume {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
         )
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Increase volume by 1 step."""
         self.command("volume level-up")
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Decrease volume by 1 step."""
         self.command("volume level-down")
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         if mute:
             self.command("audio-muting on")
         else:
             self.command("audio-muting off")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.command("system-power on")
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set the input source."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
         self.command(f"input-selector {source}")
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play radio station by preset number."""
         source = self._reverse_mapping[self._current_source]
         if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
@@ -512,16 +502,16 @@ class OnkyoDeviceZone(OnkyoDevice):
         self._supports_volume = True
         super().__init__(receiver, sources, name, max_volume, receiver_max_volume)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state from the device."""
         status = self.command(f"zone{self._zone}.power=query")
 
         if not status:
             return
         if status[1] == "on":
-            self._pwstate = STATE_ON
+            self._pwstate = MediaPlayerState.ON
         else:
-            self._pwstate = STATE_OFF
+            self._pwstate = MediaPlayerState.OFF
             return
 
         volume_raw = self.command(f"zone{self._zone}.volume=query")
@@ -569,11 +559,11 @@ class OnkyoDeviceZone(OnkyoDevice):
             return SUPPORT_ONKYO
         return SUPPORT_ONKYO_WO_VOLUME
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self.command(f"zone{self._zone}.power=standby")
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """
         Set volume level, input is range 0..1.
 
@@ -587,26 +577,26 @@ class OnkyoDeviceZone(OnkyoDevice):
             f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
         )
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Increase volume by 1 step."""
         self.command(f"zone{self._zone}.volume=level-up")
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Decrease volume by 1 step."""
         self.command(f"zone{self._zone}.volume=level-down")
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         if mute:
             self.command(f"zone{self._zone}.muting=on")
         else:
             self.command(f"zone{self._zone}.muting=off")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.command(f"zone{self._zone}.power=on")
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set the input source."""
         if source in self._source_list:
             source = self._reverse_mapping[source]

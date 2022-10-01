@@ -8,16 +8,23 @@ import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
+    EVENT_USER_UPDATED,
     InvalidAuthError,
     auth_store,
     const as auth_const,
     models as auth_models,
 )
-from homeassistant.auth.const import MFA_SESSION_EXPIRATION
+from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-from tests.common import CLIENT_ID, MockUser, ensure_auth_manager_loaded, flush_store
+from tests.common import (
+    CLIENT_ID,
+    MockUser,
+    async_capture_events,
+    ensure_auth_manager_loaded,
+    flush_store,
+)
 
 
 @pytest.fixture
@@ -161,12 +168,12 @@ async def test_create_new_user(hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     credential = step["result"]
     assert credential is not None
 
@@ -230,12 +237,12 @@ async def test_login_as_existing_user(mock_hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     credential = step["result"]
     user = await manager.async_get_user_by_credentials(credential)
@@ -281,6 +288,16 @@ async def test_linking_user_to_two_auth_providers(hass, hass_storage):
     new_credential = step["result"]
     await manager.async_link_user(user, new_credential)
     assert len(user.credentials) == 2
+
+    # Linking it again to same user is a no-op
+    await manager.async_link_user(user, new_credential)
+    assert len(user.credentials) == 2
+
+    # Linking a credential to a user while the credential is already linked to another user should raise
+    user_2 = await manager.async_create_user("User 2")
+    with pytest.raises(ValueError):
+        await manager.async_link_user(user_2, new_credential)
+    assert len(user_2.credentials) == 0
 
 
 async def test_saving_loading(hass, hass_storage):
@@ -374,12 +391,29 @@ async def test_generating_system_user(hass):
     user = await manager.async_create_system_user("Hass.io")
     token = await manager.async_create_refresh_token(user)
     assert user.system_generated
+    assert user.groups == []
+    assert not user.local_only
     assert token is not None
     assert token.client_id is None
 
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["user_id"] == user.id
+
+    # Passing arguments
+    user = await manager.async_create_system_user(
+        "Hass.io", group_ids=[GROUP_ID_ADMIN], local_only=True
+    )
+    token = await manager.async_create_refresh_token(user)
+    assert user.system_generated
+    assert user.is_admin
+    assert user.local_only
+    assert token is not None
+    assert token.client_id is None
+
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    assert events[1].data["user_id"] == user.id
 
 
 async def test_refresh_token_requires_client_for_user(hass):
@@ -694,14 +728,14 @@ async def test_login_with_auth_module(mock_hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request auth module input form
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -709,7 +743,7 @@ async def test_login_with_auth_module(mock_hass):
     )
 
     # Invalid code error
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
     assert step["errors"] == {"base": "invalid_code"}
 
@@ -718,7 +752,7 @@ async def test_login_with_auth_module(mock_hass):
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
 
@@ -769,21 +803,21 @@ async def test_login_with_multi_auth_module(mock_hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
     # After auth_provider validated, request select auth module
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "select_mfa_module"
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"multi_factor_auth_module": "module2"}
     )
 
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     step = await manager.login_flow.async_configure(
@@ -791,7 +825,7 @@ async def test_login_with_multi_auth_module(mock_hass):
     )
 
     # Finally passed, get credential
-    assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert step["result"]
     assert step["result"].id == "mock-id"
 
@@ -837,13 +871,13 @@ async def test_auth_module_expired_session(mock_hass):
     )
 
     step = await manager.login_flow.async_init(("insecure_example", None))
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
 
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
 
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "mfa"
 
     with patch(
@@ -854,7 +888,7 @@ async def test_auth_module_expired_session(mock_hass):
             step["flow_id"], {"pin": "test-pin"}
         )
         # login flow abort due session timeout
-        assert step["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert step["type"] == data_entry_flow.FlowResultType.ABORT
         assert step["reason"] == "login_expired"
 
 
@@ -931,14 +965,7 @@ async def test_enable_mfa_for_user(hass, hass_storage):
 
 async def test_async_remove_user(hass):
     """Test removing a user."""
-    events = []
-
-    @callback
-    def user_removed(event):
-        events.append(event)
-
-    hass.bus.async_listen("user_removed", user_removed)
-
+    events = async_capture_events(hass, "user_removed")
     manager = await auth.auth_manager_from_config(
         hass,
         [
@@ -983,6 +1010,18 @@ async def test_async_remove_user(hass):
     assert events[0].data["user_id"] == user.id
 
 
+async def test_async_remove_user_fail_if_remove_credential_fails(
+    hass, hass_admin_user, hass_admin_credential
+):
+    """Test removing a user."""
+    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+
+    with patch.object(
+        hass.auth, "async_remove_credentials", side_effect=ValueError
+    ), pytest.raises(ValueError):
+        await hass.auth.async_remove_user(hass_admin_user)
+
+
 async def test_new_users(mock_hass):
     """Test newly created users."""
     manager = await auth.auth_manager_from_config(
@@ -1017,15 +1056,19 @@ async def test_new_users(mock_hass):
     # first user in the system is owner and admin
     assert user.is_owner
     assert user.is_admin
+    assert not user.local_only
     assert user.groups == []
 
     user = await manager.async_create_user("Hello 2")
     assert not user.is_admin
     assert user.groups == []
 
-    user = await manager.async_create_user("Hello 3", ["system-admin"])
+    user = await manager.async_create_user(
+        "Hello 3", group_ids=["system-admin"], local_only=True
+    )
     assert user.is_admin
     assert user.groups[0].id == "system-admin"
+    assert user.local_only
 
     user_cred = await manager.async_get_or_create_user(
         auth_models.Credentials(
@@ -1055,3 +1098,20 @@ async def test_rename_does_not_change_refresh_token(mock_hass):
     token_after = list(user.refresh_tokens.values())[0]
 
     assert token_before == token_after
+
+
+async def test_event_user_updated_fires(hass):
+    """Test the user updated event fires."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    assert len(list(user.refresh_tokens.values())) == 1
+
+    events = async_capture_events(hass, EVENT_USER_UPDATED)
+
+    await manager.async_update_user(user, name="new name")
+    assert user.name == "new name"
+
+    await hass.async_block_till_done()
+    assert len(events) == 1

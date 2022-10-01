@@ -1,0 +1,50 @@
+{
+  "aqi": {
+    "name": "AQI",
+    "id": null,
+    "index": null,
+    "value": "dobry"
+  },
+  "c6h6": {
+    "name": "benzen",
+    "id": 658,
+    "index": "bardzo dobry",
+    "value": 0.23789
+  },
+  "co": {
+    "name": "tlenek węgla",
+    "id": 660,
+    "index": "dobry",
+    "value": 251.874
+  },
+  "no2": {
+    "name": "dwutlenek azotu",
+    "id": 665,
+    "index": "dobry",
+    "value": 7.13411
+  },
+  "o3": {
+    "name": "ozon",
+    "id": 667,
+    "index": "dobry",
+    "value": 95.7768
+  },
+  "pm10": {
+    "name": "py\u0142 zawieszony PM10",
+    "id": 14395,
+    "index": "dobry",
+    "value": 16.8344
+  },
+  "pm25": {
+    "name": "py\u0142 zawieszony PM2.5",
+    "id": 670,
+    "index": "dobry",
+    "value": 4
+  },
+  "so2": {
+    "name": "dwutlenek siarki",
+    "id": 672,
+    "index": "bardzo dobry",
+    "value": 4.35478
+  }
+}

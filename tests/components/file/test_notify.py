@@ -4,15 +4,16 @@ from unittest.mock import call, mock_open, patch
 
 import pytest
 
-import homeassistant.components.notify as notify
+from homeassistant.components import notify
 from homeassistant.components.notify import ATTR_TITLE_DEFAULT
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component
 
 
-async def test_bad_config(hass):
+async def test_bad_config(hass: HomeAssistant):
     """Test set up the platform with bad/missing config."""
     config = {notify.DOMAIN: {"name": "test", "platform": "file"}}
     with assert_setup_component(0) as handle_config:
@@ -27,7 +28,7 @@ async def test_bad_config(hass):
         True,
     ],
 )
-async def test_notify_file(hass, timestamp):
+async def test_notify_file(hass: HomeAssistant, timestamp: bool):
     """Test the notify file output."""
     filename = "mock_file"
     message = "one, two, testing, testing"

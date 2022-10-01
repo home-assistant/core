@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured_device": "Dit apparaat is al geconfigureerd",
+            "already_configured_device": "Apparaat is al geconfigureerd",
             "cannot_connect": "Kan geen verbinding maken",
             "updated_entry": "Dit item is al ingesteld, maar de naam en/of opties die zijn gedefinieerd in de configuratie komen niet overeen met de eerder ge\u00efmporteerde configuratie, dus het configuratie-item is dienovereenkomstig bijgewerkt."
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt",
+            "cannot_connect": "Kan geen verbinding maken",
             "complete_pairing_failed": "Kan het koppelen niet voltooien. Zorg ervoor dat de door u opgegeven pincode correct is en dat de tv nog steeds van stroom wordt voorzien en is verbonden met het netwerk voordat u opnieuw verzendt.",
             "existing_config_entry_found": "Een bestaande VIZIO SmartCast-apparaat config entry met hetzelfde serienummer is reeds geconfigureerd. U moet de bestaande entry verwijderen om deze te kunnen configureren."
         },
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN-code"
+                    "pin": "Pincode"
                 },
                 "description": "Uw TV zou een code moeten weergeven. Voer die code in het formulier in en ga dan door naar de volgende stap om de koppeling te voltooien.",
                 "title": "Voltooi het koppelingsproces"

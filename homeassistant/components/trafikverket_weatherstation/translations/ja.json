@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30a2\u30ab\u30a6\u30f3\u30c8\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c",
+            "invalid_station": "\u6307\u5b9a\u3055\u308c\u305f\u540d\u524d\u3067weather station\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f",
+            "more_stations": "\u6307\u5b9a\u3055\u308c\u305f\u540d\u524d\u3067\u8907\u6570\u306eweather station\u304c\u898b\u3064\u304b\u308a\u307e\u3057\u305f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "station": "\u30b9\u30c6\u30fc\u30b7\u30e7\u30f3"
+                }
+            }
+        }
+    }
+}

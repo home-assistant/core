@@ -1,26 +1,27 @@
 """The Minecraft Server integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from mcstatus.server import MinecraftServer as MCStatus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 from . import helpers
 from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data.setdefault(DOMAIN, {})
 
     # Create and store server instance.
+    assert entry.unique_id
     unique_id = entry.unique_id
     _LOGGER.debug(
         "Creating server instance for '%s' (%s)",
@@ -42,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     server.start_periodic_update()
 
     # Set up platforms.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -71,7 +73,7 @@ class MinecraftServer:
     _MAX_RETRIES_STATUS = 3
 
     def __init__(
-        self, hass: HomeAssistant, unique_id: str, config_data: ConfigType
+        self, hass: HomeAssistant, unique_id: str, config_data: Mapping[str, Any]
     ) -> None:
         """Initialize server instance."""
         self._hass = hass
@@ -94,13 +96,14 @@ class MinecraftServer:
         self.latency_time = None
         self.players_online = None
         self.players_max = None
-        self.players_list = None
+        self.players_list: list[str] | None = None
+        self.motd = None
 
         # Dispatcher signal name
         self.signal_name = f"{SIGNAL_NAME_PREFIX}_{self.unique_id}"
 
         # Callback for stopping periodic update.
-        self._stop_periodic_update = None
+        self._stop_periodic_update: CALLBACK_TYPE | None = None
 
     def start_periodic_update(self) -> None:
         """Start periodic execution of update method."""
@@ -110,7 +113,8 @@ class MinecraftServer:
 
     def stop_periodic_update(self) -> None:
         """Stop periodic execution of update method."""
-        self._stop_periodic_update()
+        if self._stop_periodic_update:
+            self._stop_periodic_update()
 
     async def async_check_connection(self) -> None:
         """Check server connection using a 'status' request and store connection status."""
@@ -146,7 +150,7 @@ class MinecraftServer:
             )
             self.online = False
 
-    async def async_update(self, now: datetime = None) -> None:
+    async def async_update(self, now: datetime | None = None) -> None:
         """Get server data from 3rd party library and update properties."""
         # Check connection status.
         server_online_old = self.online
@@ -179,6 +183,7 @@ class MinecraftServer:
             self.players_online = status_response.players.online
             self.players_max = status_response.players.max
             self.latency_time = status_response.latency
+            self.motd = (status_response.description).get("text")
             self.players_list = []
             if status_response.players.sample is not None:
                 for player in status_response.players.sample:
@@ -201,6 +206,7 @@ class MinecraftServer:
             self.players_max = None
             self.latency_time = None
             self.players_list = None
+            self.motd = None
 
             # Inform user once about failed update if necessary.
             if not self._last_status_request_failed:
@@ -216,54 +222,31 @@ class MinecraftServer:
 class MinecraftServerEntity(Entity):
     """Representation of a Minecraft Server base entity."""
 
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
     def __init__(
-        self, server: MinecraftServer, type_name: str, icon: str, device_class: str
+        self,
+        server: MinecraftServer,
+        type_name: str,
+        icon: str,
+        device_class: str | None,
     ) -> None:
         """Initialize base entity."""
         self._server = server
-        self._name = f"{server.name} {type_name}"
-        self._icon = icon
-        self._unique_id = f"{self._server.unique_id}-{type_name}"
-        self._device_info = {
-            "identifiers": {(DOMAIN, self._server.unique_id)},
-            "name": self._server.name,
-            "manufacturer": MANUFACTURER,
-            "model": f"Minecraft Server ({self._server.version})",
-            "sw_version": self._server.protocol_version,
-        }
-        self._device_class = device_class
+        self._attr_name = type_name
+        self._attr_icon = icon
+        self._attr_unique_id = f"{self._server.unique_id}-{type_name}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._server.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=f"Minecraft Server ({self._server.version})",
+            name=self._server.name,
+            sw_version=self._server.protocol_version,
+        )
+        self._attr_device_class = device_class
         self._extra_state_attributes = None
-        self._disconnect_dispatcher = None
-
-    @property
-    def name(self) -> str:
-        """Return name."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return self._device_info
-
-    @property
-    def device_class(self) -> str:
-        """Return device class."""
-        return self._device_class
-
-    @property
-    def icon(self) -> str:
-        """Return icon."""
-        return self._icon
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling."""
-        return False
+        self._disconnect_dispatcher: CALLBACK_TYPE | None = None
 
     async def async_update(self) -> None:
         """Fetch data from the server."""
@@ -277,7 +260,8 @@ class MinecraftServerEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher before removal."""
-        self._disconnect_dispatcher()
+        if self._disconnect_dispatcher:
+            self._disconnect_dispatcher()
 
     @callback
     def _update_callback(self) -> None:

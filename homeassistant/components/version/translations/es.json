@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "version_source": "Fuente de la versi\u00f3n"
+                },
+                "description": "Selecciona la fuente de la que deseas realizar un rastreo de las versiones",
+                "title": "Selecciona el tipo de instalaci\u00f3n"
+            },
+            "version_source": {
+                "data": {
+                    "beta": "Incluir versiones beta",
+                    "board": "Qu\u00e9 tablero debe ser rastreado",
+                    "channel": "Qu\u00e9 canal debe ser rastreado",
+                    "image": "Qu\u00e9 imagen debe ser rastreada"
+                },
+                "description": "Configura el rastreo de versiones de {version_source}",
+                "title": "Configurar"
+            }
+        }
+    }
+}

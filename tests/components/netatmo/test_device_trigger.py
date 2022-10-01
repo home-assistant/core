@@ -2,15 +2,11 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
 from homeassistant.components.netatmo.const import (
     CLIMATE_TRIGGERS,
     INDOOR_CAMERA_TRIGGERS,
-    MODEL_NACAMERA,
-    MODEL_NAPLUG,
-    MODEL_NATHERM1,
-    MODEL_NOC,
-    MODEL_NRV,
     NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
@@ -51,10 +47,10 @@ def calls(hass):
 @pytest.mark.parametrize(
     "platform,device_type,event_types",
     [
-        ("camera", MODEL_NOC, OUTDOOR_CAMERA_TRIGGERS),
-        ("camera", MODEL_NACAMERA, INDOOR_CAMERA_TRIGGERS),
-        ("climate", MODEL_NRV, CLIMATE_TRIGGERS),
-        ("climate", MODEL_NATHERM1, CLIMATE_TRIGGERS),
+        ("camera", "NOC", OUTDOOR_CAMERA_TRIGGERS),
+        ("camera", "NACamera", INDOOR_CAMERA_TRIGGERS),
+        ("climate", "NRV", CLIMATE_TRIGGERS),
+        ("climate", "NATherm1", CLIMATE_TRIGGERS),
     ],
 )
 async def test_get_triggers(
@@ -83,6 +79,7 @@ async def test_get_triggers(
                         "subtype": subtype,
                         "device_id": device_entry.id,
                         "entity_id": f"{platform}.{NETATMO_DOMAIN}_5678",
+                        "metadata": {"secondary": False},
                     }
                 )
         else:
@@ -93,12 +90,13 @@ async def test_get_triggers(
                     "type": event_type,
                     "device_id": device_entry.id,
                     "entity_id": f"{platform}.{NETATMO_DOMAIN}_5678",
+                    "metadata": {"secondary": False},
                 }
             )
     triggers = [
         trigger
         for trigger in await async_get_device_automations(
-            hass, "trigger", device_entry.id
+            hass, DeviceAutomationType.TRIGGER, device_entry.id
         )
         if trigger["domain"] == NETATMO_DOMAIN
     ]
@@ -107,15 +105,15 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     "platform,camera_type,event_type",
-    [("camera", MODEL_NOC, trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
-    + [("camera", MODEL_NACAMERA, trigger) for trigger in INDOOR_CAMERA_TRIGGERS]
+    [("camera", "NOC", trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
+    + [("camera", "NACamera", trigger) for trigger in INDOOR_CAMERA_TRIGGERS]
     + [
-        ("climate", MODEL_NRV, trigger)
+        ("climate", "NRV", trigger)
         for trigger in CLIMATE_TRIGGERS
         if trigger not in SUBTYPES
     ]
     + [
-        ("climate", MODEL_NATHERM1, trigger)
+        ("climate", "NATherm1", trigger)
         for trigger in CLIMATE_TRIGGERS
         if trigger not in SUBTYPES
     ],
@@ -185,12 +183,12 @@ async def test_if_fires_on_event(
 @pytest.mark.parametrize(
     "platform,camera_type,event_type,sub_type",
     [
-        ("climate", MODEL_NRV, trigger, subtype)
+        ("climate", "NRV", trigger, subtype)
         for trigger in SUBTYPES
         for subtype in SUBTYPES[trigger]
     ]
     + [
-        ("climate", MODEL_NATHERM1, trigger, subtype)
+        ("climate", "NATherm1", trigger, subtype)
         for trigger in SUBTYPES
         for subtype in SUBTYPES[trigger]
     ],
@@ -264,7 +262,7 @@ async def test_if_fires_on_event_with_subtype(
 
 @pytest.mark.parametrize(
     "platform,device_type,event_type",
-    [("climate", MODEL_NAPLUG, trigger) for trigger in CLIMATE_TRIGGERS],
+    [("climate", "NAPLUG", trigger) for trigger in CLIMATE_TRIGGERS],
 )
 async def test_if_invalid_device(
     hass, device_reg, entity_reg, platform, device_type, event_type

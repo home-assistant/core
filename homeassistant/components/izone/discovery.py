@@ -49,8 +49,7 @@ class DiscoveryService(pizone.Listener):
 
 async def async_start_discovery_service(hass: HomeAssistant):
     """Set up the pizone internal discovery."""
-    disco = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if disco:
+    if disco := hass.data.get(DATA_DISCOVERY_SERVICE):
         # Already started
         return disco
 
@@ -60,9 +59,7 @@ async def async_start_discovery_service(hass: HomeAssistant):
 
     # Start the pizone discovery service, disco is the listener
     session = aiohttp_client.async_get_clientsession(hass)
-    loop = hass.loop
-
-    disco.pi_disco = pizone.discovery(disco, loop=loop, session=session)
+    disco.pi_disco = pizone.discovery(disco, session=session)
     await disco.pi_disco.start_discovery()
 
     async def shutdown_event(event):
@@ -75,8 +72,7 @@ async def async_start_discovery_service(hass: HomeAssistant):
 
 async def async_stop_discovery_service(hass: HomeAssistant):
     """Stop the discovery service."""
-    disco = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if not disco:
+    if not (disco := hass.data.get(DATA_DISCOVERY_SERVICE)):
         return
 
     await disco.pi_disco.close()

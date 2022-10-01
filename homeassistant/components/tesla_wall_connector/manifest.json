@@ -1,0 +1,24 @@
+{
+  "domain": "tesla_wall_connector",
+  "name": "Tesla Wall Connector",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tesla_wall_connector",
+  "requirements": ["tesla-wall-connector==1.0.2"],
+  "dhcp": [
+    {
+      "hostname": "teslawallconnector_*",
+      "macaddress": "DC44271*"
+    },
+    {
+      "hostname": "teslawallconnector_*",
+      "macaddress": "98ED5C*"
+    },
+    {
+      "hostname": "teslawallconnector_*",
+      "macaddress": "4CFCAA*"
+    }
+  ],
+  "codeowners": ["@einarhauks"],
+  "iot_class": "local_polling",
+  "loggers": ["tesla_wall_connector"]
+}

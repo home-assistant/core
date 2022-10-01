@@ -1,5 +1,8 @@
 """Support for the KIWI.KI lock platform."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from kiwiki import KiwiClient, KiwiException
 import voluptuous as vol
@@ -14,9 +17,11 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +36,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the KIWI lock platform."""
 
     try:
@@ -39,8 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except KiwiException as exc:
         _LOGGER.error(exc)
         return
-    available_locks = kiwi.get_locks()
-    if not available_locks:
+    if not (available_locks := kiwi.get_locks()):
         # No locks found; abort setup routine.
         _LOGGER.info("No KIWI locks found in your account")
         return
@@ -74,19 +83,19 @@ class KiwiLock(LockEntity):
         }
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the lock."""
         name = self._sensor.get("name")
         specifier = self._sensor["address"].get("specifier")
         return name or specifier
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state == STATE_LOCKED
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return self._device_attrs
 
@@ -96,7 +105,7 @@ class KiwiLock(LockEntity):
         self._state = STATE_LOCKED
         self.async_write_ha_state()
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
 
         try:

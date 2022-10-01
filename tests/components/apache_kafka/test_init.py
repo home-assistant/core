@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 from unittest.mock import patch
 
 import pytest
@@ -169,7 +169,7 @@ async def test_filtered_allowlist(hass, mock_client):
         FilterTest("light.excluded_test", False),
         FilterTest("light.excluded", False),
         FilterTest("sensor.included_test", True),
-        FilterTest("climate.included_test", False),
+        FilterTest("climate.included_test", True),
     ]
 
     await _run_filter_tests(hass, tests, mock_client)

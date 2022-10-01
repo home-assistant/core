@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from ipaddress import ip_address
+from ipaddress import IPv4Network, IPv6Network, ip_address
 import logging
 from types import ModuleType
 from typing import Literal
@@ -17,7 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def async_setup_forwarded(
-    app: Application, use_x_forwarded_for: bool | None, trusted_proxies: list[str]
+    app: Application,
+    use_x_forwarded_for: bool | None,
+    trusted_proxies: list[IPv4Network | IPv6Network],
 ) -> None:
     """Create forwarded middleware for the app.
 
@@ -88,7 +90,7 @@ def async_setup_forwarded(
                 remote = False
 
         # Skip requests from Remote UI
-        if remote and remote.is_cloud_request.get():  # type: ignore
+        if remote and remote.is_cloud_request.get():
             return await handler(request)
 
         # Handle X-Forwarded-For

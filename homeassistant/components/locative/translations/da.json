@@ -1,7 +1,7 @@
 {
     "config": {
         "create_entry": {
-            "default": "For at sende lokationer til Home Assistant skal du konfigurere webhook funktionen i Locative applicationen.\n\n Udfyld f\u00f8lgende oplysninger: \n\n - URL: `{webhook_url}`\n - Metode: POST\n \n Se [dokumentationen]({docs_url}) for yderligere oplysninger."
+            "default": "For at sende lokaliteter til Home Assistant skal du konfigurere webhook-funktionen i Locative-applicationen.\n\n Udfyld f\u00f8lgende oplysninger: \n\n - URL: `{webhook_url}`\n - Metode: POST\n \n Se [dokumentationen]({docs_url}) for yderligere oplysninger."
         },
         "step": {
             "user": {

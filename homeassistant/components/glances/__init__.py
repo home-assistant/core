@@ -3,77 +3,32 @@ from datetime import timedelta
 import logging
 
 from glances_api import Glances, exceptions
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_SCAN_INTERVAL,
-    CONF_SSL,
-    CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import (
-    CONF_VERSION,
-    DATA_UPDATED,
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_VERSION,
-    DOMAIN,
-)
+from .const import DATA_UPDATED, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
-GLANCES_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_USERNAME): cv.string,
-            vol.Optional(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_SSL, default=False): cv.boolean,
-            vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-            vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In([2, 3]),
-        }
-    )
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(cv.deprecated(DOMAIN), {DOMAIN: vol.All(cv.ensure_list, [GLANCES_SCHEMA])}),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Configure Glances using config flow only."""
-    if DOMAIN in config:
-        for entry in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
-
-    return True
-
-
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Glances from config entry."""
     client = GlancesData(hass, config_entry)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
@@ -83,7 +38,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -110,7 +65,7 @@ class GlancesData:
     async def async_update(self):
         """Get the latest data from the Glances REST API."""
         try:
-            await self.api.get_data()
+            await self.api.get_data("all")
             self.available = True
         except exceptions.GlancesApiError:
             _LOGGER.error("Unable to fetch data from Glances")
@@ -122,7 +77,7 @@ class GlancesData:
         """Set up the Glances client."""
         try:
             self.api = get_api(self.hass, self.config_entry.data)
-            await self.api.get_data()
+            await self.api.get_data("all")
             self.available = True
             _LOGGER.debug("Successfully connected to Glances")
 
@@ -136,7 +91,9 @@ class GlancesData:
             self.config_entry.add_update_listener(self.async_options_updated)
         )
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
         return True
 
@@ -162,7 +119,7 @@ class GlancesData:
         )
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
         hass.data[DOMAIN][entry.entry_id].set_scan_interval(
             entry.options[CONF_SCAN_INTERVAL]
@@ -172,7 +129,7 @@ class GlancesData:
 def get_api(hass, entry):
     """Return the api from glances_api."""
     params = entry.copy()
-    params.pop(CONF_NAME)
-    verify_ssl = params.pop(CONF_VERIFY_SSL)
-    session = async_get_clientsession(hass, verify_ssl)
-    return Glances(hass.loop, session, **params)
+    params.pop(CONF_NAME, None)
+    verify_ssl = params.pop(CONF_VERIFY_SSL, True)
+    httpx_client = get_async_client(hass, verify_ssl=verify_ssl)
+    return Glances(httpx_client=httpx_client, **params)

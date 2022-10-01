@@ -6,7 +6,6 @@ from hole.exceptions import HoleError
 
 from homeassistant.components import pi_hole, switch
 from homeassistant.components.pi_hole.const import (
-    CONF_LOCATION,
     CONF_STATISTICS_ONLY,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -19,6 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_API_KEY,
     CONF_HOST,
+    CONF_LOCATION,
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
@@ -47,52 +47,45 @@ async def test_setup_minimal_config(hass):
 
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("sensor.pi_hole_ads_blocked_today").name
-        == "Pi-Hole Ads Blocked Today"
-    )
-    assert (
-        hass.states.get("sensor.pi_hole_ads_percentage_blocked_today").name
-        == "Pi-Hole Ads Percentage Blocked Today"
-    )
-    assert (
-        hass.states.get("sensor.pi_hole_dns_queries_cached").name
-        == "Pi-Hole DNS Queries Cached"
-    )
-    assert (
-        hass.states.get("sensor.pi_hole_dns_queries_forwarded").name
-        == "Pi-Hole DNS Queries Forwarded"
-    )
-    assert (
-        hass.states.get("sensor.pi_hole_dns_queries_today").name
-        == "Pi-Hole DNS Queries Today"
-    )
-    assert (
-        hass.states.get("sensor.pi_hole_dns_unique_clients").name
-        == "Pi-Hole DNS Unique Clients"
-    )
-    assert (
-        hass.states.get("sensor.pi_hole_dns_unique_domains").name
-        == "Pi-Hole DNS Unique Domains"
-    )
-    assert (
-        hass.states.get("sensor.pi_hole_domains_blocked").name
-        == "Pi-Hole Domains Blocked"
-    )
-    assert hass.states.get("sensor.pi_hole_seen_clients").name == "Pi-Hole Seen Clients"
+    state = hass.states.get("sensor.pi_hole_ads_blocked_today")
+    assert state.name == "Pi-Hole Ads Blocked Today"
+    assert state.state == "0"
 
-    assert hass.states.get("sensor.pi_hole_ads_blocked_today").state == "0"
-    assert hass.states.get("sensor.pi_hole_ads_percentage_blocked_today").state == "0"
-    assert hass.states.get("sensor.pi_hole_dns_queries_cached").state == "0"
-    assert hass.states.get("sensor.pi_hole_dns_queries_forwarded").state == "0"
-    assert hass.states.get("sensor.pi_hole_dns_queries_today").state == "0"
-    assert hass.states.get("sensor.pi_hole_dns_unique_clients").state == "0"
-    assert hass.states.get("sensor.pi_hole_dns_unique_domains").state == "0"
-    assert hass.states.get("sensor.pi_hole_domains_blocked").state == "0"
-    assert hass.states.get("sensor.pi_hole_seen_clients").state == "0"
+    state = hass.states.get("sensor.pi_hole_ads_percentage_blocked_today")
+    assert state.name == "Pi-Hole Ads Percentage Blocked Today"
+    assert state.state == "0"
 
-    assert hass.states.get("binary_sensor.pi_hole").name == "Pi-Hole"
-    assert hass.states.get("binary_sensor.pi_hole").state == "off"
+    state = hass.states.get("sensor.pi_hole_dns_queries_cached")
+    assert state.name == "Pi-Hole DNS Queries Cached"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_dns_queries_forwarded")
+    assert state.name == "Pi-Hole DNS Queries Forwarded"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_dns_queries_today")
+    assert state.name == "Pi-Hole DNS Queries Today"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_dns_unique_clients")
+    assert state.name == "Pi-Hole DNS Unique Clients"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_dns_unique_domains")
+    assert state.name == "Pi-Hole DNS Unique Domains"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_domains_blocked")
+    assert state.name == "Pi-Hole Domains Blocked"
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.pi_hole_seen_clients")
+    assert state.name == "Pi-Hole Seen Clients"
+    assert state.state == "0"
+
+    state = hass.states.get("binary_sensor.pi_hole")
+    assert state.name == "Pi-Hole"
+    assert state.state == "off"
 
 
 async def test_setup_name_config(hass):

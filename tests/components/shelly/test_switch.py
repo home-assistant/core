@@ -7,6 +7,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers.entity_component import async_update_entity
 
 RELAY_BLOCK_ID = 0
 
@@ -47,16 +48,12 @@ async def test_block_device_update(hass, coap_wrapper, monkeypatch):
     await hass.async_block_till_done()
 
     monkeypatch.setattr(coap_wrapper.device.blocks[RELAY_BLOCK_ID], "output", False)
-    await hass.helpers.entity_component.async_update_entity(
-        "switch.test_name_channel_1"
-    )
+    await async_update_entity(hass, "switch.test_name_channel_1")
     await hass.async_block_till_done()
     assert hass.states.get("switch.test_name_channel_1").state == STATE_OFF
 
     monkeypatch.setattr(coap_wrapper.device.blocks[RELAY_BLOCK_ID], "output", True)
-    await hass.helpers.entity_component.async_update_entity(
-        "switch.test_name_channel_1"
-    )
+    await async_update_entity(hass, "switch.test_name_channel_1")
     await hass.async_block_till_done()
     assert hass.states.get("switch.test_name_channel_1").state == STATE_ON
 

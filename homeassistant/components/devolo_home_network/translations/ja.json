@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "home_control": "devolo Home Control Central Unit\u306f\u3001\u3053\u306e\u7d71\u5408\u3067\u306f\u52d5\u4f5c\u3057\u307e\u305b\u3093\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "flow_title": "{product} ({name})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP\u30a2\u30c9\u30ec\u30b9"
+                },
+                "description": "\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3092\u958b\u59cb\u3057\u307e\u3059\u304b\uff1f"
+            },
+            "zeroconf_confirm": {
+                "description": "\u30db\u30b9\u30c8\u540d\u304c `{host_name}` \u306e devolo\u793e\u306e\u30db\u30fc\u30e0\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30c7\u30d0\u30a4\u30b9\u3092Home Assistant\u306b\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f",
+                "title": "devolo\u793e\u306e\u30db\u30fc\u30e0\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u6a5f\u5668\u3092\u767a\u898b"
+            }
+        }
+    }
+}

@@ -1,15 +1,13 @@
 """The waze_travel_time component."""
-import logging
-
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get,
 )
 
-PLATFORMS = ["sensor"]
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -21,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for entity in async_entries_for_config_entry(ent_reg, entry.entry_id):
             ent_reg.async_update_entity(entity.entity_id, new_unique_id=entry.entry_id)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

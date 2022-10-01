@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "zone": "Strefa"
+                },
+                "description": "Wybierz lokalizacj\u0119, dla kt\u00f3rej chcesz u\u017cywa\u0107 pogodynki"
+            }
+        }
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "no_selection": "Prosz\u0119 wybra\u0107 przynajmniej jedno miasto lub powiat",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "_a_to_d": "Miasto/powiat (A-D)",
+                    "_e_to_h": "Miasto/powiat (E-H)",
+                    "_i_to_l": "Miasto/powiat (I-L)",
+                    "_m_to_q": "Miasto/powiat (M-Q)",
+                    "_r_to_u": "Miasto/powiat (R-U)",
+                    "_v_to_z": "Miasto/powiat (V-Z)",
+                    "corona_filter": "Usu\u0144 ostrze\u017cenia o koronawirusie",
+                    "slots": "Maksymalna liczba ostrze\u017ce\u0144 na miasto/powiat"
+                },
+                "title": "Wybierz miasto/powiat"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "no_selection": "Prosz\u0119 wybra\u0107 przynajmniej jedno miasto lub powiat",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_a_to_d": "Miasto/powiat (A-D)",
+                    "_e_to_h": "Miasto/powiat (E-H)",
+                    "_i_to_l": "Miasto/powiat (I-L)",
+                    "_m_to_q": "Miasto/powiat (M-Q)",
+                    "_r_to_u": "Miasto/powiat (R-U)",
+                    "_v_to_z": "Miasto/powiat (V-Z)",
+                    "corona_filter": "Usu\u0144 ostrze\u017cenia o koronawirusie",
+                    "slots": "Maksymalna liczba ostrze\u017ce\u0144 na miasto/powiat"
+                },
+                "title": "Opcje"
+            }
+        }
+    }
+}

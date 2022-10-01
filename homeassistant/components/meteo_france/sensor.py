@@ -1,4 +1,6 @@
 """Support for Meteo-France raining forecast sensor."""
+from __future__ import annotations
+
 from meteofrance_api.helpers import (
     get_warning_text_status_from_indice_color,
     readeable_phenomenoms_dict,
@@ -8,6 +10,9 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -33,7 +38,7 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Meteo-France sensor platform."""
     coordinator_forecast = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
@@ -92,15 +97,20 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
-            "name": self.coordinator.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "entry_type": "service",
-        }
+        assert (
+            self.platform
+            and self.platform.config_entry
+            and self.platform.config_entry.unique_id
+        )
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            name=self.coordinator.name,
+        )
 
     @property
     def native_value(self):
@@ -140,11 +150,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
             (cadran for cadran in self.coordinator.data.forecast if cadran["rain"] > 1),
             None,
         )
-        return (
-            dt_util.utc_from_timestamp(next_rain["dt"]).isoformat()
-            if next_rain
-            else None
-        )
+        return dt_util.utc_from_timestamp(next_rain["dt"]) if next_rain else None
 
     @property
     def extra_state_attributes(self):
@@ -192,7 +198,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
 
 def _find_first_probability_forecast_not_null(
     probability_forecast: list, path: list
-) -> int:
+) -> int | None:
     """Search the first not None value in the first forecast elements."""
     for forecast in probability_forecast[0:3]:
         if forecast[path[1]][path[2]] is not None:

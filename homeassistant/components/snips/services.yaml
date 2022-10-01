@@ -28,7 +28,7 @@ say:
       name: Custom data
       description: custom data that will be included with all messages in this session
       example: user=UserName
-      default: ''
+      default: ""
       selector:
         text:
     site_id:
@@ -59,7 +59,7 @@ say_action:
       name: Custom data
       description: custom data that will be included with all messages in this session
       example: user=UserName
-      default: ''
+      default: ""
       selector:
         text:
     intent_filter:

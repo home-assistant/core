@@ -1,0 +1,478 @@
+{
+  "nodeId": 3,
+  "index": 0,
+  "installerIcon": 6656,
+  "userIcon": 6656,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": true,
+  "manufacturerId": 881,
+  "productId": 141,
+  "productType": 3,
+  "firmwareVersion": "3.1",
+  "zwavePlusVersion": 1,
+  "deviceConfig": {
+    "filename": "/opt/node_modules/@zwave-js/config/config/devices/0x0371/zw141.json",
+    "manufacturer": "Aeotec Ltd.",
+    "manufacturerId": 881,
+    "label": "ZW141",
+    "description": "Nano Shutter V.3",
+    "devices": [
+      {
+        "productType": 3,
+        "productId": 141
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "inclusion": "3.5.2 Classic inclusion Learn Mode\n1. Set your Z-Wave Controller into its 'Add Device' mode in order to add the product into your Z-Wave system. Refer to the Controller's manual if you are unsure of how to perform this step.\n2. Make sure the product is powered. If not, plug it into a wall socket and power on; its LED will be breathing blue light all the time.\n3. Click Action Button once, it will quickly flash blue light for 30 seconds until it is added into the network. It will become constantly bright yellow light after being assigned a NodeID.\n4. If your Z-Wave Controller supports S2 encryption, enter the first 5 digits of DSK into your Controller's interface if/when requested. The DSK is printed on its housing.\n5. If Adding fails, it will bright red light for 2s and then become breathing blue light; repeat steps 1 to 4. Contact us for further support if needed.\n6. If Adding succeeds, it will bright blue light for 2s and then turn to Load Indicator Mode. Now, this product is a part of your Z-Wave home control system. You can configure it and its automations via your Z-Wave system; please refer to your software's user guide for precise instructions",
+      "exclusion": "3.6 How to Remove the device from Z-Wave network\n1. Set your Z-Wave Controller into its 'Remove Device' mode in order to remove the product from your Z-Wave system.Refer to the Controller's manual if you are unsure of how to perform this step.\n2. Click Action Button/S1/S2(external switch need to be identified first) 6 times will enter exclusion mode.\n3. If Removing fails, it will bright red light for 2s then turn back to Regular Light Mode, repeat steps 1-2. Contact us for further support if needed.\n4. If Removing succeeds, it will become breathing blue light. Now, it is removed from Z-Wave network successfully",
+      "reset": "3.7 How to Factory Reset\nManually, press and hold the Action Button for at least 20s and then release. The LED indicator will become breathing blue light, which indicates the reset operation is successful. Otherwise, please try again. Contact us for further support if needed.\nNote:\n1. This procedure should only be used when the primary controller is missing or inoperable.\n2. Factory Reset will:\na) Remove the product from Z-Wave network;\nb) Delete the Association setting;",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=product_documents/3693/Nano%20Shutter%20-%20Product%20Manual.pdf"
+    },
+    "isEmbedded": true
+  },
+  "label": "ZW141",
+  "interviewAttempts": 0,
+  "endpoints": [
+    {
+      "nodeId": 3,
+      "index": 0,
+      "installerIcon": 6656,
+      "userIcon": 6656,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 7,
+          "label": "Motor Control Class C"
+        },
+        "mandatorySupportedCCs": [32, 38, 37, 114, 134],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 38,
+          "name": "Multilevel Switch",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 43,
+          "name": "Scene Activation",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 44,
+          "name": "Scene Actuator Configuration",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 91,
+          "name": "Central Scene",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "duration",
+      "propertyName": "duration",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "duration",
+        "readable": true,
+        "writeable": true,
+        "label": "Transition duration"
+      },
+      "value": {
+        "value": 0,
+        "unit": "seconds"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "On",
+      "propertyName": "On",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (On)",
+        "ccSpecific": {
+          "switchType": 1
+        }
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "Off",
+      "propertyName": "Off",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Perform a level change (Off)",
+        "ccSpecific": {
+          "switchType": 1
+        }
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 43,
+      "commandClassName": "Scene Activation",
+      "property": "sceneId",
+      "propertyName": "sceneId",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Scene ID",
+        "valueChangeOptions": ["transitionDuration"],
+        "min": 1,
+        "max": 255
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 43,
+      "commandClassName": "Scene Activation",
+      "property": "dimmingDuration",
+      "propertyName": "dimmingDuration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true,
+        "label": "Dimming duration"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "slowRefresh",
+      "propertyName": "slowRefresh",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "description": "When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms.",
+        "label": "Send held down notifications at a slow rate"
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "001",
+      "propertyName": "scene",
+      "propertyKeyName": "001",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 001",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "002",
+      "propertyName": "scene",
+      "propertyKeyName": "002",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Scene 002",
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown",
+          "3": "KeyPressed2x"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 881
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 141
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "6.4"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["3.1"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 17,
+      "label": "Multilevel Switch"
+    },
+    "specific": {
+      "key": 7,
+      "label": "Motor Control Class C"
+    },
+    "mandatorySupportedCCs": [32, 38, 37, 114, 134],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0371:0x0003:0x008d:3.1",
+  "isControllerNode": false
+}

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "no_serial_ports": "Ingen com-porter funnet. Trenger en gyldig RS485-enhet for \u00e5 kommunisere."
+        },
+        "error": {
+            "cannot_connect": "Kan ikke koble til, sjekk seriell port, adresse, elektrisk tilkobling og at omformeren er p\u00e5 (i dagslys)",
+            "cannot_open_serial_port": "Kan ikke \u00e5pne serieporten, sjekk og pr\u00f8v igjen",
+            "invalid_serial_port": "Seriell port er ikke en gyldig enhet eller kunne ikke \u00e5pnes"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Inverter adresse",
+                    "port": "RS485- eller USB-RS485-adapterport"
+                },
+                "description": "Omformeren m\u00e5 kobles til via en RS485-adapter, velg seriell port og omformerens adresse som konfigurert p\u00e5 LCD-panelet"
+            }
+        }
+    }
+}

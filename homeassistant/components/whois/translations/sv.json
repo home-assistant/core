@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "unexpected_response": "Ov\u00e4ntat svar fr\u00e5n whois server",
+            "unknown_date_format": "Ok\u00e4nt datumformat i whois-serverns svar",
+            "unknown_tld": "Den givna toppdom\u00e4nen \u00e4r ok\u00e4nd eller inte tillg\u00e4nglig f\u00f6r denna integration",
+            "whois_command_failed": "Whois-kommandot misslyckades: kunde inte h\u00e4mta whois-information"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "Dom\u00e4nnamn"
+                }
+            }
+        }
+    }
+}

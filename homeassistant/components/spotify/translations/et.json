@@ -19,6 +19,12 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "Spotify seadistamine YAML-i abil on eemaldatud.\n\nHome Assistant ei kasuta teie olemasolevat YAML-i konfiguratsiooni.\n\nEemaldage FAILIST CONFIGURATION.yaml YAML-konfiguratsioon ja taask\u00e4ivitage selle probleemi lahendamiseks Home Assistant.",
+            "title": "Spotify YAML konfiguratsioon on eemaldatud"
+        }
+    },
     "system_health": {
         "info": {
             "api_endpoint_reachable": "Spotify API l\u00f5pp-punkt on k\u00e4ttesaadav"

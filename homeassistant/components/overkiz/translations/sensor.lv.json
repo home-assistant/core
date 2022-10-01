@@ -1,0 +1,20 @@
+{
+    "state": {
+        "overkiz__priority_lock_originator": {
+            "external_gateway": "\u0100r\u0113j\u0101 v\u0101rteja",
+            "local_user": "Viet\u0113jais lietot\u0101js",
+            "lsc": "LSC",
+            "myself": "Es pats",
+            "rain": "Lietus",
+            "saac": "SAAC",
+            "security": "Dro\u0161\u012bba",
+            "sfc": "SFC",
+            "temperature": "Temperat\u016bra",
+            "ups": "UPS"
+        },
+        "overkiz__sensor_room": {
+            "clean": "T\u012brs",
+            "dirty": "Net\u012brs"
+        }
+    }
+}

@@ -14,7 +14,8 @@
             "invalid_serial": "Porta seriale non valida",
             "invalid_subscribe_topic": "Argomento di sottoscrizione non valido",
             "invalid_version": "Versione di MySensors non valida",
-            "not_a_number": "Per favore inserisci un numero",
+            "mqtt_required": "L'integrazione MQTT non \u00e8 configurata",
+            "not_a_number": "Digita un numero",
             "port_out_of_range": "Il numero di porta deve essere almeno 1 e al massimo 65535",
             "same_topic": "Gli argomenti di sottoscrizione e pubblicazione sono gli stessi",
             "unknown": "Errore imprevisto"
@@ -34,7 +35,7 @@
             "invalid_subscribe_topic": "Argomento di sottoscrizione non valido",
             "invalid_version": "Versione di MySensors non valida",
             "mqtt_required": "L'integrazione MQTT non \u00e8 configurata",
-            "not_a_number": "Per favore inserisci un numero",
+            "not_a_number": "Digita un numero",
             "port_out_of_range": "Il numero di porta deve essere almeno 1 e al massimo 65535",
             "same_topic": "Gli argomenti di sottoscrizione e pubblicazione sono gli stessi",
             "unknown": "Errore imprevisto"
@@ -42,8 +43,8 @@
         "step": {
             "gw_mqtt": {
                 "data": {
-                    "persistence_file": "file di persistenza (lasciare vuoto per generare automaticamente)",
-                    "retain": "mqtt conserva",
+                    "persistence_file": "file di persistenza (lascia vuoto per generare automaticamente)",
+                    "retain": "Persistenza mqtt",
                     "topic_in_prefix": "prefisso per argomenti di input (topic_in_prefix)",
                     "topic_out_prefix": "prefisso per argomenti di output (topic_out_prefix)",
                     "version": "Versione MySensors"
@@ -54,7 +55,7 @@
                 "data": {
                     "baud_rate": "velocit\u00e0 di trasmissione",
                     "device": "Porta seriale",
-                    "persistence_file": "file di persistenza (lasciare vuoto per generare automaticamente)",
+                    "persistence_file": "file di persistenza (lascia vuoto per generare automaticamente)",
                     "version": "Versione MySensors"
                 },
                 "description": "Configurazione del gateway seriale"
@@ -68,6 +69,14 @@
                 },
                 "description": "Configurazione del gateway Ethernet"
             },
+            "select_gateway_type": {
+                "description": "Seleziona quale gateway configurare.",
+                "menu_options": {
+                    "gw_mqtt": "Configura un gateway MQTT",
+                    "gw_serial": "Configura un gateway seriale",
+                    "gw_tcp": "Configura un gateway TCP"
+                }
+            },
             "user": {
                 "data": {
                     "gateway_type": "Tipo di gateway"
@@ -75,6 +84,5 @@
                 "description": "Scegli il metodo di connessione al gateway"
             }
         }
-    },
-    "title": "MySensors"
+    }
 }

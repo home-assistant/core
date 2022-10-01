@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/xs1",
   "requirements": ["xs1-api-client==3.0.0"],
   "codeowners": [],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["xs1_api_client"]
 }

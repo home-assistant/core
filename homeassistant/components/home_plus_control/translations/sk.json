@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Konfigur\u00e1cia u\u017e prebieha"
+        },
+        "create_entry": {
+            "default": "\u00daspe\u0161ne overen\u00e9"
+        }
+    }
+}

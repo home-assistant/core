@@ -11,7 +11,7 @@
         },
         "step": {
             "auth": {
-                "description": "A TelldusLive-fi\u00f3k \u00f6sszekapcsol\u00e1sa:\n 1. Kattintson az al\u00e1bbi linkre\n 2. Jelentkezzen be a Telldus Live szolg\u00e1ltat\u00e1sba\n 3. Enged\u00e9lyezzeie kell **{app_name}** (kattintson a ** Yes ** gombra).\n 4. J\u00f6jj\u00f6n vissza ide, \u00e9s kattintson a ** K\u00fcld\u00e9s ** gombra. \n\n [Link TelldusLive-fi\u00f3k]({auth_url})",
+                "description": "A TelldusLive-fi\u00f3k \u00f6sszekapcsol\u00e1sa:\n 1. Kattintson az al\u00e1bbi linkre\n 2. Jelentkezzen be a Telldus Live szolg\u00e1ltat\u00e1sba\n 3. Enged\u00e9lyezzeie kell **{app_name}** (kattintson a **Yes** gombra).\n 4. J\u00f6jj\u00f6n vissza ide, \u00e9s kattintson a **Mehet** gombra. \n\n [Link TelldusLive-fi\u00f3k]({auth_url})",
                 "title": "Hiteles\u00edtsen a TelldusLive-on"
             },
             "user": {

@@ -14,6 +14,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
 )
+from homeassistant.const import Platform
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -35,9 +36,16 @@ ECOBEE_MODEL_TO_NAME = {
     "nikeEms": "ecobee3 lite EMS",
     "apolloSmart": "ecobee4 Smart",
     "vulcanSmart": "ecobee4 Smart",
+    "aresSmart": "ecobee Smart Premium",
 }
 
-PLATFORMS = ["binary_sensor", "climate", "humidifier", "sensor", "weather"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.HUMIDIFIER,
+    Platform.SENSOR,
+    Platform.WEATHER,
+]
 
 MANUFACTURER = "ecobee"
 

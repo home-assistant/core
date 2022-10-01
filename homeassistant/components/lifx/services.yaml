@@ -1,3 +1,29 @@
+set_hev_cycle_state:
+  name: Set HEV cycle state
+  description: Control the HEV LEDs on a LIFX Clean bulb.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    power:
+      name: enable
+      description: Start or stop a Clean cycle.
+      required: true
+      example: true
+      selector:
+        boolean:
+    duration:
+      name: Duration
+      description: How long the HEV LEDs will remain on. Uses the configured default duration if not specified.
+      required: false
+      default: 7200
+      example: 3600
+      selector:
+        number:
+          min: 0
+          max: 86400
+          unit_of_measurement: seconds
 set_state:
   name: Set State
   description: Set a color/brightness and possibly turn the light on/off.
@@ -47,11 +73,11 @@ effect_pulse:
       selector:
         select:
           options:
-            - 'blink'
-            - 'breathe'
-            - 'ping'
-            - 'strobe'
-            - 'solid'
+            - "blink"
+            - "breathe"
+            - "ping"
+            - "strobe"
+            - "solid"
     brightness:
       name: Brightness
       description: Number indicating brightness of the temporary color.
@@ -129,7 +155,7 @@ effect_colorloop:
         number:
           min: 0
           max: 360
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     spread:
       name: Spread
       description: Maximum hue difference between participating lights, in degrees on a color wheel.
@@ -138,10 +164,44 @@ effect_colorloop:
         number:
           min: 0
           max: 360
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     power_on:
       name: Power on
       description: Powered off lights are temporarily turned on during the effect.
+      default: true
+      selector:
+        boolean:
+effect_move:
+  name: Move effect
+  description: Start the firmware-based Move effect on a LIFX Z, Lightstrip or Beam.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How long in seconds for the effect to move across the length of the light.
+      default: 3.0
+      selector:
+        number:
+          min: 0.1
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
+    direction:
+      name: Direction
+      description: Direction the effect will move across the device.
+      default: right
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - right
+            - left
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
       default: true
       selector:
         boolean:

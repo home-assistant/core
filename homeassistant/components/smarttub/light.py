@@ -1,5 +1,5 @@
 """Platform for light integration."""
-import logging
+from typing import Any
 
 from smarttub import SpaLight
 
@@ -7,10 +7,13 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     EFFECT_COLORLOOP,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_LIGHTS,
@@ -22,10 +25,10 @@ from .const import (
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up entities for any lights in the tub."""
 
     controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
@@ -41,6 +44,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class SmartTubLight(SmartTubEntity, LightEntity):
     """A light on a spa."""
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(self, coordinator, light):
         """Initialize the entity."""
@@ -86,11 +93,6 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         return self.light.mode != SpaLight.LightMode.OFF
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
-
-    @property
     def effect(self):
         """Return the current effect."""
         mode = self.light.mode.name.lower()
@@ -125,7 +127,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
 
         return SpaLight.LightMode[effect.upper()]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
 
         mode = self._effect_to_light_mode(kwargs.get(ATTR_EFFECT, DEFAULT_LIGHT_EFFECT))
@@ -136,7 +138,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         await self.light.set_mode(mode, intensity)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.light.set_mode(SpaLight.LightMode.OFF, 0)
         await self.coordinator.async_request_refresh()

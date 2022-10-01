@@ -19,13 +19,15 @@ Exchange the authorization code retrieved from the login flow for tokens.
 
 Return value will be the access and refresh tokens. The access token will have
 a limited expiration. New access tokens can be requested using the refresh
-token.
+token. The value ha_auth_provider will contain the auth provider type that was
+used to authorize the refresh token.
 
 {
     "access_token": "ABCDEFGH",
     "expires_in": 1800,
     "refresh_token": "IJKLMNOPQRST",
-    "token_type": "Bearer"
+    "token_type": "Bearer",
+    "ha_auth_provider": "homeassistant"
 }
 
 ## Grant type refresh_token
@@ -113,14 +115,23 @@ Result will be a long-lived access token:
     "result": "ABCDEFGH"
 }
 
+
+# POST /auth/external/callback
+
+This is an endpoint for OAuth2 Authorization callbacks used by integrations
+that link accounts with other cloud providers using LocalOAuth2Implementation
+as part of a config flow.
 """
 from __future__ import annotations
 
-from datetime import timedelta
+from collections.abc import Callable
+from datetime import datetime, timedelta
 from http import HTTPStatus
+from typing import Any, Optional, cast
 import uuid
 
 from aiohttp import web
+from multidict import MultiDictProxy
 import voluptuous as vol
 
 from homeassistant.auth import InvalidAuthError
@@ -130,94 +141,51 @@ from homeassistant.auth.models import (
     User,
 )
 from homeassistant.components import websocket_api
-from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.http.auth import (
+    async_sign_path,
+    async_user_not_allowed_do_auth,
+)
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
 from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
-WS_TYPE_CURRENT_USER = "auth/current_user"
-SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_CURRENT_USER}
-)
 
-WS_TYPE_LONG_LIVED_ACCESS_TOKEN = "auth/long_lived_access_token"
-SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
-        vol.Required("lifespan"): int,  # days
-        vol.Required("client_name"): str,
-        vol.Optional("client_icon"): str,
-    }
-)
-
-WS_TYPE_REFRESH_TOKENS = "auth/refresh_tokens"
-SCHEMA_WS_REFRESH_TOKENS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_REFRESH_TOKENS}
-)
-
-WS_TYPE_DELETE_REFRESH_TOKEN = "auth/delete_refresh_token"
-SCHEMA_WS_DELETE_REFRESH_TOKEN = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_DELETE_REFRESH_TOKEN,
-        vol.Required("refresh_token_id"): str,
-    }
-)
-
-WS_TYPE_SIGN_PATH = "auth/sign_path"
-SCHEMA_WS_SIGN_PATH = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SIGN_PATH,
-        vol.Required("path"): str,
-        vol.Optional("expires", default=30): int,
-    }
-)
-
-RESULT_TYPE_CREDENTIALS = "credentials"
-RESULT_TYPE_USER = "user"
+StoreResultType = Callable[[str, Credentials], str]
+RetrieveResultType = Callable[[str, str], Optional[Credentials]]
 
 
 @bind_hass
 def create_auth_code(
-    hass, client_id: str, credential_or_user: Credentials | User
+    hass: HomeAssistant, client_id: str, credential: Credentials
 ) -> str:
     """Create an authorization code to fetch tokens."""
-    return hass.data[DOMAIN](client_id, credential_or_user)
+    return cast(StoreResultType, hass.data[DOMAIN])(client_id, credential)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Component to allow users to login."""
     store_result, retrieve_result = _create_auth_code_store()
 
     hass.data[DOMAIN] = store_result
 
     hass.http.register_view(TokenView(retrieve_result))
+    hass.http.register_view(RevokeTokenView())
     hass.http.register_view(LinkUserView(retrieve_result))
+    hass.http.register_view(OAuth2AuthorizeCallbackView())
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_CURRENT_USER, websocket_current_user, SCHEMA_WS_CURRENT_USER
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
-        websocket_create_long_lived_access_token,
-        SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN,
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_REFRESH_TOKENS, websocket_refresh_tokens, SCHEMA_WS_REFRESH_TOKENS
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_DELETE_REFRESH_TOKEN,
-        websocket_delete_refresh_token,
-        SCHEMA_WS_DELETE_REFRESH_TOKEN,
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SIGN_PATH, websocket_sign_path, SCHEMA_WS_SIGN_PATH
-    )
+    websocket_api.async_register_command(hass, websocket_current_user)
+    websocket_api.async_register_command(hass, websocket_create_long_lived_access_token)
+    websocket_api.async_register_command(hass, websocket_refresh_tokens)
+    websocket_api.async_register_command(hass, websocket_delete_refresh_token)
+    websocket_api.async_register_command(hass, websocket_sign_path)
 
     await login_flow.async_setup(hass, store_result)
     await mfa_setup_flow.async_setup(hass)
@@ -225,23 +193,52 @@ async def async_setup(hass, config):
     return True
 
 
+class RevokeTokenView(HomeAssistantView):
+    """View to revoke tokens."""
+
+    url = "/auth/revoke"
+    name = "api:auth:revocation"
+    requires_auth = False
+    cors_allowed = True
+
+    async def post(self, request: web.Request) -> web.Response:
+        """Revoke a token."""
+        hass: HomeAssistant = request.app["hass"]
+        data = cast(MultiDictProxy[str], await request.post())
+
+        # OAuth 2.0 Token Revocation [RFC7009]
+        # 2.2 The authorization server responds with HTTP status code 200
+        # if the token has been revoked successfully or if the client
+        # submitted an invalid token.
+        if (token := data.get("token")) is None:
+            return web.Response(status=HTTPStatus.OK)
+
+        refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
+
+        if refresh_token is None:
+            return web.Response(status=HTTPStatus.OK)
+
+        await hass.auth.async_remove_refresh_token(refresh_token)
+        return web.Response(status=HTTPStatus.OK)
+
+
 class TokenView(HomeAssistantView):
-    """View to issue or revoke tokens."""
+    """View to issue tokens."""
 
     url = "/auth/token"
     name = "api:auth:token"
     requires_auth = False
     cors_allowed = True
 
-    def __init__(self, retrieve_auth):
+    def __init__(self, retrieve_auth: RetrieveResultType) -> None:
         """Initialize the token view."""
         self._retrieve_auth = retrieve_auth
 
     @log_invalid_auth
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Grant a token."""
-        hass = request.app["hass"]
-        data = await request.post()
+        hass: HomeAssistant = request.app["hass"]
+        data = cast(MultiDictProxy[str], await request.post())
 
         grant_type = data.get("grant_type")
 
@@ -250,7 +247,9 @@ class TokenView(HomeAssistantView):
         # The revocation request includes an additional parameter,
         # action=revoke.
         if data.get("action") == "revoke":
-            return await self._async_handle_revoke_token(hass, data)
+            # action=revoke is deprecated. Use /auth/revoke instead.
+            # Keep here for backwards compat
+            return await RevokeTokenView.post(self, request)  # type: ignore[arg-type]
 
         if grant_type == "authorization_code":
             return await self._async_handle_auth_code(hass, data, request.remote)
@@ -262,28 +261,12 @@ class TokenView(HomeAssistantView):
             {"error": "unsupported_grant_type"}, status_code=HTTPStatus.BAD_REQUEST
         )
 
-    async def _async_handle_revoke_token(self, hass, data):
-        """Handle revoke token request."""
-        # pylint: disable=no-self-use
-
-        # OAuth 2.0 Token Revocation [RFC7009]
-        # 2.2 The authorization server responds with HTTP status code 200
-        # if the token has been revoked successfully or if the client
-        # submitted an invalid token.
-        token = data.get("token")
-
-        if token is None:
-            return web.Response(status=HTTPStatus.OK)
-
-        refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
-
-        if refresh_token is None:
-            return web.Response(status=HTTPStatus.OK)
-
-        await hass.auth.async_remove_refresh_token(refresh_token)
-        return web.Response(status=HTTPStatus.OK)
-
-    async def _async_handle_auth_code(self, hass, data, remote_addr):
+    async def _async_handle_auth_code(
+        self,
+        hass: HomeAssistant,
+        data: MultiDictProxy[str],
+        remote_addr: str | None,
+    ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
         if client_id is None or not indieauth.verify_client_id(client_id):
@@ -292,15 +275,13 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        code = data.get("code")
-
-        if code is None:
+        if (code := data.get("code")) is None:
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        credential = self._retrieve_auth(client_id, RESULT_TYPE_CREDENTIALS, code)
+        credential = self._retrieve_auth(client_id, code)
 
         if credential is None or not isinstance(credential, Credentials):
             return self.json(
@@ -310,9 +291,12 @@ class TokenView(HomeAssistantView):
 
         user = await hass.auth.async_get_or_create_user(credential)
 
-        if not user.is_active:
+        if user_access_error := async_user_not_allowed_do_auth(hass, user):
             return self.json(
-                {"error": "access_denied", "error_description": "User is not active"},
+                {
+                    "error": "access_denied",
+                    "error_description": user_access_error,
+                },
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
@@ -337,10 +321,20 @@ class TokenView(HomeAssistantView):
                 "expires_in": int(
                     refresh_token.access_token_expiration.total_seconds()
                 ),
-            }
+                "ha_auth_provider": credential.auth_provider_type,
+            },
+            headers={
+                "Cache-Control": "no-store",
+                "Pragma": "no-cache",
+            },
         )
 
-    async def _async_handle_refresh_token(self, hass, data, remote_addr):
+    async def _async_handle_refresh_token(
+        self,
+        hass: HomeAssistant,
+        data: MultiDictProxy[str],
+        remote_addr: str | None,
+    ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
         if client_id is not None and not indieauth.verify_client_id(client_id):
@@ -349,9 +343,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        token = data.get("refresh_token")
-
-        if token is None:
+        if (token := data.get("refresh_token")) is None:
             return self.json(
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
             )
@@ -366,6 +358,17 @@ class TokenView(HomeAssistantView):
         if refresh_token.client_id != client_id:
             return self.json(
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
+            )
+
+        if user_access_error := async_user_not_allowed_do_auth(
+            hass, refresh_token.user
+        ):
+            return self.json(
+                {
+                    "error": "access_denied",
+                    "error_description": user_access_error,
+                },
+                status_code=HTTPStatus.FORBIDDEN,
             )
 
         try:
@@ -385,7 +388,11 @@ class TokenView(HomeAssistantView):
                 "expires_in": int(
                     refresh_token.access_token_expiration.total_seconds()
                 ),
-            }
+            },
+            headers={
+                "Cache-Control": "no-store",
+                "Pragma": "no-cache",
+            },
         )
 
 
@@ -395,59 +402,60 @@ class LinkUserView(HomeAssistantView):
     url = "/auth/link_user"
     name = "api:auth:link_user"
 
-    def __init__(self, retrieve_credentials):
+    def __init__(self, retrieve_credentials: RetrieveResultType) -> None:
         """Initialize the link user view."""
         self._retrieve_credentials = retrieve_credentials
 
     @RequestDataValidator(vol.Schema({"code": str, "client_id": str}))
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Link a user."""
-        hass = request.app["hass"]
-        user = request["hass_user"]
+        hass: HomeAssistant = request.app["hass"]
+        user: User = request["hass_user"]
 
-        credentials = self._retrieve_credentials(
-            data["client_id"], RESULT_TYPE_CREDENTIALS, data["code"]
-        )
+        credentials = self._retrieve_credentials(data["client_id"], data["code"])
 
         if credentials is None:
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
-        await hass.auth.async_link_user(user, credentials)
+        linked_user = await hass.auth.async_get_user_by_credentials(credentials)
+        if linked_user != user and linked_user is not None:
+            return self.json_message(
+                "Credential already linked", status_code=HTTPStatus.BAD_REQUEST
+            )
+
+        # No-op if credential is already linked to the user it will be linked to
+        if linked_user != user:
+            await hass.auth.async_link_user(user, credentials)
         return self.json_message("User linked")
 
 
 @callback
-def _create_auth_code_store():
+def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     """Create an in memory store."""
-    temp_results = {}
+    temp_results: dict[tuple[str, str], tuple[datetime, Credentials]] = {}
 
     @callback
-    def store_result(client_id, result):
+    def store_result(client_id: str, result: Credentials) -> str:
         """Store flow result and return a code to retrieve it."""
-        if isinstance(result, User):
-            result_type = RESULT_TYPE_USER
-        elif isinstance(result, Credentials):
-            result_type = RESULT_TYPE_CREDENTIALS
-        else:
-            raise ValueError("result has to be either User or Credentials")
+        if not isinstance(result, Credentials):
+            raise ValueError("result has to be a Credentials instance")
 
         code = uuid.uuid4().hex
-        temp_results[(client_id, result_type, code)] = (
+        temp_results[(client_id, code)] = (
             dt_util.utcnow(),
-            result_type,
             result,
         )
         return code
 
     @callback
-    def retrieve_result(client_id, result_type, code):
+    def retrieve_result(client_id: str, code: str) -> Credentials | None:
         """Retrieve flow result."""
-        key = (client_id, result_type, code)
+        key = (client_id, code)
 
         if key not in temp_results:
             return None
 
-        created, _, result = temp_results.pop(key)
+        created, result = temp_results.pop(key)
 
         # OAuth 4.2.1
         # The authorization code MUST expire shortly after it is issued to
@@ -461,11 +469,12 @@ def _create_auth_code_store():
     return store_result, retrieve_result
 
 
+@websocket_api.websocket_command({vol.Required("type"): "auth/current_user"})
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_current_user(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
-):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Return the current user."""
     user = connection.user
     enabled_modules = await hass.auth.async_get_enabled_mfa(user)
@@ -498,11 +507,19 @@ async def websocket_current_user(
     )
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/long_lived_access_token",
+        vol.Required("lifespan"): int,  # days
+        vol.Required("client_name"): str,
+        vol.Optional("client_icon"): str,
+    }
+)
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_create_long_lived_access_token(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
-):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Create or a long-lived access token."""
     refresh_token = await hass.auth.async_create_refresh_token(
         connection.user,
@@ -515,64 +532,81 @@ async def websocket_create_long_lived_access_token(
     try:
         access_token = hass.auth.async_create_access_token(refresh_token)
     except InvalidAuthError as exc:
-        return websocket_api.error_message(
-            msg["id"], websocket_api.const.ERR_UNAUTHORIZED, str(exc)
-        )
+        connection.send_error(msg["id"], websocket_api.const.ERR_UNAUTHORIZED, str(exc))
+        return
 
-    connection.send_message(websocket_api.result_message(msg["id"], access_token))
+    connection.send_result(msg["id"], access_token)
 
 
+@websocket_api.websocket_command({vol.Required("type"): "auth/refresh_tokens"})
 @websocket_api.ws_require_user()
 @callback
 def websocket_refresh_tokens(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
-):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Return metadata of users refresh tokens."""
     current_id = connection.refresh_token_id
-    connection.send_message(
-        websocket_api.result_message(
-            msg["id"],
-            [
-                {
-                    "id": refresh.id,
-                    "client_id": refresh.client_id,
-                    "client_name": refresh.client_name,
-                    "client_icon": refresh.client_icon,
-                    "type": refresh.token_type,
-                    "created_at": refresh.created_at,
-                    "is_current": refresh.id == current_id,
-                    "last_used_at": refresh.last_used_at,
-                    "last_used_ip": refresh.last_used_ip,
-                }
-                for refresh in connection.user.refresh_tokens.values()
-            ],
+
+    tokens: list[dict[str, Any]] = []
+    for refresh in connection.user.refresh_tokens.values():
+        if refresh.credential:
+            auth_provider_type = refresh.credential.auth_provider_type
+        else:
+            auth_provider_type = None
+
+        tokens.append(
+            {
+                "id": refresh.id,
+                "client_id": refresh.client_id,
+                "client_name": refresh.client_name,
+                "client_icon": refresh.client_icon,
+                "type": refresh.token_type,
+                "created_at": refresh.created_at,
+                "is_current": refresh.id == current_id,
+                "last_used_at": refresh.last_used_at,
+                "last_used_ip": refresh.last_used_ip,
+                "auth_provider_type": auth_provider_type,
+            }
         )
-    )
+
+    connection.send_result(msg["id"], tokens)
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/delete_refresh_token",
+        vol.Required("refresh_token_id"): str,
+    }
+)
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_delete_refresh_token(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
-):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle a delete refresh token request."""
     refresh_token = connection.user.refresh_tokens.get(msg["refresh_token_id"])
 
     if refresh_token is None:
-        return websocket_api.error_message(
-            msg["id"], "invalid_token_id", "Received invalid token"
-        )
+        connection.send_error(msg["id"], "invalid_token_id", "Received invalid token")
+        return
 
     await hass.auth.async_remove_refresh_token(refresh_token)
 
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
+    connection.send_result(msg["id"], {})
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/sign_path",
+        vol.Required("path"): str,
+        vol.Optional("expires", default=30): int,
+    }
+)
 @websocket_api.ws_require_user()
 @callback
 def websocket_sign_path(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
-):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Handle a sign path request."""
     connection.send_message(
         websocket_api.result_message(
@@ -580,7 +614,6 @@ def websocket_sign_path(
             {
                 "path": async_sign_path(
                     hass,
-                    connection.refresh_token_id,
                     msg["path"],
                     timedelta(seconds=msg["expires"]),
                 )

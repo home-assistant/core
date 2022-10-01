@@ -1,9 +1,10 @@
 """Support for Pilight binary sensors."""
+from __future__ import annotations
+
 import datetime
 
 import voluptuous as vol
 
-from homeassistant.components import pilight
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_DISARM_AFTER_TRIGGER,
@@ -12,9 +13,14 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
+
+from .. import pilight
 
 CONF_VARIABLE = "variable"
 CONF_RESET_DELAY_SEC = "reset_delay_sec"
@@ -37,10 +43,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Pilight Binary Sensor."""
-    disarm = config.get(CONF_DISARM_AFTER_TRIGGER)
-    if disarm:
+    if config.get(CONF_DISARM_AFTER_TRIGGER):
         add_entities(
             [
                 PilightTriggerSensor(

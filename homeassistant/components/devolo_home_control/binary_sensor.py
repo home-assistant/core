@@ -5,29 +5,24 @@ from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
 
 DEVICE_CLASS_MAPPING = {
-    "Water alarm": DEVICE_CLASS_MOISTURE,
-    "Home Security": DEVICE_CLASS_MOTION,
-    "Smoke Alarm": DEVICE_CLASS_SMOKE,
-    "Heat Alarm": DEVICE_CLASS_HEAT,
-    "door": DEVICE_CLASS_DOOR,
-    "overload": DEVICE_CLASS_SAFETY,
+    "Water alarm": BinarySensorDeviceClass.MOISTURE,
+    "Home Security": BinarySensorDeviceClass.MOTION,
+    "Smoke Alarm": BinarySensorDeviceClass.SMOKE,
+    "Heat Alarm": BinarySensorDeviceClass.HEAT,
+    "door": BinarySensorDeviceClass.DOOR,
+    "overload": BinarySensorDeviceClass.SAFETY,
 }
 
 
@@ -61,7 +56,7 @@ async def async_setup_entry(
                                 key=index,
                             )
                         )
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
@@ -71,9 +66,9 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
         """Initialize a devolo binary sensor."""
-        self._binary_sensor_property = device_instance.binary_sensor_property.get(
+        self._binary_sensor_property = device_instance.binary_sensor_property[
             element_uid
-        )
+        ]
 
         super().__init__(
             homecontrol=homecontrol,
@@ -87,15 +82,21 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
         )
 
         if self._attr_device_class is None:
-            if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
-                self._attr_name += f" {device_instance.binary_sensor_property.get(element_uid).sub_type}"
+            if device_instance.binary_sensor_property[element_uid].sub_type != "":
+                self._attr_name += (
+                    f" {device_instance.binary_sensor_property[element_uid].sub_type}"
+                )
             else:
-                self._attr_name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
+                self._attr_name += f" {device_instance.binary_sensor_property[element_uid].sensor_type}"
 
         self._value = self._binary_sensor_property.state
 
+        if self._attr_device_class == BinarySensorDeviceClass.SAFETY:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
         if element_uid.startswith("devolo.WarningBinaryFI:"):
-            self._attr_device_class = DEVICE_CLASS_PROBLEM
+            self._attr_device_class = BinarySensorDeviceClass.PROBLEM
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
             self._attr_entity_registry_enabled_default = False
 
     @property
@@ -115,9 +116,9 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         key: int,
     ) -> None:
         """Initialize a devolo remote control."""
-        self._remote_control_property = device_instance.remote_control_property.get(
+        self._remote_control_property = device_instance.remote_control_property[
             element_uid
-        )
+        ]
 
         super().__init__(
             homecontrol=homecontrol,

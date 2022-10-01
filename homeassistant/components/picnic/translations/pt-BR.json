@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "different_account": "A conta deve ser a mesma usada para configurar a integra\u00e7\u00e3o",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "C\u00f3digo do pa\u00eds",
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            }
+        }
+    }
+}

@@ -1,15 +1,21 @@
 """SmartTub integration."""
-import logging
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .controller import SmartTubController
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
-PLATFORMS = ["binary_sensor", "climate", "light", "sensor", "switch"]
 
-
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a smarttub config entry."""
 
     controller = SmartTubController(hass)
@@ -21,12 +27,12 @@ async def async_setup_entry(hass, entry):
     if not await controller.async_setup_entry(entry):
         return False
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove a smarttub config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

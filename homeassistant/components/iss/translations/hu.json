@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "latitude_longitude_not_defined": "A f\u00f6ldrajzi sz\u00e9less\u00e9g \u00e9s hossz\u00fas\u00e1g nincs megadva Home Assistantban.",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "step": {
+            "user": {
+                "description": "Szeretn\u00e9 konfigur\u00e1lni a Nemzetk\u00f6zi \u0170r\u00e1llom\u00e1st (ISS)?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Megjelen\u00edt\u00e9s a t\u00e9rk\u00e9pen"
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,14 @@
 """Config flow for Cast."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import onboarding, zeroconf
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, CONF_UUID, DOMAIN
@@ -23,7 +30,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._wanted_uuid = set()
 
     @staticmethod
-    def async_get_options_flow(config_entry):
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> CastOptionsFlowHandler:
         """Get the options flow for this handler."""
         return CastOptionsFlowHandler(config_entry)
 
@@ -49,7 +59,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_config()
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -90,7 +102,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data = self._get_data()
 
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(title="Google Cast", data=data)
 
         return self.async_show_form(step_id="confirm")
@@ -106,10 +118,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class CastOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Google Cast options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Google Cast options flow."""
         self.config_entry = config_entry
-        self.updated_config = {}
+        self.updated_config: dict[str, Any] = {}
 
     async def async_step_init(self, user_input=None):
         """Manage the Google Cast options."""

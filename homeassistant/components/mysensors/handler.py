@@ -1,8 +1,12 @@
 """Handle MySensors messages."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from typing import Any
+
 from mysensors import Message
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
@@ -11,7 +15,9 @@ from .const import CHILD_CALLBACK, NODE_CALLBACK, DevId, GatewayId
 from .device import get_mysensors_devices
 from .helpers import discover_mysensors_platform, validate_set_msg
 
-HANDLERS = decorator.Registry()
+HANDLERS: decorator.Registry[
+    str, Callable[[HomeAssistant, GatewayId, Message], Coroutine[Any, Any, None]]
+] = decorator.Registry()
 
 
 @HANDLERS.register("set")
@@ -27,8 +33,7 @@ async def handle_internal(
 ) -> None:
     """Handle a mysensors internal message."""
     internal = msg.gateway.const.Internal(msg.sub_type)
-    handler = HANDLERS.get(internal.name)
-    if handler is None:
+    if (handler := HANDLERS.get(internal.name)) is None:
         return
     await handler(hass, gateway_id, msg)
 
@@ -67,7 +72,7 @@ async def handle_sketch_version(
 
 @callback
 def _handle_child_update(
-    hass: HomeAssistant, gateway_id: GatewayId, validated: dict[str, list[DevId]]
+    hass: HomeAssistant, gateway_id: GatewayId, validated: dict[Platform, list[DevId]]
 ) -> None:
     """Handle a child update."""
     signals: list[str] = []

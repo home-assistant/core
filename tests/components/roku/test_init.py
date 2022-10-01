@@ -1,41 +1,45 @@
 """Tests for the Roku integration."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from rokuecp import RokuConnectionError
 
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.components.roku import setup_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry
 
 
+@patch(
+    "homeassistant.components.roku.coordinator.Roku._request",
+    side_effect=RokuConnectionError,
+)
 async def test_config_entry_not_ready(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    mock_request: MagicMock, hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the Roku configuration entry not ready."""
-    entry = await setup_integration(hass, aioclient_mock, error=True)
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_unload_config_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test the Roku configuration entry unloading."""
-    with patch(
-        "homeassistant.components.roku.media_player.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.roku.remote.async_setup_entry",
-        return_value=True,
-    ):
-        entry = await setup_integration(hass, aioclient_mock)
-
-    assert hass.data[DOMAIN][entry.entry_id]
-    assert entry.state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_request.call_count == 1
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_load_unload_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roku: AsyncMock,
+) -> None:
+    """Test the Roku configuration entry loading/unloading."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.entry_id in hass.data[DOMAIN]
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.entry_id not in hass.data[DOMAIN]
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

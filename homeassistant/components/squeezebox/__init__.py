@@ -2,24 +2,24 @@
 
 import logging
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DISCOVERY_TASK, DOMAIN, PLAYER_DISCOVERY_UNSUB
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [MP_DOMAIN]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Logitech Squeezebox from a config entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
     hass.data[DOMAIN][entry.entry_id][PLAYER_DISCOVERY_UNSUB]()

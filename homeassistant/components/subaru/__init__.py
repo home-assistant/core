@@ -10,6 +10,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_US
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -21,6 +22,7 @@ from .const import (
     ENTRY_COORDINATOR,
     ENTRY_VEHICLES,
     FETCH_INTERVAL,
+    MANUFACTURER,
     PLATFORMS,
     UPDATE_INTERVAL,
     VEHICLE_API_GEN,
@@ -36,7 +38,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Subaru from a config entry."""
     config = entry.data
     websession = aiohttp_client.async_get_clientsession(hass)
@@ -88,7 +90,7 @@ async def async_setup_entry(hass, entry):
         ENTRY_VEHICLES: vehicle_info,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -125,8 +127,7 @@ async def refresh_subaru_data(config_entry, vehicle_info, controller):
         await controller.fetch(vin, force=True)
 
         # Update our local data that will go to entity states
-        received_data = await controller.get_data(vin)
-        if received_data:
+        if received_data := await controller.get_data(vin):
             data[vin] = received_data
 
     return data
@@ -155,3 +156,12 @@ def get_vehicle_info(controller, vin):
         VEHICLE_LAST_UPDATE: 0,
     }
     return info
+
+
+def get_device_info(vehicle_info):
+    """Return DeviceInfo object based on vehicle info."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, vehicle_info[VEHICLE_VIN])},
+        manufacturer=MANUFACTURER,
+        name=vehicle_info[VEHICLE_NAME],
+    )

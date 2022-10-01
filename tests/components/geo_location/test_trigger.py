@@ -4,7 +4,12 @@ import logging
 import pytest
 
 from homeassistant.components import automation, zone
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 
@@ -189,6 +194,41 @@ async def test_if_fires_on_zone_leave(hass, calls):
     assert len(calls) == 1
 
 
+async def test_if_fires_on_zone_leave_2(hass, calls):
+    """Test for firing on zone leave for unavailable entity."""
+    hass.states.async_set(
+        "geo_location.entity",
+        "hello",
+        {"latitude": 32.880586, "longitude": -117.237564, "source": "test_source"},
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "geo_location",
+                    "source": "test_source",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "geo_location.entity",
+        STATE_UNAVAILABLE,
+        {"source": "test_source"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+
 async def test_if_not_fires_for_leave_on_zone_enter(hass, calls):
     """Test for not firing on zone enter."""
     hass.states.async_set(
@@ -270,6 +310,64 @@ async def test_if_fires_on_zone_appear(hass, calls):
     assert calls[0].context.parent_id == context.id
     assert (
         calls[0].data["some"] == "geo_location - geo_location.entity -  - hello - test"
+    )
+
+
+async def test_if_fires_on_zone_appear_2(hass, calls):
+    """Test for firing if entity appears in zone."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "geo_location",
+                    "source": "test_source",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.%s }}"
+                        % "}} - {{ trigger.".join(
+                            (
+                                "platform",
+                                "entity_id",
+                                "from_state.state",
+                                "to_state.state",
+                                "zone.name",
+                            )
+                        )
+                    },
+                },
+            }
+        },
+    )
+
+    # Entity appears in zone without previously existing outside the zone.
+    context = Context()
+    hass.states.async_set(
+        "geo_location.entity",
+        "goodbye",
+        {"latitude": 32.881011, "longitude": -117.234758, "source": "test_source"},
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "geo_location.entity",
+        "hello",
+        {"latitude": 32.880586, "longitude": -117.237564, "source": "test_source"},
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].context.parent_id == context.id
+    assert (
+        calls[0].data["some"]
+        == "geo_location - geo_location.entity - goodbye - hello - test"
     )
 
 

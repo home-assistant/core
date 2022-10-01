@@ -114,7 +114,7 @@ class EventManager:
         await self._subscription.Unsubscribe()
         self._subscription = None
 
-    async def async_restart(self, _now: dt = None) -> None:
+    async def async_restart(self, _now: dt.datetime | None = None) -> None:
         """Restart the subscription assuming the camera rebooted."""
         if not self.started:
             return
@@ -159,7 +159,7 @@ class EventManager:
         """Schedule async_pull_messages to run."""
         self._unsub_refresh = async_call_later(self.hass, 1, self.async_pull_messages)
 
-    async def async_pull_messages(self, _now: dt = None) -> None:
+    async def async_pull_messages(self, _now: dt.datetime | None = None) -> None:
         """Pull messages from device."""
         if self.hass.state == CoreState.running:
             try:
@@ -208,8 +208,7 @@ class EventManager:
                 continue
 
             topic = msg.Topic._value_1
-            parser = PARSERS.get(topic)
-            if not parser:
+            if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.info(
                         "No registered handler for event from %s: %s",
@@ -222,14 +221,14 @@ class EventManager:
             event = await parser(self.unique_id, msg)
 
             if not event:
-                LOGGER.warning("Unable to parse event from %s: %s", self.unique_id, msg)
+                LOGGER.info("Unable to parse event from %s: %s", self.unique_id, msg)
                 return
 
             self._events[event.uid] = event
 
-    def get_uid(self, uid) -> Event:
+    def get_uid(self, uid) -> Event | None:
         """Retrieve event for given id."""
-        return self._events[uid]
+        return self._events.get(uid)
 
     def get_platform(self, platform) -> list[Event]:
         """Retrieve events for given platform."""

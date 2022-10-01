@@ -6,6 +6,7 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
             "discover_timeout": "Tidak dapat menemukan bridge Hue",
+            "invalid_host": "Host tidak valid",
             "no_bridges": "Bridge Philips Hue tidak ditemukan",
             "not_hue_bridge": "Bukan bridge Hue",
             "unknown": "Kesalahan yang tidak diharapkan"
@@ -35,10 +36,16 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "Tombol pertama",
+            "2": "Tombol kedua",
+            "3": "Tombol ketiga",
+            "4": "Tombol keempat",
             "button_1": "Tombol pertama",
             "button_2": "Tombol kedua",
             "button_3": "Tombol ketiga",
             "button_4": "Tombol keempat",
+            "clock_wise": "Rotasi searah jarum jam",
+            "counter_clock_wise": "Rotasi berlawanan arah jarum jam",
             "dim_down": "Redupkan",
             "dim_up": "Terangkan",
             "double_buttons_1_3": "Tombol Pertama dan Ketiga",
@@ -47,11 +54,17 @@
             "turn_on": "Nyalakan"
         },
         "trigger_type": {
-            "remote_button_long_release": "Tombol \"{subtype}\" dilepaskan setelah ditekan lama",
-            "remote_button_short_press": "Tombol \"{subtype}\" ditekan",
-            "remote_button_short_release": "Tombol \"{subtype}\" dilepaskan",
+            "double_short_release": "Kedua \"{subtype}\" dilepaskan",
+            "initial_press": "\"{subtype}\" awalnya ditekan",
+            "long_release": "\"{subtype}\" dilepaskan setelah ditekan lama",
+            "remote_button_long_release": "\"{subtype}\" dilepaskan setelah ditekan lama",
+            "remote_button_short_press": "\"{subtype}\" ditekan",
+            "remote_button_short_release": "\"{subtype}\" dilepaskan",
             "remote_double_button_long_press": "Kedua \"{subtype}\" dilepaskan setelah ditekan lama",
-            "remote_double_button_short_press": "Kedua \"{subtype}\" dilepas"
+            "remote_double_button_short_press": "Kedua \"{subtype}\" dilepas",
+            "repeat": "\"{subtype}\" ditekan terus",
+            "short_release": "\"{subtype}\" dilepaskan setelah ditekan sebentar",
+            "start": "\"{subtype}\" awalnya ditekan"
         }
     },
     "options": {
@@ -59,7 +72,9 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Izinkan grup Hue",
-                    "allow_unreachable": "Izinkan bohlam yang tidak dapat dijangkau untuk melaporkan statusnya dengan benar"
+                    "allow_hue_scenes": "Izinkan skenario Hue",
+                    "allow_unreachable": "Izinkan bohlam yang tidak dapat dijangkau untuk melaporkan statusnya dengan benar",
+                    "ignore_availability": "Abaikan status konektivitas untuk perangkat yang diberikan"
                 }
             }
         }

@@ -1,34 +1,72 @@
 """Support for power sensors in WeMo Insight devices."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import cast
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import convert
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoEntity
 from .wemo_device import DeviceCoordinator
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+@dataclass
+class AttributeSensorDescription(SensorEntityDescription):
+    """SensorEntityDescription for WeMo AttributeSensor entities."""
+
+    state_conversion: Callable[[StateType], StateType] | None = None
+    unique_id_suffix: str | None = None
+
+
+ATTRIBUTE_SENSORS = (
+    AttributeSensorDescription(
+        name="Current Power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=POWER_WATT,
+        key="current_power_watts",
+        unique_id_suffix="currentpower",
+        state_conversion=lambda state: round(cast(float, state), 2),
+    ),
+    AttributeSensorDescription(
+        name="Today Energy",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        key="today_kwh",
+        unique_id_suffix="todaymw",
+        state_conversion=lambda state: round(cast(float, state), 2),
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up WeMo sensors."""
 
-    async def _discovered_wemo(coordinator: DeviceCoordinator):
+    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
         """Handle a discovered Wemo device."""
         async_add_entities(
-            [InsightCurrentPower(coordinator), InsightTodayEnergy(coordinator)]
+            AttributeSensor(coordinator, description)
+            for description in ATTRIBUTE_SENSORS
+            if hasattr(coordinator.wemo, description.key)
         )
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.sensor", _discovered_wemo)
@@ -41,65 +79,35 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class InsightSensor(WemoEntity, SensorEntity):
-    """Common base for WeMo Insight power sensors."""
+class AttributeSensor(WemoEntity, SensorEntity):
+    """Sensor that reads attributes of a wemo device."""
+
+    entity_description: AttributeSensorDescription
+
+    def __init__(
+        self, coordinator: DeviceCoordinator, description: AttributeSensorDescription
+    ) -> None:
+        """Init AttributeSensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
 
     @property
-    def name_suffix(self) -> str:
-        """Return the name of the entity if any."""
+    def name_suffix(self) -> str | None:
+        """Return the name of the entity."""
         return self.entity_description.name
 
     @property
-    def unique_id_suffix(self) -> str:
-        """Return the id of this entity."""
-        return self.entity_description.key
+    def unique_id_suffix(self) -> str | None:
+        """Suffix to append to the WeMo device's unique ID."""
+        return self.entity_description.unique_id_suffix
 
-    @property
-    def available(self) -> str:
-        """Return true if sensor is available."""
-        return (
-            self.entity_description.key in self.wemo.insight_params
-            and super().available
-        )
-
-
-class InsightCurrentPower(InsightSensor):
-    """Current instantaineous power consumption."""
-
-    entity_description = SensorEntityDescription(
-        key="currentpower",
-        name="Current Power",
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
-    )
+    def convert_state(self, value: StateType) -> StateType:
+        """Convert native state to a value appropriate for the sensor."""
+        if (convert := self.entity_description.state_conversion) is None:
+            return None
+        return convert(value)
 
     @property
     def native_value(self) -> StateType:
-        """Return the current power consumption."""
-        return (
-            convert(
-                self.wemo.insight_params.get(self.entity_description.key), float, 0.0
-            )
-            / 1000.0
-        )
-
-
-class InsightTodayEnergy(InsightSensor):
-    """Energy used today."""
-
-    entity_description = SensorEntityDescription(
-        key="todaymw",
-        name="Today Energy",
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-    )
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the current energy use today."""
-        miliwatts = convert(
-            self.wemo.insight_params.get(self.entity_description.key), float, 0.0
-        )
-        return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
+        """Return the value of the device attribute."""
+        return self.convert_state(getattr(self.wemo, self.entity_description.key))

@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dienst is al geconfigureerd",
+            "cannot_connect": "Verbinding maken met de credentials uit de configuration.yaml is mislukt, verwijder deze uit yaml en gebruik de config flow.",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
+            "unknown": "Verbinding maken met de credentials uit de configuration.yaml is mislukt met een onbekende fout, verwijder deze uit yaml en gebruik de config flow."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "Event Hub Connection String"
+                },
+                "description": "Voer de connection string in voor: {event_hub_instance_name}",
+                "title": "Connection String methode"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Event Hub Namespace",
+                    "event_hub_sas_key": "Event Hub SAS-sleutel",
+                    "event_hub_sas_policy": "Event Hub SAS Policy"
+                },
+                "description": "Voer de SAS-gegevens (shared access signature) in voor: {event_hub_instance_name}",
+                "title": "SAS Credentials methode"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Event Hub Instance Naam",
+                    "use_connection_string": "Gebruik Connection String"
+                },
+                "title": "Stel uw Azure Event Hub integratie in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "Interval tussen het verzenden van batches naar de hub."
+                },
+                "title": "Opties voor de Azure Event Hub."
+            }
+        }
+    }
+}

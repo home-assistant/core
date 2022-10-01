@@ -7,19 +7,22 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, UPDATE_TOPIC
 
@@ -39,7 +42,7 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         name="Air Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AquaLogicSensorEntityDescription(
         key="pool_temp",
@@ -47,7 +50,7 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
         icon="mdi:oil-temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AquaLogicSensorEntityDescription(
         key="spa_temp",
@@ -55,7 +58,7 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
         icon="mdi:oil-temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AquaLogicSensorEntityDescription(
         key="pool_chlorinator",
@@ -110,7 +113,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensor platform."""
     processor = hass.data[DOMAIN]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
@@ -136,19 +144,18 @@ class AquaLogicSensor(SensorEntity):
         self._processor = processor
         self._attr_name = f"AquaLogic {description.name}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                UPDATE_TOPIC, self.async_update_callback
+            async_dispatcher_connect(
+                self.hass, UPDATE_TOPIC, self.async_update_callback
             )
         )
 
     @callback
     def async_update_callback(self):
         """Update callback."""
-        panel = self._processor.panel
-        if panel is not None:
+        if (panel := self._processor.panel) is not None:
             if panel.is_metric:
                 self._attr_native_unit_of_measurement = (
                     self.entity_description.unit_metric

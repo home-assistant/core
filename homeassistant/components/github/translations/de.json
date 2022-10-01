@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "could_not_register": "Integration konnte nicht mit GitHub registriert werden"
+        },
+        "progress": {
+            "wait_for_device": "1. \u00d6ffne {url}\n 2. F\u00fcge den folgenden Schl\u00fcssel ein, um die Integration zu autorisieren:\n ```\n {code}\n ```"
+        },
+        "step": {
+            "repositories": {
+                "data": {
+                    "repositories": "W\u00e4hle die zu verfolgenden Repositories aus."
+                },
+                "title": "Repositories konfigurieren"
+            }
+        }
+    }
+}

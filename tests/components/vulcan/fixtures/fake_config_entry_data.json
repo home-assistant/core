@@ -1,0 +1,16 @@
+{
+  "student_id": "123",
+  "keystore": {
+    "Certificate": "certificate",
+    "DeviceModel": "Home Assistant",
+    "Fingerprint": "fingerprint",
+    "FirebaseToken": "firebase_token",
+    "PrivateKey": "private_key"
+  },
+  "account": {
+    "LoginId": 0,
+    "RestURL": "",
+    "UserLogin": "example@example.com",
+    "UserName": "example@example.com"
+  }
+}

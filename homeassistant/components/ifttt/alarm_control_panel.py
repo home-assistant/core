@@ -1,19 +1,16 @@
 """Support for alarm control panels that can be controlled through IFTTT."""
+from __future__ import annotations
+
 import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
-    FORMAT_TEXT,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -26,7 +23,10 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTR_EVENT, DOMAIN, SERVICE_PUSH_ALARM_STATE, SERVICE_TRIGGER
 
@@ -72,7 +72,12 @@ PUSH_ALARM_STATE_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a control panel managed through IFTTT."""
     if DATA_IFTTT_ALARM not in hass.data:
         hass.data[DATA_IFTTT_ALARM] = []
@@ -99,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.data[DATA_IFTTT_ALARM].append(alarmpanel)
     add_entities([alarmpanel])
 
-    async def push_state_update(service):
+    async def push_state_update(service: ServiceCall) -> None:
         """Set the service state as device state attribute."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         state = service.data.get(ATTR_STATE)
@@ -122,6 +127,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class IFTTTAlarmPanel(AlarmControlPanelEntity):
     """Representation of an alarm control panel controlled through IFTTT."""
 
+    _attr_assumed_state = True
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+    )
+
     def __init__(
         self,
         name,
@@ -134,7 +146,7 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         optimistic,
     ):
         """Initialize the alarm control panel."""
-        self._name = name
+        self._attr_name = name
         self._code = code
         self._code_arm_required = code_arm_required
         self._event_away = event_away
@@ -142,56 +154,35 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         self._event_night = event_night
         self._event_disarm = event_disarm
         self._optimistic = optimistic
-        self._state = None
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
-
-    @property
-    def assumed_state(self):
-        """Notify that this platform return an assumed state."""
-        return True
-
-    @property
-    def code_format(self):
+    def code_format(self) -> CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return FORMAT_NUMBER
-        return FORMAT_TEXT
+            return CodeFormat.NUMBER
+        return CodeFormat.TEXT
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._check_code(code):
             return
         self.set_alarm_state(self._event_disarm, STATE_ALARM_DISARMED)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_away, STATE_ALARM_ARMED_AWAY)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_home, STATE_ALARM_ARMED_HOME)
 
-    def alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if self._code_arm_required and not self._check_code(code):
             return
@@ -204,13 +195,13 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         self.hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
         _LOGGER.debug("Called IFTTT integration to trigger event %s", event)
         if self._optimistic:
-            self._state = state
+            self._attr_state = state
 
     def push_alarm_state(self, value):
         """Push the alarm state to the given value."""
         if value in ALLOWED_STATES:
             _LOGGER.debug("Pushed the alarm state to %s", value)
-            self._state = value
+            self._attr_state = value
 
-    def _check_code(self, code):
+    def _check_code(self, code: str | None) -> bool:
         return self._code is None or self._code == code

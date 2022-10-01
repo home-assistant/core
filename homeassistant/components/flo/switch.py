@@ -1,12 +1,16 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from aioflo.location import SLEEP_MINUTE_OPTIONS, SYSTEM_MODE_HOME, SYSTEM_REVERT_MODES
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
@@ -20,7 +24,11 @@ SERVICE_SET_HOME_MODE = "set_home_mode"
 SERVICE_RUN_HEALTH_TEST = "run_health_test"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Flo switches from config entry."""
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
@@ -45,7 +53,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform.async_register_entity_service(
         SERVICE_SET_SLEEP_MODE,
         {
-            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.In(SLEEP_MINUTE_OPTIONS),
+            vol.Required(ATTR_SLEEP_MINUTES, default=120): vol.All(
+                vol.Coerce(int),
+                vol.In(SLEEP_MINUTE_OPTIONS),
+            ),
             vol.Required(ATTR_REVERT_TO_MODE, default=SYSTEM_MODE_HOME): vol.In(
                 SYSTEM_REVERT_MODES
             ),
@@ -59,7 +70,7 @@ class FloSwitch(FloEntity, SwitchEntity):
 
     def __init__(self, device: FloDeviceDataUpdateCoordinator) -> None:
         """Initialize the Flo switch."""
-        super().__init__("shutoff_valve", "Shutoff Valve", device)
+        super().__init__("shutoff_valve", "Shutoff valve", device)
         self._state = self._device.last_known_valve_state == "open"
 
     @property
@@ -74,13 +85,13 @@ class FloSwitch(FloEntity, SwitchEntity):
             return "mdi:valve-open"
         return "mdi:valve-closed"
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self._device.api_client.device.open_valve(self._device.id)
         self._state = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Close the valve."""
         await self._device.api_client.device.close_valve(self._device.id)
         self._state = False
@@ -92,7 +103,7 @@ class FloSwitch(FloEntity, SwitchEntity):
         self._state = self._device.last_known_valve_state == "open"
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(self._device.async_add_listener(self.async_update_state))
 

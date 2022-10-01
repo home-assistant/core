@@ -3,20 +3,26 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    DEVICE_CLASS_TIMESTAMP,
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN
 from .entity import RingEntityMixin
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a sensor for a Ring device."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
@@ -36,7 +42,6 @@ class RingSensor(RingEntityMixin, SensorEntity):
     """A sensor implementation for Ring device."""
 
     entity_description: RingSensorEntityDescription
-    _attr_should_poll = False  # updates are controlled via the hub
 
     def __init__(
         self,
@@ -77,7 +82,7 @@ class RingSensor(RingEntityMixin, SensorEntity):
 class HealthDataRingSensor(RingSensor):
     """Ring sensor that relies on health data."""
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
@@ -85,7 +90,7 @@ class HealthDataRingSensor(RingSensor):
             self._device, self._health_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
@@ -120,7 +125,7 @@ class HistoryRingSensor(RingSensor):
 
     _latest_event = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
@@ -128,7 +133,7 @@ class HistoryRingSensor(RingSensor):
             self._device, self._history_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
@@ -164,7 +169,7 @@ class HistoryRingSensor(RingSensor):
         if self._latest_event is None:
             return None
 
-        return self._latest_event["created_at"].isoformat()
+        return self._latest_event["created_at"]
 
     @property
     def extra_state_attributes(self):
@@ -209,7 +214,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         name="Last Activity",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:history",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
     ),
     RingSensorEntityDescription(
@@ -218,7 +223,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         category=["doorbots", "authorized_doorbots"],
         icon="mdi:history",
         kind="ding",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
     ),
     RingSensorEntityDescription(
@@ -227,7 +232,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:history",
         kind="motion",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
     ),
     RingSensorEntityDescription(

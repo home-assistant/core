@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "cannot_connect": "No s'ha pogut connectar amb les credencials de configuration.yaml, elimina-les del yaml i utilitza la configuraci\u00f3.",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "unknown": "S'ha produ\u00eft un error desconegut i al connectar amb les credencials de configuration.yaml, elimina-les del yaml i utilitza la configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "Cadena de connexi\u00f3 d'Event Hub"
+                },
+                "description": "Introdueix la cadena de connexi\u00f3 de: {event_hub_instance_name}",
+                "title": "M\u00e8tode cadena de connexi\u00f3"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Event Hub Namespace",
+                    "event_hub_sas_key": "Clau SAS de l'Event Hub",
+                    "event_hub_sas_policy": "Pol\u00edtica SAS de l'Event Hub"
+                },
+                "description": "Introdueix les credencials SAS (signatura d'acc\u00e9s compartit) de: {event_hub_instance_name}",
+                "title": "M\u00e8tode de credencials SAS"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Nom de la inst\u00e0ncia Event Hub",
+                    "use_connection_string": "Utilitza una cadena de connexi\u00f3"
+                },
+                "title": "Configuraci\u00f3 de la integraci\u00f3 Azure Event Hub"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "Interval entre enviaments de lots al Hub."
+                },
+                "title": "Opcions d'Azure Event Hub."
+            }
+        }
+    }
+}

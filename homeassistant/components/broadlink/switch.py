@@ -1,21 +1,22 @@
 """Support for Broadlink switches."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from functools import partial
 import logging
+from typing import Any
 
 from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
-    DEVICE_CLASS_SWITCH,
     PLATFORM_SCHEMA,
+    SwitchDeviceClass,
     SwitchEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -23,11 +24,17 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
     STATE_ON,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SWITCH_DOMAIN
+from . import BroadlinkDevice
+from .const import DOMAIN
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 
@@ -43,14 +50,6 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
-OLD_SWITCH_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_COMMAND_OFF): data_packet,
-        vol.Optional(CONF_COMMAND_ON): data_packet,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    }
-)
-
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HOST),
     cv.deprecated(CONF_SLOTS),
@@ -60,16 +59,21 @@ PLATFORM_SCHEMA = vol.All(
         {
             vol.Required(CONF_MAC): mac_address,
             vol.Optional(CONF_HOST): cv.string,
-            vol.Optional(CONF_SWITCHES, default=[]): vol.Any(
-                cv.schema_with_slug_keys(OLD_SWITCH_SCHEMA),
-                vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
+            vol.Optional(CONF_SWITCHES, default=[]): vol.All(
+                cv.ensure_list,
+                [SWITCH_SCHEMA],
             ),
         }
     ),
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Import the device and set up custom switches.
 
     This is for backward compatibility.
@@ -77,22 +81,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """
     mac_addr = config[CONF_MAC]
     host = config.get(CONF_HOST)
-    switches = config.get(CONF_SWITCHES)
 
-    if not isinstance(switches, list):
-        switches = [
-            {CONF_NAME: switch.pop(CONF_FRIENDLY_NAME, name), **switch}
-            for name, switch in switches.items()
-        ]
-
-        _LOGGER.warning(
-            "Your configuration for the switch platform is deprecated. "
-            "Please refer to the Broadlink documentation to catch up"
+    if switches := config.get(CONF_SWITCHES):
+        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
+        async_add_entities_config_entry: AddEntitiesCallback
+        device: BroadlinkDevice
+        async_add_entities_config_entry, device = platform_data.get(
+            mac_addr, (None, None)
         )
+        if not async_add_entities_config_entry:
+            raise PlatformNotReady
 
-    if switches:
-        platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
-        platform_data.setdefault(mac_addr, []).extend(switches)
+        async_add_entities_config_entry(
+            BroadlinkRMSwitch(device, config) for config in switches
+        )
 
     else:
         _LOGGER.warning(
@@ -105,28 +107,29 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         import_device(hass, host)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Broadlink switch."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    switches: list[BroadlinkSwitch] = []
 
     if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
-        platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
-        user_defined_switches = platform_data.get(device.api.mac, {})
-        switches = [
-            BroadlinkRMSwitch(device, config) for config in user_defined_switches
-        ]
-
+        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
+        platform_data[device.api.mac] = async_add_entities, device
     elif device.api.type == "SP1":
-        switches = [BroadlinkSP1Switch(device)]
+        switches.append(BroadlinkSP1Switch(device))
 
     elif device.api.type in {"SP2", "SP2S", "SP3", "SP3S", "SP4", "SP4B"}:
-        switches = [BroadlinkSP2Switch(device)]
+        switches.append(BroadlinkSP2Switch(device))
 
     elif device.api.type == "BG1":
-        switches = [BroadlinkBG1Slot(device, slot) for slot in range(1, 3)]
+        switches.extend(BroadlinkBG1Slot(device, slot) for slot in range(1, 3))
 
     elif device.api.type == "MP1":
-        switches = [BroadlinkMP1Slot(device, slot) for slot in range(1, 5)]
+        switches.extend(BroadlinkMP1Slot(device, slot) for slot in range(1, 5))
 
     async_add_entities(switches)
 
@@ -135,7 +138,7 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
     """Representation of a Broadlink switch."""
 
     _attr_assumed_state = True
-    _attr_device_class = DEVICE_CLASS_SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, device, command_on, command_off):
         """Initialize the switch."""
@@ -144,19 +147,19 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         self._command_off = command_off
         self._attr_name = f"{device.name} Switch"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when the switch is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is not None and state.state == STATE_ON
         await super().async_added_to_hass()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         if await self._async_send_packet(self._command_on):
             self._attr_is_on = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         if await self._async_send_packet(self._command_off):
             self._attr_is_on = False
@@ -179,11 +182,13 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
+
         if packet is None:
             return True
 
         try:
-            await self._device.async_request(self._device.api.send_data, packet)
+            await device.async_request(device.api.send_data, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
@@ -200,8 +205,10 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
+
         try:
-            await self._device.async_request(self._device.api.set_power, packet)
+            await device.async_request(device.api.set_power, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
@@ -242,10 +249,10 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
+
         try:
-            await self._device.async_request(
-                self._device.api.set_power, self._slot, packet
-            )
+            await device.async_request(device.api.set_power, self._slot, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
@@ -264,7 +271,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._attr_is_on = self._coordinator.data[f"pwr{slot}"]
 
         self._attr_name = f"{device.name} S{slot}"
-        self._attr_device_class = DEVICE_CLASS_OUTLET
+        self._attr_device_class = SwitchDeviceClass.OUTLET
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
     def _update_state(self, data):
@@ -273,9 +280,11 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
-        set_state = partial(self._device.api.set_state, **{f"pwr{self._slot}": packet})
+        device = self._device
+        state = {f"pwr{self._slot}": packet}
+
         try:
-            await self._device.async_request(set_state)
+            await device.async_request(device.api.set_state, **state)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False

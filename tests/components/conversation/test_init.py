@@ -1,4 +1,6 @@
 """The tests for the Conversation component."""
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.components import conversation
@@ -116,7 +118,7 @@ async def test_http_processing_intent(hass, hass_client, hass_admin_user):
         "/api/conversation/process", json={"text": "I would like the Grolsch beer"}
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
     assert data == {
@@ -212,7 +214,7 @@ async def test_http_api(hass, hass_client):
     resp = await client.post(
         "/api/conversation/process", json={"text": "Turn the kitchen on"}
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     assert len(calls) == 1
     call = calls[0]
@@ -232,10 +234,10 @@ async def test_http_api_wrong_data(hass, hass_client):
     client = await hass_client()
 
     resp = await client.post("/api/conversation/process", json={"text": 123})
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
     resp = await client.post("/api/conversation/process", json={})
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_custom_agent(hass, hass_client, hass_admin_user):
@@ -263,7 +265,7 @@ async def test_custom_agent(hass, hass_client, hass_admin_user):
         "/api/conversation/process",
         json={"text": "Test Text", "conversation_id": "test-conv-id"},
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.json() == {
         "card": {},
         "speech": {"plain": {"extra_data": None, "speech": "Test response"}},

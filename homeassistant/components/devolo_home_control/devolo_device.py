@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import logging
+from urllib.parse import urlparse
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 from .subscriber import Subscriber
@@ -32,19 +34,20 @@ class DevoloDeviceEntity(Entity):
         ].name
         self._attr_should_poll = False
         self._attr_unique_id = element_uid
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._device_instance.uid)},
-            "name": self._attr_name,
-            "manufacturer": device_instance.brand,
-            "model": device_instance.name,
-            "suggested_area": device_instance.settings_property[
+        self._attr_device_info = DeviceInfo(
+            configuration_url=f"https://{urlparse(device_instance.href).netloc}",
+            identifiers={(DOMAIN, self._device_instance.uid)},
+            manufacturer=device_instance.brand,
+            model=device_instance.name,
+            name=self._attr_name,
+            suggested_area=device_instance.settings_property[
                 "general_device_settings"
             ].zone,
-        }
+        )
 
         self.subscriber: Subscriber | None = None
         self.sync_callback = self._sync
-        self._value: int
+        self._value: float
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -69,7 +72,11 @@ class DevoloDeviceEntity(Entity):
 
     def _generic_message(self, message: tuple) -> None:
         """Handle generic messages."""
-        if len(message) == 3 and message[2] == "battery_level":
+        if (
+            len(message) == 3
+            and message[2] == "battery_level"
+            and self.device_class == SensorDeviceClass.BATTERY
+        ):
             self._value = message[1]
         elif len(message) == 3 and message[2] == "status":
             # Maybe the API wants to tell us, that the device went on- or offline.

@@ -1,10 +1,18 @@
 """Support for Spider switches."""
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Initialize a Spider Power Plug."""
     api = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
@@ -24,14 +32,15 @@ class SpiderPowerPlug(SwitchEntity):
         self.power_plug = power_plug
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.power_plug.id)},
-            "name": self.power_plug.name,
-            "manufacturer": self.power_plug.manufacturer,
-            "model": self.power_plug.model,
-        }
+        return DeviceInfo(
+            configuration_url="https://mijn.ithodaalderop.nl/",
+            identifiers={(DOMAIN, self.power_plug.id)},
+            manufacturer=self.power_plug.manufacturer,
+            model=self.power_plug.model,
+            name=self.power_plug.name,
+        )
 
     @property
     def unique_id(self):
@@ -49,18 +58,18 @@ class SpiderPowerPlug(SwitchEntity):
         return self.power_plug.is_on
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if switch is available."""
         return self.power_plug.is_available
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self.power_plug.turn_on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self.power_plug.turn_off()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self.power_plug = self.api.get_power_plug(self.power_plug.id)

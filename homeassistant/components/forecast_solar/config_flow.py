@@ -15,6 +15,7 @@ from .const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
     CONF_DECLINATION,
+    CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
 )
@@ -98,7 +99,7 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                         CONF_API_KEY,
                         description={
                             "suggested_value": self.config_entry.options.get(
-                                CONF_API_KEY
+                                CONF_API_KEY, ""
                             )
                         },
                     ): str,
@@ -118,6 +119,14 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                         CONF_DAMPING,
                         default=self.config_entry.options.get(CONF_DAMPING, 0.0),
                     ): vol.Coerce(float),
+                    vol.Optional(
+                        CONF_INVERTER_SIZE,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_INVERTER_SIZE
+                            )
+                        },
+                    ): vol.Coerce(int),
                 }
             ),
         )

@@ -9,7 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.components.ipp import init_integration, mock_connection
+from . import init_integration, mock_connection
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -95,7 +96,7 @@ async def test_disabled_by_default_sensors(
     entry = registry.async_get("sensor.epson_xp_6000_series_uptime")
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_missing_entry_unique_id(

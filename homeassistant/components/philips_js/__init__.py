@@ -2,28 +2,35 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine, Mapping
 from datetime import timedelta
 import logging
 from typing import Any
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
+from haphilipsjs.typing import SystemType
 
-from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
+    Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.trigger import TriggerActionType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ALLOW_NOTIFY, DOMAIN
+from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
-PLATFORMS = ["media_player", "light", "remote"]
+PLATFORMS = [
+    Platform.MEDIA_PLAYER,
+    Platform.LIGHT,
+    Platform.REMOTE,
+    Platform.SWITCH,
+]
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,19 +38,26 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Philips TV from a config entry."""
 
+    system: SystemType | None = entry.data.get(CONF_SYSTEM)
     tvapi = PhilipsTV(
         entry.data[CONF_HOST],
         entry.data[CONF_API_VERSION],
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
+        system=system,
     )
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi, entry.options)
 
     await coordinator.async_refresh()
+
+    if (actual_system := tvapi.system) and actual_system != system:
+        data = {**entry.data, CONF_SYSTEM: actual_system}
+        hass.config_entries.async_update_entry(entry, data=data)
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
@@ -70,14 +84,16 @@ class PluggableAction:
     def __init__(self, update: Callable[[], None]) -> None:
         """Initialize."""
         self._update = update
-        self._actions: dict[Any, AutomationActionType] = {}
+        self._actions: dict[
+            Any, tuple[HassJob[..., Coroutine[Any, Any, None]], dict[str, Any]]
+        ] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
         return bool(self._actions)
 
     @callback
-    def async_attach(self, action: AutomationActionType, variables: dict[str, Any]):
+    def async_attach(self, action: TriggerActionType, variables: dict[str, Any]):
         """Attach a device trigger for turn on."""
 
         @callback
@@ -101,18 +117,15 @@ class PluggableAction:
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
-    def __init__(self, hass, api: PhilipsTV, options: dict) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass, api: PhilipsTV, options: Mapping) -> None:
         """Set up the coordinator."""
         self.api = api
         self.options = options
         self._notify_future: asyncio.Task | None = None
 
-        @callback
-        def _update_listeners():
-            for update_callback in self._listeners:
-                update_callback()
-
-        self.turn_on = PluggableAction(_update_listeners)
+        self.turn_on = PluggableAction(self.async_update_listeners)
 
         super().__init__(
             hass,
@@ -123,6 +136,22 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 hass, LOGGER, cooldown=2.0, immediate=False
             ),
         )
+
+    @property
+    def system(self) -> SystemType:
+        """Return the system descriptor."""
+        if self.api.system:
+            return self.api.system
+        return self.config_entry.data[CONF_SYSTEM]
+
+    @property
+    def unique_id(self) -> str:
+        """Return the system descriptor."""
+        entry = self.config_entry
+        if entry.unique_id:
+            return entry.unique_id
+        assert entry.entry_id
+        return entry.entry_id
 
     @property
     def _notify_wanted(self):
@@ -162,18 +191,11 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._notify_future = asyncio.create_task(self._notify_task())
 
     @callback
-    def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
+    def _unschedule_refresh(self) -> None:
         """Remove data update."""
-        super().async_remove_listener(update_callback)
-        if not self._listeners:
-            self._async_notify_stop()
-
-    @callback
-    def _async_stop_refresh(self, event: asyncio.Event) -> None:
-        super()._async_stop_refresh(event)
+        super()._unschedule_refresh()
         self._async_notify_stop()
 
-    @callback
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:

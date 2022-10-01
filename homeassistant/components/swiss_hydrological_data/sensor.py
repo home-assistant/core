@@ -1,4 +1,6 @@
 """Support for hydrological data from the Fed. Office for the Environment."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,7 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,10 +57,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Swiss hydrological sensor."""
-    station = config.get(CONF_STATION)
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+    station = config[CONF_STATION]
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
     hydro_data = HydrologicalData(station)
     hydro_data.update()
@@ -135,7 +145,7 @@ class SwissHydrologicalDataSensor(SensorEntity):
         """Icon to use in the frontend."""
         return self._icon
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the state."""
         self.hydro_data.update()
         self._data = self.hydro_data.data

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after_time": "Czas w\u0142\u0105czenia",
+                    "before_time": "Czas wy\u0142\u0105czenia",
+                    "name": "Nazwa"
+                },
+                "description": "Utw\u00f3rz sensor binarny, kt\u00f3ry w\u0142\u0105cza si\u0119 lub wy\u0142\u0105cza w zale\u017cno\u015bci od czasu.",
+                "title": "Dodaj sensor p\u00f3r dnia"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after_time": "Czas w\u0142\u0105czenia",
+                    "before_time": "Czas wy\u0142\u0105czenia"
+                }
+            }
+        }
+    },
+    "title": "Sensor p\u00f3r dnia"
+}

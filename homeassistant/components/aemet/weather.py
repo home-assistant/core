@@ -1,10 +1,36 @@
 """Support for the AEMET OpenData service."""
-from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    WeatherEntity,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_CONDITION,
+    ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_PRECIPITATION,
+    ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_TEMP,
+    ATTR_API_FORECAST_TEMP_LOW,
+    ATTR_API_FORECAST_TIME,
+    ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
@@ -16,12 +42,38 @@ from .const import (
     ENTRY_WEATHER_COORDINATOR,
     FORECAST_MODE_ATTR_API,
     FORECAST_MODE_DAILY,
+    FORECAST_MODE_HOURLY,
     FORECAST_MODES,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
+FORECAST_MAP = {
+    FORECAST_MODE_DAILY: {
+        ATTR_API_FORECAST_CONDITION: ATTR_FORECAST_CONDITION,
+        ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+        ATTR_API_FORECAST_TEMP_LOW: ATTR_FORECAST_NATIVE_TEMP_LOW,
+        ATTR_API_FORECAST_TEMP: ATTR_FORECAST_NATIVE_TEMP,
+        ATTR_API_FORECAST_TIME: ATTR_FORECAST_TIME,
+        ATTR_API_FORECAST_WIND_BEARING: ATTR_FORECAST_WIND_BEARING,
+        ATTR_API_FORECAST_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
+    },
+    FORECAST_MODE_HOURLY: {
+        ATTR_API_FORECAST_CONDITION: ATTR_FORECAST_CONDITION,
+        ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+        ATTR_API_FORECAST_PRECIPITATION: ATTR_FORECAST_NATIVE_PRECIPITATION,
+        ATTR_API_FORECAST_TEMP: ATTR_FORECAST_NATIVE_TEMP,
+        ATTR_API_FORECAST_TIME: ATTR_FORECAST_TIME,
+        ATTR_API_FORECAST_WIND_BEARING: ATTR_FORECAST_WIND_BEARING,
+        ATTR_API_FORECAST_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
+    },
+}
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AEMET OpenData weather entity based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
@@ -36,11 +88,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(entities, False)
 
 
-class AemetWeather(CoordinatorEntity, WeatherEntity):
+class AemetWeather(CoordinatorEntity[WeatherUpdateCoordinator], WeatherEntity):
     """Implementation of an AEMET OpenData sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_pressure_unit = PRESSURE_HPA
+    _attr_native_temperature_unit = TEMP_CELSIUS
+    _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
 
     def __init__(
         self,
@@ -66,7 +121,12 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return self.coordinator.data[FORECAST_MODE_ATTR_API[self._forecast_mode]]
+        forecasts = self.coordinator.data[FORECAST_MODE_ATTR_API[self._forecast_mode]]
+        forecast_map = FORECAST_MAP[self._forecast_mode]
+        return [
+            {ha_key: forecast[api_key] for api_key, ha_key in forecast_map.items()}
+            for forecast in forecasts
+        ]
 
     @property
     def humidity(self):
@@ -74,21 +134,21 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
         return self.coordinator.data[ATTR_API_HUMIDITY]
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the pressure."""
         return self.coordinator.data[ATTR_API_PRESSURE]
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the temperature."""
         return self.coordinator.data[ATTR_API_TEMPERATURE]
 
     @property
     def wind_bearing(self):
-        """Return the temperature."""
+        """Return the wind bearing."""
         return self.coordinator.data[ATTR_API_WIND_BEARING]
 
     @property
-    def wind_speed(self):
-        """Return the temperature."""
+    def native_wind_speed(self):
+        """Return the wind speed."""
         return self.coordinator.data[ATTR_API_WIND_SPEED]

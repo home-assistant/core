@@ -12,15 +12,13 @@
                 "data": {
                     "city": "Ville"
                 },
-                "description": "Choisissez votre ville dans la liste",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Choisissez votre ville dans la liste"
             },
             "user": {
                 "data": {
                     "city": "Ville"
                 },
-                "description": "Entrez le code postal (uniquement pour la France, recommand\u00e9) ou le nom de la ville",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Entrez le code postal (uniquement pour la France, recommand\u00e9) ou le nom de la ville"
             }
         }
     },

@@ -13,8 +13,7 @@
                     "host": "Vert",
                     "name": "Navn"
                 },
-                "description": "Denne integrasjonen krever Notifications for Android TV -appen. \n\n For Android TV: https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\n For Fire TV: https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK \n\n Du b\u00f8r konfigurere enten DHCP -reservasjon p\u00e5 ruteren din (se brukerh\u00e5ndboken til ruteren din) eller en statisk IP -adresse p\u00e5 enheten. Hvis ikke, vil enheten til slutt bli utilgjengelig.",
-                "title": "Varsler for Android TV / Fire TV"
+                "description": "Se dokumentasjonen for \u00e5 sikre at alle krav er oppfylt."
             }
         }
     }

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "not_compatible": "No se puede obtener informaci\u00f3n de la CPU, esta integraci\u00f3n no es compatible con su sistema"
+        },
+        "step": {
+            "user": {
+                "title": "Velocidad de la CPU"
+            }
+        }
+    },
+    "title": "Velocidad de la CPU"
+}

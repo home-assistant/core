@@ -4,8 +4,10 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
 
 from .const import DEFAULT_ICON, DOMAIN, FEED
@@ -26,7 +28,9 @@ DEFAULT_UNIT_OF_MEASUREMENT = "alerts"
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the GDACS Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
     sensor = GdacsSensor(entry.entry_id, entry.unique_id, entry.title, manager)
@@ -36,6 +40,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class GdacsSensor(SensorEntity):
     """This is a status sensor for the GDACS integration."""
+
+    _attr_should_poll = False
 
     def __init__(self, config_entry_id, config_unique_id, config_title, manager):
         """Initialize entity."""
@@ -53,7 +59,7 @@ class GdacsSensor(SensorEntity):
         self._removed = None
         self._remove_signal_status = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_status = async_dispatcher_connect(
             self.hass,
@@ -75,12 +81,7 @@ class GdacsSensor(SensorEntity):
         _LOGGER.debug("Received status update for %s", self._config_entry_id)
         self.async_schedule_update_ha_state(True)
 
-    @property
-    def should_poll(self):
-        """No polling needed for GDACS status sensor."""
-        return False
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._config_entry_id)
         if self._manager:

@@ -42,23 +42,21 @@ from aemet_opendata.helpers import (
 )
 import async_timeout
 
-from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
-)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_API_CONDITION,
+    ATTR_API_FORECAST_CONDITION,
     ATTR_API_FORECAST_DAILY,
     ATTR_API_FORECAST_HOURLY,
+    ATTR_API_FORECAST_PRECIPITATION,
+    ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_TEMP,
+    ATTR_API_FORECAST_TEMP_LOW,
+    ATTR_API_FORECAST_TIME,
+    ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -140,7 +138,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         data = {}
-        with async_timeout.timeout(120):
+        async with async_timeout.timeout(120):
             weather_response = await self._get_aemet_weather()
         data = self._convert_weather_response(weather_response)
         return data
@@ -286,7 +284,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         temperature_feeling = None
         town_id = None
         town_name = None
-        town_timestamp = dt_util.as_utc(elaborated).isoformat()
+        town_timestamp = dt_util.as_utc(elaborated)
         wind_bearing = None
         wind_max_speed = None
         wind_speed = None
@@ -312,7 +310,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         # Overwrite weather values with closest station data (if present)
         if station_data:
-            station_timestamp = dt_util.as_utc(station_dt).isoformat()
+            station_timestamp = dt_util.as_utc(station_dt)
             if (now_utc - station_dt) <= STATION_MAX_DELTA:
                 if AEMET_ATTR_STATION_HUMIDITY in station_data:
                     humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])
@@ -398,50 +396,43 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return None
 
     def _convert_forecast_day(self, date, day):
-        condition = self._get_condition_day(day)
-        if not condition:
+        if not (condition := self._get_condition_day(day)):
             return None
 
         return {
-            ATTR_FORECAST_CONDITION: condition,
-            ATTR_FORECAST_PRECIPITATION_PROBABILITY: self._get_precipitation_prob_day(
+            ATTR_API_FORECAST_CONDITION: condition,
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: self._get_precipitation_prob_day(
                 day
             ),
-            ATTR_FORECAST_TEMP: self._get_temperature_day(day),
-            ATTR_FORECAST_TEMP_LOW: self._get_temperature_low_day(day),
-            ATTR_FORECAST_TIME: dt_util.as_utc(date).isoformat(),
-            ATTR_FORECAST_WIND_SPEED: self._get_wind_speed_day(day),
-            ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing_day(day),
+            ATTR_API_FORECAST_TEMP: self._get_temperature_day(day),
+            ATTR_API_FORECAST_TEMP_LOW: self._get_temperature_low_day(day),
+            ATTR_API_FORECAST_TIME: dt_util.as_utc(date).isoformat(),
+            ATTR_API_FORECAST_WIND_SPEED: self._get_wind_speed_day(day),
+            ATTR_API_FORECAST_WIND_BEARING: self._get_wind_bearing_day(day),
         }
 
     def _convert_forecast_hour(self, date, day, hour):
-        condition = self._get_condition(day, hour)
-        if not condition:
+        if not (condition := self._get_condition(day, hour)):
             return None
 
         forecast_dt = date.replace(hour=hour, minute=0, second=0)
 
         return {
-            ATTR_FORECAST_CONDITION: condition,
-            ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(day, hour),
-            ATTR_FORECAST_PRECIPITATION_PROBABILITY: self._calc_precipitation_prob(
+            ATTR_API_FORECAST_CONDITION: condition,
+            ATTR_API_FORECAST_PRECIPITATION: self._calc_precipitation(day, hour),
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: self._calc_precipitation_prob(
                 day, hour
             ),
-            ATTR_FORECAST_TEMP: self._get_temperature(day, hour),
-            ATTR_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
-            ATTR_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
-            ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
+            ATTR_API_FORECAST_TEMP: self._get_temperature(day, hour),
+            ATTR_API_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
+            ATTR_API_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
+            ATTR_API_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
         }
 
     def _calc_precipitation(self, day, hour):
         """Calculate the precipitation."""
-        rain_value = self._get_rain(day, hour)
-        if not rain_value:
-            rain_value = 0
-
-        snow_value = self._get_snow(day, hour)
-        if not snow_value:
-            snow_value = 0
+        rain_value = self._get_rain(day, hour) or 0
+        snow_value = self._get_snow(day, hour) or 0
 
         if round(rain_value + snow_value, 1) == 0:
             return None
@@ -449,13 +440,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _calc_precipitation_prob(self, day, hour):
         """Calculate the precipitation probability (hour)."""
-        rain_value = self._get_rain_prob(day, hour)
-        if not rain_value:
-            rain_value = 0
-
-        snow_value = self._get_snow_prob(day, hour)
-        if not snow_value:
-            snow_value = 0
+        rain_value = self._get_rain_prob(day, hour) or 0
+        snow_value = self._get_snow_prob(day, hour) or 0
 
         if rain_value == 0 and snow_value == 0:
             return None

@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "no_selection": "Seleziona almeno una citt\u00e0/provincia",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "_a_to_d": "Citt\u00e0/provincia (A-D)",
+                    "_e_to_h": "Citt\u00e0/provincia (E-H)",
+                    "_i_to_l": "Citt\u00e0/provincia (I-L)",
+                    "_m_to_q": "Citt\u00e0/provincia (M-Q)",
+                    "_r_to_u": "Citt\u00e0/provincia (R-U)",
+                    "_v_to_z": "Citt\u00e0/provincia (V-Z)",
+                    "corona_filter": "Rimuovi gli avvisi Corona",
+                    "slots": "Numero massimo di avvisi per citt\u00e0/provincia"
+                },
+                "title": "Seleziona citt\u00e0/provincia"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "no_selection": "Seleziona almeno una citt\u00e0/provincia",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_a_to_d": "Citt\u00e0/provincia (A-D)",
+                    "_e_to_h": "Citt\u00e0/provincia (E-H)",
+                    "_i_to_l": "Citt\u00e0/provincia (I-L)",
+                    "_m_to_q": "Citt\u00e0/provincia (M-Q)",
+                    "_r_to_u": "Citt\u00e0/provincia (R-U)",
+                    "_v_to_z": "Citt\u00e0/provincia (V-Z)",
+                    "corona_filter": "Rimuovi avvisi Corona",
+                    "slots": "Avvisi massimi per citt\u00e0/provincia"
+                },
+                "title": "Opzioni"
+            }
+        }
+    }
+}

@@ -10,10 +10,12 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
+from .conftest import get_states_response_for_uid
+
 from tests.common import async_fire_time_changed
-from tests.components.freedompro.const import DEVICES_STATE
 
 uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*ILYH1E3DWZOVMNEUIMDYMNLOW-LFRQFDPWWJOVHVDOS"
 
@@ -42,14 +44,12 @@ async def test_fan_get_state(hass, init_integration):
     assert entry
     assert entry.unique_id == uid
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            state_response["state"]["on"] = True
-            state_response["state"]["rotationSpeed"] = 50
+    states_response = get_states_response_for_uid(uid)
+    states_response[0]["state"]["on"] = True
+    states_response[0]["state"]["rotationSpeed"] = 50
     with patch(
         "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
+        return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
         await hass.async_block_till_done()
@@ -72,6 +72,18 @@ async def test_fan_set_off(hass, init_integration):
     registry = er.async_get(hass)
 
     entity_id = "fan.bedroom"
+
+    states_response = get_states_response_for_uid(uid)
+    states_response[0]["state"]["on"] = True
+    states_response[0]["state"]["rotationSpeed"] = 50
+    with patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=states_response,
+    ):
+        await async_update_entity(hass, entity_id)
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+        await hass.async_block_till_done()
+
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
@@ -91,10 +103,20 @@ async def test_fan_set_off(hass, init_integration):
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"on": false}')
 
+    states_response[0]["state"]["on"] = False
+    states_response[0]["state"]["rotationSpeed"] = 0
+    with patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=states_response,
+    ):
+        await async_update_entity(hass, entity_id)
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+        await hass.async_block_till_done()
+
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_PERCENTAGE] == 50
-    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] == 0
+    assert state.state == STATE_OFF
 
 
 async def test_fan_set_on(hass, init_integration):
@@ -105,8 +127,8 @@ async def test_fan_set_on(hass, init_integration):
     entity_id = "fan.bedroom"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_PERCENTAGE] == 0
     assert state.attributes.get("friendly_name") == "bedroom"
 
     entry = registry.async_get(entity_id)
@@ -122,7 +144,16 @@ async def test_fan_set_on(hass, init_integration):
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"on": true}')
 
-    await hass.async_block_till_done()
+    states_response = get_states_response_for_uid(uid)
+    states_response[0]["state"]["on"] = True
+    states_response[0]["state"]["rotationSpeed"] = 50
+    with patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=states_response,
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+        await hass.async_block_till_done()
+
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_PERCENTAGE] == 50
     assert state.state == STATE_ON
@@ -136,8 +167,8 @@ async def test_fan_set_percent(hass, init_integration):
     entity_id = "fan.bedroom"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_PERCENTAGE] == 0
     assert state.attributes.get("friendly_name") == "bedroom"
 
     entry = registry.async_get(entity_id)
@@ -153,7 +184,17 @@ async def test_fan_set_percent(hass, init_integration):
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"rotationSpeed": 40}')
 
+    states_response = get_states_response_for_uid(uid)
+    states_response[0]["state"]["on"] = True
+    states_response[0]["state"]["rotationSpeed"] = 40
+    with patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=states_response,
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+        await hass.async_block_till_done()
+
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_PERCENTAGE] == 50
+    assert state.attributes[ATTR_PERCENTAGE] == 40
     assert state.state == STATE_ON

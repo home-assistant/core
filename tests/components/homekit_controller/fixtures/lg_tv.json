@@ -1,0 +1,841 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "bool",
+            "iid": 2,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "LG Electronics"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "OLED55B9PUA"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "LG webOS TV AF80"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 6,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "999AAAAAA999"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 7,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "value": "04.71.04"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 8,
+            "perms": ["pr"],
+            "type": "00000053-0000-1000-8000-0026BB765291",
+            "value": "1"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 9,
+            "perms": ["pr", "hd"],
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "value": "2.1;16B62a"
+          }
+        ],
+        "hidden": false,
+        "iid": 1,
+        "linked": [],
+        "primary": false,
+        "stype": "accessory-information",
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 18,
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "value": "1.1.0"
+          }
+        ],
+        "hidden": false,
+        "iid": 16,
+        "linked": [],
+        "primary": false,
+        "stype": "service",
+        "type": "000000A2-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 50,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "LG webOS TV"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 51,
+            "maxLen": 25,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E3",
+            "value": "LG webOS TV OLED55B9PUA"
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 52,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "uint32",
+            "iid": 53,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E7",
+            "value": 6
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 54,
+            "maxValue": 2,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "E8",
+            "value": 1
+          },
+          {
+            "format": "uint8",
+            "iid": 57,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pw"],
+            "type": "DF"
+          },
+          {
+            "format": "uint8",
+            "iid": 59,
+            "maxValue": 16,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pw"],
+            "type": "E1"
+          }
+        ],
+        "hidden": false,
+        "iid": 48,
+        "linked": [64, 80, 384, 256, 272, 288, 304, 320, 336, 352],
+        "primary": true,
+        "stype": "Unknown Service: D8",
+        "type": "D8"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "uint16",
+            "iid": 66,
+            "maxValue": 2,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E5",
+            "value": 0
+          },
+          {
+            "ev": false,
+            "format": "tlv8",
+            "iid": 67,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E4",
+            "value": "AQACAQA="
+          }
+        ],
+        "hidden": false,
+        "iid": 64,
+        "linked": [],
+        "primary": false,
+        "stype": "Unknown Service: DA",
+        "type": "DA"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 84,
+            "maxValue": 100,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000119-0000-1000-8000-0026BB765291",
+            "unit": "percentage",
+            "value": 0
+          },
+          {
+            "ev": false,
+            "format": "bool",
+            "iid": 82,
+            "perms": ["pr", "pw", "ev"],
+            "type": "0000011A-0000-1000-8000-0026BB765291",
+            "value": 0
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 83,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Speaker"
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 85,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "000000B0-0000-1000-8000-0026BB765291",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 86,
+            "maxValue": 3,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "E9",
+            "value": 2
+          },
+          {
+            "format": "uint8",
+            "iid": 87,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pw"],
+            "type": "EA"
+          }
+        ],
+        "hidden": false,
+        "iid": 80,
+        "linked": [],
+        "primary": false,
+        "stype": "speaker",
+        "type": "00000113-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "tlv8",
+            "iid": 385,
+            "perms": ["pr"],
+            "type": "222",
+            "value": "AQgBBnRAvoQmJQIaAQYgF0KJBUICBiAXQokFQgAAAgZ0QL6EJiQ="
+          }
+        ],
+        "hidden": false,
+        "iid": 384,
+        "linked": [],
+        "primary": false,
+        "stype": "Unknown Service: 221",
+        "type": "221"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 258,
+            "maxValue": 10,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DB",
+            "value": 8
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 259,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "D6",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "uint32",
+            "iid": 260,
+            "perms": ["pr"],
+            "type": "E6",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 261,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "AirPlay"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 262,
+            "maxLen": 25,
+            "perms": ["pr", "ev"],
+            "type": "E3",
+            "value": "AirPlay"
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 264,
+            "maxValue": 6,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DC",
+            "value": 0
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 263,
+            "maxValue": 3,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "135",
+            "value": 3
+          }
+        ],
+        "hidden": false,
+        "iid": 256,
+        "linked": [],
+        "primary": false,
+        "stype": "Unknown Service: D9",
+        "type": "D9"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 274,
+            "maxValue": 10,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DB",
+            "value": 2
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 275,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "D6",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "uint32",
+            "iid": 276,
+            "perms": ["pr"],
+            "type": "E6",
+            "value": 2
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 277,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Live TV"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 278,
+            "maxLen": 25,
+            "perms": ["pr", "ev"],
+            "type": "E3",
+            "value": "Live TV"
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 280,
+            "maxValue": 6,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DC",
+            "value": 3
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 279,
+            "maxValue": 3,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "135",
+            "value": 3
+          }
+        ],
+        "hidden": false,
+        "iid": 272,
+        "linked": [],
+        "primary": false,
+        "stype": "Unknown Service: D9",
+        "type": "D9"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 290,
+            "maxValue": 10,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DB",
+            "value": 3
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 291,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "D6",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "uint32",
+            "iid": 292,
+            "perms": ["pr"],
+            "type": "E6",
+            "value": 3
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 293,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "HDMI 1"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 294,
+            "maxLen": 25,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E3",
+            "value": "HDMI 1"
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 296,
+            "maxValue": 6,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DC",
+            "value": 4
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 295,
+            "maxValue": 3,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "135",
+            "value": 1
+          }
+        ],
+        "hidden": false,
+        "iid": 288,
+        "linked": [],
+        "primary": false,
+        "stype": "Unknown Service: D9",
+        "type": "D9"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 306,
+            "maxValue": 10,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DB",
+            "value": 3
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 307,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "D6",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "uint32",
+            "iid": 308,
+            "perms": ["pr"],
+            "type": "E6",
+            "value": 4
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 309,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "HDMI 2"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 310,
+            "maxLen": 25,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E3",
+            "value": "Sony"
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 312,
+            "maxValue": 6,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DC",
+            "value": 4
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 311,
+            "maxValue": 3,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "135",
+            "value": 2
+          }
+        ],
+        "hidden": false,
+        "iid": 304,
+        "linked": [],
+        "primary": false,
+        "stype": "Unknown Service: D9",
+        "type": "D9"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 322,
+            "maxValue": 10,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DB",
+            "value": 3
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 323,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "D6",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "uint32",
+            "iid": 324,
+            "perms": ["pr"],
+            "type": "E6",
+            "value": 5
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 325,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "HDMI 3"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 326,
+            "maxLen": 25,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E3",
+            "value": "Apple"
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 328,
+            "maxValue": 6,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DC",
+            "value": 4
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 327,
+            "maxValue": 3,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "135",
+            "value": 2
+          }
+        ],
+        "hidden": false,
+        "iid": 320,
+        "linked": [],
+        "primary": false,
+        "stype": "Unknown Service: D9",
+        "type": "D9"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 338,
+            "maxValue": 10,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DB",
+            "value": 4
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 339,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "D6",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "uint32",
+            "iid": 340,
+            "perms": ["pr"],
+            "type": "E6",
+            "value": 7
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 341,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "AV"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 342,
+            "maxLen": 25,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E3",
+            "value": "AV"
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 344,
+            "maxValue": 6,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DC",
+            "value": 2
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 343,
+            "maxValue": 3,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "135",
+            "value": 1
+          }
+        ],
+        "hidden": false,
+        "iid": 336,
+        "linked": [],
+        "primary": false,
+        "stype": "Unknown Service: D9",
+        "type": "D9"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 354,
+            "maxValue": 10,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DB",
+            "value": 3
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 355,
+            "maxValue": 1,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "D6",
+            "value": 1
+          },
+          {
+            "ev": false,
+            "format": "uint32",
+            "iid": 356,
+            "perms": ["pr"],
+            "type": "E6",
+            "value": 6
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 357,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "HDMI 4"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 358,
+            "maxLen": 25,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E3",
+            "value": "HDMI 4"
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 360,
+            "maxValue": 6,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "DC",
+            "value": 4
+          },
+          {
+            "ev": false,
+            "format": "uint8",
+            "iid": 359,
+            "maxValue": 3,
+            "minStep": 1,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "135",
+            "value": 2
+          }
+        ],
+        "hidden": false,
+        "iid": 352,
+        "linked": [],
+        "primary": false,
+        "stype": "Unknown Service: D9",
+        "type": "D9"
+      }
+    ]
+  }
+]

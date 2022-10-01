@@ -8,16 +8,9 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Bronnen"
-                },
-                "title": "Kies de te controleren bronnen"
-            },
             "ups": {
                 "data": {
-                    "alias": "Alias",
-                    "resources": "Bronnen"
+                    "alias": "Alias"
                 },
                 "title": "Kies een UPS om uit te lezen"
             },
@@ -33,17 +26,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "Verbinden mislukt",
-            "unknown": "Onverwachte fout"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Bronnen",
                     "scan_interval": "Scaninterval (seconden)"
-                },
-                "description": "Kies Sensorbronnen."
+                }
             }
         }
     }

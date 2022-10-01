@@ -1,17 +1,21 @@
 """Tests for the Google Assistant traits."""
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
 from homeassistant.components import (
     alarm_control_panel,
     binary_sensor,
+    button,
     camera,
+    climate,
     cover,
     fan,
     group,
+    humidifier,
     input_boolean,
+    input_button,
     input_select,
     light,
     lock,
@@ -23,14 +27,9 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.components.google_assistant.error import SmartHomeError
-from homeassistant.components.humidifier import const as humidifier
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    SERVICE_PLAY_MEDIA,
-)
+from homeassistant.components.media_player import SERVICE_PLAY_MEDIA, MediaType
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -146,7 +145,7 @@ async def test_camera_stream(hass):
 
     assert trt.query_attributes() == {
         "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
-        "cameraStreamReceiverAppId": "B12CE3CA",
+        "cameraStreamReceiverAppId": "B45F4572",
     }
 
 
@@ -767,12 +766,38 @@ async def test_light_modes(hass):
     }
 
 
+@pytest.mark.parametrize(
+    "component",
+    [button, input_button],
+)
+async def test_scene_button(hass, component):
+    """Test Scene trait support for the (input) button domain."""
+    assert helpers.get_google_type(component.DOMAIN, None) is not None
+    assert trait.SceneTrait.supported(component.DOMAIN, 0, None, None)
+
+    trt = trait.SceneTrait(
+        hass, State(f"{component.DOMAIN}.bla", STATE_UNKNOWN), BASIC_CONFIG
+    )
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {}
+    assert trt.can_execute(trait.COMMAND_ACTIVATE_SCENE, {})
+
+    calls = async_mock_service(hass, component.DOMAIN, component.SERVICE_PRESS)
+    await trt.execute(trait.COMMAND_ACTIVATE_SCENE, BASIC_DATA, {}, {})
+
+    # We don't wait till button press is done.
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{component.DOMAIN}.bla"}
+
+
 async def test_scene_scene(hass):
     """Test Scene trait support for scene domain."""
     assert helpers.get_google_type(scene.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(scene.DOMAIN, 0, None, None)
 
-    trt = trait.SceneTrait(hass, State("scene.bla", scene.STATE), BASIC_CONFIG)
+    trt = trait.SceneTrait(hass, State("scene.bla", STATE_UNKNOWN), BASIC_CONFIG)
     assert trt.sync_attributes() == {}
     assert trt.query_attributes() == {}
     assert trt.can_execute(trait.COMMAND_ACTIVATE_SCENE, {})
@@ -814,14 +839,14 @@ async def test_temperature_setting_climate_onoff(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_AUTO,
+            climate.HVACMode.AUTO,
             {
                 ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE,
                 climate.ATTR_HVAC_MODES: [
-                    climate.HVAC_MODE_OFF,
-                    climate.HVAC_MODE_COOL,
-                    climate.HVAC_MODE_HEAT,
-                    climate.HVAC_MODE_HEAT_COOL,
+                    climate.HVACMode.OFF,
+                    climate.HVACMode.COOL,
+                    climate.HVACMode.HEAT,
+                    climate.HVACMode.HEAT_COOL,
                 ],
                 climate.ATTR_MIN_TEMP: None,
                 climate.ATTR_MAX_TEMP: None,
@@ -859,7 +884,7 @@ async def test_temperature_setting_climate_no_modes(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_AUTO,
+            climate.HVACMode.AUTO,
             {
                 climate.ATTR_HVAC_MODES: [],
                 climate.ATTR_MIN_TEMP: None,
@@ -885,16 +910,16 @@ async def test_temperature_setting_climate_range(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_AUTO,
+            climate.HVACMode.AUTO,
             {
                 climate.ATTR_CURRENT_TEMPERATURE: 70,
                 climate.ATTR_CURRENT_HUMIDITY: 25,
                 ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE,
                 climate.ATTR_HVAC_MODES: [
                     STATE_OFF,
-                    climate.HVAC_MODE_COOL,
-                    climate.HVAC_MODE_HEAT,
-                    climate.HVAC_MODE_AUTO,
+                    climate.HVACMode.COOL,
+                    climate.HVACMode.HEAT,
+                    climate.HVACMode.AUTO,
                 ],
                 climate.ATTR_TARGET_TEMP_HIGH: 75,
                 climate.ATTR_TARGET_TEMP_LOW: 65,
@@ -942,7 +967,7 @@ async def test_temperature_setting_climate_range(hass):
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: "climate.bla",
-        climate.ATTR_HVAC_MODE: climate.HVAC_MODE_COOL,
+        climate.ATTR_HVAC_MODE: climate.HVACMode.COOL,
     }
 
     with pytest.raises(helpers.SmartHomeError) as err:
@@ -967,9 +992,9 @@ async def test_temperature_setting_climate_setpoint(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_COOL,
+            climate.HVACMode.COOL,
             {
-                climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVAC_MODE_COOL],
+                climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVACMode.COOL],
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
                 ATTR_TEMPERATURE: 18,
@@ -1022,11 +1047,11 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_HEAT_COOL,
+            climate.HVACMode.HEAT_COOL,
             {
                 climate.ATTR_HVAC_MODES: [
-                    climate.HVAC_MODE_OFF,
-                    climate.HVAC_MODE_HEAT_COOL,
+                    climate.HVACMode.OFF,
+                    climate.HVACMode.HEAT_COOL,
                 ],
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
@@ -1561,7 +1586,7 @@ async def test_fan_speed(hass):
         hass,
         State(
             "fan.living_room_fan",
-            fan.SPEED_HIGH,
+            STATE_ON,
             attributes={
                 "percentage": 33,
                 "percentage_step": 1.0,
@@ -1573,10 +1598,12 @@ async def test_fan_speed(hass):
     assert trt.sync_attributes() == {
         "reversible": False,
         "supportsFanSpeedPercent": True,
+        "availableFanSpeeds": ANY,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 33,
+        "currentFanSpeedSetting": ANY,
     }
 
     assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeedPercent": 10})
@@ -1586,6 +1613,143 @@ async def test_fan_speed(hass):
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
+
+
+async def test_fan_speed_without_percentage_step(hass):
+    """Test FanSpeed trait speed control percentage step for fan domain."""
+    assert helpers.get_google_type(fan.DOMAIN, None) is not None
+    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+
+    trt = trait.FanSpeedTrait(
+        hass,
+        State(
+            "fan.living_room_fan",
+            STATE_ON,
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "reversible": False,
+        "supportsFanSpeedPercent": True,
+        "availableFanSpeeds": ANY,
+    }
+    # If a fan state has (temporary) no percentage_step attribute return 1 available
+    assert trt.query_attributes() == {
+        "currentFanSpeedPercent": 0,
+        "currentFanSpeedSetting": "1/5",
+    }
+
+
+@pytest.mark.parametrize(
+    "percentage,percentage_step, speed, speeds, percentage_result",
+    [
+        (
+            33,
+            1.0,
+            "2/5",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium", "3"],
+                ["Medium High", "4"],
+                ["High", "Max", "Fast", "5"],
+            ],
+            40,
+        ),
+        (
+            40,
+            1.0,
+            "2/5",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium", "3"],
+                ["Medium High", "4"],
+                ["High", "Max", "Fast", "5"],
+            ],
+            40,
+        ),
+        (
+            33,
+            100 / 3,
+            "1/3",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium", "2"],
+                ["High", "Max", "Fast", "3"],
+            ],
+            33,
+        ),
+        (
+            20,
+            100 / 4,
+            "1/4",
+            [
+                ["Low", "Min", "Slow", "1"],
+                ["Medium Low", "2"],
+                ["Medium High", "3"],
+                ["High", "Max", "Fast", "4"],
+            ],
+            25,
+        ),
+    ],
+)
+async def test_fan_speed_ordered(
+    hass,
+    percentage: int,
+    percentage_step: float,
+    speed: str,
+    speeds: list[list[str]],
+    percentage_result: int,
+):
+    """Test FanSpeed trait speed control support for fan domain."""
+    assert helpers.get_google_type(fan.DOMAIN, None) is not None
+    assert trait.FanSpeedTrait.supported(fan.DOMAIN, fan.SUPPORT_SET_SPEED, None, None)
+
+    trt = trait.FanSpeedTrait(
+        hass,
+        State(
+            "fan.living_room_fan",
+            STATE_ON,
+            attributes={
+                "percentage": percentage,
+                "percentage_step": percentage_step,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "reversible": False,
+        "supportsFanSpeedPercent": True,
+        "availableFanSpeeds": {
+            "ordered": True,
+            "speeds": [
+                {
+                    "speed_name": f"{idx+1}/{len(speeds)}",
+                    "speed_values": [{"lang": "en", "speed_synonym": x}],
+                }
+                for idx, x in enumerate(speeds)
+            ],
+        },
+    }
+
+    assert trt.query_attributes() == {
+        "currentFanSpeedPercent": percentage,
+        "currentFanSpeedSetting": speed,
+    }
+
+    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": speed})
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PERCENTAGE)
+    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeed": speed}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "fan.living_room_fan",
+        "percentage": percentage_result,
+    }
 
 
 @pytest.mark.parametrize(
@@ -1605,7 +1769,7 @@ async def test_fan_reverse(hass, direction_state, direction_call):
         hass,
         State(
             "fan.living_room_fan",
-            fan.SPEED_HIGH,
+            STATE_ON,
             attributes={
                 "percentage": 33,
                 "percentage_step": 1.0,
@@ -1619,10 +1783,12 @@ async def test_fan_reverse(hass, direction_state, direction_call):
     assert trt.sync_attributes() == {
         "reversible": True,
         "supportsFanSpeedPercent": True,
+        "availableFanSpeeds": ANY,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedPercent": 33,
+        "currentFanSpeedSetting": ANY,
     }
 
     assert trt.can_execute(trait.COMMAND_REVERSE, params={})
@@ -2423,7 +2589,11 @@ async def test_openclose_cover_no_position(hass):
 
 @pytest.mark.parametrize(
     "device_class",
-    (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_GATE),
+    (
+        cover.CoverDeviceClass.DOOR,
+        cover.CoverDeviceClass.GARAGE,
+        cover.CoverDeviceClass.GATE,
+    ),
 )
 async def test_openclose_cover_secure(hass, device_class):
     """Test OpenClose trait support for cover domain."""
@@ -2486,11 +2656,11 @@ async def test_openclose_cover_secure(hass, device_class):
 @pytest.mark.parametrize(
     "device_class",
     (
-        binary_sensor.DEVICE_CLASS_DOOR,
-        binary_sensor.DEVICE_CLASS_GARAGE_DOOR,
-        binary_sensor.DEVICE_CLASS_LOCK,
-        binary_sensor.DEVICE_CLASS_OPENING,
-        binary_sensor.DEVICE_CLASS_WINDOW,
+        binary_sensor.BinarySensorDeviceClass.DOOR,
+        binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
+        binary_sensor.BinarySensorDeviceClass.LOCK,
+        binary_sensor.BinarySensorDeviceClass.OPENING,
+        binary_sensor.BinarySensorDeviceClass.WINDOW,
     ),
 )
 async def test_openclose_binary_sensor(hass, device_class):
@@ -2707,14 +2877,14 @@ async def test_media_player_mute(hass):
 async def test_temperature_control_sensor(hass):
     """Test TemperatureControl trait support for temperature sensor."""
     assert (
-        helpers.get_google_type(sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE)
+        helpers.get_google_type(sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE)
         is not None
     )
     assert not trait.TemperatureControlTrait.supported(
-        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_HUMIDITY, None
+        sensor.DOMAIN, 0, sensor.SensorDeviceClass.HUMIDITY, None
     )
     assert trait.TemperatureControlTrait.supported(
-        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE, None
+        sensor.DOMAIN, 0, sensor.SensorDeviceClass.TEMPERATURE, None
     )
 
 
@@ -2734,7 +2904,9 @@ async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, a
     trt = trait.TemperatureControlTrait(
         hass,
         State(
-            "sensor.test", state, {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE}
+            "sensor.test",
+            state,
+            {ATTR_DEVICE_CLASS: sensor.SensorDeviceClass.TEMPERATURE},
         ),
         BASIC_CONFIG,
     )
@@ -2758,13 +2930,14 @@ async def test_temperature_control_sensor_data(hass, unit_in, unit_out, state, a
 async def test_humidity_setting_sensor(hass):
     """Test HumiditySetting trait support for humidity sensor."""
     assert (
-        helpers.get_google_type(sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY) is not None
+        helpers.get_google_type(sensor.DOMAIN, sensor.SensorDeviceClass.HUMIDITY)
+        is not None
     )
     assert not trait.HumiditySettingTrait.supported(
-        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE, None
+        sensor.DOMAIN, 0, sensor.SensorDeviceClass.TEMPERATURE, None
     )
     assert trait.HumiditySettingTrait.supported(
-        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_HUMIDITY, None
+        sensor.DOMAIN, 0, sensor.SensorDeviceClass.HUMIDITY, None
     )
 
 
@@ -2775,7 +2948,9 @@ async def test_humidity_setting_sensor_data(hass, state, ambient):
     """Test HumiditySetting trait support for humidity sensor."""
     trt = trait.HumiditySettingTrait(
         hass,
-        State("sensor.test", state, {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_HUMIDITY}),
+        State(
+            "sensor.test", state, {ATTR_DEVICE_CLASS: sensor.SensorDeviceClass.HUMIDITY}
+        ),
         BASIC_CONFIG,
     )
 
@@ -2962,7 +3137,7 @@ async def test_channel(hass):
     assert trait.ChannelTrait.supported(
         media_player.DOMAIN,
         media_player.SUPPORT_PLAY_MEDIA,
-        media_player.DEVICE_CLASS_TV,
+        media_player.MediaPlayerDeviceClass.TV,
         None,
     )
     assert (
@@ -2991,7 +3166,7 @@ async def test_channel(hass):
     assert media_player_calls[0].data == {
         ATTR_ENTITY_ID: "media_player.demo",
         media_player.ATTR_MEDIA_CONTENT_ID: "1",
-        media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+        media_player.ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
     }
 
     with pytest.raises(SmartHomeError, match="Channel is not available"):
@@ -3008,12 +3183,12 @@ async def test_channel(hass):
 async def test_sensorstate(hass):
     """Test SensorState trait support for sensor domain."""
     sensor_types = {
-        sensor.DEVICE_CLASS_AQI: ("AirQuality", "AQI"),
-        sensor.DEVICE_CLASS_CO: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
-        sensor.DEVICE_CLASS_CO2: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
-        sensor.DEVICE_CLASS_PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
-        sensor.DEVICE_CLASS_PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
-        sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: (
+        sensor.SensorDeviceClass.AQI: ("AirQuality", "AQI"),
+        sensor.SensorDeviceClass.CO: ("CarbonMonoxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.CO2: ("CarbonDioxideLevel", "PARTS_PER_MILLION"),
+        sensor.SensorDeviceClass.PM25: ("PM2.5", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.SensorDeviceClass.PM10: ("PM10", "MICROGRAMS_PER_CUBIC_METER"),
+        sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: (
             "VolatileOrganicCompounds",
             "PARTS_PER_MILLION",
         ),
@@ -3052,7 +3227,7 @@ async def test_sensorstate(hass):
     assert helpers.get_google_type(sensor.DOMAIN, None) is not None
     assert (
         trait.SensorStateTrait.supported(
-            sensor.DOMAIN, None, sensor.DEVICE_CLASS_MONETARY, None
+            sensor.DOMAIN, None, sensor.SensorDeviceClass.MONETARY, None
         )
         is False
     )

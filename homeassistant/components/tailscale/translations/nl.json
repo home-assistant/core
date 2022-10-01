@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Herauthenticatie geslaagd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "description": "Tailscale API tokens zijn 90 dagen geldig. U kunt een nieuwe Tailscale API sleutel aanmaken op https://login.tailscale.com/admin/settings/authkeys."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "tailnet": "Tailnet"
+                },
+                "description": "Deze integratie controleert uw Tailscale netwerk, het maakt uw Home Assistant **NIET** toegankelijk via Tailscale VPN. \n\nOm te authenticeren met Tailscale moet u een API sleutel aanmaken op {authkeys_url}.\n\nEen Tailnet is de naam van uw Tailscale netwerk. U kunt het vinden in de linkerbovenhoek in het Tailscale Admin Panel (naast het Tailscale logo)."
+            }
+        }
+    }
+}

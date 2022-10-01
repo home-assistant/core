@@ -2,6 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.vacuum import (
     DOMAIN,
     STATE_CLEANING,
@@ -9,6 +10,8 @@ from homeassistant.components.vacuum import (
     STATE_RETURNING,
 )
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -53,19 +56,64 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "is_cleaning",
+            "type": condition,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
-        },
+            "metadata": {"secondary": False},
+        }
+        for condition in ["is_cleaning", "is_docked"]
+    ]
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
+    assert_lists_same(conditions, expected_conditions)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_conditions_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected conditions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+    )
+    expected_conditions = [
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "is_docked",
+            "type": condition,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
-        },
+            "metadata": {"secondary": True},
+        }
+        for condition in ["is_cleaning", "is_docked"]
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert_lists_same(conditions, expected_conditions)
 
 

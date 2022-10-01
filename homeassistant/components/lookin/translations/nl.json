@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "cannot_connect": "Kan geen verbinding maken",
+            "no_devices_found": "Geen apparaten gevonden op het netwerk"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "no_devices_found": "Geen apparaten gevonden op het netwerk",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "device_name": {
+                "data": {
+                    "name": "Naam"
+                }
+            },
+            "discovery_confirm": {
+                "description": "Wilt u {name} ({host}) instellen?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP-adres"
+                }
+            }
+        }
+    }
+}

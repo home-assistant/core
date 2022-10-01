@@ -25,17 +25,8 @@
             "cannot_connect": "Gagal terhubung"
         },
         "step": {
-            "entity_config": {
-                "data": {
-                    "reverse": "Penutup dibalik"
-                },
-                "description": "Konfigurasikan opsi untuk `{entity_id}`",
-                "title": "Konfigurasikan Entitas"
-            },
             "init": {
                 "data": {
-                    "default_reverse": "Status pembalikan baku untuk penutup yang belum dikonfigurasi",
-                    "entity_id": "Konfigurasikan entitas tertentu.",
                     "target_id": "Konfigurasikan opsi untuk penutup."
                 },
                 "title": "Konfigurasikan Opsi MyLink"
@@ -48,6 +39,5 @@
                 "title": "Konfigurasikan Cover MyLink"
             }
         }
-    },
-    "title": "Somfy MyLink"
+    }
 }

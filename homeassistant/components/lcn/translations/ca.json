@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "codelock": "codi de bloqueig rebut",
+            "fingerprint": "codi d'empremta rebut",
+            "send_keys": "claus d'enviament rebudes",
+            "transmitter": "codi del transmissor rebut",
+            "transponder": "codi del transponedor rebut"
+        }
+    }
+}

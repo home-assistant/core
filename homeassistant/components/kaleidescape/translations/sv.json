@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "unknown": "Ov\u00e4ntat fel",
+            "unsupported": "Enhet som inte st\u00f6ds"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "unsupported": "Enhet som inte st\u00f6ds"
+        },
+        "flow_title": "{model} ({name})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vill du st\u00e4lla in {model} -spelaren med namnet {name} ?"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                }
+            }
+        }
+    }
+}

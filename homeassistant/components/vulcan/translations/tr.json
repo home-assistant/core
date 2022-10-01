@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "all_student_already_configured": "T\u00fcm \u00f6\u011frenciler zaten eklendi.",
+            "already_configured": "Bu \u00f6\u011frenci zaten eklendi.",
+            "no_matching_entries": "E\u015fle\u015fen giri\u015f bulunamad\u0131, l\u00fctfen farkl\u0131 bir hesap kullan\u0131n veya eski \u00f6\u011frenci ile entegrasyonu kald\u0131r\u0131n..",
+            "reauth_successful": "Yeniden yetkilendirme ba\u015far\u0131l\u0131"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flant\u0131 hatas\u0131 - l\u00fctfen internet ba\u011flant\u0131n\u0131z\u0131 kontrol edin",
+            "expired_credentials": "S\u00fcresi dolmu\u015f kimlik bilgileri - l\u00fctfen Vulcan mobil uygulama kay\u0131t sayfas\u0131nda yeni olu\u015fturun",
+            "expired_token": "S\u00fcresi dolmu\u015f anahtar - l\u00fctfen yeni bir anahtar olu\u015fturun",
+            "invalid_pin": "Ge\u00e7ersiz PIN",
+            "invalid_symbol": "Ge\u00e7ersiz sembol",
+            "invalid_token": "Ge\u00e7ersiz anahtar",
+            "unknown": "Bilinmeyen hata olu\u015ftu"
+        },
+        "step": {
+            "add_next_config_entry": {
+                "data": {
+                    "use_saved_credentials": "Kaydedilmi\u015f kimlik bilgilerini kullan"
+                },
+                "description": "Ba\u015fka bir \u00f6\u011frenci ekleyin."
+            },
+            "auth": {
+                "data": {
+                    "pin": "Pin",
+                    "region": "Sembol",
+                    "token": "Anahtar"
+                },
+                "description": "Mobil uygulama kay\u0131t sayfas\u0131n\u0131 kullanarak Vulcan Hesab\u0131n\u0131za giri\u015f yap\u0131n."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "Pin",
+                    "region": "Sembol",
+                    "token": "Anahtar"
+                },
+                "description": "Mobil uygulama kay\u0131t sayfas\u0131n\u0131 kullanarak Vulcan Hesab\u0131n\u0131za giri\u015f yap\u0131n."
+            },
+            "select_saved_credentials": {
+                "data": {
+                    "credentials": "Oturum a\u00e7"
+                },
+                "description": "Kaydedilmi\u015f kimlik bilgilerini se\u00e7in."
+            },
+            "select_student": {
+                "data": {
+                    "student_name": "\u00d6\u011frenci se\u00e7"
+                },
+                "description": "\u00d6\u011frenciyi se\u00e7in, yeniden t\u00fcmle\u015ftirme ekleyerek daha fazla \u00f6\u011frenci ekleyebilirsiniz."
+            }
+        }
+    }
+}

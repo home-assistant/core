@@ -4,15 +4,16 @@ from __future__ import annotations
 from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.speedtestdotnet import SpeedTestDataCoordinator
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SpeedTestDataCoordinator
 from .const import (
     ATTR_BYTES_RECEIVED,
     ATTR_BYTES_SENT,
@@ -41,11 +42,14 @@ async def async_setup_entry(
     )
 
 
-class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
+class SpeedtestSensor(
+    CoordinatorEntity[SpeedTestDataCoordinator], RestoreEntity, SensorEntity
+):
     """Implementation of a speedtest.net sensor."""
 
-    coordinator: SpeedTestDataCoordinator
     entity_description: SpeedtestSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
     _attr_icon = ICON
 
     def __init__(
@@ -56,15 +60,15 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{DEFAULT_NAME} {description.name}"
         self._attr_unique_id = description.key
         self._state: StateType = None
-        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self.coordinator.config_entry.entry_id)},
-            "name": DEFAULT_NAME,
-            "entry_type": "service",
-        }
+        self._attrs: dict[str, Any] = {}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
+            name=DEFAULT_NAME,
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url="https://www.speedtest.net/",
+        )
 
     @property
     def native_value(self) -> StateType:
@@ -98,6 +102,5 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._state = state.state

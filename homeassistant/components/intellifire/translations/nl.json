@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "not_intellifire_device": "Niet een IntelliFire apparaat.",
+            "reauth_successful": "Herauthenticatie geslaagd"
+        },
+        "error": {
+            "api_error": "Inloggen mislukt",
+            "cannot_connect": "Kan geen verbinding maken",
+            "iftapi_connect": "Fout bij het verbinden met iftapi.net"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "api_config": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mail"
+                }
+            },
+            "dhcp_confirm": {
+                "description": "Wilt u {host} instellen\n Serieel: {serial} ?"
+            },
+            "manual_device_entry": {
+                "data": {
+                    "host": "Host (IP-adres)"
+                },
+                "description": "Lokale configuratie"
+            },
+            "pick_device": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "De volgende IntelliFire-apparaten zijn ontdekt. Selecteer welke u wilt configureren.",
+                "title": "Apparaat selectie"
+            }
+        }
+    }
+}

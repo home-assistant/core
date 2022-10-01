@@ -1,4 +1,6 @@
 """IMAP sensor support."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -14,8 +16,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the IMAP platform."""
     sensor = ImapSensor(
         config.get(CONF_NAME),
@@ -79,7 +89,7 @@ class ImapSensor(SensorEntity):
         self._does_push = None
         self._idle_loop_task = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
         if not self.should_poll:
             self._idle_loop_task = self.hass.loop.create_task(self.idle_loop())
@@ -100,12 +110,12 @@ class ImapSensor(SensorEntity):
         return self._email_count
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return the availability of the device."""
         return self._connection is not None
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return if polling is needed."""
         return not self._does_push
 
@@ -134,14 +144,14 @@ class ImapSensor(SensorEntity):
                     idle = await self._connection.idle_start()
                     await self._connection.wait_server_push()
                     self._connection.idle_done()
-                    with async_timeout.timeout(10):
+                    async with async_timeout.timeout(10):
                         await idle
                 else:
                     self.async_write_ha_state()
             except (AioImapException, asyncio.TimeoutError):
                 self.disconnected()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Periodic polling of state."""
         try:
             if await self.connection():

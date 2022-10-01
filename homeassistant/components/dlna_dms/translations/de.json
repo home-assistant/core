@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "bad_ssdp": "In den SSDP-Daten fehlt ein erforderlicher Wert",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "not_dms": "Das Ger\u00e4t ist kein unterst\u00fctzter Medienserver"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "W\u00e4hle ein zu konfigurierendes Ger\u00e4t aus",
+                "title": "Erkannte DLNA DMA-Ger\u00e4te"
+            }
+        }
+    }
+}

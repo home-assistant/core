@@ -2,16 +2,25 @@
     "config": {
         "abort": {
             "already_configured_device": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung",
+            "no_unconfigured_devices": "Tidak ditemukan perangkat yang tidak dikonfigurasi.",
             "switchbot_unsupported_type": "Jenis Switchbot yang tidak didukung.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
-        "error": {
-            "cannot_connect": "Gagal terhubung"
-        },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Ingin menyiapkan {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Perangkat {name} memerlukan kata sandi"
+            },
             "user": {
                 "data": {
+                    "address": "Alamat perangkat",
                     "mac": "Alamat MAC perangkat",
                     "name": "Nama",
                     "password": "Kata Sandi"

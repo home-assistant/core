@@ -1,6 +1,9 @@
 """Support for wired switches attached to a Konnected device."""
 import logging
+from typing import Any
 
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_STATE,
     CONF_DEVICES,
@@ -9,9 +12,10 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_ZONE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_ACTIVATION,
@@ -25,7 +29,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up switches attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
     device_id = config_entry.data["id"]
@@ -36,7 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(switches)
 
 
-class KonnectedSwitch(ToggleEntity):
+class KonnectedSwitch(SwitchEntity):
     """Representation of a Konnected switch."""
 
     def __init__(self, device_id, zone_num, data):
@@ -77,18 +85,16 @@ class KonnectedSwitch(ToggleEntity):
         return device_data.get("panel")
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
-        }
+        return DeviceInfo(identifiers={(KONNECTED_DOMAIN, self._device_id)})
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the panel is available."""
         return self.panel.available
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Send a command to turn on the switch."""
         resp = await self.panel.update_switch(
             self._zone_num,
@@ -105,7 +111,7 @@ class KonnectedSwitch(ToggleEntity):
                 # Immediately set the state back off for momentary switches
                 self._set_state(False)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send a command to turn off the switch."""
         resp = await self.panel.update_switch(
             self._zone_num, int(self._activation == STATE_LOW)
@@ -137,7 +143,7 @@ class KonnectedSwitch(ToggleEntity):
         """Update the switch state."""
         self._set_state(state)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Store entity_id and register state change callback."""
         self._data["entity_id"] = self.entity_id
         self.async_on_remove(

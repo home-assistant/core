@@ -5,16 +5,15 @@
         },
         "error": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "cannot_connect": "Kon niet verbinden",
-            "invalid_host": "ongeldige host of IP adres"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_host": "Ongeldige hostnaam of IP-adres"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host"
                 },
-                "description": "Stel Dune HD integratie in. Als u problemen heeft met de configuratie ga dan naar: https://www.home-assistant.io/integrations/dunehd \n\nZorg ervoor dat uw speler is ingeschakeld.",
-                "title": "Dune HD"
+                "description": "Zorg ervoor dat uw speler is ingeschakeld."
             }
         }
     }

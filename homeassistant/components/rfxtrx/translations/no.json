@@ -61,7 +61,7 @@
                     "debug": "Aktiver feils\u00f8king",
                     "device": "Velg enhet du vil konfigurere",
                     "event_code": "Angi hendelseskode for \u00e5 legge til",
-                    "remove_device": "Velg enhet du vil slette"
+                    "protocols": "Protokoller"
                 },
                 "title": "[%key:component::rfxtrx::title%] alternativer"
             },
@@ -70,11 +70,9 @@
                     "command_off": "Databiter-verdi for kommando av",
                     "command_on": "Databiter-verdi for kommando p\u00e5",
                     "data_bit": "Antall databiter",
-                    "fire_event": "Aktiver enhetshendelse",
                     "off_delay": "Av forsinkelse",
                     "off_delay_enabled": "Aktiver av forsinkelse",
                     "replace_device": "Velg enheten du vil erstatte",
-                    "signal_repetitions": "Antall signalrepetisjoner",
                     "venetian_blind_mode": "Persiennemodus"
                 },
                 "title": "Konfigurer enhetsalternativer"

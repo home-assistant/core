@@ -13,15 +13,19 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, callback
-from homeassistant.helpers import condition, config_validation as cv, template
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
+    template,
+)
 from homeassistant.helpers.event import (
     async_track_same_state,
     async_track_state_change_event,
 )
-
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 
 
 def validate_above_below(value):
@@ -43,11 +47,11 @@ def validate_above_below(value):
     return value
 
 
-TRIGGER_SCHEMA = vol.All(
+_TRIGGER_SCHEMA = vol.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_PLATFORM): "numeric_state",
-            vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
             vol.Optional(CONF_BELOW): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_ABOVE): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -62,11 +66,28 @@ TRIGGER_SCHEMA = vol.All(
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate trigger config."""
+    config = _TRIGGER_SCHEMA(config)
+    registry = er.async_get(hass)
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
+        registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
+    )
+    return config
+
+
 async def async_attach_trigger(
-    hass, config, action, automation_info, *, platform_type="numeric_state"
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+    *,
+    platform_type: str = "numeric_state",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    entity_ids = config.get(CONF_ENTITY_ID)
+    entity_ids: list[str] = config[CONF_ENTITY_ID]
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     time_delta = config.get(CONF_FOR)
@@ -78,8 +99,8 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
-    trigger_data = automation_info["trigger_data"]
-    _variables = automation_info["variables"] or {}
+    trigger_data = trigger_info["trigger_data"]
+    _variables = trigger_info["variables"] or {}
 
     if value_template is not None:
         value_template.hass = hass
@@ -112,7 +133,7 @@ async def async_attach_trigger(
         except exceptions.ConditionError as ex:
             _LOGGER.warning(
                 "Error initializing '%s' trigger: %s",
-                automation_info["name"],
+                trigger_info["name"],
                 ex,
             )
 
@@ -158,7 +179,7 @@ async def async_attach_trigger(
         try:
             matching = check_numeric_state(entity_id, from_s, to_s)
         except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in '%s' trigger: %s", automation_info["name"], ex)
+            _LOGGER.warning("Error in '%s' trigger: %s", trigger_info["name"], ex)
             return
 
         if not matching:
@@ -174,7 +195,7 @@ async def async_attach_trigger(
                 except (exceptions.TemplateError, vol.Invalid) as ex:
                     _LOGGER.error(
                         "Error rendering '%s' for template: %s",
-                        automation_info["name"],
+                        trigger_info["name"],
                         ex,
                     )
                     return

@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_token": "Ongeldig toegangstoken",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unknown": "Onverwachte fout"
         },
         "error": {
@@ -23,6 +23,14 @@
                     "host": "Host"
                 }
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "Veeg omlaag",
+            "swipe_left": "Veeg naar links",
+            "swipe_right": "Veeg naar rechts",
+            "swipe_up": "Veeg omhoog"
         }
     }
 }

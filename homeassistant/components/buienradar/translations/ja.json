@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "error": {
+            "already_configured": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "\u30ab\u30e1\u30e9\u753b\u50cf\u3092\u8868\u793a\u3059\u308b\u56fd\u306e\u56fd\u30b3\u30fc\u30c9\u3002",
+                    "delta": "\u30ab\u30e1\u30e9\u753b\u50cf\u306e\u66f4\u65b0\u9593\u9694(\u79d2)",
+                    "timeframe": "\u5206\u9593\u306e\u964d\u6c34\u91cf\u4e88\u5831\u3092\u5148\u8aad\u307f\u3059\u308b"
+                }
+            }
+        }
+    }
+}

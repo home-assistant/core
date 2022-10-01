@@ -1,47 +1,147 @@
 """Support for script and automation tracing and debugging."""
 from __future__ import annotations
 
-from collections import deque
-import datetime as dt
-from itertools import count
+from collections.abc import Mapping
+import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.core import Context
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.trace import (
-    TraceElement,
-    script_execution_get,
-    trace_id_get,
-    trace_id_set,
-    trace_set_child_id,
-)
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
-from .const import CONF_STORED_TRACES, DATA_TRACE, DEFAULT_STORED_TRACES
+from .const import (
+    CONF_STORED_TRACES,
+    DATA_TRACE,
+    DATA_TRACE_STORE,
+    DATA_TRACES_RESTORED,
+    DEFAULT_STORED_TRACES,
+)
+from .models import ActionTrace, BaseTrace, RestoredTrace
 from .utils import LimitedSizeDict
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = "trace"
+
+STORAGE_KEY = "trace.saved_traces"
+STORAGE_VERSION = 1
 
 TRACE_CONFIG_SCHEMA = {
     vol.Optional(CONF_STORED_TRACES, default=DEFAULT_STORED_TRACES): cv.positive_int
 }
 
+TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
-async def async_setup(hass, config):
+
+@callback
+def _get_data(hass: HomeAssistant) -> TraceData:
+    return hass.data[DATA_TRACE]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the trace integration."""
     hass.data[DATA_TRACE] = {}
     websocket_api.async_setup(hass)
+    store = Store[dict[str, list]](
+        hass, STORAGE_VERSION, STORAGE_KEY, encoder=ExtendedJSONEncoder
+    )
+    hass.data[DATA_TRACE_STORE] = store
+
+    async def _async_store_traces_at_stop(_: Event) -> None:
+        """Save traces to storage."""
+        _LOGGER.debug("Storing traces")
+        try:
+            await store.async_save(
+                {key: list(traces.values()) for key, traces in _get_data(hass).items()}
+            )
+        except HomeAssistantError as exc:
+            _LOGGER.error("Error storing traces", exc_info=exc)
+
+    # Store traces when stopping hass
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_store_traces_at_stop)
+
     return True
 
 
-def async_store_trace(hass, trace, stored_traces):
-    """Store a trace if its item_id is valid."""
-    key = trace.key
-    if key[1]:
-        traces = hass.data[DATA_TRACE]
+async def async_get_trace(
+    hass: HomeAssistant, key: str, run_id: str
+) -> dict[str, BaseTrace]:
+    """Return the requested trace."""
+    # Restore saved traces if not done
+    await async_restore_traces(hass)
+
+    return _get_data(hass)[key][run_id].as_extended_dict()
+
+
+async def async_list_contexts(
+    hass: HomeAssistant, key: str | None
+) -> dict[str, dict[str, str]]:
+    """List contexts for which we have traces."""
+    # Restore saved traces if not done
+    await async_restore_traces(hass)
+
+    values: Mapping[str, LimitedSizeDict[str, BaseTrace] | None]
+    if key is not None:
+        values = {key: _get_data(hass).get(key)}
+    else:
+        values = _get_data(hass)
+
+    def _trace_id(run_id: str, key: str) -> dict[str, str]:
+        """Make trace_id for the response."""
+        domain, item_id = key.split(".", 1)
+        return {"run_id": run_id, "domain": domain, "item_id": item_id}
+
+    return {
+        trace.context.id: _trace_id(trace.run_id, key)
+        for key, traces in values.items()
+        if traces is not None
+        for trace in traces.values()
+    }
+
+
+def _get_debug_traces(hass: HomeAssistant, key: str) -> list[dict[str, Any]]:
+    """Return a serializable list of debug traces for a script or automation."""
+    traces: list[dict[str, Any]] = []
+
+    if traces_for_key := _get_data(hass).get(key):
+        for trace in traces_for_key.values():
+            traces.append(trace.as_short_dict())
+
+    return traces
+
+
+async def async_list_traces(
+    hass: HomeAssistant, wanted_domain: str, wanted_key: str | None
+) -> list[dict[str, Any]]:
+    """List traces for a domain."""
+    # Restore saved traces if not done already
+    await async_restore_traces(hass)
+
+    if not wanted_key:
+        traces: list[dict[str, Any]] = []
+        for key in _get_data(hass):
+            domain = key.split(".", 1)[0]
+            if domain == wanted_domain:
+                traces.extend(_get_debug_traces(hass, key))
+    else:
+        traces = _get_debug_traces(hass, wanted_key)
+
+    return traces
+
+
+def async_store_trace(
+    hass: HomeAssistant, trace: ActionTrace, stored_traces: int
+) -> None:
+    """Store a trace if its key is valid."""
+    if key := trace.key:
+        traces = _get_data(hass)
         if key not in traces:
             traces[key] = LimitedSizeDict(size_limit=stored_traces)
         else:
@@ -49,90 +149,44 @@ def async_store_trace(hass, trace, stored_traces):
         traces[key][trace.run_id] = trace
 
 
-class ActionTrace:
-    """Base container for a script or automation trace."""
+def _async_store_restored_trace(hass: HomeAssistant, trace: RestoredTrace) -> None:
+    """Store a restored trace and move it to the end of the LimitedSizeDict."""
+    key = trace.key
+    traces = _get_data(hass)
+    if key not in traces:
+        traces[key] = LimitedSizeDict()
+    traces[key][trace.run_id] = trace
+    traces[key].move_to_end(trace.run_id, last=False)
 
-    _run_ids = count(0)
 
-    def __init__(
-        self,
-        key: tuple[str, str],
-        config: dict[str, Any],
-        blueprint_inputs: dict[str, Any],
-        context: Context,
-    ) -> None:
-        """Container for script trace."""
-        self._trace: dict[str, deque[TraceElement]] | None = None
-        self._config: dict[str, Any] = config
-        self._blueprint_inputs: dict[str, Any] = blueprint_inputs
-        self.context: Context = context
-        self._error: Exception | None = None
-        self._state: str = "running"
-        self._script_execution: str | None = None
-        self.run_id: str = str(next(self._run_ids))
-        self._timestamp_finish: dt.datetime | None = None
-        self._timestamp_start: dt.datetime = dt_util.utcnow()
-        self.key: tuple[str, str] = key
-        if trace_id_get():
-            trace_set_child_id(self.key, self.run_id)
-        trace_id_set((key, self.run_id))
+async def async_restore_traces(hass: HomeAssistant) -> None:
+    """Restore saved traces."""
+    if DATA_TRACES_RESTORED in hass.data:
+        return
 
-    def set_trace(self, trace: dict[str, deque[TraceElement]]) -> None:
-        """Set trace."""
-        self._trace = trace
+    hass.data[DATA_TRACES_RESTORED] = True
 
-    def set_error(self, ex: Exception) -> None:
-        """Set error."""
-        self._error = ex
+    store: Store[dict[str, list]] = hass.data[DATA_TRACE_STORE]
+    try:
+        restored_traces = await store.async_load() or {}
+    except HomeAssistantError:
+        _LOGGER.exception("Error loading traces")
+        restored_traces = {}
 
-    def finished(self) -> None:
-        """Set finish time."""
-        self._timestamp_finish = dt_util.utcnow()
-        self._state = "stopped"
-        self._script_execution = script_execution_get()
+    for key, traces in restored_traces.items():
+        # Add stored traces in reversed order to priorize the newest traces
+        for json_trace in reversed(traces):
+            if (
+                (stored_traces := _get_data(hass).get(key))
+                and stored_traces.size_limit is not None
+                and len(stored_traces) >= stored_traces.size_limit
+            ):
+                break
 
-    def as_dict(self) -> dict[str, Any]:
-        """Return dictionary version of this ActionTrace."""
-
-        result = self.as_short_dict()
-
-        traces = {}
-        if self._trace:
-            for key, trace_list in self._trace.items():
-                traces[key] = [item.as_dict() for item in trace_list]
-
-        result.update(
-            {
-                "trace": traces,
-                "config": self._config,
-                "blueprint_inputs": self._blueprint_inputs,
-                "context": self.context,
-            }
-        )
-
-        return result
-
-    def as_short_dict(self) -> dict[str, Any]:
-        """Return a brief dictionary version of this ActionTrace."""
-
-        last_step = None
-
-        if self._trace:
-            last_step = list(self._trace)[-1]
-
-        result = {
-            "last_step": last_step,
-            "run_id": self.run_id,
-            "state": self._state,
-            "script_execution": self._script_execution,
-            "timestamp": {
-                "start": self._timestamp_start,
-                "finish": self._timestamp_finish,
-            },
-            "domain": self.key[0],
-            "item_id": self.key[1],
-        }
-        if self._error is not None:
-            result["error"] = str(self._error)
-
-        return result
+            try:
+                trace = RestoredTrace(json_trace)
+            # Catch any exception to not blow up if the stored trace is invalid
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Failed to restore trace")
+                continue
+            _async_store_restored_trace(hass, trace)

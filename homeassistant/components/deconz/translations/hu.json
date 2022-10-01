@@ -2,20 +2,20 @@
     "config": {
         "abort": {
             "already_configured": "A bridge m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van.",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "no_bridges": "Nem tal\u00e1lhat\u00f3 deCONZ \u00e1tj\u00e1r\u00f3",
             "no_hardware_available": "Nincs deCONZ-hoz csatlakoztatott r\u00e1di\u00f3hardver",
-            "not_deconz_bridge": "Nem egy deCONZ \u00e1tj\u00e1r\u00f3",
             "updated_instance": "A deCONZ-p\u00e9ld\u00e1ny \u00faj \u00e1llom\u00e1sc\u00edmmel friss\u00edtve"
         },
         "error": {
+            "linking_not_possible": "Nem tudott kapcsol\u00f3dni az \u00e1tj\u00e1r\u00f3hoz",
             "no_key": "API kulcs lek\u00e9r\u00e9se nem siker\u00fclt"
         },
         "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
                 "description": "Szeretn\u00e9 be\u00e1ll\u00edtani Home Assistantot, hogy csatlakozzon {addon} \u00e1ltal biztos\u00edtott deCONZ \u00e1tj\u00e1r\u00f3hoz?",
-                "title": "deCONZ Zigbee \u00e1tj\u00e1r\u00f3 Home Assistant kieg\u00e9sz\u00edt\u0151 \u00e1ltal"
+                "title": "deCONZ Zigbee \u00e1tj\u00e1r\u00f3 Home Assistant b\u0151v\u00edtm\u00e9nnyel"
             },
             "link": {
                 "description": "Enged\u00e9lyezze fel a deCONZ \u00e1tj\u00e1r\u00f3ban a Home Assistanthoz val\u00f3 regisztr\u00e1l\u00e1st.\n\n1. V\u00e1lassza ki a deCONZ rendszer be\u00e1ll\u00edt\u00e1sait\n2. Nyomja meg az \"Authenticate app\" gombot",
@@ -71,7 +71,7 @@
             "remote_button_quintuple_press": "\"{subtype}\" gombra \u00f6tsz\u00f6r kattintottak",
             "remote_button_rotated": "A gomb elforgatva: \"{subtype}\"",
             "remote_button_rotated_fast": "A gomb gyorsan elfordult: \"{subtype}\"",
-            "remote_button_rotation_stopped": "A(z) \"{subtype}\" gomb forg\u00e1sa le\u00e1llt",
+            "remote_button_rotation_stopped": "\"{subtype}\" gomb forg\u00e1sa le\u00e1llt",
             "remote_button_short_press": "\"{subtype}\" gomb lenyomva",
             "remote_button_short_release": "\"{subtype}\" gomb elengedve",
             "remote_button_triple_press": "\"{subtype}\" gombra h\u00e1romszor kattintottak",

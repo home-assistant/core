@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import Image
@@ -13,22 +14,16 @@ from xbox.webapi.api.provider.smartglass.models import (
     VolumeDirection,
 )
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_GAME,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ConsoleData, XboxUpdateCoordinator
@@ -36,30 +31,32 @@ from .browse_media import build_item_response
 from .const import DOMAIN
 
 SUPPORT_XBOX = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_BROWSE_MEDIA
-    | SUPPORT_PLAY_MEDIA
+    MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 XBOX_STATE_MAP = {
-    PlaybackState.Playing: STATE_PLAYING,
-    PlaybackState.Paused: STATE_PAUSED,
-    PowerState.On: STATE_ON,
-    PowerState.SystemUpdate: STATE_OFF,
-    PowerState.ConnectedStandby: STATE_OFF,
-    PowerState.Off: STATE_OFF,
+    PlaybackState.Playing: MediaPlayerState.PLAYING,
+    PlaybackState.Paused: MediaPlayerState.PAUSED,
+    PowerState.On: MediaPlayerState.ON,
+    PowerState.SystemUpdate: MediaPlayerState.OFF,
+    PowerState.ConnectedStandby: MediaPlayerState.OFF,
+    PowerState.Off: MediaPlayerState.OFF,
     PowerState.Unknown: None,
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Xbox media_player from a config entry."""
     client: XboxLiveClient = hass.data[DOMAIN][entry.entry_id]["client"]
     consoles: SmartglassConsoleList = hass.data[DOMAIN][entry.entry_id]["consoles"]
@@ -72,7 +69,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntity):
     """Representation of an Xbox Media Player."""
 
     def __init__(
@@ -112,8 +109,12 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self.state not in [STATE_PLAYING, STATE_PAUSED]:
-            return SUPPORT_XBOX & ~SUPPORT_NEXT_TRACK & ~SUPPORT_PREVIOUS_TRACK
+        if self.state not in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
+            return (
+                SUPPORT_XBOX
+                & ~MediaPlayerEntityFeature.NEXT_TRACK
+                & ~MediaPlayerEntityFeature.PREVIOUS_TRACK
+            )
         return SUPPORT_XBOX
 
     @property
@@ -121,14 +122,13 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Media content type."""
         app_details = self.data.app_details
         if app_details and app_details.product_family == "Games":
-            return MEDIA_TYPE_GAME
-        return MEDIA_TYPE_APP
+            return MediaType.GAME
+        return MediaType.APP
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        app_details = self.data.app_details
-        if not app_details:
+        if not (app_details := self.data.app_details):
             return None
         return (
             app_details.localized_properties[0].product_title
@@ -138,8 +138,7 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        app_details = self.data.app_details
-        if not app_details:
+        if not (app_details := self.data.app_details):
             return None
         image = _find_media_image(app_details.localized_properties[0].images)
 
@@ -156,42 +155,42 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """If the image url is remotely accessible."""
         return True
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self.client.smartglass.wake_up(self._console.id)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self.client.smartglass.turn_off(self._console.id)
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
             await self.client.smartglass.mute(self._console.id)
         else:
             await self.client.smartglass.unmute(self._console.id)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self.client.smartglass.volume(self._console.id, VolumeDirection.Up)
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         await self.client.smartglass.volume(self._console.id, VolumeDirection.Down)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self.client.smartglass.play(self._console.id)
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.client.smartglass.pause(self._console.id)
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.client.smartglass.previous(self._console.id)
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.client.smartglass.next(self._console.id)
 
@@ -205,7 +204,9 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             media_content_id,
         )
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Launch an app on the Xbox."""
         if media_id == "Home":
             await self.client.smartglass.go_home(self._console.id)
@@ -215,21 +216,20 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             await self.client.smartglass.launch_app(self._console.id, media_id)
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         # Turns "XboxOneX" into "Xbox One X" for display
         matches = re.finditer(
             ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)",
             self._console.console_type,
         )
-        model = " ".join([m.group(0) for m in matches])
 
-        return {
-            "identifiers": {(DOMAIN, self._console.id)},
-            "name": self._console.name,
-            "manufacturer": "Microsoft",
-            "model": model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._console.id)},
+            manufacturer="Microsoft",
+            model=" ".join([m.group(0) for m in matches]),
+            name=self._console.name,
+        )
 
 
 def _find_media_image(images: list[Image]) -> Image | None:

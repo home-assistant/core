@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DEVICE_CLASS_CHARGE_MODE, DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription
+from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
@@ -29,7 +29,9 @@ class RenaultSelectRequiredKeysMixin:
 
 @dataclass
 class RenaultSelectEntityDescription(
-    SelectEntityDescription, RenaultEntityDescription, RenaultSelectRequiredKeysMixin
+    SelectEntityDescription,
+    RenaultDataEntityDescription,
+    RenaultSelectRequiredKeysMixin,
 ):
     """Class describing Renault select entities."""
 
@@ -96,7 +98,7 @@ SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
         data_key="chargeMode",
         device_class=DEVICE_CLASS_CHARGE_MODE,
         icon_lambda=_get_charge_mode_icon,
-        name="Charge Mode",
+        name="Charge mode",
         options=["always", "always_charging", "schedule_mode"],
     ),
 )

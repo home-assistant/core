@@ -3,6 +3,7 @@
   "name": "APRS",
   "documentation": "https://www.home-assistant.io/integrations/aprs",
   "codeowners": ["@PhilRW"],
-  "requirements": ["aprslib==0.6.46", "geopy==2.1.0"],
-  "iot_class": "cloud_push"
+  "requirements": ["aprslib==0.7.0", "geopy==2.1.0"],
+  "iot_class": "cloud_push",
+  "loggers": ["aprslib", "geographiclib", "geopy"]
 }

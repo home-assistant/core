@@ -3,22 +3,23 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-import garages_amsterdam
+from garages_amsterdam import GaragesAmsterdam
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Garages Amsterdam from a config entry."""
     await get_coordinator(hass)
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -39,12 +40,12 @@ async def get_coordinator(
         return hass.data[DOMAIN]
 
     async def async_get_garages():
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             return {
                 garage.garage_name: garage
-                for garage in await garages_amsterdam.get_garages(
-                    aiohttp_client.async_get_clientsession(hass)
-                )
+                for garage in await GaragesAmsterdam(
+                    session=aiohttp_client.async_get_clientsession(hass)
+                ).all_garages()
             }
 
     coordinator = DataUpdateCoordinator(

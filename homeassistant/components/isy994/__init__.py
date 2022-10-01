@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -41,9 +41,11 @@ from .const import (
     MANUFACTURER,
     PLATFORMS,
     PROGRAM_PLATFORMS,
+    SENSOR_AUX,
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
+from .util import unique_ids_for_config_entry_id
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -98,10 +100,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def _async_find_matching_config_entry(hass):
+def _async_find_matching_config_entry(
+    hass: HomeAssistant,
+) -> config_entries.ConfigEntry | None:
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.source == config_entries.SOURCE_IMPORT:
             return entry
+    return None
 
 
 async def async_setup_entry(
@@ -117,7 +122,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id] = {}
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    hass_isy_data[ISY994_NODES] = {}
+    hass_isy_data[ISY994_NODES] = {SENSOR_AUX: []}
     for platform in PLATFORMS:
         hass_isy_data[ISY994_NODES][platform] = []
 
@@ -147,7 +152,7 @@ async def async_setup_entry(
         https = False
         port = host.port or 80
         session = aiohttp_client.async_create_clientsession(
-            hass, verify_ssl=None, cookie_jar=CookieJar(unsafe=True)
+            hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
         )
     elif host.scheme == "https":
         https = True
@@ -178,11 +183,7 @@ async def async_setup_entry(
             f"Timed out initializing the ISY; device may be busy, trying again later: {err}"
         ) from err
     except ISYInvalidAuthError as err:
-        _LOGGER.error(
-            "Invalid credentials for the ISY, please adjust settings and try again: %s",
-            err,
-        )
-        return False
+        raise ConfigEntryAuthFailed(f"Invalid credentials for the ISY: {err}") from err
     except ISYConnectionError as err:
         raise ConfigEntryNotReady(
             f"Failed to connect to the ISY, please adjust settings and try again: {err}"
@@ -190,6 +191,10 @@ async def async_setup_entry(
     except ISYResponseParseError as err:
         raise ConfigEntryNotReady(
             f"Invalid XML response from ISY; Ensure the ISY is running the latest firmware: {err}"
+        ) from err
+    except TypeError as err:
+        raise ConfigEntryNotReady(
+            f"Invalid response ISY, device is likely still starting: {err}"
         ) from err
 
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
@@ -200,26 +205,23 @@ async def async_setup_entry(
     _LOGGER.info(repr(isy.clock))
 
     hass_isy_data[ISY994_ISY] = isy
-    await _async_get_or_create_isy_device_in_registry(hass, entry, isy)
+    _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    def _start_auto_update() -> None:
-        """Start isy auto update."""
-        _LOGGER.debug("ISY Starting Event Stream and automatic updates")
-        isy.websocket.start()
-
-    def _stop_auto_update(event) -> None:
+    @callback
+    def _async_stop_auto_update(event: Event) -> None:
         """Stop the isy auto update on Home Assistant Shutdown."""
         _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
         isy.websocket.stop()
 
-    await hass.async_add_executor_job(_start_auto_update)
+    _LOGGER.debug("ISY Starting Event Stream and automatic updates")
+    isy.websocket.start()
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_auto_update)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update)
     )
 
     # Register Integration-wide Services:
@@ -230,7 +232,7 @@ async def async_setup_entry(
 
 async def _async_update_listener(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
-):
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -238,7 +240,7 @@ async def _async_update_listener(
 @callback
 def _async_import_options_from_data_if_missing(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
-):
+) -> None:
     options = dict(entry.options)
     modified = False
     for importable_option in (
@@ -254,11 +256,20 @@ def _async_import_options_from_data_if_missing(
         hass.config_entries.async_update_entry(entry, options=options)
 
 
-async def _async_get_or_create_isy_device_in_registry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, isy
-) -> None:
-    device_registry = await dr.async_get_registry(hass)
+@callback
+def _async_isy_to_configuration_url(isy: ISY) -> str:
+    """Extract the configuration url from the isy."""
+    connection_info = isy.conn.connection_info
+    proto = "https" if "tls" in connection_info else "http"
+    return f"{proto}://{connection_info['addr']}:{connection_info['port']}"
 
+
+@callback
+def _async_get_or_create_isy_device_in_registry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry, isy: ISY
+) -> None:
+    device_registry = dr.async_get(hass)
+    url = _async_isy_to_configuration_url(isy)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, isy.configuration["uuid"])},
@@ -267,6 +278,7 @@ async def _async_get_or_create_isy_device_in_registry(
         name=isy.configuration["name"],
         model=isy.configuration["model"],
         sw_version=isy.configuration["firmware"],
+        configuration_url=url,
     )
 
 
@@ -278,14 +290,10 @@ async def async_unload_entry(
 
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 
-    isy = hass_isy_data[ISY994_ISY]
+    isy: ISY = hass_isy_data[ISY994_ISY]
 
-    def _stop_auto_update() -> None:
-        """Stop the isy auto update."""
-        _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
-        isy.websocket.stop()
-
-    await hass.async_add_executor_job(_stop_auto_update)
+    _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
+    isy.websocket.stop()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -293,3 +301,15 @@ async def async_unload_entry(
     async_unload_services(hass)
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove isy994 config entry from a device."""
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, unique_id)
+        for unique_id in unique_ids_for_config_entry_id(hass, config_entry.entry_id)
+    )

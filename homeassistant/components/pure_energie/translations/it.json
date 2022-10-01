@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "flow_title": "{model} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "L'indirizzo IP o il nome host del tuo contatore Pure Energie."
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Vuoi aggiungere Pure Energie Meter (`{model}`) a Home Assistant?",
+                "title": "Scoperto dispositivo Pure Energie Meter"
+            }
+        }
+    }
+}

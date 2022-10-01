@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 
 from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
-from xknx.dpt import DPTNumeric
+from xknx.dpt import DPTNumeric, DPTString
+from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueSensor
 
 from homeassistant.const import (
@@ -21,6 +23,8 @@ from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import KNX_ADDRESS
 from .schema import ExposeSchema
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -101,7 +105,10 @@ class KNXExposeSensor:
         """Initialize state of the exposure."""
         init_state = self.hass.states.get(self.entity_id)
         state_value = self._get_expose_value(init_state)
-        self.device.sensor_value.value = state_value
+        try:
+            self.device.sensor_value.value = state_value
+        except ConversionError:
+            _LOGGER.exception("Error during sending of expose sensor value")
 
     @callback
     def shutdown(self) -> None:
@@ -132,13 +139,19 @@ class KNXExposeSensor:
             and issubclass(self.device.sensor_value.dpt_class, DPTNumeric)
         ):
             return float(value)
+        if (
+            value is not None
+            and isinstance(self.device.sensor_value, RemoteValueSensor)
+            and issubclass(self.device.sensor_value.dpt_class, DPTString)
+        ):
+            # DPT 16.000 only allows up to 14 Bytes
+            return str(value)[:14]
         return value
 
     async def _async_entity_changed(self, event: Event) -> None:
         """Handle entity change."""
         new_state = event.data.get("new_state")
-        new_value = self._get_expose_value(new_state)
-        if new_value is None:
+        if (new_value := self._get_expose_value(new_state)) is None:
             return
         old_state = event.data.get("old_state")
         # don't use default value for comparison on first state change (old_state is None)
@@ -149,9 +162,10 @@ class KNXExposeSensor:
 
     async def _async_set_knx_value(self, value: StateType) -> None:
         """Set new value on xknx ExposeSensor."""
-        if value is None:
-            return
-        await self.device.set(value)
+        try:
+            await self.device.set(value)
+        except ConversionError:
+            _LOGGER.exception("Error during sending of expose sensor value")
 
 
 class KNXExposeTime:

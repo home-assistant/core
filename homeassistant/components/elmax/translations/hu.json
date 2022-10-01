@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_pin": "A megadott PIN-k\u00f3d \u00e9rv\u00e9nytelen",
+            "network_error": "H\u00e1l\u00f3zati hiba t\u00f6rt\u00e9nt",
+            "no_panel_online": "Nem tal\u00e1lhat\u00f3 online Elmax vez\u00e9rl\u0151panel.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "panels": {
+                "data": {
+                    "panel_id": "Panel ID",
+                    "panel_name": "Panel neve",
+                    "panel_pin": "PIN-k\u00f3d"
+                },
+                "description": "V\u00e1lassza ki, hogy melyik panelt szeretn\u00e9 vez\u00e9relni ezzel az integr\u00e1ci\u00f3val. A panelnek bekapcsolt \u00e1llapotban kell lennie a konfigur\u00e1l\u00e1shoz."
+            },
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "K\u00e9rem, jelentkezzen be az Elmax felh\u0151be a hiteles\u00edt\u0151 adataival"
+            }
+        }
+    }
+}

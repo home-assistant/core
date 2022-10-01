@@ -5,15 +5,33 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Mot de passe",
+                    "pin": "Code PIN",
+                    "username": "Nom d'utilisateur"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "pin": "Code PIN",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Mot de passe",
                     "pin": "Code PIN",
                     "username": "Nom d'utilisateur"
+                },
+                "menu_options": {
+                    "cloud": "Risco Cloud (recommand\u00e9)",
+                    "local": "Risco Panel local (avanc\u00e9)"
                 }
             }
         }

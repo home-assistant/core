@@ -6,7 +6,7 @@
         "step": {
             "init": {
                 "data": {
-                    "icon": "Pictogram",
+                    "icon": "Icoon",
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad",
                     "name": "Naam",

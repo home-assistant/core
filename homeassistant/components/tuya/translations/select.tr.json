@@ -1,0 +1,133 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Devre d\u0131\u015f\u0131",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Otomatik",
+            "1": "Kapal\u0131",
+            "2": "A\u00e7\u0131k"
+        },
+        "tuya__countdown": {
+            "1h": "1 saat",
+            "2h": "2 saat",
+            "3h": "3 saat",
+            "4h": "4 saat",
+            "5h": "5 saat",
+            "6h": "6 saat",
+            "cancel": "\u0130ptal"
+        },
+        "tuya__curtain_mode": {
+            "morning": "Sabah",
+            "night": "Gece"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Geri",
+            "forward": "\u0130leri"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "D\u00fc\u015f\u00fck hassasiyet",
+            "1": "Y\u00fcksek hassasiyet"
+        },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
+        "tuya__fingerbot_mode": {
+            "click": "Bildirim",
+            "switch": "Anahtar"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "Seviye 1",
+            "level_10": "Seviye 10",
+            "level_2": "Seviye 2",
+            "level_3": "Seviye 3",
+            "level_4": "Seviye 4",
+            "level_5": "Seviye 5",
+            "level_6": "Seviye 6",
+            "level_7": "Seviye 7",
+            "level_8": "Seviye 8",
+            "level_9": "Seviye 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "Mod 1",
+            "2": "Mod 2",
+            "3": "Mod 3",
+            "4": "Mod 4",
+            "5": "Mod 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "Otomatik",
+            "health": "Sa\u011fl\u0131k",
+            "humidity": "Nem",
+            "sleep": "Uyku",
+            "work": "\u0130\u015f"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "D\u00fc\u015f\u00fck g\u00fc\u00e7 modu",
+            "1": "S\u00fcrekli \u00e7al\u0131\u015fma modu"
+        },
+        "tuya__led_type": {
+            "halogen": "Halojen",
+            "incandescent": "Akkor",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Kapal\u0131",
+            "pos": "Anahtar konumunu belirtin",
+            "relay": "A\u00e7ma/kapama durumunu belirtin"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "D\u00fc\u015f\u00fck hassasiyet",
+            "1": "Orta hassasiyet",
+            "2": "Y\u00fcksek hassasiyet"
+        },
+        "tuya__record_mode": {
+            "1": "Yaln\u0131zca olaylar\u0131 kaydet",
+            "2": "S\u00fcrekli kay\u0131t"
+        },
+        "tuya__relay_status": {
+            "last": "Son durumu hat\u0131rla",
+            "memory": "Son durumu hat\u0131rla",
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k",
+            "power_off": "Kapal\u0131",
+            "power_on": "A\u00e7\u0131k"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "Kapal\u0131",
+            "high": "Y\u00fcksek",
+            "low": "D\u00fc\u015f\u00fck",
+            "middle": "Orta"
+        },
+        "tuya__vacuum_collection": {
+            "large": "B\u00fcy\u00fck",
+            "middle": "Orta",
+            "small": "K\u00fc\u00e7\u00fck"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "Yay",
+            "chargego": "Dock'a geri d\u00f6n",
+            "left_bow": "Sola Yay",
+            "left_spiral": "Spiral Sol",
+            "mop": "Paspas",
+            "part": "B\u00f6l\u00fcm",
+            "partial_bow": "K\u0131smen Yay",
+            "pick_zone": "Se\u00e7im B\u00f6lgesi",
+            "point": "Nokta",
+            "pose": "Poz",
+            "random": "Rastgele",
+            "right_bow": "Sa\u011fa E\u011fil",
+            "right_spiral": "Spiral Sa\u011f",
+            "single": "Tek",
+            "smart": "Ak\u0131ll\u0131",
+            "spiral": "Sarmal",
+            "standby": "Bekleme modu",
+            "wall_follow": "Duvar\u0131 Takip Et",
+            "zone": "B\u00f6lge"
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Entit\u00e9s d'entr\u00e9e",
+                    "name": "Nom",
+                    "round_digits": "Pr\u00e9cision",
+                    "type": "Indicateur statistique"
+                },
+                "data_description": {
+                    "round_digits": "Contr\u00f4le le nombre de chiffres d\u00e9cimaux de la sortie lorsque l'indicateur statistique est la moyenne ou la m\u00e9diane."
+                },
+                "description": "Cr\u00e9ez un capteur qui calcule une valeur minimale, maximale, moyenne ou m\u00e9diane \u00e0 partir d'une liste de capteurs d'entr\u00e9e.",
+                "title": "Ajouter un capteur de valeur minimale, maximale, moyenne ou m\u00e9diane"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Entit\u00e9s d'entr\u00e9e",
+                    "round_digits": "Pr\u00e9cision",
+                    "type": "Indicateur statistique"
+                },
+                "data_description": {
+                    "round_digits": "Contr\u00f4le le nombre de chiffres d\u00e9cimaux de la sortie lorsque l'indicateur statistique est la moyenne ou la m\u00e9diane."
+                }
+            }
+        }
+    },
+    "title": "Capteur de valeur minimale, maximale, moyenne ou m\u00e9diane"
+}

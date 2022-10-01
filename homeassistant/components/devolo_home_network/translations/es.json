@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "home_control": "La unidad central Home Control de devolo no funciona con esta integraci\u00f3n."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "{product} ({name})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP"
+                },
+                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
+            },
+            "zeroconf_confirm": {
+                "description": "\u00bfQuieres a\u00f1adir el dispositivo de red dom\u00e9stica devolo con el nombre de host `{host_name}` a Home Assistant?",
+                "title": "Dispositivo de red dom\u00e9stica devolo descubierto"
+            }
+        }
+    }
+}

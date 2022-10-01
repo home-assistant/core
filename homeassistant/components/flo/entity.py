@@ -14,6 +14,7 @@ class FloEntity(Entity):
     """A base class for Flo entities."""
 
     _attr_force_update = False
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -33,14 +34,14 @@ class FloEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return {
-            "identifiers": {(FLO_DOMAIN, self._device.id)},
-            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac_address)},
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.model,
-            "name": self._device.device_name,
-            "sw_version": self._device.firmware_version,
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._device.mac_address)},
+            identifiers={(FLO_DOMAIN, self._device.id)},
+            manufacturer=self._device.manufacturer,
+            model=self._device.model,
+            name=self._device.device_name.capitalize(),
+            sw_version=self._device.firmware_version,
+        )
 
     @property
     def available(self) -> bool:

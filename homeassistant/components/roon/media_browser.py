@@ -1,12 +1,7 @@
 """Support to interface with the Roon API."""
 import logging
 
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_TRACK,
-)
+from homeassistant.components.media_player import BrowseMedia, MediaClass
 from homeassistant.components.media_player.errors import BrowseError
 
 
@@ -55,8 +50,7 @@ def item_payload(roon_server, item, list_image_id):
     """Create response payload for a single media item."""
 
     title = item["title"]
-    subtitle = item.get("subtitle")
-    if subtitle is None:
+    if (subtitle := item.get("subtitle")) is None:
         display_title = title
     else:
         display_title = f"{title} ({subtitle})"
@@ -72,18 +66,18 @@ def item_payload(roon_server, item, list_image_id):
 
     hint = item.get("hint")
     if hint == "list":
-        media_class = MEDIA_CLASS_DIRECTORY
+        media_class = MediaClass.DIRECTORY
         can_expand = True
     elif hint == "action_list":
-        media_class = MEDIA_CLASS_PLAYLIST
+        media_class = MediaClass.PLAYLIST
         can_expand = False
     elif hint == "action":
         media_content_type = "track"
-        media_class = MEDIA_CLASS_TRACK
+        media_class = MediaClass.TRACK
         can_expand = False
     else:
         # Roon API says to treat unknown as a list
-        media_class = MEDIA_CLASS_DIRECTORY
+        media_class = MediaClass.DIRECTORY
         can_expand = True
         _LOGGER.warning("Unknown hint %s - %s", title, hint)
 
@@ -123,8 +117,7 @@ def library_payload(roon_server, zone_id, media_content_id):
     header = result_header["list"]
     title = header.get("title")
 
-    subtitle = header.get("subtitle")
-    if subtitle is None:
+    if (subtitle := header.get("subtitle")) is None:
         list_title = title
     else:
         list_title = f"{title} ({subtitle})"
@@ -137,7 +130,7 @@ def library_payload(roon_server, zone_id, media_content_id):
         title=list_title,
         media_content_id=content_id,
         media_content_type="library",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         can_play=False,
         can_expand=True,
         children=[],

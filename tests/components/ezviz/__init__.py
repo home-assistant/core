@@ -1,11 +1,9 @@
-"""Tests for the Ezviz integration."""
+"""Tests for the EZVIZ integration."""
 from unittest.mock import patch
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
-    ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
-    CONF_CAMERAS,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
@@ -48,37 +46,6 @@ USER_INPUT = {
     CONF_TYPE: ATTR_TYPE_CLOUD,
 }
 
-USER_INPUT_CAMERA_VALIDATE = {
-    ATTR_SERIAL: "C666666",
-    CONF_PASSWORD: "test-password",
-    CONF_USERNAME: "test-username",
-}
-
-USER_INPUT_CAMERA = {
-    CONF_PASSWORD: "test-password",
-    CONF_USERNAME: "test-username",
-    CONF_TYPE: ATTR_TYPE_CAMERA,
-}
-
-YAML_CONFIG = {
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-    CONF_URL: "apiieu.ezvizlife.com",
-    CONF_CAMERAS: {
-        "C666666": {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
-    },
-}
-
-YAML_INVALID = {
-    "C666666": {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
-}
-
-YAML_CONFIG_CAMERA = {
-    ATTR_SERIAL: "C666666",
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-}
-
 DISCOVERY_INFO = {
     ATTR_SERIAL: "C666666",
     CONF_USERNAME: None,
@@ -107,7 +74,7 @@ async def init_integration(
     options: dict = ENTRY_OPTIONS,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
-    """Set up the Ezviz integration in Home Assistant."""
+    """Set up the EZVIZ integration in Home Assistant."""
     entry = MockConfigEntry(domain=DOMAIN, data=data, options=options)
     entry.add_to_hass(hass)
 

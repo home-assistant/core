@@ -41,7 +41,7 @@ async def test_show_set_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -54,7 +54,7 @@ async def test_urlize_plain_host(hass, requests_mock):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=user_input
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert user_input[CONF_URL] == f"http://{host}/"
 
@@ -85,7 +85,7 @@ async def test_already_configured(hass, requests_mock, login_requests_mock):
         data=FIXTURE_USER_INPUT,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -96,7 +96,7 @@ async def test_connection_error(hass, requests_mock):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_URL: "unknown"}
 
@@ -127,7 +127,7 @@ def login_requests_mock(requests_mock):
             LoginErrorEnum.USERNAME_PWD_WRONG,
             {CONF_USERNAME: "invalid_auth"},
         ),
-        (LoginErrorEnum.USERNAME_PWD_ORERRUN, {"base": "login_attempts_exceeded"}),
+        (LoginErrorEnum.USERNAME_PWD_OVERRUN, {"base": "login_attempts_exceeded"}),
         (ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN, {"base": "response_error"}),
     ),
 )
@@ -142,7 +142,7 @@ async def test_login_error(hass, login_requests_mock, code, errors):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
 
@@ -164,7 +164,7 @@ async def test_success(hass, login_requests_mock):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_URL] == FIXTURE_USER_INPUT[CONF_URL]
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
@@ -177,22 +177,25 @@ async def test_ssdp(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=context,
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.100.1:60957/rootDesc.xml",
-            ssdp.ATTR_SSDP_ST: "upnp:rootdevice",
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
-            ssdp.ATTR_UPNP_MANUFACTURER: "Huawei",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.huawei.com/",
-            ssdp.ATTR_UPNP_MODEL_NAME: "Huawei router",
-            ssdp.ATTR_UPNP_MODEL_NUMBER: "12345678",
-            ssdp.ATTR_UPNP_PRESENTATION_URL: url,
-            ssdp.ATTR_UPNP_SERIAL: "00000000",
-            ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="upnp:rootdevice",
+            ssdp_location="http://192.168.100.1:60957/rootDesc.xml",
+            upnp={
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
+                ssdp.ATTR_UPNP_MANUFACTURER: "Huawei",
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.huawei.com/",
+                ssdp.ATTR_UPNP_MODEL_NAME: "Huawei router",
+                ssdp.ATTR_UPNP_MODEL_NUMBER: "12345678",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: url,
+                ssdp.ATTR_UPNP_SERIAL: "00000000",
+                ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+            },
+        ),
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["data_schema"]({})[CONF_URL] == url
 
@@ -206,7 +209,7 @@ async def test_options(hass):
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     recipient = "+15555550000"

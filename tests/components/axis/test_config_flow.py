@@ -4,18 +4,16 @@ from unittest.mock import patch
 import pytest
 import respx
 
-from homeassistant import data_entry_flow
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
     CONF_EVENTS,
-    CONF_MODEL,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
@@ -26,16 +24,13 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from .test_device import (
     DEFAULT_HOST,
@@ -57,7 +52,7 @@ async def test_flow_manual_configuration(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with respx.mock:
@@ -72,7 +67,7 @@ async def test_flow_manual_configuration(hass):
             },
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -93,7 +88,7 @@ async def test_manual_configuration_update_configuration(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
@@ -112,7 +107,7 @@ async def test_manual_configuration_update_configuration(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert device.host == "2.3.4.5"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -124,11 +119,11 @@ async def test_flow_fails_faulty_credentials(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_device",
+        "homeassistant.components.axis.config_flow.get_axis_device",
         side_effect=config_flow.AuthenticationRequired,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -150,11 +145,11 @@ async def test_flow_fails_cannot_connect(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_device",
+        "homeassistant.components.axis.config_flow.get_axis_device",
         side_effect=config_flow.CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -187,7 +182,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with respx.mock:
@@ -202,7 +197,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
             },
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -227,7 +222,7 @@ async def test_reauth_flow_update_configuration(hass):
         data=config_entry.data,
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     with respx.mock:
@@ -243,7 +238,7 @@ async def test_reauth_flow_update_configuration(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert device.host == "2.3.4.5"
     assert device.username == "user2"
@@ -255,54 +250,59 @@ async def test_reauth_flow_update_configuration(hass):
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: f"axis-{MAC}",
-                IP_ADDRESS: DEFAULT_HOST,
-                MAC_ADDRESS: MAC,
-            },
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip=DEFAULT_HOST,
+                macaddress=MAC,
+            ),
         ),
         (
             SOURCE_SSDP,
-            {
-                "st": "urn:axis-com:service:BasicService:1",
-                "usn": f"uuid:Upnp-BasicDevice-1_0-{MAC}::urn:axis-com:service:BasicService:1",
-                "ext": "",
-                "server": "Linux/4.14.173-axis8, UPnP/1.0, Portable SDK for UPnP devices/1.8.7",
-                "deviceType": "urn:schemas-upnp-org:device:Basic:1",
-                "friendlyName": f"AXIS M1065-LW - {MAC}",
-                "manufacturer": "AXIS",
-                "manufacturerURL": "http://www.axis.com/",
-                "modelDescription": "AXIS M1065-LW Network Camera",
-                "modelName": "AXIS M1065-LW",
-                "modelNumber": "M1065-LW",
-                "modelURL": "http://www.axis.com/",
-                "serialNumber": MAC,
-                "UDN": f"uuid:Upnp-BasicDevice-1_0-{MAC}",
-                "serviceList": {
-                    "service": {
-                        "serviceType": "urn:axis-com:service:BasicService:1",
-                        "serviceId": "urn:axis-com:serviceId:BasicServiceId",
-                        "controlURL": "/upnp/control/BasicServiceId",
-                        "eventSubURL": "/upnp/event/BasicServiceId",
-                        "SCPDURL": "/scpd_basic.xml",
-                    }
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "st": "urn:axis-com:service:BasicService:1",
+                    "usn": f"uuid:Upnp-BasicDevice-1_0-{MAC}::urn:axis-com:service:BasicService:1",
+                    "ext": "",
+                    "server": "Linux/4.14.173-axis8, UPnP/1.0, Portable SDK for UPnP devices/1.8.7",
+                    "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+                    "friendlyName": f"AXIS M1065-LW - {MAC}",
+                    "manufacturer": "AXIS",
+                    "manufacturerURL": "http://www.axis.com/",
+                    "modelDescription": "AXIS M1065-LW Network Camera",
+                    "modelName": "AXIS M1065-LW",
+                    "modelNumber": "M1065-LW",
+                    "modelURL": "http://www.axis.com/",
+                    "serialNumber": MAC,
+                    "UDN": f"uuid:Upnp-BasicDevice-1_0-{MAC}",
+                    "serviceList": {
+                        "service": {
+                            "serviceType": "urn:axis-com:service:BasicService:1",
+                            "serviceId": "urn:axis-com:serviceId:BasicServiceId",
+                            "controlURL": "/upnp/control/BasicServiceId",
+                            "eventSubURL": "/upnp/event/BasicServiceId",
+                            "SCPDURL": "/scpd_basic.xml",
+                        }
+                    },
+                    "presentationURL": f"http://{DEFAULT_HOST}:80/",
                 },
-                "presentationURL": f"http://{DEFAULT_HOST}:80/",
-            },
+            ),
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                "host": DEFAULT_HOST,
-                "port": 80,
-                "hostname": f"axis-{MAC.lower()}.local.",
-                "type": "_axis-video._tcp.local.",
-                "name": f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
-                "properties": {
+            zeroconf.ZeroconfServiceInfo(
+                host=DEFAULT_HOST,
+                addresses=[DEFAULT_HOST],
+                port=80,
+                hostname=f"axis-{MAC.lower()}.local.",
+                type="_axis-video._tcp.local.",
+                name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                properties={
                     "_raw": {"macaddress": MAC.encode()},
                     "macaddress": MAC,
                 },
-            },
+            ),
         ),
     ],
 )
@@ -312,8 +312,12 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0].get("context", {}).get("configuration_url") == "http://1.2.3.4:80"
 
     with respx.mock:
         mock_default_vapix_requests(respx)
@@ -327,7 +331,7 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
             },
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
@@ -346,28 +350,35 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: f"axis-{MAC}",
-                IP_ADDRESS: DEFAULT_HOST,
-                MAC_ADDRESS: MAC,
-            },
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip=DEFAULT_HOST,
+                macaddress=MAC,
+            ),
         ),
         (
             SOURCE_SSDP,
-            {
-                "friendlyName": f"AXIS M1065-LW - {MAC}",
-                "serialNumber": MAC,
-                "presentationURL": f"http://{DEFAULT_HOST}:80/",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "friendlyName": f"AXIS M1065-LW - {MAC}",
+                    "serialNumber": MAC,
+                    "presentationURL": f"http://{DEFAULT_HOST}:80/",
+                },
+            ),
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                CONF_HOST: DEFAULT_HOST,
-                CONF_PORT: 80,
-                "name": f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
-                "properties": {"macaddress": MAC},
-            },
+            zeroconf.ZeroconfServiceInfo(
+                host=DEFAULT_HOST,
+                addresses=[DEFAULT_HOST],
+                hostname="mock_hostname",
+                name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                port=80,
+                properties={"macaddress": MAC},
+                type="mock_type",
+            ),
         ),
     ],
 )
@@ -382,7 +393,7 @@ async def test_discovered_device_already_configured(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == DEFAULT_HOST
 
@@ -392,30 +403,37 @@ async def test_discovered_device_already_configured(
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: f"axis-{MAC}",
-                IP_ADDRESS: "2.3.4.5",
-                MAC_ADDRESS: MAC,
-            },
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip="2.3.4.5",
+                macaddress=MAC,
+            ),
             80,
         ),
         (
             SOURCE_SSDP,
-            {
-                "friendlyName": f"AXIS M1065-LW - {MAC}",
-                "serialNumber": MAC,
-                "presentationURL": "http://2.3.4.5:8080/",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "friendlyName": f"AXIS M1065-LW - {MAC}",
+                    "serialNumber": MAC,
+                    "presentationURL": "http://2.3.4.5:8080/",
+                },
+            ),
             8080,
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                CONF_HOST: "2.3.4.5",
-                CONF_PORT: 8080,
-                "name": f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
-                "properties": {"macaddress": MAC},
-            },
+            zeroconf.ZeroconfServiceInfo(
+                host="2.3.4.5",
+                addresses=["2.3.4.5"],
+                hostname="mock_hostname",
+                name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                port=8080,
+                properties={"macaddress": MAC},
+                type="mock_type",
+            ),
             8080,
         ),
     ],
@@ -444,7 +462,7 @@ async def test_discovery_flow_updated_configuration(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data == {
         CONF_HOST: "2.3.4.5",
@@ -462,28 +480,35 @@ async def test_discovery_flow_updated_configuration(
     [
         (
             SOURCE_DHCP,
-            {
-                HOSTNAME: "",
-                IP_ADDRESS: "",
-                MAC_ADDRESS: "01234567890",
-            },
+            dhcp.DhcpServiceInfo(
+                hostname="",
+                ip="",
+                macaddress="01234567890",
+            ),
         ),
         (
             SOURCE_SSDP,
-            {
-                "friendlyName": "",
-                "serialNumber": "01234567890",
-                "presentationURL": "",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "friendlyName": "",
+                    "serialNumber": "01234567890",
+                    "presentationURL": "",
+                },
+            ),
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                CONF_HOST: "",
-                CONF_PORT: 0,
-                "name": "",
-                "properties": {"macaddress": "01234567890"},
-            },
+            zeroconf.ZeroconfServiceInfo(
+                host="",
+                addresses=[""],
+                hostname="mock_hostname",
+                name="",
+                port=0,
+                properties={"macaddress": "01234567890"},
+                type="mock_type",
+            ),
         ),
     ],
 )
@@ -495,7 +520,7 @@ async def test_discovery_flow_ignore_non_axis_device(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_axis_device"
 
 
@@ -504,24 +529,35 @@ async def test_discovery_flow_ignore_non_axis_device(
     [
         (
             SOURCE_DHCP,
-            {HOSTNAME: f"axis-{MAC}", IP_ADDRESS: "169.254.3.4", MAC_ADDRESS: MAC},
+            dhcp.DhcpServiceInfo(
+                hostname=f"axis-{MAC}",
+                ip="169.254.3.4",
+                macaddress=MAC,
+            ),
         ),
         (
             SOURCE_SSDP,
-            {
-                "friendlyName": f"AXIS M1065-LW - {MAC}",
-                "serialNumber": MAC,
-                "presentationURL": "http://169.254.3.4:80/",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "friendlyName": f"AXIS M1065-LW - {MAC}",
+                    "serialNumber": MAC,
+                    "presentationURL": "http://169.254.3.4:80/",
+                },
+            ),
         ),
         (
             SOURCE_ZEROCONF,
-            {
-                CONF_HOST: "169.254.3.4",
-                CONF_PORT: 80,
-                "name": f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
-                "properties": {"macaddress": MAC},
-            },
+            zeroconf.ZeroconfServiceInfo(
+                host="169.254.3.4",
+                addresses=["169.254.3.4"],
+                hostname="mock_hostname",
+                name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                port=80,
+                properties={"macaddress": MAC},
+                type="mock_type",
+            ),
         ),
     ],
 )
@@ -533,7 +569,7 @@ async def test_discovery_flow_ignore_link_local_address(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "link_local_address"
 
 
@@ -550,7 +586,7 @@ async def test_option_flow(hass):
             device.config_entry.entry_id
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "configure_stream"
     assert set(result["data_schema"].schema[CONF_STREAM_PROFILE].container) == {
         DEFAULT_STREAM_PROFILE,
@@ -567,7 +603,7 @@ async def test_option_flow(hass):
         user_input={CONF_STREAM_PROFILE: "profile_1", CONF_VIDEO_SOURCE: 1},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_EVENTS: True,
         CONF_STREAM_PROFILE: "profile_1",

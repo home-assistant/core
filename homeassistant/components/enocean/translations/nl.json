@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "invalid_dongle_path": "Ongeldig dongle-pad",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
             "invalid_dongle_path": "Geen geldige dongle gevonden voor dit pad"

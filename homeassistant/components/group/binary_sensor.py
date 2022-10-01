@@ -1,9 +1,6 @@
 """This platform allows several binary sensor to be grouped into one binary sensor."""
 from __future__ import annotations
 
-import logging
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -12,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -20,12 +18,13 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
 
@@ -33,8 +32,6 @@ DEFAULT_NAME = "Binary Sensor Group"
 
 CONF_ALL = "all"
 REG_KEY = f"{BINARY_SENSOR_DOMAIN}_registry"
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -51,9 +48,9 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Group Binary Sensor platform."""
+    """Set up the Binary Sensor Group platform."""
     async_add_entities(
         [
             BinarySensorGroup(
@@ -67,8 +64,31 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize Binary Sensor Group config entry."""
+    registry = er.async_get(hass)
+    entities = er.async_validate_entity_ids(
+        registry, config_entry.options[CONF_ENTITIES]
+    )
+    mode = config_entry.options[CONF_ALL]
+
+    async_add_entities(
+        [
+            BinarySensorGroup(
+                config_entry.entry_id, config_entry.title, None, entities, mode
+            )
+        ]
+    )
+
+
 class BinarySensorGroup(GroupEntity, BinarySensorEntity):
     """Representation of a BinarySensorGroup."""
+
+    _attr_available: bool = False
 
     def __init__(
         self,
@@ -85,7 +105,6 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self._device_class = device_class
-        self._state: str | None = None
         self.mode = any
         if mode:
             self.mode = all
@@ -93,10 +112,11 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
-        async def async_state_changed_listener(event: Event) -> None:
+        @callback
+        def async_state_changed_listener(event: Event) -> None:
             """Handle child updates."""
             self.async_set_context(event.context)
-            await self.async_defer_or_update_ha_state()
+            self.async_defer_or_update_ha_state()
 
         self.async_on_remove(
             async_track_state_change_event(
@@ -104,26 +124,29 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
             )
         )
 
-        if self.hass.state == CoreState.running:
-            await self.async_update()
-            return
-
         await super().async_added_to_hass()
 
-    async def async_update(self) -> None:
+    @callback
+    def async_update_group_state(self) -> None:
         """Query all members and determine the binary sensor group state."""
-        all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        filtered_states: list[str] = [x.state for x in all_states if x is not None]
-        self._attr_available = any(
-            state != STATE_UNAVAILABLE for state in filtered_states
+        states = [
+            state.state
+            for entity_id in self._entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
+
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
+
+        valid_state = self.mode(
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
         )
-        if STATE_UNAVAILABLE in filtered_states:
+        if not valid_state:
+            # Set as unknown if any / all member is not unknown or unavailable
             self._attr_is_on = None
         else:
-            states = list(map(lambda x: x == STATE_ON, filtered_states))
-            state = self.mode(states)
-            self._attr_is_on = state
-        self.async_write_ha_state()
+            # Set as ON if any / all member is ON
+            self._attr_is_on = self.mode(state == STATE_ON for state in states)
 
     @property
     def device_class(self) -> str | None:

@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "discovery_started": "\u958b\u59cb\u641c\u7d22"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "protect_version": "\u6240\u9700\u6700\u4f4e\u7248\u672c\u70ba V1.20.0\u3002\u8acb\u66f4\u65b0 UniFi \u76e3\u63a7\u5f8c\u518d\u91cd\u8a66\u4e00\u6b21\u3002"
+        },
+        "flow_title": "{name} ({ip_address})",
+        "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({ip_address})\uff1f\u9700\u8981\u65bc UniFi OS Console \u65b0\u589e\u672c\u5730\u4f7f\u7528\u8005\u4ee5\u9032\u884c\u767b\u5165\u3001Ubiquiti \u96f2\u7aef\u4f7f\u7528\u8005\u7121\u6cd5\u4f7f\u7528\u3002\u66f4\u591a\u8a73\u7d30\u8cc7\u8a0a\uff1a{local_user_documentation_url}",
+                "title": "\u767c\u73fe UniFi \u76e3\u63a7"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "host": "UniFi Protect \u4f3a\u670d\u5668\u7684 IP/\u4e3b\u6a5f\u540d\u7a31",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u9023\u63a5\u57e0",
+                    "username": "\u5e33\u865f"
+                },
+                "title": "UniFi Protect \u91cd\u65b0\u6388\u6b0a"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u9023\u63a5\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31",
+                    "verify_ssl": "\u9a57\u8b49 SSL \u6191\u8b49"
+                },
+                "description": "\u9700\u8981\u65bc UniFi OS Console \u65b0\u589e\u672c\u5730\u4f7f\u7528\u8005\u4ee5\u9032\u884c\u767b\u5165\u3001Ubiquiti \u96f2\u7aef\u4f7f\u7528\u8005\u7121\u6cd5\u4f7f\u7528\u3002\u66f4\u591a\u8a73\u7d30\u8cc7\u8a0a\uff1a{local_user_documentation_url}",
+                "title": "UniFi Protect \u5b89\u88dd"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_mac_list": "\u5fc5\u9808\u70ba\u4ee5\u9017\u865f\uff08\uff1a\uff09\u5206\u9694\u958b\u7684 MAC \u5730\u5740\u5217\u8868"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "all_updates": "\u5373\u6642\u6307\u6a19\uff08\u8b66\u544a\uff1a\u5927\u91cf\u63d0\u5347 CPU \u4f7f\u7528\u7387\uff09",
+                    "disable_rtsp": "\u95dc\u9589 RTSP \u4e32\u6d41",
+                    "ignored_devices": "\u4ee5\u9017\u865f\u5206\u9694\u7684\u5ffd\u7565 MAC \u4f4d\u5740\u5217\u8868",
+                    "max_media": "\u5a92\u9ad4\u700f\u89bd\u5668\u6700\u9ad8\u8f09\u5165\u4e8b\u4ef6\u6578\uff08\u589e\u52a0\u8a18\u61b6\u9ad4\u4f7f\u7528\uff09",
+                    "override_connection_host": "\u7f6e\u63db\u9023\u7dda\u4e3b\u6a5f\u7aef"
+                },
+                "description": "\u50c5\u6709\u7576\u958b\u555f\u8a3a\u65b7\u611f\u6e2c\u5668\u3001\u4e26\u9700\u8981\u5373\u6642\u66f4\u65b0\u6642\uff0c\u624d\u5efa\u8b70\u958b\u555f\u5373\u6642\u6307\u6a19\u9078\u9805\u3002\u672a\u555f\u7528\u72c0\u6cc1\u4e0b\u70ba\u6bcf 15 \u5206\u9418\u66f4\u65b0\u4e00\u6b21\u3002",
+                "title": "UniFi \u76e3\u63a7\u9078\u9805"
+            }
+        }
+    }
+}

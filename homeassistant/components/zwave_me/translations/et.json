@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "no_valid_uuid_set": "Kehtivat UUID-d pole m\u00e4\u00e4ratud"
+        },
+        "error": {
+            "no_valid_uuid_set": "Kehtivat UUID-d pole m\u00e4\u00e4ratud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "token": "API v\u00f5ti",
+                    "url": "URL"
+                },
+                "description": "Sisesta IP-aadress koos pordi ja Z-Way serveri juurdep\u00e4\u00e4suv\u00f5tmega. Tokeni hankimiseks ava Z-Way kasutajaliides Smart Home UI > Men\u00fc\u00fc > Seaded > Kasutajad > Administraator > API luba. \n\n N\u00e4ide kohalikus v\u00f5rgus Z-Wayga \u00fchenduse loomisest:\n URL: {local_url}\n Token: {local_token} \n\n N\u00e4ide Z-Wayga \u00fchenduse loomisest kaugjuurdep\u00e4\u00e4su kaudu find.z-wave.me:\n URL: {find_url}\n Token: {find_token} \n\n N\u00e4ide Z-Wayga \u00fchenduse loomisest staatilise avaliku IP-aadressiga:\n URL: {remote_url}\n Token: {local_token} \n\n Kui \u00fchendud saidi find.z-wave.me kaudu, pead kasutama globaalse ulatusega luba (selleks logi Z-Waysse sisse saidi find.z-wave.me kaudu)."
+            }
+        }
+    }
+}

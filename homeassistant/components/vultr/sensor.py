@@ -11,7 +11,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, DATA_GIGABYTES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ATTR_CURRENT_BANDWIDTH_USED,
@@ -50,7 +53,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Vultr subscription (server) sensor."""
     vultr = hass.data[DATA_VULTR]
 
@@ -104,7 +112,7 @@ class VultrSensor(SensorEntity):
         except (TypeError, ValueError):
             return self.data.get(self.entity_description.key)
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         self._vultr.update()
         self.data = self._vultr.data[self.subscription]

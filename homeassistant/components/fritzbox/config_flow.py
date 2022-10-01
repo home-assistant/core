@@ -1,6 +1,8 @@
 """Config flow for AVM FRITZ!SmartHome."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+import ipaddress
 from typing import Any
 from urllib.parse import urlparse
 
@@ -8,15 +10,10 @@ from pyfritzhome import Fritzhome, LoginError
 from requests.exceptions import HTTPError
 import voluptuous as vol
 
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_UDN,
-)
+from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
@@ -119,14 +116,19 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
         )
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
-        host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
+        host = urlparse(discovery_info.ssdp_location).hostname
         assert isinstance(host, str)
         self.context[CONF_HOST] = host
 
-        uuid = discovery_info.get(ATTR_UPNP_UDN)
-        if uuid:
+        if (
+            ipaddress.ip_address(host).version == 6
+            and ipaddress.ip_address(host).is_link_local
+        ):
+            return self.async_abort(reason="ignore_ip6_link_local")
+
+        if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
             await self.async_set_unique_id(uuid)
@@ -144,7 +146,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         self._host = host
-        self._name = str(discovery_info.get(ATTR_UPNP_FRIENDLY_NAME) or host)
+        self._name = str(discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME) or host)
 
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()
@@ -174,14 +176,14 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
         self._entry = entry
-        self._host = data[CONF_HOST]
-        self._name = str(data[CONF_HOST])
-        self._username = data[CONF_USERNAME]
+        self._host = entry_data[CONF_HOST]
+        self._name = str(entry_data[CONF_HOST])
+        self._username = entry_data[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 

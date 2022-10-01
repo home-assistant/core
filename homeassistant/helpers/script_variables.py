@@ -8,8 +8,6 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import template
 
-# mypy: disallow-any-generics
-
 
 class ScriptVariables:
     """Class to hold and render script variables."""

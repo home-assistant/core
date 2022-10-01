@@ -1,4 +1,5 @@
 """Test the xbox config flow."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -18,7 +19,7 @@ async def test_abort_if_existing_entry(hass):
     result = await hass.config_entries.flow.async_init(
         "xbox", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -56,7 +57,7 @@ async def test_full_flow(
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(

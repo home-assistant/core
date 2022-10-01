@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel.",
+            "not_compatible": "N\u00e3o \u00e9 poss\u00edvel obter informa\u00e7\u00f5es da CPU, esta integra\u00e7\u00e3o n\u00e3o \u00e9 compat\u00edvel com seu sistema"
+        },
+        "step": {
+            "user": {
+                "description": "Deseja iniciar a configura\u00e7\u00e3o?",
+                "title": "Velocidade da CPU"
+            }
+        }
+    },
+    "title": "Velocidade da CPU"
+}

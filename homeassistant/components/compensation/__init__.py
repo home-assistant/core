@@ -1,6 +1,5 @@
 """The Compensation integration."""
 import logging
-import warnings
 
 import numpy as np
 import voluptuous as vol
@@ -12,8 +11,10 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_COMPENSATION,
@@ -67,11 +68,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Compensation sensor."""
     hass.data[DATA_COMPENSATION] = {}
 
-    for compensation, conf in config.get(DOMAIN).items():
+    for compensation, conf in config[DOMAIN].items():
         _LOGGER.debug("Setup %s.%s", DOMAIN, compensation)
 
         degree = conf[CONF_DEGREE]
@@ -82,22 +83,14 @@ async def async_setup(hass, config):
         # try to get valid coefficients for a polynomial
         coefficients = None
         with np.errstate(all="raise"):
-            with warnings.catch_warnings(record=True) as all_warnings:
-                warnings.simplefilter("always")
-                try:
-                    coefficients = np.polyfit(x_values, y_values, degree)
-                except FloatingPointError as error:
-                    _LOGGER.error(
-                        "Setup of %s encountered an error, %s",
-                        compensation,
-                        error,
-                    )
-                for warning in all_warnings:
-                    _LOGGER.warning(
-                        "Setup of %s encountered a warning, %s",
-                        compensation,
-                        str(warning.message).lower(),
-                    )
+            try:
+                coefficients = np.polyfit(x_values, y_values, degree)
+            except FloatingPointError as error:
+                _LOGGER.error(
+                    "Setup of %s encountered an error, %s",
+                    compensation,
+                    error,
+                )
 
         if coefficients is not None:
             data = {

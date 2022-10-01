@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "\u4e3b\u6a5f\u540d\u7a31\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "\u57f7\u884c DNS \u67e5\u8a62\u7684\u4e3b\u6a5f\u540d\u7a31",
+                    "resolver": "IPV4 \u89e3\u6790\u5668",
+                    "resolver_ipv6": "IPV6 \u89e3\u6790\u5668"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "\u89e3\u6790\u5668 IP \u4f4d\u5740\u7121\u6548"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "IPV4 \u89e3\u6790\u5668",
+                    "resolver_ipv6": "IPV6 \u89e3\u6790\u5668"
+                }
+            }
+        }
+    }
+}

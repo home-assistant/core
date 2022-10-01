@@ -2,10 +2,14 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTR_API_FORECAST_TIME,
     ATTRIBUTION,
     DOMAIN,
     ENTRY_NAME,
@@ -21,7 +25,11 @@ from .const import (
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AEMET OpenData sensor entities based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     name = domain_data[ENTRY_NAME]
@@ -36,17 +44,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities.extend(
         [
             AemetForecastSensor(
-                name_prefix,
-                unique_id_prefix,
+                f"{domain_data[ENTRY_NAME]} {mode} Forecast",
+                f"{unique_id}-forecast-{mode}",
                 weather_coordinator,
                 mode,
                 description,
             )
             for mode in FORECAST_MODES
-            if (
-                (name_prefix := f"{domain_data[ENTRY_NAME]} {mode} Forecast")
-                and (unique_id_prefix := f"{unique_id}-forecast-{mode}")
-            )
             for description in FORECAST_SENSOR_TYPES
             if description.key in FORECAST_MONITORED_CONDITIONS
         ]
@@ -55,10 +59,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AbstractAemetSensor(CoordinatorEntity, SensorEntity):
+class AbstractAemetSensor(CoordinatorEntity[WeatherUpdateCoordinator], SensorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -80,14 +84,14 @@ class AemetSensor(AbstractAemetSensor):
     def __init__(
         self,
         name,
-        unique_id,
+        unique_id_prefix,
         weather_coordinator: WeatherUpdateCoordinator,
         description: SensorEntityDescription,
     ):
         """Initialize the sensor."""
         super().__init__(
             name=name,
-            unique_id=f"{unique_id}-{description.key}",
+            unique_id=f"{unique_id_prefix}-{description.key}",
             coordinator=weather_coordinator,
             description=description,
         )
@@ -104,7 +108,7 @@ class AemetForecastSensor(AbstractAemetSensor):
     def __init__(
         self,
         name,
-        unique_id,
+        unique_id_prefix,
         weather_coordinator: WeatherUpdateCoordinator,
         forecast_mode,
         description: SensorEntityDescription,
@@ -112,7 +116,7 @@ class AemetForecastSensor(AbstractAemetSensor):
         """Initialize the sensor."""
         super().__init__(
             name=name,
-            unique_id=f"{unique_id}-{description.key}",
+            unique_id=f"{unique_id_prefix}-{description.key}",
             coordinator=weather_coordinator,
             description=description,
         )
@@ -130,4 +134,6 @@ class AemetForecastSensor(AbstractAemetSensor):
         )
         if forecasts:
             forecast = forecasts[0].get(self.entity_description.key)
+            if self.entity_description.key == ATTR_API_FORECAST_TIME:
+                forecast = dt_util.parse_datetime(forecast)
         return forecast

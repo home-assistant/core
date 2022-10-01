@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "invalid_hostname": "Nombre de host no v\u00e1lido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "hostname": "El nombre de host para el que realizar la consulta de DNS",
+                    "resolver": "Resolver para la b\u00fasqueda IPv4",
+                    "resolver_ipv6": "Resolver para la b\u00fasqueda IPv6"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_resolver": "Direcci\u00f3n IP no v\u00e1lida para resolver"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolver para la b\u00fasqueda IPv4",
+                    "resolver_ipv6": "Resolver para la b\u00fasqueda IPv6"
+                }
+            }
+        }
+    }
+}

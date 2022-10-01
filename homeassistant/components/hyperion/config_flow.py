@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from contextlib import suppress
 import logging
 from typing import Any
@@ -10,7 +11,7 @@ from urllib.parse import urlparse
 from hyperion import client, const
 import voluptuous as vol
 
-from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
+from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -140,18 +141,15 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_auth()
         return await self.async_step_confirm()
 
-    async def async_step_reauth(
-        self,
-        config_data: dict[str, Any],
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthentication flow."""
-        self._data = dict(config_data)
+        self._data = dict(entry_data)
         async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
                 return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
-    async def async_step_ssdp(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initiated by SSDP."""
         # Sample data provided by SSDP: {
         #   'ssdp_location': 'http://192.168.0.1:8090/description.xml',
@@ -188,23 +186,24 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # SSDP requires user confirmation.
         self._require_confirm = True
-        self._data[CONF_HOST] = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
+        self._data[CONF_HOST] = urlparse(discovery_info.ssdp_location).hostname
         try:
-            self._port_ui = urlparse(discovery_info[ATTR_SSDP_LOCATION]).port
+            self._port_ui = (
+                urlparse(discovery_info.ssdp_location).port or const.DEFAULT_PORT_UI
+            )
         except ValueError:
             self._port_ui = const.DEFAULT_PORT_UI
 
         try:
             self._data[CONF_PORT] = int(
-                discovery_info.get("ports", {}).get(
+                discovery_info.upnp.get("ports", {}).get(
                     "jsonServer", const.DEFAULT_PORT_JSON
                 )
             )
         except ValueError:
             self._data[CONF_PORT] = const.DEFAULT_PORT_JSON
 
-        hyperion_id = discovery_info.get(ATTR_UPNP_SERIAL)
-        if not hyperion_id:
+        if not (hyperion_id := discovery_info.upnp.get(ssdp.ATTR_UPNP_SERIAL)):
             return self.async_abort(reason="no_id")
 
         # For discovery mechanisms, we set the unique_id as early as possible to

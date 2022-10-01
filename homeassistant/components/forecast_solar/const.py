@@ -2,16 +2,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Final
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TIMESTAMP,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 
 from .models import ForecastSolarSensorEntityDescription
 
@@ -21,40 +14,39 @@ CONF_DECLINATION = "declination"
 CONF_AZIMUTH = "azimuth"
 CONF_MODULES_POWER = "modules power"
 CONF_DAMPING = "damping"
-ATTR_ENTRY_TYPE: Final = "entry_type"
-ENTRY_TYPE_SERVICE: Final = "service"
+CONF_INVERTER_SIZE = "inverter_size"
 
 SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
     ForecastSolarSensorEntityDescription(
         key="energy_production_today",
-        name="Estimated Energy Production - Today",
+        name="Estimated energy production - today",
         state=lambda estimate: estimate.energy_production_today / 1000,
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_production_tomorrow",
-        name="Estimated Energy Production - Tomorrow",
+        name="Estimated energy production - tomorrow",
         state=lambda estimate: estimate.energy_production_tomorrow / 1000,
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_highest_peak_time_today",
-        name="Highest Power Peak Time - Today",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        name="Highest power peak time - today",
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_highest_peak_time_tomorrow",
-        name="Highest Power Peak Time - Tomorrow",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        name="Highest power peak time - tomorrow",
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     ForecastSolarSensorEntityDescription(
         key="power_production_now",
-        name="Estimated Power Production - Now",
-        device_class=DEVICE_CLASS_POWER,
+        name="Estimated power production - now",
+        device_class=SensorDeviceClass.POWER,
         state=lambda estimate: estimate.power_production_now,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     ForecastSolarSensorEntityDescription(
@@ -62,8 +54,8 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         state=lambda estimate: estimate.power_production_at_time(
             estimate.now() + timedelta(hours=1)
         ),
-        name="Estimated Power Production - Next Hour",
-        device_class=DEVICE_CLASS_POWER,
+        name="Estimated power production - next hour",
+        device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=POWER_WATT,
     ),
@@ -72,8 +64,8 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         state=lambda estimate: estimate.power_production_at_time(
             estimate.now() + timedelta(hours=12)
         ),
-        name="Estimated Power Production - Next 12 Hours",
-        device_class=DEVICE_CLASS_POWER,
+        name="Estimated power production - next 12 hours",
+        device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=POWER_WATT,
     ),
@@ -82,23 +74,23 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         state=lambda estimate: estimate.power_production_at_time(
             estimate.now() + timedelta(hours=24)
         ),
-        name="Estimated Power Production - Next 24 Hours",
-        device_class=DEVICE_CLASS_POWER,
+        name="Estimated power production - next 24 hours",
+        device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=POWER_WATT,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_current_hour",
-        name="Estimated Energy Production - This Hour",
+        name="Estimated energy production - this hour",
         state=lambda estimate: estimate.energy_current_hour / 1000,
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     ForecastSolarSensorEntityDescription(
         key="energy_next_hour",
         state=lambda estimate: estimate.sum_energy_production(1) / 1000,
-        name="Estimated Energy Production - Next Hour",
-        device_class=DEVICE_CLASS_ENERGY,
+        name="Estimated energy production - next hour",
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
 )

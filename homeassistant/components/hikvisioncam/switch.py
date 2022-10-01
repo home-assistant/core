@@ -1,5 +1,8 @@
 """Support turning on/off motion detection on Hikvision cameras."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import hikvision.api
 from hikvision.error import HikvisionError, MissingParamError
@@ -15,7 +18,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # This is the last working version, please test before updating
 
@@ -37,7 +43,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Hikvision camera."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -51,10 +62,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
     except MissingParamError as param_err:
         _LOGGING.error("Missing required param: %s", param_err)
-        return False
+        return
     except HikvisionError as conn_err:
         _LOGGING.error("Unable to connect: %s", conn_err)
-        return False
+        return
 
     add_entities([HikvisionMotionSwitch(name, hikvision_cam)])
 
@@ -74,26 +85,21 @@ class HikvisionMotionSwitch(SwitchEntity):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the device if any."""
-        return self._state
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state == STATE_ON
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         _LOGGING.info("Turning on Motion Detection ")
         self._hikvision_cam.enable_motion_detection()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         _LOGGING.info("Turning off Motion Detection ")
         self._hikvision_cam.disable_motion_detection()
 
-    def update(self):
+    def update(self) -> None:
         """Update Motion Detection state."""
         enabled = self._hikvision_cam.is_motion_detection_enabled()
         _LOGGING.info("enabled: %s", enabled)

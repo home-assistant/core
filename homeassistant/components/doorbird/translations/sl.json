@@ -18,8 +18,7 @@
                     "name": "Ime naprave",
                     "password": "Geslo",
                     "username": "Uporabni\u0161ko ime"
-                },
-                "title": "Pove\u017eite se z DoorBird"
+                }
             }
         }
     },
@@ -28,8 +27,7 @@
             "init": {
                 "data": {
                     "events": "Seznam dogodkov, lo\u010denih z vejico."
-                },
-                "description": "Za vsak dogodek, ki ga \u017eelite spremljati, dodajte ime, lo\u010deno z vejico. Ko jih tukaj vnesete, uporabite aplikacijo DoorBird, da jih dodelite dolo\u010denemu dogodku. Glej dokumentacijo na strani https://www.home-assistant.io/integrations/doorbird/#events. Primer: nekdo_pritisnil_gumb, gibanje"
+                }
             }
         }
     }

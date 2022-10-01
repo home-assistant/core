@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mjpeg_url": "MJPEG URL",
+                    "name": "Nimi",
+                    "password": "Salas\u00f5na",
+                    "still_image_url": "Pildi URL",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL serti"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "mjpeg_url": "MJPEG URL",
+                    "name": "Nimi",
+                    "password": "Salas\u00f5na",
+                    "still_image_url": "Pildi URL",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL serti"
+                }
+            }
+        }
+    }
+}

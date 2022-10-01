@@ -8,6 +8,7 @@ from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -18,7 +19,6 @@ from homeassistant.core import Context, HomeAssistant, State
 from . import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_MODE,
-    ATTR_TEMPERATURE,
     DOMAIN,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
@@ -53,9 +53,7 @@ async def _async_reproduce_state(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
-    cur_state = hass.states.get(state.entity_id)
-
-    if cur_state is None:
+    if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 

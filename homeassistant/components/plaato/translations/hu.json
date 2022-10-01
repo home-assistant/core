@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "cloud_not_connected": "Nincs csatlakoztatva a Home Assistant Cloudhoz.",
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
             "webhook_not_internet_accessible": "A Home Assistant p\u00e9ld\u00e1ny\u00e1nak el\u00e9rhet\u0151nek kell lennie az internet fel\u0151l a webhook \u00fczenetek fogad\u00e1s\u00e1hoz."
         },
@@ -19,7 +20,7 @@
                     "token": "Auth Token beilleszt\u00e9se ide",
                     "use_webhook": "Webhook haszn\u00e1lata"
                 },
-                "description": "Az API lek\u00e9rdez\u00e9s\u00e9hez egy `auth_token` sz\u00fcks\u00e9ges, amelyet az [ezek] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) utas\u00edt\u00e1sok k\u00f6vet\u00e9s\u00e9vel lehet megszerezni. \n\n Kiv\u00e1lasztott eszk\u00f6z: ** {device_type} ** \n\nHa ink\u00e1bb a be\u00e9p\u00edtett webhook m\u00f3dszert haszn\u00e1lja (csak az Airlock eset\u00e9ben), k\u00e9rj\u00fck, jel\u00f6lje be az al\u00e1bbi n\u00e9gyzetet, \u00e9s hagyja \u00fcresen az Auth Token elemet",
+                "description": "Az API lek\u00e9rdez\u00e9s\u00e9hez egy `auth_token` sz\u00fcks\u00e9ges, amelyet az [ezek] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) utas\u00edt\u00e1sok k\u00f6vet\u00e9s\u00e9vel lehet megszerezni. \n\nKiv\u00e1lasztott eszk\u00f6z: **{device_type}** \n\nHa ink\u00e1bb a be\u00e9p\u00edtett webhook m\u00f3dszert haszn\u00e1lja (csak az Airlock eset\u00e9ben), k\u00e9rem, jel\u00f6lje be az al\u00e1bbi n\u00e9gyzetet, \u00e9s hagyja \u00fcresen az Auth Token elemet",
                 "title": "API m\u00f3dszer kiv\u00e1laszt\u00e1sa"
             },
             "user": {

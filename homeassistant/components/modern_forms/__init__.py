@@ -11,20 +11,8 @@ from aiomodernforms import (
 )
 from aiomodernforms.models import Device as ModernFormsDeviceState
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-    CONF_HOST,
-)
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -38,11 +26,11 @@ from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
-    BINARY_SENSOR_DOMAIN,
-    LIGHT_DOMAIN,
-    FAN_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.FAN,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Set up all platforms for this device/entry.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -86,12 +74,12 @@ def modernforms_exception_handler(func):
     async def handler(self, *args, **kwargs):
         try:
             await func(self, *args, **kwargs)
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
 
         except ModernFormsConnectionError as error:
             _LOGGER.error("Error communicating with API: %s", error)
             self.coordinator.last_update_success = False
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
 
         except ModernFormsError as error:
             _LOGGER.error("Invalid response from API: %s", error)
@@ -120,11 +108,6 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
             update_interval=SCAN_INTERVAL,
         )
 
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
-
     async def _async_update_data(self) -> ModernFormsDevice:
         """Fetch data from Modern Forms."""
         try:
@@ -137,8 +120,6 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
 
 class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
     """Defines a Modern Forms device entity."""
-
-    coordinator: ModernFormsDataUpdateCoordinator
 
     def __init__(
         self,
@@ -159,10 +140,10 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Modern Forms device."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},
-            ATTR_NAME: self.coordinator.data.info.device_name,
-            ATTR_MANUFACTURER: "Modern Forms",
-            ATTR_MODEL: self.coordinator.data.info.fan_type,
-            ATTR_SW_VERSION: f"{self.coordinator.data.info.firmware_version} / {self.coordinator.data.info.main_mcu_firmware_version}",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.data.info.mac_address)},
+            name=self.coordinator.data.info.device_name,
+            manufacturer="Modern Forms",
+            model=self.coordinator.data.info.fan_type,
+            sw_version=f"{self.coordinator.data.info.firmware_version} / {self.coordinator.data.info.main_mcu_firmware_version}",
+        )

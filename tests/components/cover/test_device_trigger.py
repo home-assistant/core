@@ -4,12 +4,8 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.cover import (
-    DOMAIN,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-)
+from homeassistant.components.cover import DOMAIN, CoverEntityFeature
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
     CONF_PLATFORM,
     STATE_CLOSED,
@@ -18,6 +14,8 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -55,30 +53,30 @@ def calls(hass):
 @pytest.mark.parametrize(
     "set_state,features_reg,features_state,expected_trigger_types",
     [
-        (False, SUPPORT_OPEN, 0, ["opened", "closed", "opening", "closing"]),
+        (False, CoverEntityFeature.OPEN, 0, ["opened", "closed", "opening", "closing"]),
         (
             False,
-            SUPPORT_OPEN | SUPPORT_SET_POSITION,
+            CoverEntityFeature.OPEN | CoverEntityFeature.SET_POSITION,
             0,
             ["opened", "closed", "opening", "closing", "position"],
         ),
         (
             False,
-            SUPPORT_OPEN | SUPPORT_SET_TILT_POSITION,
+            CoverEntityFeature.OPEN | CoverEntityFeature.SET_TILT_POSITION,
             0,
             ["opened", "closed", "opening", "closing", "tilt_position"],
         ),
-        (True, 0, SUPPORT_OPEN, ["opened", "closed", "opening", "closing"]),
+        (True, 0, CoverEntityFeature.OPEN, ["opened", "closed", "opening", "closing"]),
         (
             True,
             0,
-            SUPPORT_OPEN | SUPPORT_SET_POSITION,
+            CoverEntityFeature.OPEN | CoverEntityFeature.SET_POSITION,
             ["opened", "closed", "opening", "closing", "position"],
         ),
         (
             True,
             0,
-            SUPPORT_OPEN | SUPPORT_SET_TILT_POSITION,
+            CoverEntityFeature.OPEN | CoverEntityFeature.SET_TILT_POSITION,
             ["opened", "closed", "opening", "closing", "tilt_position"],
         ),
     ],
@@ -122,10 +120,62 @@ async def test_get_triggers(
             "type": trigger,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for trigger in expected_trigger_types
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert_lists_same(triggers, expected_triggers)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_triggers_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected triggers from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+        supported_features=CoverEntityFeature.OPEN,
+    )
+    expected_triggers = [
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": trigger,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for trigger in ["opened", "closed", "opening", "closing"]
+    ]
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -136,6 +186,8 @@ async def test_get_trigger_capabilities(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[0]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -147,13 +199,13 @@ async def test_get_trigger_capabilities(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
 
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 4
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == {
             "extra_fields": [
@@ -169,6 +221,8 @@ async def test_get_trigger_capabilities_set_pos(
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[1]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -179,8 +233,6 @@ async def test_get_trigger_capabilities_set_pos(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     expected_capabilities = {
         "extra_fields": [
@@ -202,11 +254,13 @@ async def test_get_trigger_capabilities_set_pos(
             },
         ]
     }
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 5
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         if trigger["type"] == "position":
             assert capabilities == expected_capabilities
@@ -228,7 +282,9 @@ async def test_get_trigger_capabilities_set_tilt_pos(
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
-    ent = platform.ENTITIES[2]
+    ent = platform.ENTITIES[3]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -239,8 +295,6 @@ async def test_get_trigger_capabilities_set_tilt_pos(
     entity_reg.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     expected_capabilities = {
         "extra_fields": [
@@ -262,11 +316,13 @@ async def test_get_trigger_capabilities_set_tilt_pos(
             },
         ]
     }
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 5
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         if trigger["type"] == "tilt_position":
             assert capabilities == expected_capabilities

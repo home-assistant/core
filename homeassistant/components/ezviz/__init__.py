@@ -1,4 +1,4 @@
-"""Support for Ezviz camera."""
+"""Support for EZVIZ camera."""
 import logging
 
 from pyezviz.client import EzvizClient
@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_URL,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -30,15 +31,15 @@ from .coordinator import EzvizDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    "binary_sensor",
-    "camera",
-    "sensor",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Ezviz from a config entry."""
+    """Set up EZVIZ from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     if not entry.options:
@@ -55,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Fetch Entry id of main account and reload it.
             for item in hass.config_entries.async_entries():
                 if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                    _LOGGER.info("Reload Ezviz integration with new camera rtsp entry")
+                    _LOGGER.info("Reload EZVIZ integration with new camera rtsp entry")
                     await hass.config_entries.async_reload(item.entry_id)
 
         return True
@@ -65,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _get_ezviz_client_instance, entry
         )
     except (InvalidURL, HTTPError, PyEzvizError) as error:
-        _LOGGER.error("Unable to connect to Ezviz service: %s", str(error))
+        _LOGGER.error("Unable to connect to EZVIZ service: %s", str(error))
         raise ConfigEntryNotReady from error
 
     coordinator = EzvizDataUpdateCoordinator(
@@ -82,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_COORDINATOR: coordinator,
         DATA_UNDO_UPDATE_LISTENER: undo_listener,
     }
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

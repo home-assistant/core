@@ -1,0 +1,13 @@
+"""Provides constants for Wallbox component tests."""
+JWT = "jwt"
+USER_ID = "user_id"
+TTL = "ttl"
+ERROR = "error"
+STATUS = "status"
+
+MOCK_NUMBER_ENTITY_ID = "number.mock_title_max_charging_current"
+MOCK_LOCK_ENTITY_ID = "lock.mock_title_locked_unlocked"
+MOCK_SENSOR_CHARGING_SPEED_ID = "sensor.mock_title_charging_speed"
+MOCK_SENSOR_CHARGING_POWER_ID = "sensor.mock_title_charging_power"
+MOCK_SENSOR_MAX_AVAILABLE_POWER = "sensor.mock_title_max_available_power"
+MOCK_SWITCH_ENTITY_ID = "switch.mock_title_pause_resume"

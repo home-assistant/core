@@ -1,4 +1,6 @@
 """Sensor for monitoring the contents of a folder."""
+from __future__ import annotations
+
 from datetime import timedelta
 import glob
 import logging
@@ -8,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import DATA_MEGABYTES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,14 +44,19 @@ def get_size(files_list):
     return sum(size_list)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the folder sensor."""
-    path = config.get(CONF_FOLDER_PATHS)
+    path = config[CONF_FOLDER_PATHS]
 
     if not hass.config.is_allowed_path(path):
         _LOGGER.error("Folder %s is not valid or allowed", path)
     else:
-        folder = Folder(path, config.get(CONF_FILTER))
+        folder = Folder(path, config[CONF_FILTER])
         add_entities([folder], True)
 
 
@@ -66,7 +76,7 @@ class Folder(SensorEntity):
         self._unit_of_measurement = DATA_MEGABYTES
         self._file_list = None
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         files_list = get_files_list(self._folder_path, self._filter_term)
         self._file_list = files_list

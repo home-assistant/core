@@ -7,9 +7,9 @@ from typing import NamedTuple
 import numpy as np
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE
@@ -18,7 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IQVIAEntity
 from .const import (
-    DATA_COORDINATOR,
     DOMAIN,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
@@ -80,17 +79,17 @@ TREND_SUBSIDING = "Subsiding"
 FORECAST_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_ALLERGY_FORECAST,
-        name="Allergy Index: Forecasted Average",
+        name="Allergy index: forecasted average",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_FORECAST,
-        name="Asthma Index: Forecasted Average",
+        name="Asthma index: forecasted average",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_FORECAST,
-        name="Cold & Flu: Forecasted Average",
+        name="Cold & flu: forecasted average",
         icon="mdi:snowflake",
     ),
 )
@@ -98,32 +97,31 @@ FORECAST_SENSOR_DESCRIPTIONS = (
 INDEX_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_ALLERGY_TODAY,
-        name="Allergy Index: Today",
+        name="Allergy index: today",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ALLERGY_TOMORROW,
-        name="Allergy Index: Tomorrow",
+        name="Allergy index: tomorrow",
         icon="mdi:flower",
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TODAY,
-        name="Asthma Index: Today",
+        name="Asthma index: today",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TOMORROW,
-        name="Asthma Index: Tomorrow",
+        name="Asthma index: tomorrow",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_TODAY,
-        name="Cold & Flu Index: Today",
+        name="Cold & flu index: today",
         icon="mdi:pill",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -134,7 +132,7 @@ async def async_setup_entry(
     """Set up IQVIA sensors based on a config entry."""
     sensors: list[ForecastSensor | IndexSensor] = [
         ForecastSensor(
-            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+            hass.data[DOMAIN][entry.entry_id][
                 API_CATEGORY_MAPPING.get(description.key, description.key)
             ],
             entry,
@@ -145,7 +143,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             IndexSensor(
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                hass.data[DOMAIN][entry.entry_id][
                     API_CATEGORY_MAPPING.get(description.key, description.key)
                 ],
                 entry,
@@ -163,7 +161,7 @@ def calculate_trend(indices: list[float]) -> str:
     """Calculate the "moving average" of a set of indices."""
     index_range = np.arange(0, len(indices))
     index_array = np.array(indices)
-    linear_fit = np.polyfit(index_range, index_array, 1)  # type: ignore
+    linear_fit = np.polyfit(index_range, index_array, 1)
     slope = round(linear_fit[0], 2)
 
     if slope > 0:
@@ -207,9 +205,9 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         )
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
-            outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
-                self._entry.entry_id
-            ][TYPE_ALLERGY_OUTLOOK]
+            outlook_coordinator = self.hass.data[DOMAIN][self._entry.entry_id][
+                TYPE_ALLERGY_OUTLOOK
+            ]
 
             if not outlook_coordinator.last_update_success:
                 return

@@ -2,33 +2,36 @@
     "config": {
         "abort": {
             "already_configured": "Dit SimpliSafe-account is al in gebruik.",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "email_2fa_timed_out": "Timed out tijdens het wachten op email-gebaseerde twee-factor authenticatie.",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
-            "identifier_exists": "Account bestaat al",
             "invalid_auth": "Ongeldige authenticatie",
-            "still_awaiting_mfa": "Wacht nog steeds op MFA-e-mailklik",
             "unknown": "Onverwachte fout"
         },
+        "progress": {
+            "email_2fa": "Controleer uw e-mail voor een verificatielink van Simplisafe."
+        },
         "step": {
-            "mfa": {
-                "description": "Controleer uw e-mail voor een link van SimpliSafe. Nadat u de link hebt geverifieerd, kom hier terug om de installatie van de integratie te voltooien.",
-                "title": "SimpliSafe Multi-Factor Authenticatie"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Wachtwoord"
                 },
-                "description": "Uw toegangstoken is verlopen of ingetrokken. Voer uw wachtwoord in om uw account opnieuw te koppelen.",
-                "title": "Verifieer de integratie opnieuw"
+                "description": "Voer het wachtwoord voor {username} opnieuw in.",
+                "title": "Integratie herauthenticeren"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Code"
+                },
+                "description": "Voer de twee-factor authenticatiecode in die u heeft ontvangen via SMS"
             },
             "user": {
                 "data": {
-                    "code": "Code (gebruikt in Home Assistant)",
                     "password": "Wachtwoord",
-                    "username": "E-mail"
+                    "username": "Gebruikersnaam"
                 },
-                "title": "Vul uw gegevens in"
+                "description": "Voer uw gebruikersnaam en wachtwoord in."
             }
         }
     },

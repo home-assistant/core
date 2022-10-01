@@ -4,20 +4,27 @@ from __future__ import annotations
 import asyncio
 import functools
 import logging
+from typing import TYPE_CHECKING, Any
 
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    DEVICE_CLASS_DAMPER,
-    DEVICE_CLASS_SHADE,
-    DOMAIN,
+    CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
@@ -26,23 +33,29 @@ from .core.const import (
     CHANNEL_ON_OFF,
     CHANNEL_SHADE,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
 )
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.COVER)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Zigbee Home Automation cover from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.COVER]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -51,10 +64,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_COVER)
+@MULTI_MATCH(channel_names=CHANNEL_COVER)
 class ZhaCover(ZhaEntity, CoverEntity):
     """Representation of a ZHA cover."""
 
@@ -64,7 +77,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
         self._cover_channel = self.cluster_channels.get(CHANNEL_COVER)
         self._current_position = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -79,24 +92,24 @@ class ZhaCover(ZhaEntity, CoverEntity):
             self._current_position = last_state.attributes["current_position"]
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.current_cover_position is None:
             return None
         return self.current_cover_position == 0
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._state == STATE_CLOSING
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return the current position of ZHA cover.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -121,35 +134,35 @@ class ZhaCover(ZhaEntity, CoverEntity):
         self._state = state
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the window cover."""
         res = await self._cover_channel.up_open()
-        if isinstance(res, list) and res[1] is Status.SUCCESS:
+        if not isinstance(res, Exception) and res[1] is Status.SUCCESS:
             self.async_update_state(STATE_OPENING)
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the window cover."""
         res = await self._cover_channel.down_close()
-        if isinstance(res, list) and res[1] is Status.SUCCESS:
+        if not isinstance(res, Exception) and res[1] is Status.SUCCESS:
             self.async_update_state(STATE_CLOSING)
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the roller shutter to a specific position."""
         new_pos = kwargs[ATTR_POSITION]
         res = await self._cover_channel.go_to_lift_percentage(100 - new_pos)
-        if isinstance(res, list) and res[1] is Status.SUCCESS:
+        if not isinstance(res, Exception) and res[1] is Status.SUCCESS:
             self.async_update_state(
                 STATE_CLOSING if new_pos < self._current_position else STATE_OPENING
             )
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the window cover."""
         res = await self._cover_channel.stop()
-        if isinstance(res, list) and res[1] is Status.SUCCESS:
+        if not isinstance(res, Exception) and res[1] is Status.SUCCESS:
             self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
             self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve the open/close state of the cover."""
         await super().async_update()
         await self.async_get_state()
@@ -173,28 +186,28 @@ class ZhaCover(ZhaEntity, CoverEntity):
                 self._state = None
 
 
-@STRICT_MATCH(channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF, CHANNEL_SHADE})
+@MULTI_MATCH(channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF, CHANNEL_SHADE})
 class Shade(ZhaEntity, CoverEntity):
     """ZHA Shade."""
 
-    _attr_device_class = DEVICE_CLASS_SHADE
+    _attr_device_class = CoverDeviceClass.SHADE
 
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> None:
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
         self._level_channel = self.cluster_channels[CHANNEL_LEVEL]
-        self._position = None
-        self._is_open = None
+        self._position: int | None = None
+        self._is_open: bool | None = None
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -208,7 +221,7 @@ class Shade(ZhaEntity, CoverEntity):
             return None
         return not self._is_open
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -238,57 +251,57 @@ class Shade(ZhaEntity, CoverEntity):
         self._position = int(value * 100 / 255)
         self.async_write_ha_state()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the window cover."""
         res = await self._on_off_channel.on()
-        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+        if isinstance(res, Exception) or res[1] != Status.SUCCESS:
             self.debug("couldn't open cover: %s", res)
             return
 
         self._is_open = True
         self.async_write_ha_state()
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the window cover."""
         res = await self._on_off_channel.off()
-        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+        if isinstance(res, Exception) or res[1] != Status.SUCCESS:
             self.debug("couldn't open cover: %s", res)
             return
 
         self._is_open = False
         self.async_write_ha_state()
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the roller shutter to a specific position."""
         new_pos = kwargs[ATTR_POSITION]
         res = await self._level_channel.move_to_level_with_on_off(
             new_pos * 255 / 100, 1
         )
 
-        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+        if isinstance(res, Exception) or res[1] != Status.SUCCESS:
             self.debug("couldn't set cover's position: %s", res)
             return
 
         self._position = new_pos
         self.async_write_ha_state()
 
-    async def async_stop_cover(self, **kwargs) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         res = await self._level_channel.stop()
-        if not isinstance(res, list) or res[1] != Status.SUCCESS:
+        if isinstance(res, Exception) or res[1] != Status.SUCCESS:
             self.debug("couldn't stop cover: %s", res)
             return
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names={CHANNEL_LEVEL, CHANNEL_ON_OFF}, manufacturers="Keen Home Inc"
 )
 class KeenVent(Shade):
     """Keen vent cover."""
 
-    _attr_device_class = DEVICE_CLASS_DAMPER
+    _attr_device_class = CoverDeviceClass.DAMPER
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         position = self._position or 100
         tasks = [

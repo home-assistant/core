@@ -2,14 +2,17 @@
 import binascii
 import logging
 import struct
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from . import XiaomiDevice
@@ -18,7 +21,11 @@ from .const import DOMAIN, GATEWAYS_KEY
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
@@ -33,6 +40,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class XiaomiGatewayLight(XiaomiDevice, LightEntity):
     """Representation of a XiaomiGatewayLight."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, device, name, xiaomi_hub, config_entry):
         """Initialize the XiaomiGatewayLight."""
@@ -54,8 +64,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
             return False
 
         if value == 0:
-            if self._state:
-                self._state = False
+            self._state = False
             return True
 
         rgbhexstr = f"{value:x}"
@@ -88,11 +97,6 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
         """Return the hs color value."""
         return self._hs
 
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
-
     def turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_HS_COLOR in kwargs:
@@ -110,7 +114,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
             self._state = True
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if self._write_to_hub(self._sid, **{self._data_key: 0}):
             self._state = False

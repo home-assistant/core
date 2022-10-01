@@ -1,7 +1,11 @@
 """Support for LiteJet switch."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 
@@ -10,7 +14,11 @@ ATTR_NUMBER = "number"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
 
     system = hass.data[DOMAIN]
@@ -28,7 +36,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LiteJetSwitch(SwitchEntity):
     """Representation of a single LiteJet switch."""
 
-    def __init__(self, entry_id, lj, i, name):
+    _attr_should_poll = False
+
+    def __init__(self, entry_id, lj, i, name):  # pylint: disable=invalid-name
         """Initialize a LiteJet switch."""
         self._entry_id = entry_id
         self._lj = lj
@@ -36,12 +46,12 @@ class LiteJetSwitch(SwitchEntity):
         self._state = False
         self._name = name
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         self._lj.on_switch_pressed(self._index, self._on_switch_pressed)
         self._lj.on_switch_released(self._index, self._on_switch_released)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_switch_pressed)
         self._lj.unsubscribe(self._on_switch_released)
@@ -72,20 +82,15 @@ class LiteJetSwitch(SwitchEntity):
         return self._state
 
     @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False
-
-    @property
     def extra_state_attributes(self):
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Press the switch."""
         self._lj.press_switch(self._index)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Release the switch."""
         self._lj.release_switch(self._index)
 

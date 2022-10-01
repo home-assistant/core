@@ -1,25 +1,20 @@
 """Support for interfacing with NAD receivers through RS-232."""
+from __future__ import annotations
+
 from nad_receiver import NADReceiver, NADReceiverTCP, NADReceiverTelnet
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_TYPE = "RS232"
 DEFAULT_SERIAL_PORT = "/dev/ttyUSB0"
@@ -30,12 +25,12 @@ DEFAULT_MAX_VOLUME = -20
 DEFAULT_VOLUME_STEP = 4
 
 SUPPORT_NAD = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_SELECT_SOURCE
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.SELECT_SOURCE
 )
 
 CONF_SERIAL_PORT = "serial_port"  # for NADReceiver
@@ -44,7 +39,8 @@ CONF_MAX_VOLUME = "max_volume"
 CONF_VOLUME_STEP = "volume_step"  # for NADReceiverTCP
 CONF_SOURCE_DICT = "sources"  # for NADReceiver
 
-SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=10): cv.string})
+# Max value based on a C658 with an MDC HDM-2 card installed
+SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=12): cv.string})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -63,7 +59,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NAD platform."""
     if config.get(CONF_TYPE) in ("RS232", "Telnet"):
         add_entities(
@@ -79,6 +80,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class NAD(MediaPlayerEntity):
     """Representation of a NAD Receiver."""
+
+    _attr_supported_features = SUPPORT_NAD
 
     def __init__(self, config):
         """Initialize the NAD Receiver device."""
@@ -124,39 +127,34 @@ class NAD(MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         return self._mute
 
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_NAD
-
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self._nad_receiver.main_power("=", "Off")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._nad_receiver.main_power("=", "On")
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up the media player."""
         self._nad_receiver.main_volume("+")
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down the media player."""
         self._nad_receiver.main_volume("-")
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._nad_receiver.main_volume("=", self.calc_db(volume))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         if mute:
             self._nad_receiver.main_mute("=", "On")
         else:
             self._nad_receiver.main_mute("=", "Off")
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self._nad_receiver.main_source("=", self._reverse_mapping.get(source))
 
@@ -171,7 +169,7 @@ class NAD(MediaPlayerEntity):
         return sorted(self._reverse_mapping)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if device is available."""
         return self._state is not None
 
@@ -182,10 +180,12 @@ class NAD(MediaPlayerEntity):
             self._state = None
             return
         self._state = (
-            STATE_ON if self._nad_receiver.main_power("?") == "On" else STATE_OFF
+            MediaPlayerState.ON
+            if self._nad_receiver.main_power("?") == "On"
+            else MediaPlayerState.OFF
         )
 
-        if self._state == STATE_ON:
+        if self._state == MediaPlayerState.ON:
             self._mute = self._nad_receiver.main_mute("?") == "On"
             volume = self._nad_receiver.main_volume("?")
             # Some receivers cannot report the volume, e.g. C 356BEE,
@@ -216,6 +216,8 @@ class NAD(MediaPlayerEntity):
 
 class NADtcp(MediaPlayerEntity):
     """Representation of a NAD Digital amplifier."""
+
+    _attr_supported_features = SUPPORT_NAD
 
     def __init__(self, config):
         """Initialize the amplifier."""
@@ -251,42 +253,37 @@ class NADtcp(MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         return self._mute
 
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_NAD
-
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         self._nad_receiver.power_off()
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self._nad_receiver.power_on()
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Step volume up in the configured increments."""
         self._nad_receiver.set_volume(self._nad_volume + 2 * self._volume_step)
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Step volume down in the configured increments."""
         self._nad_receiver.set_volume(self._nad_volume - 2 * self._volume_step)
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         nad_volume_to_set = int(
             round(volume * (self._max_vol - self._min_vol) + self._min_vol)
         )
         self._nad_receiver.set_volume(nad_volume_to_set)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         if mute:
             self._nad_receiver.mute()
         else:
             self._nad_receiver.unmute()
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self._nad_receiver.select_source(source)
 
@@ -300,7 +297,7 @@ class NADtcp(MediaPlayerEntity):
         """List of available input sources."""
         return self._nad_receiver.available_sources()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
         try:
             nad_status = self._nad_receiver.status()
@@ -311,9 +308,9 @@ class NADtcp(MediaPlayerEntity):
 
         # Update on/off state
         if nad_status["power"]:
-            self._state = STATE_ON
+            self._state = MediaPlayerState.ON
         else:
-            self._state = STATE_OFF
+            self._state = MediaPlayerState.OFF
 
         # Update current volume
         self._volume = self.nad_vol_to_internal_vol(nad_status["volume"])

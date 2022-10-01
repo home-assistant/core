@@ -14,4 +14,3 @@ transfer:
         entity:
           integration: roon
           domain: media_player
-

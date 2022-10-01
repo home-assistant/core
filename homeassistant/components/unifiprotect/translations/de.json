@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "discovery_started": "Erkennung gestartet"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "protect_version": "Die erforderliche Mindestversion ist v1.20.0. Bitte aktualisiere UniFi Protect und versuche es dann erneut."
+        },
+        "flow_title": "{name} ({ip_address})",
+        "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "M\u00f6chtest du {name} ({ip_address}) einrichten? Du ben\u00f6tigst einen lokalen Benutzer, den du in deiner UniFi OS-Konsole angelegt hast, um sich damit anzumelden. Ubiquiti Cloud-Benutzer funktionieren nicht. F\u00fcr weitere Informationen: {local_user_documentation_url}",
+                "title": "UniFi Protect erkannt"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "host": "IP/Host des UniFi Protect-Servers",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "title": "UniFi Protect Reauth"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                },
+                "description": "Du ben\u00f6tigst einen lokalen Benutzer, den du in deiner UniFi OS-Konsole angelegt hast, um sich damit anzumelden. Ubiquiti Cloud-Benutzer funktionieren nicht. F\u00fcr weitere Informationen: {local_user_documentation_url}",
+                "title": "UniFi Protect-Einrichtung"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_mac_list": "Muss eine durch Kommas getrennte Liste von MAC-Adressen sein"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "all_updates": "Echtzeitmetriken (WARNUNG: Erh\u00f6ht die CPU-Auslastung erheblich)",
+                    "disable_rtsp": "RTSP-Stream deaktivieren",
+                    "ignored_devices": "Kommagetrennte Liste von MAC-Adressen von Ger\u00e4ten, die ignoriert werden sollen",
+                    "max_media": "Maximale Anzahl von Ereignissen, die f\u00fcr den Medienbrowser geladen werden (erh\u00f6ht die RAM-Nutzung)",
+                    "override_connection_host": "Verbindungshost \u00fcberschreiben"
+                },
+                "description": "Die Option Echtzeit-Metriken sollte nur aktiviert werden, wenn du die Diagnosesensoren aktiviert hast und diese in Echtzeit aktualisiert werden sollen. Wenn sie nicht aktiviert ist, werden sie nur einmal alle 15 Minuten aktualisiert.",
+                "title": "UniFi Protect-Optionen"
+            }
+        }
+    }
+}

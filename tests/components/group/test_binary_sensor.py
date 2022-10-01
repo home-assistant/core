@@ -1,9 +1,13 @@
 """The tests for the Group Binary Sensor platform."""
-from os import path
-
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.group import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -42,11 +46,17 @@ async def test_default_state(hass):
     assert entry
     assert entry.unique_id == "unique_identifier"
     assert entry.original_name == "Bedroom Group"
-    assert entry.device_class == "presence"
+    assert entry.original_device_class == "presence"
 
 
 async def test_state_reporting_all(hass):
-    """Test the state reporting."""
+    """Test the state reporting in 'all' mode.
+
+    The group state is unavailable if all group members are unavailable.
+    Otherwise, the group state is unknown if at least one group member is unknown or unavailable.
+    Otherwise, the group state is off if at least one group member is off.
+    Otherwise, the group state is on.
+    """
     await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -64,11 +74,51 @@ async def test_state_reporting_all(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    # Initial state with no group member in the state machine -> unavailable
+    assert (
+        hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNAVAILABLE
+    )
+
+    # All group members unavailable -> unavailable
+    hass.states.async_set("binary_sensor.test1", STATE_UNAVAILABLE)
+    hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNAVAILABLE
+    )
+
+    # At least one member unknown or unavailable -> group unknown
     hass.states.async_set("binary_sensor.test1", STATE_ON)
     hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_OFF
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
 
+    hass.states.async_set("binary_sensor.test1", STATE_ON)
+    hass.states.async_set("binary_sensor.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("binary_sensor.test1", STATE_UNKNOWN)
+    hass.states.async_set("binary_sensor.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("binary_sensor.test1", STATE_OFF)
+    hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("binary_sensor.test1", STATE_OFF)
+    hass.states.async_set("binary_sensor.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
+
+    hass.states.async_set("binary_sensor.test1", STATE_UNKNOWN)
+    hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
+
+    # At least one member off -> group off
     hass.states.async_set("binary_sensor.test1", STATE_ON)
     hass.states.async_set("binary_sensor.test2", STATE_OFF)
     await hass.async_block_till_done()
@@ -79,13 +129,15 @@ async def test_state_reporting_all(hass):
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_OFF
 
+    # Otherwise -> on
     hass.states.async_set("binary_sensor.test1", STATE_ON)
     hass.states.async_set("binary_sensor.test2", STATE_ON)
     await hass.async_block_till_done()
     assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
 
-    hass.states.async_set("binary_sensor.test1", STATE_UNAVAILABLE)
-    hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
+    # All group members removed from the state machine -> unavailable
+    hass.states.async_remove("binary_sensor.test1")
+    hass.states.async_remove("binary_sensor.test2")
     await hass.async_block_till_done()
     assert (
         hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNAVAILABLE
@@ -93,7 +145,13 @@ async def test_state_reporting_all(hass):
 
 
 async def test_state_reporting_any(hass):
-    """Test the state reporting."""
+    """Test the state reporting in 'any' mode.
+
+    The group state is unavailable if all group members are unavailable.
+    Otherwise, the group state is unknown if all group members are unknown.
+    Otherwise, the group state is on if at least one group member is on.
+    Otherwise, the group state is off.
+    """
     await async_setup_component(
         hass,
         BINARY_SENSOR_DOMAIN,
@@ -112,28 +170,17 @@ async def test_state_reporting_any(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    # binary sensors have state off if unavailable
-    hass.states.async_set("binary_sensor.test1", STATE_ON)
-    hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_OFF
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("binary_sensor.binary_sensor_group")
+    assert entry
+    assert entry.unique_id == "unique_identifier"
 
-    hass.states.async_set("binary_sensor.test1", STATE_ON)
-    hass.states.async_set("binary_sensor.test2", STATE_OFF)
-    await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
+    # Initial state with no group member in the state machine -> unavailable
+    assert (
+        hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNAVAILABLE
+    )
 
-    hass.states.async_set("binary_sensor.test1", STATE_OFF)
-    hass.states.async_set("binary_sensor.test2", STATE_OFF)
-    await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_OFF
-
-    hass.states.async_set("binary_sensor.test1", STATE_ON)
-    hass.states.async_set("binary_sensor.test2", STATE_ON)
-    await hass.async_block_till_done()
-    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
-
-    # binary sensors have state off if unavailable
+    # All group members unavailable -> unavailable
     hass.states.async_set("binary_sensor.test1", STATE_UNAVAILABLE)
     hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
@@ -141,11 +188,59 @@ async def test_state_reporting_any(hass):
         hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNAVAILABLE
     )
 
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("binary_sensor.binary_sensor_group")
-    assert entry
-    assert entry.unique_id == "unique_identifier"
+    # All group members unknown -> unknown
+    hass.states.async_set("binary_sensor.test1", STATE_UNKNOWN)
+    hass.states.async_set("binary_sensor.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
 
+    # Group members unknown or unavailable -> unknown
+    hass.states.async_set("binary_sensor.test1", STATE_UNKNOWN)
+    hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNKNOWN
 
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))
+    # At least one member on -> group on
+    hass.states.async_set("binary_sensor.test1", STATE_ON)
+    hass.states.async_set("binary_sensor.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
+
+    hass.states.async_set("binary_sensor.test1", STATE_ON)
+    hass.states.async_set("binary_sensor.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
+
+    hass.states.async_set("binary_sensor.test1", STATE_ON)
+    hass.states.async_set("binary_sensor.test2", STATE_ON)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
+
+    hass.states.async_set("binary_sensor.test1", STATE_ON)
+    hass.states.async_set("binary_sensor.test2", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_ON
+
+    # Otherwise -> off
+    hass.states.async_set("binary_sensor.test1", STATE_OFF)
+    hass.states.async_set("binary_sensor.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_OFF
+
+    hass.states.async_set("binary_sensor.test1", STATE_UNKNOWN)
+    hass.states.async_set("binary_sensor.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_OFF
+
+    hass.states.async_set("binary_sensor.test1", STATE_UNAVAILABLE)
+    hass.states.async_set("binary_sensor.test2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.binary_sensor_group").state == STATE_OFF
+
+    # All group members removed from the state machine -> unavailable
+    hass.states.async_remove("binary_sensor.test1")
+    hass.states.async_remove("binary_sensor.test2")
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("binary_sensor.binary_sensor_group").state == STATE_UNAVAILABLE
+    )

@@ -15,5 +15,15 @@
                 "title": "Hubungkan ke LiteJet"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Waktu Transisi Default (detik)"
+                },
+                "title": "Konfigurasikan LiteJet"
+            }
+        }
     }
 }

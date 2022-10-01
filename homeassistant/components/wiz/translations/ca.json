@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "error": {
+            "bulb_time_out": "No s'ha pogut connectar amb la bombeta. Pot ser que la bombeta estigui desconnectada o s'hagi introdu\u00eft una IP incorrecta. Enc\u00e9n el llum i torna-ho a provar.",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "no_ip": "Adre\u00e7a IP no v\u00e0lida.",
+            "no_wiz_light": "La bombeta no es pot connectar mitjan\u00e7ant la integraci\u00f3 Plataforma WiZ.",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vols configurar {name} ({host})?"
+            },
+            "pick_device": {
+                "data": {
+                    "device": "Dispositiu"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Adre\u00e7a IP"
+                },
+                "description": "Si deixes l'adre\u00e7a IP buida, s'utilitzar\u00e0 el descobriment per cercar dispositius."
+            }
+        }
+    }
+}

@@ -1,0 +1,121 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "file_not_found": "File `.knxkeys` yang ditentukan tidak ditemukan di jalur config/.storage/knx/",
+            "invalid_individual_address": "Nilai tidak cocok dengan pola untuk alamat individual KNX.\n'area.line.device'",
+            "invalid_ip_address": "Alamat IPv4 tidak valid",
+            "invalid_signature": "Kata sandi untuk mendekripsi file `.knxkeys` salah."
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "Host",
+                    "local_ip": "IP lokal Home Assistant",
+                    "port": "Port",
+                    "tunneling_type": "Jenis Tunnel KNX"
+                },
+                "data_description": {
+                    "host": "Alamat IP perangkat tunneling KNX/IP.",
+                    "local_ip": "Kosongkan untuk menggunakan penemuan otomatis.",
+                    "port": "Port perangkat tunneling KNX/IP."
+                },
+                "description": "Masukkan informasi koneksi untuk perangkat tunneling Anda."
+            },
+            "routing": {
+                "data": {
+                    "individual_address": "Alamat individual",
+                    "local_ip": "IP lokal Home Assistant",
+                    "multicast_group": "Grup multicast",
+                    "multicast_port": "Port multicast"
+                },
+                "data_description": {
+                    "individual_address": "Alamat KNX yang akan digunakan oleh Home Assistant, misalnya `0.0.4`",
+                    "local_ip": "Kosongkan untuk menggunakan penemuan otomatis."
+                },
+                "description": "Konfigurasikan opsi routing."
+            },
+            "secure_knxkeys": {
+                "data": {
+                    "knxkeys_filename": "Nama file `.knxkeys` Anda (termasuk ekstensi)",
+                    "knxkeys_password": "Kata sandi untuk mendekripsi file `.knxkeys`"
+                },
+                "data_description": {
+                    "knxkeys_filename": "File diharapkan dapat ditemukan di direktori konfigurasi Anda di `.storage/knx/`.\nDi Home Assistant OS ini akan menjadi `/config/.storage/knx/`\nContoh: `proyek_saya.knxkeys`",
+                    "knxkeys_password": "Ini disetel saat mengekspor file dari ETS."
+                },
+                "description": "Masukkan informasi untuk file `.knxkeys` Anda."
+            },
+            "secure_manual": {
+                "data": {
+                    "device_authentication": "Kata sandi autentikasi perangkat",
+                    "user_id": "ID pengguna",
+                    "user_password": "Kata sandi pengguna"
+                },
+                "data_description": {
+                    "device_authentication": "Ini diatur dalam panel 'IP' dalam antarmuka di ETS.",
+                    "user_id": "Ini sering kali merupakan tunnel nomor +1. Jadi 'Tunnel 2' akan memiliki User-ID '3'.",
+                    "user_password": "Kata sandi untuk koneksi tunnel tertentu yang diatur di panel 'Properties' tunnel di ETS."
+                },
+                "description": "Masukkan informasi IP aman Anda."
+            },
+            "secure_tunneling": {
+                "description": "Pilih cara Anda ingin mengonfigurasi KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Gunakan file `.knxkeys` yang berisi kunci aman IP",
+                    "secure_manual": "Konfigurasikan kunci aman IP secara manual"
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "gateway": "Koneksi Tunnel KNX"
+                },
+                "description": "Pilih gateway dari daftar."
+            },
+            "type": {
+                "data": {
+                    "connection_type": "Jenis Koneksi KNX"
+                },
+                "description": "Masukkan jenis koneksi yang harus kami gunakan untuk koneksi KNX Anda. \nOTOMATIS - Integrasi melakukan konektivitas ke bus KNX Anda dengan melakukan pemindaian gateway. \nTUNNELING - Integrasi akan terhubung ke bus KNX Anda melalui tunneling. \nROUTING - Integrasi akan terhubung ke bus KNX Anda melalui routing."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "connection_type": "Jenis Koneksi KNX",
+                    "individual_address": "Alamat individu default",
+                    "local_ip": "IP lokal Home Assistant",
+                    "multicast_group": "Grup multicast",
+                    "multicast_port": "Port multicast",
+                    "rate_limit": "Batas data",
+                    "state_updater": "Pembaruan status"
+                },
+                "data_description": {
+                    "individual_address": "Alamat KNX yang akan digunakan oleh Home Assistant, misalnya `0.0.4`",
+                    "local_ip": "Gunakan `0.0.0.0` untuk penemuan otomatis.",
+                    "multicast_group": "Digunakan untuk perutean dan penemuan. Bawaan: `224.0.23.12`",
+                    "multicast_port": "Digunakan untuk perutean dan penemuan. Bawaan: `3671`",
+                    "rate_limit": "Telegram keluar maksimum per detik.\nDirekomendasikan: 20 hingga 40",
+                    "state_updater": "Menyetel default untuk status pembacaan KNX Bus. Saat dinonaktifkan, Home Assistant tidak akan secara aktif mengambil status entitas dari KNX Bus. Hal ini bisa ditimpa dengan opsi entitas `sync_state`."
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "tunneling_type": "Jenis Tunnel KNX"
+                },
+                "data_description": {
+                    "host": "Alamat IP perangkat tunneling KNX/IP.",
+                    "port": "Port perangkat tunneling KNX/IP."
+                }
+            }
+        }
+    }
+}

@@ -7,17 +7,11 @@ from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -25,7 +19,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    ATTR_ENTRY_TYPE,
     ATTRIBUTION,
     AURORA_API,
     CONF_THRESHOLD,
@@ -37,7 +30,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -73,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         AURORA_API: api,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -125,10 +118,10 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error updating from NOAA: {error}") from error
 
 
-class AuroraEntity(CoordinatorEntity):
+class AuroraEntity(CoordinatorEntity[AuroraDataUpdateCoordinator]):
     """Implementation of the base Aurora Entity."""
 
-    _attr_extra_state_attributes = {"attribution": ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -145,12 +138,12 @@ class AuroraEntity(CoordinatorEntity):
         self._attr_icon = icon
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Define the device based on name."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.unique_id)},
-            ATTR_NAME: self.coordinator.name,
-            ATTR_MANUFACTURER: "NOAA",
-            ATTR_MODEL: "Aurora Visibility Sensor",
-            ATTR_ENTRY_TYPE: "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, str(self.unique_id))},
+            manufacturer="NOAA",
+            model="Aurora Visibility Sensor",
+            name=self.coordinator.name,
+        )

@@ -9,11 +9,9 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "E-mail",
+                    "email": "Email",
                     "password": "Password"
-                },
-                "description": "Vuoi iniziare la configurazione?",
-                "title": "PoolSense"
+                }
             }
         }
     }

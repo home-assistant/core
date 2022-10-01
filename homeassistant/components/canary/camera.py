@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import Final
 
 from aiohttp.web import Request, StreamResponse
-from canary.api import Device, Location
 from canary.live_stream_api import LiveStreamSession
+from canary.model import Device, Location
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
@@ -15,14 +16,15 @@ from homeassistant.components.camera import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     Camera,
 )
-from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
+from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import Throttle
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -33,7 +35,7 @@ from .const import (
 )
 from .coordinator import CanaryDataUpdateCoordinator
 
-MIN_TIME_BETWEEN_SESSION_RENEW: Final = timedelta(seconds=90)
+FORCE_CAMERA_REFRESH_INTERVAL: Final = timedelta(minutes=15)
 
 PLATFORM_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS),
@@ -45,6 +47,8 @@ PLATFORM_SCHEMA: Final = vol.All(
         }
     ),
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -77,10 +81,8 @@ async def async_setup_entry(
     async_add_entities(cameras, True)
 
 
-class CanaryCamera(CoordinatorEntity, Camera):
+class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
     """An implementation of a Canary security camera."""
-
-    coordinator: CanaryDataUpdateCoordinator
 
     def __init__(
         self,
@@ -93,19 +95,24 @@ class CanaryCamera(CoordinatorEntity, Camera):
         """Initialize a Canary security camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
-        self._ffmpeg: FFmpegManager = hass.data[DATA_FFMPEG]
+        self._ffmpeg: FFmpegManager = get_ffmpeg_manager(hass)
         self._ffmpeg_arguments = ffmpeg_args
         self._location_id = location_id
         self._device = device
         self._live_stream_session: LiveStreamSession | None = None
         self._attr_name = device.name
         self._attr_unique_id = str(device.device_id)
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(device.device_id))},
-            "name": device.name,
-            "model": device.device_type["name"],
-            "manufacturer": MANUFACTURER,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device.device_id))},
+            manufacturer=MANUFACTURER,
+            model=device.device_type["name"],
+            name=device.name,
+        )
+        self._image: bytes | None = None
+        self._expires_at = dt_util.utcnow()
+        _LOGGER.debug(
+            "%s %s has been initialized", self.name, device.device_type["name"]
+        )
 
     @property
     def location(self) -> Location:
@@ -126,17 +133,33 @@ class CanaryCamera(CoordinatorEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        await self.hass.async_add_executor_job(self.renew_live_stream_session)
-        live_stream_url = await self.hass.async_add_executor_job(
-            getattr, self._live_stream_session, "live_stream_url"
-        )
-        return await ffmpeg.async_get_image(
-            self.hass,
-            live_stream_url,
-            extra_cmd=self._ffmpeg_arguments,
-            width=width,
-            height=height,
-        )
+        utcnow = dt_util.utcnow()
+        if self._expires_at <= utcnow:
+            _LOGGER.debug("Grabbing a live view image from %s", self.name)
+            await self.hass.async_add_executor_job(self.renew_live_stream_session)
+
+            if (live_stream_session := self._live_stream_session) is None:
+                return None
+
+            if not (live_stream_url := live_stream_session.live_stream_url):
+                return None
+
+            image = await ffmpeg.async_get_image(
+                self.hass,
+                live_stream_url,
+                extra_cmd=self._ffmpeg_arguments,
+                width=width,
+                height=height,
+            )
+
+            if image:
+                self._image = image
+                self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
+                _LOGGER.debug("Grabbed a live view image from %s", self.name)
+            await self.hass.async_add_executor_job(live_stream_session.stop_session)
+            _LOGGER.debug("Stopped live session from %s", self.name)
+
+        return self._image
 
     async def handle_async_mjpeg_stream(
         self, request: Request
@@ -145,10 +168,11 @@ class CanaryCamera(CoordinatorEntity, Camera):
         if self._live_stream_session is None:
             return None
 
-        stream = CameraMjpeg(self._ffmpeg.binary)
-        await stream.open_camera(
-            self._live_stream_session.live_stream_url, extra_cmd=self._ffmpeg_arguments
+        live_stream_url = await self.hass.async_add_executor_job(
+            getattr, self._live_stream_session, "live_stream_url"
         )
+        stream = CameraMjpeg(self._ffmpeg.binary)
+        await stream.open_camera(live_stream_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
             stream_reader = await stream.get_reader()
@@ -161,9 +185,14 @@ class CanaryCamera(CoordinatorEntity, Camera):
         finally:
             await stream.close()
 
-    @Throttle(MIN_TIME_BETWEEN_SESSION_RENEW)
     def renew_live_stream_session(self) -> None:
         """Renew live stream session."""
         self._live_stream_session = self.coordinator.canary.get_live_stream_session(
             self._device
+        )
+
+        _LOGGER.debug(
+            "Live Stream URL for %s is %s",
+            self.name,
+            self._live_stream_session.live_stream_url,
         )

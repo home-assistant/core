@@ -6,21 +6,21 @@
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
-            "reauth_failed": "Si prega di utilizzare lo stesso utente mydevolo di prima."
+            "reauth_failed": "Utilizza lo stesso utente mydevolo di prima."
         },
         "step": {
             "user": {
                 "data": {
                     "mydevolo_url": "URL di mydevolo",
                     "password": "Password",
-                    "username": "E-mail / devolo ID"
+                    "username": "Email / devolo ID"
                 }
             },
             "zeroconf_confirm": {
                 "data": {
                     "mydevolo_url": "URL mydevolo",
                     "password": "Password",
-                    "username": "E-mail / ID devolo"
+                    "username": "Email / ID devolo"
                 }
             }
         }

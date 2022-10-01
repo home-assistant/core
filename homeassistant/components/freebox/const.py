@@ -4,7 +4,7 @@ from __future__ import annotations
 import socket
 
 from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, PERCENTAGE
+from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, PERCENTAGE, Platform
 
 DOMAIN = "freebox"
 SERVICE_REBOOT = "reboot"
@@ -17,7 +17,7 @@ APP_DESC = {
 }
 API_VERSION = "v6"
 
-PLATFORMS = ["device_tracker", "sensor", "switch"]
+PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 

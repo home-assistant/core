@@ -5,26 +5,43 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 
+from homeassistant.components.mjpeg.const import (
+    CONF_MJPEG_URL,
+    CONF_STILL_IMAGE_URL,
+    DOMAIN as MJPEG_DOMAIN,
+)
+from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+)
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.helpers.aiohttp_client as client
-from homeassistant.setup import async_setup_component
+from homeassistant.util.color import RGBColor
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="camera_client")
 def camera_client_fixture(hass, hass_client):
     """Fixture to fetch camera streams."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "mjpeg",
-                    "mjpeg_url": "http://example.com/mjpeg_stream",
-                }
-            },
-        )
+    mock_config_entry = MockConfigEntry(
+        title="MJPEG Camera",
+        domain=MJPEG_DOMAIN,
+        options={
+            CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+            CONF_MJPEG_URL: "http://example.com/mjpeg_stream",
+            CONF_PASSWORD: None,
+            CONF_STILL_IMAGE_URL: None,
+            CONF_USERNAME: None,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    hass.loop.run_until_complete(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
     )
     hass.loop.run_until_complete(hass.async_block_till_done())
 
@@ -107,6 +124,7 @@ async def test_get_clientsession_patched_close(hass):
         assert mock_close.call_count == 0
 
 
+@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_integration(hass, caplog):
     """Test log warning message when closing the session from integration context."""
     with patch(
@@ -138,6 +156,7 @@ async def test_warning_close_session_integration(hass, caplog):
     ) in caplog.text
 
 
+@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_custom(hass, caplog):
     """Test log warning message when closing the session from custom context."""
     with patch(
@@ -164,7 +183,7 @@ async def test_warning_close_session_custom(hass, caplog):
         await session.close()
     assert (
         "Detected integration that closes the Home Assistant aiohttp session. "
-        "Please report issue to the custom component author for hue using this method at "
+        "Please report issue to the custom integration author for hue using this method at "
         "custom_components/hue/light.py, line 23: await session.close()" in caplog.text
     )
 
@@ -173,7 +192,7 @@ async def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", content=b"Frame1Frame2Frame3")
 
-    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.mjpeg_camera")
 
     assert resp.status == 200
     assert aioclient_mock.call_count == 1
@@ -185,7 +204,7 @@ async def test_async_aiohttp_proxy_stream_timeout(aioclient_mock, camera_client)
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=asyncio.TimeoutError())
 
-    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.mjpeg_camera")
     assert resp.status == 504
 
 
@@ -193,8 +212,18 @@ async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_clie
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=aiohttp.ClientError())
 
-    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.mjpeg_camera")
     assert resp.status == 502
+
+
+async def test_sending_named_tuple(hass, aioclient_mock):
+    """Test sending a named tuple in json."""
+    resp = aioclient_mock.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
+    session = client.async_create_clientsession(hass)
+    resp = await session.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
+    assert resp.status == 200
+    await resp.json() == {"rgb": RGBColor(4, 3, 2)}
+    aioclient_mock.mock_calls[0][2]["rgb"] == RGBColor(4, 3, 2)
 
 
 async def test_client_session_immutable_headers(hass):

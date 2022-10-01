@@ -1,13 +1,23 @@
 """Support for Ecobee binary sensors."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up ecobee binary (occupancy) sensors."""
     data = hass.data[DOMAIN]
     dev = []
@@ -49,7 +59,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information for this sensor."""
         identifier = None
         model = None
@@ -72,16 +82,16 @@ class EcobeeBinarySensor(BinarySensorEntity):
             break
 
         if identifier is not None:
-            return {
-                "identifiers": {(DOMAIN, identifier)},
-                "name": self.sensor_name,
-                "manufacturer": MANUFACTURER,
-                "model": model,
-            }
+            return DeviceInfo(
+                identifiers={(DOMAIN, identifier)},
+                manufacturer=MANUFACTURER,
+                model=model,
+                name=self.sensor_name,
+            )
         return None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)
         return thermostat["runtime"]["connected"]
@@ -94,9 +104,9 @@ class EcobeeBinarySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_OCCUPANCY
+        return BinarySensorDeviceClass.OCCUPANCY
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest state of the sensor."""
         await self.data.update()
         for sensor in self.data.ecobee.get_remote_sensors(self.index):

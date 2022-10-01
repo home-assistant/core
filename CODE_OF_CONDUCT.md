@@ -123,7 +123,7 @@ enforcement ladder][mozilla].
 
 ## Adoption
 
-This Code of Conduct was first adopted January 21st, 2017 and announced in
+This Code of Conduct was first adopted on January 21st, 2017, and announced in
 [this][coc-blog] blog post and has been updated on May 25th, 2020 to version
 2.0 of the [Contributor Covenant][homepage] as announced in [this][coc2-blog]
 blog post.

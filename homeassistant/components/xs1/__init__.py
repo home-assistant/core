@@ -11,10 +11,13 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["climate", "sensor", "switch"]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 # Lock used to limit the amount of concurrent update requests
 # as the XS1 Gateway can only handle a very
@@ -46,7 +49,7 @@ PLATFORMS = ["climate", "sensor", "switch"]
 UPDATE_LOCK = asyncio.Lock()
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up XS1 integration."""
     _LOGGER.debug("Initializing XS1")
 

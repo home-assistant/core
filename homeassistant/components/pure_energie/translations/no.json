@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "flow_title": "{modell} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "data_description": {
+                    "host": "IP-adressen eller vertsnavnet til Pure Energie Meter."
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Vil du legge til Pure Energie Meter (` {model} `) til Home Assistant?",
+                "title": "Oppdaget Pure Energie Meter-enhet"
+            }
+        }
+    }
+}

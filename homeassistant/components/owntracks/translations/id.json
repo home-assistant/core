@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "cloud_not_connected": "Tidak terhubung ke Home Assistant Cloud.",
             "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "create_entry": {

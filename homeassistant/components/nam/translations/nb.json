@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "credentials": {
+                "data": {
+                    "username": "Brukernavn"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

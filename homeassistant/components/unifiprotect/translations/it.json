@@ -1,0 +1,62 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "discovery_started": "Rilevamento iniziato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "protect_version": "La versione minima richiesta \u00e8 v1.20.0. Aggiorna UniFi Protect e riprova."
+        },
+        "flow_title": "{name} ({ip_address})",
+        "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Vuoi configurare {name} ({ip_address})? Avrai bisogno di un utente locale creato nella tua console UniFi OS con cui accedere. Gli utenti Ubiquiti Cloud non funzioneranno. Per ulteriori informazioni: {local_user_documentation_url}",
+                "title": "Rilevato UniFi Protect"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "host": "IP/host del server di UniFi Protect",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "title": "Riautenticazione UniFi Protect"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente",
+                    "verify_ssl": "Verifica il certificato SSL"
+                },
+                "description": "Avrai bisogno di un utente locale creato nella tua console UniFi OS con cui accedere. Gli utenti Ubiquiti Cloud non funzioneranno. Per ulteriori informazioni: {local_user_documentation_url}",
+                "title": "Configurazione UniFi Protect"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_mac_list": "Deve essere un elenco di indirizzi MAC separati da virgole"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "all_updates": "Metriche in tempo reale (ATTENZIONE: aumenta notevolmente l'utilizzo della CPU)",
+                    "disable_rtsp": "Disabilita il flusso RTSP",
+                    "ignored_devices": "Elenco separato da virgole di indirizzi MAC di dispositivi da ignorare",
+                    "max_media": "Numero massimo di eventi da caricare per Media Browser (aumenta l'utilizzo della RAM)",
+                    "override_connection_host": "Sostituisci host di connessione"
+                },
+                "description": "L'opzione delle metriche in tempo reale dovrebbe essere abilitata solo se hai abilitato i sensori di diagnostica e desideri che vengano aggiornati in tempo reale. Se non sono abilitati, si aggiorneranno solo una volta ogni 15 minuti.",
+                "title": "Opzioni di protezione UniFi"
+            }
+        }
+    }
+}

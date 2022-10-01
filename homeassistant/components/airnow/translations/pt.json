@@ -11,13 +11,12 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key",
+                    "api_key": "Chave da API",
                     "latitude": "Latitude",
                     "longitude": "Longitude"
                 },
-                "title": ""
+                "description": "Para gerar a chave API v\u00e1 a https://docs.airnowapi.org/account/request/"
             }
         }
-    },
-    "title": ""
+    }
 }

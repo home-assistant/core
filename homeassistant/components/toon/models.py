@@ -10,10 +10,8 @@ from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
 
 
-class ToonEntity(CoordinatorEntity):
+class ToonEntity(CoordinatorEntity[ToonDataUpdateCoordinator]):
     """Defines a base Toon entity."""
-
-    coordinator: ToonDataUpdateCoordinator
 
 
 class ToonDisplayDeviceEntity(ToonEntity):
@@ -23,15 +21,13 @@ class ToonDisplayDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this thermostat."""
         agreement = self.coordinator.data.agreement
-        model = agreement.display_hardware_version.rpartition("/")[0]
-        sw_version = agreement.display_software_version.rpartition("/")[-1]
-        return {
-            "identifiers": {(DOMAIN, agreement.agreement_id)},
-            "name": "Toon Display",
-            "manufacturer": "Eneco",
-            "model": model,
-            "sw_version": sw_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, agreement.agreement_id)},
+            manufacturer="Eneco",
+            model=agreement.display_hardware_version.rpartition("/")[0],
+            name="Toon Display",
+            sw_version=agreement.display_software_version.rpartition("/")[-1],
+        )
 
 
 class ToonElectricityMeterDeviceEntity(ToonEntity):
@@ -41,11 +37,11 @@ class ToonElectricityMeterDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Electricity Meter",
-            "identifiers": {(DOMAIN, agreement_id, "electricity")},
-            "via_device": (DOMAIN, agreement_id, "meter_adapter"),
-        }
+        return DeviceInfo(
+            name="Electricity Meter",
+            identifiers={(DOMAIN, agreement_id, "electricity")},  # type: ignore[arg-type]
+            via_device=(DOMAIN, agreement_id, "meter_adapter"),  # type: ignore[typeddict-item]
+        )
 
 
 class ToonGasMeterDeviceEntity(ToonEntity):
@@ -55,11 +51,11 @@ class ToonGasMeterDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Gas Meter",
-            "identifiers": {(DOMAIN, agreement_id, "gas")},
-            "via_device": (DOMAIN, agreement_id, "electricity"),
-        }
+        return DeviceInfo(
+            name="Gas Meter",
+            identifiers={(DOMAIN, agreement_id, "gas")},  # type: ignore[arg-type]
+            via_device=(DOMAIN, agreement_id, "electricity"),  # type: ignore[typeddict-item]
+        )
 
 
 class ToonWaterMeterDeviceEntity(ToonEntity):
@@ -69,11 +65,11 @@ class ToonWaterMeterDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Water Meter",
-            "identifiers": {(DOMAIN, agreement_id, "water")},
-            "via_device": (DOMAIN, agreement_id, "electricity"),
-        }
+        return DeviceInfo(
+            name="Water Meter",
+            identifiers={(DOMAIN, agreement_id, "water")},  # type: ignore[arg-type]
+            via_device=(DOMAIN, agreement_id, "electricity"),  # type: ignore[typeddict-item]
+        )
 
 
 class ToonSolarDeviceEntity(ToonEntity):
@@ -83,11 +79,11 @@ class ToonSolarDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Solar Panels",
-            "identifiers": {(DOMAIN, agreement_id, "solar")},
-            "via_device": (DOMAIN, agreement_id, "meter_adapter"),
-        }
+        return DeviceInfo(
+            name="Solar Panels",
+            identifiers={(DOMAIN, agreement_id, "solar")},  # type: ignore[arg-type]
+            via_device=(DOMAIN, agreement_id, "meter_adapter"),  # type: ignore[typeddict-item]
+        )
 
 
 class ToonBoilerModuleDeviceEntity(ToonEntity):
@@ -97,12 +93,12 @@ class ToonBoilerModuleDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Boiler Module",
-            "manufacturer": "Eneco",
-            "identifiers": {(DOMAIN, agreement_id, "boiler_module")},
-            "via_device": (DOMAIN, agreement_id),
-        }
+        return DeviceInfo(
+            name="Boiler Module",
+            manufacturer="Eneco",
+            identifiers={(DOMAIN, agreement_id, "boiler_module")},  # type: ignore[arg-type]
+            via_device=(DOMAIN, agreement_id),
+        )
 
 
 class ToonBoilerDeviceEntity(ToonEntity):
@@ -112,11 +108,11 @@ class ToonBoilerDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Boiler",
-            "identifiers": {(DOMAIN, agreement_id, "boiler")},
-            "via_device": (DOMAIN, agreement_id, "boiler_module"),
-        }
+        return DeviceInfo(
+            name="Boiler",
+            identifiers={(DOMAIN, agreement_id, "boiler")},  # type: ignore[arg-type]
+            via_device=(DOMAIN, agreement_id, "boiler_module"),  # type: ignore[typeddict-item]
+        )
 
 
 @dataclass

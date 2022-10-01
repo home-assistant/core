@@ -1,0 +1,66 @@
+{
+  "nodeId": 22,
+  "index": 0,
+  "status": 1,
+  "ready": false,
+  "isListening": false,
+  "isRouting": true,
+  "isSecure": "unknown",
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 22,
+      "index": 0,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 7,
+          "label": "Notification Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Notification Sensor"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": []
+    }
+  ],
+  "values": [],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 7,
+      "label": "Notification Sensor"
+    },
+    "specific": {
+      "key": 1,
+      "label": "Notification Sensor"
+    },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "ProtocolInfo",
+  "statistics": {
+    "commandsTX": 0,
+    "commandsRX": 0,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0
+  },
+  "isControllerNode": false
+}

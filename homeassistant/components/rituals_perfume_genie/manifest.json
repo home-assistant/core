@@ -6,5 +6,6 @@
   "requirements": ["pyrituals==0.0.6"],
   "codeowners": ["@milanmeu"],
   "quality_scale": "silver",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["pyrituals"]
 }

@@ -16,11 +16,9 @@ from ismartgate.common import (
 )
 
 from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
     DOMAIN as COVER_DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
+    CoverDeviceClass,
+    CoverEntityFeature,
 )
 from homeassistant.components.gogogate2.const import (
     DEVICE_TYPE_GOGOGATE2,
@@ -118,7 +116,7 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
         "device_class": "garage",
         "door_id": 1,
         "friendly_name": "Door1",
-        "supported_features": SUPPORT_CLOSE | SUPPORT_OPEN,
+        "supported_features": CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
     }
 
     api = MagicMock(GogoGate2Api)
@@ -257,7 +255,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
         "device_class": "garage",
         "door_id": 1,
         "friendly_name": "Door1",
-        "supported_features": SUPPORT_CLOSE | SUPPORT_OPEN,
+        "supported_features": CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN,
     }
 
     api = MagicMock(ISmartGateApi)
@@ -282,11 +280,11 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     assert hass.states.get("cover.door1")
     assert (
         hass.states.get("cover.door1").attributes[ATTR_DEVICE_CLASS]
-        == DEVICE_CLASS_GARAGE
+        == CoverDeviceClass.GARAGE
     )
     assert (
         hass.states.get("cover.door2").attributes[ATTR_DEVICE_CLASS]
-        == DEVICE_CLASS_GATE
+        == CoverDeviceClass.GATE
     )
 
     api.async_info.side_effect = Exception("Error")

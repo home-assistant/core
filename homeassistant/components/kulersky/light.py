@@ -3,18 +3,20 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import pykulersky
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGBW_COLOR,
-    COLOR_MODE_RGBW,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -65,9 +67,9 @@ class KulerskyLight(LightEntity):
     def __init__(self, light: pykulersky.Light) -> None:
         """Initialize a Kuler Sky light."""
         self._light = light
-        self._available = None
-        self._attr_supported_color_modes = {COLOR_MODE_RGBW}
-        self._attr_color_mode = COLOR_MODE_RGBW
+        self._available = False
+        self._attr_supported_color_modes = {ColorMode.RGBW}
+        self._attr_color_mode = ColorMode.RGBW
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -97,13 +99,13 @@ class KulerskyLight(LightEntity):
         return self._light.address
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for this light."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Brightech",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Brightech",
+            name=self.name,
+        )
 
     @property
     def is_on(self):
@@ -115,7 +117,7 @@ class KulerskyLight(LightEntity):
         """Return True if entity is available."""
         return self._available
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         default_rgbw = (255,) * 4 if self.rgbw_color is None else self.rgbw_color
         rgbw = kwargs.get(ATTR_RGBW_COLOR, default_rgbw)
@@ -133,11 +135,11 @@ class KulerskyLight(LightEntity):
 
         await self._light.set_color(*rgbw_scaled)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._light.set_color(0, 0, 0, 0)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch new state data for this light."""
         try:
             if not self._available:
@@ -154,8 +156,13 @@ class KulerskyLight(LightEntity):
         self._available = True
         brightness = max(rgbw)
         if not brightness:
-            rgbw_normalized = [0, 0, 0, 0]
+            self._attr_rgbw_color = (0, 0, 0, 0)
         else:
             rgbw_normalized = [round(x * 255 / brightness) for x in rgbw]
+            self._attr_rgbw_color = (
+                rgbw_normalized[0],
+                rgbw_normalized[1],
+                rgbw_normalized[2],
+                rgbw_normalized[3],
+            )
         self._attr_brightness = brightness
-        self._attr_rgbw_color = tuple(rgbw_normalized)

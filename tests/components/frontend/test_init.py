@@ -1,5 +1,6 @@
 """The tests for Home Assistant frontend."""
 from datetime import timedelta
+from http import HTTPStatus
 import re
 from unittest.mock import patch
 
@@ -16,7 +17,6 @@ from homeassistant.components.frontend import (
     THEMES_STORAGE_KEY,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -156,7 +156,7 @@ async def test_dont_cache_service_worker(mock_http_client):
 async def test_404(mock_http_client):
     """Test for HTTP 404 error."""
     resp = await mock_http_client.get("/not-existing")
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_we_cannot_POST_to_root(mock_http_client):
@@ -365,7 +365,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     hass.components.frontend.async_register_built_in_panel(
         "map", "Map", "mdi:tooltip-account", require_admin=True
@@ -393,7 +393,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     hass.components.frontend.async_remove_panel("map")
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     assert len(events) == 2
 
@@ -424,7 +424,7 @@ async def test_get_translations(hass, ws_client):
     """Test get_translations command."""
     with patch(
         "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang, category, integration, config_flow: {
+        side_effect=lambda hass, lang, category, integrations, config_flow: {
             "lang": lang
         },
     ):
@@ -442,6 +442,58 @@ async def test_get_translations(hass, ws_client):
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"resources": {"lang": "nl"}}
+
+
+async def test_get_translations_for_integrations(hass, ws_client):
+    """Test get_translations for integrations command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_translations",
+        side_effect=lambda hass, lang, category, integration, config_flow: {
+            "lang": lang,
+            "integration": integration,
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_translations",
+                "integration": ["frontend", "http"],
+                "language": "nl",
+                "category": "lang",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert set(msg["result"]["resources"]["integration"]) == {"frontend", "http"}
+
+
+async def test_get_translations_for_single_integration(hass, ws_client):
+    """Test get_translations for integration command."""
+    with patch(
+        "homeassistant.components.frontend.async_get_translations",
+        side_effect=lambda hass, lang, category, integrations, config_flow: {
+            "lang": lang,
+            "integration": integrations,
+        },
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "frontend/get_translations",
+                "integration": "http",
+                "language": "nl",
+                "category": "lang",
+            }
+        )
+        msg = await ws_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"resources": {"lang": "nl", "integration": ["http"]}}
 
 
 async def test_auth_load(hass):
@@ -509,7 +561,7 @@ async def test_static_paths(hass, mock_http_client):
 async def test_manifest_json(hass, frontend_themes, mock_http_client):
     """Test for fetching manifest.json."""
     resp = await mock_http_client.get("/manifest.json")
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert "cache-control" not in resp.headers
 
     json = await resp.json()
@@ -521,8 +573,40 @@ async def test_manifest_json(hass, frontend_themes, mock_http_client):
     await hass.async_block_till_done()
 
     resp = await mock_http_client.get("/manifest.json")
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert "cache-control" not in resp.headers
 
     json = await resp.json()
     assert json["theme_color"] != DEFAULT_THEME_COLOR
+
+
+async def test_static_path_cache(hass, mock_http_client):
+    """Test static paths cache."""
+    resp = await mock_http_client.get("/lovelace/default_view", allow_redirects=False)
+    assert resp.status == 404
+
+    resp = await mock_http_client.get("/frontend_latest/", allow_redirects=False)
+    assert resp.status == 403
+
+    resp = await mock_http_client.get(
+        "/static/icons/favicon.ico", allow_redirects=False
+    )
+    assert resp.status == 200
+
+    # and again to make sure the cache works
+    resp = await mock_http_client.get(
+        "/static/icons/favicon.ico", allow_redirects=False
+    )
+    assert resp.status == 200
+
+    resp = await mock_http_client.get(
+        "/static/fonts/roboto/Roboto-Bold.woff2", allow_redirects=False
+    )
+    assert resp.status == 200
+
+    resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
+    assert resp.status == 404
+
+    # and again to make sure the cache works
+    resp = await mock_http_client.get("/static/does-not-exist", allow_redirects=False)
+    assert resp.status == 404

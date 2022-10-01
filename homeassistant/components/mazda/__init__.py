@@ -1,6 +1,9 @@
 """The Mazda Connected Services integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 import async_timeout
 from pymazda import (
@@ -14,8 +17,8 @@ from pymazda import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -23,17 +26,25 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN, SERVICES
+from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["device_tracker", "lock", "sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def with_timeout(task, timeout_seconds=10):
@@ -66,12 +77,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Error occurred during Mazda login request: %s", ex)
         raise ConfigEntryNotReady from ex
 
-    async def async_handle_service_call(service_call=None):
+    async def async_handle_service_call(service_call: ServiceCall) -> None:
         """Handle a service call."""
         # Get device entry from device registry
         dev_reg = device_registry.async_get(hass)
         device_id = service_call.data["device_id"]
         device_entry = dev_reg.async_get(device_id)
+        if TYPE_CHECKING:
+            # For mypy: it has already been checked in validate_mazda_device_id
+            assert device_entry
 
         # Get vehicle VIN from device identifiers
         mazda_identifiers = (
@@ -97,22 +111,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         api_method = getattr(api_client, service_call.service)
         try:
-            if service_call.service == "send_poi":
-                latitude = service_call.data["latitude"]
-                longitude = service_call.data["longitude"]
-                poi_name = service_call.data["poi_name"]
-                await api_method(vehicle_id, latitude, longitude, poi_name)
-            else:
-                await api_method(vehicle_id)
+            latitude = service_call.data["latitude"]
+            longitude = service_call.data["longitude"]
+            poi_name = service_call.data["poi_name"]
+            await api_method(vehicle_id, latitude, longitude, poi_name)
         except Exception as ex:
             raise HomeAssistantError(ex) from ex
 
     def validate_mazda_device_id(device_id):
         """Check that a device ID exists in the registry and has at least one 'mazda' identifier."""
         dev_reg = device_registry.async_get(hass)
-        device_entry = dev_reg.async_get(device_id)
 
-        if device_entry is None:
+        if (device_entry := dev_reg.async_get(device_id)) is None:
             raise vol.Invalid("Invalid device ID")
 
         mazda_identifiers = [
@@ -125,12 +135,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return device_id
 
-    service_schema = vol.Schema(
-        {vol.Required("device_id"): vol.All(cv.string, validate_mazda_device_id)}
-    )
-
-    service_schema_send_poi = service_schema.extend(
+    service_schema_send_poi = vol.Schema(
         {
+            vol.Required("device_id"): vol.All(cv.string, validate_mazda_device_id),
             vol.Required("latitude"): cv.latitude,
             vol.Required("longitude"): cv.longitude,
             vol.Required("poi_name"): cv.string,
@@ -148,6 +155,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 vehicle["status"] = await with_timeout(
                     mazda_client.get_vehicle_status(vehicle["id"])
                 )
+
+                # If vehicle is electric, get additional EV-specific status info
+                if vehicle["isElectric"]:
+                    vehicle["evStatus"] = await with_timeout(
+                        mazda_client.get_ev_vehicle_status(vehicle["id"])
+                    )
 
             hass.data[DOMAIN][entry.entry_id][DATA_VEHICLES] = vehicles
 
@@ -179,21 +192,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register services
-    for service in SERVICES:
-        if service == "send_poi":
-            hass.services.async_register(
-                DOMAIN,
-                service,
-                async_handle_service_call,
-                schema=service_schema_send_poi,
-            )
-        else:
-            hass.services.async_register(
-                DOMAIN, service, async_handle_service_call, schema=service_schema
-            )
+    hass.services.async_register(
+        DOMAIN,
+        "send_poi",
+        async_handle_service_call,
+        schema=service_schema_send_poi,
+    )
 
     return True
 
@@ -204,8 +211,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Only remove services if it is the last config entry
     if len(hass.data[DOMAIN]) == 1:
-        for service in SERVICES:
-            hass.services.async_remove(DOMAIN, service)
+        hass.services.async_remove(DOMAIN, "send_poi")
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -216,13 +222,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class MazdaEntity(CoordinatorEntity):
     """Defines a base Mazda entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, client, coordinator, index):
         """Initialize the Mazda entity."""
         super().__init__(coordinator)
         self.client = client
         self.index = index
-        self.vin = self.coordinator.data[self.index]["vin"]
-        self.vehicle_id = self.coordinator.data[self.index]["id"]
+        self.vin = self.data["vin"]
+        self.vehicle_id = self.data["id"]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.vin)},
+            manufacturer="Mazda",
+            model=f"{self.data['modelYear']} {self.data['carlineName']}",
+            name=self.vehicle_name,
+        )
 
     @property
     def data(self):
@@ -230,16 +244,7 @@ class MazdaEntity(CoordinatorEntity):
         return self.coordinator.data[self.index]
 
     @property
-    def device_info(self):
-        """Return device info for the Mazda entity."""
-        return {
-            "identifiers": {(DOMAIN, self.vin)},
-            "name": self.get_vehicle_name(),
-            "manufacturer": "Mazda",
-            "model": f"{self.data['modelYear']} {self.data['carlineName']}",
-        }
-
-    def get_vehicle_name(self):
+    def vehicle_name(self):
         """Return the vehicle name, to be used as a prefix for names of other entities."""
         if "nickname" in self.data and len(self.data["nickname"]) > 0:
             return self.data["nickname"]

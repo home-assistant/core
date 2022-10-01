@@ -7,7 +7,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 import logging
-from typing import Any, Dict
+from typing import Any, cast
 
 import attr
 import voluptuous as vol
@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.storage import Store
 
 from . import (
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
@@ -25,7 +26,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.3.0"]
+REQUIREMENTS = ["pyotp==2.7.0"]
 
 CONF_MESSAGE = "message"
 
@@ -56,10 +57,10 @@ def _generate_secret() -> str:
 
 
 def _generate_random() -> int:
-    """Generate a 8 digit number."""
+    """Generate a 32 digit number."""
     import pyotp  # pylint: disable=import-outside-toplevel
 
-    return int(pyotp.random_base32(length=8, chars=list("1234567890")))
+    return int(pyotp.random_base32(length=32, chars=list("1234567890")))
 
 
 def _generate_otp(secret: str, count: int) -> str:
@@ -86,7 +87,7 @@ class NotifySetting:
     target: str | None = attr.ib(default=None)
 
 
-_UsersDict = Dict[str, NotifySetting]
+_UsersDict = dict[str, NotifySetting]
 
 
 @MULTI_FACTOR_AUTH_MODULES.register("notify")
@@ -99,8 +100,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._user_settings: _UsersDict | None = None
-        self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True
+        self._user_store = Store[dict[str, dict[str, Any]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._include = config.get(CONF_INCLUDE, [])
         self._exclude = config.get(CONF_EXCLUDE, [])
@@ -119,7 +120,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
                 return
 
             if (data := await self._user_store.async_load()) is None:
-                data = {STORAGE_USERS: {}}
+                data = cast(dict[str, dict[str, Any]], {STORAGE_USERS: {}})
 
             self._user_settings = {
                 user_id: NotifySetting(**setting)
@@ -245,14 +246,13 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id)
-        if notify_setting is None:
+        if (notify_setting := self._user_settings.get(user_id)) is None:
             _LOGGER.error("Cannot find user %s", user_id)
             return
 
         await self.async_notify(
             code,
-            notify_setting.notify_service,  # type: ignore
+            notify_setting.notify_service,  # type: ignore[arg-type]
             notify_setting.target,
         )
 
@@ -320,6 +320,7 @@ class NotifySetupFlow(SetupFlow):
         errors: dict[str, str] = {}
 
         hass = self._auth_module.hass
+        assert self._secret and self._count
         if user_input:
             verified = await hass.async_add_executor_job(
                 _verify_otp, self._secret, user_input["code"], self._count
@@ -334,7 +335,6 @@ class NotifySetupFlow(SetupFlow):
             errors["base"] = "invalid_code"
 
         # generate code every time, no retry logic
-        assert self._secret and self._count
         code = await hass.async_add_executor_job(
             _generate_otp, self._secret, self._count
         )

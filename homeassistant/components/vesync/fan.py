@@ -1,10 +1,15 @@
 """Support for VeSync fans."""
+from __future__ import annotations
+
 import logging
 import math
+from typing import Any
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
-from homeassistant.core import callback
+from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -12,13 +17,16 @@ from homeassistant.util.percentage import (
 )
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_FANS
+from .const import DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
 
 DEV_TYPE_TO_HA = {
     "LV-PUR131S": "fan",
     "Core200S": "fan",
+    "Core300S": "fan",
+    "Core400S": "fan",
+    "Core600S": "fan",
 }
 
 FAN_MODE_AUTO = "auto"
@@ -27,41 +35,58 @@ FAN_MODE_SLEEP = "sleep"
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core200S": [FAN_MODE_SLEEP],
+    "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
+    "Core600S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
 }
-SPEED_RANGE = (1, 3)  # off is not included
+SPEED_RANGE = {  # off is not included
+    "LV-PUR131S": (1, 3),
+    "Core200S": (1, 3),
+    "Core300S": (1, 3),
+    "Core400S": (1, 4),
+    "Core600S": (1, 4),
+}
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the VeSync fan platform."""
 
-    async def async_discover(devices):
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities)
 
-    disp = async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), async_discover)
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)
+    )
 
-    _async_setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
-    dev_list = []
+    entities = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "fan":
-            dev_list.append(VeSyncFanHA(dev))
+        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type)) == "fan":
+            entities.append(VeSyncFanHA(dev))
         else:
             _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
             )
             continue
 
-    async_add_entities(dev_list, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncFanHA(VeSyncDevice, FanEntity):
     """Representation of a VeSync fan."""
+
+    _attr_supported_features = FanEntityFeature.SET_SPEED
 
     def __init__(self, fan):
         """Initialize the VeSync fan device."""
@@ -69,31 +94,31 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         self.smartfan = fan
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
-
-    @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current speed."""
-        if self.smartfan.mode == "manual":
-            current_level = self.smartfan.fan_level
-            if current_level is not None:
-                return ranged_value_to_percentage(SPEED_RANGE, current_level)
+        if (
+            self.smartfan.mode == "manual"
+            and (current_level := self.smartfan.fan_level) is not None
+        ):
+            return ranged_value_to_percentage(
+                SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], current_level
+            )
         return None
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(SPEED_RANGE)
+        return int_states_in_range(
+            SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]]
+        )
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
-        return PRESET_MODES[self.device.device_type]
+        return PRESET_MODES[SKU_TO_BASE_DEVICE[self.device.device_type]]
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Get the current preset mode."""
         if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP):
             return self.smartfan.mode
@@ -105,7 +130,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         return self.smartfan.uuid
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fan."""
         attr = {}
 
@@ -121,18 +146,12 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if hasattr(self.smartfan, "night_light"):
             attr["night_light"] = self.smartfan.night_light
 
-        if hasattr(self.smartfan, "air_quality"):
-            attr["air_quality"] = self.smartfan.air_quality
-
         if hasattr(self.smartfan, "mode"):
             attr["mode"] = self.smartfan.mode
 
-        if hasattr(self.smartfan, "filter_life"):
-            attr["filter_life"] = self.smartfan.filter_life
-
         return attr
 
-    def set_percentage(self, percentage):
+    def set_percentage(self, percentage: int) -> None:
         """Set the speed of the device."""
         if percentage == 0:
             self.smartfan.turn_off()
@@ -143,15 +162,20 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
         self.smartfan.manual_mode()
         self.smartfan.change_fan_speed(
-            math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            math.ceil(
+                percentage_to_ranged_value(
+                    SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], percentage
+                )
+            )
         )
         self.schedule_update_ha_state()
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of device."""
         if preset_mode not in self.preset_modes:
             raise ValueError(
-                "{preset_mode} is not one of the valid preset modes: {self.preset_modes}"
+                f"{preset_mode} is not one of the valid preset modes: "
+                f"{self.preset_modes}"
             )
 
         if not self.smartfan.is_on:
@@ -166,10 +190,9 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
     def turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn the device on."""
         if preset_mode:

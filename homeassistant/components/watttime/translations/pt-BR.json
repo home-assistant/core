@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado",
+            "unknown_coordinates": "Sem dados para latitude/longitude"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Insira a latitude e longitude para monitorar:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Localiza\u00e7\u00e3o"
+                },
+                "description": "Escolha um local para monitorar:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Senha"
+                },
+                "description": "Por favor, digite novamente a senha para {username} :",
+                "title": "Reautenticar Integra\u00e7\u00e3o"
+            },
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                },
+                "description": "Insira seu nome de usu\u00e1rio e senha:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostrar localiza\u00e7\u00e3o monitorada no mapa"
+                },
+                "title": "Configurar WattTime"
+            }
+        }
+    }
+}

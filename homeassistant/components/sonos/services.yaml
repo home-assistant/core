@@ -1,33 +1,3 @@
-join:
-  name: Join group
-  description: Group player together.
-  fields:
-    master:
-      name: Master
-      description:
-        Entity ID of the player that should become the coordinator of the group.
-      required: true
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
-    entity_id:
-      name: Entity
-      description: Name of entity that will join the master.
-      required: true
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
-
-unjoin:
-  name: Unjoin group
-  description: Unjoin the player from a group.
-  target:
-    entity:
-      integration: sonos
-      domain: media_player
-
 snapshot:
   name: Snapshot
   description: Take a snapshot of the media player.
@@ -86,57 +56,6 @@ clear_sleep_timer:
   target:
     device:
       integration: sonos
-
-set_option:
-  name: Set option
-  description: Set Sonos sound options.
-  target:
-    device:
-      integration: sonos
-  fields:
-    buttons_enabled:
-      name: Buttons enabled
-      description: Enable control buttons on the device
-      example: "true"
-      selector:
-        boolean:
-    crossfade:
-      name: Crossfade
-      description: Enable crossfade on the device
-      example: "true"
-      selector:
-        boolean:
-    night_sound:
-      name: Night sound
-      description: Enable Night Sound mode
-      selector:
-        boolean:
-    speech_enhance:
-      name: Speech enhance
-      description: Enable Speech Enhancement mode
-      selector:
-        boolean:
-    status_light:
-      name: Status light
-      description: Enable Status (LED) Light
-      selector:
-        boolean:
-    bass_level:
-      name: Bass Level
-      description: Bass level for EQ.
-      selector:
-        number:
-          min: -10
-          max: 10
-          mode: box
-    treble_level:
-      name: Treble Level
-      description: Treble level for EQ.
-      selector:
-        number:
-          min: -10
-          max: 10
-          mode: box
 
 play_queue:
   name: Play queue

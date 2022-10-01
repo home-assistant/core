@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "no_services_found": "No se encontraron servicios para esta cuenta"
+        },
+        "step": {
+            "service": {
+                "data": {
+                    "services": "Servicios"
+                },
+                "title": "Seleccione Servicios"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "services": "Servicios"
+                },
+                "title": "Seleccione Servicios"
+            }
+        }
+    }
+}

@@ -13,6 +13,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_auth_key": "API credentials rejected by Coinbase due to an invalid API Key.",
+      "invalid_auth_secret": "API credentials rejected by Coinbase due to an invalid API Secret.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -26,14 +28,15 @@
         "data": {
           "account_balance_currencies": "Wallet balances to report.",
           "exchange_rate_currencies": "Exchange rates to report.",
-          "exchange_base": "Base currency for exchange rate sensors."
+          "exchange_base": "Base currency for exchange rate sensors.",
+          "exchnage_rate_precision": "Number of decimal places for exchange rates."
         }
       }
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "currency_unavaliable": "One or more of the requested currency balances is not provided by your Coinbase API.",
-      "exchange_rate_unavaliable": "One or more of the requested exchange rates is not provided by Coinbase."
+      "currency_unavailable": "One or more of the requested currency balances is not provided by your Coinbase API.",
+      "exchange_rate_unavailable": "One or more of the requested exchange rates is not provided by Coinbase."
     }
   }
 }

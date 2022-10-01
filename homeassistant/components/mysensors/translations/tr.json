@@ -1,0 +1,88 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "duplicate_persistence_file": "Kal\u0131c\u0131l\u0131k dosyas\u0131 zaten kullan\u0131mda",
+            "duplicate_topic": "Konu zaten kullan\u0131l\u0131yor",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "invalid_device": "Ge\u00e7ersiz cihaz",
+            "invalid_ip": "Ge\u00e7ersiz IP adresi",
+            "invalid_persistence_file": "Ge\u00e7ersiz kal\u0131c\u0131l\u0131k dosyas\u0131",
+            "invalid_port": "Ge\u00e7ersiz ba\u011flant\u0131 noktas\u0131 numaras\u0131",
+            "invalid_publish_topic": "Ge\u00e7ersiz yay\u0131nlama konusu",
+            "invalid_serial": "Ge\u00e7ersiz seri ba\u011flant\u0131 noktas\u0131",
+            "invalid_subscribe_topic": "Ge\u00e7ersiz abone konusu",
+            "invalid_version": "Ge\u00e7ersiz MySensors s\u00fcr\u00fcm\u00fc",
+            "mqtt_required": "MQTT entegrasyonu kurulmam\u0131\u015f",
+            "not_a_number": "L\u00fctfen bir numara giriniz",
+            "port_out_of_range": "Port numaras\u0131 en az 1, en fazla 65535 olmal\u0131d\u0131r",
+            "same_topic": "Abone olma ve yay\u0131nlama konular\u0131 ayn\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "duplicate_persistence_file": "Kal\u0131c\u0131l\u0131k dosyas\u0131 zaten kullan\u0131mda",
+            "duplicate_topic": "Konu zaten kullan\u0131l\u0131yor",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "invalid_device": "Ge\u00e7ersiz cihaz",
+            "invalid_ip": "Ge\u00e7ersiz IP adresi",
+            "invalid_persistence_file": "Ge\u00e7ersiz kal\u0131c\u0131l\u0131k dosyas\u0131",
+            "invalid_port": "Ge\u00e7ersiz ba\u011flant\u0131 noktas\u0131 numaras\u0131",
+            "invalid_publish_topic": "Ge\u00e7ersiz yay\u0131nlama konusu",
+            "invalid_serial": "Ge\u00e7ersiz seri ba\u011flant\u0131 noktas\u0131",
+            "invalid_subscribe_topic": "Ge\u00e7ersiz abone konusu",
+            "invalid_version": "Ge\u00e7ersiz MySensors s\u00fcr\u00fcm\u00fc",
+            "mqtt_required": "MQTT entegrasyonu kurulmam\u0131\u015f",
+            "not_a_number": "L\u00fctfen bir numara giriniz",
+            "port_out_of_range": "Port numaras\u0131 en az 1, en fazla 65535 olmal\u0131d\u0131r",
+            "same_topic": "Abone olma ve yay\u0131nlama konular\u0131 ayn\u0131d\u0131r",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "persistence_file": "kal\u0131c\u0131l\u0131k dosyas\u0131 (otomatik olu\u015fturmak i\u00e7in bo\u015f b\u0131rak\u0131n)",
+                    "retain": "mqtt tutma",
+                    "topic_in_prefix": "girdi konular\u0131 i\u00e7in \u00f6nek (topic_in_prefix)",
+                    "topic_out_prefix": "\u00e7\u0131kt\u0131 konular\u0131 i\u00e7in \u00f6nek (topic_out_prefix)",
+                    "version": "MySensors s\u00fcr\u00fcm\u00fc"
+                },
+                "description": "MQTT a\u011f ge\u00e7idi kurulumu"
+            },
+            "gw_serial": {
+                "data": {
+                    "baud_rate": "baud h\u0131z\u0131",
+                    "device": "Seri ba\u011flant\u0131 noktas\u0131",
+                    "persistence_file": "kal\u0131c\u0131l\u0131k dosyas\u0131 (otomatik olu\u015fturmak i\u00e7in bo\u015f b\u0131rak\u0131n)",
+                    "version": "MySensors s\u00fcr\u00fcm\u00fcne"
+                },
+                "description": "Seri a\u011f ge\u00e7idi kurulumu"
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "A\u011f ge\u00e7idinin IP adresini",
+                    "persistence_file": "kal\u0131c\u0131l\u0131k dosyas\u0131 (otomatik olu\u015fturmak i\u00e7in bo\u015f b\u0131rak\u0131n)",
+                    "tcp_port": "port",
+                    "version": "MySensors s\u00fcr\u00fcm\u00fc"
+                },
+                "description": "Ethernet a\u011f ge\u00e7idi kurulumu"
+            },
+            "select_gateway_type": {
+                "description": "Hangi a\u011f ge\u00e7idinin yap\u0131land\u0131r\u0131laca\u011f\u0131n\u0131 se\u00e7in.",
+                "menu_options": {
+                    "gw_mqtt": "Bir MQTT a\u011f ge\u00e7idini yap\u0131land\u0131r\u0131n",
+                    "gw_serial": "Bir seri a\u011f ge\u00e7idi yap\u0131land\u0131r\u0131n",
+                    "gw_tcp": "Bir TCP a\u011f ge\u00e7idi yap\u0131land\u0131r\u0131n"
+                }
+            },
+            "user": {
+                "data": {
+                    "gateway_type": "A\u011f ge\u00e7idi t\u00fcr\u00fc"
+                },
+                "description": "A\u011f ge\u00e7idine ba\u011flant\u0131 y\u00f6ntemini se\u00e7in"
+            }
+        }
+    }
+}

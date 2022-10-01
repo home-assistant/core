@@ -1,0 +1,35 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "cycle": "Syklus for tilbakestilling av m\u00e5ler",
+                    "delta_values": "Delta-verdier",
+                    "name": "Navn",
+                    "net_consumption": "Netto forbruk",
+                    "offset": "Forskyvning for tilbakestilling av meter",
+                    "source": "Inngangssensor",
+                    "tariffs": "St\u00f8ttede tariffer"
+                },
+                "data_description": {
+                    "delta_values": "Aktiver hvis kildeverdiene er deltaverdier siden siste lesing i stedet for absolutte verdier.",
+                    "net_consumption": "Aktiver hvis kilden er en nettom\u00e5ler, noe som betyr at den b\u00e5de kan \u00f8ke og redusere.",
+                    "offset": "Forskyv dagen for en m\u00e5nedlig tilbakestilling av m\u00e5leren.",
+                    "tariffs": "En liste over st\u00f8ttede tariffer, la st\u00e5 tom hvis bare en enkelt tariff er n\u00f8dvendig."
+                },
+                "description": "Lag en sensor som sporer forbruket til ulike verkt\u00f8y (f.eks. energi, gass, vann, oppvarming) over en konfigurert tidsperiode, vanligvis m\u00e5nedlig. M\u00e5lersensoren st\u00f8tter valgfritt \u00e5 dele forbruket etter tariffer, i s\u00e5 fall opprettes en sensor for hver tariff samt en valgt enhet for \u00e5 velge gjeldende tariff.",
+                "title": "Legg til verkt\u00f8ym\u00e5ler"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source": "Inngangssensor"
+                }
+            }
+        }
+    },
+    "title": "Verkt\u00f8ym\u00e5ler"
+}

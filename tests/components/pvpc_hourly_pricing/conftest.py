@@ -1,4 +1,6 @@
 """Tests for the pvpc_hourly_pricing integration."""
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
@@ -11,10 +13,7 @@ from homeassistant.const import (
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-FIXTURE_JSON_DATA_2019_10_26 = "PVPC_CURV_DD_2019_10_26.json"
-FIXTURE_JSON_DATA_2019_10_27 = "PVPC_CURV_DD_2019_10_27.json"
-FIXTURE_JSON_DATA_2019_10_29 = "PVPC_CURV_DD_2019_10_29.json"
-FIXTURE_JSON_DATA_2021_06_01 = "PVPC_CURV_DD_2021_06_01.json"
+FIXTURE_JSON_DATA_2021_06_01 = "PVPC_DATA_2021_06_01.json"
 
 
 def check_valid_state(state, tariff: str, value=None, key_attr=None):
@@ -27,7 +26,7 @@ def check_valid_state(state, tariff: str, value=None, key_attr=None):
     try:
         _ = float(state.state)
         # safety margins for current electricity price (it shouldn't be out of [0, 0.2])
-        assert -0.1 < float(state.state) < 0.3
+        assert -0.1 < float(state.state) < 0.5
         assert state.attributes[ATTR_TARIFF] == tariff
     except ValueError:
         pass
@@ -43,28 +42,22 @@ def check_valid_state(state, tariff: str, value=None, key_attr=None):
 @pytest.fixture
 def pvpc_aioclient_mock(aioclient_mock: AiohttpClientMocker):
     """Create a mock config entry."""
-    aioclient_mock.get(
-        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-10-26",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_10_26}"),
-    )
-    aioclient_mock.get(
-        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-10-27",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_10_27}"),
-    )
-    # missing day
-    aioclient_mock.get(
-        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-10-28",
-        text='{"message":"No values for specified archive"}',
-    )
-    aioclient_mock.get(
-        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-10-29",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_10_29}"),
-    )
-
+    mask_url = "https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real"
+    mask_url += "?time_trunc=hour&geo_ids={0}&start_date={1}T00:00&end_date={1}T23:59"
     # new format for prices >= 2021-06-01
+    sample_data = load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_06_01}")
+
+    # tariff variant with different geo_ids=8744
+    aioclient_mock.get(mask_url.format(8741, "2021-06-01"), text=sample_data)
+    aioclient_mock.get(mask_url.format(8744, "2021-06-01"), text=sample_data)
+    # simulate missing day
     aioclient_mock.get(
-        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2021-06-01",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_06_01}"),
+        mask_url.format(8741, "2021-06-02"),
+        status=HTTPStatus.BAD_GATEWAY,
+        text=(
+            '{"errors":[{"code":502,"status":"502","title":"Bad response from ESIOS",'
+            '"detail":"There are no data for the selected filters."}]}'
+        ),
     )
 
     return aioclient_mock

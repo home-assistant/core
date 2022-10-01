@@ -11,10 +11,11 @@ from requests.exceptions import ConnectionError as ConnectError, HTTPError, Time
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -25,9 +26,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     DEGREE,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PRESSURE,
     LENGTH_CENTIMETERS,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
@@ -43,7 +41,10 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     UV_INDEX,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -180,7 +181,8 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature": DarkskySensorEntityDescription(
         key="temperature",
         name="Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -191,7 +193,8 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature": DarkskySensorEntityDescription(
         key="apparent_temperature",
         name="Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -202,7 +205,8 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "dew_point": DarkskySensorEntityDescription(
         key="dew_point",
         name="Dew Point",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -257,7 +261,8 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "humidity": DarkskySensorEntityDescription(
         key="humidity",
         name="Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         si_unit=PERCENTAGE,
         us_unit=PERCENTAGE,
         ca_unit=PERCENTAGE,
@@ -268,7 +273,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "pressure": DarkskySensorEntityDescription(
         key="pressure",
         name="Pressure",
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
         si_unit=PRESSURE_MBAR,
         us_unit=PRESSURE_MBAR,
         ca_unit=PRESSURE_MBAR,
@@ -290,7 +295,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "ozone": DarkskySensorEntityDescription(
         key="ozone",
         name="Ozone",
-        device_class=DEVICE_CLASS_OZONE,
+        device_class=SensorDeviceClass.OZONE,
         si_unit="DU",
         us_unit="DU",
         ca_unit="DU",
@@ -301,7 +306,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature_max": DarkskySensorEntityDescription(
         key="apparent_temperature_max",
         name="Daily High Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -312,7 +317,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature_high": DarkskySensorEntityDescription(
         key="apparent_temperature_high",
         name="Daytime High Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -323,7 +328,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature_min": DarkskySensorEntityDescription(
         key="apparent_temperature_min",
         name="Daily Low Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -334,7 +339,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature_low": DarkskySensorEntityDescription(
         key="apparent_temperature_low",
         name="Overnight Low Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -345,7 +350,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature_max": DarkskySensorEntityDescription(
         key="temperature_max",
         name="Daily High Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -356,7 +361,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature_high": DarkskySensorEntityDescription(
         key="temperature_high",
         name="Daytime High Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -367,7 +372,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature_min": DarkskySensorEntityDescription(
         key="temperature_min",
         name="Daily Low Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -378,7 +383,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature_low": DarkskySensorEntityDescription(
         key="temperature_low",
         name="Overnight Low Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -568,7 +573,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -601,7 +611,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     forecast = config.get(CONF_FORECAST)
     forecast_hour = config.get(CONF_HOURLY_FORECAST)
-    sensors = []
+    sensors: list[SensorEntity] = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in DEPRECATED_SENSOR_TYPES:
             _LOGGER.warning("Monitored condition %s is deprecated", variable)
@@ -653,8 +663,7 @@ class DarkSkySensor(SensorEntity):
         self.forecast_data = forecast_data
         self.forecast_day = forecast_day
         self.forecast_hour = forecast_hour
-        self._icon = None
-        self._unit_of_measurement = None
+        self._icon: str | None = None
 
         if forecast_day is not None:
             self._attr_name = f"{name} {description.name} {forecast_day}d"
@@ -664,17 +673,12 @@ class DarkSkySensor(SensorEntity):
             self._attr_name = f"{name} {description.name}"
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
     def unit_system(self):
         """Return the unit system of this entity."""
         return self.forecast_data.unit_system
 
     @property
-    def entity_picture(self):
+    def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if self._icon is None or "summary" not in self.entity_description.key:
             return None
@@ -684,13 +688,15 @@ class DarkSkySensor(SensorEntity):
 
         return None
 
-    def update_unit_of_measurement(self):
+    def update_unit_of_measurement(self) -> None:
         """Update units based on unit system."""
         unit_key = MAP_UNIT_SYSTEM.get(self.unit_system, "si_unit")
-        self._unit_of_measurement = getattr(self.entity_description, unit_key)
+        self._attr_native_unit_of_measurement = getattr(
+            self.entity_description, unit_key
+        )
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if (
             "summary" in self.entity_description.key
@@ -700,7 +706,7 @@ class DarkSkySensor(SensorEntity):
 
         return self.entity_description.icon
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Dark Sky and updates the states."""
         # Call the API for new forecast data. Each sensor will re-trigger this
         # same exact call, but that's fine. We cache results for a short period
@@ -754,10 +760,9 @@ class DarkSkySensor(SensorEntity):
         """
         sensor_type = self.entity_description.key
         lookup_type = convert_to_camel(sensor_type)
-        state = getattr(data, lookup_type, None)
 
-        if state is None:
-            return state
+        if (state := getattr(data, lookup_type, None)) is None:
+            return None
 
         if "summary" in sensor_type:
             self._icon = getattr(data, "icon", "")
@@ -816,7 +821,7 @@ class DarkSkyAlertSensor(SensorEntity):
         """Return the state attributes."""
         return self._alerts
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Dark Sky and updates the states."""
         # Call the API for new forecast data. Each sensor will re-trigger this
         # same exact call, but that's fine. We cache results for a short period

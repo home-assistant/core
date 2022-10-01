@@ -1,9 +1,5 @@
 # Describes the format for available HomeKit services
 
-start:
-  name: Start
-  description: Starts the HomeKit driver
-
 reload:
   name: Reload
   description: Reload homekit and re-process YAML configuration

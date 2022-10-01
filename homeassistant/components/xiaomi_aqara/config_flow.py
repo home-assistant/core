@@ -6,8 +6,10 @@ import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -76,10 +78,8 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.host is None:
             self.host = user_input.get(CONF_HOST)
         if self.sid is None:
-            mac_address = user_input.get(CONF_MAC)
-
             # format sid from mac_address
-            if mac_address is not None:
+            if (mac_address := user_input.get(CONF_MAC)) is not None:
                 self.sid = format_mac(mac_address).replace(":", "")
 
         # if host is already known by zeroconf discovery or manual optional settings
@@ -106,7 +106,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_settings()
 
         # Discover Xiaomi Aqara Gateways in the netwerk to get required SIDs.
-        xiaomi = XiaomiGatewayDiscovery(self.hass.add_job, [], self.interface)
+        xiaomi = XiaomiGatewayDiscovery(self.interface)
         try:
             await self.hass.async_add_executor_job(xiaomi.discover_gateways)
         except gaierror:
@@ -146,11 +146,13 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="select", data_schema=select_schema, errors=errors
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        name = discovery_info.get("name")
-        self.host = discovery_info.get("host")
-        mac_address = discovery_info.get("properties", {}).get("mac")
+        name = discovery_info.name
+        self.host = discovery_info.host
+        mac_address = discovery_info.properties.get("mac")
 
         if not name or not self.host or not mac_address:
             return self.async_abort(reason="not_xiaomi_aqara")

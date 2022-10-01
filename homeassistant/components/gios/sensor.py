@@ -1,33 +1,118 @@
 """Support for the GIOS service."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
-from homeassistant.components.sensor import DOMAIN as PLATFORM, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_NAME, CONF_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_NAME,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import GiosDataUpdateCoordinator
 from .const import (
     ATTR_AQI,
+    ATTR_C6H6,
+    ATTR_CO,
     ATTR_INDEX,
+    ATTR_NO2,
+    ATTR_O3,
+    ATTR_PM10,
     ATTR_PM25,
+    ATTR_SO2,
     ATTR_STATION,
     ATTRIBUTION,
-    DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
-    SENSOR_TYPES,
+    URL,
 )
-from .model import GiosSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class GiosSensorEntityDescription(SensorEntityDescription):
+    """Class describing GIOS sensor entities."""
+
+    value: Callable | None = round
+
+
+SENSOR_TYPES: tuple[GiosSensorEntityDescription, ...] = (
+    GiosSensorEntityDescription(
+        key=ATTR_AQI,
+        name="AQI",
+        device_class=SensorDeviceClass.AQI,
+        value=None,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_C6H6,
+        name="C6H6",
+        icon="mdi:molecule",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_CO,
+        name="CO",
+        device_class=SensorDeviceClass.CO,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_NO2,
+        name="NO2",
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_O3,
+        name="O3",
+        device_class=SensorDeviceClass.OZONE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_PM10,
+        name="PM10",
+        device_class=SensorDeviceClass.PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_PM25,
+        name="PM2.5",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    GiosSensorEntityDescription(
+        key=ATTR_SO2,
+        name="SO2",
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -40,7 +125,7 @@ async def async_setup_entry(
 
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
-    entity_registry = await async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     old_unique_id = f"{coordinator.gios.station_id}-pm2.5"
     if entity_id := entity_registry.async_get_entity_id(
         PLATFORM, DOMAIN, old_unique_id
@@ -66,10 +151,10 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class GiosSensor(CoordinatorEntity, SensorEntity):
+class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     """Define an GIOS sensor."""
 
-    coordinator: GiosDataUpdateCoordinator
+    _attr_has_entity_name = True
     entity_description: GiosSensorEntityDescription
 
     def __init__(
@@ -80,13 +165,13 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(coordinator.gios.station_id))},
-            "name": DEFAULT_NAME,
-            "manufacturer": MANUFACTURER,
-            "entry_type": "service",
-        }
-        self._attr_name = f"{name} {description.name}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, str(coordinator.gios.station_id))},
+            manufacturer=MANUFACTURER,
+            name=name,
+            configuration_url=URL.format(station_id=coordinator.gios.station_id),
+        )
         self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
         self._attrs: dict[str, Any] = {
             ATTR_ATTRIBUTION: ATTRIBUTION,

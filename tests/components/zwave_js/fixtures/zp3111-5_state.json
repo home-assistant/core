@@ -1,0 +1,701 @@
+{
+  "nodeId": 22,
+  "index": 0,
+  "installerIcon": 3079,
+  "userIcon": 3079,
+  "status": 2,
+  "ready": true,
+  "isListening": false,
+  "isRouting": true,
+  "isSecure": false,
+  "manufacturerId": 265,
+  "productId": 8449,
+  "productType": 8225,
+  "firmwareVersion": "5.1",
+  "zwavePlusVersion": 1,
+  "deviceConfig": {
+    "filename": "/cache/db/devices/0x0109/zp3111-5.json",
+    "isEmbedded": true,
+    "manufacturer": "Vision Security",
+    "manufacturerId": 265,
+    "label": "ZP3111-5",
+    "description": "4-in-1 Sensor",
+    "devices": [
+      {
+        "productType": 8225,
+        "productId": 8449
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "inclusion": "To add the ZP3111 to the Z-Wave network (inclusion), place the Z-Wave primary controller into inclusion mode. Press the Program Switch of ZP3111 for sending the NIF. After sending NIF, Z-Wave will send the auto inclusion, otherwise, ZP3111 will go to sleep after 20 seconds.",
+      "exclusion": "To remove the ZP3111 from the Z-Wave network (exclusion), place the Z-Wave primary controller into “exclusion” mode, and following its instruction to delete the ZP3111 to the controller. Press the Program Switch of ZP3111 once to be excluded.",
+      "reset": "Remove cover to trigged tamper switch, LED flash once & send out Alarm Report. Press Program Switch 10 times within 10 seconds, ZP3111 will send the “Device Reset Locally Notification” command and reset to the factory default. (Remark: This is to be used only in the case of primary controller being inoperable or otherwise unavailable.)",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2479/ZP3111-5_R2_20170316.pdf"
+    }
+  },
+  "label": "ZP3111-5",
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 22,
+      "index": 0,
+      "installerIcon": 3079,
+      "userIcon": 3079,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 7,
+          "label": "Notification Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Notification Sensor"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 49,
+          "name": "Multilevel Sensor",
+          "version": 7,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 132,
+          "name": "Wake Up",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 2,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        }
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "4.5"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["5.1", "10.1"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 265
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 8225
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 8449
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "level",
+      "propertyName": "level",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery level",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "isLow",
+      "propertyName": "isLow",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Low battery level"
+      },
+      "value": true
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Home Security",
+      "propertyKey": "Cover status",
+      "propertyName": "Home Security",
+      "propertyKeyName": "Cover status",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Cover status",
+        "ccSpecific": {
+          "notificationType": 7
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "3": "Tampering, product cover removed"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Home Security",
+      "propertyKey": "Motion sensor status",
+      "propertyName": "Home Security",
+      "propertyKeyName": "Motion sensor status",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Motion sensor status",
+        "ccSpecific": {
+          "notificationType": 7
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "8": "Motion detection"
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Type",
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Level",
+        "min": 0,
+        "max": 255
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Air temperature",
+      "propertyName": "Air temperature",
+      "ccVersion": 7,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Air temperature",
+        "ccSpecific": {
+          "sensorType": 1,
+          "scale": 0
+        },
+        "unit": "°C"
+      },
+      "value": 21.98
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Illuminance",
+      "propertyName": "Illuminance",
+      "ccVersion": 7,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Illuminance",
+        "ccSpecific": {
+          "sensorType": 3,
+          "scale": 0
+        },
+        "unit": "%"
+      },
+      "value": 7.31
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 49,
+      "commandClassName": "Multilevel Sensor",
+      "property": "Humidity",
+      "propertyName": "Humidity",
+      "ccVersion": 7,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Humidity",
+        "ccSpecific": {
+          "sensorType": 5,
+          "scale": 0
+        },
+        "unit": "%"
+      },
+      "value": 51.98
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "Temperature Scale",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature Scale",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Celsius",
+          "1": "Fahrenheit"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyName": "Temperature offset",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Temperature offset",
+        "default": 1,
+        "min": 0,
+        "max": 50,
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyName": "Humidity",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Configure Relative Humidity",
+        "label": "Humidity",
+        "default": 10,
+        "min": 1,
+        "max": 50,
+        "unit": "percent",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyName": "Light Sensor",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Sensor",
+        "default": 10,
+        "min": 1,
+        "max": 50,
+        "unit": "percent",
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyName": "Trigger Interval",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Set the trigger interval for motion sensor re-activation.",
+        "label": "Trigger Interval",
+        "default": 180,
+        "min": 1,
+        "max": 255,
+        "unit": "seconds",
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyName": "Motion Sensor Sensitivity",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "description": "Adjust sensitivity of the motion sensor.",
+        "label": "Motion Sensor Sensitivity",
+        "default": 4,
+        "min": 1,
+        "max": 7,
+        "states": {
+          "1": "highest",
+          "2": "higher",
+          "3": "high",
+          "4": "normal",
+          "5": "low",
+          "6": "lower",
+          "7": "lowest"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyName": "LED indicator mode",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "LED indicator mode",
+        "default": 3,
+        "min": 1,
+        "max": 3,
+        "states": {
+          "1": "Off",
+          "2": "Pulsing Temperature, Flashing Motion",
+          "3": "Flashing Temperature and Motion"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 132,
+      "commandClassName": "Wake Up",
+      "property": "wakeUpInterval",
+      "propertyName": "wakeUpInterval",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "default": 3600,
+        "readable": false,
+        "writeable": true,
+        "label": "Wake Up interval",
+        "min": 600,
+        "max": 604800,
+        "steps": 600
+      },
+      "value": 3600
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 132,
+      "commandClassName": "Wake Up",
+      "property": "controllerNodeId",
+      "propertyName": "controllerNodeId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Node ID of the controller"
+      },
+      "value": 1
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 6,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 7,
+      "label": "Notification Sensor"
+    },
+    "specific": {
+      "key": 1,
+      "label": "Notification Sensor"
+    },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0109:0x2021:0x2101:5.1",
+  "statistics": {
+    "commandsTX": 39,
+    "commandsRX": 38,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0
+  },
+  "highestSecurityClass": -1,
+  "isControllerNode": false
+}

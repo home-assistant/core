@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "{entity_name} g\u00fcncellemesinin kullan\u0131labilirli\u011fi de\u011fi\u015fti",
+            "turned_off": "{entity_name} g\u00fcncellendi",
+            "turned_on": "{entity_name} bir g\u00fcncelleme ald\u0131"
+        }
+    },
+    "title": "G\u00fcncelle"
+}

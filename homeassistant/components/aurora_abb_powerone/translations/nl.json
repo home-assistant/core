@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "no_serial_ports": "Geen com-poorten gevonden. Een geldig RS485-apparaat is nodig om te communiceren."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken, controleer de seri\u00eble poort, het adres, de elektrische aansluiting en of de omvormer aan staat (bij daglicht)",
+            "cannot_open_serial_port": "Kan seri\u00eble poort niet openen, controleer en probeer het opnieuw",
+            "invalid_serial_port": "Seri\u00eble poort is geen geldig apparaat of kan niet worden geopend"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Omvormer adres",
+                    "port": "RS485 of USB-RS485 adapter poort"
+                },
+                "description": "De omvormer moet worden aangesloten via een RS485-adapter, selecteer de seri\u00eble poort en het adres van de omvormer zoals geconfigureerd op het LCD-paneel"
+            }
+        }
+    }
+}

@@ -1,8 +1,15 @@
 """Remote control support for Panasonic Viera TV."""
-import logging
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -15,10 +22,12 @@ from .const import (
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Panasonic Viera TV Remote from a config entry."""
 
     config = config_entry.data
@@ -48,18 +57,16 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         return self._device_info[ATTR_UDN]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         if self._device_info is None:
             return None
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
-            "manufacturer": self._device_info.get(
-                ATTR_MANUFACTURER, DEFAULT_MANUFACTURER
-            ),
-            "model": self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_info[ATTR_UDN])},
+            manufacturer=self._device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+            model=self._device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
+            name=self._name,
+        )
 
     @property
     def name(self):
@@ -67,7 +74,7 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if the device is available."""
         return self._remote.available
 
@@ -76,15 +83,15 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
         """Return true if device is on."""
         return self._remote.state == STATE_ON
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._remote.async_turn_on(context=self._context)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._remote.async_turn_off()
 
-    async def async_send_command(self, command, **kwargs):
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         for cmd in command:
             await self._remote.async_send_key(cmd)

@@ -1,0 +1,121 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "file_not_found": "El archivo `.knxkeys` especificado no se encontr\u00f3 en la ruta config/.storage/knx/",
+            "invalid_individual_address": "El valor no coincide con el patr\u00f3n de la direcci\u00f3n KNX individual. 'area.line.device'",
+            "invalid_ip_address": "Direcci\u00f3n IPv4 no v\u00e1lida.",
+            "invalid_signature": "La contrase\u00f1a para descifrar el archivo `.knxkeys` es incorrecta."
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "Host",
+                    "local_ip": "IP local de Home Assistant",
+                    "port": "Puerto",
+                    "tunneling_type": "Tipo de t\u00fanel KNX"
+                },
+                "data_description": {
+                    "host": "Direcci\u00f3n IP del dispositivo de tunelizaci\u00f3n KNX/IP.",
+                    "local_ip": "D\u00e9jalo en blanco para usar el descubrimiento autom\u00e1tico.",
+                    "port": "Puerto del dispositivo de tunelizaci\u00f3n KNX/IP."
+                },
+                "description": "Por favor, introduce la informaci\u00f3n de conexi\u00f3n de tu dispositivo de t\u00fanel."
+            },
+            "routing": {
+                "data": {
+                    "individual_address": "Direcci\u00f3n individual",
+                    "local_ip": "IP local de Home Assistant",
+                    "multicast_group": "Grupo multicast",
+                    "multicast_port": "Puerto multicast"
+                },
+                "data_description": {
+                    "individual_address": "Direcci\u00f3n KNX que usar\u00e1 Home Assistant, por ejemplo, `0.0.4`",
+                    "local_ip": "D\u00e9jalo en blanco para usar el descubrimiento autom\u00e1tico."
+                },
+                "description": "Por favor, configura las opciones de enrutamiento."
+            },
+            "secure_knxkeys": {
+                "data": {
+                    "knxkeys_filename": "El nombre de tu archivo `.knxkeys` (incluyendo la extensi\u00f3n)",
+                    "knxkeys_password": "Contrase\u00f1a para descifrar el archivo `.knxkeys`."
+                },
+                "data_description": {
+                    "knxkeys_filename": "Se espera que el archivo se encuentre en tu directorio de configuraci\u00f3n en `.storage/knx/`.\nEn Home Assistant OS ser\u00eda `/config/.storage/knx/`\nEjemplo: `mi_proyecto.knxkeys`",
+                    "knxkeys_password": "Esto se configur\u00f3 al exportar el archivo desde ETS."
+                },
+                "description": "Por favor, introduce la informaci\u00f3n de tu archivo `.knxkeys`."
+            },
+            "secure_manual": {
+                "data": {
+                    "device_authentication": "Contrase\u00f1a de autenticaci\u00f3n del dispositivo",
+                    "user_id": "ID de usuario",
+                    "user_password": "Contrase\u00f1a de usuario"
+                },
+                "data_description": {
+                    "device_authentication": "Esto se configura en el panel 'IP' de la interfaz en ETS.",
+                    "user_id": "Este suele ser el n\u00famero de t\u00fanel +1. Por tanto, 'T\u00fanel 2' tendr\u00eda ID de usuario '3'.",
+                    "user_password": "Contrase\u00f1a para la conexi\u00f3n de t\u00fanel espec\u00edfica establecida en el panel 'Propiedades' del t\u00fanel en ETS."
+                },
+                "description": "Por favor, introduce tu informaci\u00f3n de IP segura."
+            },
+            "secure_tunneling": {
+                "description": "Selecciona c\u00f3mo quieres configurar KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Utilizar un archivo `.knxkeys` que contenga claves seguras de IP",
+                    "secure_manual": "Configurar claves seguras de IP manualmente"
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "gateway": "Conexi\u00f3n de t\u00fanel KNX"
+                },
+                "description": "Por favor, selecciona una puerta de enlace de la lista."
+            },
+            "type": {
+                "data": {
+                    "connection_type": "Tipo de conexi\u00f3n KNX"
+                },
+                "description": "Por favor, introduce el tipo de conexi\u00f3n que debemos usar para tu conexi\u00f3n KNX.\n AUTOM\u00c1TICO: la integraci\u00f3n se encarga de la conectividad con tu bus KNX mediante la realizaci\u00f3n de un escaneo de la puerta de enlace.\n T\u00daNELES: la integraci\u00f3n se conectar\u00e1 a tu bus KNX a trav\u00e9s de t\u00faneles.\n ENRUTAMIENTO: la integraci\u00f3n se conectar\u00e1 a tu bus KNX a trav\u00e9s del enrutamiento."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "connection_type": "Tipo de conexi\u00f3n KNX",
+                    "individual_address": "Direcci\u00f3n individual predeterminada",
+                    "local_ip": "IP local de Home Assistant",
+                    "multicast_group": "Grupo multicast",
+                    "multicast_port": "Puerto multicast",
+                    "rate_limit": "Frecuencia m\u00e1xima",
+                    "state_updater": "Actualizador de estado"
+                },
+                "data_description": {
+                    "individual_address": "Direcci\u00f3n KNX que usar\u00e1 Home Assistant, por ejemplo, `0.0.4`",
+                    "local_ip": "Usar `0.0.0.0` para el descubrimiento autom\u00e1tico.",
+                    "multicast_group": "Se utiliza para el enrutamiento y el descubrimiento. Predeterminado: `224.0.23.12`",
+                    "multicast_port": "Se utiliza para el enrutamiento y el descubrimiento. Predeterminado: `3671`",
+                    "rate_limit": "N\u00famero m\u00e1ximo de telegramas salientes por segundo.\nRecomendado: 20 a 40",
+                    "state_updater": "Establece los valores predeterminados para leer los estados del bus KNX. Cuando est\u00e1 deshabilitado, Home Assistant no recuperar\u00e1 activamente los estados de entidad del bus KNX. Puede ser anulado por las opciones de entidad `sync_state`."
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto",
+                    "tunneling_type": "Tipo de t\u00fanel KNX"
+                },
+                "data_description": {
+                    "host": "Direcci\u00f3n IP del dispositivo de tunelizaci\u00f3n KNX/IP.",
+                    "port": "Puerto del dispositivo de tunelizaci\u00f3n KNX/IP."
+                }
+            }
+        }
+    }
+}

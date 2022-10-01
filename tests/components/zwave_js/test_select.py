@@ -1,14 +1,26 @@
 """Test the Z-Wave JS number platform."""
-from zwave_js_server.event import Event
+from unittest.mock import MagicMock
 
+from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
+import homeassistant.helpers.entity_registry as er
 
 DEFAULT_TONE_SELECT_ENTITY = "select.indoor_siren_6_default_tone_2"
 PROTECTION_SELECT_ENTITY = "select.family_room_combo_local_protection_state"
 MULTILEVEL_SWITCH_SELECT_ENTITY = "select.front_door_siren"
 
 
-async def test_default_tone_select(hass, client, aeotec_zw164_siren, integration):
+async def test_default_tone_select(
+    hass: HomeAssistant,
+    client: MagicMock,
+    aeotec_zw164_siren: Node,
+    integration: ConfigEntry,
+) -> None:
     """Test the default tone select entity."""
     node = aeotec_zw164_siren
     state = hass.states.get(DEFAULT_TONE_SELECT_ENTITY)
@@ -48,6 +60,12 @@ async def test_default_tone_select(hass, client, aeotec_zw164_siren, integration
         "30DOOR~1 (27 sec)",
     ]
 
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(DEFAULT_TONE_SELECT_ENTITY)
+
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+
     # Test select option with string value
     await hass.services.async_call(
         "select",
@@ -63,19 +81,7 @@ async def test_default_tone_select(hass, client, aeotec_zw164_siren, integration
     assert args["valueId"] == {
         "endpoint": 2,
         "commandClass": 121,
-        "commandClassName": "Sound Switch",
         "property": "defaultToneId",
-        "propertyName": "defaultToneId",
-        "ccVersion": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Default tone ID",
-            "min": 0,
-            "max": 254,
-        },
-        "value": 17,
     }
     assert args["value"] == 30
 
@@ -102,10 +108,16 @@ async def test_default_tone_select(hass, client, aeotec_zw164_siren, integration
     node.receive_event(event)
 
     state = hass.states.get(DEFAULT_TONE_SELECT_ENTITY)
+    assert state
     assert state.state == "30DOOR~1 (27 sec)"
 
 
-async def test_protection_select(hass, client, inovelli_lzw36, integration):
+async def test_protection_select(
+    hass: HomeAssistant,
+    client: MagicMock,
+    inovelli_lzw36: Node,
+    integration: ConfigEntry,
+) -> None:
     """Test the default tone select entity."""
     node = inovelli_lzw36
     state = hass.states.get(PROTECTION_SELECT_ENTITY)
@@ -118,6 +130,12 @@ async def test_protection_select(hass, client, inovelli_lzw36, integration):
         "ProtectedBySequence",
         "NoOperationPossible",
     ]
+
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(PROTECTION_SELECT_ENTITY)
+
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(
@@ -134,22 +152,7 @@ async def test_protection_select(hass, client, inovelli_lzw36, integration):
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 117,
-        "commandClassName": "Protection",
         "property": "local",
-        "propertyName": "local",
-        "ccVersion": 2,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Local protection state",
-            "states": {
-                "0": "Unprotected",
-                "1": "ProtectedBySequence",
-                "2": "NoOperationPossible",
-            },
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -176,6 +179,7 @@ async def test_protection_select(hass, client, inovelli_lzw36, integration):
     node.receive_event(event)
 
     state = hass.states.get(PROTECTION_SELECT_ENTITY)
+    assert state
     assert state.state == "ProtectedBySequence"
 
     # Test null value
@@ -199,6 +203,7 @@ async def test_protection_select(hass, client, inovelli_lzw36, integration):
     node.receive_event(event)
 
     state = hass.states.get(PROTECTION_SELECT_ENTITY)
+    assert state
     assert state.state == STATE_UNKNOWN
 
 
@@ -232,19 +237,7 @@ async def test_multilevel_switch_select(hass, client, fortrezz_ssa1_siren, integ
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 38,
-        "commandClassName": "Multilevel Switch",
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "ccVersion": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-            "valueChangeOptions": ["transitionDuration"],
-            "min": 0,
-            "max": 99,
-        },
     }
     assert args["value"] == 33
 

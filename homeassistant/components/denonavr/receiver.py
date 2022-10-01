@@ -23,12 +23,12 @@ class ConnectDenonAVR:
     ) -> None:
         """Initialize the class."""
         self._async_client_getter = async_client_getter
-        self._receiver = None
+        self._receiver: DenonAVR | None = None
         self._host = host
         self._show_all_inputs = show_all_inputs
         self._timeout = timeout
 
-        self._zones = {}
+        self._zones: dict[str, str | None] = {}
         if zone2:
             self._zones["Zone2"] = None
         if zone3:
@@ -42,6 +42,7 @@ class ConnectDenonAVR:
     async def async_connect_receiver(self) -> bool:
         """Connect to the DenonAVR receiver."""
         await self.async_init_receiver_class()
+        assert self._receiver
 
         if (
             self._receiver.manufacturer is None
@@ -70,7 +71,7 @@ class ConnectDenonAVR:
 
         return True
 
-    async def async_init_receiver_class(self) -> bool:
+    async def async_init_receiver_class(self) -> None:
         """Initialize the DenonAVR class asynchronously."""
         receiver = DenonAVR(
             host=self._host,

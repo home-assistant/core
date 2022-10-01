@@ -1,4 +1,5 @@
 """Support for the Tank Utility propane monitor."""
+from __future__ import annotations
 
 import datetime
 import logging
@@ -9,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, PERCENTAGE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,12 +41,17 @@ SENSOR_ATTRS = [
 ]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Tank Utility sensor."""
 
-    email = config.get(CONF_EMAIL)
-    password = config.get(CONF_PASSWORD)
-    devices = config.get(CONF_DEVICES)
+    email = config[CONF_EMAIL]
+    password = config[CONF_PASSWORD]
+    devices = config[CONF_DEVICES]
 
     try:
         token = auth.get_token(email, password)
@@ -124,7 +133,7 @@ class TankUtilitySensor(SensorEntity):
         data.update(data.pop("lastReading", {}))
         return data
 
-    def update(self):
+    def update(self) -> None:
         """Set the device state and attributes."""
         data = self.get_data()
         self._state = round(data[SENSOR_TYPE], SENSOR_ROUNDING_PRECISION)

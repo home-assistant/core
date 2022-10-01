@@ -4,9 +4,9 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
-        "flow_title": "RainMachine {ip}",
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
@@ -16,6 +16,19 @@
                 },
                 "title": "Veuillez saisir vos informations"
             }
+        }
+    },
+    "issues": {
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Modifiez tout script ou automatisation utilisant cette entit\u00e9 afin qu'ils utilisent `{replacement_entity_id}` \u00e0 la place.",
+                        "title": "L'entit\u00e9 {old_entity_id} sera supprim\u00e9e"
+                    }
+                }
+            },
+            "title": "L'entit\u00e9 {old_entity_id} sera supprim\u00e9e"
         }
     },
     "options": {

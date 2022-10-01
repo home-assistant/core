@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "description": "Zaktualizuj has\u0142o dla u\u017cytkownika {email}",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
+            "user": {
+                "data": {
+                    "email": "Adres e-mail",
+                    "password": "Has\u0142o"
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfiguracja Skybell za pomoc\u0105 YAML zosta\u0142a usuni\u0119ta. \n\nTwoja istniej\u0105ca konfiguracja YAML nie jest u\u017cywana przez Home Assistant. \n\nUsu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistant, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Konfiguracja YAML dla Skybell zosta\u0142a usuni\u0119ta"
+        }
+    }
+}

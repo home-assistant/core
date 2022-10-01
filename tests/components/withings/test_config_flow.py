@@ -1,4 +1,6 @@
 """Tests for config flow."""
+from http import HTTPStatus
+
 from aiohttp.test_utils import TestClient
 
 from homeassistant import config_entries
@@ -60,11 +62,17 @@ async def test_config_reauth_profile(
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "profile": "person0"},
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+            "title_placeholders": {"name": config_entry.title},
+            "unique_id": config_entry.unique_id,
+        },
+        data={"profile": "person0"},
     )
     assert result
     assert result["type"] == "form"
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {const.PROFILE: "person0"}
 
     result = await hass.config_entries.flow.async_configure(
@@ -83,18 +91,20 @@ async def test_config_reauth_profile(
 
     client: TestClient = await hass_client_no_auth()
     resp = await client.get(f"{AUTH_CALLBACK_PATH}?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "https://account.withings.com/oauth2/token",
+        "https://wbsapi.withings.net/v2/oauth2",
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-            "userid": "0",
+            "body": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "userid": "0",
+            },
         },
     )
 

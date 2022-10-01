@@ -20,7 +20,7 @@
                 "data": {
                     "selected_gateway": "Gateway"
                 },
-                "description": "Sono stati individuati i gateway ScreenLogic seguenti. Selezionarne uno da configurare oppure scegliere di configurare manualmente un gateway ScreenLogic.",
+                "description": "Sono stati individuati i gateway ScreenLogic seguenti. Selezionane uno da configurare oppure scegli di configurare manualmente un gateway ScreenLogic.",
                 "title": "ScreenLogic"
             }
         }

@@ -26,8 +26,12 @@ from homeassistant.const import (
     PERCENTAGE,
     TIME_DAYS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,12 +140,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the EBox sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
+    httpsession = async_get_clientsession(hass)
     ebox_data = EBoxData(username, password, httpsession)
 
     name = config.get(CONF_NAME)
@@ -175,7 +184,7 @@ class EBoxSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
         self.ebox_data = ebox_data
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from EBox and update the state."""
         await self.ebox_data.async_update()
         if self.entity_description.key in self.ebox_data.data:

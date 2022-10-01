@@ -19,8 +19,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TOKEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +75,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Discogs sensor."""
     token = config[CONF_TOKEN]
     name = config[CONF_NAME]
@@ -149,7 +157,7 @@ class DiscogsSensor(SensorEntity):
 
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Set state to the amount of records in user's collection."""
         if self.entity_description.key == SENSOR_COLLECTION_TYPE:
             self._attr_native_value = self._discogs_data["collection_count"]

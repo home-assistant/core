@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepodarilo sa pripoji\u0165",
+            "unknown": "Neo\u010dak\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API k\u013e\u00fa\u010d",
+                    "icon": "Ikona",
+                    "username": "U\u017e\u00edvate\u013esk\u00e9 meno"
+                },
+                "data_description": {
+                    "username": "Home Assistant odo\u0161le pr\u00edspevok na Slack pomocou zadan\u00e9ho pou\u017e\u00edvate\u013esk\u00e9ho mena."
+                }
+            }
+        }
+    }
+}

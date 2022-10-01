@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel."
+        },
+        "error": {
+            "invalid_discovery_topic": "Prefixo do t\u00f3pico de descoberta inv\u00e1lido."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "Prefixo do t\u00f3pico de descoberta"
+                }
+            },
+            "confirm": {
+                "description": "Deseja configurar o Tasmota?"
+            }
+        }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "V\u00e1rios dispositivos Tasmota est\u00e3o compartilhando o t\u00f3pico {topic}. \n\n Dispositivos Tasmota com este problema: {offenders}.",
+            "title": "V\u00e1rios dispositivos Tasmota est\u00e3o compartilhando o mesmo t\u00f3pico"
+        },
+        "topic_no_prefix": {
+            "description": "O dispositivo Tasmota {name} com IP {ip} n\u00e3o inclui `%prefix%` em seu t\u00f3pico completo. \n\n As entidades para estes dispositivos s\u00e3o desabilitadas at\u00e9 que a configura\u00e7\u00e3o seja corrigida.",
+            "title": "O dispositivo Tasmota {name} tem um t\u00f3pico MQTT inv\u00e1lido"
+        }
+    }
+}

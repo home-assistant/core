@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8bbe\u5907\u5df2\u88ab\u914d\u7f6e",
-            "already_in_progress": "\u914d\u7f6e\u6d41\u7a0b\u5df2\u5728\u8fdb\u884c",
             "not_huawei_lte": "\u8be5\u8bbe\u5907\u4e0d\u662f\u534e\u4e3a LTE \u8bbe\u5907"
         },
         "error": {
@@ -32,7 +30,6 @@
                 "data": {
                     "name": "\u63a8\u9001\u670d\u52a1\u540d\u79f0\uff08\u66f4\u6539\u540e\u9700\u8981\u91cd\u8f7d\uff09",
                     "recipient": "\u77ed\u4fe1\u901a\u77e5\u6536\u4ef6\u4eba",
-                    "track_new_devices": "\u8ddf\u8e2a\u65b0\u8bbe\u5907",
                     "track_wired_clients": "\u8ddf\u8e2a\u6709\u7ebf\u7f51\u7edc\u5ba2\u6237\u7aef",
                     "unauthenticated_mode": "\u672a\u7ecf\u8eab\u4efd\u9a8c\u8bc1\u7684\u6a21\u5f0f\uff08\u66f4\u6539\u540e\u9700\u8981\u91cd\u8f7d\uff09"
                 }

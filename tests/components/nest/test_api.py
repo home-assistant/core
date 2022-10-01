@@ -11,6 +11,8 @@ The tests below exercise both cases during integration setup.
 import time
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
 from homeassistant.setup import async_setup_component
@@ -23,6 +25,7 @@ from .common import (
     FAKE_REFRESH_TOKEN,
     FAKE_TOKEN,
     PROJECT_ID,
+    TEST_CONFIGFLOW_YAML_ONLY,
     create_config_entry,
 )
 
@@ -35,11 +38,12 @@ async def async_setup_sdm(hass):
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_YAML_ONLY])
 async def test_auth(hass, aioclient_mock):
     """Exercise authentication library creates valid credentials."""
 
     expiration_time = time.time() + 86400
-    create_config_entry(hass, expiration_time)
+    create_config_entry(expiration_time).add_to_hass(hass)
 
     # Prepare to capture credentials in API request.  Empty payloads just mean
     # no devices or structures are loaded.
@@ -84,11 +88,12 @@ async def test_auth(hass, aioclient_mock):
     assert creds.scopes == SDM_SCOPES
 
 
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIGFLOW_YAML_ONLY])
 async def test_auth_expired_token(hass, aioclient_mock):
     """Verify behavior of an expired token."""
 
     expiration_time = time.time() - 86400
-    create_config_entry(hass, expiration_time)
+    create_config_entry(expiration_time).add_to_hass(hass)
 
     # Prepare a token refresh response
     aioclient_mock.post(

@@ -38,8 +38,7 @@
                 "data": {
                     "modem_type": "Typ vu Modem."
                 },
-                "description": "Insteon Modem Typ auswielen.",
-                "title": "Insteon"
+                "description": "Insteon Modem Typ auswielen."
             }
         }
     },
@@ -56,8 +55,7 @@
                     "cat": "Apparat Kategorie (Beispill 0x10)",
                     "subcat": "Apparat \u00cbnnerkategorie (Beispill 0x0a)"
                 },
-                "description": "Apparat iwwerschr\u00e9iwen dob\u00e4isetzen",
-                "title": "Insteon"
+                "description": "Apparat iwwerschr\u00e9iwen dob\u00e4isetzen"
             },
             "add_x10": {
                 "data": {
@@ -66,8 +64,7 @@
                     "steps": "Dimmer Schr\u00ebtt (n\u00ebmme fir Luuchten, standard 22)",
                     "unitcode": "Unitcode (1-16)"
                 },
-                "description": "Insteon Hub passwuert \u00e4nneren",
-                "title": "Insteon"
+                "description": "Insteon Hub passwuert \u00e4nneren"
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +73,7 @@
                     "port": "Port",
                     "username": "Benotzernumm"
                 },
-                "description": "Insteon Hub Verbindungs Informatiounen \u00e4nneren. Du muss Home Assistant no der \u00c4nnerung fr\u00ebsch starten. D\u00ebst \u00e4nnert net d'Konfiguratioun vum Hub selwer. Fir d'Konfiguratioun vum Hub ze \u00e4nnere benotz d'Hub App.",
-                "title": "Insteon"
+                "description": "Insteon Hub Verbindungs Informatiounen \u00e4nneren. Du muss Home Assistant no der \u00c4nnerung fr\u00ebsch starten. D\u00ebst \u00e4nnert net d'Konfiguratioun vum Hub selwer. Fir d'Konfiguratioun vum Hub ze \u00e4nnere benotz d'Hub App."
             },
             "init": {
                 "data": {
@@ -86,23 +82,19 @@
                     "change_hub_config": "Hub Konfiguratioun \u00e4nneren.",
                     "remove_override": "Apparat iwwerschr\u00e9iwen l\u00e4schen",
                     "remove_x10": "Een X10 Apparat l\u00e4schen."
-                },
-                "description": "Eng Optioun auswielen fir ze konfigur\u00e9ieren",
-                "title": "Insteon"
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "Eng Apparat Adress auswielen fir ze l\u00e4schen"
                 },
-                "description": "Apparat iwwerschr\u00e9iwen l\u00e4schen",
-                "title": "Insteon"
+                "description": "Apparat iwwerschr\u00e9iwen l\u00e4schen"
             },
             "remove_x10": {
                 "data": {
                     "address": "Wiel eng Adress vun egem Apparat aus fir ze l\u00e4schen"
                 },
-                "description": "Een X10 Apparat l\u00e4schen",
-                "title": "Insteon"
+                "description": "Een X10 Apparat l\u00e4schen"
             }
         }
     }

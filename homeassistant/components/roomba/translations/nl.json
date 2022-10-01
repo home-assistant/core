@@ -11,13 +11,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "init": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "Kies een Roomba of Braava.",
-                "title": "Automatisch verbinding maken met het apparaat"
-            },
             "link": {
                 "description": "Houd de Home-knop op {name} ingedrukt totdat het apparaat een geluid genereert (ongeveer twee seconden), bevestig vervolgens binnen 30 seconden.",
                 "title": "Wachtwoord opvragen"
@@ -31,7 +24,6 @@
             },
             "manual": {
                 "data": {
-                    "blid": "BLID",
                     "host": "Host"
                 },
                 "description": "Er is geen Roomba of Braava ontdekt op uw netwerk.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "Doorlopend",
-                    "delay": "Vertraging",
-                    "host": "Host",
-                    "password": "Wachtwoord"
+                    "host": "Host"
                 },
                 "description": "Kies een Roomba of Braava.",
                 "title": "Automatisch verbinding maken met het apparaat"

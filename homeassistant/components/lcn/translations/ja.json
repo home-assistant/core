@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "codelock": "\u30b3\u30fc\u30c9\u30ed\u30c3\u30af\u30b3\u30fc\u30c9\u3092\u53d7\u4fe1\u3057\u307e\u3057\u305f",
+            "fingerprint": "\u6307\u7d0b\u30b3\u30fc\u30c9\u3092\u53d7\u4fe1\u3057\u307e\u3057\u305f(fingerprint code received)",
+            "send_keys": "\u9001\u4fe1\u30ad\u30fc\u3092\u53d7\u4fe1\u3057\u307e\u3057\u305f(send keys received)",
+            "transmitter": "\u9001\u4fe1\u6a5f\u30b3\u30fc\u30c9\u53d7\u4fe1\u3057\u307e\u3057\u305f(transmitter code received)",
+            "transponder": "\u30c8\u30e9\u30f3\u30b9\u30dd\u30f3\u30c0\u30fc\u30b3\u30fc\u30c9\u3092\u53d7\u4fe1"
+        }
+    }
+}

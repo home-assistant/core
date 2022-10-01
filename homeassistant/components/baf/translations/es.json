@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "ipv6_not_supported": "IPv6 no es compatible."
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "{name} - {model} ({ip_address})",
+        "step": {
+            "discovery_confirm": {
+                "description": "\u00bfQuieres configurar {name} - {model} ({ip_address})?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP"
+                }
+            }
+        }
+    }
+}

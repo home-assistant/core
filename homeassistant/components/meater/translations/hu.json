@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "service_unavailable_error": "Az API jelenleg nem el\u00e9rhet\u0151, k\u00e9rem, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
+            "unknown_auth_error": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "Er\u0151s\u00edtse meg a Meater Cloud-fi\u00f3k {username} jelszav\u00e1t."
+            },
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "data_description": {
+                    "username": "Meater Cloud felhaszn\u00e1l\u00f3n\u00e9v, \u00e1ltal\u00e1ban egy e-mail c\u00edm."
+                },
+                "description": "\u00c1ll\u00edtsa be a Meater Cloud fi\u00f3kj\u00e1t."
+            }
+        }
+    }
+}

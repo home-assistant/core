@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "alternative_integration": "El dispositivo es m\u00e1s compatible con otra integraci\u00f3n",
+            "cannot_connect": "No se pudo conectar",
+            "discovery_error": "No se ha podido descubrir un dispositivo DLNA coincidente",
+            "incomplete_config": "A la configuraci\u00f3n le falta una variable requerida",
+            "non_unique_id": "Se han encontrado varios dispositivos con el mismo ID \u00fanico",
+            "not_dmr": "El dispositivo no es un Digital Media Renderer compatible"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "not_dmr": "El dispositivo no es un Digital Media Renderer compatible"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
+            },
+            "import_turn_on": {
+                "description": "Por favor, enciende el dispositivo y haz clic en enviar para continuar la migraci\u00f3n"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL a un archivo XML de descripci\u00f3n de dispositivo",
+                "title": "Conexi\u00f3n manual del dispositivo DLNA DMR"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Elige un dispositivo para configurar o d\u00e9jalo en blanco para introducir una URL",
+                "title": "Dispositivos DLNA DMR descubiertos"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "URL no v\u00e1lida"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "browse_unfiltered": "Mostrar medios incompatibles al navegar",
+                    "callback_url_override": "URL de devoluci\u00f3n de llamada del detector de eventos",
+                    "listen_port": "Puerto de escucha de eventos (aleatorio si no est\u00e1 configurado)",
+                    "poll_availability": "Sondeo para la disponibilidad del dispositivo"
+                },
+                "title": "Configuraci\u00f3n de DLNA Digital Media Renderer"
+            }
+        }
+    }
+}

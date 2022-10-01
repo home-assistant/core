@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
@@ -61,7 +61,7 @@
                     "debug": "Foutopsporing inschakelen",
                     "device": "Selecteer het apparaat om te configureren",
                     "event_code": "Voer de gebeurteniscode in om toe te voegen",
-                    "remove_device": "Apparaat selecteren dat u wilt verwijderen"
+                    "protocols": "Protocollen"
                 },
                 "title": "Rfxtrx-opties"
             },
@@ -70,11 +70,9 @@
                     "command_off": "Waarde gegevensbits voor commando uit",
                     "command_on": "Waarde gegevensbits voor commando aan",
                     "data_bit": "Aantal databits",
-                    "fire_event": "Schakel apparaatgebeurtenis in",
                     "off_delay": "Uitschakelvertraging",
                     "off_delay_enabled": "Schakel uitschakelvertraging in",
                     "replace_device": "Selecteer apparaat dat u wilt vervangen",
-                    "signal_repetitions": "Aantal signaalherhalingen",
                     "venetian_blind_mode": "Venetiaanse jaloezie modus"
                 },
                 "title": "Configureer apparaatopties"

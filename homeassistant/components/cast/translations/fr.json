@@ -15,7 +15,7 @@
                 "title": "Google Cast"
             },
             "confirm": {
-                "description": "Voulez-vous commencer la configuration ?"
+                "description": "Voulez-vous commencer la configuration\u00a0?"
             }
         }
     },
@@ -36,7 +36,7 @@
                 "data": {
                     "known_hosts": "H\u00f4tes connus"
                 },
-                "description": "H\u00f4tes connus - Une liste de noms d'h\u00f4te ou d'adresses IP s\u00e9par\u00e9s par des virgules des p\u00e9riph\u00e9riques de diffusion, \u00e0 utiliser si la d\u00e9couverte mDNS ne fonctionne pas.",
+                "description": "H\u00f4tes connus \u2013\u00a0Une liste de noms d'h\u00f4te ou d'adresses IP s\u00e9par\u00e9s par des virgules des appareils de diffusion, \u00e0 utiliser si la d\u00e9couverte mDNS ne fonctionne pas.",
                 "title": "Configuration de Google Cast"
             }
         }
