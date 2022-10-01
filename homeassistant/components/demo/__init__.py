@@ -295,7 +295,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata: StatisticMetaData = {
         "source": DOMAIN,
         "name": "Outdoor temperature",
-        "state_unit_of_measurement": TEMP_CELSIUS,
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
         "unit_of_measurement": TEMP_CELSIUS,
         "has_mean": True,
@@ -309,7 +308,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": DOMAIN,
         "name": "Energy consumption 1",
-        "state_unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "has_mean": False,
@@ -322,7 +320,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": DOMAIN,
         "name": "Energy consumption 2",
-        "state_unit_of_measurement": ENERGY_MEGA_WATT_HOUR,
         "statistic_id": f"{DOMAIN}:energy_consumption_mwh",
         "unit_of_measurement": ENERGY_MEGA_WATT_HOUR,
         "has_mean": False,
@@ -337,7 +334,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": DOMAIN,
         "name": "Gas consumption 1",
-        "state_unit_of_measurement": VOLUME_CUBIC_METERS,
         "statistic_id": f"{DOMAIN}:gas_consumption_m3",
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "has_mean": False,
@@ -352,7 +348,6 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
     metadata = {
         "source": DOMAIN,
         "name": "Gas consumption 2",
-        "state_unit_of_measurement": VOLUME_CUBIC_FEET,
         "statistic_id": f"{DOMAIN}:gas_consumption_ft3",
         "unit_of_measurement": VOLUME_CUBIC_FEET,
         "has_mean": False,
