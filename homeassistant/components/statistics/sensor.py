@@ -85,7 +85,7 @@ STAT_VARIANCE = "variance"
 
 DEPRECATION_WARNING_CHARACTERISTIC = (
     "The configuration parameter 'state_characteristic' will become "
-    "mandatory in a future release of the statistics integration. "
+    "mandatory in Home Assistant Core 2022.12 for the statistics integration. "
     "Please add 'state_characteristic: %s' to the configuration of "
     "sensor '%s' to keep the current behavior. Read the documentation "
     "for further details: "
@@ -93,8 +93,8 @@ DEPRECATION_WARNING_CHARACTERISTIC = (
 )
 DEPRECATION_WARNING_SIZE = (
     "The configuration of either 'sampling_size' or 'max_age' will become "
-    "mandatory in a future release of the statistics integration. Please "
-    "add 'sampling_size: %s' to the configuration of sensor '%s' to keep "
+    "mandatory in Home Assistant Core 2022.12 for the statistics integration. "
+    "Please add 'sampling_size: 20' to the configuration of sensor '%s' to keep "
     "the current behavior. Read the documentation for further details: "
     "https://www.home-assistant.io/integrations/statistics/"
 )
@@ -186,7 +186,6 @@ CONF_QUANTILE_INTERVALS = "quantile_intervals"
 CONF_QUANTILE_METHOD = "quantile_method"
 
 DEFAULT_NAME = "Stats"
-DEFAULT_BUFFER_SIZE = 20
 DEFAULT_PRECISION = 2
 DEFAULT_QUANTILE_INTERVALS = 4
 DEFAULT_QUANTILE_METHOD = "exclusive"
@@ -221,13 +220,11 @@ def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that either sampling_size or max_age are provided."""
 
     if config.get(CONF_SAMPLES_MAX_BUFFER_SIZE) is None:
-        config[CONF_SAMPLES_MAX_BUFFER_SIZE] = DEFAULT_BUFFER_SIZE
-        if config.get(CONF_MAX_AGE) is None:
-            _LOGGER.warning(
-                DEPRECATION_WARNING_SIZE,
-                str(DEFAULT_BUFFER_SIZE),
-                config[CONF_NAME],
-            )
+        config[CONF_SAMPLES_MAX_BUFFER_SIZE] = 20
+        _LOGGER.warning(
+            DEPRECATION_WARNING_SIZE,
+            config[CONF_NAME],
+        )
     return config
 
 
