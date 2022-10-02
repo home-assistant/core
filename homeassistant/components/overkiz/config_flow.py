@@ -9,6 +9,7 @@ from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.exceptions import (
     BadCredentialsException,
+    CozyTouchBadCredentialsException,
     MaintenanceException,
     TooManyAttemptsBannedException,
     TooManyRequestsException,
@@ -76,8 +77,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_validate_input(user_input)
             except TooManyRequestsException:
                 errors["base"] = "too_many_requests"
-            except BadCredentialsException:
-                errors["base"] = "invalid_auth"
+            except BadCredentialsException as exception:
+                # If authentication with CozyTouch auth server is valid, but token is invalid for Overkiz
+                # API server, the hardware is not supported.
+                if user_input[CONF_HUB] == "atlantic_cozytouch" and not isinstance(
+                    exception, CozyTouchBadCredentialsException
+                ):
+                    errors["base"] = "cozytouch_unsupported_hardware"
+                else:
+                    errors["base"] = "invalid_auth"
             except (TimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:

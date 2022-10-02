@@ -14,6 +14,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cozytouch_unsupported_hardware": "Your CozyTouch hardware is not manufactured by Overkiz, and thus not supported by this integration.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "server_in_maintenance": "Server is down for maintenance",
       "too_many_attempts": "Too many attempts with an invalid token, temporarily banned",
