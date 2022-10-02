@@ -370,12 +370,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             if ATTR_REMOVE_ENTITIES in service.data:
                 delta = service.data[ATTR_REMOVE_ENTITIES]
-                entity_ids = set(group.tracking)
-                new_entity_ids = set()
-                for entity in entity_ids:
-                    if entity not in set(delta):
-                        new_entity_ids.add(entity)
-                await group.async_update_tracked_entity_ids(new_entity_ids)
+                entity_ids = set(group.tracking) - set(delta)
+                await group.async_update_tracked_entity_ids(entity_ids)
 
             if ATTR_ENTITIES in service.data:
                 entity_ids = service.data[ATTR_ENTITIES]
