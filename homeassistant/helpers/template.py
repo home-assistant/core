@@ -24,6 +24,7 @@ from typing import Any, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
+from awesomeversion import AwesomeVersion
 import jinja2
 from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
@@ -199,8 +200,6 @@ class TupleWrapper(tuple, ResultWrapper):
     def __new__(cls, value: tuple, *, render_result: str | None = None) -> TupleWrapper:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
-
-    # pylint: disable=super-init-not-called
 
     def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
@@ -1070,6 +1069,14 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     ]
 
 
+def entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get an entry ID from an entity ID."""
+    entity_reg = entity_registry.async_get(hass)
+    if entity := entity_reg.async_get(entity_id):
+        return entity.config_entry_id
+    return None
+
+
 def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     """Get a device ID from an entity ID or device name."""
     entity_reg = entity_registry.async_get(hass)
@@ -1537,6 +1544,11 @@ def arc_tangent2(*args, default=_SENTINEL):
         return default
 
 
+def version(value):
+    """Filter and function to get version object of the value."""
+    return AwesomeVersion(value)
+
+
 def square_root(value, default=_SENTINEL):
     """Filter and function to get square root of the value."""
     try:
@@ -1721,7 +1733,13 @@ def regex_match(value, find="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return bool(re.match(find, value, flags))
+    return bool(_regex_cache(find, flags).match(value))
+
+
+@lru_cache(maxsize=128)
+def _regex_cache(find: str, flags: int) -> re.Pattern:
+    """Cache compiled regex."""
+    return re.compile(find, flags)
 
 
 def regex_replace(value="", find="", replace="", ignorecase=False):
@@ -1729,8 +1747,7 @@ def regex_replace(value="", find="", replace="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    regex = re.compile(find, flags)
-    return regex.sub(replace, value)
+    return _regex_cache(find, flags).sub(replace, value)
 
 
 def regex_search(value, find="", ignorecase=False):
@@ -1738,7 +1755,7 @@ def regex_search(value, find="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return bool(re.search(find, value, flags))
+    return bool(_regex_cache(find, flags).search(value))
 
 
 def regex_findall_index(value, find="", index=0, ignorecase=False):
@@ -1751,7 +1768,7 @@ def regex_findall(value, find="", ignorecase=False):
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
-    return re.findall(find, value, flags)
+    return _regex_cache(find, flags).findall(value)
 
 
 def bitwise_and(first_value, second_value):

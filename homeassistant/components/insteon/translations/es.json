@@ -50,7 +50,7 @@
     "options": {
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "input_error": "Entradas no v\u00e1lidas, por favor, verifica tus valores.",
+            "input_error": "Entradas no v\u00e1lidas, por favor, comprueba tus valores.",
             "select_single": "Selecciona una opci\u00f3n."
         },
         "step": {
@@ -69,7 +69,7 @@
                     "steps": "Pasos de atenuaci\u00f3n (s\u00f3lo para dispositivos de luz, por defecto 22)",
                     "unitcode": "Unitcode (1 - 16)"
                 },
-                "description": "Cambia la contrase\u00f1a del Hub Insteon."
+                "description": "Cambia la contrase\u00f1a del Insteon Hub."
             },
             "change_hub_config": {
                 "data": {
@@ -78,7 +78,7 @@
                     "port": "Puerto",
                     "username": "Nombre de usuario"
                 },
-                "description": "Cambia la informaci\u00f3n de conexi\u00f3n del Hub Insteon. Debes reiniciar Home Assistant despu\u00e9s de realizar este cambio. Esto no cambia la configuraci\u00f3n del Hub en s\u00ed. Para cambiar la configuraci\u00f3n en el Hub, usa la aplicaci\u00f3n Hub."
+                "description": "Cambia la informaci\u00f3n de conexi\u00f3n del Insteon Hub. Debes reiniciar Home Assistant despu\u00e9s de realizar este cambio. Esto no cambia la configuraci\u00f3n del Hub en s\u00ed. Para cambiar la configuraci\u00f3n en el Hub, usa la aplicaci\u00f3n Hub."
             },
             "init": {
                 "data": {

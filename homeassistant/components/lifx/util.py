@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.color as color_util
 
-from .const import _LOGGER, DOMAIN, OVERALL_TIMEOUT
+from .const import _LOGGER, DOMAIN, INFRARED_BRIGHTNESS_VALUES_MAP, OVERALL_TIMEOUT
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 
@@ -43,6 +43,17 @@ def async_get_legacy_entry(hass: HomeAssistant) -> ConfigEntry | None:
         if async_entry_is_legacy(entry):
             return entry
     return None
+
+
+def infrared_brightness_value_to_option(value: int) -> str | None:
+    """Convert infrared brightness from value to option."""
+    return INFRARED_BRIGHTNESS_VALUES_MAP.get(value, None)
+
+
+def infrared_brightness_option_to_value(option: str) -> int | None:
+    """Convert infrared brightness option to value."""
+    option_values = {v: k for k, v in INFRARED_BRIGHTNESS_VALUES_MAP.items()}
+    return option_values.get(option, None)
 
 
 def convert_8_to_16(value: int) -> int:
@@ -70,7 +81,7 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
     """
     hue, saturation, brightness, kelvin = [None] * 4
 
-    preprocess_turn_on_alternatives(hass, kwargs)  # type: ignore[no-untyped-call]
+    preprocess_turn_on_alternatives(hass, kwargs)
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]

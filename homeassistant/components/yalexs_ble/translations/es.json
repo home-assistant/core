@@ -24,7 +24,7 @@
                     "key": "Clave sin conexi\u00f3n (cadena hexadecimal de 32 bytes)",
                     "slot": "Ranura de clave sin conexi\u00f3n (entero entre 0 y 255)"
                 },
-                "description": "Consulta la documentaci\u00f3n para saber c\u00f3mo encontrar la clave sin conexi\u00f3n."
+                "description": "Revisa la documentaci\u00f3n para saber c\u00f3mo encontrar la clave sin conexi\u00f3n."
             }
         }
     }

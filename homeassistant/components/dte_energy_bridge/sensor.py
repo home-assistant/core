@@ -71,7 +71,7 @@ class DteEnergyBridgeSensor(SensorEntity):
 
         self._attr_name = name
 
-    def update(self):
+    def update(self) -> None:
         """Get the energy usage data from the DTE energy bridge."""
         try:
             response = requests.get(self._url, timeout=5)

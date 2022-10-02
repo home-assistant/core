@@ -6,6 +6,8 @@ import logging
 import time
 from typing import Any, Generic, TypeVar
 
+from bleak import BleakError
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 
@@ -61,9 +63,10 @@ class ActiveBluetoothProcessorCoordinator(
         ]
         | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
+        connectable: bool = True,
     ) -> None:
         """Initialize the processor."""
-        super().__init__(hass, logger, address, mode, update_method)
+        super().__init__(hass, logger, address, mode, update_method, connectable)
 
         self._needs_poll_method = needs_poll_method
         self._poll_method = poll_method
@@ -108,11 +111,18 @@ class ActiveBluetoothProcessorCoordinator(
 
         try:
             update = await self._async_poll_data(self._last_service_info)
+        except BleakError as exc:
+            if self.last_poll_successful:
+                self.logger.error(
+                    "%s: Bluetooth error whilst polling: %s", self.address, str(exc)
+                )
+                self.last_poll_successful = False
+            return
         except Exception:  # pylint: disable=broad-except
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
                 self.last_poll_successful = False
-                return
+            return
         finally:
             self._last_poll = time.monotonic()
 

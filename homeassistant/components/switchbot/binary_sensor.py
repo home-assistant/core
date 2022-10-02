@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "calibration": BinarySensorEntityDescription(

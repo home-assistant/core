@@ -7,6 +7,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import glances
 from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +37,7 @@ def glances_setup_fixture():
         yield
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test config entry configured successfully."""
 
     result = await hass.config_entries.flow.async_init(
@@ -56,7 +57,7 @@ async def test_form(hass):
     assert result["data"] == DEMO_USER_INPUT
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test to return error if we cannot connect."""
 
     with patch(
@@ -74,23 +75,7 @@ async def test_form_cannot_connect(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_wrong_version(hass):
-    """Test to check if wrong version is entered."""
-
-    user_input = DEMO_USER_INPUT.copy()
-    user_input.update(version=1)
-    result = await hass.config_entries.flow.async_init(
-        glances.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input
-    )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {"version": "wrong_version"}
-
-
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test host is already configured."""
     entry = MockConfigEntry(
         domain=glances.DOMAIN, data=DEMO_USER_INPUT, options={CONF_SCAN_INTERVAL: 60}
@@ -107,12 +92,14 @@ async def test_form_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistant) -> None:
     """Test options for Glances."""
     entry = MockConfigEntry(
         domain=glances.DOMAIN, data=DEMO_USER_INPUT, options={CONF_SCAN_INTERVAL: 60}
     )
     entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 

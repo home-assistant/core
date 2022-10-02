@@ -208,6 +208,8 @@ def _create_mocked_owm(is_api_online: bool):
 
     mocked_owm.one_call.return_value = one_call
 
-    mocked_owm.weather_manager.return_value.one_call.return_value = is_api_online
+    mocked_owm.weather_manager.return_value.weather_at_coords.return_value = (
+        is_api_online
+    )
 
     return mocked_owm

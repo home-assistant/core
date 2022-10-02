@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
             "no_unconfigured_devices": "Fant ingen ukonfigurerte enheter."
         },
@@ -23,7 +24,7 @@
                     "key": "Frakoblet n\u00f8kkel (32-byte sekskantstreng)",
                     "slot": "Frakoblet n\u00f8kkelspor (heltall mellom 0 og 255)"
                 },
-                "description": "Se dokumentasjonen p\u00e5 {docs_url} for hvordan du finner frakoblet n\u00f8kkel."
+                "description": "Sjekk dokumentasjonen for hvordan du finner frakoblet n\u00f8kkel."
             }
         }
     }

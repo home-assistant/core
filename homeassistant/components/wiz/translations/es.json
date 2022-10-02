@@ -6,7 +6,7 @@
             "no_devices_found": "No se encontraron dispositivos en la red"
         },
         "error": {
-            "bulb_time_out": "No se puede conectar a la bombilla. Tal vez la bombilla est\u00e1 desconectada o se ha introducido una IP incorrecta. \u00a1Por favor, enciende la luz y vuelve a intentarlo!",
+            "bulb_time_out": "No se puede conectar a la bombilla. Tal vez la bombilla est\u00e9 sin conexi\u00f3n o se ha introducido una IP incorrecta. \u00a1Por favor, enciende la luz e int\u00e9ntalo de nuevo!",
             "cannot_connect": "No se pudo conectar",
             "no_ip": "No es una direcci\u00f3n IP v\u00e1lida.",
             "no_wiz_light": "La bombilla no se puede conectar a trav\u00e9s de la integraci\u00f3n WiZ Platform.",

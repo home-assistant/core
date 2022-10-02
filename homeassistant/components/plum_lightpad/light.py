@@ -65,6 +65,8 @@ async def async_setup_entry(
 class PlumLight(LightEntity):
     """Representation of a Plum Lightpad dimmer."""
 
+    _attr_should_poll = False
+
     def __init__(self, load):
         """Initialize the light."""
         self._load = load
@@ -78,11 +80,6 @@ class PlumLight(LightEntity):
         """Change event handler updating the brightness."""
         self._brightness = event["level"]
         self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):
@@ -142,6 +139,7 @@ class GlowRing(LightEntity):
     """Representation of a Plum Lightpad dimmer glow ring."""
 
     _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, lightpad):
@@ -177,11 +175,6 @@ class GlowRing(LightEntity):
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
         return color_util.color_RGB_to_hs(self._red, self._green, self._blue)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):

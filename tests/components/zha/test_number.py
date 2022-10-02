@@ -8,8 +8,9 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -259,7 +260,7 @@ async def test_level_control_number(
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
     # Test number set_value
     await hass.services.async_call(

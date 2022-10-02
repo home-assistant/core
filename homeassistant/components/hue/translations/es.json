@@ -13,7 +13,7 @@
         },
         "error": {
             "linking": "Error inesperado",
-            "register_failed": "No se pudo registrar, int\u00e9ntalo de nuevo"
+            "register_failed": "No se pudo registrar, por favor, int\u00e9ntalo de nuevo"
         },
         "step": {
             "init": {
@@ -24,7 +24,7 @@
             },
             "link": {
                 "description": "Presiona el bot\u00f3n en la pasarela para registrar Philips Hue con Home Assistant. \n\n![Ubicaci\u00f3n del bot\u00f3n en la pasarela](/static/images/config_philips_hue.jpg)",
-                "title": "Vincular pasarela"
+                "title": "Vincular concentrador"
             },
             "manual": {
                 "data": {
@@ -44,6 +44,8 @@
             "button_2": "Segundo bot\u00f3n",
             "button_3": "Tercer bot\u00f3n",
             "button_4": "Cuarto bot\u00f3n",
+            "clock_wise": "Rotaci\u00f3n en el sentido de las agujas del reloj",
+            "counter_clock_wise": "Rotaci\u00f3n en sentido contrario a las agujas del reloj",
             "dim_down": "Bajar la intensidad",
             "dim_up": "Subir la intensidad",
             "double_buttons_1_3": "Botones Primero y Tercero",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "Ambos \"{subtype}\" soltados",
-            "initial_press": "Bot\u00f3n \"{subtype}\" pulsado inicialmente",
-            "long_release": "Bot\u00f3n \"{subtype}\" soltado tras una pulsaci\u00f3n larga",
-            "remote_button_long_release": "Bot\u00f3n \"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga",
-            "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
-            "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",
+            "initial_press": "\"{subtype}\" pulsado inicialmente",
+            "long_release": "\"{subtype}\" soltado tras una pulsaci\u00f3n larga",
+            "remote_button_long_release": "\"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga",
+            "remote_button_short_press": "\"{subtype}\" pulsado",
+            "remote_button_short_release": "\"{subtype}\" soltado",
             "remote_double_button_long_press": "Ambos \"{subtype}\" soltados despu\u00e9s de pulsaci\u00f3n larga",
             "remote_double_button_short_press": "Ambos \"{subtype}\" soltados",
-            "repeat": "Bot\u00f3n \"{subtype}\" presionado",
-            "short_release": "Bot\u00f3n \"{subtype}\" soltado tras una breve pulsaci\u00f3n"
+            "repeat": "\"{subtype}\" mantenido pulsado",
+            "short_release": "\"{subtype}\" soltado tras una breve pulsaci\u00f3n",
+            "start": "\"{subtype}\" pulsado inicialmente"
         }
     },
     "options": {

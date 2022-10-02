@@ -1,7 +1,7 @@
 """Provide functionality to record stream."""
 from __future__ import annotations
 
-from io import BytesIO
+from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging
 import os
 from typing import TYPE_CHECKING
@@ -16,6 +16,7 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
 )
 from .core import PROVIDERS, IdleTimer, Segment, StreamOutput, StreamSettings
+from .fmp4utils import read_init, transform_init
 
 if TYPE_CHECKING:
     import deque
@@ -104,7 +105,11 @@ class RecorderOutput(StreamOutput):
                     "w",
                     format=RECORDER_CONTAINER_FORMAT,
                     container_options={
-                        "video_track_timescale": str(int(1 / source_v.time_base))
+                        "video_track_timescale": str(int(1 / source_v.time_base)),
+                        "movflags": "frag_keyframe",
+                        "min_frag_duration": str(
+                            self.stream_settings.min_segment_duration
+                        ),
                     },
                 )
 
@@ -143,6 +148,20 @@ class RecorderOutput(StreamOutput):
 
             source.close()
 
+        def write_transform_matrix_and_rename(video_path: str) -> None:
+            """Update the transform matrix and write to the desired filename."""
+            with open(video_path + ".tmp", mode="rb") as in_file, open(
+                video_path, mode="wb"
+            ) as out_file:
+                init = transform_init(
+                    read_init(in_file), self.stream_settings.orientation
+                )
+                out_file.write(init)
+                in_file.seek(len(init))
+                while chunk := in_file.read(DEFAULT_BUFFER_SIZE):
+                    out_file.write(chunk)
+            os.remove(video_path + ".tmp")
+
         def finish_writing(
             segments: deque[Segment], output: av.OutputContainer, video_path: str
         ) -> None:
@@ -155,7 +174,7 @@ class RecorderOutput(StreamOutput):
                 return
             output.close()
             try:
-                os.rename(video_path + ".tmp", video_path)
+                write_transform_matrix_and_rename(video_path)
             except FileNotFoundError:
                 _LOGGER.error(
                     "Error writing to '%s'. There are likely multiple recordings writing to the same file",

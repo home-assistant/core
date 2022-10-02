@@ -23,6 +23,8 @@ from aioqsw.const import (
     API_KEY,
     API_LINK,
     API_MAC_ADDR,
+    API_MAX_PORT_CHANNELS,
+    API_MAX_PORTS_PER_PORT_CHANNEL,
     API_MAX_SWITCH_TEMP,
     API_MESSAGE,
     API_MODEL,
@@ -36,6 +38,7 @@ from aioqsw.const import (
     API_RX_OCTETS,
     API_SERIAL,
     API_SPEED,
+    API_START_INDEX,
     API_SWITCH_TEMP,
     API_TRUNK_NUM,
     API_TX_OCTETS,
@@ -117,6 +120,16 @@ FIRMWARE_UPDATE_CHECK_MOCK = {
             "https://us1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
         ],
         API_NEWER: False,
+    },
+}
+
+LACP_INFO_MOCK = {
+    API_ERROR_CODE: 200,
+    API_ERROR_MESSAGE: "OK",
+    API_RESULT: {
+        API_START_INDEX: 28,
+        API_MAX_PORT_CHANNELS: 8,
+        API_MAX_PORTS_PER_PORT_CHANNEL: 8,
     },
 }
 
@@ -499,6 +512,9 @@ async def async_init_integration(
     ), patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_update_check",
         return_value=FIRMWARE_UPDATE_CHECK_MOCK,
+    ), patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_lacp_info",
+        return_value=LACP_INFO_MOCK,
     ), patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_ports_statistics",
         return_value=PORTS_STATISTICS_MOCK,

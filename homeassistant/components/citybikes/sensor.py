@@ -35,7 +35,8 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import distance, location
+from homeassistant.util import location
+from homeassistant.util.unit_conversion import DistanceConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +171,7 @@ async def async_setup_platform(
     radius = config.get(CONF_RADIUS, 0)
     name = config[CONF_NAME]
     if not hass.config.units.is_metric:
-        radius = distance.convert(radius, LENGTH_FEET, LENGTH_METERS)
+        radius = DistanceConverter.convert(radius, LENGTH_FEET, LENGTH_METERS)
 
     # Create a single instance of CityBikesNetworks.
     networks = hass.data.setdefault(CITYBIKES_NETWORKS, CityBikesNetworks(hass))
@@ -284,7 +285,7 @@ class CityBikesStation(SensorEntity):
         self._station_id = station_id
         self.entity_id = entity_id
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update station state."""
         for station in self._network.stations:
             if station[ATTR_ID] == self._station_id:

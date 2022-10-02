@@ -6,12 +6,63 @@
             "usb_probe_failed": "Gagal mendeteksi perangkat usb"
         },
         "error": {
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "invalid_backup_json": "JSON cadangan tidak valid"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Pilih cadangan otomatis"
+                },
+                "description": "Pulihkan pengaturan jaringan Anda dari cadangan otomatis",
+                "title": "Pulihkan Cadangan Otomatis"
+            },
+            "choose_formation_strategy": {
+                "description": "Pilih pengaturan jaringan untuk radio Anda.",
+                "menu_options": {
+                    "choose_automatic_backup": "Pulihkan cadangan otomatis",
+                    "form_new_network": "Hapus pengaturan jaringan dan bangun jaringan baru",
+                    "reuse_settings": "Pertahankan pengaturan jaringan radio",
+                    "upload_manual_backup": "Unggah cadangan manual"
+                },
+                "title": "Formasi Jaringan"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Jalur Perangkat Serial"
+                },
+                "description": "Pilih port serial untuk radio Zigbee Anda",
+                "title": "Pilih Port Serial"
+            },
             "confirm": {
                 "description": "Ingin menyiapkan {name}?"
+            },
+            "confirm_hardware": {
+                "description": "Ingin menyiapkan {name}?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Jenis Radio"
+                },
+                "description": "Pilih jenis radio Zigbee Anda",
+                "title": "Jenis Radio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "kecepatan port",
+                    "flow_control": "kontrol data flow",
+                    "path": "Jalur perangkat serial"
+                },
+                "description": "Masukkan pengaturan port serial",
+                "title": "Pengaturan Port Serial"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Ganti alamat radio IEEE secara permanen"
+                },
+                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda.  Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
+                "title": "Timpa Alamat IEEE Radio"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +79,13 @@
                 },
                 "description": "Masukkan pengaturan khusus port",
                 "title": "Setelan"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Unggah file"
+                },
+                "description": "Pulihkan pengaturan jaringan Anda dari file JSON cadangan yang diunggah. Anda dapat mengunduhnya dari instalasi ZHA yang berbeda dari **Pengaturan Jaringan**, atau menggunakan file Zigbee2MQTT 'coordinator_backup.json'.",
+                "title": "Unggah Cadangan Manual"
             },
             "user": {
                 "data": {
@@ -110,6 +168,78 @@
             "remote_button_short_press": "Tombol \"{subtype}\" ditekan",
             "remote_button_short_release": "Tombol \"{subtype}\" dilepaskan",
             "remote_button_triple_press": "Tombol \"{subtype}\" diklik tiga kali"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Perangkat ini bukan perangkat zha",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "usb_probe_failed": "Gagal mendeteksi perangkat usb"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_backup_json": "JSON cadangan tidak valid"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Pilih cadangan otomatis"
+                },
+                "description": "Pulihkan pengaturan jaringan Anda dari cadangan otomatis",
+                "title": "Pulihkan Cadangan Otomatis"
+            },
+            "choose_formation_strategy": {
+                "description": "Pilih pengaturan jaringan untuk radio Anda.",
+                "menu_options": {
+                    "choose_automatic_backup": "Pulihkan cadangan otomatis",
+                    "form_new_network": "Hapus pengaturan jaringan dan bangun jaringan baru",
+                    "reuse_settings": "Pertahankan pengaturan jaringan radio",
+                    "upload_manual_backup": "Unggah cadangan manual"
+                },
+                "title": "Formasi Jaringan"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Jalur Perangkat Serial"
+                },
+                "description": "Pilih port serial untuk radio Zigbee Anda",
+                "title": "Pilih Port Serial"
+            },
+            "init": {
+                "description": "ZHA akan dihentikan.  Ingin melanjutkan?",
+                "title": "Konfigurasi Ulang ZHA"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Jenis Radio"
+                },
+                "description": "Pilih jenis radio Zigbee Anda",
+                "title": "Jenis Radio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "kecepatan port",
+                    "flow_control": "kontrol data flow",
+                    "path": "Jalur perangkat serial"
+                },
+                "description": "Masukkan pengaturan port serial",
+                "title": "Pengaturan Port Serial"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Ganti alamat radio IEEE secara permanen"
+                },
+                "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda.  Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
+                "title": "Timpa Alamat IEEE Radio"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Unggah file"
+                },
+                "description": "Pulihkan pengaturan jaringan Anda dari file JSON cadangan yang diunggah. Anda dapat mengunduhnya dari instalasi ZHA yang berbeda dari **Pengaturan Jaringan**, atau menggunakan file Zigbee2MQTT 'coordinator_backup.json'.",
+                "title": "Unggah Cadangan Manual"
+            }
         }
     }
 }

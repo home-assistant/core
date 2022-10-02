@@ -11,11 +11,10 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntityFeature,
 )
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
@@ -66,7 +65,7 @@ def light_devices_fixture(device_factory):
                 Attribute.switch: "on",
                 Attribute.level: 100,
                 Attribute.hue: 76.0,
-                Attribute.saturation: 55.0,
+                Attribute.saturation: 0.0,
                 Attribute.color_temperature: 4500,
             },
         ),
@@ -80,33 +79,27 @@ async def test_entity_state(hass, light_devices):
     # Dimmer 1
     state = hass.states.get("light.dimmer_1")
     assert state.state == "on"
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_BRIGHTNESS | LightEntityFeature.TRANSITION
-    )
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert isinstance(state.attributes[ATTR_BRIGHTNESS], int)
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
     # Color Dimmer 1
     state = hass.states.get("light.color_dimmer_1")
     assert state.state == "off"
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_BRIGHTNESS | LightEntityFeature.TRANSITION | SUPPORT_COLOR
-    )
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
     # Color Dimmer 2
     state = hass.states.get("light.color_dimmer_2")
     assert state.state == "on"
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_BRIGHTNESS
-        | LightEntityFeature.TRANSITION
-        | SUPPORT_COLOR
-        | SUPPORT_COLOR_TEMP
-    )
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert state.attributes[ATTR_BRIGHTNESS] == 255
-    assert state.attributes[ATTR_HS_COLOR] == (273.6, 55.0)
+    assert ATTR_HS_COLOR not in state.attributes[ATTR_HS_COLOR]
     assert isinstance(state.attributes[ATTR_COLOR_TEMP], int)
     assert state.attributes[ATTR_COLOR_TEMP] == 222
 

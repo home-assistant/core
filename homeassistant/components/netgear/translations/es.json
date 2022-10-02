@@ -4,7 +4,7 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "config": "Error de conexi\u00f3n o de inicio de sesi\u00f3n: verifica tu configuraci\u00f3n"
+            "config": "Error de conexi\u00f3n o de inicio de sesi\u00f3n: por favor, comprueba tu configuraci\u00f3n"
         },
         "step": {
             "user": {

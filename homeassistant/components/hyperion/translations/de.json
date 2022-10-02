@@ -27,7 +27,7 @@
                 "title": "Best\u00e4tige das Hinzuf\u00fcgen des Hyperion-Ambilight-Dienstes"
             },
             "create_token": {
-                "description": "W\u00e4hle **Submit**, um einen neuen Authentifizierungs-Token anzufordern. Du wirst zur Hyperion-Benutzeroberfl\u00e4che weitergeleitet, um die Anforderung zu best\u00e4tigen. Bitte \u00fcberpr\u00fcfe, ob die angezeigte ID \"{auth_id}\" lautet.",
+                "description": "W\u00e4hle **Senden**, um einen neuen Authentifizierungs-Token anzufordern. Du wirst zur Hyperion-Benutzeroberfl\u00e4che weitergeleitet, um die Anforderung zu best\u00e4tigen. Bitte \u00fcberpr\u00fcfe, ob die angezeigte ID \"{auth_id}\" lautet.",
                 "title": "Automatisch neuen Authentifizierungs-Token erstellen"
             },
             "create_token_external": {

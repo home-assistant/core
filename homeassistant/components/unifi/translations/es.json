@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "El sitio UniFi Network ya est\u00e1 configurado",
             "configuration_updated": "Configuraci\u00f3n actualizada",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "faulty_credentials": "Autenticaci\u00f3n no v\u00e1lida",
@@ -43,19 +43,19 @@
                 "data": {
                     "detection_time": "Tiempo en segundos desde la \u00faltima vez que se vio hasta que se considera ausente",
                     "ignore_wired_bug": "Deshabilitar la l\u00f3gica de errores cableada de UniFi Network",
-                    "ssid_filter": "Selecciona los SSIDs para realizar el seguimiento de clientes inal\u00e1mbricos",
-                    "track_clients": "Seguimiento de los clientes de red",
-                    "track_devices": "Seguimiento de dispositivos de red (dispositivos Ubiquiti)",
+                    "ssid_filter": "Selecciona los SSIDs en los que rastrear clientes inal\u00e1mbricos",
+                    "track_clients": "Rastrear clientes de red",
+                    "track_devices": "Rastrear dispositivos de red (dispositivos Ubiquiti)",
                     "track_wired_clients": "Incluir clientes de red cableada"
                 },
-                "description": "Configurar dispositivo de seguimiento",
+                "description": "Configurar rastreo de dispositivo",
                 "title": "Opciones de UniFi Network 1/3"
             },
             "simple_options": {
                 "data": {
                     "block_client": "Clientes con acceso controlado a la red",
-                    "track_clients": "Seguimiento de los clientes de red",
-                    "track_devices": "Seguimiento de dispositivos de red (dispositivos Ubiquiti)"
+                    "track_clients": "Rastrear clientes de red",
+                    "track_devices": "Rastrear dispositivos de red (dispositivos Ubiquiti)"
                 },
                 "description": "Configura la integraci\u00f3n UniFi Network"
             },

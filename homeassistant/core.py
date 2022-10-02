@@ -15,6 +15,7 @@ from collections.abc import (
     Iterable,
     Mapping,
 )
+from contextvars import ContextVar
 import datetime
 import enum
 import functools
@@ -138,6 +139,8 @@ MAX_EXPECTED_ENTITY_IDS = 16384
 
 _LOGGER = logging.getLogger(__name__)
 
+_cv_hass: ContextVar[HomeAssistant] = ContextVar("current_entry")
+
 
 @functools.lru_cache(MAX_EXPECTED_ENTITY_IDS)
 def split_entity_id(entity_id: str) -> tuple[str, str]:
@@ -173,6 +176,18 @@ def callback(func: _CallableT) -> _CallableT:
 def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
     return getattr(func, "_hass_callback", False) is True
+
+
+@callback
+def async_get_hass() -> HomeAssistant:
+    """Return the HomeAssistant instance.
+
+    Raises LookupError if no HomeAssistant instance is available.
+
+    This should be used where it's very cumbersome or downright impossible to pass
+    hass to the code which needs it.
+    """
+    return _cv_hass.get()
 
 
 @enum.unique
@@ -241,6 +256,12 @@ class HomeAssistant:
     auth: AuthManager
     http: HomeAssistantHTTP = None  # type: ignore[assignment]
     config_entries: ConfigEntries = None  # type: ignore[assignment]
+
+    def __new__(cls) -> HomeAssistant:
+        """Set the _cv_hass context variable."""
+        hass = super().__new__(cls)
+        _cv_hass.set(hass)
+        return hass
 
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
@@ -628,7 +649,7 @@ class HomeAssistant:
             else:
                 await asyncio.sleep(0)
 
-    async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
+    async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
         wait_time = 0
         while pending:

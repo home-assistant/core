@@ -1,6 +1,8 @@
 """Support for Nexia / Trane XL thermostats."""
 from __future__ import annotations
 
+from typing import Any
+
 from nexia.const import (
     HOLD_PERMANENT,
     HOLD_RESUME_SCHEDULE,
@@ -18,12 +20,12 @@ from nexia.util import find_humidity_setpoint
 from nexia.zone import NexiaThermostatZone
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -195,7 +197,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         """Return the fan setting."""
         return self._thermostat.get_fan_mode()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self._thermostat.set_fan_mode(fan_mode)
         self._signal_thermostat_update()
@@ -216,7 +218,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         """Preset that is active."""
         return self._zone.get_preset()
 
-    async def async_set_humidity(self, humidity):
+    async def async_set_humidity(self, humidity: int) -> None:
         """Dehumidify target."""
         if self._thermostat.has_dehumidify_support():
             await self.async_set_dehumidify_setpoint(humidity)
@@ -303,7 +305,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
         return NEXIA_TO_HA_HVAC_MODE_MAP[mode]
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         new_heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         new_cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
@@ -364,27 +366,27 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             attrs[ATTR_HUMIDIFY_SETPOINT] = humdify_setpoint
         return attrs
 
-    async def async_set_preset_mode(self, preset_mode: str):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         await self._zone.set_preset(preset_mode)
         self._signal_zone_update()
 
-    async def async_turn_aux_heat_off(self):
+    async def async_turn_aux_heat_off(self) -> None:
         """Turn Aux Heat off."""
         await self._thermostat.set_emergency_heat(False)
         self._signal_thermostat_update()
 
-    async def async_turn_aux_heat_on(self):
+    async def async_turn_aux_heat_on(self) -> None:
         """Turn Aux Heat on."""
         self._thermostat.set_emergency_heat(True)
         self._signal_thermostat_update()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the zone."""
         await self.async_set_hvac_mode(OPERATION_MODE_OFF)
         self._signal_zone_update()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the zone."""
         await self.async_set_hvac_mode(OPERATION_MODE_AUTO)
         self._signal_zone_update()

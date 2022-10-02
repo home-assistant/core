@@ -3,7 +3,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_api_key": "Clave API no v\u00e1lida",
-            "rate_limited": "Actualmente el ritmo de consultas est\u00e1 limitado, por favor int\u00e9ntalo m\u00e1s tarde.",
+            "rate_limited": "La frecuencia de consulta est\u00e1 limitada en este momento, por favor, vuelve a intentarlo m\u00e1s tarde.",
             "unknown": "Error inesperado"
         },
         "step": {

@@ -30,7 +30,7 @@
                     "port": "Puerto",
                     "username": "Nombre de usuario Smile"
                 },
-                "description": "Por favor, introduce:",
+                "description": "Por favor, introduce",
                 "title": "Conectar a Smile"
             }
         }

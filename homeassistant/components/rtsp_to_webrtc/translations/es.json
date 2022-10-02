@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "server_failure": "El servidor RTSPtoWebRTC devolvi\u00f3 un error. Consulta los registros para obtener m\u00e1s informaci\u00f3n.",
-            "server_unreachable": "No se puede comunicar con el servidor RTSPtoWebRTC. Consulta los registros para obtener m\u00e1s informaci\u00f3n.",
+            "server_failure": "El servidor RTSPtoWebRTC devolvi\u00f3 un error. Revisa los registros para obtener m\u00e1s informaci\u00f3n.",
+            "server_unreachable": "No se puede comunicar con el servidor RTSPtoWebRTC. Revisa los registros para obtener m\u00e1s informaci\u00f3n.",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
             "invalid_url": "Debe ser una URL de servidor RTSPtoWebRTC v\u00e1lida, por ejemplo, https://example.com",
-            "server_failure": "El servidor RTSPtoWebRTC devolvi\u00f3 un error. Consulta los registros para obtener m\u00e1s informaci\u00f3n.",
-            "server_unreachable": "No se puede comunicar con el servidor RTSPtoWebRTC. Consulta los registros para obtener m\u00e1s informaci\u00f3n."
+            "server_failure": "El servidor RTSPtoWebRTC devolvi\u00f3 un error. Revisa los registros para obtener m\u00e1s informaci\u00f3n.",
+            "server_unreachable": "No se puede comunicar con el servidor RTSPtoWebRTC. Revisa los registros para obtener m\u00e1s informaci\u00f3n."
         },
         "step": {
             "hassio_confirm": {

@@ -6,15 +6,16 @@ import logging
 from nest.nest import APIError
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -86,6 +87,8 @@ async def async_setup_legacy_entry(hass, entry, async_add_entities) -> None:
 class NestThermostat(ClimateEntity):
     """Representation of a Nest thermostat."""
 
+    _attr_should_poll = False
+
     def __init__(self, structure, device, temp_unit):
         """Initialize the thermostat."""
         self._unit = temp_unit
@@ -135,11 +138,6 @@ class NestThermostat(ClimateEntity):
         self._locked_temperature = None
         self._min_temperature = None
         self._max_temperature = None
-
-    @property
-    def should_poll(self):
-        """Do not need poll thanks using Nest streaming API."""
-        return False
 
     async def async_added_to_hass(self):
         """Register update signal handler."""

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
             "no_unconfigured_devices": "Nie znaleziono nieskonfigurowanych urz\u0105dze\u0144."
         },

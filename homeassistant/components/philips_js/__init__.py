@@ -10,7 +10,6 @@ from typing import Any
 from haphilipsjs import ConnectionFailure, PhilipsTV
 from haphilipsjs.typing import SystemType
 
-from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_VERSION,
@@ -21,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.trigger import TriggerActionType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
@@ -93,7 +93,7 @@ class PluggableAction:
         return bool(self._actions)
 
     @callback
-    def async_attach(self, action: AutomationActionType, variables: dict[str, Any]):
+    def async_attach(self, action: TriggerActionType, variables: dict[str, Any]):
         """Attach a device trigger for turn on."""
 
         @callback

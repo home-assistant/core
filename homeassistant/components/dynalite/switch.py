@@ -1,5 +1,7 @@
 """Support for the Dynalite channels and presets as switches."""
 
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,10 +29,10 @@ class DynaliteSwitch(DynaliteBase, SwitchEntity):
         """Return true if switch is on."""
         return self._device.is_on
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._device.async_turn_on()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._device.async_turn_off()

@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API"
+        }
+    }
+}

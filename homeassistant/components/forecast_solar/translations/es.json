@@ -10,7 +10,7 @@
                     "modules power": "Potencia pico total en vatios de tus m\u00f3dulos solares",
                     "name": "Nombre"
                 },
-                "description": "Rellena los datos de tus placas solares. Consulta la documentaci\u00f3n si un campo no est\u00e1 claro."
+                "description": "Rellena los datos de tus placas solares. Por favor, consulta la documentaci\u00f3n si un campo no est\u00e1 claro."
             }
         }
     },

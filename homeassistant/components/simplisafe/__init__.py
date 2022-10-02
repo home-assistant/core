@@ -71,6 +71,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
@@ -126,6 +127,7 @@ EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.LOCK,
     Platform.SENSOR,
 ]
@@ -258,6 +260,45 @@ def _async_get_system_for_service_call(
 
 
 @callback
+def _async_log_deprecated_service_call(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    alternate_service: str,
+    alternate_target: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Log a warning about a deprecated service call."""
+    deprecated_service = f"{call.domain}.{call.service}"
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_service_{deprecated_service}",
+        breaks_in_ha_version=breaks_in_ha_version,
+        is_fixable=True,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_service",
+        translation_placeholders={
+            "alternate_service": alternate_service,
+            "alternate_target": alternate_target,
+            "deprecated_service": deprecated_service,
+        },
+    )
+
+    LOGGER.warning(
+        (
+            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
+            'service and pass it a target entity ID of "%s"'
+        ),
+        deprecated_service,
+        breaks_in_ha_version,
+        alternate_service,
+        alternate_target,
+    )
+
+
+@callback
 def _async_register_base_station(
     hass: HomeAssistant, entry: ConfigEntry, system: SystemType
 ) -> None:
@@ -347,6 +388,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @extract_system
     async def async_clear_notifications(call: ServiceCall, system: SystemType) -> None:
         """Clear all active notifications."""
+        _async_log_deprecated_service_call(
+            hass,
+            call,
+            "button.press",
+            "button.alarm_control_panel_clear_notifications",
+            "2022.12.0",
+        )
         await system.async_clear_notifications()
 
     @_verify_domain_control
@@ -839,9 +887,7 @@ class SimpliSafeEntity(CoordinatorEntity):
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity when new data comes from the REST API."""
-        raise NotImplementedError()
 
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
-        raise NotImplementedError()

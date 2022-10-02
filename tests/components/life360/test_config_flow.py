@@ -76,7 +76,9 @@ def life360_fixture():
 @pytest.fixture
 def life360_api():
     """Mock Life360 api."""
-    with patch("homeassistant.components.life360.config_flow.Life360") as mock:
+    with patch(
+        "homeassistant.components.life360.config_flow.Life360", autospec=True
+    ) as mock:
         yield mock.return_value
 
 

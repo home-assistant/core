@@ -20,14 +20,14 @@
                 "data": {
                     "select_ip": "Direcci\u00f3n IP"
                 },
-                "description": "Vuelve a ejecutar la configuraci\u00f3n si deseas conectar Motion Gateways adicionales",
+                "description": "Ejecuta la configuraci\u00f3n de nuevo si quieres conectar Motion Gateways adicionales",
                 "title": "Selecciona el Motion Gateway que deseas conectar"
             },
             "user": {
                 "data": {
                     "host": "Direcci\u00f3n IP"
                 },
-                "description": "Con\u00e9ctate a tu Motion Gateway, si la direcci\u00f3n IP no est\u00e1 configurada, se utiliza la detecci\u00f3n autom\u00e1tica"
+                "description": "Con\u00e9ctate a tu Motion Gateway, si la direcci\u00f3n IP no est\u00e1 configurada, se usar\u00e1 la detecci\u00f3n autom\u00e1tica"
             }
         }
     },

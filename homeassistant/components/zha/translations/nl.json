@@ -10,7 +10,13 @@
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "title": "Automatische back-up herstellen"
+            },
             "confirm": {
+                "description": "Wilt u {name} instellen?"
+            },
+            "confirm_hardware": {
                 "description": "Wilt u {name} instellen?"
             },
             "pick_radio": {
@@ -28,6 +34,12 @@
                 },
                 "description": "Voer poortspecifieke instellingen in",
                 "title": "Instellingen"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Een bestand uploaden"
+                },
+                "title": "Upload een handmatige back-up"
             },
             "user": {
                 "data": {
@@ -107,6 +119,31 @@
             "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Dit apparaat is niet een zha-apparaat.",
+            "usb_probe_failed": "Kon het USB apparaat niet onderzoeken"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "title": "Automatische back-up herstellen"
+            },
+            "init": {
+                "description": "ZHA wordt gestopt. Wilt u doorgaan?",
+                "title": "ZHA opnieuw configureren"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Een bestand uploaden"
+                },
+                "title": "Upload een handmatige back-up"
+            }
         }
     }
 }
