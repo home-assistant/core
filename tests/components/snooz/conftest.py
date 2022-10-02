@@ -27,7 +27,6 @@ def mock_bluetooth(enable_bluetooth):
 
 
 @pytest.fixture()
-@pytest.mark.asyncio()
 async def mock_connected_snooz(hass: HomeAssistant):
     """Mock a Snooz configuration entry and returns its fan entity."""
 

@@ -18,7 +18,6 @@
     "progress": {
       "wait_for_pairing_mode": "To complete setup, put this device in pairing mode.\n\n### How to enter pairing mode\n1. Force quit SNOOZ mobile apps.\n2. Press and hold the power button on the device. Release when the lights start blinking (approximately 5 seconds)."
     },
-    "error": {},
     "abort": {
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",

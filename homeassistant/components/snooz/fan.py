@@ -64,15 +64,15 @@ class SnoozFan(FanEntity, RestoreEntity):
         self._attr_unique_id = address
         self._attr_supported_features = FanEntityFeature.SET_SPEED
         self._attr_name = name
-        self._attr_is_on = None
         self._attr_should_poll = False
-        self._attr_percentage = None
+        self._is_on: bool | None = None
+        self._percentage: int | None = None
 
     def _write_state_changed(self) -> None:
         # cache state for restore entity
         if not self.assumed_state:
-            self._attr_is_on = self._device.state.on
-            self._attr_percentage = self._device.state.volume
+            self._is_on = self._device.state.on
+            self._percentage = self._device.state.volume
 
         self.async_write_ha_state()
 
@@ -87,12 +87,11 @@ class SnoozFan(FanEntity, RestoreEntity):
         await super().async_added_to_hass()
 
         if last_state := await self.async_get_last_state():
-            self._attr_is_on = (
-                last_state.state == STATE_ON
-                if last_state.state in (STATE_ON, STATE_OFF)
-                else None
-            )
-            self._attr_percentage = last_state.attributes.get(ATTR_PERCENTAGE)
+            if last_state.state in (STATE_ON, STATE_OFF):
+                self._is_on = last_state.state == STATE_ON
+            else:
+                self._is_on = None
+            self._percentage = last_state.attributes.get(ATTR_PERCENTAGE)
 
         self.async_on_remove(self._subscribe_to_device_events())
 
@@ -115,14 +114,12 @@ class SnoozFan(FanEntity, RestoreEntity):
     @property
     def percentage(self) -> int | None:
         """Volume level of the device."""
-        return (
-            self._attr_percentage if self.assumed_state else self._device.state.volume
-        )
+        return self._percentage if self.assumed_state else self._device.state.volume
 
     @property
     def is_on(self) -> bool | None:
         """Power state of the device."""
-        return self._attr_is_on if self.assumed_state else self._device.state.on
+        return self._is_on if self.assumed_state else self._device.state.on
 
     @property
     def assumed_state(self) -> bool:
