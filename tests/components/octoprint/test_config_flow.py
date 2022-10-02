@@ -575,11 +575,8 @@ async def test_reauth_form(hass):
     assert result["type"] == "progress"
 
     with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
+        "homeassistant.components.octoprint.async_setup_entry",
         return_value=True,
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
