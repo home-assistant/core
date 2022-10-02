@@ -923,6 +923,10 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "datetime": {
+      "config_flow": false,
+      "iot_class": null
+    },
     "ddwrt": {
       "name": "DD-WRT",
       "integration_type": "hub",
@@ -6383,6 +6387,7 @@
     "aurora",
     "cert_expiry",
     "cpuspeed",
+    "datetime",
     "demo",
     "derivative",
     "emulated_roku",
