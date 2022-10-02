@@ -1028,6 +1028,12 @@ async def websocket_get_configuration(
         data["data"][section] = zha_gateway.config_entry.options.get(
             CUSTOM_CONFIGURATION, {}
         ).get(section, {})
+
+        # send default values for unconfigured options
+        for entry in data["schemas"][section]:
+            if data["data"][section].get(entry["name"]) is None:
+                data["data"][section][entry["name"]] = entry["default"]
+
     connection.send_result(msg[ID], data)
 
 
