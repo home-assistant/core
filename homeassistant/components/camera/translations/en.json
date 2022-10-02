@@ -1,8 +1,8 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_off": "{entity_name} is off",
-            "is_on": "{entity_name} is on",
+            "is_recording": "{entity_name} is recording",
+            "is_streaming": "{entity_name} is streaming",
             "is_idle": "{entity_name} is idle"
         }
     },

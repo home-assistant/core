@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import pytest
 
-from homeassistant.components import automation
+from homeassistant.components import automation, camera
 from homeassistant.components.camera import DOMAIN
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.setup import async_setup_component
@@ -55,25 +55,23 @@ async def test_get_conditions(
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "is_off",
+            "type": condition,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "type": "is_on",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
+            "metadata": {"secondary": False},
+        }
+        for condition in ["is_recording", "is_streaming"]
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert_lists_same(conditions, expected_conditions)
 
 
 async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
-    """Test for turn_on and turn_off conditions."""
-    hass.states.async_set("camera.entity", STATE_ON)
+    """Test for is_recording and is_streaming conditions."""
+    camera_entity = "camera.entity"
+    hass.states.async_set(camera_entity, camera.STATE_IDLE)
 
     assert await async_setup_component(
         hass,
@@ -81,20 +79,38 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
         {
             automation.DOMAIN: [
                 {
+                    "trigger": {"platform": "event", "event_type": "test_event0"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": camera_entity,
+                            "type": "is_idle",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_idle - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
                     "trigger": {"platform": "event", "event_type": "test_event1"},
                     "condition": [
                         {
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "camera.entity",
-                            "type": "is_on",
+                            "entity_id": camera_entity,
+                            "type": "is_recording",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_recording - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
@@ -105,36 +121,33 @@ async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "camera.entity",
-                            "type": "is_off",
+                            "entity_id": camera_entity,
+                            "type": "is_streaming",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_off - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_streaming - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
             ]
         },
     )
-    hass.bus.async_fire("test_event1")
-    hass.bus.async_fire("test_event2")
+    hass.bus.async_fire("test_event0")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "is_on - event - test_event1"
+    assert calls[0].data["some"] == "is_idle - event - test_event0"
 
-    hass.states.async_set("camera.entity", STATE_OFF)
+    hass.states.async_set(camera_entity, camera.STATE_RECORDING)
     hass.bus.async_fire("test_event1")
-    hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "is_off - event - test_event2"
+    assert calls[1].data["some"] == "is_recording - event - test_event1"
 
-    hass.states.async_set("camera.entity", STATE_IDLE)
-    hass.bus.async_fire("test_event1")
+    hass.states.async_set(camera_entity, camera.STATE_STREAMING)
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "is_off - event - test_event2"
+    assert len(calls) == 3
+    assert calls[2].data["some"] == "is_streaming - event - test_event2"
