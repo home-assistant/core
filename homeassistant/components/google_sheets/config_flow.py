@@ -8,7 +8,7 @@ from typing import Any
 from google.oauth2.credentials import Credentials
 from gspread import Client, GSpreadException
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -24,6 +24,8 @@ class OAuth2FlowHandler(
     """Config flow to handle Google Sheets OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+
+    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -42,6 +44,9 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -52,40 +57,27 @@ class OAuth2FlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
-    def _async_reauth_entry(self) -> ConfigEntry | None:
-        """Return existing entry for reauth."""
-        if self.source != SOURCE_REAUTH or not (
-            entry_id := self.context.get("entry_id")
-        ):
-            return None
-        return next(
-            (
-                entry
-                for entry in self._async_current_entries()
-                if entry.entry_id == entry_id
-            ),
-            None,
-        )
-
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
         service = Client(Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
 
-        if entry := self._async_reauth_entry():
+        if self.reauth_entry:
             _LOGGER.debug("service.open_by_key")
             try:
                 await self.hass.async_add_executor_job(
                     service.open_by_key,
-                    entry.unique_id,
+                    self.reauth_entry.unique_id,
                 )
             except GSpreadException as err:
                 _LOGGER.error(
-                    "Could not find spreadsheet '%s': %s", entry.unique_id, str(err)
+                    "Could not find spreadsheet '%s': %s",
+                    self.reauth_entry.unique_id,
+                    str(err),
                 )
                 return self.async_abort(reason="open_spreadsheet_failure")
 
-            self.hass.config_entries.async_update_entry(entry, data=data)
-            await self.hass.config_entries.async_reload(entry.entry_id)
+            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         try:
@@ -97,6 +89,7 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="create_spreadsheet_failure")
 
         await self.async_set_unique_id(doc.id)
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=DEFAULT_NAME, data=data, description_placeholders={"url": doc.url}
         )
