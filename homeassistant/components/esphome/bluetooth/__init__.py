@@ -66,17 +66,21 @@ async def async_connect_scanner(
         can_connect=lambda: async_can_connect(source),
     )
     scanner = ESPHomeScanner(hass, source, new_info_callback, connector, connectable)
+    cancel_register_scanner = async_register_scanner(hass, scanner, connectable)
+    cancel_scanner_setup = scanner.async_setup()
+    cancel_advertisements = await cli.subscribe_bluetooth_le_advertisements(
+        scanner.async_on_advertisement
+    )
     unload_callbacks = [
-        async_register_scanner(hass, scanner, connectable),
-        scanner.async_setup(),
-        await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement),
+        cancel_advertisements,
+        cancel_register_scanner,
+        cancel_scanner_setup,
     ]
     if connectable:
-        unload_callbacks.append(
-            await cli.subscribe_bluetooth_connections_free(
-                entry_data.async_update_ble_connection_limits
-            )
+        cancel_ble_limits = await cli.subscribe_bluetooth_connections_free(
+            entry_data.async_update_ble_connection_limits
         )
+        unload_callbacks.insert(0, cancel_ble_limits)
 
     @hass_callback
     def _async_unload() -> None:
