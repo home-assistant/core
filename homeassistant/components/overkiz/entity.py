@@ -1,7 +1,6 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
-import copy
 from enum import unique
 from typing import cast
 
@@ -125,14 +124,12 @@ class OverkizDescriptiveEntity(OverkizEntity):
     ) -> None:
         """Initialize the device."""
         super().__init__(device_url, coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
 
         if self.is_sub_device and self.is_sub_device_default_naming:
             # In case of sub device  with description using the default naming, use the provided label and append the name of the type of entity
-            description = copy.copy(description)
-            description.name = f"{self.device.label} {description.name}"
-
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
+            self._attr_name = f"{self.device.label} {description.name}"
 
 
 # Used by state translations for sensor and select entities
