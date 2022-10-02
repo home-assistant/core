@@ -7,7 +7,11 @@ import pytest
 from todoist_api_python.models import Due
 
 from homeassistant import setup
-from homeassistant.components.todoist.calendar import DOMAIN, _parse_due_date, get_system_utc_offset_hours
+from homeassistant.components.todoist.calendar import (
+    DOMAIN,
+    _parse_due_date,
+    get_system_utc_offset_hours,
+)
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import entity_registry
 from homeassistant.util import dt

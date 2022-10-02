@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
 import logging
-import time
 from typing import Any
 import uuid
 
@@ -260,7 +259,7 @@ async def async_setup_platform(
 
         # @NOTE: The rest-api doesn't support reminders, this works manually using
         # the sync api, in order to keep functional parity with the component.
-        # https://developer.todoist.com/sync/v8/#reminders
+        # https://developer.todoist.com/sync/v9/#reminders
         sync_url = get_sync_url("sync")
         _reminder_due: dict = {}
         if REMINDER_DATE_STRING in call.data:
