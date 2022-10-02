@@ -1,4 +1,4 @@
-"""Component to allow selecting an option from a list as platforms."""
+"""Component to allow setting date/time as platforms."""
 from __future__ import annotations
 
 from dataclasses import dataclass
