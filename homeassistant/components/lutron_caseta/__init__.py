@@ -346,7 +346,7 @@ class LutronCasetaDevice(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, device, bridge, bridge_device, device_info_by_device_id=None):
+    def __init__(self, device, data):
         """Set up the base class.
 
         [:param]device the device metadata
@@ -354,19 +354,15 @@ class LutronCasetaDevice(Entity):
         [:param]bridge_device a dict with the details of the bridge
         """
         self._device = device
-        self._smartbridge = bridge
-        self._bridge_device = bridge_device
-        self._bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
+        self._smartbridge = data.bridge
+        self._bridge_device = data.bridge_device
+        self._bridge_unique_id = serial_to_unique_id(data.bridge_device["serial"])
         if "serial" not in self._device:
             return
 
-        if (
-            "parent_device" in device
-            and device_info_by_device_id is not None
-            and (
-                parent_device_info := device_info_by_device_id.get(
-                    device["parent_device"]
-                )
+        if "parent_device" in device and (
+            parent_device_info := data.device_info_by_device_id.get(
+                device["parent_device"]
             )
         ):
             # Append the child device name to the end of the parent keypad name to create the entity name
