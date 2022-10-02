@@ -42,7 +42,7 @@ ENOCEAN_TEST_DIMMER = EnOceanSupportedDeviceType(
 
 EEP_A5_12_01 = EnOceanSupportedDeviceType(
     eep="A5-12-01",
-    model="EEP A5-12-01 (Light and Blind Control - Application Style 1)",
+    model="EEP A5-12-01 (Automated Meter Reading [AMR] - Electricity)",
 )
 
 
@@ -280,11 +280,17 @@ EEP_A5_10_14 = EnOceanSupportedDeviceType(
     model="EEP A5-10-14 Room Operating Panel (Temperature and Humidity Sensor, Day/Night Control)",
 )
 
-
+# F6-02 Light and Blind Control
 EEP_F6_02_01 = EnOceanSupportedDeviceType(
     eep="F6-02-01",
     model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
 )
+
+EEP_F6_02_02 = EnOceanSupportedDeviceType(
+    eep="F6-02-02",
+    model="EEP F6-02-02 (Light and Blind Control - Application Style 1)",
+)
+
 
 PERMUNDO_PSC234 = EnOceanSupportedDeviceType(
     eep="D2-01-09",
@@ -296,10 +302,6 @@ PERMUNDO_PSC234 = EnOceanSupportedDeviceType(
 # devices given by manufacturer and model (and the respective EEP)
 ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
     # Part 1/2: Generic EEPs
-    EnOceanSupportedDeviceType(
-        eep="F5-02-02",
-        model="EEP F6-02-02 (Light and Blind Control - Application Style 1)",
-    ),
     EEP_A5_02_01,
     EEP_A5_02_02,
     EEP_A5_02_03,

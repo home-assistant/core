@@ -11,8 +11,11 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from . import dongle
-from .const import DOMAIN, ENOCEAN_SUPPORTED_DEVICES, ERROR_INVALID_DONGLE_PATH, LOGGER
-from .enocean_supported_device_type import EnOceanSupportedDeviceType
+from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
+from .enocean_supported_device_type import (
+    ENOCEAN_SUPPORTED_DEVICES,
+    EnOceanSupportedDeviceType,
+)
 
 # config
 CONF_ENOCEAN_DEVICES = "devices"

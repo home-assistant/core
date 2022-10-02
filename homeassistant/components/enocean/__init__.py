@@ -23,20 +23,16 @@ from .config_flow import (
     CONF_ENOCEAN_MODEL,
     CONF_ENOCEAN_SENDER_ID,
 )
-from .const import (
-    DATA_ENOCEAN,
-    DOMAIN,
+from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
+from .dongle import EnOceanDongle
+from .enocean_supported_device_type import (
     EEP_D2_01_07,
     EEP_D2_01_11,
     EEP_D2_01_13,
     EEP_D2_01_14,
     EEP_F6_02_01,
-    ENOCEAN_DONGLE,
-    LOGGER,
-    PLATFORMS,
+    EnOceanSupportedDeviceType,
 )
-from .dongle import EnOceanDongle
-from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA

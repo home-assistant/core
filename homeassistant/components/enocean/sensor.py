@@ -38,9 +38,9 @@ from .config_flow import (
     CONF_ENOCEAN_MANUFACTURER,
     CONF_ENOCEAN_MODEL,
 )
-from .const import LOGGER, PERMUNDO_PSC234
+from .const import LOGGER
 from .device import EnOceanEntity
-from .enocean_supported_device_type import EnOceanSupportedDeviceType
+from .enocean_supported_device_type import PERMUNDO_PSC234, EnOceanSupportedDeviceType
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -166,16 +166,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
+        # get config data
         eep = device[CONF_ENOCEAN_EEP]
         device_id = from_hex_string(device[CONF_ENOCEAN_DEVICE_ID])
         device_name = device[CONF_ENOCEAN_DEVICE_NAME]
         device_type = EnOceanSupportedDeviceType(
             manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
             model=device[CONF_ENOCEAN_MODEL],
-            eep=device[CONF_ENOCEAN_EEP],
+            eep=eep,
         )
 
-        # Temperature sensors (EEP A5-02-)
+        # Temperature sensors (EEP A5-02)
         if eep[0:5] == "A5-02":
             min_temp, max_temp = _get_a5_02_min_max_temp(eep)
 
@@ -251,7 +252,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # D2-01-09); as there is not (yet) a way to define multiple EEPs per
         # EnOcean device, but this device was previously supported in this
         # combination, we allow it manually here
-        if (
+        if eep == "A5-12-01" or (
             eep == PERMUNDO_PSC234.eep
             and device[CONF_ENOCEAN_MANUFACTURER] == PERMUNDO_PSC234.manufacturer
             and device[CONF_ENOCEAN_MODEL] == PERMUNDO_PSC234.model
