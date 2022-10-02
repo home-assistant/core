@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from async_timeout import timeout
 from pynina import ApiError, Nina
@@ -74,7 +73,6 @@ class NINADataUpdateCoordinator(
         """Initialize."""
         self._regions: dict[str, str] = regions
         self._nina: Nina = Nina(async_get_clientsession(hass))
-        self.warnings: dict[str, Any] = {}
         self.corona_filter: bool = corona_filter
 
         for region in regions:
