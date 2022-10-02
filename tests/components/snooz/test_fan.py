@@ -5,7 +5,7 @@ from pysnooz.api import SnoozDeviceState
 import pytest
 
 from homeassistant.components import fan
-from homeassistant.components.snooz.fan import ATTR_LAST_COMMAND_SUCCESSFUL, FanEntity
+from homeassistant.components.snooz.fan import FanEntity
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -30,7 +30,6 @@ async def test_turn_on(hass: HomeAssistant, snooz_fan: FanEntity):
 
     state = hass.states.get(snooz_fan.entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_LAST_COMMAND_SUCCESSFUL] is True
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
@@ -48,7 +47,6 @@ async def test_turn_on_with_percentage(
 
     state = hass.states.get(snooz_fan.entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_LAST_COMMAND_SUCCESSFUL] is True
     assert state.attributes[fan.ATTR_PERCENTAGE] == percentage
     assert ATTR_ASSUMED_STATE not in state.attributes
 
@@ -64,7 +62,6 @@ async def test_turn_off(hass: HomeAssistant, snooz_fan: FanEntity):
 
     state = hass.states.get(snooz_fan.entity_id)
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_LAST_COMMAND_SUCCESSFUL] is True
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
