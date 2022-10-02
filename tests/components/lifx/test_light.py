@@ -12,8 +12,10 @@ from homeassistant.components.lifx.const import ATTR_POWER
 from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
 from homeassistant.components.lifx.manager import (
     ATTR_DIRECTION,
+    ATTR_PALETTE,
     ATTR_SPEED,
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
 )
 from homeassistant.components.light import (
@@ -54,6 +56,7 @@ from . import (
     _mocked_bulb_new_firmware,
     _mocked_clean_bulb,
     _mocked_light_strip,
+    _mocked_tile,
     _mocked_white_bulb,
     _patch_config_flow_try_connect,
     _patch_device,
@@ -649,6 +652,120 @@ async def test_extended_multizone_messages(hass: HomeAssistant) -> None:
         )
 
 
+async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
+    """Test the firmware flame and morph effects on a matrix device."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_tile()
+    bulb.power_level = 0
+    bulb.color = [65535, 65535, 65535, 65535]
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_flame"},
+        blocking=True,
+    )
+
+    assert len(bulb.set_power.calls) == 1
+    assert len(bulb.set_tile_effect.calls) == 1
+
+    call_dict = bulb.set_tile_effect.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "effect": 3,
+        "speed": 3,
+        "palette": [
+            (0, 65535, 65535, 3500),
+            (7282, 65535, 65535, 3500),
+            (10923, 65535, 65535, 3500),
+            (22209, 65535, 65535, 3500),
+            (43509, 65535, 65535, 3500),
+            (49334, 65535, 65535, 3500),
+            (53521, 65535, 65535, 3500),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+        ],
+        "palette_count": 7,
+    }
+    bulb.get_tile_effect.reset_mock()
+    bulb.set_tile_effect.reset_mock()
+    bulb.set_power.reset_mock()
+
+    bulb.power_level = 0
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_MORPH,
+        {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 4, ATTR_PALETTE: "autumn"},
+        blocking=True,
+    )
+
+    bulb.power_level = 65535
+    bulb.effect = {
+        "effect": "MORPH",
+        "speed": 4.0,
+        "palette_count": 4,
+        "palette": [
+            (5643, 65535, 32768, 3500),
+            (15110, 65535, 32768, 3500),
+            (8920, 65535, 32768, 3500),
+            (10559, 65535, 32768, 3500),
+        ],
+    }
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    assert len(bulb.set_power.calls) == 1
+    assert len(bulb.set_tile_effect.calls) == 1
+    call_dict = bulb.set_tile_effect.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "effect": 2,
+        "speed": 4,
+        "palette": [
+            (5643, 65535, 32768, 3500),
+            (15110, 65535, 32768, 3500),
+            (8920, 65535, 32768, 3500),
+            (10559, 65535, 32768, 3500),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+            (0, 0, 0, 0),
+        ],
+        "palette_count": 4,
+    }
+    bulb.get_tile_effect.reset_mock()
+    bulb.set_tile_effect.reset_mock()
+    bulb.set_power.reset_mock()
+
+
 async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     """Test the firmware move effect on a light strip."""
     config_entry = MockConfigEntry(
@@ -696,7 +813,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     )
 
     bulb.power_level = 65535
-    bulb.effect = {"name": "effect_move", "enable": 1}
+    bulb.effect = {"name": "MOVE", "speed": 4.5, "direction": "Left"}
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
