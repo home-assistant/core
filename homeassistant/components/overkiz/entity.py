@@ -34,8 +34,8 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
         self._attr_available = self.device.available
         self._attr_unique_id = self.device.device_url
 
-        if self.is_sub_device and not self.is_sub_device_default_naming:
-            # In case of sub entity without default naming, use the provided label as name
+        if self.is_sub_device:
+            # In case of sub entity, use the provided label as name
             self._attr_name = self.device.label
 
         self._attr_device_info = self.generate_device_info()
@@ -44,21 +44,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
     def is_sub_device(self) -> bool:
         """Return True if device is a sub device."""
         return "#" in self.device_url and not self.device_url.endswith("#1")
-
-    @property
-    def is_sub_device_default_naming(self) -> bool:
-        """Return True if device has a default name not updated by the user."""
-        if self.is_sub_device and self.device.label and "-" in self.device.label:
-            main_device = self.executor.linked_device(1)
-            if (
-                main_device
-                and main_device.label
-                and self.device.label.startswith(main_device.label + "-")
-                and self.device.label.split("-", 1)[1].isdigit()
-            ):
-                return True
-
-        return False
 
     @property
     def device(self) -> Device:
@@ -127,8 +112,8 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
 
-        if self.is_sub_device and self.is_sub_device_default_naming:
-            # In case of sub device  with description using the default naming, use the provided label and append the name of the type of entity
+        if self.is_sub_device:
+            # In case of sub device, use the provided label and append the name of the type of entity
             self._attr_name = f"{self.device.label} {description.name}"
 
 
