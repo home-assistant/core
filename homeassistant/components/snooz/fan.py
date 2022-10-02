@@ -95,7 +95,8 @@ class SnoozFan(FanEntity, RestoreEntity):
 
         self.async_on_remove(self._subscribe_to_device_events())
 
-    def _subscribe_to_device_events(self) -> Callable[[], None]:
+    @callback
+    def _async_subscribe_to_device_events(self) -> Callable[[], None]:
         events = self._device.events
 
         def unsubscribe():
