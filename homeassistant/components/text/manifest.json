@@ -1,0 +1,7 @@
+{
+  "domain": "text",
+  "name": "Text",
+  "documentation": "https://www.home-assistant.io/integrations/text",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

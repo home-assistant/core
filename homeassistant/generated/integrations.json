@@ -5398,6 +5398,10 @@
         }
       }
     },
+    "text": {
+      "config_flow": false,
+      "iot_class": null
+    },
     "tfiac": {
       "name": "Tfiac",
       "integration_type": "hub",
@@ -6407,6 +6411,7 @@
     "sun",
     "switch_as_x",
     "tag",
+    "text",
     "threshold",
     "tod",
     "uptime",
