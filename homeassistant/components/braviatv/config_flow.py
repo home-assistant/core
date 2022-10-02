@@ -189,8 +189,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
-        errors: dict[str, str] = {}
-
         self.create_client()
 
         assert self.client is not None
@@ -229,7 +227,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_USE_PSK, default=False): bool,
                 }
             ),
-            errors=errors,
         )
 
 
