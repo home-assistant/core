@@ -204,7 +204,7 @@ aioopenexchangerates==0.4.0
 aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==2.0.1
+aiopvapi==2.0.2
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
@@ -423,7 +423,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.17.0
+dbus-fast==1.18.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
