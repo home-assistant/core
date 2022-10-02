@@ -25,6 +25,11 @@
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "username": "Username"
+                }
             }
         }
     }
