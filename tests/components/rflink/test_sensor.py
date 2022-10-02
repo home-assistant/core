@@ -18,10 +18,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 
 from .test_init import mock_rflink
 
-DOMAIN = "sensor"
+DOMAIN = PLATFORM_SCHEMA
 
 CONFIG = {
     "rflink": {
@@ -205,3 +210,40 @@ async def test_race_condition(hass, monkeypatch):
     new_sensor = hass.states.get(f"{DOMAIN}.test3")
     assert new_sensor
     assert new_sensor.state == "ko"
+
+
+async def test_sensor_attributes(hass, monkeypatch):
+    """Validate the sensor attributes."""
+
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {
+                "my_humidity_device_unique_id": {
+                    "name": "humidity_device",
+                    "sensor_type": "humidity",
+                    "aliases": ["test_alias_02_0"],
+                },
+                "my_temperature_device_unique_id": {
+                    "name": "temperature_device",
+                    "sensor_type": "temperature",
+                    "aliases": ["test_alias_02_0"],
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    # test sensor loaded from config
+    humidity_state = hass.states.get("sensor.humidity_device")
+    assert humidity_state
+    assert "device_class" not in humidity_state.attributes
+    assert "state_class" not in humidity_state.attributes
+
+    temperature_state = hass.states.get("sensor.temperature_device")
+    assert temperature_state
+    assert temperature_state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
+    assert temperature_state.attributes["state_class"] == SensorStateClass.MEASUREMENT

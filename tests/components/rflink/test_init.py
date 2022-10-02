@@ -507,15 +507,6 @@ async def test_unique_id(hass, monkeypatch):
     # setup mocking rflink module
     event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    # test sensor loaded from config
-    humidity_state = hass.states.get("sensor.humidity_device")
-    assert humidity_state
-    assert "device_class" not in humidity_state.attributes
-
-    temperature_state = hass.states.get("sensor.temperature_device")
-    assert temperature_state
-    assert temperature_state.attributes["device_class"] == "temperature"
-
     humidity_entry = registry.async_get("sensor.humidity_device")
     assert humidity_entry
     assert humidity_entry.unique_id == "my_humidity_device_unique_id"

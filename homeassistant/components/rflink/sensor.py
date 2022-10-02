@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -45,10 +46,12 @@ SENSOR_ICONS = {
 DEVICE_CLASS_TYPES = {
     "distance": SensorDeviceClass.DISTANCE,
     "barometric_pressure": SensorDeviceClass.PRESSURE,
+    "average_windspeed": SensorDeviceClass.SPEED,
+    "windgusts": SensorDeviceClass.SPEED,
     "windspeed": SensorDeviceClass.SPEED,
     "temperature": SensorDeviceClass.TEMPERATURE,
-    # SensorDeviceClass.VOLUME,
-    # SensorDeviceClass.WEIGHT,
+    "windtemp": SensorDeviceClass.TEMPERATURE,
+    "windchill": SensorDeviceClass.TEMPERATURE,
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -131,7 +134,9 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         self._sensor_type = sensor_type
         self._unit_of_measurement = unit_of_measurement
         if sensor_type in DEVICE_CLASS_TYPES:
+            # better with a SensorEntityDescription
             self._attr_device_class = DEVICE_CLASS_TYPES[sensor_type]
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
     def _handle_event(self, event):
