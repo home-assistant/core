@@ -78,7 +78,7 @@ class DemoText(TextEntity):
         native_min: int | None = None,
         pattern: str | None = None,
     ) -> None:
-        """Initialize the Demo select entity."""
+        """Initialize the Demo text entity."""
         self._attr_unique_id = unique_id
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_native_value = native_value
