@@ -1,0 +1,14 @@
+set_value:
+  name: Set Date
+  description: Set the date for a date entity.
+  target:
+    entity:
+      domain: date
+  fields:
+    date:
+      name: Date
+      description: Set the date of a date entity using the format %Y-%m-%d.
+      required: false
+      example: "2022/11/01"
+      selector:
+        date:
