@@ -1,6 +1,7 @@
 """The Netatmo integration."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime
 from http import HTTPStatus
 import logging
@@ -137,15 +138,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
 
-    exclude = []
+    exclude: Iterable = ()
     if entry.data["auth_implementation"] == cloud.DOMAIN:
-        exclude = ["access_doorbell", "read_doorbell"]
+        exclude = ("access_doorbell", "read_doorbell")
 
-    scopes = [scope for scope in NETATMO_SCOPES if scope not in exclude]
-    scopes.sort()
+    required_scopes = {scope for scope in NETATMO_SCOPES if scope not in exclude}
 
-    if sorted(session.token["scope"]) != sorted(scopes):
-        _LOGGER.debug("Scope is invalid: %s != %s", session.token["scope"], scopes)
+    if not (set(session.token["scope"]) & required_scopes):
+        _LOGGER.debug(
+            "Session is missing scopes: %s",
+            required_scopes - set(session.token["scope"]),
+        )
         raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 
     hass.data[DOMAIN][entry.entry_id] = {
