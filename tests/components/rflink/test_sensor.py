@@ -13,7 +13,6 @@ from homeassistant.components.rflink import (
     TMP_ENTITY,
 )
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -26,7 +25,7 @@ from homeassistant.const import (
 
 from .test_init import mock_rflink
 
-DOMAIN = PLATFORM_SCHEMA
+DOMAIN = "sensor"
 
 CONFIG = {
     "rflink": {
