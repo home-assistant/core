@@ -14,7 +14,7 @@ from .common import selected_platforms, simulate_webhook
 async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_auth):
     """Test service for selecting Netatmo schedule with thermostats."""
     with selected_platforms(["climate", "select"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
