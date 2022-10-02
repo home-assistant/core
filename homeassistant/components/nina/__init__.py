@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from async_timeout import timeout
 from pynina import ApiError, Nina
@@ -63,7 +62,9 @@ class NinaWarningData:
     is_valid: bool
 
 
-class NINADataUpdateCoordinator(DataUpdateCoordinator):
+class NINADataUpdateCoordinator(
+    DataUpdateCoordinator[dict[str, list[NinaWarningData]]]
+):
     """Class to manage fetching NINA data API."""
 
     def __init__(
@@ -72,7 +73,6 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize."""
         self._regions: dict[str, str] = regions
         self._nina: Nina = Nina(async_get_clientsession(hass))
-        self.warnings: dict[str, Any] = {}
         self.corona_filter: bool = corona_filter
 
         for region in regions:
@@ -80,7 +80,7 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
         async with timeout(10):
             try:
@@ -89,10 +89,10 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(err) from err
             return self._parse_data()
 
-    def _parse_data(self) -> dict[str, Any]:
+    def _parse_data(self) -> dict[str, list[NinaWarningData]]:
         """Parse warning data."""
 
-        return_data: dict[str, Any] = {}
+        return_data: dict[str, list[NinaWarningData]] = {}
 
         for region_id, raw_warnings in self._nina.warnings.items():
             warnings_for_regions: list[NinaWarningData] = []
