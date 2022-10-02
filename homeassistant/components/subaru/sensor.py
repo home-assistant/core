@@ -1,7 +1,6 @@
 """Support for Subaru sensors."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import subarulink.const as sc
@@ -49,8 +48,6 @@ from .const import (
     VEHICLE_VIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 # Fuel consumption units
 FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS = "L/100km"
 FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
@@ -62,6 +59,7 @@ KM_PER_MI = DistanceConverter.convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
 SAFETY_SENSORS = [
     SensorEntityDescription(
         key=sc.ODOMETER,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:road-variant",
         name="Odometer",
         native_unit_of_measurement=LENGTH_KILOMETERS,
@@ -80,6 +78,7 @@ API_GEN_2_SENSORS = [
     ),
     SensorEntityDescription(
         key=sc.DIST_TO_EMPTY,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:gas-station",
         name="Range",
         native_unit_of_measurement=LENGTH_KILOMETERS,
@@ -133,6 +132,7 @@ API_GEN_2_SENSORS = [
 EV_SENSORS = [
     SensorEntityDescription(
         key=sc.EV_DISTANCE_TO_EMPTY,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:ev-station",
         name="EV Range",
         native_unit_of_measurement=LENGTH_MILES,
