@@ -1,6 +1,7 @@
 """File for Azure Event Hub models."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import logging
 
@@ -12,12 +13,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class AzureEventHubClient:
+class AzureEventHubClient(ABC):
     """Class for the Azure Event Hub client. Use from_input to initialize."""
 
     event_hub_instance_name: str
 
     @property
+    @abstractmethod
     def client(self) -> EventHubProducerClient:
         """Return the client."""
 
