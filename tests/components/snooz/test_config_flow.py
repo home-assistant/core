@@ -260,7 +260,7 @@ async def test_async_step_user_takes_precedence_over_discovery(hass: HomeAssista
 async def _test_pairs(
     hass: HomeAssistant, flow_id: str, user_input: dict | None = None
 ) -> None:
-    pairing_mode_entered = Event(loop=hass.loop)
+    pairing_mode_entered = Event()
 
     async def _async_process_advertisements(
         _hass, _callback, _matcher, _mode, _timeout
