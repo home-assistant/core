@@ -102,7 +102,8 @@ class RuntimeEntryData:
         self.ble_connections_limit = limit
         if free:
             for fut in self._ble_connection_free_futures:
-                fut.set_result(free)
+                if not fut.done():
+                    fut.set_result(free)
             self._ble_connection_free_futures.clear()
 
     async def wait_for_ble_connections_free(self) -> int:

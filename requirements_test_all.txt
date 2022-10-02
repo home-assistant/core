@@ -251,7 +251,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.4
 
 # homeassistant.components.unifi
-aiounifi==35
+aiounifi==36
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -651,7 +651,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220929.0
+home-assistant-frontend==20221002.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
