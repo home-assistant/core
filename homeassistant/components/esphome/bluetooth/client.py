@@ -15,10 +15,9 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.service import BleakGATTServiceCollection
 from bleak.exc import BleakError
 
-from homeassistant.core import CALLBACK_TYPE, async_get_hass, callback as hass_callback
+from homeassistant.core import CALLBACK_TYPE, async_get_hass
 
 from ..domain_data import DomainData
-from ..entry_data import RuntimeEntryData
 from .characteristic import BleakGATTCharacteristicESPHome
 from .descriptor import BleakGATTDescriptorESPHome
 from .service import BleakGATTServiceESPHome
@@ -85,7 +84,9 @@ class ESPHomeClient(BaseBleakClient):
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
         self.domain_data = DomainData.get(async_get_hass())
-        self._client = self._async_get_entry_data().client
+        config_entry = self.domain_data.get_by_unique_id(self._source)
+        self.entry_data = self.domain_data.get_entry_data(config_entry)
+        self._client = self.entry_data.client
         self._is_connected = False
         self._mtu: int | None = None
         self._cancel_connection_state: CALLBACK_TYPE | None = None
@@ -108,12 +109,6 @@ class ESPHomeClient(BaseBleakClient):
             )
         self._cancel_connection_state = None
 
-    @hass_callback
-    def _async_get_entry_data(self) -> RuntimeEntryData:
-        """Get the entry data."""
-        config_entry = self.domain_data.get_by_unique_id(self._source)
-        return self.domain_data.get_entry_data(config_entry)
-
     def _async_ble_device_disconnected(self) -> None:
         """Handle the BLE device disconnecting from the ESP."""
         _LOGGER.debug("%s: BLE device disconnected", self._source)
@@ -125,8 +120,7 @@ class ESPHomeClient(BaseBleakClient):
     def _async_esp_disconnected(self) -> None:
         """Handle the esp32 client disconnecting from hass."""
         _LOGGER.debug("%s: ESP device disconnected", self._source)
-        entry_data = self._async_get_entry_data()
-        entry_data.disconnect_callbacks.remove(self._async_esp_disconnected)
+        self.entry_data.disconnect_callbacks.remove(self._async_esp_disconnected)
         self._async_ble_device_disconnected()
 
     def _async_call_bleak_disconnected_callback(self) -> None:
@@ -179,8 +173,7 @@ class ESPHomeClient(BaseBleakClient):
                 connected_future.set_exception(BleakError("Disconnected"))
                 return
 
-            entry_data = self._async_get_entry_data()
-            entry_data.disconnect_callbacks.append(self._async_esp_disconnected)
+            self.entry_data.disconnect_callbacks.append(self._async_esp_disconnected)
             connected_future.set_result(connected)
 
         timeout = kwargs.get("timeout", self._timeout)
@@ -203,14 +196,13 @@ class ESPHomeClient(BaseBleakClient):
 
     async def _wait_for_free_connection_slot(self, timeout: float) -> None:
         """Wait for a free connection slot."""
-        entry_data = self._async_get_entry_data()
-        if entry_data.ble_connections_free:
+        if self.entry_data.ble_connections_free:
             return
         _LOGGER.debug(
             "%s: Out of connection slots, waiting for a free one", self._source
         )
         async with async_timeout.timeout(timeout):
-            await entry_data.wait_for_ble_connections_free()
+            await self.entry_data.wait_for_ble_connections_free()
 
     @property
     def is_connected(self) -> bool:
