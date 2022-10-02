@@ -12,10 +12,7 @@ from homeassistant.components.rflink import (
     EVENT_KEY_SENSOR,
     TMP_ENTITY,
 )
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
