@@ -242,7 +242,7 @@ def _async_register_button_devices(
             "manufacturer": MANUFACTURER,
             "config_entry_id": config_entry_id,
             "identifiers": {(DOMAIN, ha_device["serial"])},
-            "model": f"{device['model']} ({ha_device['type']})",
+            "model": f"{ha_device['model']} ({ha_device['type']})",
             "via_device": (DOMAIN, bridge_device["serial"]),
         }
         if area != UNASSIGNED_AREA:
