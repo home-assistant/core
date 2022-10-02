@@ -2075,6 +2075,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             Ext("timedelta", glob=timedelta),
             Ext("max", glob=min_max_from_filter(self.filters["max"], "max")),
             Ext("min", glob=min_max_from_filter(self.filters["min"], "min")),
+            Ext("version", filt=version, glob=version),
+            Ext(
+                "entry_id",
+                filt=pass_context(hassfunction(entry_id)),
+                glob=hassfunction(entry_id),
+                require_hass=True,
+            ),
             Ext(
                 "device_entities",
                 filt=pass_context(hassfunction(device_entities)),
