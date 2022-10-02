@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_off": "{entity_name} is off",
+            "is_on": "{entity_name} is on"
+        }
+    },
     "state": {
         "_": {
             "off": "Off",
