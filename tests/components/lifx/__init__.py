@@ -151,7 +151,8 @@ def _mocked_light_strip() -> Light:
     bulb.set_color_zones = MockLifxCommand(bulb)
     bulb.get_multizone_effect = MockLifxCommand(bulb)
     bulb.set_multizone_effect = MockLifxCommand(bulb)
-
+    bulb.get_extended_color_zones = MockLifxCommand(bulb)
+    bulb.set_extended_color_zones = MockLifxCommand(bulb)
     return bulb
 
 
