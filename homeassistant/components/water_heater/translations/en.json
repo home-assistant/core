@@ -3,6 +3,10 @@
         "action_type": {
             "turn_off": "Turn off {entity_name}",
             "turn_on": "Turn on {entity_name}"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on"
         }
     },
     "state": {
