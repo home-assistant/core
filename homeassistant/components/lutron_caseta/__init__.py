@@ -221,7 +221,7 @@ def _async_register_button_devices(
     device_registry = dr.async_get(hass)
     button_devices_by_dr_id: dict[str, dict] = {}
     device_info_by_device_id: dict[int, dict[str, Any]] = {}
-    seen = set()
+    seen: set[str] = set()
     bridge_devices = bridge.get_devices()
 
     for device in button_devices_by_id.values():
@@ -360,22 +360,23 @@ class LutronCasetaDevice(Entity):
         if "serial" not in self._device:
             return
 
-        if "parent_device" in device:
-            # Check if this entity will be a child of an existing device
-            if device_info_by_device_id is not None:
-                if (
-                    parent_device_info := device_info_by_device_id.get(
-                        device["parent_device"], None
-                    )
-                ) is not None:
-                    # Append the child device name to the end of the parent keypad name to create the entity name
-                    self._attr_name = " ".join(
-                        (parent_device_info["name"], device["device_name"])
-                    )
-                    # Set the device_info to the same as the Parent Keypad
-                    # The entities will be nested inside the keypad device
-                    self._attr_device_info = parent_device_info
-                    return
+        if (
+            "parent_device" in device
+            and device_info_by_device_id is not None
+            and (
+                parent_device_info := device_info_by_device_id.get(
+                    device["parent_device"]
+                )
+            )
+        ):
+            # Append the child device name to the end of the parent keypad name to create the entity name
+            self._attr_name = " ".join(
+                (parent_device_info["name"], device["device_name"])
+            )
+            # Set the device_info to the same as the Parent Keypad
+            # The entities will be nested inside the keypad device
+            self._attr_device_info = parent_device_info
+            return
 
         area, name = _area_and_name_from_name(device["name"])
         self._attr_name = full_name = f"{area} {name}"
