@@ -30,7 +30,7 @@ from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator, Light
-from .palettes import PALETTES
+from .themes import LIFX_THEMES, get_theme_hsbk
 from .util import convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -51,6 +51,7 @@ ATTR_CHANGE = "change"
 ATTR_DIRECTION = "direction"
 ATTR_SPEED = "speed"
 ATTR_PALETTE = "palette"
+ATTR_THEME = "theme"
 
 EFFECT_FLAME = "FLAME"
 EFFECT_MORPH = "MORPH"
@@ -60,7 +61,7 @@ EFFECT_OFF = "OFF"
 EFFECT_FLAME_DEFAULT_SPEED = 3
 
 EFFECT_MORPH_DEFAULT_SPEED = 3
-EFFECT_MORPH_DEFAULT_PALETTE = "exciting"
+EFFECT_MORPH_DEFAULT_THEME = "exciting"
 
 EFFECT_MOVE_DEFAULT_SPEED = 3
 EFFECT_MOVE_DEFAULT_DIRECTION = "right"
@@ -146,11 +147,28 @@ LIFX_EFFECT_FLAME_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+HSBK_SCHEMA = vol.All(
+    vol.Coerce(tuple),
+    vol.ExactSequence(
+        (
+            vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+            vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+            vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+            vol.All(vol.Coerce(int), vol.Clamp(min=1500, max=9000)),
+        )
+    ),
+)
+
 LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
-        ATTR_PALETTE: vol.Optional(vol.In(PALETTES.keys())),
+        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
+            vol.In(LIFX_THEMES.keys())
+        ),
+        vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
+            cv.ensure_list, [HSBK_SCHEMA]
+        ),
     }
 )
 
@@ -274,12 +292,24 @@ class LIFXManager:
             )
 
         elif service == SERVICE_EFFECT_MORPH:
+
+            theme = kwargs.get(ATTR_THEME, "exciting")
+            palette = kwargs.get(ATTR_PALETTE, get_theme_hsbk(theme))
+            palette_colors: list[tuple[int, int, int, int]] = []
+
+            for hsbk in palette:
+                hue = round(hsbk[0] / 360 * 65535)
+                sat = round(hsbk[1] / 100 * 65535)
+                bri = round(hsbk[2] / 255 * 65535)
+                kel = int(hsbk[3])
+                palette_colors.append((hue, sat, bri, kel))
+
             await asyncio.gather(
                 *(
                     coordinator.async_set_matrix_effect(
                         effect=EFFECT_MORPH,
                         speed=kwargs.get(ATTR_SPEED, EFFECT_MORPH_DEFAULT_SPEED),
-                        palette=kwargs.get(ATTR_PALETTE, EFFECT_MORPH_DEFAULT_PALETTE),
+                        palette=palette_colors,
                         power_on=kwargs.get(ATTR_POWER_ON, True),
                     )
                     for coordinator in coordinators

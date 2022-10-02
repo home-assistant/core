@@ -32,7 +32,6 @@ from .const import (
     TARGET_ANY,
     UNAVAILABLE_GRACE,
 )
-from .palettes import PALETTES
 from .util import (
     async_execute_lifx,
     get_real_mac_addr,
@@ -309,8 +308,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     async def async_set_matrix_effect(
         self,
         effect: str,
+        palette: list[tuple[int, int, int, int]] | None = None,
         speed: float = 3,
-        palette: str = "exciting",
         power_on: bool = True,
     ) -> None:
         """Control the firmware-based effects on a matrix device."""
@@ -318,22 +317,15 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             if power_on and self.device.power_level == 0:
                 await self.async_set_power(True, 0)
 
-            # get the chosen palette color values and pad to 16
-            palette_colors: list[tuple[int, int, int, int]] = PALETTES.get(
-                palette.lower(), PALETTES["exciting"]
-            )
-            palette_count = len(palette_colors)
-            if palette_count < 16:
-                for _ in range(palette_count, 16):
-                    palette_colors.append((0, 0, 0, 0))
+            if palette is None:
+                palette = []
 
             await async_execute_lifx(
                 partial(
                     self.device.set_tile_effect,
                     effect=TileEffectType[effect.upper()].value,
                     speed=speed,
-                    palette=palette_colors,
-                    palette_count=palette_count,
+                    palette=palette,
                 )
             )
             self.active_effect = FirmwareEffect[effect.upper()]

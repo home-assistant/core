@@ -14,6 +14,7 @@ from homeassistant.components.lifx.manager import (
     ATTR_DIRECTION,
     ATTR_PALETTE,
     ATTR_SPEED,
+    ATTR_THEME,
     SERVICE_EFFECT_COLORLOOP,
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
@@ -685,25 +686,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
     assert call_dict == {
         "effect": 3,
         "speed": 3,
-        "palette": [
-            (0, 65535, 65535, 3500),
-            (7282, 65535, 65535, 3500),
-            (10923, 65535, 65535, 3500),
-            (22209, 65535, 65535, 3500),
-            (43509, 65535, 65535, 3500),
-            (49334, 65535, 65535, 3500),
-            (53521, 65535, 65535, 3500),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-        ],
-        "palette_count": 7,
+        "palette": [],
     }
     bulb.get_tile_effect.reset_mock()
     bulb.set_tile_effect.reset_mock()
@@ -713,7 +696,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_EFFECT_MORPH,
-        {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 4, ATTR_PALETTE: "autumn"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 4, ATTR_THEME: "autumn"},
         blocking=True,
     )
 
@@ -721,12 +704,11 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
     bulb.effect = {
         "effect": "MORPH",
         "speed": 4.0,
-        "palette_count": 4,
         "palette": [
             (5643, 65535, 32768, 3500),
-            (15110, 65535, 32768, 3500),
+            (15109, 65535, 32768, 3500),
             (8920, 65535, 32768, 3500),
-            (10559, 65535, 32768, 3500),
+            (10558, 65535, 32768, 3500),
         ],
     }
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
@@ -744,23 +726,68 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         "speed": 4,
         "palette": [
             (5643, 65535, 32768, 3500),
-            (15110, 65535, 32768, 3500),
+            (15109, 65535, 32768, 3500),
             (8920, 65535, 32768, 3500),
-            (10559, 65535, 32768, 3500),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
-            (0, 0, 0, 0),
+            (10558, 65535, 32768, 3500),
         ],
-        "palette_count": 4,
+    }
+    bulb.get_tile_effect.reset_mock()
+    bulb.set_tile_effect.reset_mock()
+    bulb.set_power.reset_mock()
+
+    bulb.power_level = 0
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_MORPH,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_SPEED: 6,
+            ATTR_PALETTE: [
+                (0, 100, 255, 3500),
+                (60, 100, 255, 3500),
+                (120, 100, 255, 3500),
+                (180, 100, 255, 3500),
+                (240, 100, 255, 3500),
+                (300, 100, 255, 3500),
+            ],
+        },
+        blocking=True,
+    )
+
+    bulb.power_level = 65535
+    bulb.effect = {
+        "effect": "MORPH",
+        "speed": 6,
+        "palette": [
+            (0, 65535, 65535, 3500),
+            (10922, 65535, 65535, 3500),
+            (21845, 65535, 65535, 3500),
+            (32768, 65535, 65535, 3500),
+            (43690, 65535, 65535, 3500),
+            (54612, 65535, 65535, 3500),
+        ],
+    }
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    assert len(bulb.set_power.calls) == 1
+    assert len(bulb.set_tile_effect.calls) == 1
+    call_dict = bulb.set_tile_effect.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "effect": 2,
+        "speed": 6,
+        "palette": [
+            (0, 65535, 65535, 3500),
+            (10922, 65535, 65535, 3500),
+            (21845, 65535, 65535, 3500),
+            (32768, 65535, 65535, 3500),
+            (43690, 65535, 65535, 3500),
+            (54612, 65535, 65535, 3500),
+        ],
     }
     bulb.get_tile_effect.reset_mock()
     bulb.set_tile_effect.reset_mock()
