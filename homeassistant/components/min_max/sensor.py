@@ -270,10 +270,7 @@ class MinMaxSensor(SensorEntity):
     ) -> None:
         """Handle the sensor state changes."""
         new_state: State | None = event.data.get("new_state")
-        entity: str | None = event.data.get("entity_id")
-
-        if entity is None:
-            return
+        entity: str = event.data["entity_id"]
 
         if (
             new_state is None
