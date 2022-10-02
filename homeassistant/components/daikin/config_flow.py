@@ -15,7 +15,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
+from .const import CONF_ENABLE_OUTDOOR_SENSORS, CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +37,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST, default=self.host): str,
                 vol.Optional(CONF_API_KEY): str,
                 vol.Optional(CONF_PASSWORD): str,
+                vol.Required(CONF_ENABLE_OUTDOOR_SENSORS, default=True): bool,
             }
         )
 
-    async def _create_entry(self, host, mac, key=None, uuid=None, password=None):
+    async def _create_entry(
+        self, host, mac, key=None, uuid=None, password=None, enable_outdoor_sensors=True
+    ):
         """Register new entry."""
         if not self.unique_id:
             await self.async_set_unique_id(mac)
@@ -54,10 +57,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_API_KEY: key,
                 CONF_UUID: uuid,
                 CONF_PASSWORD: password,
+                CONF_ENABLE_OUTDOOR_SENSORS: enable_outdoor_sensors,
             },
         )
 
-    async def _create_device(self, host, key=None, password=None):
+    async def _create_device(
+        self, host, key=None, password=None, enable_outdoor_sensors=True
+    ):
         """Create device."""
         # BRP07Cxx devices needs uuid together with key
         if key:
@@ -107,7 +113,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         mac = device.mac
-        return await self._create_entry(host, mac, key, uuid, password)
+        return await self._create_entry(
+            host, mac, key, uuid, password, enable_outdoor_sensors
+        )
 
     async def async_step_user(self, user_input=None):
         """User initiated config flow."""
@@ -124,6 +132,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST],
             user_input.get(CONF_API_KEY),
             user_input.get(CONF_PASSWORD),
+            user_input.get(CONF_ENABLE_OUTDOOR_SENSORS),
         )
 
     async def async_step_zeroconf(
