@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from typing import Any
 
 from pysnooz.advertisement import SnoozAdvertisementData
@@ -23,6 +24,7 @@ from .const import DOMAIN
 WAIT_FOR_PAIRING_TIMEOUT = 30
 
 
+@dataclass
 class DiscoveredSnooz:
     """Represents a discovered Snooz device."""
 

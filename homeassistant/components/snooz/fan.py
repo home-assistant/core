@@ -1,7 +1,7 @@
 """Fan representation of a Snooz device."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -19,6 +19,7 @@ from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFe
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -30,8 +31,6 @@ logging.getLogger("transitions.core").setLevel(logging.WARNING)
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
-
-ATTR_LAST_COMMAND_SUCCESSFUL = "last_command_successful"
 
 
 async def async_setup_entry(
@@ -68,7 +67,6 @@ class SnoozFan(FanEntity, RestoreEntity):
         self._attr_is_on = None
         self._attr_should_poll = False
         self._attr_percentage = None
-        self._last_command_successful: bool | None = None
 
     def _write_state_changed(self) -> None:
         # cache state for restore entity
@@ -95,9 +93,6 @@ class SnoozFan(FanEntity, RestoreEntity):
                 else None
             )
             self._attr_percentage = last_state.attributes.get(ATTR_PERCENTAGE)
-            self._last_command_successful = last_state.attributes.get(
-                ATTR_LAST_COMMAND_SUCCESSFUL
-            )
 
         self.async_on_remove(self._subscribe_to_device_events())
 
@@ -134,11 +129,6 @@ class SnoozFan(FanEntity, RestoreEntity):
         """Return True if unable to access real state of the entity."""
         return not self._device.is_connected or self._device.state is UnknownSnoozState
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Extra state attributes for the device."""
-        return {ATTR_LAST_COMMAND_SUCCESSFUL: self._last_command_successful}
-
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -158,7 +148,8 @@ class SnoozFan(FanEntity, RestoreEntity):
 
     async def _async_execute_command(self, command: SnoozCommandData) -> None:
         result = await self._device.async_execute_command(command)
-        self._last_command_successful = (
-            result.status == SnoozCommandResultStatus.SUCCESSFUL
-        )
+        if result.status != SnoozCommandResultStatus.SUCCESSFUL:
+            raise HomeAssistantError(
+                f"Command {command} failed with status {result.status.name}"
+            )
         self._write_state_changed()
