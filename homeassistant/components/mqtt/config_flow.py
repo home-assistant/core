@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Callable
 import queue
 from types import MappingProxyType
 from typing import Any
@@ -196,52 +197,61 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_options(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: ConfigType | None = None
     ) -> FlowResult:
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
         yaml_config = get_mqtt_data(self.hass, True).config or {}
-        options_config: dict[str, Any] = {}
-        if user_input is not None:
-            bad_birth = False
-            bad_will = False
+        options_config: ConfigType = {}
+        bad_input: bool = False
 
+        def _birth_will(birt_or_will: str) -> dict:
+            """Return the user input for birth or will."""
+            assert user_input
+            return {
+                ATTR_TOPIC: user_input[f"{birt_or_will}_topic"],
+                ATTR_PAYLOAD: user_input.get(f"{birt_or_will}_payload", ""),
+                ATTR_QOS: user_input[f"{birt_or_will}_qos"],
+                ATTR_RETAIN: user_input[f"{birt_or_will}_retain"],
+            }
+
+        def _validate(
+            field: str, values: ConfigType, error_code: str, schema: Callable
+        ):
+            """Validate the user input."""
+            nonlocal bad_input
+            try:
+                option_values = schema(values)
+                options_config[field] = option_values
+            except vol.Invalid:
+                errors["base"] = error_code
+                bad_input = True
+
+        if user_input is not None:
+            # validate input
+            options_config[CONF_DISCOVERY] = user_input[CONF_DISCOVERY]
             if "birth_topic" in user_input:
-                birth_message = {
-                    ATTR_TOPIC: user_input["birth_topic"],
-                    ATTR_PAYLOAD: user_input.get("birth_payload", ""),
-                    ATTR_QOS: user_input["birth_qos"],
-                    ATTR_RETAIN: user_input["birth_retain"],
-                }
-                try:
-                    birth_message = MQTT_WILL_BIRTH_SCHEMA(birth_message)
-                    options_config[CONF_BIRTH_MESSAGE] = birth_message
-                except vol.Invalid:
-                    errors["base"] = "bad_birth"
-                    bad_birth = True
+                _validate(
+                    CONF_BIRTH_MESSAGE,
+                    _birth_will("birth"),
+                    "bad_birth",
+                    MQTT_WILL_BIRTH_SCHEMA,
+                )
             if not user_input["birth_enable"]:
                 options_config[CONF_BIRTH_MESSAGE] = {}
 
             if "will_topic" in user_input:
-                will_message = {
-                    ATTR_TOPIC: user_input["will_topic"],
-                    ATTR_PAYLOAD: user_input.get("will_payload", ""),
-                    ATTR_QOS: user_input["will_qos"],
-                    ATTR_RETAIN: user_input["will_retain"],
-                }
-                try:
-                    will_message = MQTT_WILL_BIRTH_SCHEMA(will_message)
-                    options_config[CONF_WILL_MESSAGE] = will_message
-                except vol.Invalid:
-                    errors["base"] = "bad_will"
-                    bad_will = True
+                _validate(
+                    CONF_WILL_MESSAGE,
+                    _birth_will("will"),
+                    "bad_will",
+                    MQTT_WILL_BIRTH_SCHEMA,
+                )
             if not user_input["will_enable"]:
                 options_config[CONF_WILL_MESSAGE] = {}
 
-            options_config[CONF_DISCOVERY] = user_input[CONF_DISCOVERY]
-
-            if not bad_birth and not bad_will:
+            if not bad_input:
                 updated_config = {}
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
@@ -268,6 +278,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_DISCOVERY, yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
         )
 
+        # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
         fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = bool
 
