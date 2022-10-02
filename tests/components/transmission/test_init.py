@@ -80,7 +80,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "domain,old_unique_id,key,migration_needed",
+    "domain,old_unique_id,key,migration_expected",
     [
         (SENSOR_DOMAIN, "0.0.0.0-Transmission Down Speed", "download", True),
         (SENSOR_DOMAIN, "0.0.0.0-Transmission Up Speed", "upload", True),
@@ -119,7 +119,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     ],
 )
 async def test_migrate_unique_id(
-    hass, domain, old_unique_id: str, key: str, migration_needed: bool
+    hass, domain, old_unique_id: str, key: str, migration_expected: bool
 ):
     """Test unique id migration."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_DATA)
@@ -139,8 +139,8 @@ async def test_migrate_unique_id(
 
     assert await transmission.async_setup_entry(hass, entry) is True
 
-    new_unique_id = f"{entry.entry_id}-{key}" if migration_needed else old_unique_id
-    if migration_needed:
+    new_unique_id = f"{entry.entry_id}-{key}" if migration_expected else old_unique_id
+    if migration_expected:
         assert (
             ent_reg.async_get_entity_id(domain, transmission.DOMAIN, old_unique_id)
             is None

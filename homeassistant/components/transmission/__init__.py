@@ -25,7 +25,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    HomeAssistantError,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry, selector
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -96,7 +95,15 @@ PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Transmission Component."""
 
-    client = TransmissionClient(hass, config_entry)
+    try:
+        tm_api = await get_api(hass, config_entry.data)
+    except CannotConnect as error:
+        raise ConfigEntryNotReady from error
+    except (AuthenticationError, UnknownError) as error:
+        raise ConfigEntryAuthFailed from error
+
+    client = TransmissionClient(hass, config_entry, tm_api)
+
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
     await client.async_setup()
@@ -170,32 +177,26 @@ def _get_client(hass: HomeAssistant, data: dict[str, Any]) -> TransmissionClient
 class TransmissionClient:
     """Transmission Client Object."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        tm_api: transmissionrpc.Client,
+    ) -> None:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry = config_entry
-        self.tm_api: transmission_rpc.Client = None
-        self._tm_data: TransmissionData = None
+        self.tm_api = tm_api
+        self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
         self.unsub_timer = None
 
     @property
     def api(self) -> TransmissionData:
         """Return the TransmissionData object."""
-        if not self._tm_data:
-            raise HomeAssistantError("Transmission client not initialised")
         return self._tm_data
 
     async def async_setup(self) -> None:
         """Set up the Transmission client."""
-
-        try:
-            self.tm_api = await get_api(self.hass, self.config_entry.data)
-        except CannotConnect as error:
-            raise ConfigEntryNotReady from error
-        except (AuthenticationError, UnknownError) as error:
-            raise ConfigEntryAuthFailed from error
-
-        self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
 
         @callback
         def update_unique_id(
@@ -223,10 +224,9 @@ class TransmissionClient:
                 entity_entry.unique_id,
             )
 
-            if match is None:
-                return None
-
-            if (name := match.group("name")) in name_to_key:
+            if (
+                name := match.group("name") if match is not None else None
+            ) in name_to_key:
                 return {
                     "new_unique_id": f"{self.config_entry.entry_id}-{name_to_key[name]}"
                 }
