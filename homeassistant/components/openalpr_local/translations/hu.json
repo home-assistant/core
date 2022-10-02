@@ -1,0 +1,8 @@
+{
+    "issues": {
+        "pending_removal": {
+            "description": "Az OpenALPR Local integr\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra v\u00e1r a Home Assistantb\u00f3l, \u00e9s a 2022.10-es Home Assistant-t\u00f3l kezdve nem lesz el\u00e9rhet\u0151.\n\nA probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "Az OpenALPR Local integr\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
+    }
+}

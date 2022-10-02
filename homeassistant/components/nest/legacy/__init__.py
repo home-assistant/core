@@ -348,6 +348,8 @@ class NestLegacyDevice:
 class NestSensorDevice(Entity):
     """Representation of a Nest sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, structure, device, variable):
         """Initialize the sensor."""
         self.structure = structure
@@ -369,11 +371,6 @@ class NestSensorDevice(Entity):
     def name(self):
         """Return the name of the nest, if any."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Do not need poll thanks using Nest streaming API."""
-        return False
 
     @property
     def unique_id(self):

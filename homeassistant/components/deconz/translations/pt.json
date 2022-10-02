@@ -54,6 +54,7 @@
             "remote_button_double_press": "Bot\u00e3o \"{subtype}\" clicado duas vezes",
             "remote_button_long_press": "Bot\u00e3o \"{subtype}\" pressionado continuamente",
             "remote_falling": "Dispositivo em queda livre",
+            "remote_flip_180_degrees": "Dispositivo virado 180 graus",
             "remote_gyro_activated": "Dispositivo agitado"
         }
     },

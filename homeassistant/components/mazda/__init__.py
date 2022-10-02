@@ -192,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register services
     hass.services.async_register(
@@ -221,6 +221,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class MazdaEntity(CoordinatorEntity):
     """Defines a base Mazda entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, client, coordinator, index):
         """Initialize the Mazda entity."""

@@ -6,6 +6,7 @@ from time import monotonic
 
 from . import (
     application_credentials,
+    bluetooth,
     codeowners,
     config_flow,
     coverage,
@@ -19,6 +20,7 @@ from . import (
     requirements,
     services,
     ssdp,
+    supported_brands,
     translations,
     usb,
     zeroconf,
@@ -27,8 +29,8 @@ from .model import Config, Integration
 
 INTEGRATION_PLUGINS = [
     application_credentials,
+    bluetooth,
     codeowners,
-    config_flow,
     dependencies,
     dhcp,
     json,
@@ -37,9 +39,11 @@ INTEGRATION_PLUGINS = [
     requirements,
     services,
     ssdp,
+    supported_brands,
     translations,
     usb,
     zeroconf,
+    config_flow,
 ]
 HASS_PLUGINS = [
     coverage,

@@ -192,6 +192,10 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             f"Invalid XML response from ISY; Ensure the ISY is running the latest firmware: {err}"
         ) from err
+    except TypeError as err:
+        raise ConfigEntryNotReady(
+            f"Invalid response ISY, device is likely still starting: {err}"
+        ) from err
 
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass_isy_data, isy.programs)
@@ -204,7 +208,7 @@ async def async_setup_entry(
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def _async_stop_auto_update(event: Event) -> None:

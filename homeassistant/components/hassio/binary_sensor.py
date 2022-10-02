@@ -13,14 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ADDONS_COORDINATOR
-from .const import (
-    ATTR_STARTED,
-    ATTR_STATE,
-    ATTR_UPDATE_AVAILABLE,
-    DATA_KEY_ADDONS,
-    DATA_KEY_OS,
-)
-from .entity import HassioAddonEntity, HassioOSEntity
+from .const import ATTR_STARTED, ATTR_STATE, DATA_KEY_ADDONS
+from .entity import HassioAddonEntity
 
 
 @dataclass
@@ -30,17 +24,7 @@ class HassioBinarySensorEntityDescription(BinarySensorEntityDescription):
     target: str | None = None
 
 
-COMMON_ENTITY_DESCRIPTIONS = (
-    HassioBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        device_class=BinarySensorDeviceClass.UPDATE,
-        entity_registry_enabled_default=False,
-        key=ATTR_UPDATE_AVAILABLE,
-        name="Update Available",
-    ),
-)
-
-ADDON_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS + (
+ADDON_ENTITY_DESCRIPTIONS = (
     HassioBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_registry_enabled_default=False,
@@ -59,28 +43,15 @@ async def async_setup_entry(
     """Binary sensor set up for Hass.io config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
 
-    entities = []
-
-    for entity_description in ADDON_ENTITY_DESCRIPTIONS:
-        for addon in coordinator.data[DATA_KEY_ADDONS].values():
-            entities.append(
-                HassioAddonBinarySensor(
-                    addon=addon,
-                    coordinator=coordinator,
-                    entity_description=entity_description,
-                )
-            )
-
-    if coordinator.is_hass_os:
-        for entity_description in COMMON_ENTITY_DESCRIPTIONS:
-            entities.append(
-                HassioOSBinarySensor(
-                    coordinator=coordinator,
-                    entity_description=entity_description,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        HassioAddonBinarySensor(
+            addon=addon,
+            coordinator=coordinator,
+            entity_description=entity_description,
+        )
+        for addon in coordinator.data[DATA_KEY_ADDONS].values()
+        for entity_description in ADDON_ENTITY_DESCRIPTIONS
+    )
 
 
 class HassioAddonBinarySensor(HassioAddonEntity, BinarySensorEntity):
@@ -97,12 +68,3 @@ class HassioAddonBinarySensor(HassioAddonEntity, BinarySensorEntity):
         if self.entity_description.target is None:
             return value
         return value == self.entity_description.target
-
-
-class HassioOSBinarySensor(HassioOSEntity, BinarySensorEntity):
-    """Binary sensor to track whether an update is available for Hass.io OS."""
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        return self.coordinator.data[DATA_KEY_OS][self.entity_description.key]

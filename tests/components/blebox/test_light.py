@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
@@ -509,17 +510,63 @@ async def test_turn_on_failure(feature, hass, config, caplog):
     caplog.set_level(logging.ERROR)
 
     feature_mock, entity_id = feature
-    feature_mock.async_on = AsyncMock(side_effect=blebox_uniapi.error.BadOnValueError)
+    feature_mock.async_on = AsyncMock(side_effect=ValueError)
     await async_setup_entity(hass, config, entity_id)
 
     feature_mock.sensible_on_value = 123
+    with pytest.raises(ValueError) as info:
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+
+    assert f"Turning on '{feature_mock.full_name}' failed: Bad value 123" in str(
+        info.value
+    )
+
+
+async def test_wlightbox_on_effect(wlightbox, hass, config):
+    """Test light on."""
+
+    feature_mock, entity_id = wlightbox
+
+    def initial_update():
+        feature_mock.is_on = False
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    await async_setup_entity(hass, config, entity_id)
+    feature_mock.async_update = AsyncMock()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    def turn_on(value):
+        feature_mock.is_on = True
+        feature_mock.effect = "POLICE"
+
+    feature_mock.async_on = AsyncMock(side_effect=turn_on)
+
+    with pytest.raises(ValueError) as info:
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {"entity_id": entity_id, ATTR_EFFECT: "NOT IN LIST"},
+            blocking=True,
+        )
+
+    assert (
+        f"Turning on with effect '{feature_mock.full_name}' failed: NOT IN LIST not in effect list."
+        in str(info.value)
+    )
+
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,
-        {"entity_id": entity_id},
+        {"entity_id": entity_id, ATTR_EFFECT: "POLICE"},
         blocking=True,
     )
 
-    assert (
-        f"Turning on '{feature_mock.full_name}' failed: Bad value 123 ()" in caplog.text
-    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_EFFECT] == "POLICE"

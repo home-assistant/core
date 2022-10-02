@@ -8,7 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 DOMAIN = "trafikverket_weatherstation"
 CONF_STATION = "station"
@@ -76,7 +76,7 @@ async def test_flow_fails(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result4["type"] == RESULT_TYPE_FORM
+    assert result4["type"] == FlowResultType.FORM
     assert result4["step_id"] == config_entries.SOURCE_USER
 
     with patch(

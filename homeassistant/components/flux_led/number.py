@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Coroutine
 import logging
-from typing import cast
+from typing import Any, cast
 
 from flux_led.protocol import (
     MUSIC_PIXELS_MAX,
@@ -143,7 +144,7 @@ class FluxConfigNumber(
     ) -> None:
         """Initialize the flux number."""
         super().__init__(coordinator, base_unique_id, name, key)
-        self._debouncer: Debouncer | None = None
+        self._debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._pending_value: int | None = None
 
     async def async_added_to_hass(self) -> None:

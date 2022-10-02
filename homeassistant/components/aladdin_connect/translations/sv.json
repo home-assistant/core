@@ -13,6 +13,7 @@
                 "data": {
                     "password": "L\u00f6senord"
                 },
+                "description": "Aladdin Connect-integrationen m\u00e5ste autentisera ditt konto igen",
                 "title": "\u00c5terautenticera integration"
             },
             "user": {

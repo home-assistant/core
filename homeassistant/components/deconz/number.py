@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from pydeconz.models.event import EventType
-from pydeconz.models.sensor.presence import PRESENCE_DELAY, Presence
+from pydeconz.models.sensor.presence import Presence
 
 from homeassistant.components.number import (
     DOMAIN,
@@ -42,7 +42,7 @@ ENTITY_DESCRIPTIONS = {
             key="delay",
             value_fn=lambda device: device.delay,
             suffix="Delay",
-            update_key=PRESENCE_DELAY,
+            update_key="delay",
             native_max_value=65535,
             native_min_value=0,
             native_step=1,
@@ -65,8 +65,7 @@ async def async_setup_entry(
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
         sensor = gateway.api.sensors.presence[sensor_id]
-        if sensor.type.startswith("CLIP"):
-            return
+
         for description in ENTITY_DESCRIPTIONS.get(type(sensor), []):
             if (
                 not hasattr(sensor, description.key)
@@ -78,14 +77,14 @@ async def async_setup_entry(
     gateway.register_platform_add_device_callback(
         async_add_sensor,
         gateway.api.sensors.presence,
+        always_ignore_clip_sensors=True,
     )
 
 
-class DeconzNumber(DeconzDevice, NumberEntity):
+class DeconzNumber(DeconzDevice[Presence], NumberEntity):
     """Representation of a deCONZ number entity."""
 
     TYPE = DOMAIN
-    _device: Presence
 
     def __init__(
         self,
@@ -95,16 +94,9 @@ class DeconzNumber(DeconzDevice, NumberEntity):
     ) -> None:
         """Initialize deCONZ number entity."""
         self.entity_description: DeconzNumberDescription = description
+        self._update_key = self.entity_description.update_key
+        self._name_suffix = description.suffix
         super().__init__(device, gateway)
-
-        self._attr_name = f"{device.name} {description.suffix}"
-        self._update_keys = {self.entity_description.update_key, "reachable"}
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the number value."""
-        if self._device.changed_keys.intersection(self._update_keys):
-            super().async_update_callback()
 
     @property
     def native_value(self) -> float | None:
@@ -113,8 +105,10 @@ class DeconzNumber(DeconzDevice, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set sensor config."""
-        data = {self.entity_description.key: int(value)}
-        await self._device.set_config(**data)
+        await self.gateway.api.sensors.presence.set_config(
+            id=self._device.resource_id,
+            delay=int(value),
+        )
 
     @property
     def unique_id(self) -> str:

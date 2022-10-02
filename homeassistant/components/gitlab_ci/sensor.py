@@ -8,13 +8,7 @@ from gitlab import Gitlab, GitlabAuthenticationError, GitlabGetError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_NAME,
-    CONF_SCAN_INTERVAL,
-    CONF_TOKEN,
-    CONF_URL,
-)
+from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -61,7 +55,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the GitLab sensor platform."""
-    _name = config.get(CONF_NAME)
+    _name = config.get(CONF_NAME, DEFAULT_NAME)
     _interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     _url = config.get(CONF_URL)
 
@@ -78,72 +72,39 @@ def setup_platform(
 class GitLabSensor(SensorEntity):
     """Representation of a GitLab sensor."""
 
-    def __init__(self, gitlab_data, name):
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(self, gitlab_data: GitLabData, name: str) -> None:
         """Initialize the GitLab sensor."""
-        self._available = False
-        self._state = None
-        self._started_at = None
-        self._finished_at = None
-        self._duration = None
-        self._commit_id = None
-        self._commit_date = None
-        self._build_id = None
-        self._branch = None
+        self._attr_available = False
         self._gitlab_data = gitlab_data
-        self._name = name
+        self._attr_name = name
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_BUILD_STATUS: self._state,
-            ATTR_BUILD_STARTED: self._started_at,
-            ATTR_BUILD_FINISHED: self._finished_at,
-            ATTR_BUILD_DURATION: self._duration,
-            ATTR_BUILD_COMMIT_ID: self._commit_id,
-            ATTR_BUILD_COMMIT_DATE: self._commit_date,
-            ATTR_BUILD_ID: self._build_id,
-            ATTR_BUILD_BRANCH: self._branch,
-        }
-
-    @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend."""
-        if self._state == "success":
+        if self.native_value == "success":
             return ICON_HAPPY
-        if self._state == "failed":
+        if self.native_value == "failed":
             return ICON_SAD
         return ICON_OTHER
 
-    def update(self):
+    def update(self) -> None:
         """Collect updated data from GitLab API."""
         self._gitlab_data.update()
 
-        self._state = self._gitlab_data.status
-        self._started_at = self._gitlab_data.started_at
-        self._finished_at = self._gitlab_data.finished_at
-        self._duration = self._gitlab_data.duration
-        self._commit_id = self._gitlab_data.commit_id
-        self._commit_date = self._gitlab_data.commit_date
-        self._build_id = self._gitlab_data.build_id
-        self._branch = self._gitlab_data.branch
-        self._available = self._gitlab_data.available
+        self._attr_native_value = self._gitlab_data.status
+        self._attr_extra_state_attributes = {
+            ATTR_BUILD_STATUS: self._gitlab_data.status,
+            ATTR_BUILD_STARTED: self._gitlab_data.started_at,
+            ATTR_BUILD_FINISHED: self._gitlab_data.finished_at,
+            ATTR_BUILD_DURATION: self._gitlab_data.duration,
+            ATTR_BUILD_COMMIT_ID: self._gitlab_data.commit_id,
+            ATTR_BUILD_COMMIT_DATE: self._gitlab_data.commit_date,
+            ATTR_BUILD_ID: self._gitlab_data.build_id,
+            ATTR_BUILD_BRANCH: self._gitlab_data.branch,
+        }
+        self._attr_available = self._gitlab_data.available
 
 
 class GitLabData:
@@ -167,7 +128,7 @@ class GitLabData:
         self.build_id = None
         self.branch = None
 
-    def _update(self):
+    def _update(self) -> None:
         try:
             _projects = self._gitlab.projects.get(self._gitlab_id)
             _last_pipeline = _projects.pipelines.list(page=1)[0]

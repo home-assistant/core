@@ -47,7 +47,7 @@ async def test_show_form_no_hubs(hass, mock_hub_discover):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
     # Check we performed the discovery
@@ -66,7 +66,7 @@ async def test_show_form_one_hub(hass, mock_hub_discover, mock_hub_run):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_1.id
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST1,
@@ -91,7 +91,7 @@ async def test_show_form_two_hubs(hass, mock_hub_discover):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Check we performed the discovery
@@ -117,7 +117,7 @@ async def test_create_second_entry(hass, mock_hub_run, mock_hub_discover):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_2.id
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST2,

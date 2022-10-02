@@ -92,7 +92,7 @@ class DweetSensor(SensorEntity):
         """Return the state."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from REST API."""
         self.dweet.update()
 

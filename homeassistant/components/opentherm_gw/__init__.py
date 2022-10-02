@@ -1,9 +1,11 @@
 """Support for OpenTherm Gateway devices."""
+import asyncio
 from datetime import date, datetime
 import logging
 
 import pyotgw
 import pyotgw.vars as gw_vars
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -23,6 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -37,6 +40,7 @@ from .const import (
     CONF_PRECISION,
     CONF_READ_PRECISION,
     CONF_SET_PRECISION,
+    CONNECTION_TIMEOUT,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
     DOMAIN,
@@ -107,10 +111,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     config_entry.add_update_listener(options_updated)
 
-    # Schedule directly on the loop to avoid blocking HA startup.
-    hass.loop.create_task(gateway.connect_and_subscribe())
+    try:
+        await asyncio.wait_for(
+            gateway.connect_and_subscribe(),
+            timeout=CONNECTION_TIMEOUT,
+        )
+    except (asyncio.TimeoutError, ConnectionError, SerialException) as ex:
+        await gateway.cleanup()
+        raise ConfigEntryNotReady(
+            f"Could not connect to gateway at {gateway.device_path}: {ex}"
+        ) from ex
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     register_services(hass)
     return True
@@ -416,7 +428,7 @@ class OpenThermGatewayDevice:
         self.status = {}
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_options_update"
-        self.gateway = pyotgw.pyotgw()
+        self.gateway = pyotgw.OpenThermGateway()
         self.gw_version = None
 
     async def cleanup(self, event=None):
@@ -427,7 +439,10 @@ class OpenThermGatewayDevice:
 
     async def connect_and_subscribe(self):
         """Connect to serial device and subscribe report handler."""
-        self.status = await self.gateway.connect(self.hass.loop, self.device_path)
+        self.status = await self.gateway.connect(self.device_path)
+        if not self.status:
+            await self.cleanup()
+            raise ConnectionError
         version_string = self.status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
         self.gw_version = version_string[18:] if version_string else None
         _LOGGER.debug(

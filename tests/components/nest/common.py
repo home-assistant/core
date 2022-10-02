@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 import copy
 from dataclasses import dataclass, field
 import time
-from typing import Any, Generator, TypeVar
+from typing import Any, TypeVar
 
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device import Device

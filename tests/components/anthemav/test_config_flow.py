@@ -2,11 +2,14 @@
 from unittest.mock import AsyncMock, patch
 
 from anthemav.device_error import DeviceError
+import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.anthemav.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 async def test_form_with_valid_connection(
@@ -14,9 +17,9 @@ async def test_form_with_valid_connection(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -33,7 +36,7 @@ async def test_form_with_valid_connection(
 
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": 14999,
@@ -47,7 +50,7 @@ async def test_form_with_valid_connection(
 async def test_form_device_info_error(hass: HomeAssistant) -> None:
     """Test we handle DeviceError from library."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -64,14 +67,14 @@ async def test_form_device_info_error(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_receive_deviceinfo"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -88,7 +91,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -102,10 +105,10 @@ async def test_import_configuration(
         "name": "Anthem Av Import",
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "host": "1.1.1.1",
         "port": 14999,
@@ -113,3 +116,26 @@ async def test_import_configuration(
         "mac": "00:00:00:00:00:01",
         "model": "MRX 520",
     }
+
+
+@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
+async def test_device_already_configured(
+    hass: HomeAssistant,
+    mock_connection_create: AsyncMock,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    source: str,
+) -> None:
+    """Test we import existing configuration."""
+    config = {
+        "host": "1.1.1.1",
+        "port": 14999,
+    }
+
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source}, data=config
+    )
+
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"

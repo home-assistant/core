@@ -8,10 +8,6 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import API_TEMP_UNITS
 
 
-class UnsupportedInterface(HomeAssistantError):
-    """This entity does not support the requested Smart Home API interface."""
-
-
 class UnsupportedProperty(HomeAssistantError):
     """This entity does not support the requested Smart Home API property."""
 

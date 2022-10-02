@@ -160,7 +160,6 @@ async def test_event(
     entry = registry.async_get("camera.front")
     assert entry is not None
     assert entry.unique_id == "some-device-id-camera"
-    assert entry.original_name == "Front"
     assert entry.domain == "camera"
 
     device_registry = dr.async_get(hass)

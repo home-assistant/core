@@ -25,6 +25,7 @@ from homeassistant.data_entry_flow import FlowResult
 from . import CONF_NOISE_PSK, DOMAIN, DomainData
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
+ESPHOME_URL = "https://esphome.io/"
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -55,7 +56,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(fields), errors=errors
+            step_id="user",
+            data_schema=vol.Schema(fields),
+            errors=errors,
+            description_placeholders={"esphome_url": ESPHOME_URL},
         )
 
     async def async_step_user(
@@ -327,6 +331,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             await cli.disconnect(force=True)
 
         self._name = self._device_info.name
+        await self.async_set_unique_id(self._name, raise_on_progress=False)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         return None
 

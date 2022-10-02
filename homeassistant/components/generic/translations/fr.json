@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Une cam\u00e9ra avec ces param\u00e8tres d'URL existe d\u00e9j\u00e0.",
             "invalid_still_image": "L'URL n'a pas renvoy\u00e9 d'image fixe valide",
+            "malformed_url": "URL mal form\u00e9e",
             "no_still_image_or_stream_url": "Vous devez au moins renseigner une URL d'image fixe ou de flux",
+            "relative_url": "Les URL relatives ne sont pas autoris\u00e9es",
             "stream_file_not_found": "Fichier non trouv\u00e9 lors de la tentative de connexion au flux (ffmpeg est-il install\u00e9\u00a0?)",
             "stream_http_not_found": "Erreur\u00a0404 (introuvable) lors de la tentative de connexion au flux",
             "stream_io_error": "Erreur d'entr\u00e9e/sortie lors de la tentative de connexion au flux. Mauvais protocole de transport RTSP\u00a0?",
@@ -50,7 +52,9 @@
         "error": {
             "already_exists": "Une cam\u00e9ra avec ces param\u00e8tres d'URL existe d\u00e9j\u00e0.",
             "invalid_still_image": "L'URL n'a pas renvoy\u00e9 d'image fixe valide",
+            "malformed_url": "URL mal form\u00e9e",
             "no_still_image_or_stream_url": "Vous devez au moins renseigner une URL d'image fixe ou de flux",
+            "relative_url": "Les URL relatives ne sont pas autoris\u00e9es",
             "stream_file_not_found": "Fichier non trouv\u00e9 lors de la tentative de connexion au flux (ffmpeg est-il install\u00e9\u00a0?)",
             "stream_http_not_found": "Erreur\u00a0404 (introuvable) lors de la tentative de connexion au flux",
             "stream_io_error": "Erreur d'entr\u00e9e/sortie lors de la tentative de connexion au flux. Mauvais protocole de transport RTSP\u00a0?",

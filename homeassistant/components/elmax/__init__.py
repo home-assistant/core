@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     # Perform platform initialization.
-    hass.config_entries.async_setup_platforms(entry, ELMAX_PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, ELMAX_PLATFORMS)
     return True
 
 

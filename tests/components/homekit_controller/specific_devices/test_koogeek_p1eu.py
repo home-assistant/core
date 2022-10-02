@@ -3,7 +3,7 @@
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import POWER_WATT
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -31,8 +31,8 @@ async def test_koogeek_p1eu_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="switch.koogeek_p1_a00aa0",
-                    friendly_name="Koogeek-P1-A00AA0",
+                    entity_id="switch.koogeek_p1_a00aa0_outlet",
+                    friendly_name="Koogeek-P1-A00AA0 outlet",
                     unique_id="homekit-EUCP03190xxxxx48-7",
                     state="off",
                 ),

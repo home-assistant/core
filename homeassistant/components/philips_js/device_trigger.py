@@ -3,15 +3,12 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import PhilipsTVDataUpdateCoordinator
@@ -47,11 +44,11 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
     registry: dr.DeviceRegistry = dr.async_get(hass)
     if (trigger_type := config[CONF_TYPE]) == TRIGGER_TYPE_TURN_ON:
         variables = {
@@ -65,6 +62,10 @@ async def async_attach_trigger(
         }
 
         device = registry.async_get(config[CONF_DEVICE_ID])
+        if device is None:
+            raise HomeAssistantError(
+                f"Device id {config[CONF_DEVICE_ID]} not found in registry"
+            )
         for config_entry_id in device.config_entries:
             coordinator: PhilipsTVDataUpdateCoordinator = hass.data[DOMAIN].get(
                 config_entry_id

@@ -11,6 +11,8 @@ from homeassistant.const import Platform
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
+from .test_common import help_test_unload_config_entry
+
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
@@ -435,6 +437,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
+                "hw_version": "rev1",
                 "sw_version": "0.1-beta",
             },
         }
@@ -450,6 +453,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
 
 
@@ -466,6 +470,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
+                "hw_version": "rev1",
                 "sw_version": "0.1-beta",
             },
         }
@@ -479,6 +484,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
 
 
@@ -797,3 +803,28 @@ async def test_cleanup_device_with_entity2(
     # Verify device registry entry is cleared
     device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
     assert device_entry is None
+
+
+async def test_unload_entry(hass, device_reg, mqtt_mock, tag_mock, tmp_path) -> None:
+    """Test unloading the MQTT entry."""
+
+    config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+
+    # Fake tag scan, should be processed
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
+    await hass.async_block_till_done()
+    tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
+
+    tag_mock.reset_mock()
+
+    await help_test_unload_config_entry(hass, tmp_path, {})
+    await hass.async_block_till_done()
+
+    # Fake tag scan, should not be processed
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
+    await hass.async_block_till_done()
+    tag_mock.assert_not_called()

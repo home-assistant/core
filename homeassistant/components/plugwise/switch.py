@@ -21,7 +21,7 @@ from .util import plugwise_command
 SWITCHES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="dhw_cm_switch",
-        name="DHW Comfort Mode",
+        name="DHW comfort mode",
         icon="mdi:water-plus",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -68,7 +68,6 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         super().__init__(coordinator, device_id)
         self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
-        self._attr_name = (f"{self.device.get('name', '')} {description.name}").lstrip()
 
     @property
     def is_on(self) -> bool | None:

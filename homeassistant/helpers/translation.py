@@ -9,13 +9,11 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import (
-    MAX_LOAD_CONCURRENTLY,
     Integration,
     async_get_config_flows,
-    async_get_integration,
+    async_get_integrations,
     bind_hass,
 )
-from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -151,16 +149,13 @@ async def async_get_component_strings(
 ) -> dict[str, Any]:
     """Load translations."""
     domains = list({loaded.split(".")[-1] for loaded in components})
-    integrations = dict(
-        zip(
-            domains,
-            await gather_with_concurrency(
-                MAX_LOAD_CONCURRENTLY,
-                *(async_get_integration(hass, domain) for domain in domains),
-            ),
-        )
-    )
 
+    integrations: dict[str, Integration] = {}
+    ints_or_excs = await async_get_integrations(hass, domains)
+    for domain, int_or_exc in ints_or_excs.items():
+        if isinstance(int_or_exc, Exception):
+            raise int_or_exc
+        integrations[domain] = int_or_exc
     translations: dict[str, Any] = {}
 
     # Determine paths of missing components/platforms

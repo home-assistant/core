@@ -23,7 +23,7 @@
             "subscriber_error": "Bilinmeyen abone hatas\u0131, g\u00fcnl\u00fcklere bak\u0131n\u0131z",
             "timeout": "Zaman a\u015f\u0131m\u0131 do\u011frulama kodu",
             "unknown": "Beklenmeyen hata",
-            "wrong_project_id": "L\u00fctfen ge\u00e7erli bir Bulut Projesi Kimli\u011fi girin (bulunan Ayg\u0131t Eri\u015fimi Proje Kimli\u011fi)"
+            "wrong_project_id": "L\u00fctfen ge\u00e7erli bir Bulut Projesi Kimli\u011fi girin (Cihaz Eri\u015fimi Proje Kimli\u011fi ile ayn\u0131yd\u0131)"
         },
         "step": {
             "auth": {
@@ -95,6 +95,16 @@
             "camera_person": "Ki\u015fi alg\u0131land\u0131",
             "camera_sound": "Ses alg\u0131land\u0131",
             "doorbell_chime": "Kap\u0131 zili bas\u0131ld\u0131"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Nest'i configuration.yaml'de yap\u0131land\u0131rma, Home Assistant 2022.10'da kald\u0131r\u0131l\u0131yor. \n\n Mevcut OAuth Uygulama Kimlik Bilgileriniz ve eri\u015fim ayarlar\u0131n\u0131z otomatik olarak kullan\u0131c\u0131 aray\u00fcz\u00fcne aktar\u0131ld\u0131. YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu gidermek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "Nest YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131l\u0131yor"
+        },
+        "removed_app_auth": {
+            "description": "G\u00fcvenli\u011fi art\u0131rmak ve kimlik av\u0131 riskini azaltmak i\u00e7in Google, Home Assistant taraf\u0131ndan kullan\u0131lan kimlik do\u011frulama y\u00f6ntemini kullan\u0131mdan kald\u0131rm\u0131\u015ft\u0131r. \n\n **Bu, \u00e7\u00f6zmek i\u00e7in sizin taraf\u0131n\u0131zdan bir i\u015flem yap\u0131lmas\u0131n\u0131 gerektirir** ([daha fazla bilgi]( {more_info_url} )) \n\n 1. Entegrasyon sayfas\u0131n\u0131 ziyaret edin\n 1. Nest entegrasyonunda Yeniden Yap\u0131land\u0131r'\u0131 t\u0131klay\u0131n.\n 1. Home Assistant, Web Kimlik Do\u011frulamas\u0131na y\u00fckseltme ad\u0131mlar\u0131nda size yol g\u00f6sterecektir. \n\n Sorun giderme bilgileri i\u00e7in Nest [entegrasyon talimatlar\u0131na]( {documentation_url} ) bak\u0131n.",
+            "title": "Nest Kimlik Do\u011frulama Kimlik Bilgileri g\u00fcncellenmelidir"
         }
     }
 }

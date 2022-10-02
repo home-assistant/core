@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DelugeDataUpdateCoordinator(hass, api, entry)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -72,6 +72,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class DelugeEntity(CoordinatorEntity[DelugeDataUpdateCoordinator]):
     """Representation of a Deluge entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize a Deluge entity."""

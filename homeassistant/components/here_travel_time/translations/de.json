@@ -23,7 +23,7 @@
             "destination_menu": {
                 "menu_options": {
                     "destination_coordinates": "Verwendung einer Kartenposition",
-                    "destination_entity": "Verwenden einer Entit\u00e4t"
+                    "destination_entity": "Verwendung einer Entit\u00e4t"
                 },
                 "title": "Ziel w\u00e4hlen"
             },
@@ -36,6 +36,13 @@
             "origin_entity_id": {
                 "data": {
                     "origin_entity_id": "Herkunft \u00fcber eine Entit\u00e4t"
+                },
+                "title": "Herkunft w\u00e4hlen"
+            },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "Verwendung einer Kartenposition",
+                    "origin_entity": "Verwendung einer Entit\u00e4t"
                 },
                 "title": "Herkunft w\u00e4hlen"
             },

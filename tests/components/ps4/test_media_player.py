@@ -6,14 +6,13 @@ from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
 from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
 
 from homeassistant.components import ps4
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_GAME,
+    MediaType,
 )
 from homeassistant.components.ps4.const import (
     ATTR_MEDIA_IMAGE_URL,
@@ -60,19 +59,19 @@ MOCK_RANDOM_PORT = "1234"
 
 MOCK_TITLE_ID = "CUSA00000"
 MOCK_TITLE_NAME = "Random Game"
-MOCK_TITLE_TYPE = MEDIA_TYPE_GAME
+MOCK_TITLE_TYPE = MediaType.GAME
 MOCK_TITLE_ART_URL = "https://somecoverurl"
 
 MOCK_GAMES_DATA = {
     ATTR_LOCKED: False,
-    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_CONTENT_TYPE: MediaType.GAME,
     ATTR_MEDIA_IMAGE_URL: MOCK_TITLE_ART_URL,
     ATTR_MEDIA_TITLE: MOCK_TITLE_NAME,
 }
 
 MOCK_GAMES_DATA_LOCKED = {
     ATTR_LOCKED: True,
-    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+    ATTR_MEDIA_CONTENT_TYPE: MediaType.GAME,
     ATTR_MEDIA_IMAGE_URL: MOCK_TITLE_ART_URL,
     ATTR_MEDIA_TITLE: MOCK_TITLE_NAME,
 }
@@ -258,7 +257,7 @@ async def test_media_attributes_are_fetched(hass):
     mock_attrs = dict(mock_state.attributes)
 
     assert len(mock_fetch_app.mock_calls) == 1
-    assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.APP
 
 
 async def test_media_attributes_are_loaded(hass, patch_load_json):

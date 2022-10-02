@@ -5,16 +5,37 @@ from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_TO_HASS_COVER_STATES, BLEBOX_TO_HASS_DEVICE_CLASSES
+
+BLEBOX_TO_COVER_DEVICE_CLASSES = {
+    "gate": CoverDeviceClass.GATE,
+    "gatebox": CoverDeviceClass.DOOR,
+    "shutter": CoverDeviceClass.SHUTTER,
+}
+
+
+BLEBOX_TO_HASS_COVER_STATES = {
+    None: None,
+    0: STATE_CLOSING,  # moving down
+    1: STATE_OPENING,  # moving up
+    2: STATE_OPEN,  # manually stopped
+    3: STATE_CLOSED,  # lower limit
+    4: STATE_OPEN,  # upper limit / open
+    # gateController
+    5: STATE_OPEN,  # overload
+    6: STATE_OPEN,  # motor failure
+    # 7 is not used
+    8: STATE_OPEN,  # safety stop
+}
 
 
 async def async_setup_entry(
@@ -35,7 +56,7 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
     def __init__(self, feature):
         """Initialize a BleBox cover feature."""
         super().__init__(feature)
-        self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
+        self._attr_device_class = BLEBOX_TO_COVER_DEVICE_CLASSES[feature.device_class]
         position = CoverEntityFeature.SET_POSITION if feature.is_slider else 0
         stop = CoverEntityFeature.STOP if feature.has_stop else 0
         self._attr_supported_features = (

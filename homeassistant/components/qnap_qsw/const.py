@@ -10,5 +10,8 @@ MANUFACTURER: Final = "QNAP"
 
 RPM: Final = "rpm"
 
+QSW_COORD_DATA: Final = "coordinator-data"
+QSW_COORD_FW: Final = "coordinator-firmware"
 QSW_REBOOT = "reboot"
 QSW_TIMEOUT_SEC: Final = 25
+QSW_UPDATE: Final = "update"

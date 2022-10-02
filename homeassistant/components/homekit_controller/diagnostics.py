@@ -107,6 +107,7 @@ def _async_get_diagnostics(
     # It is roughly equivalent to what is in .storage/homekit_controller-entity-map
     # But it also has the latest values seen by the polling or events
     data["entity-map"] = accessories = connection.entity_map.serialize()
+    data["config-num"] = connection.config_num
 
     # It contains serial numbers, which we should strip out
     for accessory in accessories:

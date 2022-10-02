@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Kamera dengan setelan URL ini sudah ada.",
             "invalid_still_image": "URL tidak mengembalikan gambar diam yang valid",
+            "malformed_url": "URL salah format",
             "no_still_image_or_stream_url": "Anda harus menentukan setidaknya gambar diam atau URL streaming",
+            "relative_url": "URL relatif tidak diizinkan",
             "stream_file_not_found": "File tidak ditemukan saat mencoba menyambung ke streaming (sudahkah ffmpeg diinstal?)",
             "stream_http_not_found": "HTTP 404 Tidak ditemukan saat mencoba menyambung ke streaming",
             "stream_io_error": "Kesalahan Input/Output saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",
@@ -50,7 +52,9 @@
         "error": {
             "already_exists": "Kamera dengan setelan URL ini sudah ada.",
             "invalid_still_image": "URL tidak mengembalikan gambar diam yang valid",
+            "malformed_url": "URL salah format",
             "no_still_image_or_stream_url": "Anda harus menentukan setidaknya gambar diam atau URL streaming",
+            "relative_url": "URL relatif tidak diizinkan",
             "stream_file_not_found": "File tidak ditemukan saat mencoba menyambung ke streaming (sudahkah ffmpeg diinstal?)",
             "stream_http_not_found": "HTTP 404 Tidak ditemukan saat mencoba menyambung ke streaming",
             "stream_io_error": "Kesalahan Input/Output saat mencoba menyambung ke streaming. Apakah protokol transportasi RTSP salah?",

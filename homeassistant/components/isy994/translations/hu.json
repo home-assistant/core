@@ -27,7 +27,7 @@
                     "tls": "Az ISY vez\u00e9rl\u0151 TLS verzi\u00f3ja.",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
-                "description": "A c\u00edm bejegyz\u00e9s\u00e9nek teljes URL form\u00e1tumban kell lennie, pl. Http://192.168.10.100:80",
+                "description": "A c\u00edm bejegyz\u00e9s\u00e9nek teljes URL form\u00e1tumban kell lennie, pl. http://192.168.10.100:80",
                 "title": "Csatlakozzon az ISY-hez"
             }
         }

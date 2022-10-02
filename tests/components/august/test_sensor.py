@@ -2,7 +2,7 @@
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.august.mocks import (
+from .mocks import (
     _create_august_with_devices,
     _mock_activities_from_fixture,
     _mock_doorbell_from_fixture,

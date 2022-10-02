@@ -30,12 +30,8 @@ CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
 CONF_TLS_VERSION = "tls_version"
 
-CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
-DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_MQTT = "mqtt"
-DATA_MQTT_CONFIG = "mqtt_config"
-DATA_MQTT_RELOAD_NEEDED = "mqtt_reload_needed"
-DATA_MQTT_UPDATED_CONFIG = "mqtt_updated_config"
+MQTT_DATA_DEVICE_TRACKER_LEGACY = "mqtt_device_tracker_legacy"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"

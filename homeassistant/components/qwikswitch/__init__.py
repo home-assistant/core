@@ -72,6 +72,8 @@ CONFIG_SCHEMA = vol.Schema(
 class QSEntity(Entity):
     """Qwikswitch Entity base."""
 
+    _attr_should_poll = False
+
     def __init__(self, qsid, name):
         """Initialize the QSEntity."""
         self._name = name
@@ -81,11 +83,6 @@ class QSEntity(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """QS sensors gets packets in update_packet."""
-        return False
 
     @property
     def unique_id(self):

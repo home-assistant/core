@@ -117,22 +117,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         elif isinstance(dev, AqualinkToggle):
             switches += [dev]
 
-    forward_setup = hass.config_entries.async_forward_entry_setup
+    platforms = []
     if binary_sensors:
         _LOGGER.debug("Got %s binary sensors: %s", len(binary_sensors), binary_sensors)
-        hass.async_create_task(forward_setup(entry, Platform.BINARY_SENSOR))
+        platforms.append(Platform.BINARY_SENSOR)
     if climates:
         _LOGGER.debug("Got %s climates: %s", len(climates), climates)
-        hass.async_create_task(forward_setup(entry, Platform.CLIMATE))
+        platforms.append(Platform.CLIMATE)
     if lights:
         _LOGGER.debug("Got %s lights: %s", len(lights), lights)
-        hass.async_create_task(forward_setup(entry, Platform.LIGHT))
+        platforms.append(Platform.LIGHT)
     if sensors:
         _LOGGER.debug("Got %s sensors: %s", len(sensors), sensors)
-        hass.async_create_task(forward_setup(entry, Platform.SENSOR))
+        platforms.append(Platform.SENSOR)
     if switches:
         _LOGGER.debug("Got %s switches: %s", len(switches), switches)
-        hass.async_create_task(forward_setup(entry, Platform.SWITCH))
+        platforms.append(Platform.SWITCH)
+
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     async def _async_systems_update(now):
         """Refresh internal state for all systems."""
@@ -192,6 +194,8 @@ class AqualinkEntity(Entity):
     class.
     """
 
+    _attr_should_poll = False
+
     def __init__(self, dev: AqualinkDevice) -> None:
         """Initialize the entity."""
         self.dev = dev
@@ -201,15 +205,6 @@ class AqualinkEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as entities shouldn't be polled.
-
-        Entities are checked periodically as the integration runs periodic
-        updates on a timer.
-        """
-        return False
 
     @property
     def unique_id(self) -> str:

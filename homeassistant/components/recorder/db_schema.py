@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 import ciso8601
 from fnvhash import fnv1a_32
@@ -53,7 +53,9 @@ from .models import StatisticData, StatisticMetaData, process_timestamp
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 29
+SCHEMA_VERSION = 30
+
+_StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,10 +104,10 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
 
-JSON_VARIENT_CAST = Text().with_variant(
+JSON_VARIANT_CAST = Text().with_variant(
     postgresql.JSON(none_as_null=True), "postgresql"
 )
-JSONB_VARIENT_CAST = Text().with_variant(
+JSONB_VARIANT_CAST = Text().with_variant(
     postgresql.JSONB(none_as_null=True), "postgresql"
 )
 DATETIME_TYPE = (
@@ -443,7 +445,9 @@ class StatisticsBase:
     sum = Column(DOUBLE_TYPE)
 
     @classmethod
-    def from_stats(cls, metadata_id: int, stats: StatisticData) -> StatisticsBase:
+    def from_stats(
+        cls: type[_StatisticsBaseSelfT], metadata_id: int, stats: StatisticData
+    ) -> _StatisticsBaseSelfT:
         """Create object from a statistics."""
         return cls(  # type: ignore[call-arg,misc]
             metadata_id=metadata_id,
@@ -586,17 +590,17 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
 
 EVENT_DATA_JSON = type_coerce(
-    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
+    EventData.shared_data.cast(JSONB_VARIANT_CAST), JSONLiteral(none_as_null=True)
 )
 OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
-    Events.event_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
+    Events.event_data.cast(JSONB_VARIANT_CAST), JSONLiteral(none_as_null=True)
 )
 
 SHARED_ATTRS_JSON = type_coerce(
-    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+    StateAttributes.shared_attrs.cast(JSON_VARIANT_CAST), JSON(none_as_null=True)
 )
 OLD_FORMAT_ATTRS_JSON = type_coerce(
-    States.attributes.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+    States.attributes.cast(JSON_VARIANT_CAST), JSON(none_as_null=True)
 )
 
 ENTITY_ID_IN_EVENT: Column = EVENT_DATA_JSON["entity_id"]

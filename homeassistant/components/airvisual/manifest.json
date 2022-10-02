@@ -3,7 +3,7 @@
   "name": "AirVisual",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airvisual",
-  "requirements": ["pyairvisual==5.0.9"],
+  "requirements": ["pyairvisual==2022.07.0"],
   "codeowners": ["@bachya"],
   "iot_class": "cloud_polling",
   "loggers": ["pyairvisual", "pysmb"]

@@ -27,6 +27,9 @@
             "reauth": {
                 "description": "Het {profile} \" moet opnieuw worden geverifieerd om Withings-gegevens te blijven ontvangen.",
                 "title": "Integratie herauthenticeren"
+            },
+            "reauth_confirm": {
+                "title": "Integratie herauthenticeren"
             }
         }
     }

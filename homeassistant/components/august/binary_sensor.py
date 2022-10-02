@@ -288,7 +288,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self._check_for_off_update_listener()
         self._check_for_off_update_listener = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call the mixin to subscribe and setup an async_track_point_in_utc_time to turn off the sensor if needed."""
         self._schedule_update_to_recheck_turn_off_sensor()
         await super().async_added_to_hass()

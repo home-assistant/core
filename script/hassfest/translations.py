@@ -21,7 +21,7 @@ REMOVED = 2
 
 RE_REFERENCE = r"\[\%key:(.+)\%\]"
 
-# Only allow translatino of integration names if they contain non-brand names
+# Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
     "cpuspeed",
@@ -185,7 +185,7 @@ def gen_data_entry_schema(
     return vol.All(*validators)
 
 
-def gen_strings_schema(config: Config, integration: Integration):
+def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate a strings schema."""
     return vol.Schema(
         {
@@ -226,6 +226,25 @@ def gen_strings_schema(config: Config, integration: Integration):
             ),
             vol.Optional("application_credentials"): {
                 vol.Optional("description"): cv.string_with_no_html,
+            },
+            vol.Optional("issues"): {
+                str: vol.All(
+                    cv.has_at_least_one_key("description", "fix_flow"),
+                    vol.Schema(
+                        {
+                            vol.Required("title"): cv.string_with_no_html,
+                            vol.Exclusive(
+                                "description", "fixable"
+                            ): cv.string_with_no_html,
+                            vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
+                                config=config,
+                                integration=integration,
+                                flow_title=UNDEFINED,
+                                require_step_title=False,
+                            ),
+                        },
+                    ),
+                )
             },
         }
     )
@@ -293,7 +312,9 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
 ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: cv.string_with_no_html}})
 
 
-def validate_translation_file(config: Config, integration: Integration, all_strings):
+def validate_translation_file(  # noqa: C901
+    config: Config, integration: Integration, all_strings
+):
     """Validate translation files for integration."""
     if config.specific_integrations:
         check_translations_directory_name(integration)
@@ -344,14 +365,16 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
             if strings_file.name == "strings.json":
                 find_references(strings, name, references)
 
-                if strings.get(
-                    "title"
-                ) == integration.name and not allow_name_translation(integration):
-                    integration.add_error(
-                        "translations",
-                        "Don't specify title in translation strings if it's a brand name "
-                        "or add exception to ALLOW_NAME_TRANSLATION",
-                    )
+                if (title := strings.get("title")) is not None:
+                    integration.translated_name = True
+                    if title == integration.name and not allow_name_translation(
+                        integration
+                    ):
+                        integration.add_error(
+                            "translations",
+                            "Don't specify title in translation strings if it's a brand "
+                            "name or add exception to ALLOW_NAME_TRANSLATION",
+                        )
 
     platform_string_schema = gen_platform_strings_schema(config, integration)
     platform_strings = [integration.path.glob("strings.*.json")]

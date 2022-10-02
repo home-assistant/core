@@ -6,7 +6,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components import input_boolean, switch
-from homeassistant.components.humidifier.const import (
+from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     DOMAIN,
     MODE_AWAY,
