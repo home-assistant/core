@@ -5,5 +5,11 @@
       "off": "[%key:common::state::off%]",
       "on": "[%key:common::state::on%]"
     }
+  },
+  "device_automation": {
+    "condition_type": {
+      "is_on": "{entity_name} is on",
+      "is_off": "{entity_name} is off"
+    }
   }
 }
