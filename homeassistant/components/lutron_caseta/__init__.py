@@ -363,10 +363,11 @@ class LutronCasetaDevice(Entity):
         if "parent_device" in device:
             # Check if this entity will be a child of an existing device
             if device_info_by_device_id is not None:
-                parent_device_info = device_info_by_device_id.get(
-                    device["parent_device"], None
-                )
-                if parent_device_info is not None:
+                if (
+                    parent_device_info := device_info_by_device_id.get(
+                        device["parent_device"], None
+                    )
+                ) is not None:
                     # Append the child device name to the end of the parent keypad name to create the entity name
                     self._attr_name = " ".join(
                         (parent_device_info["name"], device["device_name"])
