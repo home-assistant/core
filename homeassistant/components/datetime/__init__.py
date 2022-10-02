@@ -55,10 +55,16 @@ def validate_set_datetime_attrs(config):
     """Validate set_datetime service attributes."""
     has_date_or_time_attr = any(key in config for key in (ATTR_DATE, ATTR_TIME))
     if (
-        sum([has_date_or_time_attr, ATTR_DATETIME in config, ATTR_TIMESTAMP in config])
-        > 1
-    ):
+        keys_present := sum(
+            [has_date_or_time_attr, ATTR_DATETIME in config, ATTR_TIMESTAMP in config]
+        )
+    ) > 1:
         raise vol.Invalid(f"Cannot use together: {', '.join(config.keys())}")
+    if not keys_present:
+        raise vol.Invalid(
+            f"Must include at least one of [{ATTR_DATE}, {ATTR_TIME}, {ATTR_DATETIME}, "
+            f"{ATTR_TIMESTAMP}]"
+        )
     return config
 
 
@@ -94,43 +100,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_set_datetime(entity: DateTimeEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to set a new datetime."""
-    date_ = service_call.data.get(ATTR_DATE)
-    time_ = service_call.data.get(ATTR_TIME)
-    datetime_ = service_call.data.get(ATTR_DATETIME)
-    if timestamp := service_call.data.get(ATTR_TIMESTAMP):
+    datetime_: datetime | None = service_call.data.get(ATTR_DATETIME)
+    timestamp: float | None = service_call.data.get(ATTR_TIMESTAMP)
+    date_: date | None = service_call.data.get(ATTR_DATE)
+    time_: time | None = service_call.data.get(ATTR_TIME)
+    if (
+        datetime_ or timestamp or (date_ and time_)
+    ) and entity.mode != DateTimeMode.DATETIME:
+        component = "`date`" if entity.has_date else "`time`"
+        raise vol.Invalid(f"Service data should only include {component} component")
+
+    if timestamp:
         datetime_ = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
 
     if datetime_:
-        date_ = datetime_.date()
-        time_ = datetime_.time()
+        return await entity.async_set_datetime(datetime_)
 
-    if not entity.has_date:
-        date_ = None
+    if entity.mode == DateTimeMode.DATETIME:
+        if (bool(date_) ^ bool(time_)) and not isinstance(entity.value, datetime):
+            raise vol.Invalid(
+                "Service data must include both `date` and `time` component"
+            )
 
-    if not entity.has_time:
-        time_ = None
-
-    if not date_ and not time_:
-        raise vol.Invalid("Nothing to set")
-
-    if isinstance(entity.value, datetime):
         if not date_:
+            assert isinstance(entity.value, datetime)
             date_ = entity.value.date()
 
         if not time_:
+            assert isinstance(entity.value, datetime)
             time_ = entity.value.time()
 
-    if bool(date_) ^ bool(time_) and entity.mode == DateTimeMode.DATETIME:
-        raise vol.Invalid("Service data must include both date and time component")
-
-    if date_ and time_:
-        await entity.async_set_datetime(
+        return await entity.async_set_datetime(
             datetime.combine(date_, time_, dt_util.DEFAULT_TIME_ZONE)
         )
-    elif date_:
-        await entity.async_set_datetime(date_)
-    elif time_:
-        await entity.async_set_datetime(time_)
+
+    d_or_t = date_ or time_
+    assert d_or_t
+    return await entity.async_set_datetime(d_or_t)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
