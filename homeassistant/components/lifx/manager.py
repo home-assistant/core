@@ -30,13 +30,16 @@ from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator, Light
+from .palettes import PALETTES
 from .util import convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-SERVICE_EFFECT_PULSE = "effect_pulse"
 SERVICE_EFFECT_COLORLOOP = "effect_colorloop"
+SERVICE_EFFECT_FLAME = "effect_flame"
+SERVICE_EFFECT_MORPH = "effect_morph"
 SERVICE_EFFECT_MOVE = "effect_move"
+SERVICE_EFFECT_PULSE = "effect_pulse"
 SERVICE_EFFECT_STOP = "effect_stop"
 
 ATTR_POWER_OFF = "power_off"
@@ -47,11 +50,19 @@ ATTR_SPREAD = "spread"
 ATTR_CHANGE = "change"
 ATTR_DIRECTION = "direction"
 ATTR_SPEED = "speed"
+ATTR_PALETTE = "palette"
 
+EFFECT_FLAME = "FLAME"
+EFFECT_MORPH = "MORPH"
 EFFECT_MOVE = "MOVE"
 EFFECT_OFF = "OFF"
 
-EFFECT_MOVE_DEFAULT_SPEED = 3.0
+EFFECT_FLAME_DEFAULT_SPEED = 3
+
+EFFECT_MORPH_DEFAULT_SPEED = 3
+EFFECT_MORPH_DEFAULT_PALETTE = "exciting"
+
+EFFECT_MOVE_DEFAULT_SPEED = 3
 EFFECT_MOVE_DEFAULT_DIRECTION = "right"
 EFFECT_MOVE_DIRECTION_RIGHT = "right"
 EFFECT_MOVE_DIRECTION_LEFT = "left"
@@ -128,6 +139,20 @@ SERVICES = (
     SERVICE_EFFECT_COLORLOOP,
 )
 
+LIFX_EFFECT_FLAME_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIFX_EFFECT_SCHEMA,
+        ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
+    }
+)
+
+LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIFX_EFFECT_SCHEMA,
+        ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
+        ATTR_PALETTE: vol.Optional(vol.In(PALETTES.keys())),
+    }
+)
 
 LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
     {
@@ -194,6 +219,20 @@ class LIFXManager:
 
         self.hass.services.async_register(
             DOMAIN,
+            SERVICE_EFFECT_FLAME,
+            service_handler,
+            schema=LIFX_EFFECT_FLAME_SCHEMA,
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_EFFECT_MORPH,
+            service_handler,
+            schema=LIFX_EFFECT_MORPH_SCHEMA,
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
             SERVICE_EFFECT_MOVE,
             service_handler,
             schema=LIFX_EFFECT_MOVE_SCHEMA,
@@ -222,7 +261,32 @@ class LIFXManager:
                 coordinators.append(coordinator)
                 bulbs.append(coordinator.device)
 
-        if service == SERVICE_EFFECT_MOVE:
+        if service == SERVICE_EFFECT_FLAME:
+            await asyncio.gather(
+                *(
+                    coordinator.async_set_matrix_effect(
+                        effect=EFFECT_FLAME,
+                        speed=kwargs.get(ATTR_SPEED, EFFECT_FLAME_DEFAULT_SPEED),
+                        power_on=kwargs.get(ATTR_POWER_ON, True),
+                    )
+                    for coordinator in coordinators
+                )
+            )
+
+        elif service == SERVICE_EFFECT_MORPH:
+            await asyncio.gather(
+                *(
+                    coordinator.async_set_matrix_effect(
+                        effect=EFFECT_MORPH,
+                        speed=kwargs.get(ATTR_SPEED, EFFECT_MORPH_DEFAULT_SPEED),
+                        palette=kwargs.get(ATTR_PALETTE, EFFECT_MORPH_DEFAULT_PALETTE),
+                        power_on=kwargs.get(ATTR_POWER_ON, True),
+                    )
+                    for coordinator in coordinators
+                )
+            )
+
+        elif service == SERVICE_EFFECT_MOVE:
             await asyncio.gather(
                 *(
                     coordinator.async_set_multizone_effect(
@@ -269,9 +333,9 @@ class LIFXManager:
             await self.effects_conductor.stop(bulbs)
 
             for coordinator in coordinators:
+                await coordinator.async_set_matrix_effect(
+                    effect=EFFECT_OFF, power_on=False
+                )
                 await coordinator.async_set_multizone_effect(
-                    effect=EFFECT_OFF,
-                    speed=EFFECT_MOVE_DEFAULT_SPEED,
-                    direction=EFFECT_MOVE_DEFAULT_DIRECTION,
-                    power_on=False,
+                    effect=EFFECT_OFF, power_on=False
                 )

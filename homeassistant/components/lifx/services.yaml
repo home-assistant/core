@@ -205,7 +205,85 @@ effect_move:
       default: true
       selector:
         boolean:
-
+effect_flame:
+  name: Flame effect
+  description: Start the firmware-based Flame effect on LIFX Tiles or Candle.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How fast the flames will move.
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 25
+          step: 1
+          unit_of_measurement: seconds
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
+effect_morph:
+  name: Morph effect
+  description: Start the firmware-based Morph effect on LIFX Tiles on Candle.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How fast the colors will move.
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 25
+          step: 1
+          unit_of_measurement: seconds
+    palette:
+      name: Palette
+      description: Color palette to use for the effect.
+      default: exciting
+      selector:
+        select:
+          options:
+            - "autumn"
+            - "blissful"
+            - "cheerful"
+            - "dream"
+            - "energizing"
+            - "epic"
+            - "exciting"
+            - "focusing"
+            - "halloween"
+            - "hanukkah"
+            - "holly"
+            - "independence day"
+            - "intense"
+            - "mellow"
+            - "peaceful"
+            - "powerful"
+            - "relaxing"
+            - "santa"
+            - "serene"
+            - "soothing"
+            - "sports"
+            - "spring"
+            - "tranquil"
+            - "warming"
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
 effect_stop:
   name: Stop effect
   description: Stop a running effect.
