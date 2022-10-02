@@ -51,8 +51,8 @@ FMT_DATETIME = f"{FMT_DATE} {FMT_TIME}"
 # mypy: disallow-any-generics
 
 
-def validate_set_datetime_attrs(config):
-    """Validate set_datetime service attributes."""
+def validate_svc_attrs_and_split_date_time(config):
+    """Validate set_datetime service attributes and split date/time components."""
     has_date_or_time_attr = any(key in config for key in (ATTR_DATE, ATTR_TIME))
     if (
         sum([has_date_or_time_attr, ATTR_DATETIME in config, ATTR_TIMESTAMP in config])
@@ -91,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.has_at_least_one_key(
                 ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
             ),
-            validate_set_datetime_attrs,
+            validate_svc_attrs_and_split_date_time,
         ),
         async_set_datetime,
     )
@@ -109,7 +109,7 @@ async def async_set_datetime(entity: DateTimeEntity, service_call: ServiceCall) 
         component = "`date`" if entity.has_date else "`time`"
         raise vol.Invalid(f"Service data should only include {component} component")
 
-    # For date time we need both `date` and `time` attribuets
+    # For date/time mode we need both `date` and `time` attributes
     if entity.mode == DateTimeMode.DATETIME:
         # If only one date/time component is set and entity value is None, we can't
         # fill in data and the user must include both components
@@ -119,7 +119,7 @@ async def async_set_datetime(entity: DateTimeEntity, service_call: ServiceCall) 
             )
 
         # Either both date and time components are set or entity value is a valid date
-        # time so we can fill in the unset component if needed
+        # time so we can fill in the unset component only if needed
         if not date_:
             assert isinstance(entity.value, datetime)
             date_ = entity.value.date()
