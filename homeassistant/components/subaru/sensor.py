@@ -72,7 +72,7 @@ API_GEN_2_SENSORS = [
     SensorEntityDescription(
         key=sc.AVG_FUEL_CONSUMPTION,
         icon="mdi:leaf",
-        name="Avg Fuel Consumption",
+        name="Avg fuel consumption",
         native_unit_of_measurement=FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -87,42 +87,42 @@ API_GEN_2_SENSORS = [
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FL,
         device_class=SensorDeviceClass.PRESSURE,
-        name="Tire Pressure FL",
+        name="Tire pressure FL",
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_FR,
         device_class=SensorDeviceClass.PRESSURE,
-        name="Tire Pressure FR",
+        name="Tire pressure FR",
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RL,
         device_class=SensorDeviceClass.PRESSURE,
-        name="Tire Pressure RL",
+        name="Tire pressure RL",
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.TIRE_PRESSURE_RR,
         device_class=SensorDeviceClass.PRESSURE,
-        name="Tire Pressure RR",
+        name="Tire pressure RR",
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.EXTERNAL_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="External Temp",
+        name="External temp",
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.BATTERY_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
-        name="12V Battery Voltage",
+        name="12V battery voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -134,21 +134,21 @@ EV_SENSORS = [
         key=sc.EV_DISTANCE_TO_EMPTY,
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:ev-station",
-        name="EV Range",
+        name="EV range",
         native_unit_of_measurement=LENGTH_MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.EV_STATE_OF_CHARGE_PERCENT,
         device_class=SensorDeviceClass.BATTERY,
-        name="EV Battery Level",
+        name="EV battery level",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="EV Time to Full Charge",
+        name="EV time to full charge",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
@@ -211,7 +211,7 @@ class SubaruSensor(
         self.vin = vehicle_info[VEHICLE_VIN]
         self.entity_description = description
         self._attr_device_info = get_device_info(vehicle_info)
-        self._attr_unique_id = f"{self.vin}_{description.name}"
+        self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property
     def native_value(self) -> None | int | float:
