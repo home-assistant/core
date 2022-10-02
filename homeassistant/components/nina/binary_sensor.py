@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NINADataUpdateCoordinator, NinaWarningData
+from . import NINADataUpdateCoordinator
 from .const import (
     ATTR_DESCRIPTION,
     ATTR_EXPIRES,
@@ -75,7 +75,7 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         if not len(self.coordinator.data[self._region]) > self._warning_index:
             return False
 
-        data: NinaWarningData = self.coordinator.data[self._region][self._warning_index]
+        data = self.coordinator.data[self._region][self._warning_index]
 
         return data.is_valid
 
@@ -85,7 +85,7 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         if not self.is_on:
             return {}
 
-        data: NinaWarningData = self.coordinator.data[self._region][self._warning_index]
+        data = self.coordinator.data[self._region][self._warning_index]
 
         return {
             ATTR_HEADLINE: data.headline,
