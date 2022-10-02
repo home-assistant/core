@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from enocean.utils import combine_hex, from_hex_string
+from enocean.utils import from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -76,7 +76,7 @@ SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
     icon="mdi:thermometer",
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
-    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_TEMPERATURE}",
+    unique_id=lambda dev_id_string: f"{dev_id_string}-{SENSOR_TYPE_TEMPERATURE}",
 )
 
 SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
@@ -86,7 +86,7 @@ SENSOR_DESC_HUMIDITY = EnOceanSensorEntityDescription(
     icon="mdi:water-percent",
     device_class=SensorDeviceClass.HUMIDITY,
     state_class=SensorStateClass.MEASUREMENT,
-    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_HUMIDITY}",
+    unique_id=lambda dev_id_string: f"{dev_id_string}-{SENSOR_TYPE_HUMIDITY}",
 )
 
 SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
@@ -96,14 +96,14 @@ SENSOR_DESC_POWER = EnOceanSensorEntityDescription(
     icon="mdi:power-plug",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
-    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_POWER}",
+    unique_id=lambda dev_id_string: f"{dev_id_string}-{SENSOR_TYPE_POWER}",
 )
 
 SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
     key=SENSOR_TYPE_WINDOWHANDLE,
     name="WindowHandle",
     icon="mdi:window-open-variant",
-    unique_id=lambda dev_id: f"{combine_hex(dev_id)}-{SENSOR_TYPE_WINDOWHANDLE}",
+    unique_id=lambda dev_id_string: f"{dev_id_string}-{SENSOR_TYPE_WINDOWHANDLE}",
 )
 
 
@@ -169,8 +169,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         eep = device[CONF_ENOCEAN_EEP]
         device_id = from_hex_string(device[CONF_ENOCEAN_DEVICE_ID])
         device_name = device[CONF_ENOCEAN_DEVICE_NAME]
+        device_type = EnOceanSupportedDeviceType(
+            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
+            model=device[CONF_ENOCEAN_MODEL],
+            eep=device[CONF_ENOCEAN_EEP],
+        )
 
-        # Temperature sensors
+        # Temperature sensors (EEP A5-02-)
         if eep[0:5] == "A5-02":
             min_temp, max_temp = _get_a5_02_min_max_temp(eep)
 
@@ -184,15 +189,63 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         scale_max=max_temp,
                         range_from=255,
                         range_to=0,
-                        dev_type=EnOceanSupportedDeviceType(
-                            manufacturer=device[CONF_ENOCEAN_MANUFACTURER],
-                            model=device[CONF_ENOCEAN_MODEL],
-                            eep=device[CONF_ENOCEAN_EEP],
-                        ),
+                        dev_type=device_type,
                         name=None,
                     )
                 ]
             )
+            continue
+
+        # Room Operating Panels (EEP A5-10-01 to A5-10-14)
+        if eep[0:5] == "A5-10":
+
+            eep_type = int(eep[6:8], 16)
+            LOGGER.debug("EEP A5-10 type")
+
+            if eep_type < 0x01 or eep_type > 0x14:
+                continue  # should not happen (EEP not available)
+
+            if eep_type >= 0x10:
+                async_add_entities(
+                    [
+                        EnOceanTemperatureSensor(
+                            dev_id=device_id,
+                            dev_name=device_name,
+                            description=SENSOR_DESC_TEMPERATURE,
+                            scale_min=0,
+                            scale_max=40,
+                            range_from=0,
+                            range_to=255,
+                            dev_type=device_type,
+                            name="Temperature",
+                        ),
+                        EnOceanHumiditySensor(
+                            dev_id=device_id,
+                            dev_name=device_name,
+                            description=SENSOR_DESC_HUMIDITY,
+                            dev_type=device_type,
+                            name="Humidity",
+                        ),
+                    ]
+                )
+                continue
+
+            async_add_entities(
+                [
+                    EnOceanTemperatureSensor(
+                        device_id,
+                        device_name,
+                        SENSOR_DESC_TEMPERATURE,
+                        scale_min=0,
+                        scale_max=40,
+                        range_from=255,
+                        range_to=0,
+                        dev_type=device_type,
+                        name="Temperature",
+                    )
+                ]
+            )
+            continue
 
         # The Permundo PSC234 also sends A5-12-01 messages (but uses natively
         # D2-01-09); as there is not (yet) a way to define multiple EEPs per
@@ -230,7 +283,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         """Initialize the EnOcean sensor device."""
         super().__init__(dev_id, dev_name, dev_type, name)
         self.entity_description = description
-        self._attr_unique_id = description.unique_id(dev_id)
+        self._attr_unique_id = description.unique_id(to_hex_string(dev_id).upper())
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -359,6 +412,29 @@ class EnOceanWindowHandle(EnOceanSensor):
 
 def _get_a5_02_min_max_temp(eep: str):
     """Determine the min and max temp for an A5-02-XX temperature sensor."""
+    sensor_range_type = int(eep[6:8], 16)
+
+    if sensor_range_type in range(0x01, 0x0B):
+        multiplier = sensor_range_type - 0x01
+        min_temp = -40 + multiplier * 10
+        max_temp = multiplier * 10
+        return min_temp, max_temp
+
+    if sensor_range_type in range(0x10, 0x1B):
+        multiplier = sensor_range_type - 0x10
+        min_temp = -60 + multiplier * 10
+        max_temp = 20 + multiplier * 10
+        return min_temp, max_temp
+
+    LOGGER.warning(
+        "Unsupported A5-02-XX temperature sensor with EEP %s; using default values (min_temp = 0, max_temp = 40)",
+        eep,
+    )
+    return 0, 40
+
+
+def _get_a5_10_min_max_temp(eep: str):
+    """Determine the min and max temp for an A5-10-XX temperature sensor."""
     sensor_range_type = int(eep[6:8], 16)
 
     if sensor_range_type in range(0x01, 0x0B):

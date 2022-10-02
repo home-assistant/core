@@ -58,6 +58,97 @@ EEP_D2_01_14 = EnOceanSupportedDeviceType(
     model="EEP D2-01-14 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 14)",
 )
 
+EEP_A5_10_01 = EnOceanSupportedDeviceType(
+    eep="A5-10-01",
+    model="EEP A5-10-01 Room Operating Panel (Temperature Sensor, Set Point, Fan Speed and Occupancy Control)",
+)
+
+EEP_A5_10_02 = EnOceanSupportedDeviceType(
+    eep="A5-10-02",
+    model="EEP A5-10-02 Room Operating Panel (Temperature Sensor, Set Point Control)",
+)
+
+EEP_A5_10_03 = EnOceanSupportedDeviceType(
+    eep="A5-10-03",
+    model="EEP A5-10-03 Room Operating Panel (Temperature Sensor, Set Point Control)",
+)
+
+EEP_A5_10_04 = EnOceanSupportedDeviceType(
+    eep="A5-10-04",
+    model="EEP A5-10-04 Room Operating Panel (Temperature Sensor, Set Point and Fan Speed Control)",
+)
+
+EEP_A5_10_05 = EnOceanSupportedDeviceType(
+    eep="A5-10-05",
+    model="EEP A5-10-05 Room Operating Panel (Temperature Sensor, Set Point and Occupancy Control)",
+)
+
+EEP_A5_10_06 = EnOceanSupportedDeviceType(
+    eep="A5-10-06",
+    model="EEP A5-10-06 Room Operating Panel (Temperature Sensor, Set Point and Day/Night Control)",
+)
+
+EEP_A5_10_07 = EnOceanSupportedDeviceType(
+    eep="A5-10-07",
+    model="EEP A5-10-07 Room Operating Panel (Temperature Sensor, Fan Speed Control)",
+)
+
+EEP_A5_10_08 = EnOceanSupportedDeviceType(
+    eep="A5-10-08",
+    model="EEP A5-10-08 Room Operating Panel (Temperature Sensor, Fan Speed and Occupancy Control)",
+)
+
+EEP_A5_10_09 = EnOceanSupportedDeviceType(
+    eep="A5-10-09",
+    model="EEP A5-10-09 Room Operating Panel (Temperature Sensor, Fan Speed and Day/Night Control)",
+)
+
+EEP_A5_10_0A = EnOceanSupportedDeviceType(
+    eep="A5-10-0A",
+    model="EEP A5-10-0A Room Operating Panel (Temperature Sensor, Set Point Adjust and Single Input Contact)",
+)
+
+EEP_A5_10_0B = EnOceanSupportedDeviceType(
+    eep="A5-10-0B",
+    model="EEP A5-10-0B Room Operating Panel (Temperature Sensor and Single Input Contact)",
+)
+
+EEP_A5_10_0C = EnOceanSupportedDeviceType(
+    eep="A5-10-0C",
+    model="EEP A5-10-0C Room Operating Panel (Temperature Sensor and Occupancy Control)",
+)
+
+EEP_A5_10_0D = EnOceanSupportedDeviceType(
+    eep="A5-10-0D",
+    model="EEP A5-10-0D Room Operating Panel (Temperature Sensor and Day/Night Control)",
+)
+
+EEP_A5_10_10 = EnOceanSupportedDeviceType(
+    eep="A5-10-10",
+    model="EEP A5-10-10 Room Operating Panel (Temperature and Humidity Sensor, Set Point and Occupancy Control)",
+)
+
+EEP_A5_10_11 = EnOceanSupportedDeviceType(
+    eep="A5-10-11",
+    model="EEP A5-10-11 Room Operating Panel (Temperature and Humidity Sensor, Set Point and Day/Night Control)",
+)
+
+EEP_A5_10_12 = EnOceanSupportedDeviceType(
+    eep="A5-10-12",
+    model="EEP A5-10-12 Room Operating Panel (Temperature and Humidity Sensor and Set Point)",
+)
+
+EEP_A5_10_13 = EnOceanSupportedDeviceType(
+    eep="A5-10-13",
+    model="EEP A5-10-13 Room Operating Panel (Temperature and Humidity Sensor, Occupancy Control)",
+)
+
+EEP_A5_10_14 = EnOceanSupportedDeviceType(
+    eep="A5-10-14",
+    model="EEP A5-10-14 Room Operating Panel (Temperature and Humidity Sensor, Day/Night Control)",
+)
+
+
 EEP_F6_02_01 = EnOceanSupportedDeviceType(
     eep="F6-02-01",
     model="EEP F6-02-01 (Light and Blind Control - Application Style 2)",
@@ -178,26 +269,24 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
         eep="A5-04-02",
         model="EEP A5-04-02 (Temperature and Humidity Sensor, Range -20 °C to +60 °C and 0% to 100%)",
     ),
-    EnOceanSupportedDeviceType(
-        eep="A5-10-10",
-        model="EEP A5-10-10 (Room Operating Panel)",
-    ),
-    EnOceanSupportedDeviceType(
-        eep="A5-10-11",
-        model="EEP A5-10-11 (Room Operating Panel)",
-    ),
-    EnOceanSupportedDeviceType(
-        eep="A5-10-12",
-        model="EEP A5-10-12 (Room Operating Panel)",
-    ),
-    EnOceanSupportedDeviceType(
-        eep="A5-10-13",
-        model="EEP A5-10-13 (Room Operating Panel)",
-    ),
-    EnOceanSupportedDeviceType(
-        eep="A5-10-14",
-        model="EEP A5-10-14 (Room Operating Panel)",
-    ),
+    EEP_A5_10_01,
+    EEP_A5_10_02,
+    EEP_A5_10_03,
+    EEP_A5_10_04,
+    EEP_A5_10_05,
+    EEP_A5_10_06,
+    EEP_A5_10_07,
+    EEP_A5_10_08,
+    EEP_A5_10_09,
+    EEP_A5_10_0A,
+    EEP_A5_10_0B,
+    EEP_A5_10_0C,
+    EEP_A5_10_0D,
+    EEP_A5_10_10,
+    EEP_A5_10_11,
+    EEP_A5_10_12,
+    EEP_A5_10_13,
+    EEP_A5_10_14,
     EnOceanSupportedDeviceType(
         eep="D2-01-00",
         model="EEP D2-01-00 (Electronic Switches and Dimmers with Energy Measurement and Local Control, Type 00)",
