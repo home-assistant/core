@@ -249,8 +249,14 @@ effect_morph:
           unit_of_measurement: seconds
     palette:
       name: Palette
-      description: Color palette to use for the effect.
-      default: exciting
+      description: List of at least 2 and at most 16 HSBK values to use for this effect. Overrides the theme attribute.
+      example:
+        - "[[0, 100, 255, 3500], [60, 100, 255, 3500]]"
+      selector:
+        object:
+    theme:
+      name: Theme
+      description: Predefined color theme to use for the effect. Overridden by the palette attribute.
       selector:
         select:
           options:
