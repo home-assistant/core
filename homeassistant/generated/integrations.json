@@ -5407,6 +5407,10 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "time": {
+      "integration_type": "hub",
+      "config_flow": false
+    },
     "time_date": {
       "name": "Time & Date",
       "integration_type": "hub",
@@ -6323,6 +6327,7 @@
     "switch_as_x",
     "tag",
     "threshold",
+    "time",
     "tod",
     "uptime",
     "utility_meter",

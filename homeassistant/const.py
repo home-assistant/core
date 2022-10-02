@@ -49,6 +49,7 @@ class Platform(StrEnum):
     SIREN = "siren"
     STT = "stt"
     SWITCH = "switch"
+    TIME = "time"
     TTS = "tts"
     VACUUM = "vacuum"
     UPDATE = "update"
@@ -960,3 +961,8 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+
+# Date/Time formats
+FORMAT_DATE = "%Y-%m-%d"
+FORMAT_TIME = "%H:%M:%S"
+FORMAT_DATETIME = f"{FORMAT_DATE} {FORMAT_TIME}"

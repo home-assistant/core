@@ -1,0 +1,7 @@
+{
+  "domain": "time",
+  "name": "Time",
+  "documentation": "https://www.home-assistant.io/integrations/time",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}
