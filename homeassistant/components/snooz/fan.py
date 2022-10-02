@@ -30,7 +30,6 @@ from .models import SnoozConfigurationData
 logging.getLogger("transitions.core").setLevel(logging.WARNING)
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
 
 
 async def async_setup_entry(
