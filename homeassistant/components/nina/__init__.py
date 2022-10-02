@@ -1,6 +1,7 @@
 """The Nina integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from async_timeout import timeout
@@ -12,21 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    _LOGGER,
-    ATTR_DESCRIPTION,
-    ATTR_EXPIRES,
-    ATTR_HEADLINE,
-    ATTR_ID,
-    ATTR_SENDER,
-    ATTR_SENT,
-    ATTR_SEVERITY,
-    ATTR_START,
-    CONF_FILTER_CORONA,
-    CONF_REGIONS,
-    DOMAIN,
-    SCAN_INTERVAL,
-)
+from .const import _LOGGER, CONF_FILTER_CORONA, CONF_REGIONS, DOMAIN, SCAN_INTERVAL
 
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
 
@@ -61,6 +48,21 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
+@dataclass
+class NinaWarningData:
+    """Class to hold the warning data."""
+
+    id: str
+    headline: str
+    description: str
+    sender: str
+    severity: str
+    sent: str
+    start: str
+    expires: str
+    is_valid: bool
+
+
 class NINADataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NINA data API."""
 
@@ -93,23 +95,24 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
         return_data: dict[str, Any] = {}
 
         for region_id, raw_warnings in self._nina.warnings.items():
-            warnings_for_regions: list[Any] = []
+            warnings_for_regions: list[NinaWarningData] = []
 
             for raw_warn in raw_warnings:
                 if "corona" in raw_warn.headline.lower() and self.corona_filter:
                     continue
 
-                warn_obj: dict[str, Any] = {
-                    ATTR_ID: raw_warn.id,
-                    ATTR_HEADLINE: raw_warn.headline,
-                    ATTR_DESCRIPTION: raw_warn.description,
-                    ATTR_SENDER: raw_warn.sender,
-                    ATTR_SEVERITY: raw_warn.severity,
-                    ATTR_SENT: raw_warn.sent or "",
-                    ATTR_START: raw_warn.start or "",
-                    ATTR_EXPIRES: raw_warn.expires or "",
-                }
-                warnings_for_regions.append(warn_obj)
+                warning_data: NinaWarningData = NinaWarningData(
+                    raw_warn.id,
+                    raw_warn.headline,
+                    raw_warn.description,
+                    raw_warn.sender,
+                    raw_warn.severity,
+                    raw_warn.sent or "",
+                    raw_warn.start or "",
+                    raw_warn.expires or "",
+                    raw_warn.isValid(),
+                )
+                warnings_for_regions.append(warning_data)
 
             return_data[region_id] = warnings_for_regions
 
