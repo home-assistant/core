@@ -1,0 +1,36 @@
+set_datetime:
+  name: Set Date/Time
+  description: Set the date/time for a datetime entity.
+  target:
+    entity:
+      domain: datetime
+  fields:
+    date:
+      name: Date
+      description: Set the date portion of a datetime entity using the format %Y-%m-%d. Only valid if the entity has a date component.
+      required: false
+      example: "2022/11/01"
+      selector:
+        date:
+    time:
+      name: Time
+      description: Set the time portion of a datetime entity using the format %H:%M:%S. Only valid if the entity has a time component.
+      required: false
+      example: "22:15"
+      selector:
+        time:
+    datetime:
+      name: Date & Time
+      description: Set the date and time of a datetime entity using the format %H:%M:%S. Only valid if the entity is in datetime mode.
+      required: false
+      example: "2022/11/01 22:15"
+      selector:
+        datetime:
+    timestamp:
+      name: Timestamp
+      description: Set the date and time of a datetime entity using the UNIX timestamp. Only valid if the entity is in datetime mode.
+      required: false
+      example: "2022/11/01 22:15"
+      selector:
+        text:
+          type: number

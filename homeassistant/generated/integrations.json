@@ -770,6 +770,10 @@
       "iot_class": "local_push",
       "name": "Datadog"
     },
+    "datetime": {
+      "config_flow": false,
+      "iot_class": null
+    },
     "ddwrt": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -5270,6 +5274,7 @@
     "conversation",
     "cover",
     "cpuspeed",
+    "datetime",
     "demo",
     "derivative",
     "device_tracker",
