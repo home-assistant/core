@@ -18,7 +18,7 @@ from pysnooz.device import SnoozConnectionStatus, SnoozDevice
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -92,7 +92,7 @@ class SnoozFan(FanEntity, RestoreEntity):
                 self._is_on = None
             self._percentage = last_state.attributes.get(ATTR_PERCENTAGE)
 
-        self.async_on_remove(self._subscribe_to_device_events())
+        self.async_on_remove(self._async_subscribe_to_device_events())
 
     @callback
     def _async_subscribe_to_device_events(self) -> Callable[[], None]:
