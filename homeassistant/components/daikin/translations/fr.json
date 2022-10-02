@@ -15,7 +15,8 @@
                 "data": {
                     "api_key": "Cl\u00e9 d'API",
                     "host": "H\u00f4te",
-                    "password": "Mot de passe"
+                    "password": "Mot de passe",
+                    "enable_outdoor_sensors": "Activer les capteurs extérieurs"
                 },
                 "description": "Saisissez l'Adresse IP de votre Daikin AC. \n\nNotez que Cl\u00e9 d'API et Mot de passe sont utilis\u00e9s respectivement par les appareils BRP072Cxx et SKYFi.",
                 "title": "Configurer Daikin AC"

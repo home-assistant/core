@@ -21,6 +21,7 @@ ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"
 
 CONF_UUID = "uuid"
+CONF_ENABLE_OUTDOOR_SENSORS = "enable_outdoor_sensors"
 
 KEY_MAC = "mac"
 KEY_IP = "ip"

@@ -116,6 +116,8 @@ def format_target_temperature(target_temperature):
 class DaikinClimate(ClimateEntity):
     """Representation of a Daikin HVAC."""
 
+    _attr_name = None
+    _attr_has_entity_name = True
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, api: DaikinApi) -> None:
@@ -172,11 +174,6 @@ class DaikinClimate(ClimateEntity):
 
         if values:
             await self._api.device.set(values)
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self._api.name
 
     @property
     def unique_id(self):
@@ -313,4 +310,4 @@ class DaikinClimate(ClimateEntity):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        return self._api.device_info
+        return self._api.device_info()

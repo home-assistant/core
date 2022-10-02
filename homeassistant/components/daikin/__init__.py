@@ -110,14 +110,18 @@ class DaikinApi:
         """Return True if entity is available."""
         return self._available
 
-    @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self, outdoor_device: bool = False) -> DeviceInfo:
         """Return a device description for device registry."""
         info = self.device.values
         return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            identifiers={
+                (
+                    CONNECTION_NETWORK_MAC,
+                    "outdoor" if outdoor_device else self.device.mac,
+                )
+            },
             manufacturer="Daikin",
             model=info.get("model"),
-            name=info.get("name"),
+            name="Outdoor" if outdoor_device else info.get("name"),
             sw_version=info.get("ver", "").replace("_", "."),
         )

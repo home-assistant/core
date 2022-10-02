@@ -37,6 +37,7 @@ from .const import (
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
     ATTR_TARGET_HUMIDITY,
+    CONF_ENABLE_OUTDOOR_SENSORS,
 )
 
 
@@ -45,7 +46,7 @@ class DaikinRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_func: Callable[[Appliance], float | None]
-    cross_device: bool  # Cross-device sensors should be created only once
+    outdoor_sensor: bool  # Outdoor sensors should be created only for the outdoor config entry
 
 
 @dataclass
@@ -56,23 +57,23 @@ class DaikinSensorEntityDescription(SensorEntityDescription, DaikinRequiredKeysM
 SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     DaikinSensorEntityDescription(
         key=ATTR_INSIDE_TEMPERATURE,
-        name="Inside Temperature",
+        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         entity_registry_enabled_default=True,
         value_func=lambda device: device.inside_temperature,
-        cross_device=False,
+        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_OUTSIDE_TEMPERATURE,
-        name="Outside Temperature",
+        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         entity_registry_enabled_default=True,
         value_func=lambda device: device.outside_temperature,
-        cross_device=True,
+        outdoor_sensor=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HUMIDITY,
@@ -82,7 +83,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=True,
         value_func=lambda device: device.humidity,
-        cross_device=False,
+        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TARGET_HUMIDITY,
@@ -92,17 +93,17 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=True,
         value_func=lambda device: device.humidity,
-        cross_device=False,
+        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ALL_POWER,
-        name="All Devices' Estimated Power Consumption",
+        name="Estimated Power Consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_KILO_WATT,
         entity_registry_enabled_default=True,
         value_func=lambda device: round(device.current_total_power_consumption, 2),
-        cross_device=True,
+        outdoor_sensor=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COOL_ENERGY,
@@ -112,7 +113,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
         value_func=lambda device: round(device.last_hour_cool_energy_consumption, 2),
-        cross_device=False,
+        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HEAT_ENERGY,
@@ -122,7 +123,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
         value_func=lambda device: round(device.last_hour_heat_energy_consumption, 2),
-        cross_device=False,
+        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ENERGY_TODAY,
@@ -132,7 +133,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         entity_registry_enabled_default=True,
         value_func=lambda device: round(device.today_energy_consumption, 2),
-        cross_device=False,
+        outdoor_sensor=False,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COMPRESSOR_FREQUENCY,
@@ -143,17 +144,17 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         native_unit_of_measurement=FREQUENCY_HERTZ,
         entity_registry_enabled_default=False,
         value_func=lambda device: device.compressor_frequency,
-        cross_device=True,
+        outdoor_sensor=True,
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ALL_ENERGY_TODAY,
-        name="All Devices' Energy Consumption",
+        name="Energy Consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
         value_func=lambda device: round(device.today_total_energy_consumption, 2),
-        cross_device=True,
+        outdoor_sensor=True,
     ),
 )
 
@@ -195,6 +196,10 @@ async def async_setup_entry(
         DaikinSensor(daikin_api, description)
         for description in SENSOR_TYPES
         if description.key in sensors
+        and (
+            entry.data.get(CONF_ENABLE_OUTDOOR_SENSORS, True)
+            or not description.outdoor_sensor
+        )
     ]
     async_add_entities(entities)
 
@@ -202,6 +207,7 @@ async def async_setup_entry(
 class DaikinSensor(SensorEntity):
     """Representation of a Sensor."""
 
+    _attr_has_entity_name = True
     entity_description: DaikinSensorEntityDescription
 
     def __init__(
@@ -210,15 +216,12 @@ class DaikinSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self._api = api
-        if not description.cross_device:
-            self._attr_name = f"{api.name} {description.name}"
+        # if not description.outdoor_sensor:
+        #     self._attr_name = f"{api.name} {description.name}"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        if self.entity_description.cross_device:
-            # Cross-device sensors should be generated once for all devices
-            return self.entity_description.key
         return f"{self._api.device.mac}-{self.entity_description.key}"
 
     @property
@@ -233,4 +236,6 @@ class DaikinSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return self._api.device_info
+        return self._api.device_info(
+            outdoor_device=self.entity_description.outdoor_sensor
+        )
