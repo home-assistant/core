@@ -318,6 +318,25 @@ async def async_setup_entry(
             )
             continue
 
+        # battery powered actuator
+        if eep == "A5-20-01":
+            async_add_entities(
+                [
+                    EnOceanTemperatureSensor(
+                        device_id,
+                        device_name,
+                        SENSOR_DESC_TEMPERATURE,
+                        scale_min=0,
+                        scale_max=40,
+                        range_from=0,
+                        range_to=255,
+                        dev_type=device_type,
+                        name="Temperature",
+                    )
+                ]
+            )
+            continue
+
         # window handle (EEP F6-10-00)
         if eep == "F6-10-00":
             async_add_entities(

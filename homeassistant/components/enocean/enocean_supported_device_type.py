@@ -261,6 +261,12 @@ EEP_A5_12_01 = EnOceanSupportedDeviceType(
     model="EEP A5-12-01 (Automated Meter Reading [AMR] - Electricity)",
 )
 
+# A5-20 HVAC Components - Battery Powered Actuator (BI-DIR)
+EEP_A5_20_01 = EnOceanSupportedDeviceType(
+    eep="A5-20-01",
+    model="EEP A5-20-01 (HVAC Components - Battery Powered Actuator (BI-DIR))",
+)
+
 # D2-01 Electronic Switches and Dimmers with Energy Measurement and Local Control
 EEP_D2_01_00 = EnOceanSupportedDeviceType(
     eep="D2-01-00",
@@ -478,6 +484,8 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
     EEP_A5_10_14,
     # A5-12
     EEP_A5_12_01,
+    # A5-20
+    EEP_A5_20_01,
     # D2-01
     EEP_D2_01_00,
     EEP_D2_01_01,
