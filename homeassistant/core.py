@@ -649,7 +649,7 @@ class HomeAssistant:
             else:
                 await asyncio.sleep(0)
 
-    async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
+    async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
         wait_time = 0
         while pending:

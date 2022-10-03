@@ -17,6 +17,8 @@ CAN_PLAY_TYPE = {
     MediaType.ALBUM,
     MediaType.GENRE,
     MediaType.MUSIC,
+    MediaType.EPISODE,
+    "show",  # this is a spotify constant
 }
 CONF_LIBRESPOT_JAVA_PORT = "librespot_java_port"
 CONF_MAX_PLAYLISTS = "max_playlists"
@@ -28,7 +30,7 @@ DEFAULT_TTS_PAUSE_TIME = 1.2
 DEFAULT_TTS_VOLUME = 0.8
 DEFAULT_UNMUTE_VOLUME = 0.6
 DOMAIN = "forked_daapd"  # key for hass.data
-FD_NAME = "forked-daapd"
+FD_NAME = "Owntone"
 HASS_DATA_REMOVE_LISTENERS_KEY = "REMOVE_LISTENERS"
 HASS_DATA_UPDATER_KEY = "UPDATER"
 KNOWN_PIPES = {"librespot-java"}

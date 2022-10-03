@@ -336,7 +336,6 @@ async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client, recorder_m
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }
@@ -371,7 +370,6 @@ async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client, recorder_m
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
@@ -499,7 +497,6 @@ async def test_fossil_energy_consumption_hole(hass, hass_ws_client, recorder_moc
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }
@@ -534,7 +531,6 @@ async def test_fossil_energy_consumption_hole(hass, hass_ws_client, recorder_moc
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
@@ -660,7 +656,6 @@ async def test_fossil_energy_consumption_no_data(hass, hass_ws_client, recorder_
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }
@@ -695,7 +690,6 @@ async def test_fossil_energy_consumption_no_data(hass, hass_ws_client, recorder_
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
@@ -812,7 +806,6 @@ async def test_fossil_energy_consumption(hass, hass_ws_client, recorder_mock):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }
@@ -847,7 +840,6 @@ async def test_fossil_energy_consumption(hass, hass_ws_client, recorder_mock):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
@@ -878,7 +870,6 @@ async def test_fossil_energy_consumption(hass, hass_ws_client, recorder_mock):
         "has_sum": False,
         "name": "Fossil percentage",
         "source": "test",
-        "state_unit_of_measurement": "%",
         "statistic_id": "test:fossil_percentage",
         "unit_of_measurement": "%",
     }

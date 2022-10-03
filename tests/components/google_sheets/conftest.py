@@ -10,7 +10,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.google_sheets.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -75,12 +74,3 @@ async def mock_setup_integration(
         await hass.async_block_till_done()
 
     yield func
-
-    # Verify clean unload
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    await hass.config_entries.async_unload(entries[0].entry_id)
-    await hass.async_block_till_done()
-
-    assert not hass.data.get(DOMAIN)
-    assert entries[0].state is ConfigEntryState.NOT_LOADED

@@ -33,7 +33,6 @@ from .const import (
     ATTR_DURATION_IN_TRAFFIC,
     ATTR_ORIGIN,
     ATTR_ORIGIN_NAME,
-    ATTR_ROUTE,
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION_ENTITY_ID,
@@ -190,7 +189,6 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_DURATION: round(summary["baseTime"] / 60),  # type: ignore[misc]
                     ATTR_DURATION_IN_TRAFFIC: round(traffic_time / 60),
                     ATTR_DISTANCE: distance,
-                    ATTR_ROUTE: response.route_short,
                     ATTR_ORIGIN: ",".join(origin),
                     ATTR_DESTINATION: ",".join(destination),
                     ATTR_ORIGIN_NAME: waypoint[0]["mappedRoadName"],

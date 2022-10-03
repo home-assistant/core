@@ -11,10 +11,17 @@ from homeassistant.const import (
     PRESSURE_PA,
     PRESSURE_PSI,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.pressure as pressure_util
 
 INVALID_SYMBOL = "bob"
 VALID_SYMBOL = PRESSURE_PA
+
+
+def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert pressure_util.convert(2, PRESSURE_PA, PRESSURE_PA) == 2
+    assert "use unit_conversion.PressureConverter instead" in caplog.text
 
 
 def test_convert_same_unit():
@@ -30,10 +37,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         pressure_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         pressure_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 

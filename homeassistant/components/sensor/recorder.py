@@ -30,9 +30,12 @@ from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    DistanceConverter,
     EnergyConverter,
+    MassConverter,
     PowerConverter,
     PressureConverter,
+    SpeedConverter,
     TemperatureConverter,
     VolumeConverter,
 )
@@ -57,11 +60,15 @@ DEFAULT_STATISTICS = {
 }
 
 UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    SensorDeviceClass.DISTANCE: DistanceConverter,
     SensorDeviceClass.ENERGY: EnergyConverter,
+    SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
-    SensorDeviceClass.GAS: VolumeConverter,
+    SensorDeviceClass.VOLUME: VolumeConverter,
+    SensorDeviceClass.WEIGHT: MassConverter,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -151,10 +158,16 @@ def _normalize_states(
     entity_id: str,
 ) -> tuple[str | None, str | None, list[tuple[float, State]]]:
     """Normalize units."""
+    old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     state_unit: str | None = None
 
-    if device_class not in UNIT_CONVERTERS:
-        # We're not normalizing this device class, return the state as they are
+    if device_class not in UNIT_CONVERTERS or (
+        old_metadata
+        and old_metadata["unit_of_measurement"]
+        != UNIT_CONVERTERS[device_class].NORMALIZED_UNIT
+    ):
+        # We're either not normalizing this device class or this entity is not stored
+        # normalized, return the states as they are
         fstates = []
         for state in entity_history:
             try:
@@ -171,10 +184,10 @@ def _normalize_states(
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     extra = ""
-                    if old_metadata := old_metadatas.get(entity_id):
+                    if old_metadata:
                         extra = (
                             " and matches the unit of already compiled statistics "
-                            f"({old_metadata[1]['unit_of_measurement']})"
+                            f"({old_metadata['unit_of_measurement']})"
                         )
                     _LOGGER.warning(
                         "The unit of %s is changing, got multiple %s, generation of long term "
@@ -467,7 +480,6 @@ def _compile_statistics(  # noqa: C901
             "has_sum": "sum" in wanted_statistics[entity_id],
             "name": None,
             "source": RECORDER_DOMAIN,
-            "state_unit_of_measurement": state_unit,
             "statistic_id": entity_id,
             "unit_of_measurement": normalized_unit,
         }
@@ -608,7 +620,6 @@ def list_statistic_ids(
                 "has_sum": "sum" in provided_statistics,
                 "name": None,
                 "source": RECORDER_DOMAIN,
-                "state_unit_of_measurement": state_unit,
                 "statistic_id": state.entity_id,
                 "unit_of_measurement": state_unit,
             }
@@ -624,7 +635,6 @@ def list_statistic_ids(
             "has_sum": "sum" in provided_statistics,
             "name": None,
             "source": RECORDER_DOMAIN,
-            "state_unit_of_measurement": state_unit,
             "statistic_id": state.entity_id,
             "unit_of_measurement": statistics_unit,
         }
