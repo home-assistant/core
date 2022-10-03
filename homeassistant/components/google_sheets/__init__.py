@@ -38,6 +38,11 @@ SHEET_SERVICE_SCHEMA = vol.All(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Sheets from a config entry."""
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_SHEETS_ACCESS: FeatureAccess.read_only.name}
+        )
+
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
     try:

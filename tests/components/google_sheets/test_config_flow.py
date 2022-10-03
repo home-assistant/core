@@ -169,7 +169,7 @@ async def test_create_sheet_error(
 
 async def test_reauth(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry_with_options: MockConfigEntry,
     hass_client_no_auth,
     aioclient_mock,
     current_request_with_host,
@@ -177,9 +177,9 @@ async def test_reauth(
     mock_client,
 ) -> None:
     """Test the reauthentication case updates the existing config entry."""
-    config_entry.add_to_hass(hass)
+    config_entry_with_options.add_to_hass(hass)
 
-    config_entry.async_start_reauth(hass)
+    config_entry_with_options.async_start_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -233,16 +233,22 @@ async def test_reauth(
     assert result.get("type") == "abort"
     assert result.get("reason") == "reauth_successful"
 
-    assert config_entry.unique_id == SHEET_ID
-    assert "token" in config_entry.data
+    assert config_entry_with_options.unique_id == SHEET_ID
+    assert "token" in config_entry_with_options.data
     # Verify access token is refreshed
-    assert config_entry.data["token"].get("access_token") == "updated-access-token"
-    assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
+    assert (
+        config_entry_with_options.data["token"].get("access_token")
+        == "updated-access-token"
+    )
+    assert (
+        config_entry_with_options.data["token"].get("refresh_token")
+        == "mock-refresh-token"
+    )
 
 
 async def test_reauth_abort(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry_with_options: MockConfigEntry,
     hass_client_no_auth,
     aioclient_mock,
     current_request_with_host,
@@ -250,9 +256,9 @@ async def test_reauth_abort(
     mock_client,
 ) -> None:
     """Test failure case during reauth."""
-    config_entry.add_to_hass(hass)
+    config_entry_with_options.add_to_hass(hass)
 
-    config_entry.async_start_reauth(hass)
+    config_entry_with_options.async_start_reauth(hass)
     await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress()
@@ -304,21 +310,25 @@ async def test_reauth_abort(
 async def test_options_flow_no_changes(
     hass: HomeAssistant,
     scopes: list[str],
-    config_entry: MockConfigEntry,
+    config_entry_with_options: MockConfigEntry,
 ) -> None:
     """Test load and unload of a ConfigEntry."""
-    config_entry.add_to_hass(hass)
+    config_entry_with_options.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.google_sheets.async_setup_entry", return_value=True
     ) as mock_setup:
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry_with_options.entry_id)
         mock_setup.assert_called_once()
 
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
-    assert config_entry.options == MappingProxyType({"sheets_access": "read_only"})
+    assert config_entry_with_options.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry_with_options.options == MappingProxyType(
+        {"sheets_access": "read_only"}
+    )
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry_with_options.entry_id
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
@@ -329,7 +339,7 @@ async def test_options_flow_no_changes(
         user_input={"sheets_access": "read_only"},
     )
     assert result["type"] == "create_entry"
-    assert config_entry.options == {"sheets_access": "read_only"}
+    assert config_entry_with_options.options == {"sheets_access": "read_only"}
 
 
 async def test_already_configured(
@@ -399,21 +409,25 @@ async def test_already_configured(
 async def test_options_flow(
     hass: HomeAssistant,
     scopes: list[str],
-    config_entry: MockConfigEntry,
+    config_entry_with_options: MockConfigEntry,
 ) -> None:
     """Test options flow."""
-    config_entry.add_to_hass(hass)
+    config_entry_with_options.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.google_sheets.async_setup_entry", return_value=True
     ) as mock_setup:
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry_with_options.entry_id)
         mock_setup.assert_called_once()
 
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
-    assert config_entry.options == MappingProxyType({"sheets_access": "read_only"})
+    assert config_entry_with_options.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry_with_options.options == MappingProxyType(
+        {"sheets_access": "read_only"}
+    )
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry_with_options.entry_id
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
@@ -424,4 +438,4 @@ async def test_options_flow(
         user_input={"sheets_access": "read_write"},
     )
     assert result["type"] == "create_entry"
-    assert config_entry.options == {"sheets_access": "read_write"}
+    assert config_entry_with_options.options == {"sheets_access": "read_write"}

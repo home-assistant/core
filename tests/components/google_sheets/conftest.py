@@ -50,6 +50,26 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
                 "scope": " ".join(scopes),
             },
         },
+    )
+
+
+@pytest.fixture(name="config_entry_with_options")
+def mock_config_entry_with_options(
+    expires_at: int, scopes: list[str]
+) -> MockConfigEntry:
+    """Fixture for MockConfigEntry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SHEET_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(scopes),
+            },
+        },
         options={"sheets_access": "read_only"},
     )
 
