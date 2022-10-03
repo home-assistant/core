@@ -1,3 +1,5 @@
+from prayer_times_calculator import PrayerTimesCalculator
+
 """Constants for the Islamic Prayer component."""
 DOMAIN = "islamic_prayer_times"
 NAME = "Islamic Prayer Times"
