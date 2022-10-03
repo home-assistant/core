@@ -13,6 +13,6 @@ CONF_IGNORED_SOURCES: Final = "ignored_sources"
 CONF_NICKNAME: Final = "nickname"
 CONF_USE_PSK: Final = "use_psk"
 
-CLIENT_ID_PREFIX: Final = "HomeAssistant"
 DOMAIN: Final = "braviatv"
-NICKNAME: Final = "Home Assistant"
+LEGACY_CLIENT_ID: Final = "HomeAssistant"
+NICKNAME_PREFIX: Final = "Home Assistant"

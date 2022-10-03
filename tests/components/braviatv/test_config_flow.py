@@ -17,7 +17,7 @@ from homeassistant.components.braviatv.const import (
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
-    NICKNAME,
+    NICKNAME_PREFIX,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
@@ -135,7 +135,7 @@ async def test_ssdp_discovery(hass):
             CONF_USE_PSK: False,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
             CONF_CLIENT_ID: uuid,
-            CONF_NICKNAME: f"{NICKNAME} {uuid[:6]}",
+            CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
         }
 
 
@@ -307,7 +307,7 @@ async def test_create_entry(hass):
             CONF_USE_PSK: False,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
             CONF_CLIENT_ID: uuid,
-            CONF_NICKNAME: f"{NICKNAME} {uuid[:6]}",
+            CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
         }
 
 
@@ -345,7 +345,7 @@ async def test_create_entry_with_ipv6_address(hass):
             CONF_USE_PSK: False,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
             CONF_CLIENT_ID: uuid,
-            CONF_NICKNAME: f"{NICKNAME} {uuid[:6]}",
+            CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
         }
 
 

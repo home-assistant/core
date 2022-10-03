@@ -30,7 +30,7 @@ from .const import (
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
-    NICKNAME,
+    NICKNAME_PREFIX,
 )
 
 
@@ -242,7 +242,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def gen_instance_ids(self) -> tuple[str, str]:
         """Generate client_id and nickname."""
         uuid = await instance_id.async_get(self.hass)
-        return uuid, f"{NICKNAME} {uuid[:6]}"
+        return uuid, f"{NICKNAME_PREFIX} {uuid[:6]}"
 
 
 class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
