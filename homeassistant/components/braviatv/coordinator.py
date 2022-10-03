@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import timedelta
 from functools import wraps
 import logging
+from types import MappingProxyType
 from typing import Any, Final, TypeVar
 
 from pybravia import (
@@ -19,13 +20,20 @@ from pybravia import (
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player import MediaType
+from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
-from .utils import gen_instance_ids
+from .const import (
+    CLIENTID,
+    CONF_CLIENT_ID,
+    CONF_NICKNAME,
+    CONF_USE_PSK,
+    DOMAIN,
+    NICKNAME,
+)
 
 _BraviaTVCoordinatorT = TypeVar("_BraviaTVCoordinatorT", bound="BraviaTVCoordinator")
 _P = ParamSpec("_P")
@@ -62,15 +70,16 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         client: BraviaTV,
-        pin: str,
-        use_psk: bool,
+        config: MappingProxyType[str, Any],
         ignored_sources: list[str],
     ) -> None:
         """Initialize Bravia TV Client."""
 
         self.client = client
-        self.pin = pin
-        self.use_psk = use_psk
+        self.pin = config[CONF_PIN]
+        self.use_psk = config[CONF_USE_PSK]
+        self.client_id = config.get(CONF_CLIENT_ID, CLIENTID)
+        self.nickname = config.get(CONF_NICKNAME, NICKNAME)
         self.ignored_sources = ignored_sources
         self.source: str | None = None
         self.source_list: list[str] = []
@@ -119,9 +128,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 if self.use_psk:
                     await self.client.connect(psk=self.pin)
                 else:
-                    clientid, nickname = await gen_instance_ids(self.hass)
                     await self.client.connect(
-                        pin=self.pin, clientid=clientid, nickname=nickname
+                        pin=self.pin, clientid=self.client_id, nickname=self.nickname
                     )
                 self.connected = True
 
