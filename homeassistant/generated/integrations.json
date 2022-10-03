@@ -71,9 +71,19 @@
       "name": "AirNow"
     },
     "airthings": {
-      "config_flow": true,
-      "iot_class": "cloud_polling",
-      "name": "Airthings"
+      "name": "Airthings",
+      "integrations": {
+        "airthings": {
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Airthings"
+        },
+        "airthings_ble": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Airthings BLE"
+        }
+      }
     },
     "airtouch4": {
       "config_flow": true,
@@ -4411,6 +4421,12 @@
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "Thinking Cleaner"
+    },
+    "third_reality": {
+      "name": "Third Reality",
+      "iot_standards": [
+        "zigbee"
+      ]
     },
     "thomson": {
       "config_flow": false,

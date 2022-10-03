@@ -1,0 +1,10 @@
+{
+    "state": {
+        "homekit_controller__thread_status": {
+            "child": "Dziecko",
+            "detached": "Od\u0142\u0105czony",
+            "joining": "Do\u0142\u0105czanie",
+            "router": "Router"
+        }
+    }
+}

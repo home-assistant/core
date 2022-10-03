@@ -70,7 +70,7 @@ REST_UPDATES: Final = {
         install=lambda wrapper: wrapper.async_trigger_ota_update(),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
     ),
     "fwupdate_beta": RestUpdateDescription(
         name="Beta Firmware Update",
@@ -94,7 +94,7 @@ RPC_UPDATES: Final = {
         install=lambda wrapper: wrapper.async_trigger_ota_update(),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
     ),
     "fwupdate_beta": RpcUpdateDescription(
         name="Beta Firmware Update",
@@ -163,7 +163,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         new_version = self.entity_description.latest_version(
             self.wrapper.device.status,
         )
-        if new_version is not None:
+        if new_version not in (None, ""):
             return cast(str, new_version)
 
         return self.installed_version
