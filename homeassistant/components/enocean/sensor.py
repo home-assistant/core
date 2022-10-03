@@ -179,13 +179,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Temperature sensors (EEP A5-02)
         if eep[0:5] == "A5-02":
             min_temp, max_temp = _get_a5_02_min_max_temp(eep)
-
             async_add_entities(
                 [
                     EnOceanTemperatureSensor(
-                        device_id,
-                        device_name,
-                        SENSOR_DESC_TEMPERATURE,
+                        dev_id=device_id,
+                        dev_name=device_name,
+                        description=SENSOR_DESC_TEMPERATURE,
                         scale_min=min_temp,
                         scale_max=max_temp,
                         range_from=255,
@@ -206,7 +205,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if eep_type < 0x01 or eep_type > 0x14:
                 continue  # should not happen (EEP not available)
 
-            if eep_type >= 0x10:
+            if eep_type < 0x10:
+                async_add_entities(
+                    [
+                        EnOceanTemperatureSensor(
+                            device_id,
+                            device_name,
+                            SENSOR_DESC_TEMPERATURE,
+                            scale_min=0,
+                            scale_max=40,
+                            range_from=255,
+                            range_to=0,
+                            dev_type=device_type,
+                            name="Temperature",
+                        )
+                    ]
+                )
+            else:
                 async_add_entities(
                     [
                         EnOceanTemperatureSensor(
@@ -216,7 +231,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             scale_min=0,
                             scale_max=40,
                             range_from=0,
-                            range_to=255,
+                            range_to=250,
                             dev_type=device_type,
                             name="Temperature",
                         ),
@@ -229,26 +244,47 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         ),
                     ]
                 )
+
+            continue
+
+        if eep[0:5] == "A5-04":
+            eep_type = int(eep[6:8], 16)
+            if eep_type < 0x01 or eep_type > 0x02:
                 continue
+
+            min_temp = 0
+            max_temp = 40
+
+            if eep_type == 0x02:
+                min_temp = -20
+                max_temp = 60
 
             async_add_entities(
                 [
                     EnOceanTemperatureSensor(
-                        device_id,
-                        device_name,
-                        SENSOR_DESC_TEMPERATURE,
-                        scale_min=0,
-                        scale_max=40,
-                        range_from=255,
-                        range_to=0,
+                        dev_id=device_id,
+                        dev_name=device_name,
+                        description=SENSOR_DESC_TEMPERATURE,
+                        scale_min=min_temp,
+                        scale_max=max_temp,
+                        range_from=0,
+                        range_to=250,
                         dev_type=device_type,
                         name="Temperature",
-                    )
+                    ),
+                    EnOceanHumiditySensor(
+                        dev_id=device_id,
+                        dev_name=device_name,
+                        description=SENSOR_DESC_HUMIDITY,
+                        dev_type=device_type,
+                        name="Humidity",
+                    ),
                 ]
             )
             continue
 
-        # The Permundo PSC234 also sends A5-12-01 messages (but uses natively
+        # A5-12-01 Automated Meter Reading (AMR) - Electricity; note that
+        # the Permundo PSC234 also sends A5-12-01 messages (but uses natively
         # D2-01-09); as there is not (yet) a way to define multiple EEPs per
         # EnOcean device, but this device was previously supported in this
         # combination, we allow it manually here
@@ -268,6 +304,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
                 ]
             )
+            continue
 
 
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
@@ -413,29 +450,6 @@ class EnOceanWindowHandle(EnOceanSensor):
 
 def _get_a5_02_min_max_temp(eep: str):
     """Determine the min and max temp for an A5-02-XX temperature sensor."""
-    sensor_range_type = int(eep[6:8], 16)
-
-    if sensor_range_type in range(0x01, 0x0B):
-        multiplier = sensor_range_type - 0x01
-        min_temp = -40 + multiplier * 10
-        max_temp = multiplier * 10
-        return min_temp, max_temp
-
-    if sensor_range_type in range(0x10, 0x1B):
-        multiplier = sensor_range_type - 0x10
-        min_temp = -60 + multiplier * 10
-        max_temp = 20 + multiplier * 10
-        return min_temp, max_temp
-
-    LOGGER.warning(
-        "Unsupported A5-02-XX temperature sensor with EEP %s; using default values (min_temp = 0, max_temp = 40)",
-        eep,
-    )
-    return 0, 40
-
-
-def _get_a5_10_min_max_temp(eep: str):
-    """Determine the min and max temp for an A5-10-XX temperature sensor."""
     sensor_range_type = int(eep[6:8], 16)
 
     if sensor_range_type in range(0x01, 0x0B):
