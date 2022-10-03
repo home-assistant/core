@@ -452,10 +452,7 @@ def test_temperature_convert_with_interval(
     value: float, from_unit: str, expected: float, to_unit: str
 ) -> None:
     """Test conversion to other units."""
-    assert (
-        TemperatureConverter.convert(value, from_unit, to_unit, interval=True)
-        == expected
-    )
+    assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
 
 
 @pytest.mark.parametrize(
