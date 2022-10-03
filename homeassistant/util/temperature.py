@@ -43,6 +43,6 @@ def convert(
         "unit_conversion.TemperatureConverter instead",
         error_if_core=False,
     )
-    return TemperatureConverter.convert(
-        temperature, from_unit, to_unit, interval=interval
-    )
+    if interval:
+        return TemperatureConverter.convert_interval(temperature, from_unit, to_unit)
+    return TemperatureConverter.convert(temperature, from_unit, to_unit)
