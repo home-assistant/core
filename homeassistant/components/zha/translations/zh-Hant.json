@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "\u57f7\u884c\u5168\u90e8 LED \u6548\u679c",
+            "issue_individual_led_effect": "\u57f7\u884c\u500b\u5225 LED \u6548\u679c",
             "squawk": "\u61c9\u7b54",
             "warn": "\u8b66\u544a"
         },

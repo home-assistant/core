@@ -68,7 +68,7 @@ class AirlySensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     AirlySensorEntityDescription(
         key=ATTR_API_CAQI,
-        device_class=SensorDeviceClass.AQI,
+        icon="mdi:air-filter",
         name=ATTR_API_CAQI,
         native_unit_of_measurement="CAQI",
     ),

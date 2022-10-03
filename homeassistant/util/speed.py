@@ -13,6 +13,7 @@ from homeassistant.const import (  # pylint: disable=unused-import # noqa: F401
     SPEED_MILLIMETERS_PER_DAY,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
+from homeassistant.helpers.frame import report
 
 from .unit_conversion import (  # pylint: disable=unused-import # noqa: F401
     _FOOT_TO_M as FOOT_TO_M,
@@ -24,10 +25,17 @@ from .unit_conversion import (  # pylint: disable=unused-import # noqa: F401
     SpeedConverter,
 )
 
-UNIT_CONVERSION = SpeedConverter.UNIT_CONVERSION
+# pylint: disable-next=protected-access
+UNIT_CONVERSION: dict[str, float] = SpeedConverter._UNIT_CONVERSION
 VALID_UNITS = SpeedConverter.VALID_UNITS
 
 
 def convert(value: float, from_unit: str, to_unit: str) -> float:
     """Convert one unit of measurement to another."""
+    report(
+        "uses speed utility. This is deprecated since 2022.10 and will "
+        "stop working in Home Assistant 2022.4, it should be updated to use "
+        "unit_conversion.SpeedConverter instead",
+        error_if_core=False,
+    )
     return SpeedConverter.convert(value, from_unit, to_unit)

@@ -23,8 +23,10 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_IGNORE_ADDRESSES,
+    CONF_IGNORE_UUIDS,
     DOMAIN,
     MAX_IDS,
+    MAX_IDS_PER_UUID,
     SIGNAL_IBEACON_DEVICE_NEW,
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
@@ -62,7 +64,7 @@ def async_name(
         service_info.name,
         service_info.name.replace("_", ":"),
     ):
-        base_name = f"{ibeacon_advertisement.uuid} {ibeacon_advertisement.major}.{ibeacon_advertisement.minor}"
+        base_name = f"{ibeacon_advertisement.uuid}_{ibeacon_advertisement.major}_{ibeacon_advertisement.minor}"
     else:
         base_name = service_info.name
     if unique_address:
@@ -115,6 +117,9 @@ class IBeaconCoordinator:
         self._ignore_addresses: set[str] = set(
             entry.data.get(CONF_IGNORE_ADDRESSES, [])
         )
+        # iBeacon devices that do not follow the spec
+        # and broadcast custom data in the major and minor fields
+        self._ignore_uuids: set[str] = set(entry.data.get(CONF_IGNORE_UUIDS, []))
 
         # iBeacons with fixed MAC addresses
         self._last_ibeacon_advertisement_by_unique_id: dict[
@@ -131,6 +136,17 @@ class IBeaconCoordinator:
         self._last_seen_by_group_id: dict[str, bluetooth.BluetoothServiceInfoBleak] = {}
         self._unavailable_group_ids: set[str] = set()
 
+        # iBeacons with random MAC addresses, fixed UUID, random major/minor
+        self._major_minor_by_uuid: dict[str, set[tuple[int, int]]] = {}
+
+    @callback
+    def async_device_id_seen(self, device_id: str) -> bool:
+        """Return True if the device_id has been seen since boot."""
+        return bool(
+            device_id in self._last_ibeacon_advertisement_by_unique_id
+            or device_id in self._last_seen_by_group_id
+        )
+
     @callback
     def _async_handle_unavailable(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
@@ -145,6 +161,25 @@ class IBeaconCoordinator:
     def _async_cancel_unavailable_tracker(self, address: str) -> None:
         """Cancel unavailable tracking for an address."""
         self._unavailable_trackers.pop(address)()
+
+    @callback
+    def _async_ignore_uuid(self, uuid: str) -> None:
+        """Ignore an UUID that does not follow the spec and any entities created by it."""
+        self._ignore_uuids.add(uuid)
+        major_minor_by_uuid = self._major_minor_by_uuid.pop(uuid)
+        unique_ids_to_purge = set()
+        for major, minor in major_minor_by_uuid:
+            group_id = f"{uuid}_{major}_{minor}"
+            if unique_ids := self._unique_ids_by_group_id.pop(group_id, None):
+                unique_ids_to_purge.update(unique_ids)
+            for address in self._addresses_by_group_id.pop(group_id, []):
+                self._async_cancel_unavailable_tracker(address)
+                self._unique_ids_by_address.pop(address)
+                self._group_ids_by_address.pop(address)
+        self._async_purge_untrackable_entities(unique_ids_to_purge)
+        entry_data = self._entry.data
+        new_data = entry_data | {CONF_IGNORE_UUIDS: list(self._ignore_uuids)}
+        self.hass.config_entries.async_update_entry(self._entry, data=new_data)
 
     @callback
     def _async_ignore_address(self, address: str) -> None:
@@ -203,7 +238,20 @@ class IBeaconCoordinator:
             return
         if not (ibeacon_advertisement := parse(service_info)):
             return
-        group_id = f"{ibeacon_advertisement.uuid}_{ibeacon_advertisement.major}_{ibeacon_advertisement.minor}"
+
+        uuid_str = str(ibeacon_advertisement.uuid)
+        if uuid_str in self._ignore_uuids:
+            return
+
+        major = ibeacon_advertisement.major
+        minor = ibeacon_advertisement.minor
+        major_minor_by_uuid = self._major_minor_by_uuid.setdefault(uuid_str, set())
+        if len(major_minor_by_uuid) + 1 > MAX_IDS_PER_UUID:
+            self._async_ignore_uuid(uuid_str)
+            return
+
+        major_minor_by_uuid.add((major, minor))
+        group_id = f"{uuid_str}_{major}_{minor}"
 
         if group_id in self._group_ids_random_macs:
             self._async_update_ibeacon_with_random_mac(
