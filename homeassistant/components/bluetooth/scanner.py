@@ -16,7 +16,7 @@ from bleak.assigned_numbers import AdvertisementDataType
 from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
+from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
 from bleak_retry_connector import get_device_by_adapter
 from dbus_fast import InvalidMessageError
 
@@ -86,11 +86,14 @@ class ScannerStartError(HomeAssistantError):
 
 
 def create_bleak_scanner(
-    scanning_mode: BluetoothScanningMode, adapter: str | None
+    detection_callback: AdvertisementDataCallback,
+    scanning_mode: BluetoothScanningMode,
+    adapter: str | None,
 ) -> bleak.BleakScanner:
     """Create a Bleak scanner."""
     scanner_kwargs: dict[str, Any] = {
-        "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]
+        "detection_callback": detection_callback,
+        "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode],
     }
     if platform.system() == "Linux":
         # Only Linux supports multiple adapters
@@ -120,13 +123,14 @@ class HaScanner(BaseHaScanner):
     def __init__(
         self,
         hass: HomeAssistant,
-        scanner: bleak.BleakScanner,
+        mode: BluetoothScanningMode,
         adapter: str,
         address: str,
     ) -> None:
         """Init bluetooth discovery."""
         self.hass = hass
-        self.scanner = scanner
+        self.scanner: bleak.BleakScanner | None = None
+        self.mode = mode
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
         self._cancel_watchdog: CALLBACK_TYPE | None = None
@@ -139,7 +143,15 @@ class HaScanner(BaseHaScanner):
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
+        assert self.scanner is not None
         return self.scanner.discovered_devices
+
+    @hass_callback
+    def async_setup(self) -> None:
+        """Set up the scanner."""
+        self.scanner = create_bleak_scanner(
+            self._async_detection_callback, self.mode, self.adapter
+        )
 
     async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
         """Get a device by address."""
@@ -218,13 +230,12 @@ class HaScanner(BaseHaScanner):
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""
-        self.scanner.register_detection_callback(self._async_detection_callback)
-
         async with self._start_stop_lock:
             await self._async_start()
 
     async def _async_start(self) -> None:
         """Start bluetooth scanner under the lock."""
+        assert self.scanner is not None
         for attempt in range(START_ATTEMPTS):
             _LOGGER.debug(
                 "%s: Starting bluetooth discovery attempt: (%s/%s)",
@@ -393,6 +404,7 @@ class HaScanner(BaseHaScanner):
 
     async def _async_stop_scanner(self) -> None:
         """Stop bluetooth discovery under the lock."""
+        assert self.scanner is not None
         _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
         try:
             await self.scanner.stop()  # type: ignore[no-untyped-call]
