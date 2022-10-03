@@ -138,9 +138,9 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
             if device.state == ApiStateCommand.OFF
             else HVAC_MODE_SB_TO_HASS[device.mode]
         )
-        self._attr_fan_mode: str = FAN_SB_TO_HASS[device.fan]
-        self._attr_current_temperature: float = device.temperature
-        self._attr_target_temperature: int = device.target_temperature
+        self._attr_fan_mode = FAN_SB_TO_HASS[device.fan]
+        self._attr_current_temperature = device.temperature
+        self._attr_target_temperature = device.target_temperature
 
     def _create_switchbee_request(
         self,
