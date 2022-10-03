@@ -518,6 +518,9 @@ class PrometheusMetrics:
 
         self._battery(state)
 
+    def _handle_number(self, state):
+        return self._handle_sensor(state)
+
     def _sensor_default_metric(self, state, unit):
         """Get default metric."""
         return self._default_metric
