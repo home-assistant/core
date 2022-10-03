@@ -1470,6 +1470,18 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     return None
 
 
+def is_available(hass: HomeAssistant, entity_id: str | Iterable) -> bool:
+    """Test if an entity is available."""
+    if isinstance(entity_id, str):
+        entity_id = [entity_id]
+
+    for entity in entity_id:
+        state_obj = _get_state(hass, entity)
+        if state_obj is None or state_obj.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+            return False
+    return True
+
+
 def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
     if (render_info := hass.data.get(_RENDER_INFO)) is not None:
@@ -2302,6 +2314,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_state_attr",
                 "state_attr",
                 "states",
+                "is_available",
                 "utcnow",
                 "now",
                 "device_attr",
@@ -2332,6 +2345,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
+        self.globals["is_available"] = hassfunction(is_available)
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)
