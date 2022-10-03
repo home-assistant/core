@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ID,
@@ -161,13 +162,18 @@ def setup_platform(
     add_entities(entities)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up entry."""
     devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
         # get config data
         eep = device[CONF_ENOCEAN_EEP]
+        eep_type = int(eep[6:8], 16)
         device_id = from_hex_string(device[CONF_ENOCEAN_DEVICE_ID])
         device_name = device[CONF_ENOCEAN_DEVICE_NAME]
         device_type = EnOceanSupportedDeviceType(
@@ -176,7 +182,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             eep=eep,
         )
 
-        # Temperature sensors (EEP A5-02)
+        # temperature sensors (EEP A5-02)
         if eep[0:5] == "A5-02":
             min_temp, max_temp = _get_a5_02_min_max_temp(eep)
             async_add_entities(
@@ -196,14 +202,56 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
             continue
 
-        # Room Operating Panels (EEP A5-10-01 to A5-10-14)
+        # temperature and humidity sensors (A5-04-01 / A5-04-02)
+        if eep[0:5] == "A5-04":
+            if eep_type < 0x01 or eep_type > 0x02:
+                LOGGER.warning(
+                    "Unsupported sensor EEP %s - ignoring EnOcean device %s",
+                    eep,
+                    to_hex_string(device_id).upper(),
+                )
+                continue
+
+            min_temp = 0
+            max_temp = 40
+
+            if eep_type == 0x02:
+                min_temp = -20
+                max_temp = 60
+
+            async_add_entities(
+                [
+                    EnOceanTemperatureSensor(
+                        dev_id=device_id,
+                        dev_name=device_name,
+                        description=SENSOR_DESC_TEMPERATURE,
+                        scale_min=min_temp,
+                        scale_max=max_temp,
+                        range_from=0,
+                        range_to=250,
+                        dev_type=device_type,
+                        name="Temperature",
+                    ),
+                    EnOceanHumiditySensor(
+                        dev_id=device_id,
+                        dev_name=device_name,
+                        description=SENSOR_DESC_HUMIDITY,
+                        dev_type=device_type,
+                        name="Humidity",
+                    ),
+                ]
+            )
+            continue
+
+        # room operating panels (EEP A5-10-01 to A5-10-14)
         if eep[0:5] == "A5-10":
-
-            eep_type = int(eep[6:8], 16)
-            LOGGER.debug("EEP A5-10 type")
-
             if eep_type < 0x01 or eep_type > 0x14:
-                continue  # should not happen (EEP not available)
+                LOGGER.warning(
+                    "Unsupported sensor EEP %s - ignoring EnOcean device %s",
+                    eep,
+                    to_hex_string(device_id).upper(),
+                )
+                continue
 
             if eep_type < 0x10:
                 async_add_entities(
@@ -247,47 +295,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             continue
 
-        if eep[0:5] == "A5-04":
-            eep_type = int(eep[6:8], 16)
-            if eep_type < 0x01 or eep_type > 0x02:
-                continue
-
-            min_temp = 0
-            max_temp = 40
-
-            if eep_type == 0x02:
-                min_temp = -20
-                max_temp = 60
-
-            async_add_entities(
-                [
-                    EnOceanTemperatureSensor(
-                        dev_id=device_id,
-                        dev_name=device_name,
-                        description=SENSOR_DESC_TEMPERATURE,
-                        scale_min=min_temp,
-                        scale_max=max_temp,
-                        range_from=0,
-                        range_to=250,
-                        dev_type=device_type,
-                        name="Temperature",
-                    ),
-                    EnOceanHumiditySensor(
-                        dev_id=device_id,
-                        dev_name=device_name,
-                        description=SENSOR_DESC_HUMIDITY,
-                        dev_type=device_type,
-                        name="Humidity",
-                    ),
-                ]
-            )
-            continue
-
-        # A5-12-01 Automated Meter Reading (AMR) - Electricity; note that
+        # power sensors A5-12-01 Automated Meter Reading (AMR) - Electricity;
         # the Permundo PSC234 also sends A5-12-01 messages (but uses natively
         # D2-01-09); as there is not (yet) a way to define multiple EEPs per
         # EnOcean device, but this device was previously supported in this
-        # combination, we allow it manually here
+        # combination, we manually accept this here
         if eep == "A5-12-01" or (
             eep == PERMUNDO_PSC234.eep
             and device[CONF_ENOCEAN_MANUFACTURER] == PERMUNDO_PSC234.manufacturer
