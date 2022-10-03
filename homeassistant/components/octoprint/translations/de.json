@@ -4,6 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "auth_failed": "Fehler beim Abrufen des Anwendungs-API-Schl\u00fcssels",
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
@@ -15,6 +16,11 @@
             "get_api_key": "\u00d6ffne die OctoPrint-Benutzeroberfl\u00e4che und dr\u00fccke bei der Zugriffsanfrage f\u00fcr \"Home Assistant\" auf \"Zulassen\"."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "username": "Benutzername"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",

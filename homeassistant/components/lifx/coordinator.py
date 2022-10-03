@@ -12,6 +12,7 @@ from aiolifx.connection import LIFXConnection
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -148,10 +149,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             if self.device.mac_addr == TARGET_ANY:
                 self.device.mac_addr = response.target_addr
 
-            # Update model-specific configuration
-            if lifx_features(self.device)["multizone"]:
-                await self.async_update_color_zones()
-                await self.async_update_multizone_effect()
+            # Update extended multizone devices
+            if lifx_features(self.device)["extended_multizone"]:
+                await self.async_get_extended_color_zones()
+                await self.async_get_multizone_effect()
+            # use legacy methods for older devices
+            elif lifx_features(self.device)["multizone"]:
+                await self.async_get_color_zones()
+                await self.async_get_multizone_effect()
 
             if lifx_features(self.device)["hev"]:
                 await self.async_get_hev_cycle()
@@ -159,7 +164,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             if lifx_features(self.device)["infrared"]:
                 response = await async_execute_lifx(self.device.get_infrared)
 
-    async def async_update_color_zones(self) -> None:
+    async def async_get_color_zones(self) -> None:
         """Get updated color information for each zone."""
         zone = 0
         top = 1
@@ -174,6 +179,15 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             # We only await multizone responses so don't ask for just one
             if zone == top - 1:
                 zone -= 1
+
+    async def async_get_extended_color_zones(self) -> None:
+        """Get updated color information for all zones."""
+        try:
+            await async_execute_lifx(self.device.get_extended_color_zones)
+        except asyncio.TimeoutError as ex:
+            raise HomeAssistantError(
+                f"Timeout getting color zones from {self.name}"
+            ) from ex
 
     def async_get_hev_cycle_state(self) -> bool | None:
         """Return the current HEV cycle state."""
@@ -232,7 +246,34 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             )
         )
 
-    async def async_update_multizone_effect(self) -> None:
+    async def async_set_extended_color_zones(
+        self,
+        colors: list[tuple[int | float, int | float, int | float, int | float]],
+        colors_count: int | None = None,
+        duration: int = 0,
+        apply: int = 1,
+    ) -> None:
+        """Send a single set extended color zones message to the device."""
+
+        if colors_count is None:
+            colors_count = len(colors)
+
+        # pad the color list with blanks if necessary
+        if len(colors) < 82:
+            for _ in range(82 - len(colors)):
+                colors.append((0, 0, 0, 0))
+
+        await async_execute_lifx(
+            partial(
+                self.device.set_extended_color_zones,
+                colors=colors,
+                colors_count=colors_count,
+                duration=duration,
+                apply=apply,
+            )
+        )
+
+    async def async_get_multizone_effect(self) -> None:
         """Update the device firmware effect running state."""
         await async_execute_lifx(self.device.get_multizone_effect)
         self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
