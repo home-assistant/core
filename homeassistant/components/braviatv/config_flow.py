@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.network import is_host_valid
@@ -28,8 +27,8 @@ from .const import (
     CONF_IGNORED_SOURCES,
     CONF_USE_PSK,
     DOMAIN,
-    NICKNAME,
 )
+from .utils import gen_instance_ids
 
 
 class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -68,7 +67,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if use_psk:
             await self.client.connect(psk=pin)
         else:
-            clientid, nickname = await self.gen_instance_id()
+            clientid, nickname = await gen_instance_ids(self.hass)
             await self.client.connect(pin=pin, clientid=clientid, nickname=nickname)
         await self.client.set_wol_mode(True)
 
@@ -109,7 +108,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Authorize Bravia TV device."""
         errors: dict[str, str] = {}
-        clientid, nickname = await self.gen_instance_id()
+        clientid, nickname = await gen_instance_ids(self.hass)
 
         if user_input is not None:
             self.device_config[CONF_PIN] = user_input[CONF_PIN]
@@ -190,7 +189,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         self.create_client()
-        clientid, nickname = await self.gen_instance_id()
+        clientid, nickname = await gen_instance_ids(self.hass)
 
         assert self.client is not None
         assert self.entry is not None
@@ -229,11 +228,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
         )
-
-    async def gen_instance_id(self) -> tuple[str, str]:
-        """Generate clientid and nickname."""
-        uuid = await instance_id.async_get(self.hass)
-        return uuid, NICKNAME.format(instance_id=uuid[:6])
 
 
 class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):

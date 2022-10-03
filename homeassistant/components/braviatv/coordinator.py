@@ -21,11 +21,11 @@ from typing_extensions import Concatenate, ParamSpec
 from homeassistant.components.media_player import MediaType
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import instance_id
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, NICKNAME
+from .const import DOMAIN
+from .utils import gen_instance_ids
 
 _BraviaTVCoordinatorT = TypeVar("_BraviaTVCoordinatorT", bound="BraviaTVCoordinator")
 _P = ParamSpec("_P")
@@ -119,10 +119,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 if self.use_psk:
                     await self.client.connect(psk=self.pin)
                 else:
-                    uuid = await instance_id.async_get(self.hass)
-                    nickname = NICKNAME.format(instance_id=uuid[:6])
+                    clientid, nickname = await gen_instance_ids(self.hass)
                     await self.client.connect(
-                        pin=self.pin, clientid=uuid, nickname=nickname
+                        pin=self.pin, clientid=clientid, nickname=nickname
                     )
                 self.connected = True
 
