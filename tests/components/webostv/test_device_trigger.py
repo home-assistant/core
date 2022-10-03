@@ -128,8 +128,7 @@ async def test_get_triggers_for_invalid_device_id(hass, caplog):
     await hass.async_block_till_done()
 
     assert (
-        "Invalid config for [automation]: Device invalid_device_id is not a valid webostv device"
-        in caplog.text
+        "Invalid config for [automation]: invalid trigger configuration" in caplog.text
     )
 
 
