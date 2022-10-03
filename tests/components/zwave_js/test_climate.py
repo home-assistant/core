@@ -1,5 +1,4 @@
 """Test the Z-Wave JS climate platform."""
-import logging
 
 import pytest
 from zwave_js_server.const import CommandClass
