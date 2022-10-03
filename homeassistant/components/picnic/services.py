@@ -5,9 +5,9 @@ from python_picnic_api import PicnicAPI
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from ...exceptions import HomeAssistantError
 from .const import (
     ATTR_AMOUNT,
     ATTR_CONFIG_ENTRY_ID,
