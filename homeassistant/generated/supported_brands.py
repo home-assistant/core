@@ -8,6 +8,7 @@ HAS_SUPPORTED_BRANDS = [
     "hunterdouglas_powerview",
     "inkbird",
     "motion_blinds",
+    "netatmo",
     "overkiz",
     "renault",
     "thermobeacon",
