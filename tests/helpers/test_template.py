@@ -1642,7 +1642,7 @@ def test_is_available(hass):
 
     tpl = template.Template(
         """
-{{ is_available(["test.available1","test.unavailable"]) }}
+{{ ["test.available1","test.unavailable"] | is_available() }}
         """,
         hass,
     )
