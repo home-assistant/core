@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "no_ip_control": "El control IP del teu televisor est\u00e0 desactivat o aquest no \u00e9s compatible.",
-            "not_bravia_device": "El dispositiu no \u00e9s un televisor Bravia."
+            "not_bravia_device": "El dispositiu no \u00e9s un televisor Bravia.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "reauth_unsuccessful": "La re-autenticaci\u00f3 no ha tingut \u00e8xit, elimina la integraci\u00f3 i torna-la a configurar."
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
@@ -22,6 +24,12 @@
             },
             "confirm": {
                 "description": "Vols comen\u00e7ar la configuraci\u00f3?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "Codi PIN",
+                    "use_psk": "Utilitza autenticaci\u00f3 PSK"
+                }
             },
             "user": {
                 "data": {
