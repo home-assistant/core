@@ -106,7 +106,7 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
         self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.unit]
         self._attr_hvac_modes = [HVAC_MODE_SB_TO_HASS[mode] for mode in device.modes]
         self._attr_hvac_modes.append(HVACMode.OFF)
-        self._update_device_attrs(self._device)
+        self._update_device_attrs(device)
 
     @property
     def hvac_mode(self) -> HVACMode:
