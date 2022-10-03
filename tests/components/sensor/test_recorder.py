@@ -86,22 +86,22 @@ def set_time_zone():
         ("battery", "%", "%", "%", None, 13.050847, -10, 30),
         ("battery", None, None, None, None, 13.050847, -10, 30),
         ("distance", "m", "m", "m", "distance", 13.050847, -10, 30),
-        ("distance", "mi", "mi", "m", "distance", 13.050847, -10, 30),
+        ("distance", "mi", "mi", "mi", "distance", 13.050847, -10, 30),
         ("humidity", "%", "%", "%", None, 13.050847, -10, 30),
         ("humidity", None, None, None, None, 13.050847, -10, 30),
         ("pressure", "Pa", "Pa", "Pa", "pressure", 13.050847, -10, 30),
-        ("pressure", "hPa", "hPa", "Pa", "pressure", 13.050847, -10, 30),
-        ("pressure", "mbar", "mbar", "Pa", "pressure", 13.050847, -10, 30),
-        ("pressure", "inHg", "inHg", "Pa", "pressure", 13.050847, -10, 30),
-        ("pressure", "psi", "psi", "Pa", "pressure", 13.050847, -10, 30),
+        ("pressure", "hPa", "hPa", "hPa", "pressure", 13.050847, -10, 30),
+        ("pressure", "mbar", "mbar", "mbar", "pressure", 13.050847, -10, 30),
+        ("pressure", "inHg", "inHg", "inHg", "pressure", 13.050847, -10, 30),
+        ("pressure", "psi", "psi", "psi", "pressure", 13.050847, -10, 30),
         ("speed", "m/s", "m/s", "m/s", "speed", 13.050847, -10, 30),
-        ("speed", "mph", "mph", "m/s", "speed", 13.050847, -10, 30),
+        ("speed", "mph", "mph", "mph", "speed", 13.050847, -10, 30),
         ("temperature", "°C", "°C", "°C", "temperature", 13.050847, -10, 30),
-        ("temperature", "°F", "°F", "°C", "temperature", 13.050847, -10, 30),
+        ("temperature", "°F", "°F", "°F", "temperature", 13.050847, -10, 30),
         ("volume", "m³", "m³", "m³", "volume", 13.050847, -10, 30),
-        ("volume", "ft³", "ft³", "m³", "volume", 13.050847, -10, 30),
+        ("volume", "ft³", "ft³", "ft³", "volume", 13.050847, -10, 30),
         ("weight", "g", "g", "g", "mass", 13.050847, -10, 30),
-        ("weight", "oz", "oz", "g", "mass", 13.050847, -10, 30),
+        ("weight", "oz", "oz", "oz", "mass", 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics(
@@ -355,29 +355,29 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     "units, device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
     [
         (IMPERIAL_SYSTEM, "distance", "m", "m", "m", "distance", 1),
-        (IMPERIAL_SYSTEM, "distance", "mi", "mi", "m", "distance", 1),
+        (IMPERIAL_SYSTEM, "distance", "mi", "mi", "mi", "distance", 1),
         (IMPERIAL_SYSTEM, "energy", "kWh", "kWh", "kWh", "energy", 1),
-        (IMPERIAL_SYSTEM, "energy", "Wh", "Wh", "kWh", "energy", 1),
+        (IMPERIAL_SYSTEM, "energy", "Wh", "Wh", "Wh", "energy", 1),
         (IMPERIAL_SYSTEM, "gas", "m³", "m³", "m³", "volume", 1),
-        (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", "m³", "volume", 1),
+        (IMPERIAL_SYSTEM, "gas", "ft³", "ft³", "ft³", "volume", 1),
         (IMPERIAL_SYSTEM, "monetary", "EUR", "EUR", "EUR", None, 1),
         (IMPERIAL_SYSTEM, "monetary", "SEK", "SEK", "SEK", None, 1),
         (IMPERIAL_SYSTEM, "volume", "m³", "m³", "m³", "volume", 1),
-        (IMPERIAL_SYSTEM, "volume", "ft³", "ft³", "m³", "volume", 1),
+        (IMPERIAL_SYSTEM, "volume", "ft³", "ft³", "ft³", "volume", 1),
         (IMPERIAL_SYSTEM, "weight", "g", "g", "g", "mass", 1),
-        (IMPERIAL_SYSTEM, "weight", "oz", "oz", "g", "mass", 1),
+        (IMPERIAL_SYSTEM, "weight", "oz", "oz", "oz", "mass", 1),
         (METRIC_SYSTEM, "distance", "m", "m", "m", "distance", 1),
-        (METRIC_SYSTEM, "distance", "mi", "mi", "m", "distance", 1),
+        (METRIC_SYSTEM, "distance", "mi", "mi", "mi", "distance", 1),
         (METRIC_SYSTEM, "energy", "kWh", "kWh", "kWh", "energy", 1),
-        (METRIC_SYSTEM, "energy", "Wh", "Wh", "kWh", "energy", 1),
+        (METRIC_SYSTEM, "energy", "Wh", "Wh", "Wh", "energy", 1),
         (METRIC_SYSTEM, "gas", "m³", "m³", "m³", "volume", 1),
-        (METRIC_SYSTEM, "gas", "ft³", "ft³", "m³", "volume", 1),
+        (METRIC_SYSTEM, "gas", "ft³", "ft³", "ft³", "volume", 1),
         (METRIC_SYSTEM, "monetary", "EUR", "EUR", "EUR", None, 1),
         (METRIC_SYSTEM, "monetary", "SEK", "SEK", "SEK", None, 1),
         (METRIC_SYSTEM, "volume", "m³", "m³", "m³", "volume", 1),
-        (METRIC_SYSTEM, "volume", "ft³", "ft³", "m³", "volume", 1),
+        (METRIC_SYSTEM, "volume", "ft³", "ft³", "ft³", "volume", 1),
         (METRIC_SYSTEM, "weight", "g", "g", "g", "mass", 1),
-        (METRIC_SYSTEM, "weight", "oz", "oz", "g", "mass", 1),
+        (METRIC_SYSTEM, "weight", "oz", "oz", "oz", "mass", 1),
     ],
 )
 async def test_compile_hourly_sum_statistics_amount(
@@ -548,11 +548,11 @@ async def test_compile_hourly_sum_statistics_amount(
     "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
-        ("energy", "Wh", "Wh", "kWh", "energy", 1),
+        ("energy", "Wh", "Wh", "Wh", "energy", 1),
         ("monetary", "EUR", "EUR", "EUR", None, 1),
         ("monetary", "SEK", "SEK", "SEK", None, 1),
         ("gas", "m³", "m³", "m³", "volume", 1),
-        ("gas", "ft³", "ft³", "m³", "volume", 1),
+        ("gas", "ft³", "ft³", "ft³", "volume", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
@@ -957,11 +957,11 @@ def test_compile_hourly_sum_statistics_negative_state(
     "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
-        ("energy", "Wh", "Wh", "kWh", "energy", 1),
+        ("energy", "Wh", "Wh", "Wh", "energy", 1),
         ("monetary", "EUR", "EUR", "EUR", None, 1),
         ("monetary", "SEK", "SEK", "SEK", None, 1),
         ("gas", "m³", "m³", "m³", "volume", 1),
-        ("gas", "ft³", "ft³", "m³", "volume", 1),
+        ("gas", "ft³", "ft³", "ft³", "volume", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_total_no_reset(
@@ -1061,9 +1061,9 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     "device_class, state_unit, display_unit, statistics_unit, unit_class, factor",
     [
         ("energy", "kWh", "kWh", "kWh", "energy", 1),
-        ("energy", "Wh", "Wh", "kWh", "energy", 1),
+        ("energy", "Wh", "Wh", "Wh", "energy", 1),
         ("gas", "m³", "m³", "m³", "volume", 1),
-        ("gas", "ft³", "ft³", "m³", "volume", 1),
+        ("gas", "ft³", "ft³", "ft³", "volume", 1),
     ],
 )
 def test_compile_hourly_sum_statistics_total_increasing(
@@ -1431,7 +1431,7 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
             "has_sum": True,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "Wh",
             "unit_class": "energy",
         },
     ]
@@ -1728,40 +1728,40 @@ def test_compile_hourly_statistics_fails(hass_recorder, caplog):
         ("measurement", "battery", "%", "%", "%", None, "mean"),
         ("measurement", "battery", None, None, None, None, "mean"),
         ("measurement", "distance", "m", "m", "m", "distance", "mean"),
-        ("measurement", "distance", "mi", "mi", "m", "distance", "mean"),
+        ("measurement", "distance", "mi", "mi", "mi", "distance", "mean"),
         ("total", "distance", "m", "m", "m", "distance", "sum"),
-        ("total", "distance", "mi", "mi", "m", "distance", "sum"),
-        ("total", "energy", "Wh", "Wh", "kWh", "energy", "sum"),
+        ("total", "distance", "mi", "mi", "mi", "distance", "sum"),
+        ("total", "energy", "Wh", "Wh", "Wh", "energy", "sum"),
         ("total", "energy", "kWh", "kWh", "kWh", "energy", "sum"),
-        ("measurement", "energy", "Wh", "Wh", "kWh", "energy", "mean"),
+        ("measurement", "energy", "Wh", "Wh", "Wh", "energy", "mean"),
         ("measurement", "energy", "kWh", "kWh", "kWh", "energy", "mean"),
         ("measurement", "humidity", "%", "%", "%", None, "mean"),
         ("measurement", "humidity", None, None, None, None, "mean"),
         ("total", "monetary", "USD", "USD", "USD", None, "sum"),
         ("total", "monetary", "None", "None", "None", None, "sum"),
         ("total", "gas", "m³", "m³", "m³", "volume", "sum"),
-        ("total", "gas", "ft³", "ft³", "m³", "volume", "sum"),
+        ("total", "gas", "ft³", "ft³", "ft³", "volume", "sum"),
         ("measurement", "monetary", "USD", "USD", "USD", None, "mean"),
         ("measurement", "monetary", "None", "None", "None", None, "mean"),
         ("measurement", "gas", "m³", "m³", "m³", "volume", "mean"),
-        ("measurement", "gas", "ft³", "ft³", "m³", "volume", "mean"),
+        ("measurement", "gas", "ft³", "ft³", "ft³", "volume", "mean"),
         ("measurement", "pressure", "Pa", "Pa", "Pa", "pressure", "mean"),
-        ("measurement", "pressure", "hPa", "hPa", "Pa", "pressure", "mean"),
-        ("measurement", "pressure", "mbar", "mbar", "Pa", "pressure", "mean"),
-        ("measurement", "pressure", "inHg", "inHg", "Pa", "pressure", "mean"),
-        ("measurement", "pressure", "psi", "psi", "Pa", "pressure", "mean"),
+        ("measurement", "pressure", "hPa", "hPa", "hPa", "pressure", "mean"),
+        ("measurement", "pressure", "mbar", "mbar", "mbar", "pressure", "mean"),
+        ("measurement", "pressure", "inHg", "inHg", "inHg", "pressure", "mean"),
+        ("measurement", "pressure", "psi", "psi", "psi", "pressure", "mean"),
         ("measurement", "speed", "m/s", "m/s", "m/s", "speed", "mean"),
-        ("measurement", "speed", "mph", "mph", "m/s", "speed", "mean"),
+        ("measurement", "speed", "mph", "mph", "mph", "speed", "mean"),
         ("measurement", "temperature", "°C", "°C", "°C", "temperature", "mean"),
-        ("measurement", "temperature", "°F", "°F", "°C", "temperature", "mean"),
+        ("measurement", "temperature", "°F", "°F", "°F", "temperature", "mean"),
         ("measurement", "volume", "m³", "m³", "m³", "volume", "mean"),
-        ("measurement", "volume", "ft³", "ft³", "m³", "volume", "mean"),
+        ("measurement", "volume", "ft³", "ft³", "ft³", "volume", "mean"),
         ("total", "volume", "m³", "m³", "m³", "volume", "sum"),
-        ("total", "volume", "ft³", "ft³", "m³", "volume", "sum"),
+        ("total", "volume", "ft³", "ft³", "ft³", "volume", "sum"),
         ("measurement", "weight", "g", "g", "g", "mass", "mean"),
-        ("measurement", "weight", "oz", "oz", "g", "mass", "mean"),
+        ("measurement", "weight", "oz", "oz", "oz", "mass", "mean"),
         ("total", "weight", "g", "g", "g", "mass", "sum"),
-        ("total", "weight", "oz", "oz", "g", "mass", "sum"),
+        ("total", "weight", "oz", "oz", "oz", "mass", "sum"),
     ],
 )
 def test_list_statistic_ids(
@@ -2134,7 +2134,7 @@ def test_compile_hourly_statistics_changing_units_3(
 @pytest.mark.parametrize(
     "device_class, state_unit, statistic_unit, unit_class, mean1, mean2, min, max",
     [
-        ("power", "kW", "W", None, 13.050847, 13.333333, -10, 30),
+        ("power", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_device_class_1(
@@ -2207,7 +2207,7 @@ def test_compile_hourly_statistics_changing_device_class_1(
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    # Run statistics again, we get a warning, and no additional statistics is generated
+    # Run statistics again, additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
@@ -2265,13 +2265,9 @@ def test_compile_hourly_statistics_changing_device_class_1(
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    # Run statistics again, we get a warning, and no additional statistics is generated
+    # Run statistics again, additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=20))
     wait_recording_done(hass)
-    assert (
-        f"The normalized unit of sensor.test1 ({statistic_unit}) does not match the "
-        f"unit of already compiled statistics ({state_unit})" in caplog.text
-    )
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
@@ -2311,15 +2307,28 @@ def test_compile_hourly_statistics_changing_device_class_1(
                 "state": None,
                 "sum": None,
             },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(
+                    zero + timedelta(minutes=20)
+                ),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=25)),
+                "mean": approx(mean2),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistic_unit, unit_class, mean, min, max",
+    "device_class, state_unit, display_unit, statistic_unit, unit_class, mean, mean2, min, max",
     [
-        ("power", "kW", "kW", "W", "power", 13.050847, -10, 30),
+        ("power", "kW", "kW", "kW", "power", 13.050847, 13.333333, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_device_class_2(
@@ -2331,6 +2340,7 @@ def test_compile_hourly_statistics_changing_device_class_2(
     statistic_unit,
     unit_class,
     mean,
+    mean2,
     min,
     max,
 ):
@@ -2393,13 +2403,9 @@ def test_compile_hourly_statistics_changing_device_class_2(
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    # Run statistics again, we get a warning, and no additional statistics is generated
+    # Run statistics again, additional statistics is generated
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
-    assert (
-        f"The unit of sensor.test1 ({state_unit}) does not match the "
-        f"unit of already compiled statistics ({statistic_unit})" in caplog.text
-    )
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
@@ -2425,7 +2431,20 @@ def test_compile_hourly_statistics_changing_device_class_2(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-            }
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(
+                    zero + timedelta(minutes=10)
+                ),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=15)),
+                "mean": approx(mean2),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            },
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
@@ -3120,13 +3139,13 @@ async def test_validate_statistics_supported_device_class(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, unit",
+    "units, attributes, valid_units",
     [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W, kW"),
     ],
 )
 async def test_validate_statistics_supported_device_class_2(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit
+    hass, hass_ws_client, recorder_mock, units, attributes, valid_units
 ):
     """Test validate_statistics."""
     id = 1
@@ -3172,7 +3191,7 @@ async def test_validate_statistics_supported_device_class_2(
                     "device_class": attributes["device_class"],
                     "metadata_unit": None,
                     "statistic_id": "sensor.test",
-                    "supported_unit": unit,
+                    "supported_unit": valid_units,
                 },
                 "type": "unsupported_unit_metadata",
             }
@@ -3192,99 +3211,9 @@ async def test_validate_statistics_supported_device_class_2(
                     "device_class": attributes["device_class"],
                     "metadata_unit": None,
                     "statistic_id": "sensor.test",
-                    "supported_unit": unit,
+                    "supported_unit": valid_units,
                 },
                 "type": "unsupported_unit_metadata",
-            },
-            {
-                "data": {
-                    "device_class": attributes["device_class"],
-                    "state_unit": "dogs",
-                    "statistic_id": "sensor.test",
-                },
-                "type": "unsupported_unit_state",
-            },
-        ],
-    }
-    await assert_validation_result(client, expected)
-
-
-@pytest.mark.parametrize(
-    "units, attributes, unit",
-    [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
-    ],
-)
-async def test_validate_statistics_supported_device_class_3(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit
-):
-    """Test validate_statistics."""
-    id = 1
-
-    def next_id():
-        nonlocal id
-        id += 1
-        return id
-
-    async def assert_validation_result(client, expected_result):
-        await client.send_json(
-            {"id": next_id(), "type": "recorder/validate_statistics"}
-        )
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"] == expected_result
-
-    now = dt_util.utcnow()
-
-    hass.config.units = units
-    await async_setup_component(hass, "sensor", {})
-    await async_recorder_block_till_done(hass)
-    client = await hass_ws_client()
-
-    # No statistics, no state - empty response
-    await assert_validation_result(client, {})
-
-    # No statistics, valid state - empty response
-    initial_attributes = {"state_class": "measurement", "unit_of_measurement": "kW"}
-    hass.states.async_set("sensor.test", 10, attributes=initial_attributes)
-    await hass.async_block_till_done()
-    await assert_validation_result(client, {})
-
-    # Statistics has run, device class set - expect error
-    do_adhoc_statistics(hass, start=now)
-    await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", 12, attributes=attributes)
-    await hass.async_block_till_done()
-    expected = {
-        "sensor.test": [
-            {
-                "data": {
-                    "device_class": attributes["device_class"],
-                    "metadata_unit": "kW",
-                    "statistic_id": "sensor.test",
-                    "supported_unit": unit,
-                },
-                "type": "unsupported_unit_metadata_can_convert",
-            }
-        ],
-    }
-    await assert_validation_result(client, expected)
-
-    # Invalid state too, expect double errors
-    hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
-    )
-    await async_recorder_block_till_done(hass)
-    expected = {
-        "sensor.test": [
-            {
-                "data": {
-                    "device_class": attributes["device_class"],
-                    "metadata_unit": "kW",
-                    "statistic_id": "sensor.test",
-                    "supported_unit": unit,
-                },
-                "type": "unsupported_unit_metadata_can_convert",
             },
             {
                 "data": {
