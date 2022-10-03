@@ -14,5 +14,4 @@ HAS_SUPPORTED_BRANDS = [
     "wemo",
     "whirlpool",
     "yalexs_ble",
-    "zwave_js",
 ]

@@ -1,6 +1,7 @@
 """Config flow to configure the Bravia TV integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlparse
 
@@ -40,6 +41,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self.client: BraviaTV | None = None
         self.device_config: dict[str, Any] = {}
+        self.entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -176,6 +178,56 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_authorize()
 
         return self.async_show_form(step_id="confirm")
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self.device_config = {**entry_data}
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        self.create_client()
+
+        assert self.client is not None
+        assert self.entry is not None
+
+        if user_input is not None:
+            pin = user_input[CONF_PIN]
+            use_psk = user_input[CONF_USE_PSK]
+            try:
+                if use_psk:
+                    await self.client.connect(psk=pin)
+                else:
+                    await self.client.connect(
+                        pin=pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+                    )
+                await self.client.set_wol_mode(True)
+            except BraviaTVError:
+                return self.async_abort(reason="reauth_unsuccessful")
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry, data={**self.device_config, **user_input}
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        try:
+            await self.client.pair(CLIENTID_PREFIX, NICKNAME)
+        except BraviaTVError:
+            return self.async_abort(reason="reauth_unsuccessful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PIN, default=""): str,
+                    vol.Required(CONF_USE_PSK, default=False): bool,
+                }
+            ),
+        )
 
 
 class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):

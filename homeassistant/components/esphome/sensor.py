@@ -76,7 +76,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         """Return if this sensor should force a state update."""
         return self._static_info.force_update
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
@@ -121,7 +121,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
     """A text sensor implementation for ESPHome."""
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def native_value(self) -> str | None:
         """Return the state of the entity."""

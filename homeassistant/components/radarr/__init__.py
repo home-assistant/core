@@ -50,15 +50,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_yaml",
             )
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "removed_attributes",
-                breaks_in_ha_version="2022.10.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="removed_attributes",
-            )
 
     return True
 
