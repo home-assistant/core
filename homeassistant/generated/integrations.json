@@ -4907,7 +4907,7 @@
     "whirlpool": {
       "config_flow": true,
       "iot_class": "cloud_push",
-      "name": "Whirlpool Sixth Sense"
+      "name": "Whirlpool Appliances"
     },
     "whois": {
       "config_flow": true,
