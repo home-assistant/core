@@ -177,7 +177,7 @@ class WasherDryerClass(SensorEntity):
         self._said = said
 
         self._wd: WasherDryer = washdry
-        self._wd.register_callback(self.async_write_ha_state)
+        self._wd.register_attr_callback(self.async_write_ha_state)
 
         if self._name == "dryer":
             self._attr_icon = ICON_D
