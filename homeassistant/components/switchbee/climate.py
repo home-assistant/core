@@ -1,7 +1,7 @@
 """Support for SwitchBee climate."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.const import (
@@ -28,8 +28,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import SwitchBeeCoordinator
 from .const import DOMAIN
+from .coordinator import SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
 
 FAN_SB_TO_HASS = {
@@ -106,25 +106,7 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
         self._attr_temperature_unit = HVAC_UNIT_SB_TO_HASS[device.unit]
         self._attr_hvac_modes = [HVAC_MODE_SB_TO_HASS[mode] for mode in device.modes]
         self._attr_hvac_modes.append(HVACMode.OFF)
-        self._update_device_attrs(device)
-
-    @property
-    def hvac_mode(self) -> HVACMode:
-        """Return hvac operation ie. heat, cool mode."""
-        return self._attr_hvac_mode
-
-    @property
-    def fan_mode(self) -> str:
-        """Return the fan setting.
-
-        Requires ClimateEntityFeature.FAN_MODE.
-        """
-        return self._attr_fan_mode
-
-    @property
-    def target_temperature(self) -> int:
-        """Return the temperature we try to reach."""
-        return self._attr_target_temperature
+        self._update_attrs_from_coordinator()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -132,24 +114,49 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
         self._update_attrs_from_coordinator()
         super()._handle_coordinator_update()
 
-    def _update_device_attrs(self, device: SwitchBeeThermostat) -> None:
+    def _update_attrs_from_coordinator(self) -> None:
+
+        coordinator_device = self._get_coordinator_device()
+
         self._attr_hvac_mode: HVACMode = (
             HVACMode.OFF
-            if device.state == ApiStateCommand.OFF
-            else HVAC_MODE_SB_TO_HASS[device.mode]
+            if coordinator_device.state == ApiStateCommand.OFF
+            else HVAC_MODE_SB_TO_HASS[coordinator_device.mode]
         )
-        self._attr_fan_mode = FAN_SB_TO_HASS[device.fan]
-        self._attr_current_temperature = device.temperature
-        self._attr_target_temperature = device.target_temperature
+        self._attr_fan_mode = FAN_SB_TO_HASS[coordinator_device.fan]
+        self._attr_current_temperature = coordinator_device.temperature
+        self._attr_target_temperature = coordinator_device.target_temperature
 
-    def _create_switchbee_request(
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode."""
+
+        if hvac_mode == HVACMode.OFF:
+            await self.operate(power=ApiStateCommand.OFF)
+        else:
+            await self.operate(
+                power=ApiStateCommand.ON, mode=HVAC_MODE_HASS_TO_SB[hvac_mode]
+            )
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        await self.operate(target_temperature=kwargs[ATTR_TEMPERATURE])
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set AC fan mode."""
+        await self.operate(fan=FAN_HASS_TO_SB[fan_mode])
+
+    async def operate(
         self,
         power: str | None = None,
         mode: str | None = None,
         fan: str | None = None,
         target_temperature: int | None = None,
-    ) -> dict[str, Any]:
-        """Create SwitchBee thermostat state object."""
+    ) -> None:
+        """Send request to central unit."""
+
+        assert isinstance(self.hvac_mode, HVACMode)
+        assert isinstance(self.fan_mode, str)
+        assert isinstance(self.target_temperature, int)
 
         new_power = power
         if not new_power:
@@ -159,41 +166,19 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
                 else ApiStateCommand.ON
             )
 
-        data = {
-            ApiAttribute.POWER: new_power,
-            ApiAttribute.MODE: mode if mode else HVAC_MODE_HASS_TO_SB[self.hvac_mode],
-            ApiAttribute.FAN: fan if fan else FAN_HASS_TO_SB[self.fan_mode],
-            ApiAttribute.CONFIGURED_TEMPERATURE: target_temperature
-            if target_temperature
-            else self.target_temperature,
-        }
-
-        return data
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set hvac mode."""
-
-        if hvac_mode == HVACMode.OFF:
-            state = self._create_switchbee_request(power=ApiStateCommand.OFF)
-        else:
-            state = self._create_switchbee_request(
-                power=ApiStateCommand.ON, mode=HVAC_MODE_HASS_TO_SB[hvac_mode]
-            )
-
-        await self.operate(state)
-
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        await self.operate(
-            self._create_switchbee_request(target_temperature=kwargs[ATTR_TEMPERATURE])
+        new_mode = mode if mode else HVAC_MODE_HASS_TO_SB[self.hvac_mode]
+        new_fan = fan if fan else FAN_HASS_TO_SB[self.fan_mode]
+        new_temperature = (
+            target_temperature if target_temperature else self.target_temperature
         )
 
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set AC fan mode."""
-        await self.operate(self._create_switchbee_request(fan=FAN_HASS_TO_SB[fan_mode]))
+        state: dict[str, int | str] = {
+            ApiAttribute.POWER: new_power,
+            ApiAttribute.MODE: new_mode,
+            ApiAttribute.FAN: new_fan,
+            ApiAttribute.CONFIGURED_TEMPERATURE: new_temperature,
+        }
 
-    async def operate(self, state: dict[str, str | int]) -> None:
-        """Send request to central unit."""
         try:
             await self.coordinator.api.set_state(self._device.id, state)
         except (SwitchBeeError, SwitchBeeDeviceOfflineError) as exp:

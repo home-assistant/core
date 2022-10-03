@@ -50,11 +50,11 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
             device.id if device.type == DeviceType.Thermostat else device.unit_id
         )
         self._attr_device_info = DeviceInfo(
-            name=f"SwitchBee {identfier}",
+            name=f"SwitchBee {identifier}",
             identifiers={
                 (
                     DOMAIN,
-                    f"{identfier}-{coordinator.mac_formatted}",
+                    f"{identifier}-{coordinator.mac_formatted}",
                 )
             },
             manufacturer=SWITCHBEE_BRAND,
