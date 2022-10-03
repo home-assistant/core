@@ -126,7 +126,7 @@ QUERY_STATISTIC_META = [
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
-    **{unit2: EnergyConverter for unit2 in EnergyConverter.VALID_UNITS},
+    **{unit: EnergyConverter for unit in EnergyConverter.VALID_UNITS},
     **{unit: MassConverter for unit in MassConverter.VALID_UNITS},
     **{unit: PowerConverter for unit in PowerConverter.VALID_UNITS},
     **{unit: PressureConverter for unit in PressureConverter.VALID_UNITS},
