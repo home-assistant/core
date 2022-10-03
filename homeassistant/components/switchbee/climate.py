@@ -78,13 +78,13 @@ async def async_setup_entry(
     """Set up SwitchBee climate."""
     coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        SwitchBeeClimate(switchbee_device, coordinator)
+        SwitchBeeClimateEntity(switchbee_device, coordinator)
         for switchbee_device in coordinator.data.values()
         if isinstance(switchbee_device, SwitchBeeThermostat)
     )
 
 
-class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity):
+class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity):
     """Representation of a SwitchBee button."""
 
     _attr_supported_features = (
@@ -131,21 +131,21 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
         """Set hvac mode."""
 
         if hvac_mode == HVACMode.OFF:
-            await self.operate(power=ApiStateCommand.OFF)
+            await self._operate(power=ApiStateCommand.OFF)
         else:
-            await self.operate(
+            await self._operate(
                 power=ApiStateCommand.ON, mode=HVAC_MODE_HASS_TO_SB[hvac_mode]
             )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self.operate(target_temperature=kwargs[ATTR_TEMPERATURE])
+        await self._operate(target_temperature=kwargs[ATTR_TEMPERATURE])
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set AC fan mode."""
-        await self.operate(fan=FAN_HASS_TO_SB[fan_mode])
+        await self._operate(fan=FAN_HASS_TO_SB[fan_mode])
 
-    async def operate(
+    async def _operate(
         self,
         power: str | None = None,
         mode: str | None = None,
