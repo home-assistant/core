@@ -205,3 +205,19 @@ async def test_stun_server(
     assert response.get("type") == TYPE_RESULT
     assert "result" in response
     assert response["result"].get("stun_server") == "example.com:1234"
+
+    # Simulate an options flow change, clearing the stun server and verify the change is reflected
+    hass.config_entries.async_update_entry(config_entry, options={})
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "rtsp_to_webrtc/get_settings",
+        }
+    )
+    response = await client.receive_json()
+    assert response.get("id") == 4
+    assert response.get("type") == TYPE_RESULT
+    assert "result" in response
+    assert response["result"].get("stun_server") == ""
