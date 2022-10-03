@@ -1,8 +1,9 @@
 """Test AccuWeather diagnostics."""
 import json
 
+from . import init_integration
+
 from tests.common import load_fixture
-from tests.components.accuweather import init_integration
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 

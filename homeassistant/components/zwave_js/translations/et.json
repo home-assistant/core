@@ -91,6 +91,12 @@
             "zwave_js.value_updated.value": "Z-Wave JS v\u00e4\u00e4rtuse muutus"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "Z-Wave JS Serveri versioon, mida praegu kasutad, on selle Home Assistanti versiooni jaoks liiga vana. Selle probleemi lahendamiseks v\u00e4rskenda Z-Wave JS Server uusimale versioonile.",
+            "title": "Vajalik on Z-Wave JS Serveri uuem versioon"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Z-Wave JS lisandmooduli tuvastusteabe hankimine nurjus.",

@@ -667,36 +667,6 @@ async def test_removing_area_id(registry):
     assert entry_w_area != entry_wo_area
 
 
-async def test_deleted_device_removing_area_id(registry):
-    """Make sure we can clear area id of deleted device."""
-    entry = registry.async_get_or_create(
-        config_entry_id="123",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
-        manufacturer="manufacturer",
-        model="model",
-    )
-
-    entry_w_area = registry.async_update_device(entry.id, area_id="12345A")
-
-    registry.async_remove_device(entry.id)
-    registry.async_clear_area_id("12345A")
-
-    entry2 = registry.async_get_or_create(
-        config_entry_id="123",
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        identifiers={("bridgeid", "0123")},
-        manufacturer="manufacturer",
-        model="model",
-    )
-    assert entry.id == entry2.id
-
-    entry_wo_area = registry.async_get_device({("bridgeid", "0123")})
-
-    assert not entry_wo_area.area_id
-    assert entry_w_area != entry_wo_area
-
-
 async def test_specifying_via_device_create(registry):
     """Test specifying a via_device and removal of the hub device."""
     via = registry.async_get_or_create(

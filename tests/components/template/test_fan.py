@@ -11,8 +11,7 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
+    FanEntityFeature,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
@@ -879,7 +878,7 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
     state = hass.states.get("fan.mechanical_ventilation")
     attributes = state.attributes
     assert attributes["percentage_step"] == percentage_step
-    assert attributes.get("supported_features") & SUPPORT_SET_SPEED
+    assert attributes.get("supported_features") & FanEntityFeature.SET_SPEED
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -947,4 +946,4 @@ async def test_implemented_preset_mode(hass, start_ha):
     state = hass.states.get("fan.mechanical_ventilation")
     attributes = state.attributes
     assert attributes.get("percentage") is None
-    assert attributes.get("supported_features") & SUPPORT_PRESET_MODE
+    assert attributes.get("supported_features") & FanEntityFeature.PRESET_MODE

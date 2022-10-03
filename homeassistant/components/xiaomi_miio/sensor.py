@@ -35,6 +35,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
+    REVOLUTIONS_PER_MINUTE,
     TEMP_CELSIUS,
     TIME_DAYS,
     TIME_HOURS,
@@ -192,7 +193,7 @@ SENSOR_TYPES = {
     ATTR_ACTUAL_SPEED: XiaomiMiioSensorDescription(
         key=ATTR_ACTUAL_SPEED,
         name="Actual speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         icon="mdi:fast-forward",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -200,7 +201,7 @@ SENSOR_TYPES = {
     ATTR_CONTROL_SPEED: XiaomiMiioSensorDescription(
         key=ATTR_CONTROL_SPEED,
         name="Control speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         icon="mdi:fast-forward",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -208,7 +209,7 @@ SENSOR_TYPES = {
     ATTR_FAVORITE_SPEED: XiaomiMiioSensorDescription(
         key=ATTR_FAVORITE_SPEED,
         name="Favorite speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         icon="mdi:fast-forward",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -216,7 +217,7 @@ SENSOR_TYPES = {
     ATTR_MOTOR_SPEED: XiaomiMiioSensorDescription(
         key=ATTR_MOTOR_SPEED,
         name="Motor speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         icon="mdi:fast-forward",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -224,7 +225,7 @@ SENSOR_TYPES = {
     ATTR_MOTOR2_SPEED: XiaomiMiioSensorDescription(
         key=ATTR_MOTOR2_SPEED,
         name="Second motor speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         icon="mdi:fast-forward",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -234,6 +235,7 @@ SENSOR_TYPES = {
         name="Use time",
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:progress-clock",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -293,6 +295,7 @@ SENSOR_TYPES = {
         name="Filter use",
         native_unit_of_measurement=TIME_HOURS,
         icon="mdi:clock-outline",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -301,6 +304,7 @@ SENSOR_TYPES = {
         name="Filter time left",
         native_unit_of_measurement=TIME_DAYS,
         icon="mdi:clock-outline",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -318,6 +322,7 @@ SENSOR_TYPES = {
         name="Dust filter life remaining days",
         native_unit_of_measurement=TIME_DAYS,
         icon="mdi:clock-outline",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -335,6 +340,7 @@ SENSOR_TYPES = {
         name="Upper filter life remaining days",
         native_unit_of_measurement=TIME_DAYS,
         icon="mdi:clock-outline",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -571,6 +577,7 @@ VACUUM_SENSORS = {
     f"last_clean_{ATTR_LAST_CLEAN_TIME}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-sand",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_LAST_CLEAN_TIME,
         parent_key=VacuumCoordinatorDataAttributes.last_clean_details,
         name="Last clean duration",
@@ -587,6 +594,7 @@ VACUUM_SENSORS = {
     f"current_{ATTR_STATUS_CLEAN_TIME}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-sand",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_STATUS_CLEAN_TIME,
         parent_key=VacuumCoordinatorDataAttributes.status,
         name="Current clean duration",
@@ -602,6 +610,7 @@ VACUUM_SENSORS = {
     ),
     f"clean_history_{ATTR_CLEAN_HISTORY_TOTAL_DURATION}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
+        device_class=SensorDeviceClass.DURATION,
         icon="mdi:timer-sand",
         key=ATTR_CLEAN_HISTORY_TOTAL_DURATION,
         parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
@@ -641,6 +650,7 @@ VACUUM_SENSORS = {
     f"consumable_{ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:brush",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Main brush left",
@@ -649,6 +659,7 @@ VACUUM_SENSORS = {
     f"consumable_{ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:brush",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_CONSUMABLE_STATUS_SIDE_BRUSH_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Side brush left",
@@ -657,6 +668,7 @@ VACUUM_SENSORS = {
     f"consumable_{ATTR_CONSUMABLE_STATUS_FILTER_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:air-filter",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Filter left",
@@ -665,6 +677,7 @@ VACUUM_SENSORS = {
     f"consumable_{ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:eye-outline",
+        device_class=SensorDeviceClass.DURATION,
         key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
         parent_key=VacuumCoordinatorDataAttributes.consumable_status,
         name="Sensor dirty left",
@@ -892,7 +905,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
         """Return the state attributes of the device."""
         return self._state_attrs
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -958,7 +971,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
         """Return the state of the device."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         try:
             self._state = await self.hass.async_add_executor_job(

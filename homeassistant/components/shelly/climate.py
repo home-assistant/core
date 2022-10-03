@@ -6,11 +6,13 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 from aioshelly.block_device import Block
+from aioshelly.exceptions import AuthRequired
 import async_timeout
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -317,11 +319,14 @@ class BlockSleepingClimate(
 
             assert self.block.channel
 
-            self._preset_modes = [
-                PRESET_NONE,
-                *self.wrapper.device.settings["thermostats"][int(self.block.channel)][
-                    "schedule_profile_names"
-                ],
-            ]
-
-            self.async_write_ha_state()
+            try:
+                self._preset_modes = [
+                    PRESET_NONE,
+                    *self.wrapper.device.settings["thermostats"][
+                        int(self.block.channel)
+                    ]["schedule_profile_names"],
+                ]
+            except AuthRequired:
+                self.wrapper.entry.async_start_reauth(self.hass)
+            else:
+                self.async_write_ha_state()

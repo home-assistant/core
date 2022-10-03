@@ -66,7 +66,99 @@
         },
         "mandatorySupportedCCs": [32, 114, 64, 67, 134],
         "mandatoryControlledCCs": []
-      }
+      },
+      "commandClasses": [
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 64,
+          "name": "Thermostat Mode",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 67,
+          "name": "Thermostat Setpoint",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 50,
+          "name": "Meter",
+          "version": 3,
+          "isSecure": false
+        }
+      ]
     },
     {
       "nodeId": 26,
@@ -1348,98 +1440,6 @@
     "mandatorySupportedCCs": [32, 114, 64, 67, 134],
     "mandatoryControlledCCs": []
   },
-  "commandClasses": [
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 64,
-      "name": "Thermostat Mode",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 67,
-      "name": "Thermostat Setpoint",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 94,
-      "name": "Z-Wave Plus Info",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 133,
-      "name": "Association",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 89,
-      "name": "Association Group Information",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 142,
-      "name": "Multi Channel Association",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 96,
-      "name": "Multi Channel",
-      "version": 4,
-      "isSecure": false
-    },
-    {
-      "id": 90,
-      "name": "Device Reset Locally",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 152,
-      "name": "Security",
-      "version": 1,
-      "isSecure": true
-    },
-    {
-      "id": 108,
-      "name": "Supervision",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 112,
-      "name": "Configuration",
-      "version": 3,
-      "isSecure": false
-    },
-    {
-      "id": 122,
-      "name": "Firmware Update Meta Data",
-      "version": 4,
-      "isSecure": false
-    },
-    {
-      "id": 50,
-      "name": "Meter",
-      "version": 3,
-      "isSecure": false
-    }
-  ],
   "interviewStage": "Complete",
   "isControllerNode": false
 }

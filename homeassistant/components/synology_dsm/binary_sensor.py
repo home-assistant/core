@@ -1,12 +1,10 @@
 """Support for Synology DSM binary sensors."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
 from synology_dsm.api.core.security import SynoCoreSecurity
-from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from synology_dsm.api.storage.storage import SynoStorage
 
 from homeassistant.components.binary_sensor import (
@@ -37,18 +35,6 @@ class SynologyDSMBinarySensorEntityDescription(
 ):
     """Describes Synology DSM binary sensor entity."""
 
-
-UPGRADE_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
-    SynologyDSMBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6 (#68664)
-        api_key=SynoCoreUpgrade.API_KEY,
-        key="update_available",
-        name="Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-)
 
 SECURITY_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
     SynologyDSMBinarySensorEntityDescription(
@@ -85,21 +71,10 @@ async def async_setup_entry(
     api = data.api
     coordinator = data.coordinator_central
 
-    entities: list[
-        SynoDSMSecurityBinarySensor
-        | SynoDSMUpgradeBinarySensor
-        | SynoDSMStorageBinarySensor
-    ] = [
+    entities: list[SynoDSMSecurityBinarySensor | SynoDSMStorageBinarySensor] = [
         SynoDSMSecurityBinarySensor(api, coordinator, description)
         for description in SECURITY_BINARY_SENSORS
     ]
-
-    entities.extend(
-        [
-            SynoDSMUpgradeBinarySensor(api, coordinator, description)
-            for description in UPGRADE_BINARY_SENSORS
-        ]
-    )
 
     # Handle all disks
     if api.storage.disks_ids:
@@ -169,25 +144,3 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, SynoDSMBinarySensor):
         return bool(
             getattr(self._api.storage, self.entity_description.key)(self._device_id)
         )
-
-
-class SynoDSMUpgradeBinarySensor(SynoDSMBinarySensor):
-    """Representation a Synology Upgrade binary sensor."""
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state."""
-        return bool(getattr(self._api.upgrade, self.entity_description.key))
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return bool(self._api.upgrade)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return firmware details."""
-        return {
-            "installed_version": self._api.information.version_string,
-            "latest_available_version": self._api.upgrade.available_version,
-        }

@@ -8,12 +8,12 @@ from typing import Any
 from aiobotocore.session import AioSession
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,

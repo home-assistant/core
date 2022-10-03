@@ -5,12 +5,12 @@ from datetime import datetime as dt
 import logging
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

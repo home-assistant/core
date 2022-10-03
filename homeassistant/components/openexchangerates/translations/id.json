@@ -19,7 +19,7 @@
                     "base": "Mata uang dasar"
                 },
                 "data_description": {
-                    "base": "Menggunakan mata uang dasar selain USD memerlukan [paket berbayar]({daftar})."
+                    "base": "Menggunakan mata uang dasar selain USD memerlukan [paket berbayar]({signup})."
                 }
             }
         }

@@ -1,4 +1,4 @@
-"""Tests for the BThome integration."""
+"""Tests for the BTHome integration."""
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData

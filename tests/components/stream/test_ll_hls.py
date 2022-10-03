@@ -22,13 +22,8 @@ from homeassistant.components.stream.const import (
 from homeassistant.components.stream.core import Part
 from homeassistant.setup import async_setup_component
 
+from .common import FAKE_TIME, DefaultSegment as Segment, generate_h264_video
 from .test_hls import STREAM_SOURCE, HlsClient, make_playlist
-
-from tests.components.stream.common import (
-    FAKE_TIME,
-    DefaultSegment as Segment,
-    generate_h264_video,
-)
 
 SEGMENT_DURATION = 6
 TEST_PART_DURATION = 0.75

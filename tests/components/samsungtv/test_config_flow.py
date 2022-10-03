@@ -100,6 +100,15 @@ MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
         ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
     },
 )
+MOCK_SSDP_DATA_NO_MANUFACTURER = ssdp.SsdpServiceInfo(
+    ssdp_usn="mock_usn",
+    ssdp_st="mock_st",
+    ssdp_location="https://fake_host:12345/test",
+    upnp={
+        ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
+        ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
+    },
+)
 
 MOCK_SSDP_DATA_NOPREFIX = ssdp.SsdpServiceInfo(
     ssdp_usn="mock_usn",
@@ -519,6 +528,18 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
+@pytest.mark.usefixtures("remote", "rest_api_failing")
+async def test_ssdp_no_manufacturer(hass: HomeAssistant) -> None:
+    """Test starting a flow from discovery when the manufacturer data is missing."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_NO_MANUFACTURER,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
 
 
 @pytest.mark.parametrize(

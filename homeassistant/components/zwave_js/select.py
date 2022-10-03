@@ -107,9 +107,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
         )
 
         # Entity class attributes
-        self._attr_name = self.generate_name(
-            include_value_name=True, alternate_value_name=info.platform_hint
-        )
+        self._attr_name = self.generate_name(alternate_value_name=info.platform_hint)
 
     @property
     def options(self) -> list[str]:

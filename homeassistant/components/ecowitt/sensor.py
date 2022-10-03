@@ -1,5 +1,8 @@
 """Support for Ecowitt Weather Stations."""
+from __future__ import annotations
+
 import dataclasses
+from datetime import datetime
 from typing import Final
 
 from aioecowitt import EcoWittListener, EcoWittSensor, EcoWittSensorTypes
@@ -193,6 +196,11 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=PRESSURE_INHG,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    EcoWittSensorTypes.PERCENTAGE: SensorEntityDescription(
+        key="PERCENTAGE",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
@@ -242,6 +250,6 @@ class EcowittSensorEntity(EcowittEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.ecowitt.value

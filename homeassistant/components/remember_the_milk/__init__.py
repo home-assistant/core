@@ -52,7 +52,7 @@ SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Remember the milk component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[RememberTheMilk](_LOGGER, DOMAIN, hass)
 
     stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:

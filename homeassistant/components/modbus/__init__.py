@@ -50,11 +50,12 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
@@ -63,6 +64,7 @@ from .const import (
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_FANS,
+    CONF_HUB,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,

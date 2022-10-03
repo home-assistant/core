@@ -26,8 +26,6 @@ from homeassistant.helpers.script import (
 
 from .. import trace
 
-# mypy: allow-untyped-calls, allow-untyped-defs
-
 TRACE_DOMAINS = ("automation", "script")
 
 

@@ -10,12 +10,8 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -25,10 +21,6 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -39,7 +31,6 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_TYPE_TRAILER = "trailer"
-MEDIA_TYPE_GENERIC_VIDEO = "video"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8096
@@ -189,17 +180,18 @@ class EmbyDevice(MediaPlayerEntity):
         return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         state = self.device.state
         if state == "Paused":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if state == "Playing":
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if state == "Idle":
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
         if state == "Off":
-            return STATE_OFF
+            return MediaPlayerState.OFF
+        return None
 
     @property
     def app_name(self):
@@ -213,23 +205,23 @@ class EmbyDevice(MediaPlayerEntity):
         return self.device.media_id
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | str | None:
         """Content type of current playing media."""
         media_type = self.device.media_type
         if media_type == "Episode":
-            return MEDIA_TYPE_TVSHOW
+            return MediaType.TVSHOW
         if media_type == "Movie":
-            return MEDIA_TYPE_MOVIE
+            return MediaType.MOVIE
         if media_type == "Trailer":
             return MEDIA_TYPE_TRAILER
         if media_type == "Music":
-            return MEDIA_TYPE_MUSIC
+            return MediaType.MUSIC
         if media_type == "Video":
-            return MEDIA_TYPE_GENERIC_VIDEO
+            return MediaType.VIDEO
         if media_type == "Audio":
-            return MEDIA_TYPE_MUSIC
+            return MediaType.MUSIC
         if media_type == "TvChannel":
-            return MEDIA_TYPE_CHANNEL
+            return MediaType.CHANNEL
         return None
 
     @property
