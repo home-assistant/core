@@ -29,7 +29,7 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> BaseNotificationService:
+) -> ClickatellNotificationService:
     """Get the Clickatell notification service."""
     return ClickatellNotificationService(config)
 
@@ -39,8 +39,8 @@ class ClickatellNotificationService(BaseNotificationService):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the service."""
-        self.api_key = config[CONF_API_KEY]
-        self.recipient = config[CONF_RECIPIENT]
+        self.api_key: str = config[CONF_API_KEY]
+        self.recipient: str = config[CONF_RECIPIENT]
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
