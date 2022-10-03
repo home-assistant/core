@@ -160,11 +160,10 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
 
         new_power = power
         if not new_power:
-            new_power = (
-                ApiStateCommand.OFF
-                if self.hvac_mode == HVACMode.OFF
-                else ApiStateCommand.ON
-            )
+            if self.hvac_mode == HVACMode.OFF:
+                new_power = ApiStateCommand.OFF
+            else:
+                new_power = ApiStateCommand.ON
 
         new_mode = mode if mode else HVAC_MODE_HASS_TO_SB[self.hvac_mode]
         new_fan = fan if fan else FAN_HASS_TO_SB[self.fan_mode]
