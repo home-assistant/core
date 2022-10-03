@@ -31,7 +31,8 @@
             "is_value": "Nilai {entity_name} saat ini",
             "is_volatile_organic_compounds": "Tingkat konsentrasi senyawa organik volatil {entity_name} saat ini",
             "is_voltage": "Tegangan {entity_name} saat ini",
-            "is_volume": "Volume {entity_name} saat ini"
+            "is_volume": "Volume {entity_name} saat ini",
+            "is_weight": "Berat {entity_name} saat ini"
         },
         "trigger_type": {
             "apparent_power": "Perubahan daya nyata {entity_name}",
@@ -58,13 +59,14 @@
             "pressure": "Perubahan tekanan {entity_name}",
             "reactive_power": "Perubahan daya reaktif {entity_name}",
             "signal_strength": "Perubahan kekuatan sinyal {entity_name}",
-            "speed": "Perubahan kecepatan {nama_entitas}",
+            "speed": "Perubahan kecepatan {entity_name}",
             "sulphur_dioxide": "Perubahan konsentrasi sulfur dioksida {entity_name}",
             "temperature": "Perubahan suhu {entity_name}",
             "value": "Perubahan nilai {entity_name}",
             "volatile_organic_compounds": "Perubahan konsentrasi senyawa organik volatil {entity_name}",
             "voltage": "Perubahan tegangan {entity_name}",
-            "volume": "Perubahan volume {entity_name}"
+            "volume": "Perubahan volume {entity_name}",
+            "weight": "Perubahan berat {entity_name}"
         }
     },
     "state": {
