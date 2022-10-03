@@ -9,6 +9,7 @@ from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_HOME,
     PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
@@ -34,11 +35,11 @@ HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 OVERKIZ_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.OFF: PRESET_ECO,
     OverkizCommandParam.STOP: PRESET_ECO,
-    OverkizCommandParam.COMFORT: PRESET_COMFORT,
     OverkizCommandParam.MANU: PRESET_COMFORT,
+    OverkizCommandParam.COMFORT: PRESET_COMFORT,
     OverkizCommandParam.ABSENCE: PRESET_AWAY,
     OverkizCommandParam.ECO: PRESET_ECO,
-    OverkizCommandParam.INTERNAL_SCHEDULING: PRESET_COMFORT,
+    OverkizCommandParam.INTERNAL_SCHEDULING: PRESET_HOME,
 }
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODES.items()}
