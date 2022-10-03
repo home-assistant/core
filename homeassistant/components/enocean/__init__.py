@@ -380,7 +380,7 @@ def _get_light_import_config(dev_id_string: str, dev_id) -> EnOceanImportConfig:
     old_unique_id = str(combine_hex(dev_id))
 
     device_type = EnOceanSupportedDeviceType(
-        eep="eltako_fud61npn", manufacturer="Eltako", model="FUD61NPN"
+        eep="A5-38-08_EltakoFUD61", manufacturer="Eltako", model="FUD61NPN"
     )
 
     return EnOceanImportConfig(

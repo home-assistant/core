@@ -308,11 +308,25 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     EnOceanPowerSensor(
-                        device_id,
-                        device_name,
-                        SENSOR_DESC_POWER,
-                        dev_type=PERMUNDO_PSC234,
+                        dev_id=device_id,
+                        dev_name=device_name,
+                        description=SENSOR_DESC_POWER,
+                        dev_type=device_type,
                         name="Power usage",
+                    )
+                ]
+            )
+            continue
+
+        # window handle (EEP F6-10-00)
+        if eep == "F6-10-00":
+            async_add_entities(
+                [
+                    EnOceanWindowHandle(
+                        dev_id=device_id,
+                        dev_name=device_name,
+                        description=SENSOR_DESC_WINDOWHANDLE,
+                        dev_type=device_type,
                     )
                 ]
             )

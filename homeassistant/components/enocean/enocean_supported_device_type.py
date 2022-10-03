@@ -37,7 +37,7 @@ class EnOceanSupportedDeviceType:
 
 
 ENOCEAN_TEST_DIMMER = EnOceanSupportedDeviceType(
-    eep="eltako_fud61npn", manufacturer="Eltako", model="FUD61NPN"
+    eep="A5-38-08_EltakoFUD61", manufacturer="Eltako", model="FUD61NPN"
 )
 
 
@@ -378,6 +378,12 @@ EEP_F6_02_02 = EnOceanSupportedDeviceType(
     model="EEP F6-02-02 (Light and Blind Control - Application Style 1)",
 )
 
+# F6-10-00 Window Handle
+EEP_F6_10_00 = EnOceanSupportedDeviceType(
+    eep="F6-10-00",
+    model="EEP F6-10-00 (Mechanical Handle - Window Handle)",
+)
+
 
 PERMUNDO_PSC234 = EnOceanSupportedDeviceType(
     eep="D2-01-09",
@@ -461,6 +467,8 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
     # F6-02
     EEP_F6_02_01,
     EEP_F6_02_02,
+    # F6-10-00
+    EEP_F6_10_00,
     # Part 2/2: specific devices by manufacturer and model (and EEP)
     ENOCEAN_TEST_DIMMER,
     EnOceanSupportedDeviceType(

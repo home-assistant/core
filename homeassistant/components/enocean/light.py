@@ -67,7 +67,7 @@ async def async_setup_entry(
     devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     for device in devices:
-        if device["eep"] == "eltako_fud61npn":
+        if device["eep"] == "A5-38-08_EltakoFUD61":
             device_id = from_hex_string(device["id"])
             sender_id = 0
             if not device["sender_id"] == "":
