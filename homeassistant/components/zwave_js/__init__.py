@@ -795,7 +795,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not task.cancel()
     ]
 
-    unload_ok = all(await asyncio.gather(*tasks))
+    unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
 
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(hass, entry)
