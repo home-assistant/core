@@ -46,9 +46,12 @@ HUMIDIFIER_TRIGGER_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
-TRIGGER_SCHEMA = vol.Any(
-    HUMIDIFIER_TRIGGER_SCHEMA,
-    toggle_entity.TRIGGER_SCHEMA,
+TRIGGER_SCHEMA = vol.All(
+    vol.Any(
+        HUMIDIFIER_TRIGGER_SCHEMA,
+        toggle_entity.TRIGGER_SCHEMA,
+    ),
+    vol.Schema({vol.Required(CONF_DOMAIN): DOMAIN}, extra=vol.ALLOW_EXTRA),
 )
 
 
