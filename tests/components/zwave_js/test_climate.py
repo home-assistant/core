@@ -657,7 +657,6 @@ async def test_thermostat_unknown_values(
         ],
         None,
     )
-    logging.getLogger(__name__).error(node_state["values"])
     node = Node(client, node_state)
     client.driver.controller.emit("node added", {"node": node})
     await hass.async_block_till_done()
