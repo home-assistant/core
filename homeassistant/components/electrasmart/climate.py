@@ -147,21 +147,17 @@ class ElectraClimateEntity(ClimateEntity):
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         )
 
-        self._attr_swing_modes = []
-
+        swing_modes: list = []
         if Feature.V_SWING in self._electra_ac_device.features:
-            self._attr_swing_modes.append(SWING_VERTICAL)
+            swing_modes.append(SWING_VERTICAL)
         if Feature.H_SWING in self._electra_ac_device.features:
-            self._attr_swing_modes.append(SWING_HORIZONTAL)
-        if (
-            SWING_HORIZONTAL in self._attr_swing_modes
-            and SWING_VERTICAL in self._attr_swing_modes
-        ):
-            self._attr_swing_modes.append(SWING_BOTH)
-        if self._attr_swing_modes:
-            self._attr_swing_modes.append(SWING_OFF)
+            swing_modes.append(SWING_HORIZONTAL)
 
-        if self.swing_modes:
+        if all(elem in [SWING_HORIZONTAL, SWING_VERTICAL] for elem in swing_modes):
+            swing_modes.append(SWING_BOTH)
+        if swing_modes:
+            swing_modes.append(SWING_OFF)
+            self._attr_swing_modes = swing_modes
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
         self._attr_device_info = DeviceInfo(
@@ -171,20 +167,28 @@ class ElectraClimateEntity(ClimateEntity):
             manufacturer=self._electra_ac_device.manufactor,
         )
 
-        # This attribute will be used to mark the time we communicated a command to the API
-        self._last_state_update = 0
-        self._consecutive_failures = 0
-        self._attr_available = not device.is_disconnected(UNAVAILABLE_THRESH_SEC)
+        self._last_state_update = 0  # This attribute will be used to mark the time we communicated a command to the API
+        self._consecutive_failures = (
+            0  # count the consecutive update failures, used to print error log
+        )
         self._skip_update = True
-        self._available = True
+        self._was_available = True
 
         _LOGGER.debug("Added %s Electra AC device", self._attr_name)
+
+    @property
+    def available(self) -> bool:
+        """Return True if the AC is available."""
+        return (
+            not self._electra_ac_device.is_disconnected(UNAVAILABLE_THRESH_SEC)
+            and super().available
+        )
 
     async def async_update(self) -> None:
         """Update Electra device."""
 
-        # if we communicated a change to the API in the last X seconds, don't receive any updates-
-        # as the API takes few seconds until it start sending the last change
+        # if we communicated a change to the API in the last API_DELAY seconds, don't receive any updates-
+        # as the API takes few seconds until it start sending it last recent change
         if self._last_state_update and int(time.time()) < (
             self._last_state_update + API_DELAY
         ):
@@ -194,32 +198,30 @@ class ElectraClimateEntity(ClimateEntity):
         self._last_state_update = 0
 
         try:
-            # skip the first update only, as we get the devices with their current state
+            # skip the first update only as we already got the devices with their current state
             if self._skip_update:
                 self._skip_update = False
             else:
                 await self._api.get_last_telemtry(self._electra_ac_device)
 
-            if self._electra_ac_device.is_disconnected(UNAVAILABLE_THRESH_SEC):
-                # show the warning once on a state change
-                if self._available:
+            if not self.available:
+                # show the warning once upon state change
+                if self._was_available:
                     _LOGGER.warning(
                         "Electra AC %s (%s) is not available, check its status in the Electra Smart mobile app",
                         self._electra_ac_device.name,
                         self._electra_ac_device.mac,
                     )
-                    self._available = False
-                self._attr_available = False
+                    self._was_available = False
                 return
 
-            if not self._available:
+            if not self._was_available:
                 _LOGGER.info(
                     "%s (%s) is now available",
                     self._electra_ac_device.mac,
                     self._electra_ac_device.name,
                 )
-                self._available = True
-                self._attr_available = True
+                self._was_available = True
 
             _LOGGER.debug(
                 "%s (%s) state updated: %s",
@@ -245,10 +247,10 @@ class ElectraClimateEntity(ClimateEntity):
         self._update_device_attrs()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set AC fand mode."""
+        """Set AC fan mode."""
         mode = FAN_HASS_TO_ELECTRA[fan_mode]
         self._electra_ac_device.set_fan_speed(mode)
-        await self._async_update_electra_ac_state()
+        await self._async_operate_electra_ac()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -259,12 +261,12 @@ class ElectraClimateEntity(ClimateEntity):
             self._electra_ac_device.set_mode(HVAC_MODE_HASS_TO_ELECTRA[hvac_mode])
             self._electra_ac_device.turn_on()
 
-        await self._async_update_electra_ac_state()
+        await self._async_operate_electra_ac()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         self._electra_ac_device.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
-        await self._async_update_electra_ac_state()
+        await self._async_operate_electra_ac()
 
     def _update_device_attrs(self) -> None:
 
@@ -320,9 +322,9 @@ class ElectraClimateEntity(ClimateEntity):
             self._electra_ac_device.set_horizontal_swing(False)
             self._electra_ac_device.set_vertical_swing(False)
 
-        await self._async_update_electra_ac_state()
+        await self._async_operate_electra_ac()
 
-    async def _async_update_electra_ac_state(self) -> None:
+    async def _async_operate_electra_ac(self) -> None:
         """Send HVAC parameters to API."""
 
         try:
