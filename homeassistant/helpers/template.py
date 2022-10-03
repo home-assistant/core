@@ -2346,6 +2346,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
         self.globals["is_available"] = hassfunction(is_available)
+        self.tests["is_available"] = pass_eval_context(self.globals["is_available"])
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)

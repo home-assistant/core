@@ -21,6 +21,8 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     MASS_GRAMS,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     VOLUME_LITERS,
     UnitOfPressure,
@@ -1605,6 +1607,62 @@ def test_states_function(hass: HomeAssistant) -> None:
         hass,
     )
     assert tpl.async_render() == "available"
+
+
+def test_is_available(hass):
+    """Test is_available method."""
+    hass.states.async_set("test.available1", "available1")
+    hass.states.async_set("test.available2", "available1")
+    hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
+    hass.states.async_set("test.unknown", STATE_UNKNOWN)
+
+    tpl = template.Template(
+        """
+{{ is_available("test.available1") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{% if "test.available1" is is_available() %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ is_available(["test.available1","test.available2"]) }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ is_available(["test.available1","test.unavailable"]) }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ ["test.unknown","test.available1"] | select("is_available") | list | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == ["test.available1"]
+
+    tpl = template.Template(
+        """
+{{ is_available("test.noobject") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
 
 
 @patch(
