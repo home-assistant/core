@@ -39,7 +39,7 @@ FAN_SB_TO_HASS = {
     ThermostatFanSpeed.HIGH: FAN_HIGH,
 }
 
-FAN_HASS_TO_SB = {
+FAN_HASS_TO_SB: dict[str | None, str] = {
     FAN_AUTO: ThermostatFanSpeed.AUTO,
     FAN_LOW: ThermostatFanSpeed.LOW,
     FAN_MEDIUM: ThermostatFanSpeed.MEDIUM,
@@ -52,7 +52,7 @@ HVAC_MODE_SB_TO_HASS = {
     ThermostatMode.FAN: HVACMode.FAN_ONLY,
 }
 
-HVAC_MODE_HASS_TO_SB = {
+HVAC_MODE_HASS_TO_SB: dict[HVACMode | str | None, str] = {
     HVACMode.COOL: ThermostatMode.COOL,
     HVACMode.HEAT: ThermostatMode.HEAT,
     HVACMode.FAN_ONLY: ThermostatMode.FAN,
@@ -154,28 +154,22 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
     ) -> None:
         """Send request to central unit."""
 
-        assert isinstance(self.hvac_mode, HVACMode)
-        assert isinstance(self.fan_mode, str)
-        assert isinstance(self.target_temperature, int)
-
-        new_power = power
-        if not new_power:
+        if power is None:
+            power = ApiStateCommand.ON
             if self.hvac_mode == HVACMode.OFF:
-                new_power = ApiStateCommand.OFF
-            else:
-                new_power = ApiStateCommand.ON
-
-        new_mode = mode if mode else HVAC_MODE_HASS_TO_SB[self.hvac_mode]
-        new_fan = fan if fan else FAN_HASS_TO_SB[self.fan_mode]
-        new_temperature = (
-            target_temperature if target_temperature else self.target_temperature
-        )
+                power = ApiStateCommand.OFF
+        if mode is None:
+            mode = HVAC_MODE_HASS_TO_SB[self.hvac_mode]
+        if fan is None:
+            fan = FAN_HASS_TO_SB[self.fan_mode]
+        if target_temperature is None:
+            target_temperature = int(self.target_temperature or 0)
 
         state: dict[str, int | str] = {
-            ApiAttribute.POWER: new_power,
-            ApiAttribute.MODE: new_mode,
-            ApiAttribute.FAN: new_fan,
-            ApiAttribute.CONFIGURED_TEMPERATURE: new_temperature,
+            ApiAttribute.POWER: power,
+            ApiAttribute.MODE: mode,
+            ApiAttribute.FAN: fan,
+            ApiAttribute.CONFIGURED_TEMPERATURE: target_temperature,
         }
 
         try:
