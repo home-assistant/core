@@ -69,9 +69,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.client.connect(psk=pin)
         else:
             clientid, nickname = await self.gen_instance_id()
-            await self.client.connect(
-                pin=pin, clientid=clientid, nickname=nickname
-            )
+            await self.client.connect(pin=pin, clientid=clientid, nickname=nickname)
         await self.client.set_wol_mode(True)
 
         system_info = await self.client.get_system_info()
@@ -192,6 +190,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         self.create_client()
+        clientid, nickname = await self.gen_instance_id()
 
         assert self.client is not None
         assert self.entry is not None
@@ -203,7 +202,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if use_psk:
                     await self.client.connect(psk=pin)
                 else:
-                    clientid, nickname = await self.gen_instance_id()
                     await self.client.connect(
                         pin=pin, clientid=clientid, nickname=nickname
                     )
@@ -218,7 +216,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         try:
-            await self.client.pair(CLIENTID_PREFIX, NICKNAME)
+            await self.client.pair(clientid, nickname)
         except BraviaTVError:
             return self.async_abort(reason="reauth_unsuccessful")
 
@@ -235,7 +233,8 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def gen_instance_id(self) -> tuple[str, str]:
         """Generate clientid and nickname."""
         uuid = await instance_id.async_get(self.hass)
-        return uuid, NICKNAME.format(instance_id=uuid[:6]
+        return uuid, NICKNAME.format(instance_id=uuid[:6])
+
 
 class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options for Bravia TV."""
