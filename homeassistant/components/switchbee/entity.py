@@ -46,7 +46,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
         """Initialize the Switchbee device."""
         super().__init__(device, coordinator)
         self._is_online: bool = True
-        identfier = (
+        identifier = (
             device.id if device.type == DeviceType.Thermostat else device.unit_id
         )
         self._attr_device_info = DeviceInfo(
