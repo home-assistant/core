@@ -52,6 +52,17 @@ class Observation:
 
         return dic
 
+    def is_mirror(self, other: Observation) -> bool:
+        """Dectects whether given observation is a mirror of this one."""
+        true_sums_1: bool = (
+            round(self.prob_given_true + other.prob_given_true, 1) == 1.0
+        )
+        false_sums_1: bool = (
+            round(self.prob_given_false + other.prob_given_false, 1) == 1.0
+        )
+        same_states: bool = self.platform == other.platform
+        return true_sums_1 & false_sums_1 & same_states
+
     @property
     def template(self) -> str | None:
         """Not all observations have templates and we want to get template strings."""
