@@ -240,7 +240,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def gen_instance_ids(self) -> tuple[str, str]:
-        """Generate clientid and nickname."""
+        """Generate client_id and nickname."""
         uuid = await instance_id.async_get(self.hass)
         return uuid, f"{NICKNAME} {uuid[:6]}"
 

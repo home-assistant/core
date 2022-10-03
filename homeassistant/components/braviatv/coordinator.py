@@ -27,7 +27,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CLIENTID,
+    CLIENT_ID_PREFIX,
     CONF_CLIENT_ID,
     CONF_NICKNAME,
     CONF_USE_PSK,
@@ -78,7 +78,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.client = client
         self.pin = config[CONF_PIN]
         self.use_psk = config.get(CONF_USE_PSK, False)
-        self.client_id = config.get(CONF_CLIENT_ID, CLIENTID)
+        self.client_id = config.get(CONF_CLIENT_ID, CLIENT_ID_PREFIX)
         self.nickname = config.get(CONF_NICKNAME, NICKNAME)
         self.ignored_sources = ignored_sources
         self.source: str | None = None
