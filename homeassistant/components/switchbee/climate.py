@@ -75,7 +75,7 @@ SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up SwitchBee thermostat."""
+    """Set up SwitchBee climate."""
     coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         SwitchBeeClimate(switchbee_device, coordinator)
