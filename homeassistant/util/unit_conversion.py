@@ -273,7 +273,15 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
-        """Convert a temperature from one unit to another."""
+        """Convert a temperature from one unit to another.
+
+        eg. 10°C will return 50°F
+
+        For converting an interval between two temperatures, please use
+        `convert_interval` instead.
+        """
+        # We cannot use the implementation from BaseUnitConverter here because the temperature
+        # units do not use the same floor: 0°C, 0°F and 0K do not align
         if from_unit == to_unit:
             return value
 
@@ -308,9 +316,17 @@ class TemperatureConverter(BaseUnitConverter):
         )
 
     @classmethod
-    def convert_interval(cls, value: float, from_unit: str, to_unit: str) -> float:
-        """Convert a temperature interval from one unit to another."""
-        return super().convert(value, from_unit, to_unit)
+    def convert_interval(cls, interval: float, from_unit: str, to_unit: str) -> float:
+        """Convert a temperature interval from one unit to another.
+
+        eg. a 10°C interval (10°C to 20°C) will return a 18°F (50°F to 68°F) interval
+
+        For converting a temperature value, please use `convert` as this method
+        skips floor adjustment.
+        """
+        # We use BaseUnitConverter implementation here because we are only interested
+        # in the ratio between the units.
+        return super().convert(interval, from_unit, to_unit)
 
     @classmethod
     def _fahrenheit_to_celsius(cls, fahrenheit: float) -> float:
