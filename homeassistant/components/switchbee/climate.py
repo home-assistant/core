@@ -85,7 +85,7 @@ async def async_setup_entry(
 
 
 class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity):
-    """Representation of an Switchbee button."""
+    """Representation of a SwitchBee button."""
 
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
