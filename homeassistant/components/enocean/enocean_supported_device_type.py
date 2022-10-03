@@ -36,11 +36,6 @@ class EnOceanSupportedDeviceType:
         )
 
 
-ENOCEAN_TEST_DIMMER = EnOceanSupportedDeviceType(
-    eep="A5-38-08_EltakoFUD61", manufacturer="Eltako", model="FUD61NPN"
-)
-
-
 # A5-02 Temperature Sensors
 EEP_A5_02_01 = EnOceanSupportedDeviceType(
     eep="A5-02-01",
@@ -385,6 +380,46 @@ EEP_F6_10_00 = EnOceanSupportedDeviceType(
 )
 
 
+# Other Devices
+ELTAKO_FUD61 = EnOceanSupportedDeviceType(
+    eep="A5-38-08_EltakoFUD61", manufacturer="Eltako", model="FUD61NPN"
+)
+
+ELTAKO_FT55 = EnOceanSupportedDeviceType(
+    eep="F6-02-01", manufacturer="Eltako", model="FT55 battery-less wall switch"
+)
+
+JUNG_ENO = EnOceanSupportedDeviceType(
+    eep="F6-02-01", manufacturer="Jung", model="ENO Series"
+)
+
+OMNIO_WS_CH_102 = EnOceanSupportedDeviceType(
+    eep="F6-02-01", manufacturer="Omnio", model="WS-CH-102"
+)
+
+HOPPE_SECUSIGNAL = EnOceanSupportedDeviceType(
+    eep="F6-10-00",
+    manufacturer="Hoppe",
+    model="SecuSignal window handle from Somfy",
+)
+
+TRIO2SYS = EnOceanSupportedDeviceType(
+    eep="F6-02-01", manufacturer="TRIO2SYS", model="TRIO2SYS Wall switches "
+)
+
+NODON_SIN_2_1_01 = EnOceanSupportedDeviceType(
+    eep="D2-01-0F",
+    manufacturer="NodOn",
+    model="SIN-2-1-01",
+)
+
+NODON_SIN_2_2_01 = EnOceanSupportedDeviceType(
+    eep="D2-01-12",
+    manufacturer="NodOn",
+    model="SIN-2-2-01",
+)
+
+
 PERMUNDO_PSC234 = EnOceanSupportedDeviceType(
     eep="D2-01-09",
     manufacturer="Permundo",
@@ -470,29 +505,13 @@ ENOCEAN_SUPPORTED_DEVICES: list[EnOceanSupportedDeviceType] = [
     # F6-10-00
     EEP_F6_10_00,
     # Part 2/2: specific devices by manufacturer and model (and EEP)
-    ENOCEAN_TEST_DIMMER,
-    EnOceanSupportedDeviceType(
-        eep="F6-02-01", manufacturer="Eltako", model="FT55 battery-less wall switch"
-    ),
-    EnOceanSupportedDeviceType(eep="F6-02-01", manufacturer="Jung", model="ENO Series"),
-    EnOceanSupportedDeviceType(eep="F6-02-01", manufacturer="Omnio", model="WS-CH-102"),
-    EnOceanSupportedDeviceType(
-        eep="F6-10-00",
-        manufacturer="Hoppe",
-        model="SecuSignal window handle from Somfy",
-    ),
-    EnOceanSupportedDeviceType(
-        eep="F6-02-01", manufacturer="TRIO2SYS", model="TRIO2SYS Wall switches "
-    ),
+    ELTAKO_FUD61,
+    ELTAKO_FT55,
+    HOPPE_SECUSIGNAL,
+    JUNG_ENO,
+    NODON_SIN_2_1_01,
+    NODON_SIN_2_2_01,
+    OMNIO_WS_CH_102,
     PERMUNDO_PSC234,
-    EnOceanSupportedDeviceType(
-        eep="D2-01-0F",
-        manufacturer="NodOn",
-        model="SIN-2-1-01",
-    ),
-    EnOceanSupportedDeviceType(
-        eep="D2-01-12",
-        manufacturer="NodOn",
-        model="SIN-2-2-01",
-    ),
+    TRIO2SYS,
 ]
