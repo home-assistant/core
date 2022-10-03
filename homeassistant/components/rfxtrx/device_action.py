@@ -80,7 +80,6 @@ async def async_validate_action_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
-    config = ACTION_SCHEMA(config)
     commands, _ = _get_commands(hass, config[CONF_DEVICE_ID], config[CONF_TYPE])
     sub_type = config[CONF_SUBTYPE]
 

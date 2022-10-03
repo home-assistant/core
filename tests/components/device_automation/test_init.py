@@ -720,7 +720,28 @@ async def test_automation_with_bad_condition_action(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_automation_with_bad_condition(hass, caplog):
+async def test_automation_with_bad_condition_missing_domain(hass, caplog):
+    """Test automation with bad device condition."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event1"},
+                "condition": {"condition": "device", "device_id": "hello.device"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    assert (
+        "Invalid config for [automation]: required key not provided @ data['condition'][0]['domain']"
+        in caplog.text
+    )
+
+
+async def test_automation_with_bad_condition_missing_device_id(hass, caplog):
     """Test automation with bad device condition."""
     assert await async_setup_component(
         hass,
@@ -735,7 +756,10 @@ async def test_automation_with_bad_condition(hass, caplog):
         },
     )
 
-    assert "required key not provided" in caplog.text
+    assert (
+        "Invalid config for [automation]: required key not provided @ data['condition'][0]['device_id']"
+        in caplog.text
+    )
 
 
 @pytest.fixture
@@ -876,8 +900,25 @@ async def test_automation_with_bad_sub_condition(hass, caplog):
     assert "required key not provided" in caplog.text
 
 
-async def test_automation_with_bad_trigger(hass, caplog):
-    """Test automation with bad device trigger."""
+async def test_automation_with_bad_trigger_missing_domain(hass, caplog):
+    """Test automation with device trigger this is missing domain."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "device", "device_id": "hello.device"},
+                "action": {"service": "test.automation", "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    assert "required key not provided @ data['domain']" in caplog.text
+
+
+async def test_automation_with_bad_trigger_missing_device_id(hass, caplog):
+    """Test automation with device trigger that is missing device_id."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -890,7 +931,7 @@ async def test_automation_with_bad_trigger(hass, caplog):
         },
     )
 
-    assert "required key not provided" in caplog.text
+    assert "required key not provided @ data['device_id']" in caplog.text
 
 
 async def test_websocket_device_not_found(hass, hass_ws_client):
