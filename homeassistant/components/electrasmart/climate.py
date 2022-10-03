@@ -209,7 +209,7 @@ class ElectraClimateEntity(ClimateEntity):
                 if self._was_available:
                     _LOGGER.warning(
                         "Electra AC %s (%s) is not available, check its status in the Electra Smart mobile app",
-                        self._electra_ac_device.name,
+                        self.name,
                         self._electra_ac_device.mac,
                     )
                     self._was_available = False
@@ -219,28 +219,28 @@ class ElectraClimateEntity(ClimateEntity):
                 _LOGGER.info(
                     "%s (%s) is now available",
                     self._electra_ac_device.mac,
-                    self._electra_ac_device.name,
+                    self.name,
                 )
                 self._was_available = True
 
             _LOGGER.debug(
                 "%s (%s) state updated: %s",
                 self._electra_ac_device.mac,
-                self._electra_ac_device.name,
+                self.name,
                 self._electra_ac_device.__dict__,
             )
         except ElectraApiError as exp:
             self._consecutive_failures += 1
             _LOGGER.warning(
                 "Failed to get %s state: %s (try #%i since last success), keeping old state",
-                self._electra_ac_device.name,
+                self.name,
                 exp,
                 self._consecutive_failures,
             )
 
             if self._consecutive_failures >= CONSECUTIVE_FAILURE_THRESHOLD:
                 raise HomeAssistantError(
-                    f"Failed to get {self._electra_ac_device.name} state: {exp} for the {self._consecutive_failures} time",
+                    f"Failed to get {self.name} state: {exp} for the {self._consecutive_failures} time",
                 ) from ElectraApiError
 
         self._consecutive_failures = 0
