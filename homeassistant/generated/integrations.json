@@ -6015,7 +6015,8 @@
       "name": "Whirlpool Appliances",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_push",
+      "name": "Whirlpool Appliances"
     },
     "whois": {
       "name": "Whois",
