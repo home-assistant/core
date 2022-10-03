@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SwitchBeeCoordinator
+from .coordinator import SwitchBeeCoordinator
 from .const import DOMAIN
 from .entity import SwitchBeeDeviceEntity
 
