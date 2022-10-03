@@ -65,8 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def get_feature_access(config_entry: ConfigEntry) -> list[str]:
     """Return the desired sheets feature access."""
     return [
-        FeatureAccess.file.value,
-        FeatureAccess[config_entry.options[CONF_SHEETS_ACCESS]].value,
+        FeatureAccess.file,
+        FeatureAccess[config_entry.options[CONF_SHEETS_ACCESS]],
     ]
 
 
