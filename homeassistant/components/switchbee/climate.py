@@ -129,9 +129,7 @@ class SwitchBeeClimate(SwitchBeeDeviceEntity[SwitchBeeThermostat], ClimateEntity
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_device_attrs(
-            cast(SwitchBeeThermostat, self.coordinator.data[self._device.id])
-        )
+        self._update_attrs_from_coordinator()
         super()._handle_coordinator_update()
 
     def _update_device_attrs(self, device: SwitchBeeThermostat) -> None:
