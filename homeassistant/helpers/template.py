@@ -1470,7 +1470,7 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     return None
 
 
-def is_available(hass: HomeAssistant, entity_id: str | Iterable) -> bool:
+def is_nominal(hass: HomeAssistant, entity_id: str | Iterable) -> bool:
     """Test if an entity is available."""
     if isinstance(entity_id, str):
         entity_id = [entity_id]
@@ -2314,7 +2314,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_state_attr",
                 "state_attr",
                 "states",
-                "is_available",
+                "is_nominal",
                 "utcnow",
                 "now",
                 "device_attr",
@@ -2344,10 +2344,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["state_attr"] = hassfunction(state_attr)
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
-        self.filters["states"] = self.globals["states"]
-        self.globals["is_available"] = hassfunction(is_available)
-        self.filters["is_available"] = pass_context(self.globals["is_available"])
-        self.tests["is_available"] = pass_eval_context(self.globals["is_available"])
+        self.globals["is_nominal"] = hassfunction(is_nominal)
+        self.filters["is_nominal"] = pass_context(self.globals["is_nominal"])
+        self.tests["is_nominal"] = pass_eval_context(self.globals["is_nominal"])
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)

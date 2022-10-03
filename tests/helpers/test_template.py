@@ -1609,16 +1609,16 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "available"
 
 
-def test_is_available(hass):
-    """Test is_available method."""
-    hass.states.async_set("test.available1", "available1")
-    hass.states.async_set("test.available2", "available1")
+def test_is_nominal(hass):
+    """Test is_nominal method."""
+    hass.states.async_set("test.nominal1", "nominal1")
+    hass.states.async_set("test.nominal2", "nominal1")
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
     hass.states.async_set("test.unknown", STATE_UNKNOWN)
 
     tpl = template.Template(
         """
-{{ is_available("test.available1") }}
+{{ is_nominal("test.nominal1") }}
         """,
         hass,
     )
@@ -1626,7 +1626,7 @@ def test_is_available(hass):
 
     tpl = template.Template(
         """
-{% if "test.available1" is is_available() %}yes{% else %}no{% endif %}
+{% if "test.nominal1" is is_nominal() %}yes{% else %}no{% endif %}
         """,
         hass,
     )
@@ -1634,7 +1634,7 @@ def test_is_available(hass):
 
     tpl = template.Template(
         """
-{{ is_available(["test.available1","test.available2"]) }}
+{{ is_nominal(["test.nominal1","test.nominal2"]) }}
         """,
         hass,
     )
@@ -1642,7 +1642,7 @@ def test_is_available(hass):
 
     tpl = template.Template(
         """
-{{ ["test.available1","test.unavailable"] | is_available() }}
+{{ ["test.nominal1","test.unavailable"] | is_nominal() }}
         """,
         hass,
     )
@@ -1650,15 +1650,15 @@ def test_is_available(hass):
 
     tpl = template.Template(
         """
-{{ ["test.unknown","test.available1"] | select("is_available") | list | default }}
+{{ ["test.unknown","test.nominal1"] | select("is_nominal") | list | default }}
         """,
         hass,
     )
-    assert tpl.async_render() == ["test.available1"]
+    assert tpl.async_render() == ["test.nominal1"]
 
     tpl = template.Template(
         """
-{{ is_available("test.noobject") }}
+{{ is_nominal("test.noobject") }}
         """,
         hass,
     )
