@@ -577,19 +577,6 @@ class InovelliButtonDelay(ZHANumberConfigurationEntity, id_suffix="button_delay"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
-class InovelliDeviceBindNumber(
-    ZHANumberConfigurationEntity, id_suffix="device_bind_number"
-):
-    """Inovelli device bind number configuration entity."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_min_value: float = 0
-    _attr_native_max_value: float = 255
-    _zcl_attribute: str = "device_bind_number"
-    _attr_name: str = "Device bind number"
-
-
-@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
 class InovelliLocalDimmingUpSpeed(
     ZHANumberConfigurationEntity, id_suffix="dimming_speed_up_local"
 ):
