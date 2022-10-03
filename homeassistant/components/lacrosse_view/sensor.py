@@ -118,6 +118,11 @@ SENSOR_DESCRIPTIONS = {
         name="Wet/Dry",
         value_fn=get_value,
     ),
+    "Flex": LaCrosseSensorEntityDescription(
+        key="Flex",
+        name="Flex",
+        value_fn=get_value,
+    ),
 }
 
 
