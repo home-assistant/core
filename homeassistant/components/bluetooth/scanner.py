@@ -120,6 +120,8 @@ class HaScanner(BaseHaScanner):
     over ethernet, usb over ethernet, etc.
     """
 
+    scanner: bleak.BleakScanner
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -129,7 +131,6 @@ class HaScanner(BaseHaScanner):
     ) -> None:
         """Init bluetooth discovery."""
         self.hass = hass
-        self.scanner: bleak.BleakScanner | None = None
         self.mode = mode
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
@@ -143,7 +144,6 @@ class HaScanner(BaseHaScanner):
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
-        assert self.scanner is not None
         return self.scanner.discovered_devices
 
     @hass_callback
@@ -235,7 +235,6 @@ class HaScanner(BaseHaScanner):
 
     async def _async_start(self) -> None:
         """Start bluetooth scanner under the lock."""
-        assert self.scanner is not None
         for attempt in range(START_ATTEMPTS):
             _LOGGER.debug(
                 "%s: Starting bluetooth discovery attempt: (%s/%s)",
@@ -404,7 +403,6 @@ class HaScanner(BaseHaScanner):
 
     async def _async_stop_scanner(self) -> None:
         """Stop bluetooth discovery under the lock."""
-        assert self.scanner is not None
         _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
         try:
             await self.scanner.stop()  # type: ignore[no-untyped-call]
