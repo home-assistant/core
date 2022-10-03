@@ -119,11 +119,6 @@
       "iot_class": "local_push",
       "name": "Alert"
     },
-    "alexa": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Amazon Alexa"
-    },
     "almond": {
       "config_flow": true,
       "iot_class": "local_polling",
@@ -134,10 +129,25 @@
       "iot_class": "cloud_polling",
       "name": "Alpha Vantage"
     },
-    "amazon_polly": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Amazon Polly"
+    "amazon": {
+      "name": "Amazon",
+      "integrations": {
+        "alexa": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Amazon Alexa"
+        },
+        "amazon_polly": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Amazon Polly"
+        },
+        "aws": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Amazon Web Services (AWS)"
+        }
+      }
     },
     "amberelectric": {
       "config_flow": true,
@@ -354,11 +364,6 @@
       "config_flow": true,
       "iot_class": "local_polling",
       "name": "Awair"
-    },
-    "aws": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Amazon Web Services (AWS)"
     },
     "axis": {
       "config_flow": true,
