@@ -68,6 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step via config flow."""
         errors = {}
+        description_placeholders = {}
 
         if user_input:
             self._default_user = user_input[CONF_USERNAME]
@@ -83,7 +84,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if user_input[CONF_HUB] == "atlantic_cozytouch" and not isinstance(
                     exception, CozyTouchBadCredentialsException
                 ):
-                    errors["base"] = "cozytouch_unsupported_hardware"
+                    description_placeholders["unsupported_device"] = "CozyTouch"
+                    errors["base"] = "unsupported_hardware"
                 else:
                     errors["base"] = "invalid_auth"
             except (TimeoutError, ClientError):
@@ -137,6 +139,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
