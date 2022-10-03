@@ -17,6 +17,7 @@ from homeassistant.components import (
     input_number,
     light,
     lock,
+    number,
     person,
     prometheus,
     sensor,
@@ -448,6 +449,18 @@ async def test_counter(client, counter_entities):
         'counter_value{domain="counter",'
         'entity="counter.counter",'
         'friendly_name="None"} 2.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_number(client, number_entities):
+    """Test prometheus metrics for number."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'sensor_unit_percent{domain="number",'
+        'entity="number.valve_position",'
+        'friendly_name="Valve Position"} 50.0' in body
     )
 
 
@@ -952,6 +965,25 @@ async def sensor_fixture(hass, registry):
     )
     set_state_with_entry(hass, sensor_11, 50)
     data["sensor_11"] = sensor_11
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="number_entities")
+async def number_fixture(hass, registry):
+    """Simulate sensor entities."""
+    data = {}
+    number_1 = registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_1",
+        unit_of_measurement=PERCENTAGE,
+        suggested_object_id="valve_position",
+        original_name="Valve Position",
+    )
+    set_state_with_entry(hass, number_1, 50)
+    data["number_1"] = number_1
 
     await hass.async_block_till_done()
     return data
