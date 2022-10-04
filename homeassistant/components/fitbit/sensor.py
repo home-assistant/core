@@ -348,7 +348,7 @@ class FitbitSensor(SensorEntity):
     def __init__(
         self,
         client: Fitbit,
-        user_profile: dict,
+        user_profile: dict[str, Any],
         config_path: str,
         description: FitbitSensorEntityDescription,
         is_metric: bool,
