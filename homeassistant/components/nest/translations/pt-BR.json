@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "C\u00f3digo do projeto de acesso ao dispositivo"
                 },
-                "description": "Crie um projeto Nest Device Access que **exija uma taxa de US$ 5** para ser configurado.\n 1. V\u00e1 para o [Device Access Console]( {device_access_console_url} ) e atrav\u00e9s do fluxo de pagamento.\n 1. Clique em **Criar projeto**\n 1. D\u00ea um nome ao seu projeto Device Access e clique em **Pr\u00f3ximo**.\n 1. Insira seu ID do cliente OAuth\n 1. Ative os eventos clicando em **Ativar** e **Criar projeto**. \n\n Insira o ID do projeto de acesso ao dispositivo abaixo ([mais informa\u00e7\u00f5es]( {more_info_url} )).",
+                "description": "Crie um projeto Nest Device Access que **exije o pagamento de uma taxa de US$ 5 ao Google** para ser configurado.\n 1. V\u00e1 para o [Device Access Console]({device_access_console_url}) e atrav\u00e9s do fluxo de pagamento.\n 1. Clique em **Criar projeto**\n 1. D\u00ea um nome ao seu projeto Device Access e clique em **Next**.\n 1. Insira seu ID do cliente OAuth\n 1. Ative os eventos clicando em **Ativar** e **Criar projeto**. \n\n Insira o ID do projeto de acesso ao dispositivo abaixo ([mais informa\u00e7\u00f5es]({more_info_url})).\n",
                 "title": "Nest: criar um projeto de acesso ao dispositivo"
             },
             "device_project_upgrade": {
