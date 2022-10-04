@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import Platform
 
 DOMAIN = "flume"
@@ -19,43 +18,6 @@ DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
 _LOGGER = logging.getLogger(__package__)
 
 FLUME_TYPE_SENSOR = 2
-FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="current_interval",
-        name="Current",
-        native_unit_of_measurement="gal/m",
-    ),
-    SensorEntityDescription(
-        key="month_to_date",
-        name="Current Month",
-        native_unit_of_measurement="gal",
-    ),
-    SensorEntityDescription(
-        key="week_to_date",
-        name="Current Week",
-        native_unit_of_measurement="gal",
-    ),
-    SensorEntityDescription(
-        key="today",
-        name="Current Day",
-        native_unit_of_measurement="gal",
-    ),
-    SensorEntityDescription(
-        key="last_60_min",
-        name="60 Minutes",
-        native_unit_of_measurement="gal/h",
-    ),
-    SensorEntityDescription(
-        key="last_24_hrs",
-        name="24 Hours",
-        native_unit_of_measurement="gal/d",
-    ),
-    SensorEntityDescription(
-        key="last_30_days",
-        name="30 Days",
-        native_unit_of_measurement="gal/mo",
-    ),
-)
 
 FLUME_AUTH = "flume_auth"
 FLUME_HTTP_SESSION = "http_session"
