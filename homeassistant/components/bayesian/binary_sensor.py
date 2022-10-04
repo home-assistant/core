@@ -165,7 +165,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         self,
         name: str,
         prior: float,
-        observations: list[dict[str, Any]],
+        observations: list[ConfigType],
         probability_threshold: float,
         device_class: BinarySensorDeviceClass | None,
     ) -> None:
