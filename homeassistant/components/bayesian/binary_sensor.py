@@ -472,7 +472,11 @@ class BayesianBinarySensor(BinarySensorEntity):
                     and observation.observed is not None
                 }
             ),
-            ATTR_OBSERVATIONS: attr_observations_list,
+            ATTR_OBSERVATIONS: [
+                observation.to_dict()
+                for observation in self.current_observations.values()
+                if observation is not None
+            ],
         }
 
     async def async_update(self) -> None:
