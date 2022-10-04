@@ -2,7 +2,7 @@
 # If component is fully covered with type annotations, please add it here
 # to enable strict mypy checks.
 
-# Stict typing is enabled by default for core files.
+# Strict typing is enabled by default for core files.
 # Add it here to add 'disallow_any_generics'.
 # --- Only for core file! ---
 homeassistant.exceptions

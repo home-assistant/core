@@ -170,20 +170,20 @@ class BayesianBinarySensor(BinarySensorEntity):
         device_class: BinarySensorDeviceClass | None,
     ) -> None:
         """Initialize the Bayesian sensor."""
-        self._attr_name: str = name
+        self._attr_name = name
         self._observations = [
             Observation(
-                entity_id=o.get(CONF_ENTITY_ID),
-                platform=o[CONF_PLATFORM],
-                prob_given_false=o[CONF_P_GIVEN_F],
-                prob_given_true=o[CONF_P_GIVEN_T],
+                entity_id=observation.get(CONF_ENTITY_ID),
+                platform=observation[CONF_PLATFORM],
+                prob_given_false=observation[CONF_P_GIVEN_F],
+                prob_given_true=observation[CONF_P_GIVEN_T],
                 observed=None,
-                to_state=o.get(CONF_TO_STATE),
-                above=o.get(CONF_ABOVE),
-                below=o.get(CONF_BELOW),
-                value_template=o.get(CONF_VALUE_TEMPLATE),
+                to_state=observation.get(CONF_TO_STATE),
+                above=observation.get(CONF_ABOVE),
+                below=observation.get(CONF_BELOW),
+                value_template=observation.get(CONF_VALUE_TEMPLATE),
             )
-            for o in observations
+            for observation in observations
         ]
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
@@ -263,18 +263,18 @@ class BayesianBinarySensor(BinarySensorEntity):
                     self.entity_id,
                 )
 
-                observation = None
+                observed = None
             else:
-                observation = result_as_boolean(result)
+                observed = result_as_boolean(result)
 
-            for obs in self.observations_by_template[template]:
-                obs.observed = observation
+            for observation in self.observations_by_template[template]:
+                observation.observed = observed
 
                 # in some cases a template may update because of the absence of an entity
                 if entity is not None:
-                    obs.entity_id = str(entity)
+                    observation.entity_id = str(entity)
 
-                self.current_observations[obs.id] = obs
+                self.current_observations[observation.id] = observation
 
             if event:
                 self.async_set_context(event.context)
@@ -324,40 +324,40 @@ class BayesianBinarySensor(BinarySensorEntity):
         return local_observations
 
     def _record_entity_observations(self, entity: str) -> OrderedDict[str, Observation]:
-        local_observations: OrderedDict[str, Observation] = OrderedDict({})
+        local_observations = OrderedDict({})
 
-        for entity_obs in self.observations_by_entity[entity]:
-            platform: str = str(entity_obs.platform)
+        for observation in self.observations_by_entity[entity]:
+            platform = observation.platform
 
-            observation: bool | None = self.observation_handlers[platform](entity_obs)
-            entity_obs.observed = observation
+            observed = self.observation_handlers[platform](observation)
+            observation.observed = observed
 
-            local_observations[entity_obs.id] = entity_obs
+            local_observations[observation.id] = observation
 
         return local_observations
 
     def _calculate_new_probability(self) -> float:
         prior = self.prior
 
-        for obs in self.current_observations.values():
-            if obs is not None:
-                if obs.observed is True:
+        for observation in self.current_observations.values():
+            if observation is not None:
+                if observation.observed is True:
                     prior = update_probability(
                         prior,
-                        obs.prob_given_true,
-                        obs.prob_given_false,
+                        observation.prob_given_true,
+                        observation.prob_given_false,
                     )
-                elif obs.observed is False:
+                elif observation.observed is False:
                     prior = update_probability(
                         prior,
-                        1 - obs.prob_given_true,
-                        1 - obs.prob_given_false,
+                        1 - observation.prob_given_true,
+                        1 - observation.prob_given_false,
                     )
-                elif obs.observed is None:
-                    if obs.entity_id is not None:
+                elif observation.observed is None:
+                    if observation.entity_id is not None:
                         _LOGGER.debug(
                             "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
-                            obs.entity_id,
+                            observation.entity_id,
                         )
                     else:
                         _LOGGER.debug(
@@ -381,18 +381,16 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         observations_by_entity: dict[str, list[Observation]] = {}
-        for _, observation in enumerate(self._observations):
+        for observation in self._observations:
 
-            if observation.entity_id is None:
+            if (key := observation.entity_id) is None:
                 continue
-            observations_by_entity.setdefault(observation.entity_id, []).append(
-                observation
-            )
+            observations_by_entity.setdefault(key, []).append(observation)
 
-        for li_of_obs in observations_by_entity.values():
-            if len(li_of_obs) == 1:
+        for entity_observations in observations_by_entity.values():
+            if len(entity_observations) == 1:
                 continue
-            for observation in li_of_obs:
+            for observation in entity_observations:
                 if observation.platform != "state":
                     continue
                 observation.platform = "multi_state"
@@ -414,7 +412,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         observations_by_template: dict[Template, list[Observation]] = {}
-        for _, observation in enumerate(self._observations):
+        for observation in self._observations:
             if observation.value_template is None:
                 continue
 
@@ -442,9 +440,13 @@ class BayesianBinarySensor(BinarySensorEntity):
             return None
 
     def _process_state(self, entity_observation: Observation) -> bool | None:
-        """Return True if state conditions are met, return False if they are not. Returns None if the state is unavailable."""
+        """Return True if state conditions are met, return False if they are not.
+
+        Returns None if the state is unavailable.
+        """
+
         entity = entity_observation.entity_id
-        assert entity is not None
+
         try:
             if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
                 return None
@@ -454,7 +456,11 @@ class BayesianBinarySensor(BinarySensorEntity):
             return None
 
     def _process_multi_state(self, entity_observation: Observation) -> bool | None:
-        """Return True if state conditions are met, otherwise return None. Never return False as all other states should have their own probabilities configured."""
+        """Return True if state conditions are met, otherwise return None.
+
+        Never return False as all other states should have their own probabilities configured.
+        """
+
         entity = entity_observation.entity_id
 
         try:
@@ -467,26 +473,25 @@ class BayesianBinarySensor(BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
-        #
-        attr_observations_list: list[dict[str, str | float | bool | None]] = [
-            obs.to_dict()
-            for obs in self.current_observations.values()
-            if obs is not None
-        ]
 
         return {
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
+            # An entity can be in more than one observation so set then list to deduplicate
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
                 {
-                    obs.entity_id
-                    for obs in self.current_observations.values()
-                    if obs is not None
-                    and obs.entity_id is not None
-                    and obs.observed is not None
+                    observation.entity_id
+                    for observation in self.current_observations.values()
+                    if observation is not None
+                    and observation.entity_id is not None
+                    and observation.observed is not None
                 }
             ),
-            ATTR_OBSERVATIONS: attr_observations_list,
+            ATTR_OBSERVATIONS: [
+                observation.to_dict()
+                for observation in self.current_observations.values()
+                if observation is not None
+            ],
         }
 
     async def async_update(self) -> None:

@@ -32,8 +32,9 @@ class Observation:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
     def to_dict(self) -> dict[str, str | float | bool | None]:
-        """Represent Class as a Dict for easier serialization. Sadly necessary because dataclasses asdict() can't serialize Templates and ignores Properties."""
+        """Represent Class as a Dict for easier serialization."""
 
+        # Needed because dataclasses asdict() can't serialize Templates and ignores Properties.
         dic = {
             CONF_PLATFORM: self.platform,
             CONF_ENTITY_ID: self.entity_id,
@@ -54,14 +55,11 @@ class Observation:
 
     def is_mirror(self, other: Observation) -> bool:
         """Dectects whether given observation is a mirror of this one."""
-        true_sums_1: bool = (
-            round(self.prob_given_true + other.prob_given_true, 1) == 1.0
+        return (
+            self.platform == other.platform
+            and round(self.prob_given_true + other.prob_given_true, 1) == 1
+            and round(self.prob_given_false + other.prob_given_false, 1) == 1
         )
-        false_sums_1: bool = (
-            round(self.prob_given_false + other.prob_given_false, 1) == 1.0
-        )
-        same_states: bool = self.platform == other.platform
-        return true_sums_1 & false_sums_1 & same_states
 
     @property
     def template(self) -> str | None:
