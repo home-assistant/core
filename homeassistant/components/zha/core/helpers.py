@@ -22,6 +22,7 @@ import zigpy.exceptions
 import zigpy.types
 import zigpy.util
 import zigpy.zcl
+from zigpy.zcl.foundation import CommandSchema
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.config_entries import ConfigEntry
@@ -118,6 +119,28 @@ async def get_matched_clusters(
                     )
                     clusters_to_bind.append(cluster_pair)
     return clusters_to_bind
+
+
+def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
+    """Convert a cluster command schema to a voluptuous schema."""
+    return vol.Schema(
+        {
+            vol.Optional(field.name)
+            if field.optional
+            else vol.Required(field.name): schema_type_to_vol(field.type)
+            for field in schema.fields
+        }
+    )
+
+
+def schema_type_to_vol(field_type):
+    """Convert a schema type to a voluptuous type."""
+    if issubclass(field_type, zigpy.types.FixedIntType):
+        return vol.All(
+            vol.Coerce(int),
+            vol.Range(0, field_type._size),  # pylint: disable=protected-access
+        )
+    return str
 
 
 @callback

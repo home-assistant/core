@@ -69,6 +69,7 @@ from .core.group import GroupMember
 from .core.helpers import (
     async_cluster_exists,
     async_is_bindable_target,
+    cluster_command_schema_to_vol_schema,
     convert_install_code,
     get_matched_clusters,
     qr_to_install_code,
@@ -711,6 +712,8 @@ async def websocket_device_cluster_commands(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return a list of cluster commands."""
+    import voluptuous_serialize  # pylint: disable=import-outside-toplevel
+
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee: EUI64 = msg[ATTR_IEEE]
     endpoint_id: int = msg[ATTR_ENDPOINT_ID]
@@ -731,6 +734,9 @@ async def websocket_device_cluster_commands(
                         TYPE: CLIENT,
                         ID: cmd_id,
                         ATTR_NAME: cmd.name,
+                        "schema": voluptuous_serialize.convert(
+                            cluster_command_schema_to_vol_schema(cmd.schema)
+                        ),
                     }
                 )
             for cmd_id, cmd in commands[CLUSTER_COMMANDS_SERVER].items():
@@ -739,6 +745,9 @@ async def websocket_device_cluster_commands(
                         TYPE: CLUSTER_COMMAND_SERVER,
                         ID: cmd_id,
                         ATTR_NAME: cmd.name,
+                        "schema": voluptuous_serialize.convert(
+                            cluster_command_schema_to_vol_schema(cmd.schema)
+                        ),
                     }
                 )
     _LOGGER.debug(
