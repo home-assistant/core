@@ -23,22 +23,11 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
     StatisticResult,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_conversion import (
-    BaseUnitConverter,
-    DistanceConverter,
-    EnergyConverter,
-    MassConverter,
-    PowerConverter,
-    PressureConverter,
-    SpeedConverter,
-    TemperatureConverter,
-    VolumeConverter,
-)
 
 from . import (
     ATTR_LAST_RESET,
@@ -48,7 +37,6 @@ from . import (
     STATE_CLASS_TOTAL,
     STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
-    SensorDeviceClass,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,18 +45,6 @@ DEFAULT_STATISTICS = {
     STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
     STATE_CLASS_TOTAL: {"sum"},
     STATE_CLASS_TOTAL_INCREASING: {"sum"},
-}
-
-UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
-    SensorDeviceClass.DISTANCE: DistanceConverter,
-    SensorDeviceClass.ENERGY: EnergyConverter,
-    SensorDeviceClass.GAS: VolumeConverter,
-    SensorDeviceClass.POWER: PowerConverter,
-    SensorDeviceClass.PRESSURE: PressureConverter,
-    SensorDeviceClass.SPEED: SpeedConverter,
-    SensorDeviceClass.TEMPERATURE: TemperatureConverter,
-    SensorDeviceClass.VOLUME: VolumeConverter,
-    SensorDeviceClass.WEIGHT: MassConverter,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -154,84 +130,84 @@ def _normalize_states(
     session: Session,
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
     entity_history: Iterable[State],
-    device_class: str | None,
     entity_id: str,
 ) -> tuple[str | None, str | None, list[tuple[float, State]]]:
     """Normalize units."""
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     state_unit: str | None = None
 
-    if device_class not in UNIT_CONVERTERS or (
+    fstates: list[tuple[float, State]] = []
+    for state in entity_history:
+        try:
+            fstate = _parse_float(state.state)
+        except (ValueError, TypeError):  # TypeError to guard for NULL state in DB
+            continue
+        fstates.append((fstate, state))
+
+    if not fstates:
+        return None, None, fstates
+
+    state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    if state_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER or (
         old_metadata
         and old_metadata["unit_of_measurement"]
-        not in UNIT_CONVERTERS[device_class].VALID_UNITS
+        not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER
     ):
         # We're either not normalizing this device class or this entity is not stored
-        # in a supported unit, return the states as they are
-        fstates = []
-        for state in entity_history:
-            try:
-                fstate = _parse_float(state.state)
-            except (ValueError, TypeError):  # TypeError to guard for NULL state in DB
-                continue
-            fstates.append((fstate, state))
+        # in a unit which can be converted, return the states as they are
 
-        if fstates:
-            all_units = _get_units(fstates)
-            if len(all_units) > 1:
-                if WARN_UNSTABLE_UNIT not in hass.data:
-                    hass.data[WARN_UNSTABLE_UNIT] = set()
-                if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
-                    hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
-                    extra = ""
-                    if old_metadata:
-                        extra = (
-                            " and matches the unit of already compiled statistics "
-                            f"({old_metadata['unit_of_measurement']})"
-                        )
-                    _LOGGER.warning(
-                        "The unit of %s is changing, got multiple %s, generation of long term "
-                        "statistics will be suppressed unless the unit is stable%s. "
-                        "Go to %s to fix this",
-                        entity_id,
-                        all_units,
-                        extra,
-                        LINK_DEV_STATISTICS,
+        all_units = _get_units(fstates)
+        if len(all_units) > 1:
+            if WARN_UNSTABLE_UNIT not in hass.data:
+                hass.data[WARN_UNSTABLE_UNIT] = set()
+            if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
+                hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
+                extra = ""
+                if old_metadata:
+                    extra = (
+                        " and matches the unit of already compiled statistics "
+                        f"({old_metadata['unit_of_measurement']})"
                     )
-                return None, None, []
-            state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                _LOGGER.warning(
+                    "The unit of %s is changing, got multiple %s, generation of long term "
+                    "statistics will be suppressed unless the unit is stable%s. "
+                    "Go to %s to fix this",
+                    entity_id,
+                    all_units,
+                    extra,
+                    LINK_DEV_STATISTICS,
+                )
+            return None, None, []
+        state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         return state_unit, state_unit, fstates
 
-    converter = UNIT_CONVERTERS[device_class]
-    fstates = []
+    converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[state_unit]
+    valid_fstates: list[tuple[float, State]] = []
 
     statistics_unit: str | None = None
     if old_metadata:
         statistics_unit = old_metadata["unit_of_measurement"]
 
-    for state in entity_history:
-        try:
-            fstate = _parse_float(state.state)
-        except ValueError:
-            continue
+    for fstate, state in fstates:
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        # Exclude unsupported units from statistics
+        # Exclude states with unsupported unit from statistics
         if state_unit not in converter.VALID_UNITS:
             if WARN_UNSUPPORTED_UNIT not in hass.data:
                 hass.data[WARN_UNSUPPORTED_UNIT] = set()
             if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
                 hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
                 _LOGGER.warning(
-                    "%s has unit %s which is unsupported for device_class %s",
+                    "%s has unit %s which can't be converted to %s",
                     entity_id,
                     state_unit,
-                    device_class,
+                    statistics_unit,
                 )
             continue
         if statistics_unit is None:
             statistics_unit = state_unit
 
-        fstates.append(
+        valid_fstates.append(
             (
                 converter.convert(
                     fstate, from_unit=state_unit, to_unit=statistics_unit
@@ -240,7 +216,7 @@ def _normalize_states(
             )
         )
 
-    return statistics_unit, state_unit, fstates
+    return statistics_unit, state_unit, valid_fstates
 
 
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
@@ -427,14 +403,12 @@ def _compile_statistics(  # noqa: C901
         if entity_id not in history_list:
             continue
 
-        device_class = _state.attributes.get(ATTR_DEVICE_CLASS)
         entity_history = history_list[entity_id]
         statistics_unit, state_unit, fstates = _normalize_states(
             hass,
             session,
             old_metadatas,
             entity_history,
-            device_class,
             entity_id,
         )
 
@@ -467,11 +441,11 @@ def _compile_statistics(  # noqa: C901
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
                     hass.data[WARN_UNSTABLE_UNIT].add(entity_id)
                     _LOGGER.warning(
-                        "The %sunit of %s (%s) does not match the unit of already "
+                        "The unit of %s (%s) can not be converted to the unit of previously "
                         "compiled statistics (%s). Generation of long term statistics "
-                        "will be suppressed unless the unit changes back to %s. "
+                        "will be suppressed unless the unit changes back to %s or a "
+                        "compatible unit. "
                         "Go to %s to fix this",
-                        "normalized " if device_class in UNIT_CONVERTERS else "",
                         entity_id,
                         statistics_unit,
                         old_metadata[1]["unit_of_measurement"],
@@ -603,7 +577,6 @@ def list_statistic_ids(
 
     for state in entities:
         state_class = state.attributes[ATTR_STATE_CLASS]
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         provided_statistics = DEFAULT_STATISTICS[state_class]
@@ -620,21 +593,6 @@ def list_statistic_ids(
         ):
             continue
 
-        if device_class not in UNIT_CONVERTERS:
-            result[state.entity_id] = {
-                "has_mean": "mean" in provided_statistics,
-                "has_sum": "sum" in provided_statistics,
-                "name": None,
-                "source": RECORDER_DOMAIN,
-                "statistic_id": state.entity_id,
-                "unit_of_measurement": state_unit,
-            }
-            continue
-
-        converter = UNIT_CONVERTERS[device_class]
-        if state_unit not in converter.VALID_UNITS:
-            continue
-
         result[state.entity_id] = {
             "has_mean": "mean" in provided_statistics,
             "has_sum": "sum" in provided_statistics,
@@ -643,6 +601,7 @@ def list_statistic_ids(
             "statistic_id": state.entity_id,
             "unit_of_measurement": state_unit,
         }
+        continue
 
     return result
 
@@ -660,7 +619,6 @@ def validate_statistics(
 
     for state in sensor_states:
         entity_id = state.entity_id
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         state_class = state.attributes.get(ATTR_STATE_CLASS)
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
@@ -684,35 +642,30 @@ def validate_statistics(
                 )
 
             metadata_unit = metadata[1]["unit_of_measurement"]
-            if device_class not in UNIT_CONVERTERS:
+            converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
+            if not converter:
                 if state_unit != metadata_unit:
-                    # The unit has changed
-                    issue_type = (
-                        "units_changed_can_convert"
-                        if statistics.can_convert_units(metadata_unit, state_unit)
-                        else "units_changed"
-                    )
+                    # The unit has changed, and it's not possible to convert
                     validation_result[entity_id].append(
                         statistics.ValidationIssue(
-                            issue_type,
+                            "units_changed",
                             {
                                 "statistic_id": entity_id,
                                 "state_unit": state_unit,
                                 "metadata_unit": metadata_unit,
+                                "supported_unit": metadata_unit,
                             },
                         )
                     )
-            elif metadata_unit not in UNIT_CONVERTERS[device_class].VALID_UNITS:
-                # The unit in metadata is not supported for this device class
-                valid_units = ", ".join(
-                    sorted(UNIT_CONVERTERS[device_class].VALID_UNITS)
-                )
+            elif state_unit not in converter.VALID_UNITS:
+                # The state unit can't be converted to the unit in metadata
+                valid_units = ", ".join(sorted(converter.VALID_UNITS))
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
-                        "unsupported_unit_metadata",
+                        "units_changed",
                         {
                             "statistic_id": entity_id,
-                            "device_class": device_class,
+                            "state_unit": state_unit,
                             "metadata_unit": metadata_unit,
                             "supported_unit": valid_units,
                         },
@@ -727,23 +680,6 @@ def validate_statistics(
                         {"statistic_id": entity_id},
                     )
                 )
-
-        if (
-            state_class in STATE_CLASSES
-            and device_class in UNIT_CONVERTERS
-            and state_unit not in UNIT_CONVERTERS[device_class].VALID_UNITS
-        ):
-            # The unit in the state is not supported for this device class
-            validation_result[entity_id].append(
-                statistics.ValidationIssue(
-                    "unsupported_unit_state",
-                    {
-                        "statistic_id": entity_id,
-                        "device_class": device_class,
-                        "state_unit": state_unit,
-                    },
-                )
-            )
 
     for statistic_id in sensor_statistic_ids - sensor_entity_ids:
         # There is no sensor matching the statistics_id
