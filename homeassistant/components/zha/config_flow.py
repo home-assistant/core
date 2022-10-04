@@ -1,6 +1,7 @@
 """Config flow for ZHA."""
 from __future__ import annotations
 
+import asyncio
 import collections
 import contextlib
 import copy
@@ -66,6 +67,8 @@ CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
 
 UPLOADED_BACKUP_FILE = "uploaded_backup_file"
+
+CONNECT_DELAY_S = 1.0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,6 +162,7 @@ class BaseZhaFlow(FlowHandler):
             yield app
         finally:
             await app.disconnect()
+            await asyncio.sleep(CONNECT_DELAY_S)
 
     async def _restore_backup(
         self, backup: zigpy.backups.NetworkBackup, **kwargs: Any
