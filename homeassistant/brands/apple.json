@@ -2,10 +2,11 @@
   "domain": "apple",
   "name": "Apple",
   "integrations": [
-    "icloud",
-    "ibeacon",
     "apple_tv",
+    "homekit_controller",
     "homekit",
-    "homekit_controller"
+    "ibeacon",
+    "icloud",
+    "itunes"
   ]
 }
