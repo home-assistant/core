@@ -454,11 +454,6 @@ class BayesianBinarySensor(BinarySensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        attr_observations_list = [
-            observation.to_dict()
-            for observation in self.current_observations.values()
-            if observation is not None
-        ]
 
         return {
             ATTR_PROBABILITY: round(self.probability, 2),
