@@ -91,20 +91,20 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        commands: list[list | str] = [
-            [
-                OverkizCommand.SET_PASS_APC_HEATING_MODE,
-                [HVAC_MODE_TO_OVERKIZ[hvac_mode]],
-            ],
-            # We also needs to execute these 3 commands to make it work correctly
-            [
-                OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
-                [OverkizCommandParam.OFF],
-            ],
-            OverkizCommand.REFRESH_PASS_APC_HEATING_MODE,
-            OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE,
-        ]
-        await self.executor.async_execute_commands(commands)
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_PASS_APC_HEATING_MODE, HVAC_MODE_TO_OVERKIZ[hvac_mode]
+        )
+
+        # We also needs to execute these 3 commands to make it work correctly
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_DEROGATION_ON_OFF_STATE, OverkizCommandParam.OFF
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.REFRESH_PASS_APC_HEATING_MODE
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE
+        )
 
     @property
     def preset_mode(self) -> str:
@@ -128,21 +128,21 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        commands: list[list | str] = [
-            [
-                OverkizCommand.SET_PASS_APC_HEATING_MODE,
-                [PRESET_MODES_TO_OVERKIZ[preset_mode]],
-            ],
-            # We also needs to execute these 3 commands to make it work correctly
-            [
-                OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
-                [OverkizCommandParam.OFF],
-            ],
-            OverkizCommand.REFRESH_PASS_APC_HEATING_MODE,
-            OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE,
-        ]
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_PASS_APC_HEATING_MODE,
+            PRESET_MODES_TO_OVERKIZ[preset_mode],
+        )
 
-        await self.executor.async_execute_commands(commands)
+        # We also needs to execute these 3 commands to make it work correctly
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_DEROGATION_ON_OFF_STATE, OverkizCommandParam.OFF
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.REFRESH_PASS_APC_HEATING_MODE
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE
+        )
 
     @property
     def target_temperature(self) -> float:
@@ -181,27 +181,31 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
         temperature = kwargs[ATTR_TEMPERATURE]
 
         if self.hvac_mode == HVACMode.AUTO:
-            commands_for_auto: list[list | str] = [
-                [
-                    OverkizCommand.SET_COMFORT_HEATING_TARGET_TEMPERATURE,
-                    [temperature],
-                ],
-                OverkizCommand.REFRESH_COMFORT_HEATING_TARGET_TEMPERATURE,
-                OverkizCommand.REFRESH_TARGET_TEMPERATURE,
-            ]
-            await self.executor.async_execute_commands(commands_for_auto)
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_COMFORT_HEATING_TARGET_TEMPERATURE,
+                temperature,
+            )
+            await self.executor.async_execute_command(
+                OverkizCommand.REFRESH_COMFORT_HEATING_TARGET_TEMPERATURE
+            )
+            await self.executor.async_execute_command(
+                OverkizCommand.REFRESH_TARGET_TEMPERATURE
+            )
         else:
-            commands_for_other: list[list | str] = [
-                [
-                    OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE,
-                    [temperature],
-                ],
-                [
-                    OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
-                    [OverkizCommandParam.ON],
-                ],
-                OverkizCommand.REFRESH_TARGET_TEMPERATURE,
-                OverkizCommand.REFRESH_PASS_APC_HEATING_MODE,
-                OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE,
-            ]
-            await self.executor.async_execute_commands(commands_for_other)
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE,
+                temperature,
+            )
+            await self.executor.async_execute_command(
+                OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
+                OverkizCommandParam.ON,
+            )
+            await self.executor.async_execute_command(
+                OverkizCommand.REFRESH_TARGET_TEMPERATURE
+            )
+            await self.executor.async_execute_command(
+                OverkizCommand.REFRESH_PASS_APC_HEATING_MODE
+            )
+            await self.executor.async_execute_command(
+                OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE
+            )
