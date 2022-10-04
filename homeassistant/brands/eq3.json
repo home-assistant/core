@@ -1,0 +1,5 @@
+{
+  "domain": "eq3",
+  "name": "eQ-3",
+  "integrations": ["eq3btsmart", "maxcube"]
+}
