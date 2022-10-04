@@ -109,6 +109,69 @@ class OverkizExecutor:
 
         await self.coordinator.async_refresh()
 
+
+    # commands except an array of commands
+    # each command could be :
+    # - a simple string to execute a command without parameter
+    # - a list with command name as first index and parameters list  as second index
+    # Example of usage:
+    # commands: list[list | str] = [
+    #     [
+    #         OverkizCommand.SET_MODE_TEMPERATURE,
+    #         [OverkizCommandParam.MANUAL_MODE, temperature],
+    #     ],
+    #     [
+    #         OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
+    #         [OverkizCommandParam.OFF],
+    #     ],
+    #     OverkizCommand.REFRESH_PASS_APC_HEATING_MODE,
+    #     OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE,
+    # ]
+    # await self.executor.async_execute_commands(commands)
+    async def async_execute_commands(self, commands: list[list | str]) -> None:
+        """Execute device commands in async context."""
+        command_names = []
+        commands_objects = []
+        for cmd in commands:
+            parameters = []
+            if isinstance(cmd, list):
+                command_name = cmd[0]
+                parameters = cmd[1]
+            else:
+                command_name = cmd
+
+            # Set the execution duration to 0 seconds for RTS devices on supported commands
+            # Default execution duration is 30 seconds and will block consecutive commands
+            if (
+                self.device.protocol == Protocol.RTS
+                and command_name not in COMMANDS_WITHOUT_DELAY
+            ):
+                parameters.append(0)
+
+            command_names.append(command_name)
+            if len(parameters) > 0:
+                commands_objects.append(Command(command_name, parameters))
+            else:
+                commands_objects.append(Command(command_name))
+
+        try:
+            exec_id = await self.coordinator.client.execute_commands(
+                self.device.device_url,
+                commands_objects,
+                "Home Assistant",
+            )
+        # Catch Overkiz exceptions to support `continue_on_error` functionality
+        except OverkizException as exception:
+            raise HomeAssistantError(exception) from exception
+
+        # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here
+        self.coordinator.executions[exec_id] = {
+            "device_url": self.device.device_url,
+            "commands": command_names,
+        }
+
+        await self.coordinator.async_refresh()
+
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
     ) -> bool:
@@ -121,8 +184,9 @@ class OverkizExecutor:
                 exec_id
                 # Reverse dictionary to cancel the last added execution
                 for exec_id, execution in reversed(self.coordinator.executions.items())
+                for command in execution.get("commands")
                 if execution.get("device_url") == self.device.device_url
-                and execution.get("command_name") in commands_to_cancel
+                and command in commands_to_cancel
             ),
             None,
         )
