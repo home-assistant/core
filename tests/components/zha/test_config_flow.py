@@ -47,6 +47,13 @@ def disable_platform_only():
 
 
 @pytest.fixture(autouse=True)
+def reduce_reconnect_timeout():
+    """Reduces reconnect timeout to speed up tests."""
+    with patch("homeassistant.components.zha.config_flow.CONNECT_DELAY_S", 0.01):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_app():
     """Mock zigpy app interface."""
     mock_app = AsyncMock()
