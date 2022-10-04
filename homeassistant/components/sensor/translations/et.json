@@ -31,7 +31,8 @@
             "is_value": "Praegune {entity_name} v\u00e4\u00e4rtus",
             "is_volatile_organic_compounds": "Praegune {entity_name} lenduvate orgaaniliste \u00fchendite kontsentratsioonitase",
             "is_voltage": "Praegune {entity_name}pinge",
-            "is_volume": "Praegune {entity_name} helitugevus"
+            "is_volume": "Praegune {entity_name} helitugevus",
+            "is_weight": "Praegune {entity_name} kaal"
         },
         "trigger_type": {
             "apparent_power": "{entity_name} n\u00e4iv v\u00f5imsus muutub",
@@ -64,7 +65,8 @@
             "value": "{entity_name} v\u00e4\u00e4rtus muutub",
             "volatile_organic_compounds": "{entity_name} lenduvate orgaaniliste \u00fchendite kontsentratsiooni muutused",
             "voltage": "{entity_name} pingemuutub",
-            "volume": "{entity_name} helitugevus muutub"
+            "volume": "{entity_name} helitugevus muutub",
+            "weight": "{entity_name} kaal muutus"
         }
     },
     "state": {
