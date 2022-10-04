@@ -153,14 +153,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(
-        self,
-        name,
-        prior,
-        observations,
-        probability_threshold,
-        device_class,
-    ) -> None:
+    def __init__(self, name, prior, observations, probability_threshold, device_class):
         """Initialize the Bayesian sensor."""
         self._attr_name = name
         self._observations = [
@@ -180,12 +173,12 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
         self._attr_is_on = False
-        self._callbacks = []  # type: ignore[var-annotated]
+        self._callbacks = []
 
         self.prior = prior
         self.probability = prior
 
-        self.current_observations = OrderedDict({})  # type: ignore[var-annotated]
+        self.current_observations = OrderedDict({})
 
         self.observations_by_entity = self._build_observations_by_entity()
         self.observations_by_template = self._build_observations_by_template()
