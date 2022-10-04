@@ -185,7 +185,7 @@ async def test_barrier_signaling_switch(hass, gdc_zw062, integration, client):
 
 async def test_switch_no_value(hass, hank_binary_switch_state, integration, client):
     """Test the switch where primary value value is None."""
-    node_data = replace_value_of_zwave_value(
+    node_state = replace_value_of_zwave_value(
         hank_binary_switch_state,
         [
             ZwaveValueMatcher(
@@ -195,7 +195,7 @@ async def test_switch_no_value(hass, hank_binary_switch_state, integration, clie
         ],
         None,
     )
-    node = Node(client, node_data)
+    node = Node(client, node_state)
     client.driver.controller.emit("node added", {"node": node})
     await hass.async_block_till_done()
 
