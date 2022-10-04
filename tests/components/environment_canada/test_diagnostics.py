@@ -43,7 +43,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     )
 
     weather_mock = mock_ec()
-    ec_data["metadata"]["timestamp"] = datetime.now(timezone.utc)
+    ec_data["metadata"]["timestamp"] = datetime(2022, 10, 4, tzinfo=timezone.utc)
     weather_mock.conditions = ec_data["conditions"]
     weather_mock.alerts = ec_data["alerts"]
     weather_mock.daily_forecasts = ec_data["daily_forecasts"]
@@ -51,7 +51,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
 
     radar_mock = mock_ec()
     radar_mock.image = b"GIF..."
-    radar_mock.timestamp = datetime.now(timezone.utc)
+    radar_mock.timestamp = datetime(2022, 10, 4, tzinfo=timezone.utc)
 
     with patch(
         "homeassistant.components.environment_canada.ECWeather",
