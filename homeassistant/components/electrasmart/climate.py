@@ -103,17 +103,8 @@ async def async_setup_entry(
 ) -> None:
     """Add Electra AC devices."""
     api: ElectraAPI = hass.data[DOMAIN][entry.entry_id]
-    devices: list[ElectraAirConditioner] = await get_devices(api)
-
-    _LOGGER.debug("Discovered %i Electra devices", len(devices))
-    async_add_entities((ElectraClimateEntity(device, api) for device in devices), True)
-
-
-async def get_devices(api: ElectraAPI) -> list[ElectraAirConditioner]:
-    """Return Electra devices."""
-    _LOGGER.debug("Fetching Electra AC devices")
     try:
-        return await api.get_devices()
+        devices: list[ElectraAirConditioner] = await api.get_devices()
     except ElectraApiError as exp:
         err_message = f"Error communicating with API: {exp}"
         if "client error" in err_message:
@@ -121,10 +112,13 @@ async def get_devices(api: ElectraAPI) -> list[ElectraAirConditioner]:
             raise ConfigEntryNotReady(err_message) from exp
 
         if Attributes.INTRUDER_LOCKOUT in err_message:
-            err_message += ", You must re-authenticate by adding the integration again"
+            err_message += ", You must re-authenticate"
             raise ConfigEntryAuthFailed(err_message) from exp
 
         raise ConfigEntryNotReady(err_message) from exp
+
+    _LOGGER.debug("Discovered %i Electra devices", len(devices))
+    async_add_entities((ElectraClimateEntity(device, api) for device in devices), True)
 
 
 class ElectraClimateEntity(ClimateEntity):
