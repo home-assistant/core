@@ -5,12 +5,14 @@ import logging
 
 from homeassistant.components import (
     button,
+    climate,
     cover,
     fan,
     image_processing,
     input_button,
     input_number,
     light,
+    media_player,
     timer,
     vacuum,
 )
@@ -18,8 +20,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-import homeassistant.components.climate.const as climate
-import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
     ATTR_CODE_FORMAT,
     ATTR_SUPPORTED_FEATURES,

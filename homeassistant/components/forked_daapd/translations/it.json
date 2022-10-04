@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "not_forked_daapd": "Il dispositivo non \u00e8 un server forked-daapd."
+            "not_forked_daapd": "Il dispositivo non \u00e8 un server Owntone."
         },
         "error": {
-            "forbidden": "Impossibile connettersi. Controlla i permessi di rete forked-daapd.",
+            "forbidden": "Impossibile connetersi. Controlla le autorizzazioni di rete di Owntone.",
             "unknown_error": "Errore imprevisto",
-            "websocket_not_enabled": "websocket del server forked-daapd non abilitato.",
+            "websocket_not_enabled": "Websocket del server Owntone non abilitato.",
             "wrong_host_or_port": "Impossibile connettersi. Controlla host e porta.",
             "wrong_password": "Password errata",
-            "wrong_server_type": "L'integrazione forked-daapd richiede un server forked-daapd con versione >= 27.0."
+            "wrong_server_type": "L'integrazione Owntone richiede un server Owntone con versione >= 27.0."
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -21,7 +21,7 @@
                     "password": "Password API (lascia vuota se non c'\u00e8 password)",
                     "port": "Porta API"
                 },
-                "title": "Configura il dispositivo forked-daapd"
+                "title": "Configura dispositivo Owntone"
             }
         }
     },
@@ -34,8 +34,8 @@
                     "tts_pause_time": "Secondi di pausa prima e dopo il TTS",
                     "tts_volume": "Volume TTS (variabile nell'intervallo [0,1])"
                 },
-                "description": "Imposta le varie opzioni per l'integrazione forked-daapd.",
-                "title": "Configura le opzioni forked-daapd"
+                "description": "Imposta varie opzioni per l'integrazione Owntone.",
+                "title": "Configurare le opzioni Owntone"
             }
         }
     }

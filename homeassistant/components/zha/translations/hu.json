@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Effekt minden LED-re",
+            "issue_individual_led_effect": "Effekt egyes LED-ekre",
             "squawk": "Riaszt\u00e1s",
             "warn": "Figyelmeztet\u00e9s"
         },

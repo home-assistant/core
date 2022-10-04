@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import bleak
 from bleak.backends.device import BLEDevice
-import pytest
+import bleak_retry_connector
 
 from homeassistant.components.bluetooth.models import (
     HaBleakClientWrapper,
@@ -57,9 +57,6 @@ async def test_bleak_client_reports_with_address(hass, enable_bluetooth, caplog)
     """Test we report when we pass an address to BleakClient."""
     install_multiple_bleak_catcher()
 
-    with pytest.raises(bleak.BleakError):
-        instance = bleak.BleakClient("00:00:00:00:00:00")
-
     with patch.object(
         _get_manager(),
         "async_ble_device_from_address",
@@ -76,6 +73,35 @@ async def test_bleak_client_reports_with_address(hass, enable_bluetooth, caplog)
     caplog.clear()
 
     instance = bleak.BleakClient("00:00:00:00:00:00")
+
+    assert not isinstance(instance, HaBleakClientWrapper)
+    assert "BleakClient with an address instead of a BLEDevice" not in caplog.text
+
+
+async def test_bleak_retry_connector_client_reports_with_address(
+    hass, enable_bluetooth, caplog
+):
+    """Test we report when we pass an address to BleakClientWithServiceCache."""
+    install_multiple_bleak_catcher()
+
+    with patch.object(
+        _get_manager(),
+        "async_ble_device_from_address",
+        return_value=MOCK_BLE_DEVICE,
+    ):
+        instance = bleak_retry_connector.BleakClientWithServiceCache(
+            "00:00:00:00:00:00"
+        )
+
+    assert "BleakClient with an address instead of a BLEDevice" in caplog.text
+
+    assert isinstance(instance, HaBleakClientWrapper)
+
+    uninstall_multiple_bleak_catcher()
+
+    caplog.clear()
+
+    instance = bleak_retry_connector.BleakClientWithServiceCache("00:00:00:00:00:00")
 
     assert not isinstance(instance, HaBleakClientWrapper)
     assert "BleakClient with an address instead of a BLEDevice" not in caplog.text

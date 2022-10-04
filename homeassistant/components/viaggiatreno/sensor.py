@@ -161,7 +161,7 @@ class ViaggiaTrenoSensor(SensorEntity):
             return True
         return False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state."""
         uri = self.uri
         res = await async_http_request(self.hass, uri)

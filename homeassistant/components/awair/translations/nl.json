@@ -26,6 +26,12 @@
                     "host": "IP-adres"
                 }
             },
+            "local_pick": {
+                "data": {
+                    "device": "Apparaat",
+                    "host": "IP-adres"
+                }
+            },
             "reauth": {
                 "data": {
                     "access_token": "Toegangstoken",
@@ -44,7 +50,10 @@
                     "access_token": "Toegangstoken",
                     "email": "E-mail"
                 },
-                "description": "U moet zich registreren voor een Awair-toegangstoken voor ontwikkelaars op: https://developer.getawair.com/onboard/login"
+                "description": "U moet zich registreren voor een Awair-toegangstoken voor ontwikkelaars op: https://developer.getawair.com/onboard/login",
+                "menu_options": {
+                    "cloud": "Verbinden via de cloud"
+                }
             }
         }
     }

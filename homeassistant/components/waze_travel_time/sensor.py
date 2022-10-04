@@ -6,7 +6,11 @@ import logging
 
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -107,6 +111,8 @@ class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
     _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_device_info = DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
         name="Waze",
@@ -161,7 +167,7 @@ class WazeTravelTime(SensorEntity):
         await self.hass.async_add_executor_job(self.update)
         self.async_write_ha_state()
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor."""
         _LOGGER.debug("Fetching Route for %s", self._attr_name)
         self._waze_data.origin = find_coordinates(self.hass, self._origin)

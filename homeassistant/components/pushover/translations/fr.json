@@ -24,5 +24,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Pushover sera bient\u00f4t supprim\u00e9e"
+        }
     }
 }

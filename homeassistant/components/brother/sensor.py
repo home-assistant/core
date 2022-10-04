@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -14,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -28,7 +31,7 @@ ATTR_BLACK_DRUM_REMAINING_LIFE = "black_drum_remaining_life"
 ATTR_BLACK_DRUM_REMAINING_PAGES = "black_drum_remaining_pages"
 ATTR_BLACK_INK_REMAINING = "black_ink_remaining"
 ATTR_BLACK_TONER_REMAINING = "black_toner_remaining"
-ATTR_BW_COUNTER = "b/w_counter"
+ATTR_BW_COUNTER = "bw_counter"
 ATTR_COLOR_COUNTER = "color_counter"
 ATTR_COUNTER = "counter"
 ATTR_CYAN_DRUM_COUNTER = "cyan_drum_counter"
@@ -82,12 +85,30 @@ ATTRS_MAP: dict[str, tuple[str, str]] = {
     ),
 }
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add Brother entities from a config_entry."""
     coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
+
+    # Due to the change of the attribute name of one sensor, it is necessary to migrate
+    # the unique_id to the new one.
+    entity_registry = er.async_get(hass)
+    old_unique_id = f"{coordinator.data.serial.lower()}_b/w_counter"
+    if entity_id := entity_registry.async_get_entity_id(
+        PLATFORM, DOMAIN, old_unique_id
+    ):
+        new_unique_id = f"{coordinator.data.serial.lower()}_bw_counter"
+        _LOGGER.debug(
+            "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+            entity_id,
+            old_unique_id,
+            new_unique_id,
+        )
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
     sensors = []
 
@@ -97,11 +118,11 @@ async def async_setup_entry(
         manufacturer=ATTR_MANUFACTURER,
         model=coordinator.data.model,
         name=coordinator.data.model,
-        sw_version=getattr(coordinator.data, "firmware", None),
+        sw_version=coordinator.data.firmware,
     )
 
     for description in SENSOR_TYPES:
-        if description.key in coordinator.data:
+        if getattr(coordinator.data, description.key) is not None:
             sensors.append(
                 description.entity_class(coordinator, description, device_info)
             )

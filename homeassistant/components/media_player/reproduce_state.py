@@ -37,8 +37,6 @@ from .const import (
     MediaPlayerEntityFeature,
 )
 
-# mypy: allow-untyped-defs
-
 
 async def _async_reproduce_states(
     hass: HomeAssistant,
@@ -51,7 +49,7 @@ async def _async_reproduce_states(
     cur_state = hass.states.get(state.entity_id)
     features = cur_state.attributes[ATTR_SUPPORTED_FEATURES] if cur_state else 0
 
-    async def call_service(service: str, keys: Iterable) -> None:
+    async def call_service(service: str, keys: Iterable[str]) -> None:
         """Call service with set of attributes given."""
         data = {"entity_id": state.entity_id}
         for key in keys:

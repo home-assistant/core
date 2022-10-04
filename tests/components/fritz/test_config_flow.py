@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )

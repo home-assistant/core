@@ -50,20 +50,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"] == 50
 
@@ -82,20 +71,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"] == 0
 
@@ -114,20 +92,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"]
 
@@ -145,18 +112,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 6
     assert open_args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "Open",
-        "propertyName": "Open",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Open)",
-            "ccSpecific": {"switchType": 3},
-        },
     }
     assert not open_args["value"]
 
@@ -164,18 +122,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert close_args["command"] == "node.set_value"
     assert close_args["nodeId"] == 6
     assert close_args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "Close",
-        "propertyName": "Close",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Close)",
-            "ccSpecific": {"switchType": 3},
-        },
     }
     assert not close_args["value"]
 
@@ -215,20 +164,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"] == 0
 
@@ -247,18 +185,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 6
     assert open_args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "Open",
-        "propertyName": "Open",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Open)",
-            "ccSpecific": {"switchType": 3},
-        },
     }
     assert not open_args["value"]
 
@@ -266,18 +195,9 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert close_args["command"] == "node.set_value"
     assert close_args["nodeId"] == 6
     assert close_args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "Close",
-        "propertyName": "Close",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Close)",
-            "ccSpecific": {"switchType": 3},
-        },
     }
     assert not close_args["value"]
 
@@ -332,21 +252,8 @@ async def test_fibaro_FGR222_shutter_cover(
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 145,
-        "commandClassName": "Manufacturer Proprietary",
         "property": "fibaro",
         "propertyKey": "venetianBlindsTilt",
-        "propertyName": "fibaro",
-        "propertyKeyName": "venetianBlindsTilt",
-        "ccVersion": 0,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Venetian blinds tilt",
-            "min": 0,
-            "max": 99,
-        },
-        "value": 0,
     }
     assert args["value"] == 99
 
@@ -366,21 +273,8 @@ async def test_fibaro_FGR222_shutter_cover(
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 145,
-        "commandClassName": "Manufacturer Proprietary",
         "property": "fibaro",
         "propertyKey": "venetianBlindsTilt",
-        "propertyName": "fibaro",
-        "propertyKeyName": "venetianBlindsTilt",
-        "ccVersion": 0,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "label": "Venetian blinds tilt",
-            "min": 0,
-            "max": 99,
-        },
-        "value": 0,
     }
     assert args["value"] == 0
 
@@ -411,23 +305,9 @@ async def test_aeotec_nano_shutter_cover(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 3
     assert args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "value": 0,
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "valueChangeOptions": ["transitionDuration"],
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
     }
     assert args["value"]
 
@@ -445,20 +325,9 @@ async def test_aeotec_nano_shutter_cover(
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 3
     assert open_args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "On",
-        "propertyName": "On",
-        "value": False,
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (On)",
-            "ccSpecific": {"switchType": 1},
-        },
     }
     assert not open_args["value"]
 
@@ -466,20 +335,9 @@ async def test_aeotec_nano_shutter_cover(
     assert close_args["command"] == "node.set_value"
     assert close_args["nodeId"] == 3
     assert close_args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "Off",
-        "propertyName": "Off",
-        "value": False,
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Off)",
-            "ccSpecific": {"switchType": 1},
-        },
     }
     assert not close_args["value"]
 
@@ -520,23 +378,9 @@ async def test_aeotec_nano_shutter_cover(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 3
     assert args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "value": 0,
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueChangeOptions": ["transitionDuration"],
-            "label": "Target value",
-        },
     }
     assert args["value"] == 0
 
@@ -555,20 +399,9 @@ async def test_aeotec_nano_shutter_cover(
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 3
     assert open_args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "On",
-        "propertyName": "On",
-        "value": False,
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (On)",
-            "ccSpecific": {"switchType": 1},
-        },
     }
     assert not open_args["value"]
 
@@ -576,20 +409,9 @@ async def test_aeotec_nano_shutter_cover(
     assert close_args["command"] == "node.set_value"
     assert close_args["nodeId"] == 3
     assert close_args["valueId"] == {
-        "ccVersion": 4,
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "Off",
-        "propertyName": "Off",
-        "value": False,
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Perform a level change (Off)",
-            "ccSpecific": {"switchType": 1},
-        },
     }
     assert not close_args["value"]
 
@@ -631,21 +453,9 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
     assert args["nodeId"] == 12
     assert args["value"] == 255
     assert args["valueId"] == {
-        "ccVersion": 0,
         "commandClass": 102,
-        "commandClassName": "Barrier Operator",
         "endpoint": 0,
-        "metadata": {
-            "label": "Target Barrier State",
-            "max": 255,
-            "min": 0,
-            "readable": True,
-            "states": {"0": "Closed", "255": "Open"},
-            "type": "number",
-            "writeable": True,
-        },
         "property": "targetState",
-        "propertyName": "targetState",
     }
 
     # state doesn't change until currentState value update is received
@@ -665,21 +475,9 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
     assert args["nodeId"] == 12
     assert args["value"] == 0
     assert args["valueId"] == {
-        "ccVersion": 0,
         "commandClass": 102,
-        "commandClassName": "Barrier Operator",
         "endpoint": 0,
-        "metadata": {
-            "label": "Target Barrier State",
-            "max": 255,
-            "min": 0,
-            "readable": True,
-            "states": {"0": "Closed", "255": "Open"},
-            "type": "number",
-            "writeable": True,
-        },
         "property": "targetState",
-        "propertyName": "targetState",
     }
 
     # state doesn't change until currentState value update is received

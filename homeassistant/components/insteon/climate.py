@@ -6,12 +6,12 @@ from typing import Any
 from pyinsteon.config import CELSIUS
 from pyinsteon.constants import ThermostatMode
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

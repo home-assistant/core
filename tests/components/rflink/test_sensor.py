@@ -19,7 +19,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from tests.components.rflink.test_init import mock_rflink
+from .test_init import mock_rflink
 
 DOMAIN = "sensor"
 

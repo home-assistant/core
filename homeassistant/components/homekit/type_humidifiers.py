@@ -3,8 +3,7 @@ import logging
 
 from pyhap.const import CATEGORY_HUMIDIFIER
 
-from homeassistant.components.humidifier import HumidifierDeviceClass
-from homeassistant.components.humidifier.const import (
+from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
@@ -12,6 +11,7 @@ from homeassistant.components.humidifier.const import (
     DEFAULT_MIN_HUMIDITY,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
+    HumidifierDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

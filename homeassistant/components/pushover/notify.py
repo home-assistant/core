@@ -128,7 +128,7 @@ class PushoverNotificationService(BaseNotificationService):
             self.pushover.send_message(
                 self._user_key,
                 message,
-                kwargs.get(ATTR_TARGET),
+                ",".join(kwargs.get(ATTR_TARGET, [])),
                 title,
                 url,
                 url_title,

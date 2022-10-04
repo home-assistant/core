@@ -9,5 +9,11 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "La configurazione di Moon tramite YAML \u00e8 stata rimossa. \n\nLa tua configurazione YAML esistente non viene utilizzata da Home Assistant. \n\nRimuovere la configurazione YAML dal file configuration.yaml e riavviare Home Assistant per risolvere questo problema.",
+            "title": "La configurazione YAML di Moon \u00e8 stata rimossa"
+        }
+    },
     "title": "Luna"
 }

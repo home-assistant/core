@@ -1951,6 +1951,30 @@ async def different_device_server_version(*args):
             0,
             different_device_server_version,
         ),
+        (
+            {"config": ADDON_DISCOVERY_INFO},
+            {},
+            {
+                "device": "/test",
+                "network_key": "old123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "log_level": "info",
+            },
+            {
+                "usb_path": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "log_level": "info",
+                "emulate_hardware": False,
+            },
+            0,
+            different_device_server_version,
+        ),
     ],
 )
 async def test_options_different_device(
@@ -2018,14 +2042,16 @@ async def test_options_different_device(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
+    # Default emulate_hardware is False.
+    addon_options = {"emulate_hardware": False} | old_addon_options
     # Legacy network key is not reset.
-    old_addon_options.pop("network_key")
+    addon_options.pop("network_key")
 
     assert set_addon_options.call_count == 2
     assert set_addon_options.call_args == call(
         hass,
         "core_zwave_js",
-        {"options": old_addon_options},
+        {"options": addon_options},
     )
     assert result["type"] == "progress"
     assert result["step_id"] == "start_addon"

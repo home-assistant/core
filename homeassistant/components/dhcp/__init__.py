@@ -26,7 +26,7 @@ from scapy.config import conf
 from scapy.error import Scapy_Exception
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
     ATTR_IP,
     ATTR_MAC,
