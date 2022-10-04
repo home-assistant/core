@@ -78,7 +78,10 @@ async def async_setup_entry(
 
     flume_entity_list = []
     for device in flume_devices.device_list:
-        if device[KEY_DEVICE_TYPE] != FLUME_TYPE_SENSOR:
+        if (
+            device[KEY_DEVICE_TYPE] != FLUME_TYPE_SENSOR
+            or KEY_DEVICE_LOCATION not in device
+        ):
             continue
         if KEY_DEVICE_LOCATION not in device.keys():
             continue

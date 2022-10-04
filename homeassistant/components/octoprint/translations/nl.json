@@ -4,6 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "auth_failed": "Kan applicatie API-sleutel niet ophalen",
             "cannot_connect": "Kan geen verbinding maken",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "unknown": "Onverwachte fout"
         },
         "error": {
@@ -15,6 +16,11 @@
             "get_api_key": "Open de OctoPrint UI en klik op 'Toestaan' op het toegangsverzoek voor 'Home Assistant'."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "username": "Gebruikersnaam"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",

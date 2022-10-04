@@ -110,7 +110,7 @@ class SynoApi:
         # check if upgrade is available
         try:
             self.dsm.upgrade.update()
-        except SynologyDSMAPIErrorException as ex:
+        except SYNOLOGY_CONNECTION_EXCEPTIONS as ex:
             self._with_upgrade = False
             self.dsm.reset(SynoCoreUpgrade.API_KEY)
             LOGGER.debug("Disabled fetching upgrade data during setup: %s", ex)
