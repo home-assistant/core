@@ -188,7 +188,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         ]
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
-        self._attr_is_on: bool = False
+        self._attr_is_on = bool(False)
         self._callbacks: list[_TrackTemplateResultInfo] = []
 
         self.prior = prior
