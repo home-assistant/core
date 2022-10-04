@@ -71,9 +71,19 @@
       "name": "AirNow"
     },
     "airthings": {
-      "config_flow": true,
-      "iot_class": "cloud_polling",
-      "name": "Airthings"
+      "name": "Airthings",
+      "integrations": {
+        "airthings": {
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Airthings"
+        },
+        "airthings_ble": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Airthings BLE"
+        }
+      }
     },
     "airtouch4": {
       "config_flow": true,
@@ -189,10 +199,34 @@
       "iot_class": null,
       "name": "Home Assistant API"
     },
-    "apple_tv": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "Apple TV"
+    "apple": {
+      "name": "Apple",
+      "integrations": {
+        "icloud": {
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Apple iCloud"
+        },
+        "ibeacon": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "iBeacon Tracker"
+        },
+        "apple_tv": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Apple TV"
+        },
+        "homekit": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "HomeKit"
+        },
+        "homekit_controller": {
+          "config_flow": true,
+          "iot_class": "local_push"
+        }
+      }
     },
     "application_credentials": {
       "config_flow": false,
@@ -547,11 +581,6 @@
       "iot_class": "cloud_polling",
       "name": "Canary"
     },
-    "cast": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "Google Cast"
-    },
     "cert_expiry": {
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -786,14 +815,24 @@
       "iot_class": "calculated"
     },
     "denon": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Denon Network Receivers"
-    },
-    "denonavr": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "Denon AVR Network Receivers"
+      "name": "Denon",
+      "integrations": {
+        "denon": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Denon Network Receivers"
+        },
+        "denonavr": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Denon AVR Network Receivers"
+        },
+        "heos": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Denon HEOS"
+        }
+      }
     },
     "deutsche_bahn": {
       "config_flow": false,
@@ -837,11 +876,6 @@
     "diagnostics": {
       "config_flow": false,
       "iot_class": null
-    },
-    "dialogflow": {
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "name": "Dialogflow"
     },
     "digital_ocean": {
       "config_flow": false,
@@ -1382,7 +1416,7 @@
     "forked_daapd": {
       "config_flow": true,
       "iot_class": "local_push",
-      "name": "forked-daapd"
+      "name": "Owntone"
     },
     "fortios": {
       "config_flow": false,
@@ -1419,20 +1453,25 @@
       "iot_class": "cloud_polling",
       "name": "Freedompro"
     },
-    "fritz": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "AVM FRITZ!Box Tools"
-    },
     "fritzbox": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "AVM FRITZ!SmartHome"
-    },
-    "fritzbox_callmonitor": {
-      "config_flow": true,
-      "iot_class": "local_polling",
-      "name": "AVM FRITZ!Box Call Monitor"
+      "name": "FRITZ!Box",
+      "integrations": {
+        "fritz": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "AVM FRITZ!Box Tools"
+        },
+        "fritzbox": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "AVM FRITZ!SmartHome"
+        },
+        "fritzbox_callmonitor": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "AVM FRITZ!Box Call Monitor"
+        }
+      }
     },
     "fronius": {
       "config_flow": true,
@@ -1581,56 +1620,76 @@
     "google": {
       "name": "Google",
       "integrations": {
-        "google": {
-          "config_flow": true,
+        "google_assistant": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Google Assistant"
+        },
+        "google_cloud": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Google Cloud Platform"
+        },
+        "google_domains": {
+          "config_flow": false,
           "iot_class": "cloud_polling",
-          "name": "Google Calendars"
+          "name": "Google Domains"
+        },
+        "google_maps": {
+          "config_flow": false,
+          "iot_class": "cloud_polling",
+          "name": "Google Maps"
+        },
+        "google_pubsub": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Google Pub/Sub"
         },
         "google_sheets": {
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Sheets"
+        },
+        "google_translate": {
+          "config_flow": false,
+          "iot_class": "cloud_push",
+          "name": "Google Translate Text-to-Speech"
+        },
+        "google_travel_time": {
+          "config_flow": true,
+          "iot_class": "cloud_polling"
+        },
+        "google_wifi": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Google Wifi"
+        },
+        "google": {
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Calendar"
+        },
+        "nest": {
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Google Nest"
+        },
+        "cast": {
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Google Cast"
+        },
+        "hangouts": {
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Google Chat"
+        },
+        "dialogflow": {
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Dialogflow"
         }
       }
-    },
-    "google_assistant": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Google Assistant"
-    },
-    "google_cloud": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Google Cloud Platform"
-    },
-    "google_domains": {
-      "config_flow": false,
-      "iot_class": "cloud_polling",
-      "name": "Google Domains"
-    },
-    "google_maps": {
-      "config_flow": false,
-      "iot_class": "cloud_polling",
-      "name": "Google Maps"
-    },
-    "google_pubsub": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Google Pub/Sub"
-    },
-    "google_translate": {
-      "config_flow": false,
-      "iot_class": "cloud_push",
-      "name": "Google Translate Text-to-Speech"
-    },
-    "google_travel_time": {
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
-    "google_wifi": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Google Wifi"
     },
     "govee_ble": {
       "config_flow": true,
@@ -1691,11 +1750,6 @@
       "iot_class": "cloud_polling",
       "name": "Habitica"
     },
-    "hangouts": {
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "name": "Google Chat"
-    },
     "hardware": {
       "config_flow": false,
       "iot_class": null,
@@ -1735,11 +1789,6 @@
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "Heatmiser"
-    },
-    "heos": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "Denon HEOS"
     },
     "here_travel_time": {
       "config_flow": true,
@@ -1805,15 +1854,6 @@
       "config_flow": false,
       "iot_class": null,
       "name": "Home Assistant Alerts"
-    },
-    "homekit": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "HomeKit"
-    },
-    "homekit_controller": {
-      "config_flow": true,
-      "iot_class": "local_push"
     },
     "homematic": {
       "config_flow": false,
@@ -1913,16 +1953,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Jandy iAqualink"
-    },
-    "ibeacon": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "iBeacon Tracker"
-    },
-    "icloud": {
-      "config_flow": true,
-      "iot_class": "cloud_polling",
-      "name": "Apple iCloud"
     },
     "idteck_prox": {
       "config_flow": false,
@@ -2246,6 +2276,12 @@
       "config_flow": true,
       "iot_class": "local_polling",
       "name": "LED BLE"
+    },
+    "leviton": {
+      "name": "Leviton",
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "lg_netcast": {
       "config_flow": false,
@@ -2783,11 +2819,6 @@
       "config_flow": false,
       "iot_class": "local_push",
       "name": "Ness Alarm"
-    },
-    "nest": {
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "name": "Nest"
     },
     "netatmo": {
       "config_flow": true,
@@ -4391,6 +4422,12 @@
       "iot_class": "local_polling",
       "name": "Thinking Cleaner"
     },
+    "third_reality": {
+      "name": "Third Reality",
+      "iot_standards": [
+        "zigbee"
+      ]
+    },
     "thomson": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -4576,6 +4613,31 @@
       "iot_class": "cloud_push",
       "name": "Twitter"
     },
+    "ubiquiti": {
+      "name": "Ubiquiti",
+      "integrations": {
+        "unifi": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "UniFi Network"
+        },
+        "unifi_direct": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "UniFi AP"
+        },
+        "unifiled": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "UniFi LED"
+        },
+        "unifiprotect": {
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "UniFi Protect"
+        }
+      }
+    },
     "ubus": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -4595,26 +4657,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Ukraine Alarm"
-    },
-    "unifi": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "UniFi Network"
-    },
-    "unifi_direct": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Ubiquiti UniFi AP"
-    },
-    "unifiled": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Ubiquiti UniFi LED"
-    },
-    "unifiprotect": {
-      "config_flow": true,
-      "iot_class": "local_push",
-      "name": "UniFi Protect"
     },
     "universal": {
       "config_flow": false,

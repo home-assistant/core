@@ -2,7 +2,7 @@
 # If component is fully covered with type annotations, please add it here
 # to enable strict mypy checks.
 
-# Stict typing is enabled by default for core files.
+# Strict typing is enabled by default for core files.
 # Add it here to add 'disallow_any_generics'.
 # --- Only for core file! ---
 homeassistant.exceptions
@@ -77,6 +77,7 @@ homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.cover.*
+homeassistant.components.clickatell.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.deconz.*

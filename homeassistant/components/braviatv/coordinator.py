@@ -9,6 +9,7 @@ from typing import Any, Final, TypeVar
 
 from pybravia import (
     BraviaTV,
+    BraviaTVAuthError,
     BraviaTVConnectionError,
     BraviaTVConnectionTimeout,
     BraviaTVError,
@@ -19,6 +20,7 @@ from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.components.media_player import MediaType
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -139,6 +141,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.debug("Update skipped, Bravia API service is reloading")
                 return
             raise UpdateFailed("Error communicating with device") from err
+        except BraviaTVAuthError as err:
+            raise ConfigEntryAuthFailed from err
         except (BraviaTVConnectionError, BraviaTVConnectionTimeout, BraviaTVTurnedOff):
             self.is_on = False
             self.connected = False

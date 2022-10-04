@@ -25,6 +25,10 @@
             },
             "pick_implementation": {
                 "title": "Scegli il metodo di autenticazione"
+            },
+            "reauth_confirm": {
+                "description": "L'integrazione di Fogli Google deve riautenticare il tuo account",
+                "title": "Autentica nuovamente l'integrazione"
             }
         }
     }

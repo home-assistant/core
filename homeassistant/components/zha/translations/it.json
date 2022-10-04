@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Effetto di emissione per tutti i LED",
+            "issue_individual_led_effect": "Effetto di emissione per i singoli LED",
             "squawk": "Strillare",
             "warn": "Avvertire"
         },

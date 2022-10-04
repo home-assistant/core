@@ -5,8 +5,9 @@ from typing import Final
 
 from .backports.enum import StrEnum
 
+APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -558,7 +559,10 @@ VOLUME_CUBIC_METERS: Final = "m³"
 VOLUME_CUBIC_FEET: Final = "ft³"
 
 VOLUME_GALLONS: Final = "gal"
+"""US gallon (British gallon is not yet supported)"""
+
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
+"""US fluid ounce (British fluid ounce is not yet supported)"""
 
 # Volume Flow Rate units
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
