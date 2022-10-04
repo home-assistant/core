@@ -1945,6 +1945,13 @@
       "iot_class": "local_push",
       "name": "INKBIRD"
     },
+    "inovelli": {
+      "name": "Inovelli",
+      "iot_standards": [
+        "zigbee",
+        "zwave"
+      ]
+    },
     "insteon": {
       "config_flow": true,
       "iot_class": "local_push",
@@ -2018,6 +2025,12 @@
       "config_flow": true,
       "iot_class": "local_polling",
       "name": "iZone"
+    },
+    "jasco": {
+      "name": "Jasco",
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "jellyfin": {
       "config_flow": true,
@@ -4560,6 +4573,12 @@
       "iot_class": "cloud_push",
       "name": "Twitter"
     },
+    "u_tec": {
+      "name": "U-tec",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "ubiquiti": {
       "name": "Ubiquiti",
       "integrations": {
@@ -5057,6 +5076,12 @@
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "ZoneMinder"
+    },
+    "zooz": {
+      "name": "Zooz",
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "zwave_js": {
       "config_flow": true,
