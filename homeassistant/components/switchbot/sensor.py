@@ -63,6 +63,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
+    "button_count": SensorEntityDescription(
+        key="button_count",
+        native_unit_of_measurement=None,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=None,
+    ),
 }
 
 
