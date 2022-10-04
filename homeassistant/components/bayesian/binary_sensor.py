@@ -253,7 +253,9 @@ class BayesianBinarySensor(BinarySensorEntity):
             track_template_result = updates.pop()
             template = track_template_result.template
             result = track_template_result.result
-            entity: Event | str | None = event and event.data.get(CONF_ENTITY_ID)
+            entity: str | None = (
+                None if event is None else event.data.get(CONF_ENTITY_ID)
+            )
             if isinstance(result, TemplateError):
                 _LOGGER.error(
                     "TemplateError('%s') "
