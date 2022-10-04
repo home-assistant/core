@@ -1,0 +1,5 @@
+{
+  "domain": "panasonic",
+  "name": "Panasonic",
+  "integrations": ["panasonic_bluray", "panasonic_viera"]
+}
