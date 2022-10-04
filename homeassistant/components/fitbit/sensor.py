@@ -90,7 +90,7 @@ def request_app_setup(
         if os.path.isfile(config_path):
             config_file = load_json(config_path)
             if config_file == DEFAULT_CONFIG:
-                error_msg = f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try again."
+                error_msg = "You didn't correctly modify fitbit.conf, please try again."
 
                 configurator.notify_errors(hass, _CONFIGURING["fitbit"], error_msg)
             else:
@@ -115,7 +115,7 @@ def request_app_setup(
         )
         return
 
-    submit = f"I have saved my Client ID and Client Secret into {FITBIT_CONFIG_FILE}."
+    submit = "I have saved my Client ID and Client Secret into fitbit.conf."
 
     _CONFIGURING["fitbit"] = configurator.request_config(
         hass,
