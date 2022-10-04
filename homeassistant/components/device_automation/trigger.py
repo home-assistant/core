@@ -58,14 +58,15 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate config."""
     try:
+        config = TRIGGER_SCHEMA(config)
         platform = await async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], DeviceAutomationType.TRIGGER
         )
         if not hasattr(platform, "async_validate_trigger_config"):
             return cast(ConfigType, platform.TRIGGER_SCHEMA(config))
         return await platform.async_validate_trigger_config(hass, config)
-    except InvalidDeviceAutomationConfig as err:
-        raise vol.Invalid(str(err) or "Invalid trigger configuration") from err
+    except (vol.Invalid, InvalidDeviceAutomationConfig) as err:
+        raise InvalidDeviceAutomationConfig("invalid trigger configuration") from err
 
 
 async def async_attach_trigger(

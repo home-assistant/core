@@ -16,7 +16,7 @@ from bleak.assigned_numbers import AdvertisementDataType
 from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
+from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
 from bleak_retry_connector import get_device_by_adapter
 from dbus_fast import InvalidMessageError
 
@@ -86,11 +86,14 @@ class ScannerStartError(HomeAssistantError):
 
 
 def create_bleak_scanner(
-    scanning_mode: BluetoothScanningMode, adapter: str | None
+    detection_callback: AdvertisementDataCallback,
+    scanning_mode: BluetoothScanningMode,
+    adapter: str | None,
 ) -> bleak.BleakScanner:
     """Create a Bleak scanner."""
     scanner_kwargs: dict[str, Any] = {
-        "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]
+        "detection_callback": detection_callback,
+        "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode],
     }
     if platform.system() == "Linux":
         # Only Linux supports multiple adapters
@@ -117,16 +120,18 @@ class HaScanner(BaseHaScanner):
     over ethernet, usb over ethernet, etc.
     """
 
+    scanner: bleak.BleakScanner
+
     def __init__(
         self,
         hass: HomeAssistant,
-        scanner: bleak.BleakScanner,
+        mode: BluetoothScanningMode,
         adapter: str,
         address: str,
     ) -> None:
         """Init bluetooth discovery."""
         self.hass = hass
-        self.scanner = scanner
+        self.mode = mode
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
         self._cancel_watchdog: CALLBACK_TYPE | None = None
@@ -140,6 +145,13 @@ class HaScanner(BaseHaScanner):
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         return self.scanner.discovered_devices
+
+    @hass_callback
+    def async_setup(self) -> None:
+        """Set up the scanner."""
+        self.scanner = create_bleak_scanner(
+            self._async_detection_callback, self.mode, self.adapter
+        )
 
     async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
         """Get a device by address."""
@@ -218,8 +230,6 @@ class HaScanner(BaseHaScanner):
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""
-        self.scanner.register_detection_callback(self._async_detection_callback)
-
         async with self._start_stop_lock:
             await self._async_start()
 

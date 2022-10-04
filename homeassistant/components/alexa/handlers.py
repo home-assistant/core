@@ -819,7 +819,9 @@ def temperature_from_object(hass, temp_obj, interval=False):
         # convert to Celsius if absolute temperature
         temp -= 273.15
 
-    return TemperatureConverter.convert(temp, from_unit, to_unit, interval=interval)
+    if interval:
+        return TemperatureConverter.convert_interval(temp, from_unit, to_unit)
+    return TemperatureConverter.convert(temp, from_unit, to_unit)
 
 
 @HANDLERS.register(("Alexa.ThermostatController", "SetTargetTemperature"))
