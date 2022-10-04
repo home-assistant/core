@@ -293,6 +293,10 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode and self._current_mode.value is None:
             # guard missing value
             return None
+        if len(self._current_mode_setpoint_enums) > 1:
+            # current mode has a temperature range
+            return None
+
         try:
             temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
         except (IndexError, ValueError):
@@ -305,6 +309,10 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode and self._current_mode.value is None:
             # guard missing value
             return None
+        if len(self._current_mode_setpoint_enums) < 2:
+            # current mode has a single temperature
+            return None
+
         try:
             temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
         except (IndexError, ValueError):
@@ -317,9 +325,15 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode and self._current_mode.value is None:
             # guard missing value
             return None
-        if len(self._current_mode_setpoint_enums) > 1:
-            return self.target_temperature
-        return None
+        if len(self._current_mode_setpoint_enums) < 2:
+            # current mode has a single temperature
+            return None
+
+        try:
+            temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
+        except (IndexError, ValueError):
+            return None
+        return get_value_of_zwave_value(temp)
 
     @property
     def preset_mode(self) -> str | None:
