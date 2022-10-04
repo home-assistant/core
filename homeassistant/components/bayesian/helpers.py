@@ -34,7 +34,7 @@ class Observation:
     def to_dict(self) -> dict[str, str | float | bool | None]:
         """Represent Class as a Dict for easier serialization."""
 
-        # Sadly necessary because dataclasses asdict() can't serialize Templates and ignores Properties.
+        # Needed because dataclasses asdict() can't serialize Templates and ignores Properties.
         dic = {
             CONF_PLATFORM: self.platform,
             CONF_ENTITY_ID: self.entity_id,
