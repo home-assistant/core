@@ -2341,11 +2341,21 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "relative_time",
                 "today_at",
             ]
-            hass_filters = ["closest", "expand", "device_id", "area_id", "area_name"]
+            hass_filters = [
+                "closest",
+                "expand",
+                "device_id",
+                "area_id",
+                "area_name",
+                "is_nominal",
+            ]
+            hass_tests = ["nominal"]
             for glob in hass_globals:
                 self.globals[glob] = unsupported(glob)
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
+            for test in hass_tests:
+                self.filters[test] = unsupported(test)
             return
 
         self.globals["expand"] = hassfunction(expand)
@@ -2362,7 +2372,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["states"] = AllStates(hass)
         self.globals["is_nominal"] = hassfunction(is_nominal)
         self.filters["is_nominal"] = pass_context(self.globals["is_nominal"])
-        self.tests["is_nominal"] = pass_eval_context(self.globals["is_nominal"])
+        self.tests["nominal"] = pass_eval_context(self.globals["is_nominal"])
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
         self.globals["relative_time"] = hassfunction(relative_time)

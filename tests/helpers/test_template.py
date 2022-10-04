@@ -1634,7 +1634,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{% if "test.nominal1" is is_nominal() %}yes{% else %}no{% endif %}
+{% if "test.nominal1" is nominal %}yes{% else %}no{% endif %}
         """,
         hass,
     )
@@ -1642,7 +1642,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{% if states.test.nominal1 is is_nominal() %}yes{% else %}no{% endif %}
+{% if states.test.nominal1 is nominal %}yes{% else %}no{% endif %}
         """,
         hass,
     )
@@ -1658,7 +1658,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ ["test.nominal1","test.unavailable"] | is_nominal() }}
+{{ ["test.nominal1","test.unavailable"] | is_nominal }}
         """,
         hass,
     )
@@ -1666,7 +1666,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ ["test.unknown",states.test.nominal1] | select("is_nominal") | list | count }}
+{{ ["test.unknown",states.test.nominal1] | select("nominal") | list | count }}
         """,
         hass,
     )
@@ -1674,7 +1674,7 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ states | select("is_nominal") | list | count }}
+{{ states | select("nominal") | list | count }}
         """,
         hass,
     )
