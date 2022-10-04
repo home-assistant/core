@@ -231,7 +231,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
             entity: str | None = event.data.get(CONF_ENTITY_ID)
             if entity is None:
-                _LOGGER.error("Unexpected NoneType for event %s", event.data)
+                _LOGGER.error("Entity ID is NoneType for event %s", event.data)
                 return
 
             self.current_observations.update(self._record_entity_observations(entity))
