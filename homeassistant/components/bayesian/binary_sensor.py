@@ -158,17 +158,17 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._attr_name = name
         self._observations = [
             Observation(
-                entity_id=o.get(CONF_ENTITY_ID),
-                platform=o[CONF_PLATFORM],
-                prob_given_false=o[CONF_P_GIVEN_F],
-                prob_given_true=o[CONF_P_GIVEN_T],
+                entity_id=observation.get(CONF_ENTITY_ID),
+                platform=observation[CONF_PLATFORM],
+                prob_given_false=observation[CONF_P_GIVEN_F],
+                prob_given_true=observation[CONF_P_GIVEN_T],
                 observed=None,
-                to_state=o.get(CONF_TO_STATE),
-                above=o.get(CONF_ABOVE),
-                below=o.get(CONF_BELOW),
-                value_template=o.get(CONF_VALUE_TEMPLATE),
+                to_state=observation.get(CONF_TO_STATE),
+                above=observation.get(CONF_ABOVE),
+                below=observation.get(CONF_BELOW),
+                value_template=observation.get(CONF_VALUE_TEMPLATE),
             )
-            for o in observations
+            for observation in observations
         ]
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
@@ -243,18 +243,18 @@ class BayesianBinarySensor(BinarySensorEntity):
                     self.entity_id,
                 )
 
-                observation = None
+                observed = None
             else:
-                observation = result_as_boolean(result)
+                observed = result_as_boolean(result)
 
-            for obs in self.observations_by_template[template]:
-                obs.observed = observation
+            for observation in self.observations_by_template[template]:
+                observation.observed = observed
 
                 # in some cases a template may update because of the absence of an entity
                 if entity is not None:
-                    obs.entity_id = str(entity)
+                    observation.entity_id = str(entity)
 
-                self.current_observations[obs.id] = obs
+                self.current_observations[observation.id] = observation
 
             if event:
                 self.async_set_context(event.context)
@@ -308,7 +308,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         local_observations = OrderedDict({})
 
         for entity_obs in self.observations_by_entity[entity]:
-            platform: str = str(entity_obs.platform)
+            platform = str(entity_obs.platform)
 
             observation = self.observation_handlers[platform](entity_obs)
             entity_obs.observed = observation
@@ -320,25 +320,25 @@ class BayesianBinarySensor(BinarySensorEntity):
     def _calculate_new_probability(self):
         prior = self.prior
 
-        for obs in self.current_observations.values():
-            if obs is not None:
-                if obs.observed is True:
+        for observation in self.current_observations.values():
+            if observation is not None:
+                if observation.observed is True:
                     prior = update_probability(
                         prior,
-                        obs.prob_given_true,
-                        obs.prob_given_false,
+                        observation.prob_given_true,
+                        observation.prob_given_false,
                     )
-                elif obs.observed is False:
+                elif observation.observed is False:
                     prior = update_probability(
                         prior,
-                        1 - obs.prob_given_true,
-                        1 - obs.prob_given_false,
+                        1 - observation.prob_given_true,
+                        1 - observation.prob_given_false,
                     )
-                elif obs.observed is None:
-                    if obs.entity_id is not None:
+                elif observation.observed is None:
+                    if observation.entity_id is not None:
                         _LOGGER.debug(
                             "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
-                            obs.entity_id,
+                            observation.entity_id,
                         )
                     else:
                         _LOGGER.debug(
