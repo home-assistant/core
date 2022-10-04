@@ -32,8 +32,9 @@ class Observation:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
     def to_dict(self) -> dict[str, str | float | bool | None]:
-        """Represent Class as a Dict for easier serialization. Sadly necessary because dataclasses asdict() can't serialize Templates and ignores Properties."""
+        """Represent Class as a Dict for easier serialization."""
 
+        # Sadly necessary because dataclasses asdict() can't serialize Templates and ignores Properties.
         dic = {
             CONF_PLATFORM: self.platform,
             CONF_ENTITY_ID: self.entity_id,
