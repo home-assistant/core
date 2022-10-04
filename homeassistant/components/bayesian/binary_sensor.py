@@ -131,10 +131,10 @@ async def async_setup_platform(
     """Set up the Bayesian Binary sensor."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    name = config[CONF_NAME]
-    observations = config[CONF_OBSERVATIONS]
-    prior = config[CONF_PRIOR]
-    probability_threshold = config[CONF_PROBABILITY_THRESHOLD]
+    name: str = config[CONF_NAME]
+    observations: list[ConfigType] = config[CONF_OBSERVATIONS]
+    prior: float = config[CONF_PRIOR]
+    probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     # Should deprecate in some future version (2022.10 at time of writing) & make prob_given_false required in schemas.
@@ -142,7 +142,7 @@ async def async_setup_platform(
     for observation in observations:
         if CONF_P_GIVEN_F not in observation:
             text: str = f"{name}/{observation.get(CONF_ENTITY_ID,'')}{observation.get(CONF_VALUE_TEMPLATE,'')}"
-            raise_no_prob_given_false(hass, observation, text)
+            raise_no_prob_given_false(hass, text)
             _LOGGER.error("Missing prob_given_false YAML entry for %s", text)
             broken_observations.append(observation)
     observations = [x for x in observations if x not in broken_observations]
