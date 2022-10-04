@@ -343,30 +343,29 @@ class BayesianBinarySensor(BinarySensorEntity):
         prior = self.prior
 
         for observation in self.current_observations.values():
-            if observation is not None:
-                if observation.observed is True:
-                    prior = update_probability(
-                        prior,
-                        observation.prob_given_true,
-                        observation.prob_given_false,
+            if observation.observed is True:
+                prior = update_probability(
+                    prior,
+                    observation.prob_given_true,
+                    observation.prob_given_false,
+                )
+            elif observation.observed is False:
+                prior = update_probability(
+                    prior,
+                    1 - observation.prob_given_true,
+                    1 - observation.prob_given_false,
+                )
+            elif observation.observed is None:
+                if observation.entity_id is not None:
+                    _LOGGER.debug(
+                        "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
+                        observation.entity_id,
                     )
-                elif observation.observed is False:
-                    prior = update_probability(
-                        prior,
-                        1 - observation.prob_given_true,
-                        1 - observation.prob_given_false,
+                else:
+                    _LOGGER.debug(
+                        "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
                     )
-                elif observation.observed is None:
-                    if observation.entity_id is not None:
-                        _LOGGER.debug(
-                            "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
-                            observation.entity_id,
-                        )
-                    else:
-                        _LOGGER.debug(
-                            "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
-                        )
-
+        # the prior has been updated and is now the posterior
         return prior
 
     def _build_observations_by_entity(self) -> dict[str, list[Observation]]:
