@@ -27,7 +27,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -138,8 +137,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
-        if target_value is None:
-            raise HomeAssistantError("Missing target value on device.")
+        assert target_value is not None
         await self.info.node.async_set_value(
             target_value, percent_to_zwave_position(kwargs[ATTR_POSITION])
         )
@@ -147,15 +145,13 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
-        if target_value is None:
-            raise HomeAssistantError("Missing target value on device.")
+        assert target_value is not None
         await self.info.node.async_set_value(target_value, 99)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
-        if target_value is None:
-            raise HomeAssistantError("Missing target value on device.")
+        assert target_value is not None
         await self.info.node.async_set_value(target_value, 0)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
