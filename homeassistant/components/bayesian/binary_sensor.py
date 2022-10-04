@@ -5,6 +5,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 import logging
 from typing import Any
+from uuid import UUID
 
 import voluptuous as vol
 
@@ -194,7 +195,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.prior = prior
         self.probability = prior
 
-        self.current_observations: OrderedDict[str, Observation] = OrderedDict({})
+        self.current_observations: OrderedDict[UUID, Observation] = OrderedDict({})
 
         self.observations_by_entity = self._build_observations_by_entity()
         self.observations_by_template = self._build_observations_by_template()
@@ -320,13 +321,15 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._attr_is_on = bool(self.probability >= self._probability_threshold)
         self.async_write_ha_state()
 
-    def _initialize_current_observations(self) -> OrderedDict[str, Observation]:
-        local_observations: OrderedDict[str, Observation] = OrderedDict({})
+    def _initialize_current_observations(self) -> OrderedDict[UUID, Observation]:
+        local_observations: OrderedDict[UUID, Observation] = OrderedDict({})
         for entity in self.observations_by_entity:
             local_observations.update(self._record_entity_observations(entity))
         return local_observations
 
-    def _record_entity_observations(self, entity: str) -> OrderedDict[str, Observation]:
+    def _record_entity_observations(
+        self, entity: str
+    ) -> OrderedDict[UUID, Observation]:
         local_observations = OrderedDict({})
 
         for observation in self.observations_by_entity[entity]:

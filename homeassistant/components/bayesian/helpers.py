@@ -29,7 +29,7 @@ class Observation:
     below: float | None
     value_template: Template | None
     observed: bool | None = None
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
 
     def __post_init__(self) -> None:
         """Observations will be keyed in dicts by their value_template OR entity_id."""
