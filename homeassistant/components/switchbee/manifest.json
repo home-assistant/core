@@ -5,5 +5,8 @@
   "documentation": "https://www.home-assistant.io/integrations/switchbee",
   "requirements": ["pyswitchbee==1.5.3"],
   "codeowners": ["@jafar-atili"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "supported_brands": {
+    "bswitch": "BSwitch"
+  }
 }

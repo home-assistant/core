@@ -10,6 +10,7 @@ HAS_SUPPORTED_BRANDS = [
     "motion_blinds",
     "overkiz",
     "renault",
+    "switchbee",
     "thermobeacon",
     "wemo",
     "yalexs_ble",
