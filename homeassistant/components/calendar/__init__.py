@@ -122,18 +122,16 @@ def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     return result
 
 
-def _api_event_dict_factory(
-    obj: Iterable[tuple[str, Any]]
-) -> dict[str, str | dict[str, str]]:
+def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
     """Convert CalendarEvent dataclass items to the API format."""
-    result: dict[str, str | dict[str, str]] = {}
+    result: dict[str, Any] = {}
     for name, value in obj:
         if isinstance(value, datetime.datetime):
             result[name] = {"dateTime": dt.as_local(value).isoformat()}
         elif isinstance(value, datetime.date):
             result[name] = {"date": value.isoformat()}
         else:
-            result[name] = str(value)
+            result[name] = value
     return result
 
 
