@@ -362,13 +362,14 @@ class FitbitSensor(SensorEntity):
         self.is_metric = is_metric
         self.clock_format = clock_format
         self.extra = extra
+
+        self._attr_unique_id = f"{user_profile['encodedId']}_{description.key}"
         if self.extra is not None:
             self._attr_name = f"{self.extra.get('deviceVersion')} Battery"
             self._attr_unique_id = (
-                f"{user_profile['encodedId']}_{self.extra.get('deviceVersion')}_battery"
+                f"{self._attr_unique_id}_{self.extra.get('id')}_battery"
             )
-        else:
-            self._attr_unique_id = f"{user_profile['encodedId']}_{description.key}"
+
         if (unit_type := description.unit_type) == "":
             split_resource = description.key.rsplit("/", maxsplit=1)[-1]
             try:
