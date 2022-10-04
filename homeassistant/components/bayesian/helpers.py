@@ -31,6 +31,11 @@ class Observation:
     observed: bool | None = None
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
+    def __post_init__(self) -> None:
+        """Observations will be keyed in dicts by their value_template OR entity_id."""
+
+        assert self.entity_id is not None or self.value_template is not None
+
     def to_dict(self) -> dict[str, str | float | bool | None]:
         """Represent Class as a Dict for easier serialization."""
 
