@@ -11,6 +11,7 @@ HAS_SUPPORTED_BRANDS = [
     "overkiz",
     "renault",
     "thermobeacon",
+    "upb",
     "wemo",
     "yalexs_ble",
 ]
