@@ -1471,7 +1471,7 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
 
 
 def is_nominal(hass: HomeAssistant, entity_id: str | Iterable) -> bool:
-    """Test if an entity is available."""
+    """Test if an entity has a nominal state."""
     if isinstance(entity_id, str):
         entity_id = [entity_id]
 
