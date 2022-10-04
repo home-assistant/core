@@ -19,5 +19,6 @@
     "websocket_api"
   ],
   "codeowners": ["@home-assistant/frontend"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "system"
 }
