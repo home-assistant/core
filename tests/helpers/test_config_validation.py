@@ -75,6 +75,18 @@ def test_port():
         schema(value)
 
 
+def test_pin():
+    """Test PIN."""
+    schema = vol.Schema(cv.pin)
+
+    for value in ("invalid", None, "0123a", "a0123"):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (1230, "0123", "1234567890"):
+        assert schema(value)
+
+
 def test_isfile():
     """Validate that the value is an existing file."""
     schema = vol.Schema(cv.isfile)
