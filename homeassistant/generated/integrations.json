@@ -3342,6 +3342,11 @@
       "iot_class": "local_polling",
       "name": "One-Time Password (OTP)"
     },
+    "overkiz": {
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "name": "Overkiz"
+    },
     "ovo_energy": {
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -4236,20 +4241,10 @@
       "iot_class": "local_polling",
       "name": "Soma Connect"
     },
-    "somfy": {
-      "name": "Somfy",
-      "integrations": {
-        "overkiz": {
-          "config_flow": true,
-          "iot_class": "cloud_polling",
-          "name": "Overkiz"
-        },
-        "somfy_mylink": {
-          "config_flow": true,
-          "iot_class": "assumed_state",
-          "name": "Somfy MyLink"
-        }
-      }
+    "somfy_mylink": {
+      "config_flow": true,
+      "iot_class": "assumed_state",
+      "name": "Somfy MyLink"
     },
     "sonarr": {
       "config_flow": true,
