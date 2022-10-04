@@ -2,12 +2,17 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Callable
 import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -20,18 +25,19 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
+    TrackTemplateResult,
     async_track_state_change_event,
     async_track_template_result,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.template import result_as_boolean
+from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
@@ -107,7 +113,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def update_probability(prior, prob_given_true, prob_given_false):
+def update_probability(
+    prior: float, prob_given_true: float, prob_given_false: float
+) -> float:
     """Update probability using Bayes' rule."""
     numerator = prob_given_true * prior
     denominator = numerator + prob_given_false * (1 - prior)
@@ -127,7 +135,7 @@ async def async_setup_platform(
     observations = config[CONF_OBSERVATIONS]
     prior = config[CONF_PRIOR]
     probability_threshold = config[CONF_PROBABILITY_THRESHOLD]
-    device_class = config.get(CONF_DEVICE_CLASS)
+    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
     # Should deprecate in some future version (2022.10 at time of writing) & make prob_given_false required in schemas.
     broken_observations: list[dict[str, Any]] = []
@@ -153,7 +161,14 @@ class BayesianBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, name, prior, observations, probability_threshold, device_class):
+    def __init__(
+        self,
+        name: str,
+        prior: float,
+        observations: list[dict[str, Any]],
+        probability_threshold: float,
+        device_class: BinarySensorDeviceClass | None,
+    ) -> None:
         """Initialize the Bayesian sensor."""
         self._attr_name = name
         self._observations = [
@@ -173,17 +188,17 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
         self._attr_is_on = False
-        self._callbacks = []
+        self._callbacks: list[Any] = []
 
         self.prior = prior
         self.probability = prior
 
-        self.current_observations = OrderedDict({})
+        self.current_observations: OrderedDict[str, Observation] = OrderedDict({})
 
         self.observations_by_entity = self._build_observations_by_entity()
         self.observations_by_template = self._build_observations_by_template()
 
-        self.observation_handlers = {
+        self.observation_handlers: dict[str, Callable[[Observation], bool | None]] = {
             "numeric_state": self._process_numeric_state,
             "state": self._process_state,
             "multi_state": self._process_multi_state,
@@ -205,7 +220,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         @callback
-        def async_threshold_sensor_state_listener(event):
+        def async_threshold_sensor_state_listener(event: Event) -> None:
             """
             Handle sensor state changes.
 
@@ -213,7 +228,10 @@ class BayesianBinarySensor(BinarySensorEntity):
             then calculate the new probability.
             """
 
-            entity = event.data.get("entity_id")
+            entity: str | None = event.data.get(CONF_ENTITY_ID)
+            if entity is None:
+                _LOGGER.error("Unexpected NoneType for event %s", event.data)
+                return
 
             self.current_observations.update(self._record_entity_observations(entity))
             self.async_set_context(event.context)
@@ -228,11 +246,13 @@ class BayesianBinarySensor(BinarySensorEntity):
         )
 
         @callback
-        def _async_template_result_changed(event, updates):
+        def _async_template_result_changed(
+            event: Event | None, updates: list[TrackTemplateResult]
+        ) -> None:
             track_template_result = updates.pop()
             template = track_template_result.template
             result = track_template_result.result
-            entity = event and event.data.get("entity_id")
+            entity: Event | str | None = event and event.data.get(CONF_ENTITY_ID)
             if isinstance(result, TemplateError):
                 _LOGGER.error(
                     "TemplateError('%s') "
@@ -281,7 +301,7 @@ class BayesianBinarySensor(BinarySensorEntity):
                 self.hass, observations, text=f"{self._attr_name}/{entity}"
             )
 
-        all_template_observations = []
+        all_template_observations: list[Observation] = []
         for value in self.observations_by_template.values():
             all_template_observations.append(value[0])
         if len(all_template_observations) == 2:
@@ -292,19 +312,18 @@ class BayesianBinarySensor(BinarySensorEntity):
             )
 
     @callback
-    def _recalculate_and_write_state(self):
+    def _recalculate_and_write_state(self) -> None:
         self.probability = self._calculate_new_probability()
         self._attr_is_on = bool(self.probability >= self._probability_threshold)
         self.async_write_ha_state()
 
-    def _initialize_current_observations(self):
-        local_observations = OrderedDict({})
-
+    def _initialize_current_observations(self) -> OrderedDict[str, Observation]:
+        local_observations: OrderedDict[str, Observation] = OrderedDict({})
         for entity in self.observations_by_entity:
             local_observations.update(self._record_entity_observations(entity))
         return local_observations
 
-    def _record_entity_observations(self, entity):
+    def _record_entity_observations(self, entity: str) -> OrderedDict[str, Observation]:
         local_observations = OrderedDict({})
 
         for observation in self.observations_by_entity[entity]:
@@ -317,7 +336,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return local_observations
 
-    def _calculate_new_probability(self):
+    def _calculate_new_probability(self) -> float:
         prior = self.prior
 
         for observation in self.current_observations.values():
@@ -347,7 +366,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return prior
 
-    def _build_observations_by_entity(self):
+    def _build_observations_by_entity(self) -> dict[str, list[Observation]]:
         """
         Build and return data structure of the form below.
 
@@ -378,7 +397,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return observations_by_entity
 
-    def _build_observations_by_template(self):
+    def _build_observations_by_template(self) -> dict[Template, list[Observation]]:
         """
         Build and return data structure of the form below.
 
@@ -392,7 +411,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         for all relevant observations to be looked up via their `template`.
         """
 
-        observations_by_template = {}
+        observations_by_template: dict[Template, list[Observation]] = {}
         for observation in self._observations:
             if observation.value_template is None:
                 continue
@@ -402,7 +421,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return observations_by_template
 
-    def _process_numeric_state(self, entity_observation):
+    def _process_numeric_state(self, entity_observation: Observation) -> bool | None:
         """Return True if numeric condition is met, return False if not, return None otherwise."""
         entity = entity_observation.entity_id
 
@@ -420,7 +439,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         except ConditionError:
             return None
 
-    def _process_state(self, entity_observation):
+    def _process_state(self, entity_observation: Observation) -> bool | None:
         """Return True if state conditions are met, return False if they are not.
 
         Returns None if the state is unavailable.
@@ -436,7 +455,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         except ConditionError:
             return None
 
-    def _process_multi_state(self, entity_observation):
+    def _process_multi_state(self, entity_observation: Observation) -> bool | None:
         """Return True if state conditions are met, otherwise return None.
 
         Never return False as all other states should have their own probabilities configured.
@@ -452,7 +471,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
 
         return {
