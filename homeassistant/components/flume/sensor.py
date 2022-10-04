@@ -119,7 +119,7 @@ async def async_setup_entry(
                     device_id=device_id,
                     location_name=device_location_name,
                 )
-                for description in FLUME_SENSORS
+                for description in FLUME_QUERIES_SENSOR
             ]
         )
 
