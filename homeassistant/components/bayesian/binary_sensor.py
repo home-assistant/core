@@ -308,7 +308,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         local_observations = OrderedDict({})
 
         for observation in self.observations_by_entity[entity]:
-            platform = str(observation.platform)
+            platform = observation.platform
 
             observed = self.observation_handlers[platform](observation)
             observation.observed = observed
