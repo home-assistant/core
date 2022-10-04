@@ -1470,15 +1470,31 @@ def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
     return None
 
 
-def is_nominal(hass: HomeAssistant, entity_id: str | Iterable) -> bool:
+def is_nominal(hass: HomeAssistant, entity_id: str | State | Iterable | None) -> bool:
     """Test if an entity has a nominal state."""
-    if isinstance(entity_id, str):
+    # Entity is a non-existing object
+    if entity_id is None:
+        return False
+
+    # If entity is a string or object then make it a list first.
+    if isinstance(entity_id, (str, State)):
         entity_id = [entity_id]
 
+    # Loop through entity items provided.
     for entity in entity_id:
-        state_obj = _get_state(hass, entity)
-        if state_obj is None or state_obj.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        if isinstance(entity, str):
+            # Set value to state if string is an entity_id, otherwise to string itself.
+            value = (
+                getattr(_get_state(hass, entity), "state", None)
+                if "." in entity
+                else entity
+            )
+
+            if value is None or value in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+                return False
+        elif entity is None or entity.state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             return False
+
     return True
 
 

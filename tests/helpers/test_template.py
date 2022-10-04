@@ -1612,13 +1612,21 @@ def test_states_function(hass: HomeAssistant) -> None:
 def test_is_nominal(hass):
     """Test is_nominal method."""
     hass.states.async_set("test.nominal1", "nominal1")
-    hass.states.async_set("test.nominal2", "nominal1")
+    hass.states.async_set("test.nominal2", "nominal2")
     hass.states.async_set("test.unavailable", STATE_UNAVAILABLE)
     hass.states.async_set("test.unknown", STATE_UNKNOWN)
 
     tpl = template.Template(
         """
 {{ is_nominal("test.nominal1") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+    tpl = template.Template(
+        """
+{{ is_nominal(states.test.nominal1) }}
         """,
         hass,
     )
@@ -1634,7 +1642,15 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ is_nominal(["test.nominal1","test.nominal2"]) }}
+{% if states.test.nominal1 is is_nominal() %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ is_nominal(["test.nominal1",states.test.nominal2]) }}
         """,
         hass,
     )
@@ -1650,15 +1666,39 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
-{{ ["test.unknown","test.nominal1"] | select("is_nominal") | list | default }}
+{{ ["test.unknown",states.test.nominal1] | select("is_nominal") | list | count }}
         """,
         hass,
     )
-    assert tpl.async_render() == ["test.nominal1"]
+    assert tpl.async_render() == 1
+
+    tpl = template.Template(
+        """
+{{ states | select("is_nominal") | list | count }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == 2
 
     tpl = template.Template(
         """
 {{ is_nominal("test.noobject") }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ is_nominal(states.test.noobject) }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() is False
+
+    tpl = template.Template(
+        """
+{{ is_nominal([states.test.noobject, states.test.noobject2]) }}
         """,
         hass,
     )
