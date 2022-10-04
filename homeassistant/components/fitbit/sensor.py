@@ -364,11 +364,11 @@ class FitbitSensor(SensorEntity):
         self.extra = extra
         if self.extra is not None:
             self._attr_name = f"{self.extra.get('deviceVersion')} Battery"
-            self._attr_unique_id = f"fitbit_{user_profile['encodedId']}_{self.extra.get('deviceVersion')}_battery"
-        else:
             self._attr_unique_id = (
-                f"fitbit_{user_profile['encodedId']}_{description.key}"
+                f"{user_profile['encodedId']}_{self.extra.get('deviceVersion')}_battery"
             )
+        else:
+            self._attr_unique_id = f"{user_profile['encodedId']}_{description.key}"
         if (unit_type := description.unit_type) == "":
             split_resource = description.key.rsplit("/", maxsplit=1)[-1]
             try:
