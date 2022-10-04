@@ -307,13 +307,13 @@ class BayesianBinarySensor(BinarySensorEntity):
     def _record_entity_observations(self, entity):
         local_observations = OrderedDict({})
 
-        for entity_obs in self.observations_by_entity[entity]:
-            platform = str(entity_obs.platform)
+        for observation in self.observations_by_entity[entity]:
+            platform = str(observation.platform)
 
-            observation = self.observation_handlers[platform](entity_obs)
-            entity_obs.observed = observation
+            observation = self.observation_handlers[platform](observation)
+            observation.observed = observation
 
-            local_observations[entity_obs.id] = entity_obs
+            local_observations[observation.id] = observation
 
         return local_observations
 
