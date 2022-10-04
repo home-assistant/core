@@ -38,7 +38,7 @@ FILTER_UUIDS: Final = "UUIDs"
 MANAGER: BluetoothManager | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class BluetoothServiceInfoBleak(BluetoothServiceInfo):
     """BluetoothServiceInfo with bleak data.
 
