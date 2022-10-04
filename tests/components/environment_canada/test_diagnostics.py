@@ -11,7 +11,6 @@ from homeassistant.components.environment_canada.const import (
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -28,7 +27,7 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Environment Canada integration in Home Assistant."""
 
     def mock_ec():
-        ec_mock = MagicMock(aiohttp_client.async_get_clientsession(hass))
+        ec_mock = MagicMock()
         ec_mock.station_id = FIXTURE_USER_INPUT[CONF_STATION]
         ec_mock.lat = FIXTURE_USER_INPUT[CONF_LATITUDE]
         ec_mock.lon = FIXTURE_USER_INPUT[CONF_LONGITUDE]
