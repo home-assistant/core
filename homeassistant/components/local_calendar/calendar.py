@@ -11,16 +11,20 @@ from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
 from ical.store import EventStore
 from ical.types import Range, Recur
-import voluptuous as vol
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
+    EVENT_DESCRIPTION,
+    EVENT_END,
+    EVENT_RRULE,
+    EVENT_START,
+    EVENT_SUMMARY,
+    EVENT_UID,
     CalendarEntity,
     CalendarEvent,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -29,44 +33,6 @@ from .const import CONF_CALENDAR_NAME, DOMAIN
 from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
-
-
-EVENT_DESCRIPTION = "description"
-EVENT_END_DATE = "end_date"
-EVENT_END_DATETIME = "end_date_time"
-EVENT_START_DATE = "start_date"
-EVENT_START_DATETIME = "start_date_time"
-EVENT_SUMMARY = "summary"
-EVENT_RRULE = "rrule"
-
-SERVICE_CREATE_EVENT = "create_event"
-CREATE_EVENT_SCHEMA = vol.All(
-    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME),
-    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME),
-    cv.make_entity_service_schema(
-        {
-            vol.Required(EVENT_SUMMARY): cv.string,
-            vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-            vol.Inclusive(
-                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            vol.Inclusive(
-                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
-            ): cv.date,
-            vol.Inclusive(
-                EVENT_START_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            vol.Inclusive(
-                EVENT_END_DATETIME,
-                "datetimes",
-                "Start and end datetimes must both be specified",
-            ): cv.datetime,
-            vol.Optional(EVENT_RRULE, default=""): cv.string,
-        }
-    ),
-)
 
 
 async def async_setup_entry(
@@ -83,13 +49,6 @@ async def async_setup_entry(
     entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
     entity = LocalCalendarEntity(store, calendar, name, entity_id)
     async_add_entities([entity], True)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CREATE_EVENT,
-        CREATE_EVENT_SCHEMA,
-        "async_create_event",
-    )
 
 
 class LocalCalendarEntity(CalendarEntity):
@@ -142,14 +101,9 @@ class LocalCalendarEntity(CalendarEntity):
         event = Event.parse_obj(
             {
                 EVENT_SUMMARY: kwargs[EVENT_SUMMARY],
+                EVENT_START: kwargs[EVENT_START],
+                EVENT_END: kwargs[EVENT_END],
                 EVENT_DESCRIPTION: kwargs.get(EVENT_DESCRIPTION),
-                "dtstart": kwargs.get(
-                    "dtstart",
-                    kwargs.get(EVENT_START_DATE, kwargs.get(EVENT_START_DATETIME)),
-                ),
-                "dtend": kwargs.get(
-                    "dtend", kwargs.get(EVENT_END_DATE, kwargs.get(EVENT_END_DATETIME))
-                ),
             }
         )
         if rrule := kwargs.get(EVENT_RRULE):
@@ -157,27 +111,8 @@ class LocalCalendarEntity(CalendarEntity):
 
         new_event = EventStore(self._calendar).add(event)
         await self._async_store()
-        return {"uid": new_event.uid}
-
-    async def async_update_event(self, **kwargs: Any) -> None:
-        """Add a new event to calendar."""
-        uid = kwargs.pop("uid")
-        recurrence_id = kwargs.pop("recurrence_id", None)
-        range_value: Range = Range.NONE
-        if recurrence_range := kwargs.pop("recurrence_range", None):
-            range_value = Range[recurrence_range]
-
-        event = Event(**kwargs)
-        if rrule := kwargs.get(EVENT_RRULE):
-            event.rrule = Recur.from_rrule(rrule)
-
-        EventStore(self._calendar).edit(
-            uid,
-            event=event,
-            recurrence_id=recurrence_id,
-            recurrence_range=range_value,
-        )
-        await self._async_store()
+        await self.async_update_ha_state(force_refresh=True)
+        return {EVENT_UID: new_event.uid}
 
     async def async_delete_event(
         self,
@@ -185,7 +120,7 @@ class LocalCalendarEntity(CalendarEntity):
         recurrence_id: str | None = None,
         recurrence_range: str | None = None,
     ) -> None:
-        """Cancel an event on the calendar."""
+        """Delete an event on the calendar."""
         range_value: Range = Range.NONE
         if recurrence_range == Range.THIS_AND_FUTURE:
             range_value = Range.THIS_AND_FUTURE
@@ -195,6 +130,7 @@ class LocalCalendarEntity(CalendarEntity):
             recurrence_range=range_value,
         )
         await self._async_store()
+        await self.async_update_ha_state(force_refresh=True)
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
@@ -204,7 +140,6 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         start=event.start,
         end=event.end,
         description=event.description,
-        location=event.location,
         uid=event.uid,
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,

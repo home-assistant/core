@@ -78,24 +78,6 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-@pytest.fixture(name="create_event")
-def create_event_fixture(
-    hass: HomeAssistant,
-) -> Callable[[dict[str, Any]], Awaitable[None]]:
-    """Fixture to simplify creating events for tests."""
-
-    async def _create(data: dict[str, Any]) -> None:
-        await hass.services.async_call(
-            DOMAIN,
-            "create_event",
-            data,
-            target={"entity_id": TEST_ENTITY},
-            blocking=True,
-        )
-
-    return _create
-
-
 GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
 
@@ -123,181 +105,6 @@ def event_fields(data: dict[str, str]) -> dict[str, str]:
         for k in ["summary", "start", "end", "recurrence_id"]
         if data.get(k)
     }
-
-
-async def test_empty_calendar(hass, setup_integration, get_events):
-    """Test querying the API and fetching events."""
-    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
-    assert len(events) == 0
-
-    state = hass.states.get(TEST_ENTITY)
-    assert state.name == FRIENDLY_NAME
-    assert state.state == STATE_OFF
-    assert dict(state.attributes) == {
-        "friendly_name": FRIENDLY_NAME,
-    }
-
-
-async def test_api_date_time_event(setup_integration, create_event, get_events):
-    """Test an event with a start/end date time."""
-    await create_event(
-        {
-            "summary": "Bastille Day Party",
-            "start_date_time": "1997-07-14T17:00:00+00:00",
-            "end_date_time": "1997-07-15T04:00:00+00:00",
-        }
-    )
-
-    events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
-    assert list(map(event_fields, events)) == [
-        {
-            "summary": "Bastille Day Party",
-            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
-            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
-        }
-    ]
-
-    # Time range before event
-    events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T16:00:00Z")
-    assert len(events) == 0
-    # Time range after event
-    events = await get_events("1997-07-15T05:00:00Z", "1997-07-15T06:00:00Z")
-    assert len(events) == 0
-
-    # Overlap with event start
-    events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T18:00:00Z")
-    assert len(events) == 1
-    # Overlap with event end
-    events = await get_events("1997-07-15T03:00:00Z", "1997-07-15T06:00:00Z")
-    assert len(events) == 1
-
-
-async def test_api_date_event(setup_integration, create_event, get_events):
-    """Test an event with a start/end date all day event."""
-    await create_event(
-        {
-            "summary": "Festival International de Jazz de Montreal",
-            "start_date": "2007-06-28",
-            "end_date": "2007-07-09",
-        }
-    )
-
-    events = await get_events("2007-06-20T00:00:00", "2007-07-20T00:00:00")
-    assert list(map(event_fields, events)) == [
-        {
-            "summary": "Festival International de Jazz de Montreal",
-            "start": {"date": "2007-06-28"},
-            "end": {"date": "2007-07-09"},
-        }
-    ]
-
-    # Time range before event (timezone is -6)
-    events = await get_events("2007-06-26T00:00:00Z", "2007-06-28T01:00:00Z")
-    assert len(events) == 0
-    # Time range after event
-    events = await get_events("2007-07-10T00:00:00Z", "2007-07-11T00:00:00Z")
-    assert len(events) == 0
-
-    # Overlap with event start (timezone is -6)
-    events = await get_events("2007-06-26T00:00:00Z", "2007-06-28T08:00:00Z")
-    assert len(events) == 1
-    # Overlap with event end
-    events = await get_events("2007-07-09T00:00:00Z", "2007-07-11T00:00:00Z")
-    assert len(events) == 1
-
-
-async def test_active_event(hass, setup_integration, create_event):
-    """Test an event with a start/end date time."""
-    start = dt_util.now() - datetime.timedelta(minutes=30)
-    end = dt_util.now() + datetime.timedelta(minutes=30)
-    await create_event(
-        {
-            "summary": "Evening lights",
-            "start_date_time": start,
-            "end_date_time": end,
-        }
-    )
-
-    state = hass.states.get(TEST_ENTITY)
-    assert state.name == FRIENDLY_NAME
-    assert state.state == STATE_ON
-    assert dict(state.attributes) == {
-        "friendly_name": FRIENDLY_NAME,
-        "message": "Evening lights",
-        "all_day": False,
-        "description": "",
-        "location": "",
-        "message": "Evening lights",
-        "start_time": start.strftime(DATE_STR_FORMAT),
-        "end_time": end.strftime(DATE_STR_FORMAT),
-    }
-
-
-async def test_upcoming_event(hass, setup_integration, create_event):
-    """Test an event with a start/end date time."""
-    start = dt_util.now() + datetime.timedelta(days=1)
-    end = dt_util.now() + datetime.timedelta(days=1, hours=1)
-    await create_event(
-        {
-            "summary": "Evening lights",
-            "start_date_time": start,
-            "end_date_time": end,
-        }
-    )
-
-    state = hass.states.get(TEST_ENTITY)
-    assert state.name == FRIENDLY_NAME
-    assert state.state == STATE_OFF
-    assert dict(state.attributes) == {
-        "friendly_name": FRIENDLY_NAME,
-        "message": "Evening lights",
-        "all_day": False,
-        "description": "",
-        "location": "",
-        "message": "Evening lights",
-        "start_time": start.strftime(DATE_STR_FORMAT),
-        "end_time": end.strftime(DATE_STR_FORMAT),
-    }
-
-
-async def test_recurring_event(setup_integration, create_event, get_events):
-    """Test an event with a recurrence rule."""
-    await create_event(
-        {
-            "summary": "Monday meeting",
-            "start_date_time": "2022-08-29T09:00:00",
-            "end_date_time": "2022-08-29T10:00:00",
-            "rrule": "FREQ=WEEKLY",
-        }
-    )
-
-    events = await get_events("2022-08-20T00:00:00", "2022-09-20T00:00:00")
-    assert list(map(event_fields, events)) == [
-        {
-            "summary": "Monday meeting",
-            "start": {"dateTime": "2022-08-29T09:00:00-06:00"},
-            "end": {"dateTime": "2022-08-29T10:00:00-06:00"},
-            "recurrence_id": "20220829T090000",
-        },
-        {
-            "summary": "Monday meeting",
-            "start": {"dateTime": "2022-09-05T09:00:00-06:00"},
-            "end": {"dateTime": "2022-09-05T10:00:00-06:00"},
-            "recurrence_id": "20220905T090000",
-        },
-        {
-            "summary": "Monday meeting",
-            "start": {"dateTime": "2022-09-12T09:00:00-06:00"},
-            "end": {"dateTime": "2022-09-12T10:00:00-06:00"},
-            "recurrence_id": "20220912T090000",
-        },
-        {
-            "summary": "Monday meeting",
-            "start": {"dateTime": "2022-09-19T09:00:00-06:00"},
-            "end": {"dateTime": "2022-09-19T10:00:00-06:00"},
-            "recurrence_id": "20220919T090000",
-        },
-    ]
 
 
 class Client:
@@ -346,10 +153,25 @@ async def ws_client(
     return create_client
 
 
-async def test_websocket_create(
+async def test_empty_calendar(
+    hass: HomeAssistant, setup_integration: None, get_events: GetEventsFn
+):
+    """Test querying the API and fetching events."""
+    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+    assert len(events) == 0
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == FRIENDLY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": FRIENDLY_NAME,
+    }
+
+
+async def test_api_date_time_event(
     ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
 ):
-    """Test websocket create command."""
+    """Test an event with a start/end date time."""
     client = await ws_client()
     await client.cmd_result(
         "create",
@@ -362,13 +184,191 @@ async def test_websocket_create(
             },
         },
     )
-    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
+
+    events = await get_events("1997-07-14T00:00:00Z", "1997-07-16T00:00:00Z")
     assert list(map(event_fields, events)) == [
         {
             "summary": "Bastille Day Party",
             "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
         }
+    ]
+
+    # Time range before event
+    events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T16:00:00Z")
+    assert len(events) == 0
+    # Time range after event
+    events = await get_events("1997-07-15T05:00:00Z", "1997-07-15T06:00:00Z")
+    assert len(events) == 0
+
+    # Overlap with event start
+    events = await get_events("1997-07-13T00:00:00Z", "1997-07-14T18:00:00Z")
+    assert len(events) == 1
+    # Overlap with event end
+    events = await get_events("1997-07-15T03:00:00Z", "1997-07-15T06:00:00Z")
+    assert len(events) == 1
+
+
+async def test_api_date_event(
+    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
+):
+    """Test an event with a start/end date all day event."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Festival International de Jazz de Montreal",
+                "dtstart": "2007-06-28",
+                "dtend": "2007-07-09",
+            },
+        },
+    )
+
+    events = await get_events("2007-06-20T00:00:00", "2007-07-20T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Festival International de Jazz de Montreal",
+            "start": {"date": "2007-06-28"},
+            "end": {"date": "2007-07-09"},
+        }
+    ]
+
+    # Time range before event (timezone is -6)
+    events = await get_events("2007-06-26T00:00:00Z", "2007-06-28T01:00:00Z")
+    assert len(events) == 0
+    # Time range after event
+    events = await get_events("2007-07-10T00:00:00Z", "2007-07-11T00:00:00Z")
+    assert len(events) == 0
+
+    # Overlap with event start (timezone is -6)
+    events = await get_events("2007-06-26T00:00:00Z", "2007-06-28T08:00:00Z")
+    assert len(events) == 1
+    # Overlap with event end
+    events = await get_events("2007-07-09T00:00:00Z", "2007-07-11T00:00:00Z")
+    assert len(events) == 1
+
+
+async def test_active_event(
+    hass: HomeAssistant,
+    ws_client: ClientFixture,
+    setup_integration: None,
+):
+    """Test an event with a start/end date time."""
+    start = dt_util.now() - datetime.timedelta(minutes=30)
+    end = dt_util.now() + datetime.timedelta(minutes=30)
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Evening lights",
+                "dtstart": start.isoformat(),
+                "dtend": end.isoformat(),
+            },
+        },
+    )
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == FRIENDLY_NAME
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": FRIENDLY_NAME,
+        "message": "Evening lights",
+        "all_day": False,
+        "description": "",
+        "location": "",
+        "message": "Evening lights",
+        "start_time": start.strftime(DATE_STR_FORMAT),
+        "end_time": end.strftime(DATE_STR_FORMAT),
+    }
+
+
+async def test_upcoming_event(
+    hass: HomeAssistant,
+    ws_client: ClientFixture,
+    setup_integration: None,
+):
+    """Test an event with a start/end date time."""
+    start = dt_util.now() + datetime.timedelta(days=1)
+    end = dt_util.now() + datetime.timedelta(days=1, hours=1)
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Evening lights",
+                "dtstart": start.isoformat(),
+                "dtend": end.isoformat(),
+            },
+        },
+    )
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == FRIENDLY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": FRIENDLY_NAME,
+        "message": "Evening lights",
+        "all_day": False,
+        "description": "",
+        "location": "",
+        "message": "Evening lights",
+        "start_time": start.strftime(DATE_STR_FORMAT),
+        "end_time": end.strftime(DATE_STR_FORMAT),
+    }
+
+
+async def test_recurring_event(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+    get_events: GetEventsFn,
+):
+    """Test an event with a recurrence rule."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Monday meeting",
+                "dtstart": "2022-08-29T09:00:00",
+                "dtend": "2022-08-29T10:00:00",
+                "rrule": "FREQ=WEEKLY",
+            },
+        },
+    )
+
+    events = await get_events("2022-08-20T00:00:00", "2022-09-20T00:00:00")
+    assert list(map(event_fields, events)) == [
+        {
+            "summary": "Monday meeting",
+            "start": {"dateTime": "2022-08-29T09:00:00-06:00"},
+            "end": {"dateTime": "2022-08-29T10:00:00-06:00"},
+            "recurrence_id": "20220829T090000",
+        },
+        {
+            "summary": "Monday meeting",
+            "start": {"dateTime": "2022-09-05T09:00:00-06:00"},
+            "end": {"dateTime": "2022-09-05T10:00:00-06:00"},
+            "recurrence_id": "20220905T090000",
+        },
+        {
+            "summary": "Monday meeting",
+            "start": {"dateTime": "2022-09-12T09:00:00-06:00"},
+            "end": {"dateTime": "2022-09-12T10:00:00-06:00"},
+            "recurrence_id": "20220912T090000",
+        },
+        {
+            "summary": "Monday meeting",
+            "start": {"dateTime": "2022-09-19T09:00:00-06:00"},
+            "end": {"dateTime": "2022-09-19T10:00:00-06:00"},
+            "recurrence_id": "20220919T090000",
+        },
     ]
 
 
@@ -389,6 +389,7 @@ async def test_websocket_delete(
         },
     )
     assert "uid" in result
+    uid = result["uid"]
 
     events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
     assert list(map(event_fields, events)) == [
@@ -404,7 +405,7 @@ async def test_websocket_delete(
         "delete",
         {
             "entity_id": TEST_ENTITY,
-            "uid": result["uid"],
+            "uid": uid,
         },
     )
     events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
@@ -508,43 +509,4 @@ async def test_websocket_delete_recurring(
             "end": {"dateTime": "2022-08-22T09:00:00-06:00"},
             "recurrence_id": "20220822T083000",
         },
-    ]
-
-
-async def test_websocket_update(
-    ws_client: ClientFixture, setup_integration: None, get_events: GetEventsFn
-):
-    """Test websocket update command."""
-    client = await ws_client()
-    result = await client.cmd_result(
-        "create",
-        {
-            "entity_id": TEST_ENTITY,
-            "event": {
-                "summary": "Bastille Day Party",
-                "dtstart": "1997-07-14T17:00:00+00:00",
-                "dtend": "1997-07-15T04:00:00+00:00",
-            },
-        },
-    )
-    assert "uid" in result
-
-    # Update the event summary
-    result = await client.cmd_result(
-        "update",
-        {
-            "entity_id": TEST_ENTITY,
-            "event": {
-                "uid": result["uid"],
-                "summary": "July Party",
-            },
-        },
-    )
-    events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
-    assert list(map(event_fields, events)) == [
-        {
-            "summary": "July Party",
-            "start": {"dateTime": "1997-07-14T11:00:00-06:00"},
-            "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
-        }
     ]
