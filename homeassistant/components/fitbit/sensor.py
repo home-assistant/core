@@ -27,6 +27,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -37,6 +39,7 @@ from .const import (
     ATTR_ACCESS_TOKEN,
     ATTR_LAST_SAVED_AT,
     ATTR_REFRESH_TOKEN,
+    ATTR_INCLUDE_DEVICE,
     ATTRIBUTION,
     BATTERY_LEVELS,
     CONF_CLOCK_FORMAT,
@@ -178,6 +181,8 @@ def setup_platform(
     access_token: str | None = config_file.get(ATTR_ACCESS_TOKEN)
     refresh_token: str | None = config_file.get(ATTR_REFRESH_TOKEN)
     expires_at: int | None = config_file.get(ATTR_LAST_SAVED_AT)
+    include_device: bool = config_file.get(ATTR_INCLUDE_DEVICE) or False
+
     if (
         access_token is not None
         and refresh_token is not None
@@ -217,6 +222,7 @@ def setup_platform(
                 description,
                 hass.config.units.is_metric,
                 clock_format,
+                include_device,
             )
             for description in FITBIT_RESOURCES_LIST
             if description.key in monitored_resources
@@ -231,6 +237,7 @@ def setup_platform(
                         FITBIT_RESOURCE_BATTERY,
                         hass.config.units.is_metric,
                         clock_format,
+                        include_device,
                         dev_extra,
                     )
                     for dev_extra in registered_devs
@@ -332,6 +339,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
                 CONF_CLIENT_ID: self.oauth.client_id,
                 CONF_CLIENT_SECRET: self.oauth.client_secret,
                 ATTR_LAST_SAVED_AT: int(time.time()),
+                ATTR_INCLUDE_DEVICE: True,
             }
         save_json(hass.config.path(FITBIT_CONFIG_FILE), config_contents)
 
@@ -353,6 +361,7 @@ class FitbitSensor(SensorEntity):
         description: FitbitSensorEntityDescription,
         is_metric: bool,
         clock_format: str,
+        include_device: bool,
         extra: dict[str, str] | None = None,
     ) -> None:
         """Initialize the Fitbit sensor."""
@@ -361,7 +370,18 @@ class FitbitSensor(SensorEntity):
         self.config_path = config_path
         self.is_metric = is_metric
         self.clock_format = clock_format
+        self.include_device = include_device
         self.extra = extra
+
+        if include_device:
+            self._attr_has_entity_name = True
+            self._attr_device_info = DeviceInfo(
+                entry_type=DeviceEntryType.SERVICE,
+                identifiers={("fitbit", user_profile["encodedId"])},
+                manufacturer="Fitbit",
+                model="Fitbit User",
+                name=user_profile["fullName"],
+            )
 
         self._attr_unique_id = f"{user_profile['encodedId']}_{description.key}"
         if self.extra is not None:
@@ -465,5 +485,6 @@ class FitbitSensor(SensorEntity):
             CONF_CLIENT_ID: self.client.client.client_id,
             CONF_CLIENT_SECRET: self.client.client.client_secret,
             ATTR_LAST_SAVED_AT: int(time.time()),
+            ATTR_INCLUDE_DEVICE: self.include_device,
         }
         save_json(self.config_path, config_contents)
