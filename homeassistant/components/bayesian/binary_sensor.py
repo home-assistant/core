@@ -362,18 +362,16 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         observations_by_entity: dict[str, list[Observation]] = {}
-        for _, observation in enumerate(self._observations):
+        for observation in self._observations:
 
-            if observation.entity_id is None:
+            if (key := observation.entity_id) is None:
                 continue
-            observations_by_entity.setdefault(observation.entity_id, []).append(
-                observation
-            )
+            observations_by_entity.setdefault(key, []).append(observation)
 
-        for li_of_obs in observations_by_entity.values():
-            if len(li_of_obs) == 1:
+        for entity_observations in observations_by_entity.values():
+            if len(entity_observations) == 1:
                 continue
-            for observation in li_of_obs:
+            for observation in entity_observations:
                 if observation.platform != "state":
                     continue
                 observation.platform = "multi_state"
@@ -395,7 +393,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """
 
         observations_by_template = {}
-        for _, observation in enumerate(self._observations):
+        for observation in self._observations:
             if observation.value_template is None:
                 continue
 
@@ -423,7 +421,11 @@ class BayesianBinarySensor(BinarySensorEntity):
             return None
 
     def _process_state(self, entity_observation):
-        """Return True if state conditions are met, return False if they are not. Returns None if the state is unavailable."""
+        """Return True if state conditions are met, return False if they are not.
+
+        Returns None if the state is unavailable.
+        """
+
         entity = entity_observation.entity_id
 
         try:
@@ -435,7 +437,11 @@ class BayesianBinarySensor(BinarySensorEntity):
             return None
 
     def _process_multi_state(self, entity_observation):
-        """Return True if state conditions are met, otherwise return None. Never return False as all other states should have their own probabilities configured."""
+        """Return True if state conditions are met, otherwise return None.
+
+        Never return False as all other states should have their own probabilities configured.
+        """
+
         entity = entity_observation.entity_id
 
         try:
@@ -449,9 +455,9 @@ class BayesianBinarySensor(BinarySensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr_observations_list = [
-            obs.to_dict()
-            for obs in self.current_observations.values()
-            if obs is not None
+            observation.to_dict()
+            for observation in self.current_observations.values()
+            if observation is not None
         ]
 
         return {
@@ -459,11 +465,11 @@ class BayesianBinarySensor(BinarySensorEntity):
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
                 {
-                    obs.entity_id
-                    for obs in self.current_observations.values()
-                    if obs is not None
-                    and obs.entity_id is not None
-                    and obs.observed is not None
+                    observation.entity_id
+                    for observation in self.current_observations.values()
+                    if observation is not None
+                    and observation.entity_id is not None
+                    and observation.observed is not None
                 }
             ),
             ATTR_OBSERVATIONS: attr_observations_list,
