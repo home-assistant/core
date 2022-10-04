@@ -404,7 +404,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return observations_by_template
 
-    def _process_numeric_state(self, entity_observation: Observation):
+    def _process_numeric_state(self, entity_observation):
         """Return True if numeric condition is met, return False if not, return None otherwise."""
         entity = entity_observation.entity_id
 
