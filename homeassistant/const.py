@@ -625,17 +625,33 @@ PRESSURE_PSI: Final = "psi"
 SOUND_PRESSURE_DB: Final = "dB"
 SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
 
+
 # Volume units
+class UnitOfVolume(StrEnum):
+    """Volume units."""
+
+    CUBIC_FEET: Final = "ft³"
+    CUBIC_METERS: Final = "m³"
+    LITERS: Final = "L"
+    MILLILITERS: Final = "mL"
+    UK_GALLONS: Final = "gal (UK)"
+    UK_FLUID_OUNCES: Final = "fl. oz. (UK)"
+    US_GALLONS: Final = "gal (US)"
+    US_FLUID_OUNCES: Final = "fl. oz. (US)"
+
 VOLUME_LITERS: Final = "L"
+"""Deprecate: please use UnitOfVolume.LITERS"""
 VOLUME_MILLILITERS: Final = "mL"
+"""Deprecate: please use UnitOfVolume.MILLILITERS"""
 VOLUME_CUBIC_METERS: Final = "m³"
+"""Deprecate: please use UnitOfVolume.CUBIC_METERS"""
 VOLUME_CUBIC_FEET: Final = "ft³"
+"""Deprecate: please use UnitOfVolume.CUBIC_FEET"""
 
 VOLUME_GALLONS: Final = "gal"
-"""US gallon (British gallon is not yet supported)"""
-
+"""Deprecate: please use UnitOfVolume.US_GALLONS or UnitOfVolume.UK_GALLONS"""
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
-"""US fluid ounce (British fluid ounce is not yet supported)"""
+"""Deprecate: please use UnitOfVolume.US_FLUID_OUNCES or UnitOfVolume.UK_FLUID_OUNCES"""
 
 # Volume Flow Rate units
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"

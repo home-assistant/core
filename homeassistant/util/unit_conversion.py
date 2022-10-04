@@ -36,13 +36,10 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
     VOLUME_FLUID_OUNCE,
     VOLUME_GALLONS,
-    VOLUME_LITERS,
-    VOLUME_MILLILITERS,
     UnitOfEnergy,
+    UnitOfVolume,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -76,6 +73,10 @@ _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
 _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
 _GALLON_TO_CUBIC_METER = 231 * pow(_IN_TO_M, 3)  # US gallon is 231 cubic inches
 _FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
+_UK_GALLON_TO_CUBIC_METER = 4.54609 * _L_TO_CUBIC_METER  # UK gallon is 4.54609 litres
+_UK_FLUID_OUNCE_TO_CUBIC_METER = (
+    _UK_GALLON_TO_CUBIC_METER / 160  # 160 fl. oz. in a UK gallon
+)
 _CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
 
 
@@ -357,21 +358,29 @@ class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume"
-    NORMALIZED_UNIT = VOLUME_CUBIC_METERS
+    NORMALIZED_UNIT = UnitOfVolume.CUBIC_METERS
     # Units in terms of m³
     _UNIT_CONVERSION: dict[str, float] = {
-        VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
-        VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
+        UnitOfVolume.LITERS: 1 / _L_TO_CUBIC_METER,
+        UnitOfVolume.MILLILITERS: 1 / _ML_TO_CUBIC_METER,
+        UnitOfVolume.US_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
+        UnitOfVolume.US_FLUID_OUNCES: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
+        UnitOfVolume.UK_GALLONS: 1 / _UK_GALLON_TO_CUBIC_METER,
+        UnitOfVolume.UK_FLUID_OUNCES: 1 / _UK_FLUID_OUNCE_TO_CUBIC_METER,
+        UnitOfVolume.CUBIC_METERS: 1,
+        UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
         VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
         VOLUME_FLUID_OUNCE: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
-        VOLUME_CUBIC_METERS: 1,
-        VOLUME_CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
     }
     VALID_UNITS = {
-        VOLUME_LITERS,
-        VOLUME_MILLILITERS,
+        UnitOfVolume.LITERS,
+        UnitOfVolume.MILLILITERS,
+        UnitOfVolume.US_GALLONS,
+        UnitOfVolume.US_FLUID_OUNCES,
+        UnitOfVolume.UK_GALLONS,
+        UnitOfVolume.UK_FLUID_OUNCES,
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.CUBIC_FEET,
         VOLUME_GALLONS,
         VOLUME_FLUID_OUNCE,
-        VOLUME_CUBIC_METERS,
-        VOLUME_CUBIC_FEET,
     }
