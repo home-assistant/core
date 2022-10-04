@@ -871,7 +871,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221003.0
+home-assistant-frontend==20221004.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -2625,7 +2625,7 @@ zigpy==0.51.1
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.42.0
+zwave-js-server-python==0.43.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.6
