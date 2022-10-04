@@ -559,7 +559,9 @@ VOLUME_CUBIC_METERS: Final = "m³"
 VOLUME_CUBIC_FEET: Final = "ft³"
 
 VOLUME_GALLONS: Final = "gal"
+"""US gallon (British gallon is not yet supported)"""
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
+"""US fluid ounce (British fluid ounce is not yet supported)"""
 
 # Volume Flow Rate units
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
