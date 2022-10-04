@@ -217,29 +217,34 @@
     "apple": {
       "name": "Apple",
       "integrations": {
-        "icloud": {
-          "config_flow": true,
-          "iot_class": "cloud_polling",
-          "name": "Apple iCloud"
-        },
-        "ibeacon": {
-          "config_flow": true,
-          "iot_class": "local_push",
-          "name": "iBeacon Tracker"
-        },
         "apple_tv": {
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Apple TV"
+        },
+        "homekit_controller": {
+          "config_flow": true,
+          "iot_class": "local_push"
         },
         "homekit": {
           "config_flow": true,
           "iot_class": "local_push",
           "name": "HomeKit"
         },
-        "homekit_controller": {
+        "ibeacon": {
           "config_flow": true,
-          "iot_class": "local_push"
+          "iot_class": "local_push",
+          "name": "iBeacon Tracker"
+        },
+        "icloud": {
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Apple iCloud"
+        },
+        "itunes": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Apple iTunes"
         }
       }
     },
@@ -608,6 +613,11 @@
     "cisco": {
       "name": "Cisco",
       "integrations": {
+        "cisco_ios": {
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Cisco IOS"
+        },
         "cisco_mobility_express": {
           "config_flow": false,
           "iot_class": "local_polling",
@@ -619,11 +629,6 @@
           "name": "Cisco Webex Teams"
         }
       }
-    },
-    "cisco_ios": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Cisco IOS"
     },
     "citybikes": {
       "config_flow": false,
@@ -1043,17 +1048,9 @@
       "name": "eSterownik eCoal.pl Boiler"
     },
     "ecobee": {
-      "name": "ecobee",
-      "integrations": {
-        "ecobee": {
-          "config_flow": true,
-          "iot_class": "cloud_polling",
-          "name": "ecobee"
-        }
-      },
-      "iot_standards": [
-        "homekit"
-      ]
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "name": "ecobee"
     },
     "econet": {
       "config_flow": true,
@@ -2179,11 +2176,6 @@
       "config_flow": true,
       "iot_class": "local_push",
       "name": "Universal Devices ISY994"
-    },
-    "itunes": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Apple iTunes"
     },
     "izone": {
       "config_flow": true,
@@ -4836,7 +4828,7 @@
       "iot_class": "cloud_polling",
       "name": "Twente Milieu"
     },
-    "twilo": {
+    "twilio": {
       "name": "Twilio",
       "integrations": {
         "twilio": {
