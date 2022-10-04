@@ -8,16 +8,23 @@ from homeassistant.const import Platform
 
 DOMAIN = "flume"
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+]
 
 DEFAULT_NAME = "Flume Sensor"
 
+# Flume API limits individual endpoints to 120 queries per hour
 NOTIFICATION_SCAN_INTERVAL = timedelta(minutes=1)
 DEVICE_SCAN_INTERVAL = timedelta(minutes=1)
+DEVICE_CONNECTION_SCAN_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__package__)
 
+FLUME_TYPE_BRIDGE = 1
 FLUME_TYPE_SENSOR = 2
+
 
 FLUME_AUTH = "flume_auth"
 FLUME_HTTP_SESSION = "http_session"
