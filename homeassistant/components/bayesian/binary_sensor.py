@@ -458,6 +458,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         return {
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
+            # An entity can be in more than one observation so set then list to deduplicate
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
                 {
                     observation.entity_id
