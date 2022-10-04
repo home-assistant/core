@@ -1081,7 +1081,7 @@ pyefergy==22.1.1
 pyeight==0.3.0
 
 # homeassistant.components.electrasmart
-pyelectra==1.1.0
+pyelectra==1.2.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0

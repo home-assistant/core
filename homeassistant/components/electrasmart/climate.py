@@ -28,11 +28,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -103,22 +99,11 @@ async def async_setup_entry(
 ) -> None:
     """Add Electra AC devices."""
     api: ElectraAPI = hass.data[DOMAIN][entry.entry_id]
-    try:
-        devices: list[ElectraAirConditioner] = await api.get_devices()
-    except ElectraApiError as exp:
-        err_message = f"Error communicating with API: {exp}"
-        if "client error" in err_message:
-            err_message += ", Check your internet connection."
-            raise ConfigEntryNotReady(err_message) from exp
 
-        if Attributes.INTRUDER_LOCKOUT in err_message:
-            err_message += ", You must re-authenticate"
-            raise ConfigEntryAuthFailed(err_message) from exp
-
-        raise ConfigEntryNotReady(err_message) from exp
-
-    _LOGGER.debug("Discovered %i Electra devices", len(devices))
-    async_add_entities((ElectraClimateEntity(device, api) for device in devices), True)
+    _LOGGER.debug("Discovered %i Electra devices", len(api.devices))
+    async_add_entities(
+        (ElectraClimateEntity(device, api) for device in api.devices), True
+    )
 
 
 class ElectraClimateEntity(ClimateEntity):

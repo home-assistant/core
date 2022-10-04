@@ -160,14 +160,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauthorization request from Electra Smart."""
+        self._api = ElectraAPI(async_get_clientsession(self.hass))
         self._phone_number = entry_data[CONF_PHONE_NUMBER]
-        print("AAAAA")
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle reauthorization flow."""
-
-        return self._show_setup_form(step_id="reauth_confirm")
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_PHONE_NUMBER, default=self._phone_number
+                        ): str,
+                    }
+                ),
+            )
+        return await self.async_step_user({CONF_PHONE_NUMBER: self._phone_number})

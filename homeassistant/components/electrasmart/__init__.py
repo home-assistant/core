@@ -1,11 +1,14 @@
 """The Electra Air Conditioner integration."""
 from __future__ import annotations
 
-from electrasmart.api import ElectraAPI
+from typing import cast
+
+from electrasmart.api import Attributes, ElectraAPI, ElectraApiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_IMEI, DOMAIN
@@ -20,8 +23,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = ElectraAPI(
         async_get_clientsession(hass), entry.data[CONF_IMEI], entry.data[CONF_TOKEN]
     )
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    try:
+        await cast(ElectraAPI, hass.data[DOMAIN][entry.entry_id]).fetch_devices()
+    except ElectraApiError as exp:
+        err_message = f"Error communicating with API: {exp}"
+        if "client error" in err_message:
+            err_message += ", Check your internet connection."
+            raise ConfigEntryNotReady(err_message) from exp
+
+        if Attributes.INTRUDER_LOCKOUT in err_message:
+            err_message += ", You must re-authenticate"
+            raise ConfigEntryAuthFailed(err_message) from exp
+
+        raise ConfigEntryNotReady(err_message) from exp
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
