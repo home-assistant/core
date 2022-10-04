@@ -750,6 +750,9 @@ def _apply_update(  # noqa: C901
     elif new_version == 30:
         # This added a column to the statistics_meta table, removed again before
         # release of HA Core 2022.10.0
+        # SQLite 3.31.0 does not support dropping columns.
+        # Once we require SQLite >= 3.35.5, we should drop the column:
+        # ALTER TABLE statistics_meta DROP COLUMN state_unit_of_measurement
         pass
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
