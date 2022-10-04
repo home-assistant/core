@@ -1,0 +1,11 @@
+{
+  "domain": "telegram",
+  "name": "Telegram",
+  "integrations": [
+    "telegram",
+    "telegram_bot",
+    "telegram_broadcast",
+    "telegram_polling",
+    "telegram_webhooks"
+  ]
+}

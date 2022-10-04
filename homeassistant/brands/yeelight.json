@@ -1,0 +1,5 @@
+{
+  "domain": "yeelight",
+  "name": "Yandex",
+  "integrations": ["yeelight", "yeelightsunflower"]
+}

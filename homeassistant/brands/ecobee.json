@@ -1,0 +1,6 @@
+{
+  "domain": "ecobee",
+  "name": "ecobee",
+  "integrations": ["ecobee"],
+  "iot_standards": ["homekit"]
+}

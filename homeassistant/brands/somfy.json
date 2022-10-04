@@ -1,0 +1,5 @@
+{
+  "domain": "somfy",
+  "name": "Somfy",
+  "integrations": ["overkiz", "somfy_mylink"]
+}
