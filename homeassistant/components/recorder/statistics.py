@@ -29,6 +29,7 @@ from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -299,12 +300,16 @@ def async_setup(hass: HomeAssistant) -> None:
 
         return True
 
-    if hass.is_running:
+    @callback
+    def setup_entity_registry_event_handler(hass: HomeAssistant) -> None:
+        """Subscribe to event registry events."""
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_id_changed,
             event_filter=entity_registry_changed_filter,
         )
+
+    async_at_start(hass, setup_entity_registry_event_handler)
 
 
 def get_start_time() -> datetime:
