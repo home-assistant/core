@@ -54,7 +54,7 @@ async def update_ac_state(
     mock_aircon_api_instance: MagicMock,
 ):
     """Simulate an update trigger from the API."""
-    for call in mock_aircon_api_instance.register_callback.call_args_list:
+    for call in mock_aircon_api_instance.register_attr_callback.call_args_list:
         update_ha_state_cb = call[0][0]
         update_ha_state_cb()
         await hass.async_block_till_done()
