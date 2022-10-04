@@ -411,6 +411,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         for all relevant observations to be looked up via their `template`.
         """
 
+
         observations_by_template: dict[Template, list[Observation]] = {}
         for observation in self._observations:
             if observation.value_template is None:
