@@ -560,6 +560,7 @@ VOLUME_CUBIC_FEET: Final = "ft³"
 
 VOLUME_GALLONS: Final = "gal"
 """US gallon (British gallon is not yet supported)"""
+
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
 """US fluid ounce (British fluid ounce is not yet supported)"""
 
