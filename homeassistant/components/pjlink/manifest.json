@@ -5,5 +5,6 @@
   "requirements": ["pypjlink2==1.2.1"],
   "codeowners": [],
   "iot_class": "local_polling",
-  "loggers": ["pypjlink"]
+  "loggers": ["pypjlink"],
+  "config_flow": true
 }
