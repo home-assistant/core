@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
@@ -27,7 +27,7 @@ from zwave_js_server.exceptions import (
     NotFoundError,
     SetValueFailed,
 )
-from zwave_js_server.firmware import begin_firmware_update
+from zwave_js_server.firmware import update_firmware
 from zwave_js_server.model.controller import (
     ControllerStatistics,
     InclusionGrant,
@@ -36,8 +36,9 @@ from zwave_js_server.model.controller import (
 )
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.firmware import (
-    FirmwareUpdateFinished,
+    FirmwareUpdateData,
     FirmwareUpdateProgress,
+    FirmwareUpdateResult,
 )
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
@@ -1897,11 +1898,14 @@ async def websocket_is_node_firmware_update_in_progress(
 
 def _get_firmware_update_progress_dict(
     progress: FirmwareUpdateProgress,
-) -> dict[str, int]:
+) -> dict[str, int | float]:
     """Get a dictionary of firmware update progress."""
     return {
+        "current_file": progress.current_file,
+        "total_files": progress.total_files,
         "sent_fragments": progress.sent_fragments,
         "total_fragments": progress.total_fragments,
+        "progress": progress.progress,
     }
 
 
@@ -1943,14 +1947,16 @@ async def websocket_subscribe_firmware_update_status(
 
     @callback
     def forward_finished(event: dict) -> None:
-        finished: FirmwareUpdateFinished = event["firmware_update_finished"]
+        finished: FirmwareUpdateResult = event["firmware_update_finished"]
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],
                 {
                     "event": event["event"],
                     "status": finished.status,
+                    "success": finished.success,
                     "wait_time": finished.wait_time,
+                    "reinterview": finished.reinterview,
                 },
             )
         )
@@ -2052,21 +2058,20 @@ class FirmwareUploadView(HomeAssistantView):
         if "file" not in data or not isinstance(data["file"], web_request.FileField):
             raise web_exceptions.HTTPBadRequest
 
-        target = None
-        if "target" in data:
-            target = int(cast(str, data["target"]))
-
         uploaded_file: web_request.FileField = data["file"]
 
         try:
-            await begin_firmware_update(
+            await update_firmware(
                 node.client.ws_server_url,
                 node,
-                uploaded_file.filename,
-                await hass.async_add_executor_job(uploaded_file.file.read),
+                [
+                    FirmwareUpdateData(
+                        uploaded_file.filename,
+                        await hass.async_add_executor_job(uploaded_file.file.read),
+                    )
+                ],
                 async_get_clientsession(hass),
                 additional_user_agent_components=USER_AGENT,
-                target=target,
             )
         except BaseZwaveJSServerError as err:
             raise web_exceptions.HTTPBadRequest(reason=str(err)) from err
