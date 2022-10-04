@@ -5300,7 +5300,7 @@
       }
     },
     "yeelight": {
-      "name": "Yandex",
+      "name": "Yeelight",
       "integrations": {
         "yeelight": {
           "config_flow": true,
