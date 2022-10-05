@@ -66,6 +66,9 @@ FORMATION_UPLOAD_MANUAL_BACKUP = "upload_manual_backup"
 CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
 
+OPTIONS_INTENT_MIGRATE = "intent_migrate"
+OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
+
 UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
 CONNECT_DELAY_S = 1.0
@@ -724,9 +727,53 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
                 # ZHA is not running
                 pass
 
-            return await self.async_step_choose_serial_port()
+            return await self.async_step_prompt_migrate_or_reconfigure()
 
         return self.async_show_form(step_id="init")
+
+    async def async_step_prompt_migrate_or_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm if we are migrating adapters or just re-configuring."""
+
+        return self.async_show_menu(
+            step_id="prompt_migrate_or_reconfigure",
+            menu_options=[
+                OPTIONS_INTENT_RECONFIGURE,
+                OPTIONS_INTENT_MIGRATE,
+            ],
+        )
+
+    async def async_step_intent_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Virtual step for when the user is reconfiguring the integration."""
+        return await self.async_step_choose_serial_port()
+
+    async def async_step_intent_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm the user wants to reset their current radio."""
+
+        if user_input is not None:
+            # Reset the current adapter
+            async with self._connect_zigpy_app() as app:
+                await app.reset_network_info()
+
+            return await self.async_step_instruct_unplug()
+
+        return self.async_show_form(step_id="intent_migrate")
+
+    async def async_step_instruct_unplug(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Instruct the user to unplug the current radio, if possible."""
+
+        if user_input is not None:
+            # Now that the old radio is gone, we can scan for serial ports again
+            return await self.async_step_choose_serial_port()
+
+        return self.async_show_form(step_id="instruct_unplug")
 
     async def _async_create_radio_entity(self):
         """Re-implementation of the base flow's final step to update the config."""
