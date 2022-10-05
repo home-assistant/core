@@ -62,7 +62,7 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
 
     def _update_connectivity(self) -> None:
         """Update device connectivity.."""
-        self.connections = {
+        self.connected = {
             device["id"]: device["connected"]
             for device in self.flume_devices.get_devices()
         }
