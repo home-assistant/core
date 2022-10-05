@@ -9,8 +9,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_TYPE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
+from . import init_integration
+
 from tests.common import MockConfigEntry
-from tests.components.brother import init_integration
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:

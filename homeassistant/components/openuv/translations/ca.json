@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Actualitza totes les automatitzacions o 'scripts' que utilitzin aquest servei perqu\u00e8 passin a utilitzar el servei `{alternate_service}` amb alguna de les seg\u00fcents entitats com a objectiu o 'target': `{alternate_targets}`.",
+            "title": "El servei {deprecated_service} est\u00e0 sent eliminat"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Actualitza totes les automatitzacions o 'scripts' que utilitzin aquest servei perqu\u00e8 passin a utilitzar el servei `{alternate_service}` amb `{alternate_targets}` com a objectius o 'targets'.",
+            "title": "El servei {deprecated_service} est\u00e0 sent eliminat"
+        }
+    },
     "options": {
         "step": {
             "init": {

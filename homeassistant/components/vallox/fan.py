@@ -70,7 +70,7 @@ async def async_setup_entry(
     client = data["client"]
     client.set_settable_address(METRIC_KEY_MODE, int)
 
-    device = ValloxFan(
+    device = ValloxFanEntity(
         data["name"],
         client,
         data["coordinator"],
@@ -79,7 +79,7 @@ async def async_setup_entry(
     async_add_entities([device])
 
 
-class ValloxFan(ValloxEntity, FanEntity):
+class ValloxFanEntity(ValloxEntity, FanEntity):
     """Representation of the fan."""
 
     _attr_supported_features = FanEntityFeature.PRESET_MODE

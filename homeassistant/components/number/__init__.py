@@ -29,7 +29,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import temperature as temperature_util
+from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 
 from .const import (
     ATTR_MAX,
@@ -70,12 +70,8 @@ class NumberMode(StrEnum):
     SLIDER = "slider"
 
 
-UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    NumberDeviceClass.TEMPERATURE: temperature_util.convert,
-}
-
-VALID_UNITS: dict[str, tuple[str, ...]] = {
-    NumberDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    NumberDeviceClass.TEMPERATURE: TemperatureConverter,
 }
 
 # mypy: disallow-any-generics
@@ -436,7 +432,7 @@ class NumberEntity(Entity):
 
         if (
             native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
@@ -446,7 +442,7 @@ class NumberEntity(Entity):
 
             # Suppress ValueError (Could not convert value to float)
             with suppress(ValueError):
-                value_new: float = UNIT_CONVERSIONS[device_class](
+                value_new: float = UNIT_CONVERTERS[device_class].convert(
                     value,
                     native_unit_of_measurement,
                     unit_of_measurement,
@@ -467,12 +463,12 @@ class NumberEntity(Entity):
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert native_unit_of_measurement
             assert unit_of_measurement
 
-            value = UNIT_CONVERSIONS[device_class](
+            value = UNIT_CONVERTERS[device_class].convert(
                 value,
                 unit_of_measurement,
                 native_unit_of_measurement,
@@ -500,9 +496,10 @@ class NumberEntity(Entity):
         if (
             (number_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))
-            and (device_class := self.device_class) in UNIT_CONVERSIONS
-            and self.native_unit_of_measurement in VALID_UNITS[device_class]
-            and custom_unit in VALID_UNITS[device_class]
+            and (device_class := self.device_class) in UNIT_CONVERTERS
+            and self.native_unit_of_measurement
+            in UNIT_CONVERTERS[device_class].VALID_UNITS
+            and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
             self._number_option_unit_of_measurement = custom_unit
             return

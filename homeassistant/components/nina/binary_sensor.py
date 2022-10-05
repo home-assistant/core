@@ -72,25 +72,28 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return len(self.coordinator.data[self._region]) > self._warning_index
+        if not len(self.coordinator.data[self._region]) > self._warning_index:
+            return False
+
+        data = self.coordinator.data[self._region][self._warning_index]
+
+        return data.is_valid
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes of the sensor."""
-        if (
-            not len(self.coordinator.data[self._region]) > self._warning_index
-        ) or not self.is_on:
+        if not self.is_on:
             return {}
 
-        data: dict[str, Any] = self.coordinator.data[self._region][self._warning_index]
+        data = self.coordinator.data[self._region][self._warning_index]
 
         return {
-            ATTR_HEADLINE: data[ATTR_HEADLINE],
-            ATTR_DESCRIPTION: data[ATTR_DESCRIPTION],
-            ATTR_SENDER: data[ATTR_SENDER],
-            ATTR_SEVERITY: data[ATTR_SEVERITY],
-            ATTR_ID: data[ATTR_ID],
-            ATTR_SENT: data[ATTR_SENT],
-            ATTR_START: data[ATTR_START],
-            ATTR_EXPIRES: data[ATTR_EXPIRES],
+            ATTR_HEADLINE: data.headline,
+            ATTR_DESCRIPTION: data.description,
+            ATTR_SENDER: data.sender,
+            ATTR_SEVERITY: data.severity,
+            ATTR_ID: data.id,
+            ATTR_SENT: data.sent,
+            ATTR_START: data.start,
+            ATTR_EXPIRES: data.expires,
         }

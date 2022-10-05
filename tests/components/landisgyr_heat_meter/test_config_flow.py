@@ -7,7 +7,7 @@ import serial.tools.list_ports
 from homeassistant import config_entries
 from homeassistant.components.landisgyr_heat_meter import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 
 def mock_serial_port():
@@ -38,7 +38,7 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -46,7 +46,7 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
         result["flow_id"], {"device": "Enter Manually"}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {}
 
@@ -58,7 +58,7 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
             result["flow_id"], {"device": "/dev/ttyUSB0"}
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
         "device": "/dev/ttyUSB0",
@@ -78,14 +78,14 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"device": port.device}
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
         "device": port.device,
@@ -103,7 +103,7 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -111,7 +111,7 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
         result["flow_id"], {"device": "Enter Manually"}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {}
 
@@ -123,7 +123,7 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
             result["flow_id"], {"device": "/dev/ttyUSB0"}
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -139,14 +139,14 @@ async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"device": port.device}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -164,7 +164,7 @@ async def test_get_serial_by_id_realpath(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -181,7 +181,7 @@ async def test_get_serial_by_id_realpath(
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {"device": port.device}
             )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
         "device": port.device,
@@ -203,7 +203,7 @@ async def test_get_serial_by_id_dev_path(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -218,7 +218,7 @@ async def test_get_serial_by_id_dev_path(
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {"device": port.device}
             )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
         "device": port.device,

@@ -7,7 +7,7 @@ from homeassistant.components.whirlpool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.components.whirlpool import init_integration
+from . import init_integration
 
 
 async def test_setup(hass: HomeAssistant):

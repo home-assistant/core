@@ -22,9 +22,10 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .conftest import KNXTestKit
+
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.knx.conftest import KNXTestKit
 
 
 async def test_diagnostics(

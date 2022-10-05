@@ -5,7 +5,7 @@ from unittest.mock import patch
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.advantage_air.const import DOMAIN
 
-from tests.components.advantage_air import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, USER_INPUT
+from . import TEST_SYSTEM_DATA, TEST_SYSTEM_URL, USER_INPUT
 
 
 async def test_form(hass, aioclient_mock):

@@ -38,10 +38,11 @@ from .const import (
     DOMAIN,
     INFRARED_BRIGHTNESS,
 )
-from .coordinator import LIFXUpdateCoordinator
+from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_STOP,
     LIFXManager,
@@ -94,8 +95,10 @@ async def async_setup_entry(
         LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
         "set_hev_cycle_state",
     )
-    if lifx_features(device)["multizone"]:
-        entity: LIFXLight = LIFXStrip(coordinator, manager, entry)
+    if lifx_features(device)["extended_multizone"]:
+        entity: LIFXLight = LIFXExtendedMultiZone(coordinator, manager, entry)
+    elif lifx_features(device)["multizone"]:
+        entity = LIFXMultiZone(coordinator, manager, entry)
     elif lifx_features(device)["color"]:
         entity = LIFXColor(coordinator, manager, entry)
     else:
@@ -139,6 +142,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             color_mode = ColorMode.BRIGHTNESS
         self._attr_color_mode = color_mode
         self._attr_supported_color_modes = {color_mode}
+        self._attr_effect = None
 
     @property
     def brightness(self) -> int:
@@ -163,6 +167,8 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Return the name of the currently running effect."""
         if effect := self.effects_conductor.effect(self.bulb):
             return f"effect_{effect.name}"
+        if effect := self.coordinator.async_get_active_effect():
+            return f"effect_{FirmwareEffect(effect).name.lower()}"
         return None
 
     async def update_during_transition(self, when: int) -> None:
@@ -358,8 +364,15 @@ class LIFXColor(LIFXLight):
         return (hue, sat) if sat else None
 
 
-class LIFXStrip(LIFXColor):
-    """Representation of a LIFX light strip with multiple zones."""
+class LIFXMultiZone(LIFXColor):
+    """Representation of a legacy LIFX multizone device."""
+
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_MOVE,
+        SERVICE_EFFECT_STOP,
+    ]
 
     async def set_color(
         self,
@@ -415,16 +428,53 @@ class LIFXStrip(LIFXColor):
                 ) from ex
 
         # set_color_zones does not update the
-        # state of the bulb, so we need to do that
+        # state of the device, so we need to do that
         await self.get_color()
 
     async def update_color_zones(
         self,
     ) -> None:
-        """Send a get color zones message to the bulb."""
+        """Send a get color zones message to the device."""
         try:
-            await self.coordinator.async_update_color_zones()
+            await self.coordinator.async_get_color_zones()
         except asyncio.TimeoutError as ex:
             raise HomeAssistantError(
-                f"Timeout setting updating color zones for {self.name}"
+                f"Timeout getting color zones from {self.name}"
             ) from ex
+
+
+class LIFXExtendedMultiZone(LIFXMultiZone):
+    """Representation of a LIFX device that supports extended multizone messages."""
+
+    async def set_color(
+        self, hsbk: list[float | int | None], kwargs: dict[str, Any], duration: int = 0
+    ) -> None:
+        """Set colors on all zones of the device."""
+
+        # trigger an update of all zone values before merging new values
+        await self.coordinator.async_get_extended_color_zones()
+
+        color_zones = self.bulb.color_zones
+        if (zones := kwargs.get(ATTR_ZONES)) is None:
+            # merge the incoming hsbk across all zones
+            for index, zone in enumerate(color_zones):
+                color_zones[index] = merge_hsbk(zone, hsbk)
+        else:
+            # merge the incoming HSBK with only the specified zones
+            for index, zone in enumerate(color_zones):
+                if index in zones:
+                    color_zones[index] = merge_hsbk(zone, hsbk)
+
+        # send the updated color zones list to the device
+        try:
+            await self.coordinator.async_set_extended_color_zones(
+                color_zones, duration=duration
+            )
+        except asyncio.TimeoutError as ex:
+            raise HomeAssistantError(
+                f"Timeout setting color zones on {self.name}"
+            ) from ex
+
+        # set_extended_color_zones does not update the
+        # state of the device, so we need to do that
+        await self.get_color()
