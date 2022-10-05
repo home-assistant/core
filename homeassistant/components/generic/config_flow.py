@@ -334,9 +334,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.title = name
 
                     # temporary preview for user to check the image
-                    self.context["preview_cam"] = GenericCamera(
-                        self.hass, user_input, self.flow_id, "preview"
-                    )
+                    self.context["preview_cam"] = user_input
                     return await self.async_step_user_confirm_still()
         else:
             user_input = DEFAULT_DATA.copy()
@@ -476,7 +474,8 @@ class CameraImagePreview(HomeAssistantView):
             flow: FlowResult = self.hass.config_entries.flow.async_get(flow_id)
         except UnknownFlow as exc:
             raise web.HTTPNotFound() from exc
-        camera = flow["context"]["preview_cam"]
+        user_input = flow["context"]["preview_cam"]
+        camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
             raise web.HTTPServiceUnavailable()
