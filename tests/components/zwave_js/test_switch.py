@@ -25,18 +25,9 @@ async def test_switch(hass, hank_binary_switch, integration, client):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 32
     assert args["valueId"] == {
-        "commandClassName": "Binary Switch",
         "commandClass": 37,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
-        "value": False,
     }
     assert args["value"] is True
 
@@ -72,18 +63,9 @@ async def test_switch(hass, hank_binary_switch, integration, client):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 32
     assert args["valueId"] == {
-        "commandClassName": "Binary Switch",
         "commandClass": 37,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-            "label": "Target value",
-        },
-        "value": False,
     }
     assert args["value"] is False
 
@@ -108,24 +90,10 @@ async def test_barrier_signaling_switch(hass, gdc_zw062, integration, client):
     assert args["nodeId"] == 12
     assert args["value"] == 0
     assert args["valueId"] == {
-        "ccVersion": 0,
         "commandClass": 102,
-        "commandClassName": "Barrier Operator",
         "endpoint": 0,
-        "metadata": {
-            "label": "Signaling State (Visual)",
-            "max": 255,
-            "min": 0,
-            "readable": True,
-            "states": {"0": "Off", "255": "On"},
-            "type": "number",
-            "writeable": True,
-        },
         "property": "signalingState",
         "propertyKey": 2,
-        "propertyKeyName": "2",
-        "propertyName": "signalingState",
-        "value": 255,
     }
 
     # state change is optimistic and writes state
@@ -149,24 +117,10 @@ async def test_barrier_signaling_switch(hass, gdc_zw062, integration, client):
     assert args["nodeId"] == 12
     assert args["value"] == 255
     assert args["valueId"] == {
-        "ccVersion": 0,
         "commandClass": 102,
-        "commandClassName": "Barrier Operator",
         "endpoint": 0,
-        "metadata": {
-            "label": "Signaling State (Visual)",
-            "max": 255,
-            "min": 0,
-            "readable": True,
-            "states": {"0": "Off", "255": "On"},
-            "type": "number",
-            "writeable": True,
-        },
         "property": "signalingState",
         "propertyKey": 2,
-        "propertyKeyName": "2",
-        "propertyName": "signalingState",
-        "value": 255,
     }
 
     # state change is optimistic and writes state

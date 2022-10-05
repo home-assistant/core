@@ -8,10 +8,11 @@ HAS_SUPPORTED_BRANDS = [
     "hunterdouglas_powerview",
     "inkbird",
     "motion_blinds",
+    "netatmo",
     "overkiz",
     "renault",
+    "switchbee",
     "thermobeacon",
     "wemo",
     "yalexs_ble",
-    "zwave_js",
 ]

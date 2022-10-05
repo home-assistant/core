@@ -22,7 +22,7 @@ async def test_camera_no_job(
     mock_api,
     hass_client,
 ) -> None:
-    """Test sensors while no job active."""
+    """Test camera while no job active."""
     assert await async_setup_component(hass, "prusalink", {})
     state = hass.states.get("camera.mock_title_job_preview")
     assert state is not None
@@ -34,9 +34,13 @@ async def test_camera_no_job(
 
 
 async def test_camera_active_job(
-    hass: HomeAssistant, mock_config_entry, mock_api, mock_job_api_active, hass_client
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    mock_job_api_printing,
+    hass_client,
 ):
-    """Test sensors while no job active."""
+    """Test camera while job active."""
     assert await async_setup_component(hass, "prusalink", {})
     state = hass.states.get("camera.mock_title_job_preview")
     assert state is not None

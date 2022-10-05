@@ -1,8 +1,12 @@
 """Basic checks for HomeKit sensor."""
+from unittest.mock import patch
+
+from aiohomekit.model import Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
+from aiohomekit.testing import FakePairing
 
 from homeassistant.components.homekit_controller.sensor import (
     thread_node_capability_to_str,
@@ -10,7 +14,9 @@ from homeassistant.components.homekit_controller.sensor import (
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 
-from .common import Helper, setup_test_component
+from .common import TEST_DEVICE_SERVICE_INFO, Helper, setup_test_component
+
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 def create_temperature_sensor_service(accessory):
@@ -349,3 +355,26 @@ def test_thread_status_to_str():
     assert thread_status_to_str(ThreadStatus.JOINING) == "joining"
     assert thread_status_to_str(ThreadStatus.DETACHED) == "detached"
     assert thread_status_to_str(ThreadStatus.DISABLED) == "disabled"
+
+
+async def test_rssi_sensor(
+    hass, utcnow, entity_registry_enabled_by_default, enable_bluetooth
+):
+    """Test an rssi sensor."""
+
+    inject_bluetooth_service_info(hass, TEST_DEVICE_SERVICE_INFO)
+
+    class FakeBLEPairing(FakePairing):
+        """Fake BLE pairing."""
+
+        @property
+        def transport(self):
+            return Transport.BLE
+
+    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
+        # Any accessory will do for this test, but we need at least
+        # one or the rssi sensor will not be created
+        await setup_test_component(
+            hass, create_battery_level_sensor, suffix="battery", connection="BLE"
+        )
+        assert hass.states.get("sensor.testdevice_signal_strength").state == "-56"

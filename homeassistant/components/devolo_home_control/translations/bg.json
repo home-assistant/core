@@ -7,7 +7,15 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "\u041f\u0430\u0440\u043e\u043b\u0430"
+                    "password": "\u041f\u0430\u0440\u043e\u043b\u0430",
+                    "username": "\u0418\u043c\u0435\u0439\u043b / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "\u041f\u0430\u0440\u043e\u043b\u0430",
+                    "username": "\u0418\u043c\u0435\u0439\u043b / devolo ID"
                 }
             }
         }

@@ -52,9 +52,10 @@ from .models import (
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBleakScannerWrapper,
+    HaBluetoothConnector,
     ProcessAdvertisementCallback,
 )
-from .scanner import HaScanner, ScannerStartError, create_bleak_scanner
+from .scanner import HaScanner, ScannerStartError
 from .util import adapter_human_name, adapter_unique_name, async_default_adapter
 
 if TYPE_CHECKING:
@@ -66,9 +67,11 @@ __all__ = [
     "async_ble_device_from_address",
     "async_discovered_service_info",
     "async_get_scanner",
+    "async_last_service_info",
     "async_process_advertisements",
     "async_rediscover_address",
     "async_register_callback",
+    "async_register_scanner",
     "async_track_unavailable",
     "async_scanner_count",
     "BaseHaScanner",
@@ -76,6 +79,7 @@ __all__ = [
     "BluetoothServiceInfoBleak",
     "BluetoothScanningMode",
     "BluetoothCallback",
+    "HaBluetoothConnector",
     "SOURCE_LOCAL",
 ]
 
@@ -396,13 +400,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
+    scanner = HaScanner(hass, mode, adapter, address)
     try:
-        bleak_scanner = create_bleak_scanner(mode, adapter)
+        scanner.async_setup()
     except RuntimeError as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
         ) from err
-    scanner = HaScanner(hass, bleak_scanner, adapter, address)
     info_callback = async_get_advertisement_callback(hass)
     entry.async_on_unload(scanner.async_register_callback(info_callback))
     try:

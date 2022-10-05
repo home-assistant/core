@@ -1,6 +1,7 @@
 """Support for LIFX lights."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
@@ -28,21 +29,35 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
-from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN
+from .const import DATA_LIFX_MANAGER, DOMAIN
+from .coordinator import LIFXUpdateCoordinator, Light
 from .util import convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-
 SERVICE_EFFECT_PULSE = "effect_pulse"
 SERVICE_EFFECT_COLORLOOP = "effect_colorloop"
+SERVICE_EFFECT_MOVE = "effect_move"
 SERVICE_EFFECT_STOP = "effect_stop"
 
+ATTR_POWER_OFF = "power_off"
 ATTR_POWER_ON = "power_on"
 ATTR_PERIOD = "period"
 ATTR_CYCLES = "cycles"
 ATTR_SPREAD = "spread"
 ATTR_CHANGE = "change"
+ATTR_DIRECTION = "direction"
+ATTR_SPEED = "speed"
+
+EFFECT_MOVE = "MOVE"
+EFFECT_OFF = "OFF"
+
+EFFECT_MOVE_DEFAULT_SPEED = 3.0
+EFFECT_MOVE_DEFAULT_DIRECTION = "right"
+EFFECT_MOVE_DIRECTION_RIGHT = "right"
+EFFECT_MOVE_DIRECTION_LEFT = "left"
+
+EFFECT_MOVE_DIRECTIONS = [EFFECT_MOVE_DIRECTION_LEFT, EFFECT_MOVE_DIRECTION_RIGHT]
 
 PULSE_MODE_BLINK = "blink"
 PULSE_MODE_BREATHE = "breathe"
@@ -110,7 +125,17 @@ LIFX_EFFECT_STOP_SCHEMA = cv.make_entity_service_schema({})
 SERVICES = (
     SERVICE_EFFECT_STOP,
     SERVICE_EFFECT_PULSE,
+    SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_COLORLOOP,
+)
+
+
+LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIFX_EFFECT_SCHEMA,
+        ATTR_SPEED: vol.All(vol.Coerce(float), vol.Clamp(min=0.1, max=60)),
+        ATTR_DIRECTION: vol.In(EFFECT_MOVE_DIRECTIONS),
+    }
 )
 
 
@@ -170,6 +195,13 @@ class LIFXManager:
 
         self.hass.services.async_register(
             DOMAIN,
+            SERVICE_EFFECT_MOVE,
+            service_handler,
+            schema=LIFX_EFFECT_MOVE_SCHEMA,
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
             SERVICE_EFFECT_STOP,
             service_handler,
             schema=LIFX_EFFECT_STOP_SCHEMA,
@@ -179,15 +211,35 @@ class LIFXManager:
         self, entity_ids: set[str], service: str, **kwargs: Any
     ) -> None:
         """Start a light effect on entities."""
-        bulbs = [
-            coordinator.device
-            for entry_id, coordinator in self.hass.data[DOMAIN].items()
-            if entry_id != DATA_LIFX_MANAGER
-            and self.entry_id_to_entity_id[entry_id] in entity_ids
-        ]
-        _LOGGER.debug("Starting effect %s on %s", service, bulbs)
 
-        if service == SERVICE_EFFECT_PULSE:
+        coordinators: list[LIFXUpdateCoordinator] = []
+        bulbs: list[Light] = []
+
+        for entry_id, coordinator in self.hass.data[DOMAIN].items():
+            if (
+                entry_id != DATA_LIFX_MANAGER
+                and self.entry_id_to_entity_id[entry_id] in entity_ids
+            ):
+                coordinators.append(coordinator)
+                bulbs.append(coordinator.device)
+
+        if service == SERVICE_EFFECT_MOVE:
+            await asyncio.gather(
+                *(
+                    coordinator.async_set_multizone_effect(
+                        effect=EFFECT_MOVE,
+                        speed=kwargs.get(ATTR_SPEED, EFFECT_MOVE_DEFAULT_SPEED),
+                        direction=kwargs.get(
+                            ATTR_DIRECTION, EFFECT_MOVE_DEFAULT_DIRECTION
+                        ),
+                        power_on=kwargs.get(ATTR_POWER_ON, False),
+                    )
+                    for coordinator in coordinators
+                )
+            )
+
+        elif service == SERVICE_EFFECT_PULSE:
+
             effect = aiolifx_effects.EffectPulse(
                 power_on=kwargs.get(ATTR_POWER_ON),
                 period=kwargs.get(ATTR_PERIOD),
@@ -196,6 +248,7 @@ class LIFXManager:
                 hsbk=find_hsbk(self.hass, **kwargs),
             )
             await self.effects_conductor.start(effect, bulbs)
+
         elif service == SERVICE_EFFECT_COLORLOOP:
             preprocess_turn_on_alternatives(self.hass, kwargs)
 
@@ -212,5 +265,15 @@ class LIFXManager:
                 brightness=brightness,
             )
             await self.effects_conductor.start(effect, bulbs)
+
         elif service == SERVICE_EFFECT_STOP:
+
             await self.effects_conductor.stop(bulbs)
+
+            for coordinator in coordinators:
+                await coordinator.async_set_multizone_effect(
+                    effect=EFFECT_OFF,
+                    speed=EFFECT_MOVE_DEFAULT_SPEED,
+                    direction=EFFECT_MOVE_DEFAULT_DIRECTION,
+                    power_on=False,
+                )

@@ -71,7 +71,8 @@ TEST_OPTIONS = {
     CONF_UPDATE_ENABLED: True,
 }
 
-TEST_ENTITY_ID = "sensor.test_vehicle_2_odometer"
+TEST_DEVICE_NAME = "test_vehicle_2"
+TEST_ENTITY_ID = f"sensor.{TEST_DEVICE_NAME}_odometer"
 
 
 def advance_time_to_next_fetch(hass):

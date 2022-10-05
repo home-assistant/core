@@ -865,6 +865,7 @@ class MqttDiscoveryUpdate(Entity):
             send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
+            assert self._discovery_data is not None
             debug_info.add_entity_discovery_data(
                 self.hass, self._discovery_data, self.entity_id
             )
