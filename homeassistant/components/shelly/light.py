@@ -25,7 +25,6 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import (
     BLOCK,
     DATA_CONFIG_ENTRY,
@@ -44,6 +43,7 @@ from .const import (
     SHBLB_1_RGB_EFFECTS,
     STANDARD_RGB_EFFECTS,
 )
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import (
     async_remove_shelly_entity,
@@ -77,28 +77,28 @@ def async_setup_block_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for block device."""
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
+    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
 
     blocks = []
-    assert wrapper.device.blocks
-    for block in wrapper.device.blocks:
+    assert coordinator.device.blocks
+    for block in coordinator.device.blocks:
         if block.type == "light":
             blocks.append(block)
         elif block.type == "relay":
             if not is_block_channel_type_light(
-                wrapper.device.settings, int(block.channel)
+                coordinator.device.settings, int(block.channel)
             ):
                 continue
 
             blocks.append(block)
-            assert wrapper.device.shelly
-            unique_id = f"{wrapper.mac}-{block.type}_{block.channel}"
+            assert coordinator.device.shelly
+            unique_id = f"{coordinator.mac}-{block.type}_{block.channel}"
             async_remove_shelly_entity(hass, "switch", unique_id)
 
     if not blocks:
         return
 
-    async_add_entities(BlockShellyLight(wrapper, block) for block in blocks)
+    async_add_entities(BlockShellyLight(coordinator, block) for block in blocks)
 
 
 @callback
@@ -108,22 +108,22 @@ def async_setup_rpc_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
-    switch_key_ids = get_rpc_key_ids(wrapper.device.status, "switch")
+    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
+    switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
 
     switch_ids = []
     for id_ in switch_key_ids:
-        if not is_rpc_channel_type_light(wrapper.device.config, id_):
+        if not is_rpc_channel_type_light(coordinator.device.config, id_):
             continue
 
         switch_ids.append(id_)
-        unique_id = f"{wrapper.mac}-switch:{id_}"
+        unique_id = f"{coordinator.mac}-switch:{id_}"
         async_remove_shelly_entity(hass, "switch", unique_id)
 
     if not switch_ids:
         return
 
-    async_add_entities(RpcShellyLight(wrapper, id_) for id_ in switch_ids)
+    async_add_entities(RpcShellyLight(coordinator, id_) for id_ in switch_ids)
 
 
 class BlockShellyLight(ShellyBlockEntity, LightEntity):
@@ -131,9 +131,9 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
     _attr_supported_color_modes: set[str]
 
-    def __init__(self, wrapper: BlockDeviceWrapper, block: Block) -> None:
+    def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
         """Initialize light."""
-        super().__init__(wrapper, block)
+        super().__init__(coordinator, block)
         self.control_result: dict[str, Any] | None = None
         self._attr_supported_color_modes = set()
         self._attr_min_mireds = MIRED_MIN_VALUE
@@ -144,7 +144,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
             self._attr_max_mireds = MIRED_MAX_VALUE_COLOR
             self._min_kelvin = KELVIN_MIN_VALUE_COLOR
-            if wrapper.model in RGBW_MODELS:
+            if coordinator.model in RGBW_MODELS:
                 self._attr_supported_color_modes.add(ColorMode.RGBW)
             else:
                 self._attr_supported_color_modes.add(ColorMode.RGB)
@@ -161,8 +161,8 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         if hasattr(block, "effect"):
             self._attr_supported_features |= LightEntityFeature.EFFECT
 
-        if wrapper.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
-            match = FIRMWARE_PATTERN.search(wrapper.device.settings.get("fw", ""))
+        if coordinator.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
+            match = FIRMWARE_PATTERN.search(coordinator.device.settings.get("fw", ""))
             if (
                 match is not None
                 and int(match[0]) >= LIGHT_TRANSITION_MIN_FIRMWARE_DATE
@@ -215,7 +215,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.mode == "color":
-            if self.wrapper.model in RGBW_MODELS:
+            if self.coordinator.model in RGBW_MODELS:
                 return ColorMode.RGBW
             return ColorMode.RGB
 
@@ -268,7 +268,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         if not self.supported_features & LightEntityFeature.EFFECT:
             return None
 
-        if self.wrapper.model == "SHBLB-1":
+        if self.coordinator.model == "SHBLB-1":
             return list(SHBLB_1_RGB_EFFECTS.values())
 
         return list(STANDARD_RGB_EFFECTS.values())
@@ -284,7 +284,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         else:
             effect_index = self.block.effect
 
-        if self.wrapper.model == "SHBLB-1":
+        if self.coordinator.model == "SHBLB-1":
             return SHBLB_1_RGB_EFFECTS[effect_index]
 
         return STANDARD_RGB_EFFECTS[effect_index]
@@ -334,7 +334,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         if ATTR_EFFECT in kwargs and ATTR_COLOR_TEMP not in kwargs:
             # Color effect change - used only in color mode, switch device mode to color
             set_mode = "color"
-            if self.wrapper.model == "SHBLB-1":
+            if self.coordinator.model == "SHBLB-1":
                 effect_dict = SHBLB_1_RGB_EFFECTS
             else:
                 effect_dict = STANDARD_RGB_EFFECTS
@@ -346,13 +346,13 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 LOGGER.error(
                     "Effect '%s' not supported by device %s",
                     kwargs[ATTR_EFFECT],
-                    self.wrapper.model,
+                    self.coordinator.model,
                 )
 
         if (
             set_mode
             and set_mode != self.mode
-            and self.wrapper.model in DUAL_MODE_LIGHT_MODELS
+            and self.coordinator.model in DUAL_MODE_LIGHT_MODELS
         ):
             params["mode"] = set_mode
 
@@ -385,15 +385,15 @@ class RpcShellyLight(ShellyRpcEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(self, wrapper: RpcDeviceWrapper, id_: int) -> None:
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize light."""
-        super().__init__(wrapper, f"switch:{id_}")
+        super().__init__(coordinator, f"switch:{id_}")
         self._id = id_
 
     @property
     def is_on(self) -> bool:
         """If light is on."""
-        return bool(self.wrapper.device.status[self.key]["output"])
+        return bool(self.coordinator.device.status[self.key]["output"])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""

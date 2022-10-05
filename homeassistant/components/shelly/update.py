@@ -17,8 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import BLOCK, CONF_SLEEP_PERIOD, DATA_CONFIG_ENTRY, DOMAIN
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
     RpcEntityDescription,
@@ -67,7 +67,7 @@ REST_UPDATES: Final = {
         name="Firmware Update",
         key="fwupdate",
         latest_version=lambda status: status["update"]["new_version"],
-        install=lambda wrapper: wrapper.async_trigger_ota_update(),
+        install=lambda coordinator: coordinator.async_trigger_ota_update(),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -76,7 +76,7 @@ REST_UPDATES: Final = {
         name="Beta Firmware Update",
         key="fwupdate",
         latest_version=lambda status: status["update"].get("beta_version"),
-        install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
+        install=lambda coordinator: coordinator.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -91,7 +91,7 @@ RPC_UPDATES: Final = {
         latest_version=lambda status: status.get("stable", {"version": None})[
             "version"
         ],
-        install=lambda wrapper: wrapper.async_trigger_ota_update(),
+        install=lambda coordinator: coordinator.async_trigger_ota_update(),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -101,7 +101,7 @@ RPC_UPDATES: Final = {
         key="sys",
         sub_key="available_updates",
         latest_version=lambda status: status.get("beta", {"version": None})["version"],
-        install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
+        install=lambda coordinator: coordinator.async_trigger_ota_update(beta=True),
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -140,18 +140,18 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
 
     def __init__(
         self,
-        wrapper: BlockDeviceWrapper,
+        block_coordinator: ShellyBlockCoordinator,
         attribute: str,
         description: RestEntityDescription,
     ) -> None:
         """Initialize update entity."""
-        super().__init__(wrapper, attribute, description)
+        super().__init__(block_coordinator, attribute, description)
         self._in_progress_old_version: str | None = None
 
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        version = self.wrapper.device.status["update"]["old_version"]
+        version = self.block_coordinator.device.status["update"]["old_version"]
         if version is None:
             return None
 
@@ -161,7 +161,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_version = self.entity_description.latest_version(
-            self.wrapper.device.status,
+            self.block_coordinator.device.status,
         )
         if new_version not in (None, ""):
             return cast(str, new_version)
@@ -177,12 +177,12 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest firmware version."""
-        config_entry = self.wrapper.entry
-        block_wrapper = self.hass.data[DOMAIN][DATA_CONFIG_ENTRY][
+        config_entry = self.block_coordinator.entry
+        block_coordinator = self.hass.data[DOMAIN][DATA_CONFIG_ENTRY][
             config_entry.entry_id
         ].get(BLOCK)
         self._in_progress_old_version = self.installed_version
-        await self.entity_description.install(block_wrapper)
+        await self.entity_description.install(block_coordinator)
 
 
 class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
@@ -195,28 +195,28 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
 
     def __init__(
         self,
-        wrapper: RpcDeviceWrapper,
+        coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
         description: RpcEntityDescription,
     ) -> None:
         """Initialize update entity."""
-        super().__init__(wrapper, key, attribute, description)
+        super().__init__(coordinator, key, attribute, description)
         self._in_progress_old_version: str | None = None
 
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        if self.wrapper.device.shelly is None:
+        if self.coordinator.device.shelly is None:
             return None
 
-        return cast(str, self.wrapper.device.shelly["ver"])
+        return cast(str, self.coordinator.device.shelly["ver"])
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_version = self.entity_description.latest_version(
-            self.wrapper.device.status[self.key][self.entity_description.sub_key],
+            self.coordinator.device.status[self.key][self.entity_description.sub_key],
         )
         if new_version is not None:
             return cast(str, new_version)
@@ -233,4 +233,4 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     ) -> None:
         """Install the latest firmware version."""
         self._in_progress_old_version = self.installed_version
-        await self.entity_description.install(self.wrapper)
+        await self.entity_description.install(self.coordinator)

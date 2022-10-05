@@ -105,10 +105,6 @@
       "iot_class": "cloud_polling",
       "name": "Aladdin Connect"
     },
-    "alarm_control_panel": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "alarmdecoder": {
       "config_flow": true,
       "iot_class": "local_push",
@@ -209,11 +205,6 @@
       "iot_class": "local_polling",
       "name": "APC UPS Daemon"
     },
-    "api": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Home Assistant API"
-    },
     "apple": {
       "name": "Apple",
       "integrations": {
@@ -247,10 +238,6 @@
           "name": "Apple iTunes"
         }
       }
-    },
-    "application_credentials": {
-      "config_flow": false,
-      "iot_class": null
     },
     "apprise": {
       "config_flow": false,
@@ -376,15 +363,6 @@
       "iot_class": "cloud_polling",
       "name": "Aussie Broadband"
     },
-    "auth": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Auth"
-    },
-    "automation": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "avion": {
       "config_flow": false,
       "iot_class": "assumed_state",
@@ -399,11 +377,6 @@
       "config_flow": true,
       "iot_class": "local_push",
       "name": "Axis"
-    },
-    "backup": {
-      "config_flow": false,
-      "iot_class": "calculated",
-      "name": "Backup"
     },
     "baf": {
       "config_flow": true,
@@ -434,10 +407,6 @@
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "BeeWi SmartClim BLE sensor"
-    },
-    "binary_sensor": {
-      "config_flow": false,
-      "iot_class": null
     },
     "bitcoin": {
       "config_flow": false,
@@ -483,11 +452,6 @@
       "config_flow": true,
       "iot_class": "local_push",
       "name": "BlueMaestro"
-    },
-    "blueprint": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Blueprint"
     },
     "bluesound": {
       "config_flow": false,
@@ -574,22 +538,10 @@
       "iot_class": "cloud_polling",
       "name": "Buienradar"
     },
-    "button": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "caldav": {
       "config_flow": false,
       "iot_class": "cloud_polling",
       "name": "CalDAV"
-    },
-    "calendar": {
-      "config_flow": false,
-      "iot_class": null
-    },
-    "camera": {
-      "config_flow": false,
-      "iot_class": null
     },
     "canary": {
       "config_flow": true,
@@ -660,10 +612,6 @@
         }
       }
     },
-    "climate": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "cloud": {
       "config_flow": false,
       "iot_class": "cloud_push",
@@ -719,23 +667,10 @@
       "iot_class": "local_polling",
       "name": "Concord232"
     },
-    "config": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Configuration"
-    },
-    "configurator": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "control4": {
       "config_flow": true,
       "iot_class": "local_polling",
       "name": "Control4"
-    },
-    "conversation": {
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "coolmaster": {
       "config_flow": true,
@@ -746,10 +681,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Coronavirus (COVID-19)"
-    },
-    "cover": {
-      "config_flow": false,
-      "iot_class": null
     },
     "cpuspeed": {
       "config_flow": true,
@@ -815,11 +746,6 @@
       "iot_class": "cloud_polling",
       "name": "Leviton Decora Wi-Fi"
     },
-    "default_config": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Default Config"
-    },
     "delijn": {
       "config_flow": false,
       "iot_class": "cloud_polling",
@@ -859,19 +785,10 @@
       "iot_class": "cloud_polling",
       "name": "Deutsche Bahn"
     },
-    "device_automation": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Device Automation"
-    },
     "device_sun_light_trigger": {
       "config_flow": false,
       "iot_class": "calculated",
       "name": "Presence-based Lights"
-    },
-    "device_tracker": {
-      "config_flow": false,
-      "iot_class": null
     },
     "devolo": {
       "name": "devolo",
@@ -893,15 +810,6 @@
       "iot_class": "cloud_polling",
       "name": "Dexcom"
     },
-    "dhcp": {
-      "config_flow": false,
-      "iot_class": "local_push",
-      "name": "DHCP Discovery"
-    },
-    "diagnostics": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "digital_ocean": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -921,11 +829,6 @@
       "config_flow": true,
       "iot_class": "cloud_push",
       "name": "Discord"
-    },
-    "discovery": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Discovery"
     },
     "dlib_face_detect": {
       "config_flow": false,
@@ -1171,10 +1074,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "energy": {
-      "config_flow": false,
-      "iot_class": "calculated"
-    },
     "enigma2": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -1295,10 +1194,6 @@
       "iot_class": "local_polling",
       "name": "Fail2Ban"
     },
-    "fan": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "fastdotcom": {
       "config_flow": false,
       "iot_class": "cloud_polling",
@@ -1343,11 +1238,6 @@
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "File"
-    },
-    "file_upload": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "File Upload"
     },
     "filesize": {
       "config_flow": true,
@@ -1528,11 +1418,6 @@
       "iot_class": "local_polling",
       "name": "Fronius"
     },
-    "frontend": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Home Assistant Frontend"
-    },
     "frontier_silicon": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -1586,11 +1471,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling",
       "name": "GeoJSON"
-    },
-    "geo_location": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Geolocation"
     },
     "geo_rss_events": {
       "config_flow": false,
@@ -1815,20 +1695,10 @@
       "iot_class": "cloud_polling",
       "name": "Habitica"
     },
-    "hardware": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Hardware"
-    },
     "harman_kardon_avr": {
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "Harman Kardon AVR"
-    },
-    "hassio": {
-      "config_flow": false,
-      "iot_class": "local_polling",
-      "name": "Home Assistant Supervisor"
     },
     "haveibeenpwned": {
       "config_flow": false,
@@ -1875,11 +1745,6 @@
       "iot_class": "local_polling",
       "name": "Hisense AEH-W4A1"
     },
-    "history": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "History"
-    },
     "history_stats": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -1909,11 +1774,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Legrand Home+ Control"
-    },
-    "homeassistant": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Home Assistant Core Integration"
     },
     "homeassistant_alerts": {
       "config_flow": false,
@@ -1975,11 +1835,6 @@
       "iot_class": "cloud_push",
       "name": "HTML5 Push Notifications"
     },
-    "http": {
-      "config_flow": false,
-      "iot_class": "local_push",
-      "name": "HTTP"
-    },
     "huawei_lte": {
       "config_flow": true,
       "iot_class": "local_polling",
@@ -1989,10 +1844,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Huisbaasje"
-    },
-    "humidifier": {
-      "config_flow": false,
-      "iot_class": null
     },
     "hunterdouglas_powerview": {
       "config_flow": true,
@@ -2069,15 +1920,6 @@
       "iot_class": "local_push",
       "name": "IHC Controller"
     },
-    "image": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Image"
-    },
-    "image_processing": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "imap": {
       "config_flow": false,
       "iot_class": "cloud_push",
@@ -2103,6 +1945,13 @@
       "iot_class": "local_push",
       "name": "INKBIRD"
     },
+    "inovelli": {
+      "name": "Inovelli",
+      "iot_standards": [
+        "zigbee",
+        "zwave"
+      ]
+    },
     "insteon": {
       "config_flow": true,
       "iot_class": "local_push",
@@ -2112,11 +1961,6 @@
       "config_flow": true,
       "iot_class": "local_polling",
       "name": "IntelliFire"
-    },
-    "intent": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Intent"
     },
     "intent_script": {
       "config_flow": false,
@@ -2181,6 +2025,12 @@
       "config_flow": true,
       "iot_class": "local_polling",
       "name": "iZone"
+    },
+    "jasco": {
+      "name": "Jasco",
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "jellyfin": {
       "config_flow": true,
@@ -2403,10 +2253,6 @@
       "iot_class": "cloud_push",
       "name": "LIFX Cloud"
     },
-    "light": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "lightwave": {
       "config_flow": false,
       "iot_class": "assumed_state",
@@ -2466,24 +2312,10 @@
       "iot_class": "local_push",
       "name": "Locative"
     },
-    "lock": {
-      "config_flow": false,
-      "iot_class": null
-    },
-    "logbook": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Logbook"
-    },
     "logentries": {
       "config_flow": false,
       "iot_class": "cloud_push",
       "name": "Logentries"
-    },
-    "logger": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Logger"
     },
     "logi_circle": {
       "config_flow": true,
@@ -2525,11 +2357,6 @@
       "iot_class": "local_push",
       "name": "LOOKin"
     },
-    "lovelace": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Dashboards"
-    },
     "luftdaten": {
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -2569,10 +2396,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling",
       "name": "Magicseaweed"
-    },
-    "mailbox": {
-      "config_flow": false,
-      "iot_class": null
     },
     "mailgun": {
       "config_flow": true,
@@ -2618,15 +2441,6 @@
       "config_flow": false,
       "iot_class": "calculated",
       "name": "Media Extractor"
-    },
-    "media_player": {
-      "config_flow": false,
-      "iot_class": null
-    },
-    "media_source": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Media Source"
     },
     "mediaroom": {
       "config_flow": false,
@@ -2905,11 +2719,6 @@
       "iot_class": "cloud_polling",
       "name": "MVG"
     },
-    "my": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "My Home Assistant"
-    },
     "mycroft": {
       "config_flow": false,
       "iot_class": "local_push",
@@ -3000,11 +2809,6 @@
       "iot_class": "local_polling",
       "name": "Netio"
     },
-    "network": {
-      "config_flow": false,
-      "iot_class": "local_push",
-      "name": "Network Configuration"
-    },
     "neurio_energy": {
       "config_flow": false,
       "iot_class": "cloud_polling",
@@ -3094,10 +2898,6 @@
       "iot_class": "cloud_polling",
       "name": "Om Luftkvalitet i Norge (Norway Air)"
     },
-    "notify": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "notify_events": {
       "config_flow": false,
       "iot_class": "cloud_push",
@@ -3132,10 +2932,6 @@
       "config_flow": false,
       "iot_class": "local_push",
       "name": "Numato USB GPIO Expander"
-    },
-    "number": {
-      "config_flow": false,
-      "iot_class": null
     },
     "nut": {
       "config_flow": true,
@@ -3191,11 +2987,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Hayward Omnilogic"
-    },
-    "onboarding": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Home Assistant Onboarding"
     },
     "oncue": {
       "config_flow": true,
@@ -3406,10 +3197,6 @@
       "config_flow": false,
       "iot_class": "local_push",
       "name": "Persistent Notification"
-    },
-    "person": {
-      "config_flow": false,
-      "iot_class": "calculated"
     },
     "philips": {
       "name": "Philips",
@@ -3728,11 +3515,6 @@
       "iot_class": "cloud_polling",
       "name": "ReCollect Waste"
     },
-    "recorder": {
-      "config_flow": false,
-      "iot_class": "local_push",
-      "name": "Recorder"
-    },
     "recswitch": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -3753,19 +3535,10 @@
       "iot_class": "cloud_push",
       "name": "Remember The Milk"
     },
-    "remote": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "renault": {
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Renault"
-    },
-    "repairs": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Repairs"
     },
     "repetier": {
       "config_flow": false,
@@ -3892,11 +3665,6 @@
       "iot_class": "local_polling",
       "name": "SABnzbd"
     },
-    "safe_mode": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Safe Mode"
-    },
     "saj": {
       "config_flow": false,
       "iot_class": "local_polling",
@@ -3927,10 +3695,6 @@
       "iot_class": "local_push",
       "name": "Satel Integra"
     },
-    "scene": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "schluter": {
       "config_flow": false,
       "iot_class": "cloud_polling",
@@ -3946,28 +3710,15 @@
       "iot_class": "local_polling",
       "name": "Pentair ScreenLogic"
     },
-    "script": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "scsgate": {
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "SCSGate"
     },
-    "search": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Search"
-    },
     "season": {
       "config_flow": true,
       "iot_class": "local_polling",
       "name": "Season"
-    },
-    "select": {
-      "config_flow": false,
-      "iot_class": null
     },
     "sendgrid": {
       "config_flow": false,
@@ -3988,10 +3739,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "name": "Sensibo"
-    },
-    "sensor": {
-      "config_flow": false,
-      "iot_class": null
     },
     "sensorpro": {
       "config_flow": true,
@@ -4106,10 +3853,6 @@
       "config_flow": false,
       "iot_class": "cloud_push",
       "name": "Sinch SMS"
-    },
-    "siren": {
-      "config_flow": false,
-      "iot_class": null
     },
     "sisyphus": {
       "config_flow": false,
@@ -4326,11 +4069,6 @@
       "iot_class": "cloud_polling",
       "name": "SRP Energy"
     },
-    "ssdp": {
-      "config_flow": false,
-      "iot_class": "local_push",
-      "name": "Simple Service Discovery Protocol (SSDP)"
-    },
     "starline": {
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -4386,11 +4124,6 @@
       "iot_class": "cloud_polling",
       "name": "StreamLabs"
     },
-    "stt": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Speech-to-Text (STT)"
-    },
     "subaru": {
       "config_flow": true,
       "iot_class": "cloud_polling",
@@ -4434,10 +4167,6 @@
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "Swisscom Internet-Box"
-    },
-    "switch": {
-      "config_flow": false,
-      "iot_class": null
     },
     "switchbee": {
       "config_flow": true,
@@ -4493,10 +4222,6 @@
       "config_flow": true,
       "iot_class": "local_push",
       "name": "System Bridge"
-    },
-    "system_health": {
-      "config_flow": false,
-      "iot_class": null
     },
     "system_log": {
       "config_flow": false,
@@ -4753,11 +4478,6 @@
       "iot_class": "local_polling",
       "name": "Traccar"
     },
-    "trace": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Trace"
-    },
     "tractive": {
       "config_flow": true,
       "iot_class": "cloud_push",
@@ -4808,11 +4528,6 @@
       "iot_class": "local_push",
       "name": "Trend"
     },
-    "tts": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Text-to-Speech (TTS)"
-    },
     "tuya": {
       "config_flow": true,
       "iot_class": "cloud_push",
@@ -4857,6 +4572,12 @@
       "config_flow": false,
       "iot_class": "cloud_push",
       "name": "Twitter"
+    },
+    "u_tec": {
+      "name": "U-tec",
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "ubiquiti": {
       "name": "Ubiquiti",
@@ -4913,10 +4634,6 @@
       "iot_class": "cloud_polling",
       "name": "UpCloud"
     },
-    "update": {
-      "config_flow": false,
-      "iot_class": null
-    },
     "upnp": {
       "config_flow": true,
       "iot_class": "local_polling",
@@ -4931,11 +4648,6 @@
       "iot_class": "cloud_polling",
       "name": "UptimeRobot"
     },
-    "usb": {
-      "config_flow": false,
-      "iot_class": "local_push",
-      "name": "USB Discovery"
-    },
     "usgs_earthquakes_feed": {
       "config_flow": false,
       "iot_class": "cloud_polling",
@@ -4945,10 +4657,6 @@
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "Ubiquiti UniFi Video"
-    },
-    "vacuum": {
-      "config_flow": false,
-      "iot_class": null
     },
     "vallox": {
       "config_flow": true,
@@ -5090,11 +4798,6 @@
       "iot_class": "cloud_polling",
       "name": "World Air Quality Index (WAQI)"
     },
-    "water_heater": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Water Heater"
-    },
     "waterfurnace": {
       "config_flow": false,
       "iot_class": "cloud_polling",
@@ -5109,20 +4812,10 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "weather": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Weather"
-    },
     "webhook": {
       "config_flow": false,
       "iot_class": null,
       "name": "Webhook"
-    },
-    "websocket_api": {
-      "config_flow": false,
-      "iot_class": null,
-      "name": "Home Assistant WebSocket API"
     },
     "wemo": {
       "config_flow": true,
@@ -5344,11 +5037,6 @@
       "iot_class": "local_polling",
       "name": "Zengge"
     },
-    "zeroconf": {
-      "config_flow": false,
-      "iot_class": "local_push",
-      "name": "Zero-configuration networking (zeroconf)"
-    },
     "zerproc": {
       "config_flow": true,
       "iot_class": "local_polling",
@@ -5388,6 +5076,12 @@
       "config_flow": false,
       "iot_class": "local_polling",
       "name": "ZoneMinder"
+    },
+    "zooz": {
+      "name": "Zooz",
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "zwave_js": {
       "config_flow": true,
@@ -5496,35 +5190,18 @@
     }
   },
   "translated_name": [
-    "alarm_control_panel",
-    "application_credentials",
     "aurora",
-    "automation",
-    "binary_sensor",
-    "button",
-    "calendar",
-    "camera",
     "cert_expiry",
-    "climate",
-    "configurator",
-    "conversation",
-    "cover",
     "cpuspeed",
     "demo",
     "derivative",
-    "device_tracker",
-    "diagnostics",
     "emulated_roku",
-    "energy",
-    "fan",
     "filesize",
     "garages_amsterdam",
     "google_travel_time",
     "group",
     "growatt_server",
     "homekit_controller",
-    "humidifier",
-    "image_processing",
     "input_boolean",
     "input_datetime",
     "input_number",
@@ -5532,41 +5209,24 @@
     "input_text",
     "integration",
     "islamic_prayer_times",
-    "light",
     "local_ip",
-    "lock",
-    "mailbox",
-    "media_player",
     "min_max",
     "mobile_app",
     "moehlenhoff_alpha2",
     "moon",
     "nmap_tracker",
-    "notify",
-    "number",
-    "person",
     "plant",
     "proximity",
-    "remote",
     "rpi_power",
-    "scene",
     "schedule",
-    "script",
-    "select",
-    "sensor",
     "shopping_list",
-    "siren",
     "sun",
-    "switch",
     "switch_as_x",
-    "system_health",
     "tag",
     "threshold",
     "tod",
-    "update",
     "uptime",
     "utility_meter",
-    "vacuum",
     "waze_travel_time"
   ]
 }
