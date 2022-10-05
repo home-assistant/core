@@ -47,7 +47,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
         super().__init__(device, coordinator)
         self._is_online: bool = True
         self._attr_device_info = DeviceInfo(
-            name=f"SwitchBee {device.unit_id}",
+            name=device.zone,
             identifiers={
                 (
                     DOMAIN,
