@@ -5,5 +5,6 @@
   "requirements": ["sqlalchemy==1.4.41", "fnvhash==0.1.0"],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "integration_type": "system"
 }

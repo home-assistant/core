@@ -16,6 +16,11 @@
             "get_api_key": "Open the OctoPrint UI and click 'Allow' on the Access Request for 'Home Assistant'."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "username": "Username"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -24,11 +29,6 @@
                     "ssl": "Use SSL",
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
-                }
-            },
-            "reauth_confirm": {
-                "data": {
-                    "username": "Username"
                 }
             }
         }

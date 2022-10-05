@@ -3,5 +3,6 @@
   "name": "Configurator",
   "documentation": "https://www.home-assistant.io/integrations/configurator",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "system"
 }
