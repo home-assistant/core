@@ -80,6 +80,6 @@ class LidarrEntity(CoordinatorEntity[LidarrDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
+            name=coordinator.config_entry.title,
             sw_version=coordinator.system_version,
         )
