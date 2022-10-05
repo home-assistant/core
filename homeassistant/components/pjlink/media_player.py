@@ -11,14 +11,11 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityDescription,
     MediaPlayerEntityFeature,
-    MediaPlayerState,
 )
-
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_TO_PROPERTY, DOMAIN
@@ -27,7 +24,7 @@ from .entity import PJLinkEntity
 
 PJLINK_MEDIA_PLAYER = MediaPlayerEntityDescription(
     key="projector",
-    entity_category=entity.EntityCategory.CONFIG,
+    entity_category=EntityCategory.CONFIG,
     device_class=MediaPlayerDeviceClass.TV,
 )
 

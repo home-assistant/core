@@ -4,16 +4,13 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
 INTEGRATION_NAME = "PJLink"
 DOMAIN = "pjlink"
 
-CONF_HOST = "host"
-CONF_PORT = "port"
-CONF_NAME = "name"
 CONF_ENCODING = "encoding"
-CONF_PASSWORD = "password"
 
 DEFAULT_PORT = 4352
 DEFAULT_ENCODING = "utf-8"
