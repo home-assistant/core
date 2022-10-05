@@ -7,7 +7,7 @@ from homeassistant.core import callback
 
 from .models import BluetoothServiceInfoBleak
 
-ADVERTISING_TIMES_NEEDED = 10
+ADVERTISING_TIMES_NEEDED = 30
 
 
 class AdvertisementTracker:
@@ -30,6 +30,11 @@ class AdvertisementTracker:
 
     def collect(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Collect timings for the tracker."""
+        import pprint
+
+        pprint.pprint(
+            ["collect", service_info.address, service_info.source, service_info]
+        )
         address = service_info.address
         assert (
             address not in self.intervals
