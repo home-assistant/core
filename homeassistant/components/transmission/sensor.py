@@ -75,11 +75,11 @@ class TransmissionSensor(SensorEntity):
         return self._state
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._tm_client.api.available
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
 
         @callback
@@ -102,7 +102,7 @@ class TransmissionSpeedSensor(TransmissionSensor):
         """Return the unit of measurement of this entity, if any."""
         return DATA_RATE_MEGABYTES_PER_SECOND
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
             mb_spd = (
@@ -117,7 +117,7 @@ class TransmissionSpeedSensor(TransmissionSensor):
 class TransmissionStatusSensor(TransmissionSensor):
     """Representation of a Transmission status sensor."""
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         if data := self._tm_client.api.data:
             upload = data.uploadSpeed
@@ -163,7 +163,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
             STATE_ATTR_TORRENT_INFO: info,
         }
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         torrents = _filter_torrents(
             self._tm_client.api.torrents, statuses=self.SUBTYPE_MODES[self._sub_type]

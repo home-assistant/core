@@ -8,15 +8,16 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
+    PLATFORM_SCHEMA,
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

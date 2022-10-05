@@ -1028,6 +1028,12 @@ async def websocket_get_configuration(
         data["data"][section] = zha_gateway.config_entry.options.get(
             CUSTOM_CONFIGURATION, {}
         ).get(section, {})
+
+        # send default values for unconfigured options
+        for entry in data["schemas"][section]:
+            if data["data"][section].get(entry["name"]) is None:
+                data["data"][section][entry["name"]] = entry["default"]
+
     connection.send_result(msg[ID], data)
 
 
@@ -1046,6 +1052,22 @@ async def websocket_update_zha_configuration(
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     options = zha_gateway.config_entry.options
     data_to_save = {**options, **{CUSTOM_CONFIGURATION: msg["data"]}}
+
+    for section, schema in ZHA_CONFIG_SCHEMAS.items():
+        for entry in schema.schema:
+            # remove options that match defaults
+            if (
+                data_to_save[CUSTOM_CONFIGURATION].get(section, {}).get(entry)
+                == entry.default()
+            ):
+                data_to_save[CUSTOM_CONFIGURATION][section].pop(entry)
+            # remove entire section block if empty
+            if not data_to_save[CUSTOM_CONFIGURATION][section]:
+                data_to_save[CUSTOM_CONFIGURATION].pop(section)
+
+    # remove entire custom_configuration block if empty
+    if not data_to_save[CUSTOM_CONFIGURATION]:
+        data_to_save.pop(CUSTOM_CONFIGURATION)
 
     _LOGGER.info(
         "Updating ZHA custom configuration options from %s to %s",

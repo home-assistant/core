@@ -2014,3 +2014,20 @@ async def test_client_message_coalescing(hass, websocket_client, hass_admin_user
     hass.states.async_set("light.permitted", "on", {"color": "blue"})
     await websocket_client.close()
     await hass.async_block_till_done()
+
+
+async def test_integration_descriptions(hass, hass_ws_client):
+    """Test we can get integration descriptions."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "integration/descriptions",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"]

@@ -9,7 +9,7 @@
             "inconsistent_device": "No se encontraron los protocolos esperados durante el descubrimiento. Esto normalmente indica un problema con multicast DNS (Zeroconf). Por favor, intenta a\u00f1adir el dispositivo de nuevo.",
             "ipv6_not_supported": "IPv6 no es compatible.",
             "no_devices_found": "No se encontraron dispositivos en la red",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "setup_failed": "No se pudo configurar el dispositivo.",
             "unknown": "Error inesperado"
         },

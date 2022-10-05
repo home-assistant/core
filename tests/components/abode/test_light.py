@@ -8,9 +8,8 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -52,10 +51,10 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get("device_type") == "RGB Dimmer"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Living Room Lamp"
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
-    assert state.attributes.get(ATTR_COLOR_MODE) == COLOR_MODE_HS
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.HS
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_HS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
     ]
 
 

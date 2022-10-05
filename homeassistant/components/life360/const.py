@@ -7,7 +7,6 @@ DOMAIN = "life360"
 LOGGER = logging.getLogger(__package__)
 
 ATTRIBUTION = "Data provided by life360.com"
-COMM_MAX_RETRIES = 2
 COMM_TIMEOUT = 3.05
 SPEED_FACTOR_MPH = 2.25
 SPEED_DIGITS = 1

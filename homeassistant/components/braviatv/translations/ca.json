@@ -2,20 +2,26 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "no_ip_control": "El control IP del teu televisor est\u00e0 desactivat o aquest no \u00e9s compatible."
+            "no_ip_control": "El control IP del teu televisor est\u00e0 desactivat o aquest no \u00e9s compatible.",
+            "not_bravia_device": "El dispositiu no \u00e9s un televisor Bravia."
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids",
             "unsupported_model": "Aquest model de televisor no \u00e9s compatible."
         },
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "Codi PIN"
+                    "pin": "Codi PIN",
+                    "use_psk": "Utilitza autenticaci\u00f3 PSK"
                 },
                 "description": "Introdueix el codi PIN que es mostra a la pantalla del televisor.\n\nSi no es mostra el codi, has d'eliminar Home Assistant del teu televisor. V\u00e9s a Configuraci\u00f3 > Xarxa > Configuraci\u00f3 de dispositiu remot > Elimina dispositiu remot.",
                 "title": "Autoritzaci\u00f3 del televisor Sony Bravia"
+            },
+            "confirm": {
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?"
             },
             "user": {
                 "data": {

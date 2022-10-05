@@ -67,6 +67,7 @@ async def async_setup_entry(
 class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
+    _attr_device_class = SensorDeviceClass.VOLUME
     _attr_icon = WATER_ICON
     _attr_native_unit_of_measurement = VOLUME_GALLONS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING

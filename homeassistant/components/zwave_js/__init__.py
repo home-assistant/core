@@ -34,6 +34,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
 from .addon import AddonError, AddonManager, AddonState, get_addon_manager
@@ -83,6 +88,7 @@ from .const import (
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
+    USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
@@ -124,7 +130,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
 
-    client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
+    client = ZwaveClient(
+        entry.data[CONF_URL],
+        async_get_clientsession(hass),
+        additional_user_agent_components=USER_AGENT,
+    )
 
     # connect and throw error if connection failed
     try:
@@ -133,10 +143,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidServerVersion as err:
         if use_addon:
             async_ensure_addon_updated(hass)
+        else:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "invalid_server_version",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="invalid_server_version",
+            )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
     else:
+        async_delete_issue(hass, DOMAIN, "invalid_server_version")
         LOGGER.info("Connected to Zwave JS Server")
 
     dev_reg = device_registry.async_get(hass)

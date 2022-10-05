@@ -31,17 +31,17 @@ OPTIONS_SCHEMA = vol.Schema(
             CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS
         ): selector.NumberSelector(
             selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX, step=1e-3
+                mode=selector.NumberSelectorMode.BOX, step="any"
             ),
         ),
         vol.Optional(CONF_LOWER): selector.NumberSelector(
             selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX, step=1e-3
+                mode=selector.NumberSelectorMode.BOX, step="any"
             ),
         ),
         vol.Optional(CONF_UPPER): selector.NumberSelector(
             selector.NumberSelectorConfig(
-                mode=selector.NumberSelectorMode.BOX, step=1e-3
+                mode=selector.NumberSelectorMode.BOX, step="any"
             ),
         ),
     }

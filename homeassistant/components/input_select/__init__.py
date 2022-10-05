@@ -132,7 +132,7 @@ class InputSelectStore(Store):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputSelect](_LOGGER, DOMAIN, hass)
 
     # Process integration platforms right away since
     # we will create entities before firing EVENT_COMPONENT_LOADED
@@ -144,7 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputSelect.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputSelect
     )
 
     storage_collection = InputSelectStorageCollection(
@@ -249,11 +249,11 @@ class InputSelectStorageCollection(collection.StorageCollection):
         return {CONF_ID: data[CONF_ID]} | update_data
 
 
-class InputSelect(SelectEntity, RestoreEntity):
+class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
     _attr_should_poll = False
-    editable = True
+    editable: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize a select input."""
@@ -264,8 +264,15 @@ class InputSelect(SelectEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
+    def from_storage(cls, config: ConfigType) -> InputSelect:
+        """Return entity instance initialized from storage."""
+        input_select = cls(config)
+        input_select.editable = True
+        return input_select
+
+    @classmethod
     def from_yaml(cls, config: ConfigType) -> InputSelect:
-        """Return entity instance initialized from yaml storage."""
+        """Return entity instance initialized from yaml."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_select.editable = False
