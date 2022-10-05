@@ -30,29 +30,24 @@ class AdvertisementTracker:
 
     def collect(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Collect timings for the tracker."""
-        import pprint
-
-        pprint.pprint(
-            ["collect", service_info.address, service_info.source, service_info]
-        )
         address = service_info.address
-        assert (
-            address not in self.intervals
-        ), f"Implementor error: interval already exist for {address}"
+        tracked_source = self._sources.get(address)
+        current_source = service_info.source
 
-        if tracked_source := self._sources.get(address):
-            # Source has changed, start tracking again
-            if tracked_source != service_info.source:
-                self._timings[address] = []
+        if tracked_source != current_source:
+            # Source has changed, start tracking this source
+            timings = self._timings[address] = []
+            self._sources[address] = current_source
+        else:
+            timings = self._timings[address]
 
-        timings = self._timings.setdefault(address, [])
         timings.append(service_info.time)
         if len(timings) != ADVERTISING_TIMES_NEEDED:
             return
 
         max_time_between_advertisements = timings[1] - timings[0]
-        for i, timing in enumerate(timings, 2):
-            time_between_advertisements = timing - timings[i - 1]
+        for i in range(2, len(timings)):
+            time_between_advertisements = timings[i] - timings[i - 1]
             if time_between_advertisements > max_time_between_advertisements:
                 max_time_between_advertisements = time_between_advertisements
 
