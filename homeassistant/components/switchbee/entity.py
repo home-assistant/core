@@ -50,7 +50,7 @@ class SwitchBeeDeviceEntity(SwitchBeeEntity[_DeviceTypeT]):
             device.id if device.type == DeviceType.Thermostat else device.unit_id
         )
         self._attr_device_info = DeviceInfo(
-            name=f"SwitchBee {identifier}",
+            name=device.zone,
             identifiers={
                 (
                     DOMAIN,
