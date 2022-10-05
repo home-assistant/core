@@ -78,6 +78,7 @@ homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.cover.*
 homeassistant.components.clickatell.*
+homeassistant.components.clicksend.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.deconz.*
