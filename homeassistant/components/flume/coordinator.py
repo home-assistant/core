@@ -66,7 +66,7 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
             device["id"]: device["connected"]
             for device in self.flume_devices.get_devices()
         }
-        _LOGGER.debug("Connectivity %s", self.connections)
+        _LOGGER.debug("Connectivity %s", self.connected)
 
     async def _async_update_data(self) -> None:
         """Update the device list."""
