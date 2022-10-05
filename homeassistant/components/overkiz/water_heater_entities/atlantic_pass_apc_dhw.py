@@ -1,4 +1,4 @@
-"""Support for Atlantic Pass APC Zone Control."""
+"""Support for Atlantic Pass APC DHW."""
 
 from typing import Any, cast
 
@@ -16,8 +16,6 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from ..entity import OverkizEntity
 
-OPERATION_LIST = [STATE_OFF, STATE_HEAT_PUMP, STATE_PERFORMANCE]
-
 
 class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
     """Representation of Atlantic Pass APC DHW."""
@@ -28,7 +26,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
         | WaterHeaterEntityFeature.AWAY_MODE
     )
-    _attr_operation_list = OPERATION_LIST
+    _attr_operation_list = [STATE_OFF, STATE_HEAT_PUMP, STATE_PERFORMANCE]
 
     @property
     def target_temperature(self) -> float:
