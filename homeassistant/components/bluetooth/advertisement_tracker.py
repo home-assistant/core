@@ -28,31 +28,32 @@ class AdvertisementTracker:
             "timings": self._timings,
         }
 
-    def collect(self, service_info: BluetoothServiceInfoBleak) -> None:
-        """Collect timings for the tracker."""
-        import pprint
+    @callback
+    def async_collect(self, service_info: BluetoothServiceInfoBleak) -> None:
+        """Collect timings for the tracker.
 
-        pprint.pprint(
-            ["collect", service_info.address, service_info.source, service_info]
-        )
+        For performance reasons, it is the responsibility of the
+        caller to check if the device already has an interval set in the
+        tracker before calling this function.
+        """
         address = service_info.address
-        assert (
-            address not in self.intervals
-        ), f"Implementor error: interval already exist for {address}"
+        tracked_source = self._sources.get(address)
+        current_source = service_info.source
 
-        if tracked_source := self._sources.get(address):
-            # Source has changed, start tracking again
-            if tracked_source != service_info.source:
-                self._timings[address] = []
+        if tracked_source != current_source:
+            # Source has changed, start tracking this source
+            timings = self._timings[address] = []
+            self._sources[address] = current_source
+        else:
+            timings = self._timings[address]
 
-        timings = self._timings.setdefault(address, [])
         timings.append(service_info.time)
         if len(timings) != ADVERTISING_TIMES_NEEDED:
             return
 
         max_time_between_advertisements = timings[1] - timings[0]
-        for i, timing in enumerate(timings, 2):
-            time_between_advertisements = timing - timings[i - 1]
+        for i in range(2, len(timings)):
+            time_between_advertisements = timings[i] - timings[i - 1]
             if time_between_advertisements > max_time_between_advertisements:
                 max_time_between_advertisements = time_between_advertisements
 
@@ -60,14 +61,16 @@ class AdvertisementTracker:
         self.intervals[address] = max_time_between_advertisements
         del self._timings[address]
 
-    def remove_address(self, address: str) -> None:
+    @callback
+    def async_remove_address(self, address: str) -> None:
         """Remove the tracker."""
         self.intervals.pop(address, None)
         self._sources.pop(address, None)
         self._timings.pop(address, None)
 
-    def remove_source(self, source: str) -> None:
+    @callback
+    def async_remove_source(self, source: str) -> None:
         """Remove the tracker."""
         for address in list(self._sources):
             if self._sources[address] == source:
-                self.remove_address(address)
+                self.async_remove_address(address)

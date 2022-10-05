@@ -380,7 +380,7 @@ class BluetoothManager:
             # but we only want to use it for non-connectable devices since
             # the bluetooth stack provides a better way to determine if
             # a connectable device is unavailable.
-            self._advertisement_tracker.collect(service_info)
+            self._advertisement_tracker.async_collect(service_info)
 
         # If the advertisement data is the same as the last time we saw it, we
         # don't need to do anything else.
@@ -441,7 +441,7 @@ class BluetoothManager:
             if unavailable_callbacks[address]:
                 return
             if not connectable:
-                self._advertisement_tracker.remove_address(address)
+                self._advertisement_tracker.async_remove_address(address)
             del unavailable_callbacks[address]
 
         return _async_remove_callback
@@ -550,7 +550,7 @@ class BluetoothManager:
         scanners = self._get_scanners_by_type(connectable)
 
         def _unregister_scanner() -> None:
-            self._advertisement_tracker.remove_source(scanner.source)
+            self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
 
         scanners.append(scanner)
