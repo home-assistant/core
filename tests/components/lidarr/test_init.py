@@ -57,5 +57,5 @@ async def test_device_info(
     assert device.configuration_url == "http://127.0.0.1:8668"
     assert device.identifiers == {(DOMAIN, entry.entry_id)}
     assert device.manufacturer == DEFAULT_NAME
-    assert device.name == "Lidarr"
+    assert device.name == "Mock Title"
     assert device.sw_version == "10.0.0.34882"
