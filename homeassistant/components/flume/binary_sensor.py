@@ -155,6 +155,6 @@ class FlumeConnectionBinarySensor(FlumeEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return connection status."""
-       return bool(
-            (connected := self.coordinator.connected) and connected[self.device_id]
-        )
+        return bool(
+             (connected := self.coordinator.connected) and connected[self.device_id]
+         )
