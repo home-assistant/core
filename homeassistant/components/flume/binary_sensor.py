@@ -134,13 +134,14 @@ class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return on state."""
-
-        if notifications := self.coordinator.active_notifications_by_device.get(
-            self.device_id
-        ):
-            return self.entity_description.event_rule in notifications
-
-        return False
+        return bool(
+            (
+                notifications := self.coordinator.active_notifications_by_device.get(
+                    self.device_id
+                )
+            )
+            and self.entity_description.event_rule in notifications
+        )
 
 
 class FlumeConnectionBinarySensor(FlumeEntity, BinarySensorEntity):
