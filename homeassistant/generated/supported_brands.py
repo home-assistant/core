@@ -11,6 +11,7 @@ HAS_SUPPORTED_BRANDS = [
     "netatmo",
     "overkiz",
     "renault",
+    "switchbee",
     "thermobeacon",
     "wemo",
     "yalexs_ble",
