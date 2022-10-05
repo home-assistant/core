@@ -514,6 +514,9 @@ fivem-api==0.1.2
 # homeassistant.components.fjaraskupan
 fjaraskupan==2.1.0
 
+# homeassistant.components.flexit_bacnet
+flexit_bacnet==1.0.0
+
 # homeassistant.components.flipr
 flipr-api==1.4.2
 
