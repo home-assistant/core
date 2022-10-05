@@ -1427,6 +1427,7 @@ omit =
     homeassistant/components/velbus/const.py
     homeassistant/components/velbus/cover.py
     homeassistant/components/velbus/diagnostics.py
+    homeassistant/components/velbus/entity.py
     homeassistant/components/velbus/light.py
     homeassistant/components/velbus/sensor.py
     homeassistant/components/velbus/switch.py
