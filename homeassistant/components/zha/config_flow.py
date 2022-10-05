@@ -646,8 +646,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
         if "radio_type" in discovery_info.properties:
             self._radio_type = RadioType[discovery_info.properties["radio_type"]]
-        elif "zigate" in local_name:
-            self._radio_type = RadioType.zigate
         elif "efr32" in local_name:
             self._radio_type = RadioType.ezsp
         else:

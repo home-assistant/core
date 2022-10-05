@@ -1680,3 +1680,65 @@ async def test_options_flow_restarts_running_zha_if_cancelled(async_setup_entry,
 
     # ZHA was set up once more
     async_setup_entry.assert_called_once_with(hass, entry)
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_options_flow_migration_reset_old_adapter(hass, mock_app):
+    """Test options flow for migrating from an old radio."""
+
+    entry = MockConfigEntry(
+        version=config_flow.ZhaConfigFlowHandler.VERSION,
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "/dev/serial/by-id/old_radio",
+                CONF_BAUDRATE: 12345,
+                CONF_FLOWCONTROL: None,
+            },
+            CONF_RADIO_TYPE: "znp",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+
+    # ZHA gets unloaded
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload", return_value=True
+    ):
+        result1 = await hass.config_entries.options.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+
+    assert result1["step_id"] == "prompt_migrate_or_reconfigure"
+    result2 = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={"next_step_id": config_flow.OPTIONS_INTENT_MIGRATE},
+    )
+
+    # User must explicitly approve radio reset
+    assert result2["step_id"] == "intent_migrate"
+
+    mock_app.reset_network_info = AsyncMock()
+
+    result3 = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={},
+    )
+
+    mock_app.reset_network_info.assert_awaited_once()
+
+    # Now we can unplug the old radio
+    assert result3["step_id"] == "instruct_unplug"
+
+    # And move on to choosing the new radio
+    result4 = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={},
+    )
+    assert result4["step_id"] == "choose_serial_port"
