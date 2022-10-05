@@ -39,11 +39,10 @@ class ESPHomeScanner(BaseHaScanner):
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
-        self._hass = hass
+        super().__init__(hass, scanner_id)
         self._new_info_callback = new_info_callback
         self._discovered_devices: dict[str, BLEDevice] = {}
         self._discovered_device_timestamps: dict[str, float] = {}
-        self._source = scanner_id
         self._connector = connector
         self._connectable = connectable
         self._details: dict[str, str | HaBluetoothConnector] = {"source": scanner_id}
@@ -54,7 +53,7 @@ class ESPHomeScanner(BaseHaScanner):
     def async_setup(self) -> CALLBACK_TYPE:
         """Set up the scanner."""
         return async_track_time_interval(
-            self._hass, self._async_expire_devices, timedelta(seconds=30)
+            self.hass, self._async_expire_devices, timedelta(seconds=30)
         )
 
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
@@ -113,7 +112,7 @@ class ESPHomeScanner(BaseHaScanner):
                 manufacturer_data=advertisement_data.manufacturer_data,
                 service_data=advertisement_data.service_data,
                 service_uuids=advertisement_data.service_uuids,
-                source=self._source,
+                source=self.source,
                 device=device,
                 advertisement=advertisement_data,
                 connectable=self._connectable,

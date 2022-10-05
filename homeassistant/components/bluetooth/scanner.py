@@ -130,7 +130,8 @@ class HaScanner(BaseHaScanner):
         address: str,
     ) -> None:
         """Init bluetooth discovery."""
-        self.hass = hass
+        source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
+        super().__init__(hass, source)
         self.mode = mode
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
@@ -139,7 +140,6 @@ class HaScanner(BaseHaScanner):
         self._start_time = 0.0
         self._callbacks: list[Callable[[BluetoothServiceInfoBleak], None]] = []
         self.name = adapter_human_name(adapter, address)
-        self.source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:

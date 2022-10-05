@@ -20,7 +20,7 @@ from bleak.backends.scanner import (
 )
 from bleak_retry_connector import freshen_ble_device
 
-from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
@@ -85,6 +85,11 @@ class _HaWrappedBleakBackend:
 
 class BaseHaScanner:
     """Base class for Ha Scanners."""
+
+    def __init__(self, hass: HomeAssistant, source: str) -> None:
+        """Initialize the scanner."""
+        self.hass = hass
+        self.source = source
 
     @property
     @abstractmethod
