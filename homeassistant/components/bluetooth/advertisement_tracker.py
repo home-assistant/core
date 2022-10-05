@@ -28,8 +28,14 @@ class AdvertisementTracker:
             "timings": self._timings,
         }
 
-    def collect(self, service_info: BluetoothServiceInfoBleak) -> None:
-        """Collect timings for the tracker."""
+    @callback
+    def async_collect(self, service_info: BluetoothServiceInfoBleak) -> None:
+        """Collect timings for the tracker.
+
+        For performance reasons, it is the responsibility of the
+        caller to check if the device already has an interval set in the
+        tracker before calling this function.
+        """
         address = service_info.address
         tracked_source = self._sources.get(address)
         current_source = service_info.source
@@ -55,14 +61,16 @@ class AdvertisementTracker:
         self.intervals[address] = max_time_between_advertisements
         del self._timings[address]
 
-    def remove_address(self, address: str) -> None:
+    @callback
+    def async_remove_address(self, address: str) -> None:
         """Remove the tracker."""
         self.intervals.pop(address, None)
         self._sources.pop(address, None)
         self._timings.pop(address, None)
 
-    def remove_source(self, source: str) -> None:
+    @callback
+    def async_remove_source(self, source: str) -> None:
         """Remove the tracker."""
         for address in list(self._sources):
             if self._sources[address] == source:
-                self.remove_address(address)
+                self.async_remove_address(address)
