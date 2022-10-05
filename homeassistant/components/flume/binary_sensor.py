@@ -88,7 +88,13 @@ async def async_setup_entry(
         hass=hass, auth=flume_auth
     )
 
-    for device in flume_devices.device_list:
+    flume_devices = [
+        device
+        for device in flume_domain_data[FLUME_DEVICES].device_list
+        if KEY_DEVICE_LOCATION_NAME in device[KEY_DEVICE_LOCATION]
+    ]
+
+    for device in flume_devices:
         device_id = device[KEY_DEVICE_ID]
         device_location_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]
 
@@ -155,6 +161,6 @@ class FlumeConnectionBinarySensor(FlumeEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return connection status."""
-       return bool(
+        return bool(
             (connected := self.coordinator.connected) and connected[self.device_id]
         )
