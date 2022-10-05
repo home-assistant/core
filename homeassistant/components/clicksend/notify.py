@@ -65,12 +65,12 @@ class ClicksendNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.username: str = config[CONF_USERNAME]
         self.api_key: str = config[CONF_API_KEY]
-        self.recipients: list = config[CONF_RECIPIENT]
+        self.recipients: list[str] = config[CONF_RECIPIENT]
         self.sender: str = config[CONF_SENDER]
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
-        data: dict = {"messages": []}
+        data: dict[str, Any] = {"messages": []}
         for recipient in self.recipients:
             data["messages"].append(
                 {
