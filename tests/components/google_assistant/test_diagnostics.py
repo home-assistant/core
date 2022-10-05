@@ -53,10 +53,7 @@ async def test_diagnostics(hass: core.HomeAssistant, hass_client: Any):
                     "type": "action.devices.types.SWITCH",
                     "willReportState": False,
                     "customData": {
-                        "baseUrl": "**REDACTED**",
                         "httpPort": 8123,
-                        "httpSSL": False,
-                        "proxyDeviceId": "**REDACTED**",
                         "uuid": "**REDACTED**",
                         "webhookId": None,
                     },
@@ -70,10 +67,7 @@ async def test_diagnostics(hass: core.HomeAssistant, hass_client: Any):
                     "type": "action.devices.types.OUTLET",
                     "willReportState": False,
                     "customData": {
-                        "baseUrl": "**REDACTED**",
                         "httpPort": 8123,
-                        "httpSSL": False,
-                        "proxyDeviceId": "**REDACTED**",
                         "uuid": "**REDACTED**",
                         "webhookId": None,
                     },

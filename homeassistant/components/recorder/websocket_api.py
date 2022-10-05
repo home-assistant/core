@@ -9,27 +9,26 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import messages
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
-)
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
-from homeassistant.util import (
-    dt as dt_util,
-    energy as energy_util,
-    power as power_util,
-    pressure as pressure_util,
-    temperature as temperature_util,
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    EnergyConverter,
+    MassConverter,
+    PowerConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
+    VolumeConverter,
 )
 
 from .const import MAX_QUEUE_BACKLOG
 from .statistics import (
+    STATISTIC_UNIT_TO_UNIT_CONVERTER,
     async_add_external_statistics,
+    async_change_statistics_unit,
     async_import_statistics,
     list_statistic_ids,
     statistics_during_period,
@@ -46,6 +45,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
     websocket_api.async_register_command(hass, ws_backup_end)
     websocket_api.async_register_command(hass, ws_backup_start)
+    websocket_api.async_register_command(hass, ws_change_statistics_unit)
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_get_statistics_during_period)
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
@@ -121,11 +121,14 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
         vol.Optional("units"): vol.Schema(
             {
-                vol.Optional("energy"): vol.In(energy_util.VALID_UNITS),
-                vol.Optional("power"): vol.In(power_util.VALID_UNITS),
-                vol.Optional("pressure"): vol.In(pressure_util.VALID_UNITS),
-                vol.Optional("temperature"): vol.In(temperature_util.VALID_UNITS),
-                vol.Optional("volume"): vol.Any(VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+                vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
+                vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+                vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
+                vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
+                vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+                vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
+                vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
+                vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
             }
         ),
     }
@@ -258,11 +261,37 @@ def ws_update_statistics_metadata(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        vol.Required("type"): "recorder/change_statistics_unit",
+        vol.Required("statistic_id"): str,
+        vol.Required("new_unit_of_measurement"): vol.Any(str, None),
+        vol.Required("old_unit_of_measurement"): vol.Any(str, None),
+    }
+)
+@callback
+def ws_change_statistics_unit(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Change the unit_of_measurement for a statistic_id.
+
+    All existing statistics will be converted to the new unit.
+    """
+    async_change_statistics_unit(
+        hass,
+        msg["statistic_id"],
+        new_unit_of_measurement=msg["new_unit_of_measurement"],
+        old_unit_of_measurement=msg["old_unit_of_measurement"],
+    )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         vol.Required("type"): "recorder/adjust_sum_statistics",
         vol.Required("statistic_id"): str,
         vol.Required("start_time"): str,
         vol.Required("adjustment"): vol.Any(float, int),
-        vol.Required("display_unit"): vol.Any(str, None),
+        vol.Required("adjustment_unit_of_measurement"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -271,8 +300,8 @@ async def ws_adjust_sum_statistics(
 ) -> None:
     """Adjust sum statistics.
 
-    If the statistics is stored as kWh, it's allowed to make an adjustment in Wh or MWh
-    If the statistics is stored as m³, it's allowed to make an adjustment in ft³
+    If the statistics is stored as NORMALIZED_UNIT,
+    it's allowed to make an adjustment in VALID_UNIT
     """
     start_time_str = msg["start_time"]
 
@@ -291,29 +320,26 @@ async def ws_adjust_sum_statistics(
         return
     metadata = metadatas[0]
 
-    def valid_units(statistics_unit: str | None, display_unit: str | None) -> bool:
-        if statistics_unit == display_unit:
+    def valid_units(statistics_unit: str | None, adjustment_unit: str | None) -> bool:
+        if statistics_unit == adjustment_unit:
             return True
-        if statistics_unit == ENERGY_KILO_WATT_HOUR and display_unit in (
-            ENERGY_MEGA_WATT_HOUR,
-            ENERGY_WATT_HOUR,
-        ):
-            return True
-        if statistics_unit == VOLUME_CUBIC_METERS and display_unit == VOLUME_CUBIC_FEET:
+        converter = STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
+        if converter is not None and adjustment_unit in converter.VALID_UNITS:
             return True
         return False
 
     stat_unit = metadata["statistics_unit_of_measurement"]
-    if not valid_units(stat_unit, msg["display_unit"]):
+    adjustment_unit = msg["adjustment_unit_of_measurement"]
+    if not valid_units(stat_unit, adjustment_unit):
         connection.send_error(
             msg["id"],
             "invalid_units",
-            f"Can't convert {stat_unit} to {msg['display_unit']}",
+            f"Can't convert {stat_unit} to {adjustment_unit}",
         )
         return
 
     get_instance(hass).async_adjust_statistics(
-        msg["statistic_id"], start_time, msg["adjustment"], msg["display_unit"]
+        msg["statistic_id"], start_time, msg["adjustment"], adjustment_unit
     )
     connection.send_result(msg["id"])
 
@@ -350,7 +376,6 @@ def ws_import_statistics(
     """Import statistics."""
     metadata = msg["metadata"]
     stats = msg["stats"]
-    metadata["state_unit_of_measurement"] = metadata["unit_of_measurement"]
 
     if valid_entity_id(metadata["statistic_id"]):
         async_import_statistics(hass, metadata, stats)

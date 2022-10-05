@@ -286,6 +286,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^DISABLED_(\w*)$"),
         ),
     ],
+    "homeassistant.util": [
+        ObsoleteImportMatch(
+            reason="replaced by unit_conversion.***Converter",
+            constant=re.compile(r"^(distance|pressure|speed|temperature|volume)$"),
+        ),
+    ],
 }
 
 

@@ -609,7 +609,7 @@ async def test_sensor_entity_total_liters(
 
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
-    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLUME
     assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
 
 

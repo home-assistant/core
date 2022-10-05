@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Atrybuty encji s\u0105 teraz dost\u0119pne jako sensory diagnostyczne. \n\nDostosuj wszelkie automatyzacje lub skrypty korzystaj\u0105ce z tych atrybut\u00f3w.",
+            "title": "Atrybuty Litter-Robot s\u0105 teraz ich w\u0142asnymi sensorami"
+        }
     }
 }

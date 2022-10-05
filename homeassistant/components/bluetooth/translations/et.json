@@ -29,6 +29,12 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "Bluetoothi t\u00f6\u00f6kindluse ja j\u00f5udluse parandamiseks soovitame tungivalt v\u00e4rskendada Home Assistanti operatsioonis\u00fcsteemi versioonile 9.0 v\u00f5i uuemale.",
+            "title": "Uuenda operatsioonis\u00fcsteemile Home Assistant 9.0 v\u00f5i uuem"
+        }
+    },
     "options": {
         "step": {
             "init": {

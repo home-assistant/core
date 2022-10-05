@@ -119,6 +119,62 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
     )
 
 
+async def test_switching_adapters_based_on_zero_rssi(hass, enable_bluetooth):
+    """Test switching adapters based on zero rssi."""
+
+    address = "44:44:33:11:23:45"
+
+    switchbot_device_no_rssi = BLEDevice(address, "wohand_poor_signal", rssi=0)
+    switchbot_adv_no_rssi = AdvertisementData(
+        local_name="wohand_no_rssi", service_uuids=[]
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_no_rssi, switchbot_adv_no_rssi, "hci0"
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_no_rssi
+    )
+
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal", rssi=-60)
+    switchbot_adv_good_signal = AdvertisementData(
+        local_name="wohand_good_signal", service_uuids=[]
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_good_signal, switchbot_adv_good_signal, "hci1"
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+    inject_advertisement_with_source(
+        hass, switchbot_device_good_signal, switchbot_adv_no_rssi, "hci0"
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+    # We should not switch adapters unless the signal hits the threshold
+    switchbot_device_similar_signal = BLEDevice(
+        address, "wohand_similar_signal", rssi=-62
+    )
+    switchbot_adv_similar_signal = AdvertisementData(
+        local_name="wohand_similar_signal", service_uuids=[]
+    )
+
+    inject_advertisement_with_source(
+        hass, switchbot_device_similar_signal, switchbot_adv_similar_signal, "hci0"
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_good_signal
+    )
+
+
 async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
     """Test switching adapters based on the previous advertisement being stale."""
 

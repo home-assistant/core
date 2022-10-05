@@ -39,6 +39,7 @@ ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
+ATTR_RANGE = "range"
 
 ICON = "mdi:calculator"
 
@@ -48,6 +49,7 @@ SENSOR_TYPES = {
     ATTR_MEAN: "mean",
     ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
+    ATTR_RANGE: "range",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -158,6 +160,19 @@ def calc_median(sensor_values, round_digits):
     return round(statistics.median(result), round_digits)
 
 
+def calc_range(sensor_values, round_digits):
+    """Calculate range value, honoring unknown states."""
+    result = [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+    if not result:
+        return None
+    return round(max(result) - min(result), round_digits)
+
+
 class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
@@ -180,6 +195,7 @@ class MinMaxSensor(SensorEntity):
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = self.last = self.median = None
+        self.range = None
         self.min_entity_id = self.max_entity_id = self.last_entity_id = None
         self.count_sensors = len(self._entity_ids)
         self.states = {}
@@ -288,3 +304,4 @@ class MinMaxSensor(SensorEntity):
         self.max_entity_id, self.max_value = calc_max(sensor_values)
         self.mean = calc_mean(sensor_values, self._round_digits)
         self.median = calc_median(sensor_values, self._round_digits)
+        self.range = calc_range(sensor_values, self._round_digits)

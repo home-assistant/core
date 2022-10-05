@@ -1,13 +1,10 @@
 """Test Subaru sensors."""
 from unittest.mock import patch
 
-from homeassistant.components.subaru.const import VEHICLE_NAME
 from homeassistant.components.subaru.sensor import (
     API_GEN_2_SENSORS,
     EV_SENSORS,
     SAFETY_SENSORS,
-    SENSOR_FIELD,
-    SENSOR_TYPE,
 )
 from homeassistant.util import slugify
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
@@ -16,13 +13,14 @@ from .api_responses import (
     EXPECTED_STATE_EV_IMPERIAL,
     EXPECTED_STATE_EV_METRIC,
     EXPECTED_STATE_EV_UNAVAILABLE,
-    TEST_VIN_2_EV,
-    VEHICLE_DATA,
     VEHICLE_STATUS_EV,
 )
-from .conftest import MOCK_API_FETCH, MOCK_API_GET_DATA, advance_time_to_next_fetch
-
-VEHICLE_NAME = VEHICLE_DATA[TEST_VIN_2_EV][VEHICLE_NAME]
+from .conftest import (
+    MOCK_API_FETCH,
+    MOCK_API_GET_DATA,
+    TEST_DEVICE_NAME,
+    advance_time_to_next_fetch,
+)
 
 
 async def test_sensors_ev_imperial(hass, ev_entry):
@@ -59,9 +57,9 @@ def _assert_data(hass, expected_state):
     expected_states = {}
     for item in sensor_list:
         expected_states[
-            f"sensor.{slugify(f'{VEHICLE_NAME} {item[SENSOR_TYPE]}')}"
-        ] = expected_state[item[SENSOR_FIELD]]
+            f"sensor.{slugify(f'{TEST_DEVICE_NAME} {item.name}')}"
+        ] = expected_state[item.key]
 
-    for sensor in expected_states:
+    for sensor, value in expected_states.items():
         actual = hass.states.get(sensor)
-        assert actual.state == expected_states[sensor]
+        assert actual.state == value

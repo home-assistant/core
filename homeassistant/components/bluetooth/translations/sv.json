@@ -29,6 +29,12 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "F\u00f6r att f\u00f6rb\u00e4ttra Bluetooths tillf\u00f6rlitlighet och prestanda rekommenderar vi starkt att du uppdaterar till version 9.0 eller senare av operativsystemet Home Assistant.",
+            "title": "Uppdatera till Home Assistant operativsystem 9.0 eller senare"
+        }
+    },
     "options": {
         "step": {
             "init": {

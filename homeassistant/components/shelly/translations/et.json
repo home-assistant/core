@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "reauth_unsuccessful": "Taasautentimine eba\u00f5nnestus, eemaldage integratsioon ja seadistage see uuesti.",
             "unsupported_firmware": "Seade kasutab toetuseta p\u00fcsivara versiooni."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "Kas soovid seadistada seadet {model} saidil {host} ? \n\n Enne seadistamise j\u00e4tkamist tuleb parooliga kaitstud akutoitega seadmed \u00e4ratada.\n Patareitoitega seadmed, mis pole parooliga kaitstud, lisatakse seadme \u00e4rkamisel. N\u00fc\u00fcd saad seadme k\u00e4sitsi \u00fcles \u00e4ratada, kasutades sellel olevat nuppu v\u00f5i oodata seadme j\u00e4rgmist andmete v\u00e4rskendamist."
             },
             "credentials": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
