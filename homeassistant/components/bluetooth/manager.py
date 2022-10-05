@@ -366,7 +366,8 @@ class BluetoothManager:
         if connectable:
             self._connectable_history[address] = service_info
             # Bleak callbacks must get a connectable device
-        elif (
+
+        if (
             address in self._unavailable_callbacks
             and address not in self._advertisement_tracker.intervals
         ):
