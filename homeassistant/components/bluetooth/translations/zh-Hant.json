@@ -29,6 +29,12 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "\u6b32\u6539\u5584\u85cd\u82bd\u53ef\u9760\u6027\u8207\u6548\u80fd\uff0c\u5f37\u70c8\u5efa\u8b70\u60a8\u66f4\u65b0\u81f3 9.0 \u6216\u66f4\u65b0\u7248\u672c\u4e4b Home Assistant OS\u3002",
+            "title": "\u8acb\u66f4\u65b0\u81f3 Home Assistant OS 9.0 \u6216\u66f4\u65b0\u7248\u672c"
+        }
+    },
     "options": {
         "step": {
             "init": {

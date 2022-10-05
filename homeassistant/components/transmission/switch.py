@@ -1,5 +1,6 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -61,11 +62,11 @@ class TransmissionSwitch(SwitchEntity):
         return self._state == STATE_ON
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._tm_client.api.available
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self.type == "on_off":
             _LOGGING.debug("Starting all torrents")
@@ -75,7 +76,7 @@ class TransmissionSwitch(SwitchEntity):
             self._tm_client.api.set_alt_speed_enabled(True)
         self._tm_client.api.update()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self.type == "on_off":
             _LOGGING.debug("Stopping all torrents")
@@ -85,7 +86,7 @@ class TransmissionSwitch(SwitchEntity):
             self._tm_client.api.set_alt_speed_enabled(False)
         self._tm_client.api.update()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.unsub_update = async_dispatcher_connect(
             self.hass,
@@ -103,7 +104,7 @@ class TransmissionSwitch(SwitchEntity):
             self.unsub_update()
             self.unsub_update = None
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Transmission and updates the state."""
         active = None
         if self.type == "on_off":

@@ -15,8 +15,7 @@ from google_nest_sdm.thermostat_traits import (
     ThermostatTemperatureSetpointTrait,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -24,6 +23,7 @@ from homeassistant.components.climate.const import (
     FAN_ON,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -315,6 +315,8 @@ class ThermostatEntity(ClimateEntity):
         """Set new target preset mode."""
         if preset_mode not in self.preset_modes:
             raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
+        if self.preset_mode == preset_mode:  # API doesn't like duplicate preset modes
+            return
         trait = self._device.traits[ThermostatEcoTrait.NAME]
         try:
             await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])

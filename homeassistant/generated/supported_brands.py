@@ -3,17 +3,16 @@
 To update, run python3 -m script.hassfest
 """
 
-# fmt: off
-
-HAS_SUPPORTED_BRANDS = (
+HAS_SUPPORTED_BRANDS = [
     "denonavr",
     "hunterdouglas_powerview",
     "inkbird",
     "motion_blinds",
+    "netatmo",
     "overkiz",
     "renault",
+    "switchbee",
     "thermobeacon",
     "wemo",
     "yalexs_ble",
-    "zwave_js"
-)
+]

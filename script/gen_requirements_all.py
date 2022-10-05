@@ -142,9 +142,6 @@ iso4217!=1.10.20220401
 
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
 pandas==1.4.3
-
-# pyopenssl 22.1.0 requires pycryptography > 38 and we have 37
-pyopenssl==22.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

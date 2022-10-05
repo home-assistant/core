@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API Anahtar\u0131"
+                },
+                "data_description": {
+                    "api_key": "Yeni bir api anahtar\u0131 almak i\u00e7in belgeleri izleyin."
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API Anahtar\u0131"
+                },
+                "data_description": {
+                    "api_key": "API anahtar\u0131n\u0131z\u0131 almak i\u00e7in belgeleri izleyin."
                 }
             }
         }

@@ -14,16 +14,10 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -110,63 +104,63 @@ class HorizonDevice(MediaPlayerEntity):
         """Update State using the media server running on the Horizon."""
         try:
             if self._client.is_powered_on():
-                self._state = STATE_PLAYING
+                self._state = MediaPlayerState.PLAYING
             else:
-                self._state = STATE_OFF
+                self._state = MediaPlayerState.OFF
         except OSError:
-            self._state = STATE_OFF
+            self._state = MediaPlayerState.OFF
 
     def turn_on(self) -> None:
         """Turn the device on."""
-        if self._state == STATE_OFF:
+        if self._state == MediaPlayerState.OFF:
             self._send_key(self._keys.POWER)
 
     def turn_off(self) -> None:
         """Turn the device off."""
-        if self._state != STATE_OFF:
+        if self._state != MediaPlayerState.OFF:
             self._send_key(self._keys.POWER)
 
     def media_previous_track(self) -> None:
         """Channel down."""
         self._send_key(self._keys.CHAN_DOWN)
-        self._state = STATE_PLAYING
+        self._state = MediaPlayerState.PLAYING
 
     def media_next_track(self) -> None:
         """Channel up."""
         self._send_key(self._keys.CHAN_UP)
-        self._state = STATE_PLAYING
+        self._state = MediaPlayerState.PLAYING
 
     def media_play(self) -> None:
         """Send play command."""
         self._send_key(self._keys.PAUSE)
-        self._state = STATE_PLAYING
+        self._state = MediaPlayerState.PLAYING
 
     def media_pause(self) -> None:
         """Send pause command."""
         self._send_key(self._keys.PAUSE)
-        self._state = STATE_PAUSED
+        self._state = MediaPlayerState.PAUSED
 
     def media_play_pause(self) -> None:
         """Send play/pause command."""
         self._send_key(self._keys.PAUSE)
-        if self._state == STATE_PAUSED:
-            self._state = STATE_PLAYING
+        if self._state == MediaPlayerState.PAUSED:
+            self._state = MediaPlayerState.PLAYING
         else:
-            self._state = STATE_PAUSED
+            self._state = MediaPlayerState.PAUSED
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play media / switch to channel."""
-        if MEDIA_TYPE_CHANNEL == media_type:
+        if MediaType.CHANNEL == media_type:
             try:
                 self._select_channel(int(media_id))
-                self._state = STATE_PLAYING
+                self._state = MediaPlayerState.PLAYING
             except ValueError:
                 _LOGGER.error("Invalid channel: %s", media_id)
         else:
             _LOGGER.error(
                 "Invalid media type %s. Supported type: %s",
                 media_type,
-                MEDIA_TYPE_CHANNEL,
+                MediaType.CHANNEL,
             )
 
     def _select_channel(self, channel):

@@ -18,6 +18,13 @@
                 "description": "Ditt tidligere angitte passord for {username} fungerer ikke lenger. Oppdater passordet ditt for \u00e5 fortsette \u00e5 bruke denne integrasjonen.",
                 "title": "Godkjenne integrering p\u00e5 nytt"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Det tidligere oppgitte passordet for {username} fungerer ikke lenger. Oppdater passordet ditt for \u00e5 fortsette \u00e5 bruke denne integrasjonen.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "P\u00e5litelig enhet"

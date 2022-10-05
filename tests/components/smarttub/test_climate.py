@@ -1,7 +1,7 @@
 """Test the SmartTub climate platform."""
 import smarttub
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,

@@ -29,6 +29,12 @@
             }
         }
     },
+    "issues": {
+        "haos_outdated": {
+            "description": "Para melhorar a confiabilidade e o desempenho do Bluetooth, recomendamos que voc\u00ea atualize para a vers\u00e3o 9.0 ou posterior do sistema operacional Home Assistant.",
+            "title": "Atualiza\u00e7\u00e3o para o sistema operacional Home Assistant 9.0 ou posterior"
+        }
+    },
     "options": {
         "step": {
             "init": {

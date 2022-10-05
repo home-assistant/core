@@ -1,6 +1,9 @@
 """Sensor platform for Advantage Air integration."""
 from __future__ import annotations
 
+from decimal import Decimal
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -35,17 +38,18 @@ async def async_setup_entry(
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
     entities: list[SensorEntity] = []
-    for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
-        entities.append(AdvantageAirTimeTo(instance, ac_key, "On"))
-        entities.append(AdvantageAirTimeTo(instance, ac_key, "Off"))
-        for zone_key, zone in ac_device["zones"].items():
-            # Only show damper and temp sensors when zone is in temperature control
-            if zone["type"] != 0:
-                entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
-                entities.append(AdvantageAirZoneTemp(instance, ac_key, zone_key))
-            # Only show wireless signal strength sensors when using wireless sensors
-            if zone["rssi"] > 0:
-                entities.append(AdvantageAirZoneSignal(instance, ac_key, zone_key))
+    if aircons := instance["coordinator"].data.get("aircons"):
+        for ac_key, ac_device in aircons.items():
+            entities.append(AdvantageAirTimeTo(instance, ac_key, "On"))
+            entities.append(AdvantageAirTimeTo(instance, ac_key, "Off"))
+            for zone_key, zone in ac_device["zones"].items():
+                # Only show damper and temp sensors when zone is in temperature control
+                if zone["type"] != 0:
+                    entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
+                    entities.append(AdvantageAirZoneTemp(instance, ac_key, zone_key))
+                # Only show wireless signal strength sensors when using wireless sensors
+                if zone["rssi"] > 0:
+                    entities.append(AdvantageAirZoneSignal(instance, ac_key, zone_key))
     async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
@@ -62,7 +66,7 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
     _attr_native_unit_of_measurement = ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key, action):
+    def __init__(self, instance: dict[str, Any], ac_key: str, action: str) -> None:
         """Initialize the Advantage Air timer control."""
         super().__init__(instance, ac_key)
         self.action = action
@@ -71,21 +75,21 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
         self._attr_unique_id += f"-timeto{action}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> Decimal:
         """Return the current value."""
         return self._ac[self._time_key]
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return a representative icon of the timer."""
         if self._ac[self._time_key] > 0:
             return "mdi:timer-outline"
         return "mdi:timer-off-outline"
 
-    async def set_time_to(self, **kwargs):
+    async def set_time_to(self, **kwargs: Any) -> None:
         """Set the timer value."""
         value = min(720, max(0, int(kwargs[ADVANTAGE_AIR_SET_COUNTDOWN_VALUE])))
-        await self.async_change({self.ac_key: {"info": {self._time_key: value}}})
+        await self.aircon({self.ac_key: {"info": {self._time_key: value}}})
 
 
 class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
@@ -95,21 +99,21 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Vent Sensor."""
         super().__init__(instance, ac_key, zone_key=zone_key)
         self._attr_name = f'{self._zone["name"]} vent'
         self._attr_unique_id += "-vent"
 
     @property
-    def native_value(self):
+    def native_value(self) -> Decimal:
         """Return the current value of the air vent."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return self._zone["value"]
-        return 0
+        return Decimal(0)
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return a representative icon."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return "mdi:fan"
@@ -123,19 +127,19 @@ class AdvantageAirZoneSignal(AdvantageAirZoneEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone wireless signal sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} signal'
         self._attr_unique_id += "-signal"
 
     @property
-    def native_value(self):
+    def native_value(self) -> Decimal:
         """Return the current value of the wireless signal."""
         return self._zone["rssi"]
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return a representative icon."""
         if self._zone["rssi"] >= 80:
             return "mdi:wifi-strength-4"
@@ -157,13 +161,13 @@ class AdvantageAirZoneTemp(AdvantageAirZoneEntity, SensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Temp Sensor."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = f'{self._zone["name"]} temperature'
         self._attr_unique_id += "-temp"
 
     @property
-    def native_value(self):
+    def native_value(self) -> Decimal:
         """Return the current value of the measured temperature."""
         return self._zone["measuredTemp"]

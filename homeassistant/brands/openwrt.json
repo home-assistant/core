@@ -1,0 +1,5 @@
+{
+  "domain": "openwrt",
+  "name": "OpenWrt",
+  "integrations": ["luci", "ubus"]
+}

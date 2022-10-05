@@ -6,20 +6,18 @@ from contextlib import suppress
 from functools import partial
 import logging
 from typing import cast
-from urllib.parse import quote_plus, unquote
 
-from soco.data_structures import DidlFavorite, DidlObject
+from soco.data_structures import DidlObject
 from soco.ms_data_structures import MusicServiceItem
 from soco.music_library import MusicLibrary
 
 from homeassistant.components import media_source, plex, spotify
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_TYPE_ALBUM,
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
 )
-from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
@@ -38,6 +36,7 @@ from .const import (
     SONOS_TYPES_MAPPING,
 )
 from .exception import UnknownMediaType
+from .favorites import SonosFavorites
 from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +63,7 @@ def get_thumbnail_url_full(
 
     return get_browse_image_url(
         media_content_type,
-        quote_plus(media_content_id),
+        media_content_id,
         media_image_id,
     )
 
@@ -160,7 +159,7 @@ def build_item_response(
     media_library: MusicLibrary, payload: dict[str, str], get_thumbnail_url=None
 ) -> BrowseMedia | None:
     """Create response payload for the provided media query."""
-    if payload["search_type"] == MEDIA_TYPE_ALBUM and payload["idstring"].startswith(
+    if payload["search_type"] == MediaType.ALBUM and payload["idstring"].startswith(
         ("A:GENRE", "A:COMPOSER")
     ):
         payload["idstring"] = "A:ALBUMARTIST/" + "/".join(
@@ -192,7 +191,7 @@ def build_item_response(
     # Fetch album info for titles and thumbnails
     # Can't be extracted from track info
     if (
-        payload["search_type"] == MEDIA_TYPE_ALBUM
+        payload["search_type"] == MediaType.ALBUM
         and media[0].item_class == "object.item.audioItem.musicTrack"
     ):
         item = get_media(media_library, payload["idstring"], SONOS_ALBUM_ARTIST)
@@ -201,7 +200,7 @@ def build_item_response(
 
     if not title:
         try:
-            title = unquote(payload["idstring"].split("/")[1])
+            title = payload["idstring"].split("/")[1]
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
@@ -272,7 +271,7 @@ async def root_payload(
         children.append(
             BrowseMedia(
                 title="Favorites",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="favorites",
                 thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
@@ -287,7 +286,7 @@ async def root_payload(
         children.append(
             BrowseMedia(
                 title="Music Library",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MediaClass.DIRECTORY,
                 media_content_id="",
                 media_content_type="library",
                 thumbnail="https://brands.home-assistant.io/_/sonos/logo.png",
@@ -300,7 +299,7 @@ async def root_payload(
         children.append(
             BrowseMedia(
                 title="Plex",
-                media_class=MEDIA_CLASS_APP,
+                media_class=MediaClass.APP,
                 media_content_id="",
                 media_content_type="plex",
                 thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
@@ -338,7 +337,7 @@ async def root_payload(
 
     return BrowseMedia(
         title="Sonos",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="",
         media_content_type="root",
         can_play=False,
@@ -360,7 +359,7 @@ def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> Brow
 
     return BrowseMedia(
         title="Music Library",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         can_play=False,
@@ -369,15 +368,15 @@ def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> Brow
     )
 
 
-def favorites_payload(favorites: list[DidlFavorite]) -> BrowseMedia:
+def favorites_payload(favorites: SonosFavorites) -> BrowseMedia:
     """
     Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """
-    children = []
+    children: list[BrowseMedia] = []
 
-    group_types = {fav.reference.item_class for fav in favorites}
+    group_types: set[str] = {fav.reference.item_class for fav in favorites}
     for group_type in sorted(group_types):
         try:
             media_content_type = SONOS_TYPES_MAPPING[group_type]
@@ -398,7 +397,7 @@ def favorites_payload(favorites: list[DidlFavorite]) -> BrowseMedia:
 
     return BrowseMedia(
         title="Favorites",
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="",
         media_content_type="favorites",
         can_play=False,
@@ -408,13 +407,13 @@ def favorites_payload(favorites: list[DidlFavorite]) -> BrowseMedia:
 
 
 def favorites_folder_payload(
-    favorites: list[DidlFavorite], media_content_id: str
+    favorites: SonosFavorites, media_content_id: str
 ) -> BrowseMedia:
     """Create response payload to describe all items of a type of favorite.
 
     Used by async_browse_media.
     """
-    children = []
+    children: list[BrowseMedia] = []
     content_type = SONOS_TYPES_MAPPING[media_content_id]
 
     for favorite in favorites:
@@ -434,7 +433,7 @@ def favorites_folder_payload(
 
     return BrowseMedia(
         title=content_type.title(),
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="",
         media_content_type="favorites",
         can_play=False,
@@ -501,11 +500,9 @@ def get_media(
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
 
-    for item in media_library.browse_by_idstring(
-        search_type,
-        "/".join(item_id.split("/")[:-1]),
-        full_album_art_uri=True,
-        max_items=0,
-    ):
-        if item.item_id == item_id:
-            return item
+    search_term = item_id.split("/")[-1]
+    matches = media_library.get_music_library_information(
+        search_type, search_term=search_term, full_album_art_uri=True
+    )
+    if len(matches) > 0:
+        return matches[0]

@@ -85,7 +85,7 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert len(conditions) == 26
+    assert len(conditions) == 27
     assert_lists_same(conditions, expected_conditions)
 
 
