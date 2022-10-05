@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -18,8 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC, SHELLY_GAS_MODELS
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .const import SHELLY_GAS_MODELS
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
 
 
@@ -80,15 +80,9 @@ async def async_setup_entry(
     """Set buttons for device."""
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
     if get_device_entry_gen(config_entry) == 2:
-        if rpc_coordinator := hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry.entry_id
-        ].get(RPC):
-            coordinator = cast(ShellyRpcCoordinator, rpc_coordinator)
+        coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     else:
-        if block_coordinator := hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry.entry_id
-        ].get(BLOCK):
-            coordinator = cast(ShellyBlockCoordinator, block_coordinator)
+        coordinator = get_entry_data(hass)[config_entry.entry_id].block
 
     if coordinator is not None:
         entities = []

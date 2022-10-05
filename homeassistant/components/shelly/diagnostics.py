@@ -6,8 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .coordinator import get_entry_data
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
@@ -16,12 +15,13 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict:
     """Return diagnostics for a config entry."""
-    data: dict = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
+    entry_data = get_entry_data(hass)[entry.entry_id]
 
     device_settings: str | dict = "not initialized"
     device_status: str | dict = "not initialized"
-    if BLOCK in data:
-        block_coordinator: ShellyBlockCoordinator = data[BLOCK]
+    if entry_data.block:
+        block_coordinator = entry_data.block
+        assert block_coordinator
         device_info = {
             "name": block_coordinator.name,
             "model": block_coordinator.model,
@@ -51,7 +51,8 @@ async def async_get_config_entry_diagnostics(
                 ]
             }
     else:
-        rpc_coordinator: ShellyRpcCoordinator = data[RPC]
+        rpc_coordinator = entry_data.rpc
+        assert rpc_coordinator
         device_info = {
             "name": rpc_coordinator.name,
             "model": rpc_coordinator.model,
