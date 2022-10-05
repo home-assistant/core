@@ -95,6 +95,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     }
 
     registry = entity_registry.async_get(hass)
-    entry = registry.async_get("media_player.test_projector")
+    entry = registry.async_get("media_player.test_projector_test_projector")
 
     assert entry.unique_id == entry.config_entry_id

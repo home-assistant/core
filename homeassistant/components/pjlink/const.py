@@ -2,11 +2,6 @@
 
 import logging
 
-import voluptuous as vol
-
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
-import homeassistant.helpers.config_validation as cv
-
 INTEGRATION_NAME = "PJLink"
 DOMAIN = "pjlink"
 
@@ -35,15 +30,5 @@ ATTR_TO_PROPERTY = [
     ATTR_PROJECTOR_STATUS,
     ATTR_OTHER_INFO,
 ]
-
-CONFIG_ENTRY_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=""): cv.string,
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
-        vol.Optional(CONF_PASSWORD, default=""): cv.string,
-    }
-)
 
 _LOGGER = logging.getLogger(__package__)

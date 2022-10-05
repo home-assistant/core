@@ -6,7 +6,7 @@ import asyncio
 from pypjlink import Projector
 from pypjlink.projector import ProjectorError
 
-from .util import LampStateType, format_input_source
+from .util import LampStateType, PJLinkConfig, format_input_source
 
 
 class PJLinkDevice:
@@ -31,26 +31,18 @@ class PJLinkDevice:
 
     _first_metadata_run: bool = False
 
-    def __init__(
-        self,
-        host: str,
-        port: int,
-        name: str,
-        encoding: str,
-        password: str,
-        timeout: int,
-    ) -> None:
+    def __init__(self, conf: PJLinkConfig) -> None:
         """Initialize a PJLink projector factory."""
-        self.host = host
-        self.port = port
+        self.host = conf.host
+        self.port = conf.port
 
-        self._name = name
-        self._encoding = encoding
-        self._timeout = timeout
+        self._name = conf.name
+        self._encoding = conf.encoding
+        self._timeout = conf.timeout
 
         self._lock = asyncio.Lock()
 
-        self.__password = password
+        self.__password = conf.password
 
         self._error_dict = {}
         self._source_name_mapping = {}

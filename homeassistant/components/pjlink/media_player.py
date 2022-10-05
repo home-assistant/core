@@ -59,6 +59,7 @@ class PJLinkMediaPlayerEntity(PJLinkEntity, MediaPlayerEntity):
 
         self.entity_description = PJLINK_MEDIA_PLAYER
         self._attr_name = self.device.name
+        self._attr_unique_id = coordinator.projector_unique_id
 
     @callback
     def _handle_coordinator_update(self) -> None:

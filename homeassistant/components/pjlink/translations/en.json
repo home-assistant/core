@@ -16,5 +16,23 @@
                 "description": "Configure a PJLink projector for use with Home Assistant."
             }
         }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "flow_title": "PJLink: {name}",
+        "step": {
+            "init": {
+                "data": {
+                    "encoding": "Encoding",
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port"
+                },
+                "description": "Configure a PJLink projector for use with Home Assistant."
+            }
+        }
     }
 }
