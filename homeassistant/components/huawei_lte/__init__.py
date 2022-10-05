@@ -15,9 +15,7 @@ from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
 from huawei_lte_api.enums.device import ControlModeEnum
 from huawei_lte_api.exceptions import (
-    LoginErrorPasswordWrongException,
-    LoginErrorUsernamePasswordWrongException,
-    LoginErrorUsernameWrongException,
+    LoginErrorInvalidCredentialsException,
     ResponseErrorException,
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
@@ -342,11 +340,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         connection = await hass.async_add_executor_job(get_connection)
-    except (
-        LoginErrorUsernameWrongException,
-        LoginErrorPasswordWrongException,
-        LoginErrorUsernamePasswordWrongException,
-    ) as ex:
+    except LoginErrorInvalidCredentialsException as ex:
         raise ConfigEntryAuthFailed from ex
     except Timeout as ex:
         raise ConfigEntryNotReady from ex
