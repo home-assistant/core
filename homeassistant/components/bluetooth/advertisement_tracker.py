@@ -7,7 +7,7 @@ from homeassistant.core import callback
 
 from .models import BluetoothServiceInfoBleak
 
-ADVERTISING_TIMES_NEEDED = 30
+ADVERTISING_TIMES_NEEDED = 16
 
 
 class AdvertisementTracker:
