@@ -23,3 +23,5 @@ GWS = "gateways"
 TCS = "temperatureControlSystems"
 
 UTC_OFFSET = "currentOffsetMinutes"
+
+CONF_LOCATION_IDX = "location_idx"
