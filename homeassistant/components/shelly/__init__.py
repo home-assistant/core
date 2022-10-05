@@ -36,10 +36,10 @@ from .const import (
     RPC_POLL,
 )
 from .coordinator import (
-    BlockDeviceWrapper,
-    RpcDeviceWrapper,
-    RpcPollingWrapper,
-    ShellyDeviceRestWrapper,
+    ShellyBlockCoordinator,
+    ShellyRestCoordinator,
+    ShellyRpcCoordinator,
+    ShellyRpcPollingCoordinator,
 )
 from .utils import get_block_device_sleep_period, get_coap_context, get_device_entry_gen
 
@@ -200,17 +200,17 @@ def async_block_device_setup(
     hass: HomeAssistant, entry: ConfigEntry, device: BlockDevice
 ) -> None:
     """Set up a block based device that is online."""
-    device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
+    block_coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         BLOCK
-    ] = BlockDeviceWrapper(hass, entry, device)
-    device_wrapper.async_setup()
+    ] = ShellyBlockCoordinator(hass, entry, device)
+    block_coordinator.async_setup()
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
     if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
             REST
-        ] = ShellyDeviceRestWrapper(hass, device, entry)
+        ] = ShellyRestCoordinator(hass, device, entry)
         platforms = BLOCK_PLATFORMS
 
     hass.config_entries.async_setup_platforms(entry, platforms)
@@ -237,14 +237,14 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
     except (AuthRequired, InvalidAuthError) as err:
         raise ConfigEntryAuthFailed from err
 
-    device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
+    rpc_coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         RPC
-    ] = RpcDeviceWrapper(hass, entry, device)
-    device_wrapper.async_setup()
+    ] = ShellyRpcCoordinator(hass, entry, device)
+    rpc_coordinator.async_setup()
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][RPC_POLL] = RpcPollingWrapper(
-        hass, entry, device
-    )
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
+        RPC_POLL
+    ] = ShellyRpcPollingCoordinator(hass, entry, device)
 
     hass.config_entries.async_setup_platforms(entry, RPC_PLATFORMS)
 
@@ -265,7 +265,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id].get(DEVICE)
     if device is not None:
-        # If device is present, device wrapper is not setup yet
+        # If device is present, block coordinator is not setup yet
         device.shutdown()
         return True
 
@@ -283,10 +283,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def get_block_device_wrapper(
+def get_block_device_coordinator(
     hass: HomeAssistant, device_id: str
-) -> BlockDeviceWrapper | None:
-    """Get a Shelly block device wrapper for the given device id."""
+) -> ShellyBlockCoordinator | None:
+    """Get a Shelly block device coordinator for the given device id."""
     if not hass.data.get(DOMAIN):
         return None
 
@@ -296,16 +296,18 @@ def get_block_device_wrapper(
             if not hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry):
                 continue
 
-            if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(BLOCK):
-                return cast(BlockDeviceWrapper, wrapper)
+            if coordinator := hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(
+                BLOCK
+            ):
+                return cast(ShellyBlockCoordinator, coordinator)
 
     return None
 
 
-def get_rpc_device_wrapper(
+def get_rpc_device_coordinator(
     hass: HomeAssistant, device_id: str
-) -> RpcDeviceWrapper | None:
-    """Get a Shelly RPC device wrapper for the given device id."""
+) -> ShellyRpcCoordinator | None:
+    """Get a Shelly RPC device coordinator for the given device id."""
     if not hass.data.get(DOMAIN):
         return None
 
@@ -315,7 +317,9 @@ def get_rpc_device_wrapper(
             if not hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry):
                 continue
 
-            if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(RPC):
-                return cast(RpcDeviceWrapper, wrapper)
+            if coordinator := hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(
+                RPC
+            ):
+                return cast(ShellyRpcCoordinator, coordinator)
 
     return None
