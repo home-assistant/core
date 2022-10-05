@@ -63,6 +63,8 @@ from homeassistant.const import (
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
     CONF_STATE,
     CONF_STOP,
@@ -1119,8 +1121,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
-            vol.Optional("data_template"): vol.Any(
+            vol.Optional(CONF_SERVICE_DATA): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
+            vol.Optional(CONF_SERVICE_DATA_TEMPLATE): vol.Any(
                 template, vol.All(dict, template_complex)
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
