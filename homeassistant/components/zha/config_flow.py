@@ -641,7 +641,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         port = discovery_info.port or DEFAULT_ZHA_ZEROCONF_PORT
 
         # Fix incorrect port for older TubesZB devices
-        if "tubeszb" in local_name and port == ESPHOME_API_PORT:
+        if "tube" in local_name and port == ESPHOME_API_PORT:
             port = DEFAULT_ZHA_ZEROCONF_PORT
 
         if "radio_type" in discovery_info.properties:
