@@ -14,21 +14,26 @@ from .device import PJLinkDevice
 class PJLinkUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to gather data for a specific PJLink device."""
 
-    _device_label: str
+    _unique_id: str
 
     _first_metadata_run: bool = False
 
-    def __init__(self, hass: HomeAssistant, device: PJLinkDevice) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: PJLinkDevice, unique_id: str
+    ) -> None:
         """Initialize the DataUpdateCoordinator."""
         self.lock = asyncio.Lock()
         self.device = device
 
-        self._device_label = f"{device.host}_{device.port}"
+        self._unique_id = unique_id
 
         update_interval = timedelta(seconds=UPDATE_INTERVAL)
 
         super().__init__(
-            hass, _LOGGER, name=self.device_label, update_interval=update_interval
+            hass,
+            _LOGGER,
+            name=f"{device.host}:{device.port} ({device.name})",
+            update_interval=update_interval,
         )
 
     async def _async_update_data(self) -> None:
@@ -53,6 +58,6 @@ class PJLinkUpdateCoordinator(DataUpdateCoordinator):
         return self.device.model
 
     @property
-    def device_label(self) -> str:
-        """Get the device label."""
-        return self._device_label
+    def projector_unique_id(self) -> str:
+        """Get the unique id of the projector media player entity."""
+        return self._unique_id

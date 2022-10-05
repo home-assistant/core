@@ -1,5 +1,7 @@
 """The pjlink component."""
 
+import socket
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
@@ -37,12 +39,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
     timeout = DEFAULT_TIMEOUT
 
+    unique_id = entry.unique_id
+
+    if unique_id is None:
+        # Create a unique ID
+        unique_id = entry.entry_id
+
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "unique_id": unique_id}
+        )
+
     device = PJLinkDevice(host, port, name, encoding, password, timeout)
 
-    coordinator = PJLinkUpdateCoordinator(hass, device)
+    coordinator = PJLinkUpdateCoordinator(hass, device, unique_id)
 
     try:
         await coordinator.async_config_entry_first_refresh()
+    except socket.timeout as exc:
+        device.async_stop()
+        raise ConfigEntryNotReady() from exc
     except ConfigEntryNotReady:
         device.async_stop()
         raise

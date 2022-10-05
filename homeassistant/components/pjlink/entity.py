@@ -19,11 +19,12 @@ class PJLinkEntity(CoordinatorEntity[PJLinkUpdateCoordinator]):
 
         self._device = coordinator.device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.device_label)},
+            identifiers={(DOMAIN, coordinator.projector_unique_id)},
             manufacturer=coordinator.manufacturer,
             model=coordinator.model,
             name=self.device.name,
             configuration_url=f"http://{coordinator.device.host}/",
+            via_device=(DOMAIN, coordinator.projector_unique_id),
         )
 
     @property
