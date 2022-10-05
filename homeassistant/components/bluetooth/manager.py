@@ -109,24 +109,21 @@ class BluetoothManager:
 
         self._advertisement_tracker = AdvertisementTracker()
 
-        # Non-connectable devices
-        self._non_connectable_unavailable_callbacks: dict[
+        self._unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
         ] = {}
-        self._non_connectable_scanners: list[BaseHaScanner] = []
-
-        # Connectable devices
         self._connectable_unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
         ] = {}
-        self._connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
-        self._connectable_scanners: list[BaseHaScanner] = []
 
         self._callback_index = BluetoothCallbackMatcherIndex()
         self._bleak_callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
         self._history: dict[str, BluetoothServiceInfoBleak] = {}
+        self._connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
+        self._non_connectable_scanners: list[BaseHaScanner] = []
+        self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
 
     @property
@@ -370,7 +367,7 @@ class BluetoothManager:
             self._connectable_history[address] = service_info
             # Bleak callbacks must get a connectable device
         elif (
-            address in self._non_connectable_unavailable_callbacks
+            address in self._unavailable_callbacks
             and address not in self._advertisement_tracker.intervals
         ):
             # Non-connectables cannot use the bluetooth stack to determine
@@ -533,9 +530,11 @@ class BluetoothManager:
         self, connectable: bool
     ) -> dict[str, list[Callable[[BluetoothServiceInfoBleak], None]]]:
         """Return the unavailable callbacks by type."""
-        if connectable:
-            return self._connectable_unavailable_callbacks
-        return self._non_connectable_unavailable_callbacks
+        return (
+            self._connectable_unavailable_callbacks
+            if connectable
+            else self._unavailable_callbacks
+        )
 
     def _get_history_by_type(
         self, connectable: bool
