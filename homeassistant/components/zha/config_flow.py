@@ -71,6 +71,9 @@ OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
 
 UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
+DEFAULT_ZHA_ZEROCONF_PORT = 6638
+ESPHOME_API_PORT = 6053
+
 CONNECT_DELAY_S = 1.0
 
 _LOGGER = logging.getLogger(__name__)
@@ -635,14 +638,23 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
         # Hostname is format: livingroom.local.
         local_name = discovery_info.hostname[:-1]
-        radio_type = discovery_info.properties.get("radio_type") or local_name
+        port = discovery_info.port or DEFAULT_ZHA_ZEROCONF_PORT
+
+        # Fix incorrect port for older TubesZB devices
+        if "tubeszb" in local_name and port == ESPHOME_API_PORT:
+            port = DEFAULT_ZHA_ZEROCONF_PORT
+
+        if "radio_type" in discovery_info.properties:
+            self._radio_type = RadioType[discovery_info.properties["radio_type"]]
+        elif "zigate" in local_name:
+            self._radio_type = RadioType.zigate
+        elif "efr32" in local_name:
+            self._radio_type = RadioType.ezsp
+        else:
+            self._radio_type = RadioType.znp
+
         node_name = local_name[: -len(".local")]
-        host = discovery_info.host
-        port = discovery_info.port
-        if local_name.startswith("tube") or "efr32" in local_name:
-            # This is hard coded to work with legacy devices
-            port = 6638
-        device_path = f"socket://{host}:{port}"
+        device_path = f"socket://{discovery_info.host}:{port}"
 
         if current_entry := await self.async_set_unique_id(node_name):
             self._abort_if_unique_id_configured(
@@ -657,13 +669,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self.context["title_placeholders"] = {CONF_NAME: node_name}
         self._title = device_path
         self._device_path = device_path
-
-        if "efr32" in radio_type:
-            self._radio_type = RadioType.ezsp
-        elif "zigate" in radio_type:
-            self._radio_type = RadioType.zigate
-        else:
-            self._radio_type = RadioType.znp
 
         return await self.async_step_confirm()
 
