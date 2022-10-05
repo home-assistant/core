@@ -1682,6 +1682,14 @@ def test_is_nominal(hass):
 
     tpl = template.Template(
         """
+{{ states | selectattr("state", "nominal") | list | count }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == 2
+
+    tpl = template.Template(
+        """
 {{ is_nominal("test.noobject") }}
         """,
         hass,
