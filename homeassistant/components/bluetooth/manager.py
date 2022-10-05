@@ -21,6 +21,7 @@ from homeassistant.core import (
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 
+from .advertisement_tracker import AdvertisementTracker
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
@@ -67,7 +68,6 @@ APPLE_START_BYTES_WANTED: Final = {
 
 RSSI_SWITCH_THRESHOLD = 6
 
-ADVERTISING_TIMES_NEEDED = 10
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,64 +92,6 @@ def _dispatch_bleak_callback(
         callback(device, advertisement_data)
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error in callback: %s", callback)
-
-
-class AdvertisementTracker:
-    """Tracker to determine the interval that a device is advertising."""
-
-    def __init__(self) -> None:
-        """Initialize the tracker."""
-        self.intervals: dict[str, float] = {}
-        self._sources: dict[str, str] = {}
-        self._timings: dict[str, list[float]] = {}
-
-    @hass_callback
-    def async_diagnostics(self) -> dict[str, dict[str, Any]]:
-        """Return diagnostics."""
-        return {
-            "intervals": self.intervals,
-            "sources": self._sources,
-            "timings": self._timings,
-        }
-
-    def collect(self, service_info: BluetoothServiceInfoBleak) -> None:
-        """Collect timings for the tracker."""
-        address = service_info.address
-        assert (
-            address not in self.intervals
-        ), f"Implementor error: interval already exist for {address}"
-
-        if tracked_source := self._sources.get(address):
-            # Source has changed, start tracking again
-            if tracked_source != service_info.source:
-                self._timings[address] = []
-
-        timings = self._timings.setdefault(address, [])
-        timings.append(service_info.time)
-        if len(timings) != ADVERTISING_TIMES_NEEDED:
-            return
-
-        max_time_between_advertisements = timings[1] - timings[0]
-        for i, timing in enumerate(timings, 2):
-            time_between_advertisements = timing - timings[i - 1]
-            if time_between_advertisements > max_time_between_advertisements:
-                max_time_between_advertisements = time_between_advertisements
-
-        # We now know the maximum time between advertisements
-        self.intervals[address] = max_time_between_advertisements
-        del self._timings[address]
-
-    def remove_address(self, address: str) -> None:
-        """Remove the tracker."""
-        self.intervals.pop(address, None)
-        self._sources.pop(address, None)
-        self._timings.pop(address, None)
-
-    def remove_source(self, source: str) -> None:
-        """Remove the tracker."""
-        for address in list(self._sources):
-            if self._sources[address] == source:
-                self.remove_address(address)
 
 
 class BluetoothManager:
