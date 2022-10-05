@@ -8,13 +8,27 @@ from pytest import approx
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_CENTIMETERS,
+    LENGTH_INCHES,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    MASS_GRAMS,
+    MASS_OUNCES,
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_KPA,
     PRESSURE_MMHG,
+    SPEED_INCHES_PER_HOUR,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
+    SPEED_MILLIMETERS_PER_DAY,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLUID_OUNCE,
+    VOLUME_LITERS,
 )
 from homeassistant.core import State
 from homeassistant.helpers import entity_registry as er
@@ -455,14 +469,142 @@ async def test_custom_unit(
 
 
 @pytest.mark.parametrize(
-    "native_unit,custom_unit,state_unit,native_value,custom_value",
+    "native_unit,custom_unit,state_unit,native_value,custom_value,device_class",
     [
+        # Distance
+        (
+            LENGTH_KILOMETERS,
+            LENGTH_MILES,
+            LENGTH_MILES,
+            1000,
+            621,
+            SensorDeviceClass.DISTANCE,
+        ),
+        (
+            LENGTH_CENTIMETERS,
+            LENGTH_INCHES,
+            LENGTH_INCHES,
+            7.24,
+            2.85,
+            SensorDeviceClass.DISTANCE,
+        ),
+        (
+            LENGTH_KILOMETERS,
+            "peer_distance",
+            LENGTH_KILOMETERS,
+            1000,
+            1000,
+            SensorDeviceClass.DISTANCE,
+        ),
         # Smaller to larger unit, InHg is ~33x larger than hPa -> 1 more decimal
-        (PRESSURE_HPA, PRESSURE_INHG, PRESSURE_INHG, 1000.0, 29.53),
-        (PRESSURE_KPA, PRESSURE_HPA, PRESSURE_HPA, 1.234, 12.34),
-        (PRESSURE_HPA, PRESSURE_MMHG, PRESSURE_MMHG, 1000, 750),
+        (
+            PRESSURE_HPA,
+            PRESSURE_INHG,
+            PRESSURE_INHG,
+            1000.0,
+            29.53,
+            SensorDeviceClass.PRESSURE,
+        ),
+        (
+            PRESSURE_KPA,
+            PRESSURE_HPA,
+            PRESSURE_HPA,
+            1.234,
+            12.34,
+            SensorDeviceClass.PRESSURE,
+        ),
+        (
+            PRESSURE_HPA,
+            PRESSURE_MMHG,
+            PRESSURE_MMHG,
+            1000,
+            750,
+            SensorDeviceClass.PRESSURE,
+        ),
         # Not a supported pressure unit
-        (PRESSURE_HPA, "peer_pressure", PRESSURE_HPA, 1000, 1000),
+        (
+            PRESSURE_HPA,
+            "peer_pressure",
+            PRESSURE_HPA,
+            1000,
+            1000,
+            SensorDeviceClass.PRESSURE,
+        ),
+        # Speed
+        (
+            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_MILES_PER_HOUR,
+            SPEED_MILES_PER_HOUR,
+            100,
+            62,
+            SensorDeviceClass.SPEED,
+        ),
+        (
+            SPEED_MILLIMETERS_PER_DAY,
+            SPEED_INCHES_PER_HOUR,
+            SPEED_INCHES_PER_HOUR,
+            78,
+            0.13,
+            SensorDeviceClass.SPEED,
+        ),
+        (
+            SPEED_KILOMETERS_PER_HOUR,
+            "peer_distance",
+            SPEED_KILOMETERS_PER_HOUR,
+            100,
+            100,
+            SensorDeviceClass.SPEED,
+        ),
+        # Volume
+        (
+            VOLUME_CUBIC_METERS,
+            VOLUME_CUBIC_FEET,
+            VOLUME_CUBIC_FEET,
+            100,
+            3531,
+            SensorDeviceClass.VOLUME,
+        ),
+        (
+            VOLUME_FLUID_OUNCE,
+            VOLUME_LITERS,
+            VOLUME_LITERS,
+            78,
+            2.3,
+            SensorDeviceClass.VOLUME,
+        ),
+        (
+            VOLUME_CUBIC_METERS,
+            "peer_distance",
+            VOLUME_CUBIC_METERS,
+            100,
+            100,
+            SensorDeviceClass.VOLUME,
+        ),
+        # Weight
+        (
+            MASS_GRAMS,
+            MASS_OUNCES,
+            MASS_OUNCES,
+            100,
+            3.5,
+            SensorDeviceClass.WEIGHT,
+        ),
+        (
+            MASS_OUNCES,
+            MASS_GRAMS,
+            MASS_GRAMS,
+            78,
+            2211,
+            SensorDeviceClass.WEIGHT,
+        ),
+        (
+            MASS_GRAMS,
+            "peer_distance",
+            MASS_GRAMS,
+            100,
+            100,
+            SensorDeviceClass.WEIGHT,
+        ),
     ],
 )
 async def test_custom_unit_change(
@@ -473,6 +615,7 @@ async def test_custom_unit_change(
     state_unit,
     native_value,
     custom_value,
+    device_class,
 ):
     """Test custom unit changes are picked up."""
     entity_registry = er.async_get(hass)
@@ -482,7 +625,7 @@ async def test_custom_unit_change(
         name="Test",
         native_value=str(native_value),
         native_unit_of_measurement=native_unit,
-        device_class=SensorDeviceClass.PRESSURE,
+        device_class=device_class,
         unique_id="very_unique",
     )
 

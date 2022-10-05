@@ -22,7 +22,9 @@ on:
 env:
   CACHE_VERSION: 1
   PIP_CACHE_VERSION: 1
-  HA_SHORT_VERSION: 2022.9
+  HA_SHORT_VERSION: 2022.10
+  # Pin latest Python patch versions to avoid issues
+  # with runners using different versions.
   DEFAULT_PYTHON: 3.9.14
   ALL_PYTHON_VERSIONS: "['3.9.14', '3.10.7']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
@@ -842,9 +844,9 @@ jobs:
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1
         with:
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v3.1.0
+        uses: codecov/codecov-action@v3.1.1

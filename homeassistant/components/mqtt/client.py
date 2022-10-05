@@ -27,7 +27,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    CoreState,
+    Event,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -46,7 +53,6 @@ from .const import (
     CONF_KEEPALIVE,
     CONF_TLS_INSECURE,
     CONF_WILL_MESSAGE,
-    DATA_MQTT,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     MQTT_CONNECTED,
@@ -61,14 +67,12 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import mqtt_config_entry_enabled
+from .util import get_mqtt_data, mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
     # because integrations should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt
-
-    from .mixins import MqttData
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,11 +104,7 @@ async def async_publish(
     encoding: str | None = DEFAULT_ENCODING,
 ) -> None:
     """Publish message to a MQTT topic."""
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from .mixins import MqttData
-
-    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
+    mqtt_data = get_mqtt_data(hass, True)
     if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot publish to topic '{topic}', MQTT is not enabled"
@@ -185,16 +185,12 @@ async def async_subscribe(
     | AsyncDeprecatedMessageCallbackType,
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
-):
+) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
 
     Call the return value to unsubscribe.
     """
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from .mixins import MqttData
-
-    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
+    mqtt_data = get_mqtt_data(hass, True)
     if mqtt_data.client is None or not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled"
@@ -332,7 +328,7 @@ class MQTT:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-        self._mqtt_data: MqttData = hass.data[DATA_MQTT]
+        self._mqtt_data = get_mqtt_data(hass)
 
         self.hass = hass
         self.config_entry = config_entry
@@ -368,12 +364,12 @@ class MQTT:
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
         )
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Clean up listeners."""
         while self._cleanup_on_unload:
             self._cleanup_on_unload.pop()()
 
-    def init_client(self):
+    def init_client(self) -> None:
         """Initialize paho client."""
         self._mqttc = MqttClientSetup(self.conf).client
         self._mqttc.on_connect = self._mqtt_on_connect
@@ -408,7 +404,8 @@ class MQTT:
                 self._mqttc.publish, topic, payload, qos, retain
             )
             _LOGGER.debug(
-                "Transmitting message on %s: '%s', mid: %s",
+                "Transmitting%s message on %s: '%s', mid: %s",
+                " retained" if retain else "",
                 topic,
                 payload,
                 msg_info.mid,
@@ -439,10 +436,10 @@ class MQTT:
 
         self._mqttc.loop_start()
 
-    async def async_disconnect(self):
+    async def async_disconnect(self) -> None:
         """Stop the MQTT client."""
 
-        def stop():
+        def stop() -> None:
             """Stop the MQTT client."""
             # Do not disconnect, we want the broker to always publish will
             self._mqttc.loop_stop()
@@ -626,9 +623,9 @@ class MQTT:
     @callback
     def _mqtt_handle_message(self, msg: MQTTMessage) -> None:
         _LOGGER.debug(
-            "Received message on %s%s: %s",
+            "Received%s message on %s: %s",
+            " retained" if msg.retain else "",
             msg.topic,
-            " (retained)" if msg.retain else "",
             msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()

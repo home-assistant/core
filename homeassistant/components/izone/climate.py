@@ -7,8 +7,7 @@ from typing import Any
 from pizone import Controller, Zone
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -16,6 +15,7 @@ from homeassistant.components.climate.const import (
     FAN_TOP,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -295,7 +295,7 @@ class ControllerDevice(ClimateEntity):
                 return key
         assert False, "Should be unreachable"
 
-    @property  # type: ignore[misc]
+    @property
     @_return_on_connection_error([])
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
@@ -303,13 +303,13 @@ class ControllerDevice(ClimateEntity):
             return [HVACMode.OFF, HVACMode.FAN_ONLY]
         return [HVACMode.OFF, *self._state_to_pizone]
 
-    @property  # type: ignore[misc]
+    @property
     @_return_on_connection_error(PRESET_NONE)
     def preset_mode(self):
         """Eco mode is external air."""
         return PRESET_ECO if self._controller.free_air else PRESET_NONE
 
-    @property  # type: ignore[misc]
+    @property
     @_return_on_connection_error([PRESET_NONE])
     def preset_modes(self):
         """Available preset modes, normal or eco."""
@@ -317,7 +317,7 @@ class ControllerDevice(ClimateEntity):
             return [PRESET_NONE, PRESET_ECO]
         return [PRESET_NONE]
 
-    @property  # type: ignore[misc]
+    @property
     @_return_on_connection_error()
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
@@ -347,7 +347,7 @@ class ControllerDevice(ClimateEntity):
             return None
         return zone.target_temperature
 
-    @property  # type: ignore[misc]
+    @property
     @_return_on_connection_error()
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach (either from control zone or master unit)."""
@@ -375,13 +375,13 @@ class ControllerDevice(ClimateEntity):
         """Return the list of available fan modes."""
         return list(self._fan_to_pizone)
 
-    @property  # type: ignore[misc]
+    @property
     @_return_on_connection_error(0.0)
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.temp_min
 
-    @property  # type: ignore[misc]
+    @property
     @_return_on_connection_error(50.0)
     def max_temp(self) -> float:
         """Return the maximum temperature."""
@@ -516,7 +516,7 @@ class ZoneDevice(ClimateEntity):
         """Return the name of the entity."""
         return self._name
 
-    @property  # type: ignore[misc]
+    @property
     @_return_on_connection_error(0)
     def supported_features(self) -> int:
         """Return the list of supported features."""

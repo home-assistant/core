@@ -10,6 +10,7 @@ from homeassistant import core as ha
 from homeassistant.components import (
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
@@ -20,7 +21,6 @@ from homeassistant.components import (
     timer,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -50,10 +50,9 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers import network
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
-import homeassistant.util.dt as dt_util
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .config import AbstractConfig
 from .const import (
@@ -820,7 +819,9 @@ def temperature_from_object(hass, temp_obj, interval=False):
         # convert to Celsius if absolute temperature
         temp -= 273.15
 
-    return convert_temperature(temp, from_unit, to_unit, interval)
+    if interval:
+        return TemperatureConverter.convert_interval(temp, from_unit, to_unit)
+    return TemperatureConverter.convert(temp, from_unit, to_unit)
 
 
 @HANDLERS.register(("Alexa.ThermostatController", "SetTargetTemperature"))

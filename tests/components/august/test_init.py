@@ -21,8 +21,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.components.august.mocks import (
+from .mocks import (
     _create_august_with_devices,
     _mock_august_authentication,
     _mock_doorsense_enabled_august_lock_detail,
@@ -32,6 +31,8 @@ from tests.components.august.mocks import (
     _mock_lock_with_offline_key,
     _mock_operative_august_lock_detail,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def test_august_api_is_failing(hass):

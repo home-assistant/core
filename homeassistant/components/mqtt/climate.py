@@ -8,8 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import climate
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -22,6 +21,7 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     SWING_OFF,
     SWING_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

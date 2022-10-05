@@ -6,14 +6,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -33,7 +33,7 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.temperature import convert
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 from .util import ecobee_date, ecobee_time
@@ -763,12 +763,12 @@ class Thermostat(ClimateEntity):
     def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""
         vacation_name = service_data[ATTR_VACATION_NAME]
-        cool_temp = convert(
+        cool_temp = TemperatureConverter.convert(
             service_data[ATTR_COOL_TEMP],
             self.hass.config.units.temperature_unit,
             TEMP_FAHRENHEIT,
         )
-        heat_temp = convert(
+        heat_temp = TemperatureConverter.convert(
             service_data[ATTR_HEAT_TEMP],
             self.hass.config.units.temperature_unit,
             TEMP_FAHRENHEIT,

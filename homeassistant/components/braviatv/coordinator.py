@@ -13,13 +13,11 @@ from pybravia import (
     BraviaTVConnectionTimeout,
     BraviaTVError,
     BraviaTVNotFound,
+    BraviaTVTurnedOff,
 )
 from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_CHANNEL,
-)
+from homeassistant.components.media_player import MediaType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -62,19 +60,21 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         client: BraviaTV,
         pin: str,
+        use_psk: bool,
         ignored_sources: list[str],
     ) -> None:
         """Initialize Bravia TV Client."""
 
         self.client = client
         self.pin = pin
+        self.use_psk = use_psk
         self.ignored_sources = ignored_sources
         self.source: str | None = None
         self.source_list: list[str] = []
         self.source_map: dict[str, dict] = {}
         self.media_title: str | None = None
         self.media_content_id: str | None = None
-        self.media_content_type: str | None = None
+        self.media_content_type: MediaType | None = None
         self.media_uri: str | None = None
         self.media_duration: int | None = None
         self.volume_level: float | None = None
@@ -113,9 +113,12 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Connect and fetch data."""
         try:
             if not self.connected:
-                await self.client.connect(
-                    pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
-                )
+                if self.use_psk:
+                    await self.client.connect(psk=self.pin)
+                else:
+                    await self.client.connect(
+                        pin=self.pin, clientid=CLIENTID_PREFIX, nickname=NICKNAME
+                    )
                 self.connected = True
 
             power_status = await self.client.get_power_status()
@@ -136,7 +139,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.debug("Update skipped, Bravia API service is reloading")
                 return
             raise UpdateFailed("Error communicating with device") from err
-        except (BraviaTVConnectionError, BraviaTVConnectionTimeout):
+        except (BraviaTVConnectionError, BraviaTVConnectionTimeout, BraviaTVTurnedOff):
             self.is_on = False
             self.connected = False
             _LOGGER.debug("Update skipped, Bravia TV is off")
@@ -182,7 +185,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.is_channel = self.media_uri[:2] == "tv"
             if self.is_channel:
                 self.media_content_id = playing_info.get("dispNum")
-                self.media_content_type = MEDIA_TYPE_CHANNEL
+                self.media_content_type = MediaType.CHANNEL
             else:
                 self.media_content_id = self.media_uri
                 self.media_content_type = None
@@ -193,7 +196,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.media_content_type = None
         if not playing_info:
             self.media_title = "Smart TV"
-            self.media_content_type = MEDIA_TYPE_APP
+            self.media_content_type = MediaType.APP
 
     @catch_braviatv_errors
     async def async_turn_on(self) -> None:
@@ -285,3 +288,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                         cmd,
                         commands_keys,
                     )
+
+    @catch_braviatv_errors
+    async def async_reboot_device(self) -> None:
+        """Send command to reboot the device."""
+        await self.client.reboot()
+
+    @catch_braviatv_errors
+    async def async_terminate_apps(self) -> None:
+        """Send command to terminate all applications."""
+        await self.client.terminate_apps()

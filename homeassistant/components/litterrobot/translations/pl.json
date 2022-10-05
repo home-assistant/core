@@ -14,6 +14,7 @@
                 "data": {
                     "password": "Has\u0142o"
                 },
+                "description": "Zaktualizuj has\u0142o dla u\u017cytkownika {username}",
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {

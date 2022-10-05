@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-nyckel"
+                },
+                "data_description": {
+                    "api_key": "F\u00f6lj dokumentationen f\u00f6r att f\u00e5 en ny api-nyckel."
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API-nyckel"
+                },
+                "data_description": {
+                    "api_key": "F\u00f6lj dokumentationen f\u00f6r att f\u00e5 din api-nyckel."
                 }
             }
         }

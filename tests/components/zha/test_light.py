@@ -28,6 +28,7 @@ from .common import (
     async_find_group_entity_id,
     async_shift_time,
     async_test_rejoin,
+    async_wait_for_updates,
     find_entity_id,
     get_zha_gateway,
     patch_zha_config,
@@ -36,10 +37,7 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_fire_time_changed
-from tests.components.zha.common import async_wait_for_updates
 
-ON = 1
-OFF = 0
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e9"
 IEEE_GROUPABLE_DEVICE3 = "03:2d:6f:00:0a:90:69:e7"
@@ -538,10 +536,10 @@ async def test_transitions(
     assert dev1_cluster_level.request.await_count == 1
     assert dev1_cluster_level.request.call_args == call(
         False,
-        4,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        50,  # brightness (level in ZCL)
-        0,  # transition time
+        level=50,
+        transition_time=0,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -574,10 +572,10 @@ async def test_transitions(
     assert dev1_cluster_level.request.await_count == 1
     assert dev1_cluster_level.request.call_args == call(
         False,
-        4,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        18,  # brightness (level in ZCL)
-        30,  # transition time (ZCL time in 10ths of a second)
+        level=18,
+        transition_time=30,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -585,10 +583,10 @@ async def test_transitions(
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
-        10,
+        dev1_cluster_color.commands_by_name["move_to_color_temp"].id,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
-        432,  # color temp mireds
-        30.0,  # transition time (ZCL time in 10ths of a second)
+        color_temp_mireds=432,
+        transition_time=30.0,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -622,10 +620,10 @@ async def test_transitions(
     assert dev1_cluster_level.request.await_count == 1
     assert dev1_cluster_level.request.call_args == call(
         False,
-        4,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        0,  # brightness (level in ZCL)
-        0,  # transition time (ZCL time in 10ths of a second)
+        level=0,
+        transition_time=0,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -659,10 +657,10 @@ async def test_transitions(
     # first it comes on with no transition at 2 brightness
     assert dev1_cluster_level.request.call_args_list[0] == call(
         False,
-        4,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        2,  # brightness (level in ZCL)
-        0,  # transition time (ZCL time in 10ths of a second)
+        level=2,
+        transition_time=0,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -670,10 +668,10 @@ async def test_transitions(
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
-        10,
+        dev1_cluster_color.commands_by_name["move_to_color_temp"].id,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
-        235,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when new_color_provided_while_off
+        color_temp_mireds=235,
+        transition_time=0,  # no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -681,10 +679,10 @@ async def test_transitions(
     )
     assert dev1_cluster_level.request.call_args_list[1] == call(
         False,
-        0,
+        dev1_cluster_level.commands_by_name["move_to_level"].id,
         dev1_cluster_level.commands_by_name["move_to_level"].schema,
-        25,  # brightness (level in ZCL)
-        10.0,  # transition time (ZCL time in 10ths of a second)
+        level=25,
+        transition_time=10,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -743,10 +741,10 @@ async def test_transitions(
     # first it comes on with no transition at 2 brightness
     assert dev1_cluster_level.request.call_args_list[0] == call(
         False,
-        4,
+        dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev1_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        2,  # brightness (level in ZCL)
-        0,  # transition time (ZCL time in 10ths of a second)
+        level=2,
+        transition_time=0,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -754,10 +752,10 @@ async def test_transitions(
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
-        10,
+        dev1_cluster_color.commands_by_name["move_to_color_temp"].id,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
-        236,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when new_color_provided_while_off
+        color_temp_mireds=236,
+        transition_time=0,  # no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -765,10 +763,10 @@ async def test_transitions(
     )
     assert dev1_cluster_level.request.call_args_list[1] == call(
         False,
-        0,
+        dev1_cluster_level.commands_by_name["move_to_level"].id,
         dev1_cluster_level.commands_by_name["move_to_level"].schema,
-        25,  # brightness (level in ZCL)
-        0,  # transition time (ZCL time in 10ths of a second)
+        level=25,
+        transition_time=0,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -825,7 +823,7 @@ async def test_transitions(
 
     assert dev1_cluster_on_off.request.call_args == call(
         False,
-        1,
+        dev1_cluster_on_off.commands_by_name["on"].id,
         dev1_cluster_on_off.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
@@ -835,10 +833,10 @@ async def test_transitions(
 
     assert dev1_cluster_color.request.call_args == call(
         False,
-        10,
+        dev1_cluster_color.commands_by_name["move_to_color_temp"].id,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
-        236,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second) - no transition when new_color_provided_while_off
+        color_temp_mireds=236,
+        transition_time=0,  # no transition when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -895,10 +893,10 @@ async def test_transitions(
     assert dev2_cluster_level.request.await_count == 1
     assert dev2_cluster_level.request.call_args == call(
         False,
-        4,
+        dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        100,  # brightness (level in ZCL)
-        1,  # transition time - sengled light uses default minimum
+        level=100,
+        transition_time=1,  # transition time - sengled light uses default minimum
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -953,10 +951,10 @@ async def test_transitions(
     # first it comes on with no transition at 2 brightness
     assert dev2_cluster_level.request.call_args_list[0] == call(
         False,
-        4,
+        dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        2,  # brightness (level in ZCL)
-        1,  # transition time (ZCL time in 10ths of a second)
+        level=2,
+        transition_time=1,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -964,10 +962,10 @@ async def test_transitions(
     )
     assert dev2_cluster_color.request.call_args == call(
         False,
-        10,
+        dev2_cluster_color.commands_by_name["move_to_color_temp"].id,
         dev2_cluster_color.commands_by_name["move_to_color_temp"].schema,
-        235,  # color temp mireds
-        1,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when new_color_provided_while_off
+        color_temp_mireds=235,
+        transition_time=1,  # sengled transition == 1 when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -975,10 +973,10 @@ async def test_transitions(
     )
     assert dev2_cluster_level.request.call_args_list[1] == call(
         False,
-        0,
+        dev2_cluster_level.commands_by_name["move_to_level"].id,
         dev2_cluster_level.commands_by_name["move_to_level"].schema,
-        25,  # brightness (level in ZCL)
-        10.0,  # transition time (ZCL time in 10ths of a second)
+        level=25,
+        transition_time=10,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1040,10 +1038,10 @@ async def test_transitions(
     # groups are omitted from the 3 call dance for new_color_provided_while_off
     assert group_color_channel.request.call_args == call(
         False,
-        10,
+        dev2_cluster_color.commands_by_name["move_to_color_temp"].id,
         dev2_cluster_color.commands_by_name["move_to_color_temp"].schema,
-        235,  # color temp mireds
-        10.0,  # transition time (ZCL time in 10ths of a second) - sengled transition == 1 when new_color_provided_while_off
+        color_temp_mireds=235,
+        transition_time=10,  # sengled transition == 1 when new_color_provided_while_off
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1051,10 +1049,10 @@ async def test_transitions(
     )
     assert group_level_channel.request.call_args == call(
         False,
-        4,
+        dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        25,  # brightness (level in ZCL)
-        10.0,  # transition time (ZCL time in 10ths of a second)
+        level=25,
+        transition_time=10,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1106,10 +1104,10 @@ async def test_transitions(
     assert dev2_cluster_level.request.await_count == 1
     assert dev2_cluster_level.request.call_args == call(
         False,
-        4,
+        dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        0,  # brightness (level in ZCL)
-        20,  # transition time
+        level=0,
+        transition_time=20,  # transition time
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1136,10 +1134,10 @@ async def test_transitions(
     assert dev2_cluster_level.request.await_count == 1
     assert dev2_cluster_level.request.call_args == call(
         False,
-        4,
+        dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].id,
         dev2_cluster_level.commands_by_name["move_to_level_with_on_off"].schema,
-        25,  # brightness (level in ZCL) - this is the last brightness we set a few tests above
-        1,  # transition time - sengled light uses default minimum
+        level=25,
+        transition_time=1,  # transition time - sengled light uses default minimum
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1171,7 +1169,7 @@ async def test_transitions(
     # first it comes on
     assert eWeLink_cluster_on_off.request.call_args_list[0] == call(
         False,
-        1,
+        eWeLink_cluster_on_off.commands_by_name["on"].id,
         eWeLink_cluster_on_off.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
@@ -1180,10 +1178,10 @@ async def test_transitions(
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
-        10,
+        dev1_cluster_color.commands_by_name["move_to_color_temp"].id,
         dev1_cluster_color.commands_by_name["move_to_color_temp"].schema,
-        235,  # color temp mireds
-        0,  # transition time (ZCL time in 10ths of a second)
+        color_temp_mireds=235,
+        transition_time=0,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1228,7 +1226,7 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
         False,
-        ON,
+        cluster.commands_by_name["on"].id,
         cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
@@ -1251,7 +1249,7 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
         False,
-        OFF,
+        cluster.commands_by_name["off"].id,
         cluster.commands_by_name["off"].schema,
         expect_reply=True,
         manufacturer=None,
@@ -1279,7 +1277,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.await_count == 0
     assert on_off_cluster.request.call_args == call(
         False,
-        ON,
+        on_off_cluster.commands_by_name["on"].id,
         on_off_cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
@@ -1303,7 +1301,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.await_count == 1
     assert on_off_cluster.request.call_args == call(
         False,
-        ON,
+        on_off_cluster.commands_by_name["on"].id,
         on_off_cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
@@ -1312,10 +1310,10 @@ async def async_test_level_on_off_from_hass(
     )
     assert level_cluster.request.call_args == call(
         False,
-        4,
+        level_cluster.commands_by_name["move_to_level_with_on_off"].id,
         level_cluster.commands_by_name["move_to_level_with_on_off"].schema,
-        254,
-        100.0,
+        level=254,
+        transition_time=100,
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1337,10 +1335,10 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.await_count == 1
     assert level_cluster.request.call_args == call(
         False,
-        4,
+        level_cluster.commands_by_name["move_to_level_with_on_off"].id,
         level_cluster.commands_by_name["move_to_level_with_on_off"].schema,
-        10,
-        expected_default_transition,
+        level=10,
+        transition_time=int(expected_default_transition),
         expect_reply=True,
         manufacturer=None,
         tries=1,
@@ -1380,10 +1378,10 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
         False,
-        64,
+        cluster.commands_by_name["trigger_effect"].id,
         cluster.commands_by_name["trigger_effect"].schema,
-        FLASH_EFFECTS[flash],
-        0,
+        effect_id=FLASH_EFFECTS[flash],
+        effect_variant=general.Identify.EffectVariant.Default,
         expect_reply=True,
         manufacturer=None,
         tries=1,

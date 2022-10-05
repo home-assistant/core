@@ -11,8 +11,7 @@ import pytest
 from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -21,6 +20,8 @@ from tests.components.homekit_controller.common import (
     setup_accessories_from_file,
     setup_test_accessories,
 )
+
+from tests.common import async_fire_time_changed
 
 LIGHT_ON = ("lightbulb", "on")
 

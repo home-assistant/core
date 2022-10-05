@@ -4,14 +4,14 @@ from typing import Any
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import ThermostatFanMode, ThermostatOperationMode
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

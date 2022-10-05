@@ -76,7 +76,6 @@ from .const import (  # noqa: F401
     PLATFORMS,
     RELOADABLE_PLATFORMS,
 )
-from .mixins import MqttData
 from .models import (  # noqa: F401
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -86,6 +85,7 @@ from .models import (  # noqa: F401
 )
 from .util import (
     _VALID_QOS_SCHEMA,
+    get_mqtt_data,
     mqtt_config_entry_enabled,
     valid_publish_topic,
     valid_subscribe_topic,
@@ -164,13 +164,12 @@ async def _async_setup_discovery(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
-    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
+    mqtt_data = get_mqtt_data(hass, True)
 
     conf: ConfigType | None = config.get(DOMAIN)
 
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
-    debug_info.initialize(hass)
 
     if conf:
         conf = dict(conf)
@@ -249,25 +248,12 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
     Causes for this is config entry options changing.
     """
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
-    assert (client := mqtt_data.client) is not None
-
-    if (conf := mqtt_data.config) is None:
-        conf = CONFIG_SCHEMA_BASE(dict(entry.data))
-
-    mqtt_data.config = _merge_extended_config(entry, conf)
-    await client.async_disconnect()
-    client.init_client()
-    await client.async_connect()
-
-    await discovery.async_stop(hass)
-    if client.conf.get(CONF_DISCOVERY):
-        await _async_setup_discovery(hass, cast(ConfigType, mqtt_data.config), entry)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | None:
     """Fetch fresh MQTT yaml config from the hass config when (re)loading the entry."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     if mqtt_data.reload_entry:
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_data.config = CONFIG_SCHEMA_BASE(hass_config.get(DOMAIN, {}))
@@ -307,7 +293,7 @@ async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    mqtt_data: MqttData = hass.data.setdefault(DATA_MQTT, MqttData())
+    mqtt_data = get_mqtt_data(hass, True)
 
     # Merge basic configuration, and add missing defaults for basic options
     if (conf := await async_fetch_config(hass, entry)) is None:
@@ -318,7 +304,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if mqtt_data.subscriptions_to_restore:
         mqtt_data.client.subscriptions = mqtt_data.subscriptions_to_restore
         mqtt_data.subscriptions_to_restore = []
-    entry.add_update_listener(_async_config_entry_updated)
+    mqtt_data.reload_dispatchers.append(
+        entry.add_update_listener(_async_config_entry_updated)
+    )
 
     await mqtt_data.client.async_connect()
 
@@ -593,7 +581,7 @@ def async_subscribe_connection_status(
 
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     assert mqtt_data.client is not None
     return mqtt_data.client.connected
 
@@ -611,7 +599,7 @@ async def async_remove_config_entry_device(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload MQTT dump and publish service when the config entry is unloaded."""
-    mqtt_data: MqttData = hass.data[DATA_MQTT]
+    mqtt_data = get_mqtt_data(hass)
     assert mqtt_data.client is not None
     mqtt_client = mqtt_data.client
 
