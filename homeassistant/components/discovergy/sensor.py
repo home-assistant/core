@@ -229,12 +229,7 @@ class DiscovergySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_name = (
-            f"{meter.measurement_type.capitalize()} "
-            f"{meter.location.street} "
-            f"{meter.location.street_number} - "
-            f"{description.name}"
-        )
+        self._attr_name = f"{description.name}"
         self._attr_unique_id = f"{meter.full_serial_number}-{description.key}"
         self._attr_device_info = {
             ATTR_IDENTIFIERS: {(DOMAIN, meter.get_meter_id())},
