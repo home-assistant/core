@@ -73,9 +73,9 @@ _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
 _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
 _GALLON_TO_CUBIC_METER = 231 * pow(_IN_TO_M, 3)  # US gallon is 231 cubic inches
 _FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
-_UK_GALLON_TO_CUBIC_METER = 4.54609 * _L_TO_CUBIC_METER  # UK gallon is 4.54609 litres
+_UK_GALLON_TO_CUBIC_METER = 4.54609 * _L_TO_CUBIC_METER  # Imperial gallon is 4.54609 litres
 _UK_FLUID_OUNCE_TO_CUBIC_METER = (
-    _UK_GALLON_TO_CUBIC_METER / 160  # 160 fl. oz. in a UK gallon
+    _UK_GALLON_TO_CUBIC_METER / 160  # 160 fl. oz. in an Imperial gallon
 )
 _CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
 
