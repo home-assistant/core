@@ -131,6 +131,7 @@ FLOWS = {
         "fireservicerota",
         "fivem",
         "fjaraskupan",
+        "flexit_bacnet",
         "flick_electric",
         "flipr",
         "flo",
