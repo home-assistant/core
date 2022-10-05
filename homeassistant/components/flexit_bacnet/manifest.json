@@ -1,0 +1,13 @@
+{
+  "domain": "flexit_bacnet",
+  "name": "Flexit Nordic (BACnet)",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/flexit_bacnet",
+  "requirements": ["flexit_bacnet==1.0.0"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@piotrbulinski"],
+  "iot_class": "local_polling"
+}
