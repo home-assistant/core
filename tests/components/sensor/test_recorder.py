@@ -1900,12 +1900,13 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    "device_class, state_unit, state_unit2, unit_class, mean, min, max",
     [
-        (None, None, None, None, None, 13.050847, -10, 30),
-        (None, "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", None, None, None, None, 13.050847, -10, 30),
+        (None, None, "cats", None, 13.050847, -10, 30),
+        (None, "%", "cats", None, 13.050847, -10, 30),
+        ("battery", "%", "cats", None, 13.050847, -10, 30),
+        ("battery", None, "cats", None, 13.050847, -10, 30),
+        (None, "kW", "Wh", "power", 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_1(
@@ -1913,8 +1914,7 @@ def test_compile_hourly_statistics_changing_units_1(
     caplog,
     device_class,
     state_unit,
-    display_unit,
-    statistics_unit,
+    state_unit2,
     unit_class,
     mean,
     min,
@@ -1931,7 +1931,7 @@ def test_compile_hourly_statistics_changing_units_1(
         "unit_of_measurement": state_unit,
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
-    attributes["unit_of_measurement"] = "cats"
+    attributes["unit_of_measurement"] = state_unit2
     four, _states = record_states(
         hass, zero + timedelta(minutes=5), "sensor.test1", attributes
     )
@@ -1954,7 +1954,7 @@ def test_compile_hourly_statistics_changing_units_1(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": statistics_unit,
+            "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
         },
     ]
@@ -1978,8 +1978,8 @@ def test_compile_hourly_statistics_changing_units_1(
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     assert (
-        "The unit of sensor.test1 (cats) can not be converted to the unit of "
-        f"previously compiled statistics ({display_unit})" in caplog.text
+        f"The unit of sensor.test1 ({state_unit2}) can not be converted to the unit of "
+        f"previously compiled statistics ({state_unit})" in caplog.text
     )
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -1989,7 +1989,7 @@ def test_compile_hourly_statistics_changing_units_1(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": statistics_unit,
+            "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
         },
     ]
