@@ -889,9 +889,9 @@ class LightEntity(ToggleEntity):
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
-        if self._attr_min_color_temp_kelvin is None:
+        if self._attr_max_color_temp_kelvin is None:
             return color_util.color_temperature_mired_to_kelvin(self.min_mireds)
-        return self._attr_min_color_temp_kelvin
+        return self._attr_max_color_temp_kelvin
 
     @property
     def effect_list(self) -> list[str] | None:
