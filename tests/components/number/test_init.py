@@ -455,7 +455,7 @@ async def test_deprecated_methods(
             TEMP_FAHRENHEIT,
             38,
             100,
-            10,
+            pytest.approx(10),
             50,
             60,
             140,

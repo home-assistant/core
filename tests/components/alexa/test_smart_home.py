@@ -2112,8 +2112,8 @@ async def test_thermostat(hass):
         },
     )
     assert call.data["temperature"] == 70.0
-    assert call.data["target_temp_low"] == 68.0
-    assert call.data["target_temp_high"] == 86.0
+    assert call.data["target_temp_low"] == pytest.approx(68.0)
+    assert call.data["target_temp_high"] == pytest.approx(86.0)
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal(
         "Alexa.ThermostatController",
@@ -2123,12 +2123,12 @@ async def test_thermostat(hass):
     properties.assert_equal(
         "Alexa.ThermostatController",
         "lowerSetpoint",
-        {"value": 68.0, "scale": "FAHRENHEIT"},
+        {"value": pytest.approx(68.0), "scale": "FAHRENHEIT"},
     )
     properties.assert_equal(
         "Alexa.ThermostatController",
         "upperSetpoint",
-        {"value": 86.0, "scale": "FAHRENHEIT"},
+        {"value": pytest.approx(86.0), "scale": "FAHRENHEIT"},
     )
 
     msg = await assert_request_fails(

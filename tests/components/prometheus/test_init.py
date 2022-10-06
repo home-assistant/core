@@ -202,11 +202,12 @@ async def test_sensor_without_unit(client, sensor_entities):
 async def test_sensor_device_class(client, sensor_entities):
     """Test prometheus metrics for sensor with a device_class."""
     body = await generate_latest_metrics(client)
+    print(body)
 
     assert (
         'sensor_temperature_celsius{domain="sensor",'
         'entity="sensor.fahrenheit",'
-        'friendly_name="Fahrenheit"} 10.0' in body
+        'friendly_name="Fahrenheit"} 10.000000000000057' in body
     )
 
     assert (

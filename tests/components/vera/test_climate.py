@@ -1,6 +1,7 @@
 """Vera tests."""
 from unittest.mock import MagicMock
 
+import pytest
 import pyvera as pv
 
 from homeassistant.components.climate import FAN_AUTO, FAN_ON, HVACMode
@@ -153,7 +154,7 @@ async def test_climate_f(
         {"entity_id": entity_id, "temperature": 30},
     )
     await hass.async_block_till_done()
-    vera_device.set_temperature.assert_called_with(86)
+    vera_device.set_temperature.assert_called_with(pytest.approx(86))
     vera_device.get_current_goal_temperature.return_value = 30
     vera_device.get_current_temperature.return_value = 25
     update_callback(vera_device)

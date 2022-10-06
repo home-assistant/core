@@ -134,7 +134,7 @@ async def test_thermostat_v2(
         "property": "setpoint",
         "propertyKey": 1,
     }
-    assert args["value"] == 77
+    assert args["value"] == pytest.approx(77)
 
     client.async_send_command.reset_mock()
 
@@ -214,7 +214,7 @@ async def test_thermostat_v2(
         "property": "setpoint",
         "propertyKey": 1,
     }
-    assert args["value"] == 77
+    assert args["value"] == pytest.approx(77)
 
     args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
@@ -225,7 +225,7 @@ async def test_thermostat_v2(
         "property": "setpoint",
         "propertyKey": 2,
     }
-    assert args["value"] == 86
+    assert args["value"] == pytest.approx(86)
 
     client.async_send_command.reset_mock()
 
