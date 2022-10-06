@@ -65,28 +65,40 @@ def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
 
 def gpu_core_clock_speed(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the GPU core clock speed."""
-    if getattr(data.gpu, f"{key}_core_clock") is not None:
+    if (
+        hasattr(data.gpu, f"{key}_core_clock")
+        and getattr(data.gpu, f"{key}_core_clock") is not None
+    ):
         return round(getattr(data.gpu, f"{key}_core_clock"))
     return None
 
 
 def gpu_memory_clock_speed(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the GPU memory clock speed."""
-    if getattr(data.gpu, f"{key}_memory_clock") is not None:
+    if (
+        hasattr(data.gpu, f"{key}_memory_clock")
+        and getattr(data.gpu, f"{key}_memory_clock") is not None
+    ):
         return round(getattr(data.gpu, f"{key}_memory_clock"))
     return None
 
 
 def gpu_memory_free(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the free GPU memory."""
-    if getattr(data.gpu, f"{key}_memory_free") is not None:
+    if (
+        hasattr(data.gpu, f"{key}_memory_free")
+        and getattr(data.gpu, f"{key}_memory_free") is not None
+    ):
         return round(getattr(data.gpu, f"{key}_memory_free") / 10**3, 2)
     return None
 
 
 def gpu_memory_used(data: SystemBridgeCoordinatorData, key: str) -> float | None:
     """Return the used GPU memory."""
-    if getattr(data.gpu, f"{key}_memory_used") is not None:
+    if (
+        hasattr(data.gpu, f"{key}_memory_used")
+        and getattr(data.gpu, f"{key}_memory_used") is not None
+    ):
         return round(getattr(data.gpu, f"{key}_memory_used") / 10**3, 2)
     return None
 
@@ -96,7 +108,9 @@ def gpu_memory_used_percentage(
 ) -> float | None:
     """Return the used GPU memory percentage."""
     if (
-        getattr(data.gpu, f"{key}_memory_used") is not None
+        hasattr(data.gpu, f"{key}_memory_used")
+        and getattr(data.gpu, f"{key}_memory_used") is not None
+        and hasattr(data.gpu, f"{key}_memory_total") is not None
         and getattr(data.gpu, f"{key}_memory_total") is not None
     ):
         return round(
@@ -119,6 +133,15 @@ def memory_used(data: SystemBridgeCoordinatorData) -> float | None:
     """Return the used memory."""
     if data.memory.virtual_used is not None:
         return round(data.memory.virtual_used / 1000**3, 2)
+    return None
+
+
+def get_attr_if_available(
+    data: SystemBridgeCoordinatorData, key: str
+) -> str | float | None:
+    """Return the attribute if available."""
+    if hasattr(data, key):
+        return getattr(data, key)
     return None
 
 
@@ -265,7 +288,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:harddisk",
-                    value=lambda data, p=partition: getattr(
+                    value=lambda data, p=partition: get_attr_if_available(
                         data.disk, f"usage_{p}_percent"
                     ),
                 ),
@@ -285,14 +308,15 @@ async def async_setup_entry(
 
     displays = []
     for display in coordinator.data.display.displays:
-        displays.append(
-            {
-                "key": display,
-                "name": getattr(coordinator.data.display, f"{display}_name").replace(
-                    "Display ", ""
-                ),
-            },
-        )
+        if hasattr(coordinator.data.display, f"{display}_name"):
+            displays.append(
+                {
+                    "key": display,
+                    "name": getattr(
+                        coordinator.data.display, f"{display}_name"
+                    ).replace("Display ", ""),
+                },
+            )
     display_count = len(displays)
 
     entities.append(
@@ -320,7 +344,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
-                    value=lambda data, k=display["key"]: getattr(
+                    value=lambda data, k=display["key"]: get_attr_if_available(
                         data.display, f"{k}_resolution_horizontal"
                     ),
                 ),
@@ -334,7 +358,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
-                    value=lambda data, k=display["key"]: getattr(
+                    value=lambda data, k=display["key"]: get_attr_if_available(
                         data.display, f"{k}_resolution_vertical"
                     ),
                 ),
@@ -349,7 +373,7 @@ async def async_setup_entry(
                     native_unit_of_measurement=UnitOfFrequency.HERTZ,
                     device_class=SensorDeviceClass.FREQUENCY,
                     icon="mdi:monitor",
-                    value=lambda data, k=display["key"]: getattr(
+                    value=lambda data, k=display["key"]: get_attr_if_available(
                         data.display, f"{k}_refresh_rate"
                     ),
                 ),
@@ -362,7 +386,7 @@ async def async_setup_entry(
         gpus.append(
             {
                 "key": gpu,
-                "name": getattr(coordinator.data.gpu, f"{gpu}_name"),
+                "name": get_attr_if_available(coordinator.data.gpu, f"{gpu}_name"),
             },
         )
 
@@ -447,7 +471,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
                     icon="mdi:fan",
-                    value=lambda data, k=gpu["key"]: getattr(
+                    value=lambda data, k=gpu["key"]: get_attr_if_available(
                         data.gpu, f"{k}_fan_speed"
                     ),
                 ),
@@ -462,7 +486,9 @@ async def async_setup_entry(
                     device_class=SensorDeviceClass.POWER,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfPower.WATT,
-                    value=lambda data, k=gpu["key"]: getattr(data.gpu, f"{k}_power"),
+                    value=lambda data, k=gpu["key"]: get_attr_if_available(
+                        data.gpu, f"{k}_power"
+                    ),
                 ),
                 entry.data[CONF_PORT],
             ),
@@ -475,7 +501,7 @@ async def async_setup_entry(
                     device_class=SensorDeviceClass.TEMPERATURE,
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                    value=lambda data, k=gpu["key"]: getattr(
+                    value=lambda data, k=gpu["key"]: get_attr_if_available(
                         data.gpu, f"{k}_temperature"
                     ),
                 ),
@@ -489,7 +515,7 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda data, k=gpu["key"]: getattr(
+                    value=lambda data, k=gpu["key"]: get_attr_if_available(
                         data.gpu, f"{k}_core_load"
                     ),
                 ),
@@ -509,7 +535,9 @@ async def async_setup_entry(
                     state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
-                    value=lambda data, k=index: getattr(data.cpu, f"usage_{k}"),
+                    value=lambda data, k=index: get_attr_if_available(
+                        data.cpu, f"usage_{k}"
+                    ),
                 ),
                 entry.data[CONF_PORT],
             ),
