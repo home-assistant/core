@@ -142,14 +142,13 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
+    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
     @callback
     def _async_block_device_setup() -> None:
         """Set up a block based device that is online."""
-        shelly_entry_data = get_entry_data(hass)[entry.entry_id]
         shelly_entry_data.block = ShellyBlockCoordinator(hass, entry, device)
         shelly_entry_data.block.async_setup()
-        coordinator.async_setup()
 
         platforms = BLOCK_SLEEPING_PLATFORMS
 
@@ -162,7 +161,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     @callback
     def _async_device_online(_: Any) -> None:
         LOGGER.debug("Device %s is online, resuming setup", entry.title)
-        get_entry_data(hass)[entry.entry_id].device = None
+        shelly_entry_data.device = None
 
         if sleep_period is None:
             data = {**entry.data}
@@ -194,7 +193,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         _async_block_device_setup()
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
-        get_entry_data(hass)[entry.entry_id].device = device
+        shelly_entry_data.device = device
         LOGGER.debug(
             "Setup for device %s will resume when device is online", entry.title
         )
