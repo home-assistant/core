@@ -4,6 +4,13 @@ from datetime import timedelta
 
 DOMAIN = "landisgyr_heat_meter"
 
-GJ_TO_MWH = 0.277778  # conversion factor
 ULTRAHEAT_TIMEOUT = 30  # reading the IR port can take some time
 POLLING_INTERVAL = timedelta(days=1)  # Polling is only daily to prevent battery drain.
+
+# Keys used to check for GJ or MWH
+MWH_IDENTITY_KEY = "heat_usage_mwh"
+GJ_IDENTITY_KEY = "heat_usage_gj"
+
+# Keys that are energy unit specific
+MWH_ONLY_KEYS = {"heat_usage_mwh", "heat_previous_year_mwh"}
+GJ_ONLY_KEYS = {"heat_usage_gj", "heat_previous_year_gj"}

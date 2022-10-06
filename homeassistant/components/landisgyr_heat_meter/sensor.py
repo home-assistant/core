@@ -35,6 +35,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
+from .const import GJ_IDENTITY_KEY, GJ_ONLY_KEYS, MWH_IDENTITY_KEY, MWH_ONLY_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +56,15 @@ class HeatMeterSensorEntityDescription(
 
 HEAT_METER_SENSOR_TYPES = (
     HeatMeterSensorEntityDescription(
+        key="heat_usage_mwh",
+        icon="mdi:fire",
+        name="Heat usage MWh",
+        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda res: getattr(res, "heat_usage_mwh", None),
+    ),
+    HeatMeterSensorEntityDescription(
         key="volume_usage_m3",
         icon="mdi:fire",
         name="Volume usage",
@@ -73,10 +83,20 @@ HEAT_METER_SENSOR_TYPES = (
         value_fn=lambda res: getattr(res, "heat_usage_gj", None),
     ),
     HeatMeterSensorEntityDescription(
+        key="heat_previous_year_mwh",
+        icon="mdi:fire",
+        name="Heat previous year MWh",
+        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda res: getattr(res, "heat_previous_year_mwh", None),
+    ),
+    HeatMeterSensorEntityDescription(
         key="heat_previous_year_gj",
         icon="mdi:fire",
         name="Heat previous year GJ",
         native_unit_of_measurement=UnitOfEnergy.GIGA_JOULE,
+        device_class=SensorDeviceClass.ENERGY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda res: getattr(res, "heat_previous_year_gj", None),
     ),
@@ -275,10 +295,18 @@ async def async_setup_entry(
         name="Landis+Gyr Heat Meter",
     )
 
-    sensors = []
+    energy_unit = energy_unit_from_data(coordinator.data)
+    if energy_unit == UnitOfEnergy.GIGA_JOULE:
+        exclude_keys = MWH_ONLY_KEYS
+    elif energy_unit == UnitOfEnergy.MEGA_WATT_HOUR:
+        exclude_keys = GJ_ONLY_KEYS
+    else:
+        exclude_keys = set()
 
+    sensors = []
     for description in HEAT_METER_SENSOR_TYPES:
-        sensors.append(HeatMeterSensor(coordinator, description, device))
+        if description.key not in exclude_keys:
+            sensors.append(HeatMeterSensor(coordinator, description, device))
 
     async_add_entities(sensors)
 
@@ -309,3 +337,20 @@ class HeatMeterSensor(
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+def energy_unit_from_data(data) -> str | None:
+    """Determine the energy unit of measurement (MWh or GJ) this device uses."""
+    if data:
+        mwh_supplied = getattr(data, MWH_IDENTITY_KEY, None)
+        gj_supplied = getattr(data, GJ_IDENTITY_KEY, None)
+
+        if mwh_supplied and not gj_supplied:
+            # MWh is returned and GJ not: remove GJ entities
+            return UnitOfEnergy.MEGA_WATT_HOUR
+
+        if gj_supplied and not mwh_supplied:
+            # GJ is returned and MWH not: remove MWH entities
+            return UnitOfEnergy.GIGA_JOULE
+
+    return None
