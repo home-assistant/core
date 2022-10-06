@@ -1893,7 +1893,7 @@ async def test_light_service_call_color_temp_conversion(
     assert entity1.min_mireds == 153
     assert entity1.max_mireds == 500
     assert entity1.min_color_temp_kelvin == 2000
-    assert entity1.max_color_temp_kelvin == 6535
+    assert entity1.max_color_temp_kelvin == 6500
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
