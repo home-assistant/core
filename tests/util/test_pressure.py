@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.const import (
+    PRESSURE_BAR,
     PRESSURE_CBAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
@@ -22,6 +23,21 @@ def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
     """Ensure that a warning is raised on use of convert."""
     assert pressure_util.convert(2, PRESSURE_PA, PRESSURE_PA) == 2
     assert "use unit_conversion.PressureConverter instead" in caplog.text
+
+
+def test_deprecated_constant() -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert pressure_util.UNIT_CONVERSION == {
+        PRESSURE_PA: 1,
+        PRESSURE_HPA: 1 / 100,
+        PRESSURE_KPA: 1 / 1000,
+        PRESSURE_BAR: 1 / 100000,
+        PRESSURE_CBAR: 1 / 1000,
+        PRESSURE_MBAR: 1 / 100,
+        PRESSURE_INHG: pytest.approx(1 / 3386.389),
+        PRESSURE_PSI: pytest.approx(1 / 6894.757),
+        PRESSURE_MMHG: pytest.approx(1 / 133.3223874),
+    }
 
 
 def test_convert_same_unit():

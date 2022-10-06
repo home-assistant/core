@@ -24,6 +24,20 @@ def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
     assert "use unit_conversion.SpeedConverter instead" in caplog.text
 
 
+def test_deprecated_constant() -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert speed_util.UNIT_CONVERSION == {
+        SPEED_FEET_PER_SECOND: pytest.approx(1 / 0.3048),
+        SPEED_INCHES_PER_DAY: (24 * 60 * 60) / 0.0254,
+        SPEED_INCHES_PER_HOUR: 60 * 60 / 0.0254,
+        SPEED_KILOMETERS_PER_HOUR: pytest.approx(60 * 60 / 1000),
+        SPEED_KNOTS: pytest.approx(60 * 60 / 1852),
+        SPEED_METERS_PER_SECOND: 1,
+        SPEED_MILES_PER_HOUR: 60 * 60 / 1609.344,
+        SPEED_MILLIMETERS_PER_DAY: (24 * 60 * 60) * 1000,
+    }
+
+
 def test_convert_same_unit():
     """Test conversion from any unit to same unit."""
     assert speed_util.convert(2, SPEED_INCHES_PER_DAY, SPEED_INCHES_PER_DAY) == 2
