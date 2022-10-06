@@ -88,6 +88,12 @@ def mock_connection(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
+    aioclient_mock.get(
+        f"{url}/api/v3/queue",
+        text=load_fixture("radarr/queue.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
     if windows:
         aioclient_mock.get(
             f"{url}/api/v3/rootfolder",
@@ -121,10 +127,11 @@ def mock_connection_invalid_auth(
     url: str = URL,
 ) -> None:
     """Mock radarr invalid auth errors."""
-    aioclient_mock.get(f"{url}/api/v3/system/status", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/command", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/movie", status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.get(f"{url}/api/v3/queue", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/rootfolder", status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.get(f"{url}/api/v3/system/status", status=HTTPStatus.UNAUTHORIZED)
 
 
 def mock_connection_server_error(
@@ -132,13 +139,14 @@ def mock_connection_server_error(
     url: str = URL,
 ) -> None:
     """Mock radarr server errors."""
-    aioclient_mock.get(
-        f"{url}/api/v3/system/status", status=HTTPStatus.INTERNAL_SERVER_ERROR
-    )
     aioclient_mock.get(f"{url}/api/v3/command", status=HTTPStatus.INTERNAL_SERVER_ERROR)
     aioclient_mock.get(f"{url}/api/v3/movie", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(f"{url}/api/v3/queue", status=HTTPStatus.INTERNAL_SERVER_ERROR)
     aioclient_mock.get(
         f"{url}/api/v3/rootfolder", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    aioclient_mock.get(
+        f"{url}/api/v3/system/status", status=HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 
@@ -188,11 +196,6 @@ def patch_async_setup_entry(return_value=True):
         "homeassistant.components.radarr.async_setup_entry",
         return_value=return_value,
     )
-
-
-def patch_radarr():
-    """Patch radarr api."""
-    return patch("homeassistant.components.radarr.RadarrClient.async_get_system_status")
 
 
 def create_entry(hass: HomeAssistant) -> MockConfigEntry:

@@ -4,10 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from datetime import timezone
+from datetime import datetime, timezone
 from typing import Generic
 
-from aiopyarr import Diskspace, RootFolder
+from aiopyarr import Diskspace, RadarrQueueDetail as RadarrQueueItem, RootFolder
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -73,6 +74,9 @@ class RadarrSensorEntityDescription(
 ):
     """Class to describe a Radarr sensor."""
 
+    attributes_fn: Callable[
+        [T], dict[str, StateType | datetime] | None
+    ] = lambda _: None
     description_fn: Callable[
         [RadarrSensorEntityDescription, RootFolder],
         tuple[RadarrSensorEntityDescription, str] | None,
@@ -95,6 +99,16 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription] = {
         icon="mdi:television",
         entity_registry_enabled_default=False,
         value_fn=lambda data, _: data,
+    ),
+    "queue": RadarrSensorEntityDescription(
+        key="queue",
+        name="Queue",
+        native_unit_of_measurement="Movies",
+        icon="mdi:download",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data, _: data.totalRecords,
+        attributes_fn=lambda data: {i.title: queue_str(i) for i in data.records},
     ),
     "status": RadarrSensorEntityDescription(
         key="start_time",
@@ -186,6 +200,22 @@ class RadarrSensor(RadarrEntity, SensorEntity):
         self.folder_name = folder_name
 
     @property
+    def extra_state_attributes(self) -> dict[str, StateType | datetime] | None:
+        """Return the state attributes of the sensor."""
+        return self.entity_description.attributes_fn(self.coordinator.data)
+
+    @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data, self.folder_name)
+
+
+def queue_str(item: RadarrQueueItem) -> str:
+    """Return string description of queue item."""
+    if (
+        item.sizeleft > 0
+        and item.timeleft == "00:00:00"
+        or not hasattr(item, "trackedDownloadState")
+    ):
+        return "stopped"
+    return item.trackedDownloadState
