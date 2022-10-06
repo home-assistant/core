@@ -18,9 +18,9 @@ def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
 @pytest.mark.parametrize(
     "function_name, value, expected",
     [
-        ("fahrenheit_to_celsius", 75.2, 24),
+        ("fahrenheit_to_celsius", 75.2, pytest.approx(24)),
         ("kelvin_to_celsius", 297.65, 24.5),
-        ("celsius_to_fahrenheit", 23, 73.4),
+        ("celsius_to_fahrenheit", 23, pytest.approx(73.4)),
         ("celsius_to_kelvin", 23, 296.15),
     ],
 )

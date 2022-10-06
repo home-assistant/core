@@ -166,7 +166,9 @@ def test_temperature_to_metric():
 def test_temperature_to_imperial():
     """Test temperature conversion to imperial system."""
     assert IMPERIAL_SYSTEM.temperature(77, IMPERIAL_SYSTEM.temperature_unit) == 77
-    assert IMPERIAL_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit) == 77
+    assert IMPERIAL_SYSTEM.temperature(
+        25, METRIC_SYSTEM.temperature_unit
+    ) == pytest.approx(77)
 
 
 def test_length_unknown_unit():

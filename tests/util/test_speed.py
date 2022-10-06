@@ -29,12 +29,12 @@ def test_deprecated_constant() -> None:
     assert speed_util.UNIT_CONVERSION == {
         SPEED_FEET_PER_SECOND: pytest.approx(1 / 0.3048),
         SPEED_INCHES_PER_DAY: (24 * 60 * 60) / 0.0254,
-        SPEED_INCHES_PER_HOUR: 60 * 60 / 0.0254,
+        SPEED_INCHES_PER_HOUR: pytest.approx(60 * 60 / 0.0254),
         SPEED_KILOMETERS_PER_HOUR: pytest.approx(60 * 60 / 1000),
         SPEED_KNOTS: pytest.approx(60 * 60 / 1852),
         SPEED_METERS_PER_SECOND: 1,
         SPEED_MILES_PER_HOUR: 60 * 60 / 1609.344,
-        SPEED_MILLIMETERS_PER_DAY: (24 * 60 * 60) * 1000,
+        SPEED_MILLIMETERS_PER_DAY: pytest.approx((24 * 60 * 60) * 1000),
     }
 
 
