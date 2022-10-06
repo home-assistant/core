@@ -1795,6 +1795,11 @@ class Config:
         self.elevation: int = 0
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
+        # self.unit_conversions = {
+        #     "distance": {LENGTH_KILOMETERS: LENGTH_MILES},
+        #     "temperature": {TEMP_CELSIUS: TEMP_FAHRENHEIT},
+        # }
+        self.unit_conversions: dict[str | None, dict[str | None, str]] = {}
         self.units: UnitSystem = METRIC_SYSTEM
         self.internal_url: str | None = None
         self.external_url: str | None = None

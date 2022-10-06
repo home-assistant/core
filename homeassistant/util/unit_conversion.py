@@ -1,6 +1,8 @@
 """Typing Helpers for Home Assistant."""
 from __future__ import annotations
 
+from typing import Final
+
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
@@ -50,6 +52,9 @@ from homeassistant.const import (
     VOLUME_MILLILITERS,
 )
 from homeassistant.exceptions import HomeAssistantError
+
+# Do not convert flag
+DO_NOT_CONVERT: Final = "**DO_NOT_CONVERT**"
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m

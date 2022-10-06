@@ -388,9 +388,20 @@ class SensorEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
-            self.device_class == DEVICE_CLASS_TEMPERATURE
+            unit_conversion := self.hass.config.unit_conversions.get(self.device_class)
+        ) and (to_unit := unit_conversion.get(native_unit_of_measurement)):
+            return to_unit
+
+        if (
+            self.device_class == SensorDeviceClass.TEMPERATURE
+            and native_unit_of_measurement != self.hass.config.units.temperature_unit
             and native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
         ):
+            # Automatic conversion based on UnitSystem will stop working in XXXX.XX.
+            # To keep existing behavior, please add a mapping for
+            # {native_unit_of_measurement} > {self.hass.config.units.temperature_unit}
+            # To cancel automatic temperature conversion, please add a mapping for
+            # {native_unit_of_measurement} > {native_unit_of_measurement}
             return self.hass.config.units.temperature_unit
 
         return native_unit_of_measurement
