@@ -11,8 +11,10 @@ from homeassistant.components.fritzbox.const import (
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -24,7 +26,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import color
 import homeassistant.util.dt as dt_util
 
 from . import FritzDeviceLightMock, setup_config_entry
@@ -53,9 +54,9 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
-    assert state.attributes[ATTR_COLOR_TEMP] == color.color_temperature_kelvin_to_mired(
-        2700
-    )
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2700
+    assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
+    assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
 
 
 async def test_setup_color(hass: HomeAssistant, fritz: Mock):
@@ -95,7 +96,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock):
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP: 300},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP_KELVIN: 300},
         True,
     )
     assert device.set_state_on.call_count == 1
