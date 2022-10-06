@@ -29,7 +29,7 @@ from .const import (
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_MODEL): vol.In([e.name for e in Model]),
+        vol.Required(CONF_MODEL): vol.In(list(Model.__members__)),
         vol.Required(CONF_IP_ADDRESS): str,
         vol.Required(CONF_LISTENING_PORT, default=9999): cv.port,
         vol.Required(CONF_REMOTE_READ_PORT, default=9999): cv.port,
