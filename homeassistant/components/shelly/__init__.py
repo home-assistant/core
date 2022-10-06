@@ -146,9 +146,9 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     @callback
     def _async_block_device_setup() -> None:
         """Set up a block based device that is online."""
-        coordinator = get_entry_data(hass)[
-            entry.entry_id
-        ].block = ShellyBlockCoordinator(hass, entry, device)
+        shelly_entry_data = get_entry_data(hass)[entry.entry_id]
+        shelly_entry_data.block = ShellyBlockCoordinator(hass, entry, device)
+        shelly_entry_data.block.async_setup()
         coordinator.async_setup()
 
         platforms = BLOCK_SLEEPING_PLATFORMS
