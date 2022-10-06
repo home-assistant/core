@@ -15,12 +15,12 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict:
     """Return diagnostics for a config entry."""
-    entry_data = get_entry_data(hass)[entry.entry_id]
+    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
     device_settings: str | dict = "not initialized"
     device_status: str | dict = "not initialized"
-    if entry_data.block:
-        block_coordinator = entry_data.block
+    if shelly_entry_data.block:
+        block_coordinator = shelly_entry_data.block
         assert block_coordinator
         device_info = {
             "name": block_coordinator.name,
@@ -51,7 +51,7 @@ async def async_get_config_entry_diagnostics(
                 ]
             }
     else:
-        rpc_coordinator = entry_data.rpc
+        rpc_coordinator = shelly_entry_data.rpc
         assert rpc_coordinator
         device_info = {
             "name": rpc_coordinator.name,

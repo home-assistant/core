@@ -154,9 +154,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         platforms = BLOCK_SLEEPING_PLATFORMS
 
         if not entry.data.get(CONF_SLEEP_PERIOD):
-            get_entry_data(hass)[entry.entry_id].rest = ShellyRestCoordinator(
-                hass, device, entry
-            )
+            shelly_entry_data.rest = ShellyRestCoordinator(hass, device, entry)
             platforms = BLOCK_PLATFORMS
 
         hass.config_entries.async_setup_platforms(entry, platforms)
@@ -230,14 +228,11 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     except (AuthRequired, InvalidAuthError) as err:
         raise ConfigEntryAuthFailed from err
 
-    rpc_coordinator = get_entry_data(hass)[entry.entry_id].rpc = ShellyRpcCoordinator(
-        hass, entry, device
-    )
-    rpc_coordinator.async_setup()
+    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
+    shelly_entry_data.rpc = ShellyRpcCoordinator(hass, entry, device)
+    shelly_entry_data.rpc.async_setup()
 
-    get_entry_data(hass)[entry.entry_id].rpc_poll = ShellyRpcPollingCoordinator(
-        hass, entry, device
-    )
+    shelly_entry_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
 
     hass.config_entries.async_setup_platforms(entry, RPC_PLATFORMS)
 
@@ -246,32 +241,32 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    entry_data = get_entry_data(hass)[entry.entry_id]
+    shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
     if get_device_entry_gen(entry) == 2:
         if unload_ok := await hass.config_entries.async_unload_platforms(
             entry, RPC_PLATFORMS
         ):
-            if entry_data.rpc:
-                await entry_data.rpc.shutdown()
+            if shelly_entry_data.rpc:
+                await shelly_entry_data.rpc.shutdown()
             get_entry_data(hass).pop(entry.entry_id)
 
         return unload_ok
 
-    if entry_data.device is not None:
+    if shelly_entry_data.device is not None:
         # If device is present, block coordinator is not setup yet
-        entry_data.device.shutdown()
+        shelly_entry_data.device.shutdown()
         return True
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
     if not entry.data.get(CONF_SLEEP_PERIOD):
-        entry_data.rest = None
+        shelly_entry_data.rest = None
         platforms = BLOCK_PLATFORMS
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
-        if entry_data.block:
-            entry_data.block.shutdown()
+        if shelly_entry_data.block:
+            shelly_entry_data.block.shutdown()
         get_entry_data(hass).pop(entry.entry_id)
 
     return unload_ok
