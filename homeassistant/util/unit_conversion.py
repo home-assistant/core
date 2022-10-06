@@ -72,7 +72,7 @@ _POUND_TO_G = 453.59237
 _OUNCE_TO_G = _POUND_TO_G / 16
 
 # Pressure conversion constants
-_GRAVITY = 9.80665
+_STANDARD_GRAVITY = 9.80665
 _MERCURY_DENSITY = 13.5951
 
 # Volume conversion constants
@@ -215,9 +215,9 @@ class PressureConverter(BaseUnitConverter):
         PRESSURE_BAR: 1 / 100000,
         PRESSURE_CBAR: 1 / 1000,
         PRESSURE_MBAR: 1 / 100,
-        PRESSURE_INHG: 1 / (_IN_TO_M * 1000 * _GRAVITY * _MERCURY_DENSITY),
+        PRESSURE_INHG: 1 / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
         PRESSURE_PSI: 1 / 6894.757,
-        PRESSURE_MMHG: 1 / (_MM_TO_M * 1000 * _GRAVITY * _MERCURY_DENSITY),
+        PRESSURE_MMHG: 1 / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
     }
     VALID_UNITS = {
         PRESSURE_PA,
