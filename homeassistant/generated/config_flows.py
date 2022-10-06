@@ -465,6 +465,7 @@ FLOWS = {
         "zwave_me",
     ],
     "helper": [
+        "attribute_as_sensor",
         "derivative",
         "group",
         "integration",

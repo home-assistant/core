@@ -1,0 +1,10 @@
+{
+  "domain": "attribute_as_sensor",
+  "integration_type": "helper",
+  "name": "Attribute as Sensor",
+  "documentation": "https://www.home-assistant.io/integrations/attribute_as_sensor",
+  "codeowners": ["@gjohansson-ST"],
+  "quality_scale": "internal",
+  "iot_class": "local_push",
+  "config_flow": true
+}

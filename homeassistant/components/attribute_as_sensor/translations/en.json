@@ -1,0 +1,42 @@
+{
+    "config": {
+        "step": {
+            "attr": {
+                "data": {
+                    "attribute": "Attribute",
+                    "device_class": "Device Class",
+                    "state_class": "State Class",
+                    "unit_of_measurement": "Unit of Measurement"
+                },
+                "data_description": {
+                    "attribute": "Select the Attribute from the entity that you like to get as sensor.",
+                    "unit_of_measurement": "Select an unit of measurement or add your own custom UoM"
+                }
+            },
+            "user": {
+                "data": {
+                    "entity_id": "Input entities",
+                    "icon": "Icon",
+                    "name": "Name"
+                },
+                "description": "Create a sensor that derives it's value from an attribute from another entity.",
+                "title": "Add Attribute as Sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "device_class": "Device Class",
+                    "state_class": "State Class",
+                    "unit_of_measurement": "Unit of Measurement"
+                },
+                "data_description": {
+                    "unit_of_measurement": "Select an unit of measurement or add your own custom UoM"
+                }
+            }
+        }
+    },
+    "title": "Attribute as Sensor"
+}

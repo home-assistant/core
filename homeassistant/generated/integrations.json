@@ -5117,6 +5117,10 @@
     }
   },
   "helper": {
+    "attribute_as_sensor": {
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "counter": {
       "config_flow": false,
       "iot_class": null,
@@ -5190,6 +5194,7 @@
     }
   },
   "translated_name": [
+    "attribute_as_sensor",
     "aurora",
     "cert_expiry",
     "cpuspeed",

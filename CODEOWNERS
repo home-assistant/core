@@ -103,6 +103,7 @@ build.json @home-assistant/supervisor
 /tests/components/atag/ @MatsNL
 /homeassistant/components/aten_pe/ @mtdcr
 /homeassistant/components/atome/ @baqs
+/homeassistant/components/attribute_as_sensor/ @gjohansson-ST
 /homeassistant/components/august/ @bdraco
 /tests/components/august/ @bdraco
 /homeassistant/components/aurora/ @djtimca
