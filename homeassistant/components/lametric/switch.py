@@ -35,7 +35,7 @@ class LaMetricSwitchEntityDescription(
     available_fn: Callable[[Device], bool] = lambda device: True
 
 
-NUMBERS = [
+SWITCHES = [
     LaMetricSwitchEntityDescription(
         key="bluetooth",
         name="Bluetooth",
@@ -60,7 +60,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             description=description,
         )
-        for description in NUMBERS
+        for description in SWITCHES
     )
 
 
