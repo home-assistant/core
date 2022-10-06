@@ -1626,3 +1626,22 @@ async def test_disable_echo(hass, db_url, echo, caplog):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: db_url}})
         create_engine_mock.assert_called_once()
         assert create_engine_mock.mock_calls[0][2].get("echo") == echo
+
+
+@pytest.mark.parametrize(
+    "dburl",
+    (
+        "mysql://user:password@SERVER_IP/DB_NAME",
+        "mysql+pymysql://user:password@SERVER_IP/DB_NAME",
+    ),
+)
+async def test_mysql_missing_utf8mb4(hass, dburl, caplog):
+    """Test recorder fails to setup if charset=utf8mb4 is missing from db_url."""
+    recorder_helper.async_initialize_recorder(hass)
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+
+    assert (
+        "MySQL or MariaDB database connection URL must contain a 'charset=utf8mb4' "
+        "character set specifer. Please update the 'db_url' configuration option in "
+        "configuration.yaml"
+    ) in caplog.text

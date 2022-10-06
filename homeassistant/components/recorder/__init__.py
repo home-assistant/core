@@ -26,6 +26,9 @@ from .const import (
     DATA_INSTANCE,
     DOMAIN,
     EXCLUDE_ATTRIBUTES,
+    MYSQLDB_PYMYSQL_URL_PREFIX,
+    MYSQLDB_URL_PREFIX,
+    MYSQLDB_UTF8MB4_CHARSET,
     SQLITE_URL_PREFIX,
 )
 from .core import Recorder
@@ -71,6 +74,16 @@ def validate_db_url(db_url: str) -> Any:
     # Don't allow on-memory sqlite databases
     if (db_url == SQLITE_URL_PREFIX or ":memory:" in db_url) and not ALLOW_IN_MEMORY_DB:
         raise vol.Invalid("In-memory SQLite database is not supported")
+
+    if MYSQLDB_UTF8MB4_CHARSET not in db_url and (
+        db_url.startswith(MYSQLDB_URL_PREFIX)
+        or db_url.startswith(MYSQLDB_PYMYSQL_URL_PREFIX)
+    ):
+        raise vol.Invalid(
+            "MySQL or MariaDB database connection URL must contain a "
+            "'charset=utf8mb4' character set specifer. Please update the 'db_url' "
+            "configuration option in configuration.yaml"
+        )
 
     return db_url
 

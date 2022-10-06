@@ -9,6 +9,8 @@ from homeassistant.helpers.json import (  # noqa: F401 pylint: disable=unused-im
 DATA_INSTANCE = "recorder_instance"
 SQLITE_URL_PREFIX = "sqlite://"
 MYSQLDB_URL_PREFIX = "mysql://"
+MYSQLDB_PYMYSQL_URL_PREFIX = "mysql+pymysql://"
+MYSQLDB_UTF8MB4_CHARSET = "charset=utf8mb4"
 DOMAIN = "recorder"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
