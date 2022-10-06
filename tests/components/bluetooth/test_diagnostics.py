@@ -3,10 +3,12 @@
 
 from unittest.mock import ANY, patch
 
-from bleak.backends.scanner import BLEDevice
+from bleak.backends.scanner import AdvertisementData, BLEDevice
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
+
+from . import inject_advertisement
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -158,6 +160,10 @@ async def test_diagnostics_macos(
     # because we cannot import the scanner class directly without it throwing an
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
+    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_adv = AdvertisementData(
+        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
+    )
 
     with patch(
         "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
@@ -180,6 +186,8 @@ async def test_diagnostics_macos(
         assert await hass.config_entries.async_setup(entry1.entry_id)
         await hass.async_block_till_done()
 
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+
         diag = await get_diagnostics_for_config_entry(hass, hass_client, entry1)
         assert diag == {
             "adapters": {
@@ -197,8 +205,34 @@ async def test_diagnostics_macos(
                         "sw_version": ANY,
                     }
                 },
-                "connectable_history": [],
-                "history": [],
+                "connectable_history": [
+                    {
+                        "address": "44:44:33:11:23:45",
+                        "advertisement": ANY,
+                        "connectable": True,
+                        "manufacturer_data": ANY,
+                        "name": "wohand",
+                        "rssi": 0,
+                        "service_data": {},
+                        "service_uuids": [],
+                        "source": "local",
+                        "time": ANY,
+                    }
+                ],
+                "history": [
+                    {
+                        "address": "44:44:33:11:23:45",
+                        "advertisement": ANY,
+                        "connectable": True,
+                        "manufacturer_data": ANY,
+                        "name": "wohand",
+                        "rssi": 0,
+                        "service_data": {},
+                        "service_uuids": [],
+                        "source": "local",
+                        "time": ANY,
+                    }
+                ],
                 "scanners": [
                     {
                         "adapter": "Core Bluetooth",
