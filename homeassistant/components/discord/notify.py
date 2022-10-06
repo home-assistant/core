@@ -178,11 +178,7 @@ class DiscordNotificationService(BaseNotificationService):
             for channelid in kwargs[ATTR_TARGET]:
                 channelid = int(channelid)
                 # Must create new instances of File for each channel.
-                files = (
-                    [nextcord.File(image, filename) for image, filename in images]
-                    if images
-                    else []
-                )
+                files = [nextcord.File(image, filename) for image, filename in images]
                 try:
                     channel = cast(
                         Messageable, await discord_bot.fetch_channel(channelid)
