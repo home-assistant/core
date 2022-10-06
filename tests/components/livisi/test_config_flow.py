@@ -8,6 +8,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.livisi.const import CONF_HOST, CONF_PASSWORD, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_NAME
 
 from tests.common import MockConfigEntry
 
@@ -15,6 +16,8 @@ VALID_CONFIG = {
     CONF_HOST: "1.1.1.1",
     CONF_PASSWORD: "test",
 }
+
+DEVICE_CONFIG = {CONF_NAME: "foo"}
 
 
 @pytest.fixture(name="config")
@@ -34,13 +37,15 @@ def config_entry_fixture(hass, config):
     return entry
 
 
-async def test_show_form(hass):
-    """Test that the form is served with no input."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "credentials"
+async def test_create_entry(hass):
+    """Test that the user step works."""
+    with patch("homeassistant.components.livisi.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=DEVICE_CONFIG
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEVICE_CONFIG[CONF_NAME]
 
 
 async def test_api_error(hass):

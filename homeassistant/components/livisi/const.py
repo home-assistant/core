@@ -15,4 +15,4 @@ LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
 
 SWITCH_PLATFORM: Final = "switch"
 
-PSS_DEVICE_TYPE = "PSS"
+PSS_DEVICE_TYPE: Final = "PSS"

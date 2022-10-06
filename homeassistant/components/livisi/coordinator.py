@@ -8,7 +8,8 @@ from aiolivisi import AioLivisi, LivisiEvent, Websocket
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -40,17 +41,20 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.hass = hass
         self.aiolivisi = aiolivisi
         self.websocket = Websocket(aiolivisi)
-        self.switch_devices: list = []
+        self.devices: list[str] = []
         self.rooms: dict[str, Any] = {}
-        self.serial_number: str
-        self.controller_type: str
-        self.os_version: str
+        self.serial_number: str = ""
+        self.controller_type: str = ""
+        self.os_version: str = ""
         self.is_avatar: bool = False
         self.port: str = ""
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Get device configuration from LIVISI."""
-        return await self.async_get_devices()
+        try:
+            return await self.async_get_devices()
+        except Exception as exc:
+            raise HomeAssistantError("Failed to get LIVISI the devices") from exc
 
     async def async_setup(self) -> None:
         """Set up the Livisi Smart Home Controller."""
@@ -78,7 +82,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Set the discovered devices list."""
         return await self.aiolivisi.async_get_devices()
 
-    async def async_get_pss_state(self, capability: str) -> bool:
+    async def async_get_pss_state(self, capability: str) -> bool | None:
         """Set the PSS state."""
         response: dict[str, Any] = await self.aiolivisi.async_get_pss_state(
             capability[1:]
@@ -103,24 +107,24 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
                 "id": event_data.source,
                 "state": event_data.onState,
             }
-            dispatcher_send(self.hass, LIVISI_STATE_CHANGE, device_id_state)
+            async_dispatcher_send(self.hass, LIVISI_STATE_CHANGE, device_id_state)
         if event_data.isReachable is not None:
             device_id_reachability: dict = {
                 "id": event_data.source,
                 "is_reachable": event_data.isReachable,
             }
-            dispatcher_send(
+            async_dispatcher_send(
                 self.hass, LIVISI_REACHABILITY_CHANGE, device_id_reachability
             )
 
     async def on_close(self) -> None:
         """Define a handler to fire when the websocket is closed."""
-        for device in self.switch_devices:
+        for device in self.devices:
             device_id_reachability: dict = {
-                "id": device.get("id"),
+                "id": device,
                 "is_reachable": False,
             }
-            dispatcher_send(
+            async_dispatcher_send(
                 self.hass, LIVISI_REACHABILITY_CHANGE, device_id_reachability
             )
 

@@ -36,15 +36,17 @@ async def async_setup_entry(
         shc_devices: list[dict[str, Any]] = coordinator.data
         for device in shc_devices:
             if device["type"] == PSS_DEVICE_TYPE:
-                if device not in coordinator.switch_devices:
+                if device["id"] not in coordinator.devices:
                     livisi_switch: SwitchEntity = create_entity(
                         config_entry, device, coordinator
                     )
                     LOGGER.debug("Include device type: %s", device.get("type"))
-                    coordinator.switch_devices.append(device)
+                    coordinator.devices.append(device["id"])
                     async_add_entities([livisi_switch])
 
-    coordinator.async_add_listener(handle_coordinator_update)
+    config_entry.async_on_unload(
+        coordinator.async_add_listener(handle_coordinator_update)
+    )
 
 
 def create_entity(
@@ -55,7 +57,7 @@ def create_entity(
     """Create Switch Entity."""
     config_details: dict[str, Any] = device["config"]
     capabilities: list = device["capabilities"]
-    room_id: str = device["location"].removeprefix("/location/")
+    room_id: str = device["location"]
     room_name: str = coordinator.rooms[room_id]
     livisi_switch = LivisiSwitch(
         config_entry,
@@ -79,16 +81,16 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         self,
         config_entry: ConfigEntry,
         coordinator: LivisiDataUpdateCoordinator,
-        unique_id,
-        manufacturer,
-        product,
-        serial_number,
-        device_type,
-        name,
-        capability_id,
-        room,
-        version=None,
-    ):
+        unique_id: str,
+        manufacturer: str,
+        product: str,
+        serial_number: str,
+        device_type: str,
+        name: str,
+        capability_id: str,
+        room: str,
+        version: str | None = None,
+    ) -> None:
         """Initialize the Livisi Switch."""
         self.config_entry = config_entry
         self._attr_unique_id = unique_id
@@ -102,9 +104,9 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         self._room = room
         self._version = version
         self.aio_livisi = coordinator.aiolivisi
-        self._attr_is_available = False
+        self._attr_available = False
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._attr_unique_id))},
+            identifiers={(DOMAIN, unique_id)},
             manufacturer=self._manufacturer,
             model=self._attr_model,
             name=self._attr_name,
@@ -119,7 +121,7 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
             self._capability_id, is_on=True
         )
         if response is None:
-            self._attr_is_available = False
+            self._attr_available = False
             raise HomeAssistantError(f"Failed to turn on {self._attr_name}")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -128,17 +130,24 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
             self._capability_id, is_on=False
         )
         if response is None:
-            self._attr_is_available = False
+            self._attr_available = False
             raise HomeAssistantError(f"Failed to turn off {self._attr_name}")
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self._attr_is_on = await self.coordinator.async_get_pss_state(
-            self._capability_id
+        response = await self.coordinator.async_get_pss_state(self._capability_id)
+        if response is None:
+            self._attr_is_on = False
+            self._attr_available = False
+        else:
+            self._attr_is_on = response
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, LIVISI_STATE_CHANGE, self.update_states)
         )
-        async_dispatcher_connect(self.hass, LIVISI_STATE_CHANGE, self.update_states)
-        async_dispatcher_connect(
-            self.hass, LIVISI_REACHABILITY_CHANGE, self.update_reachability
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, LIVISI_REACHABILITY_CHANGE, self.update_reachability
+            )
         )
 
     @callback
@@ -165,6 +174,6 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         if device_id_reachability.get("id") != self.unique_id:
             return
         if device_id_reachability["is_reachable"] is False:
-            self._attr_is_available = False
+            self._attr_available = False
         else:
-            self._attr_is_available = True
+            self._attr_available = True
