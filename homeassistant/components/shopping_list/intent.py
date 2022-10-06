@@ -2,7 +2,7 @@
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 
-from . import DOMAIN, EVENT
+from . import DOMAIN, EVENT_SHOPPING_LIST_UPDATED
 
 INTENT_ADD_ITEM = "HassShoppingListAddItem"
 INTENT_LAST_ITEMS = "HassShoppingListLastItems"
@@ -28,7 +28,7 @@ class AddItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(f"I've added {item} to your shopping list")
-        intent_obj.hass.bus.async_fire(EVENT)
+        intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
         return response
 
 

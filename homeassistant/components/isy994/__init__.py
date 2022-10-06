@@ -192,6 +192,10 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             f"Invalid XML response from ISY; Ensure the ISY is running the latest firmware: {err}"
         ) from err
+    except TypeError as err:
+        raise ConfigEntryNotReady(
+            f"Invalid response ISY, device is likely still starting: {err}"
+        ) from err
 
     _categorize_nodes(hass_isy_data, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass_isy_data, isy.programs)

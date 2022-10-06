@@ -7,12 +7,12 @@ from typing import Any
 from simplepush import BadRequest, UnknownError, send, send_encrypted
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import CONF_EVENT, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue

@@ -792,7 +792,9 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
                 CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
                 CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
                 CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
-                CONF_ADDON_EMULATE_HARDWARE: user_input[CONF_EMULATE_HARDWARE],
+                CONF_ADDON_EMULATE_HARDWARE: user_input.get(
+                    CONF_EMULATE_HARDWARE, False
+                ),
             }
 
             if new_addon_config != addon_config:

@@ -14,12 +14,9 @@ from homeassistant.components.homekit_controller.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .common import setup_accessories_from_file, setup_platform, setup_test_accessories
+
 from tests.common import MockConfigEntry
-from tests.components.homekit_controller.common import (
-    setup_accessories_from_file,
-    setup_platform,
-    setup_test_accessories,
-)
 
 
 @dataclasses.dataclass

@@ -14,7 +14,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.advantage_air import (
+from . import (
     TEST_SET_LIGHT_URL,
     TEST_SET_RESPONSE,
     TEST_SYSTEM_DATA,

@@ -13,7 +13,17 @@
       "connectable": false
     },
     {
+      "manufacturer_id": 63391,
+      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
       "manufacturer_id": 26589,
+      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 57391,
       "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
       "connectable": false
     },
@@ -28,7 +38,22 @@
       "connectable": false
     },
     {
+      "manufacturer_id": 53579,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 43682,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
       "manufacturer_id": 59970,
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
+    {
+      "manufacturer_id": 63585,
       "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
       "connectable": false
     },
@@ -48,7 +73,7 @@
       "connectable": false
     }
   ],
-  "requirements": ["govee-ble==0.17.0"],
+  "requirements": ["govee-ble==0.19.1"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "iot_class": "local_push"

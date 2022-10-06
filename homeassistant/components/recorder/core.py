@@ -13,6 +13,7 @@ import threading
 import time
 from typing import Any, TypeVar, cast
 
+import async_timeout
 from awesomeversion import AwesomeVersion
 from lru import LRU  # pylint: disable=no-name-in-module
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, func, select
@@ -71,6 +72,7 @@ from .queries import find_shared_attributes_id, find_shared_data_id
 from .run_history import RunHistory
 from .tasks import (
     AdjustStatisticsTask,
+    ChangeStatisticsUnitTask,
     ClearStatisticsTask,
     CommitTask,
     DatabaseLockTask,
@@ -479,10 +481,18 @@ class Recorder(threading.Thread):
 
     @callback
     def async_adjust_statistics(
-        self, statistic_id: str, start_time: datetime, sum_adjustment: float
+        self,
+        statistic_id: str,
+        start_time: datetime,
+        sum_adjustment: float,
+        adjustment_unit: str,
     ) -> None:
         """Adjust statistics."""
-        self.queue_task(AdjustStatisticsTask(statistic_id, start_time, sum_adjustment))
+        self.queue_task(
+            AdjustStatisticsTask(
+                statistic_id, start_time, sum_adjustment, adjustment_unit
+            )
+        )
 
     @callback
     def async_clear_statistics(self, statistic_ids: list[str]) -> None:
@@ -501,6 +511,21 @@ class Recorder(threading.Thread):
         self.queue_task(
             UpdateStatisticsMetadataTask(
                 statistic_id, new_statistic_id, new_unit_of_measurement
+            )
+        )
+
+    @callback
+    def async_change_statistics_unit(
+        self,
+        statistic_id: str,
+        *,
+        new_unit_of_measurement: str,
+        old_unit_of_measurement: str,
+    ) -> None:
+        """Change statistics unit for a statistic_id."""
+        self.queue_task(
+            ChangeStatisticsUnitTask(
+                statistic_id, new_unit_of_measurement, old_unit_of_measurement
             )
         )
 
@@ -614,6 +639,10 @@ class Recorder(threading.Thread):
                 return
 
         self.hass.add_job(self.async_set_db_ready)
+
+        # Catch up with missed statistics
+        with session_scope(session=self.get_session()) as session:
+            self._schedule_compile_missing_statistics(session)
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
@@ -1026,7 +1055,8 @@ class Recorder(threading.Thread):
         task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue_task(task)
         try:
-            await asyncio.wait_for(database_locked.wait(), timeout=DB_LOCK_TIMEOUT)
+            async with async_timeout.timeout(DB_LOCK_TIMEOUT):
+                await database_locked.wait()
         except asyncio.TimeoutError as err:
             task.database_unlock.set()
             raise TimeoutError(
@@ -1118,7 +1148,6 @@ class Recorder(threading.Thread):
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.run_history.recording_start)
             self.run_history.start(session)
-            self._schedule_compile_missing_statistics(session)
 
         self._open_event_session()
 

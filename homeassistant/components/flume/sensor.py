@@ -3,8 +3,13 @@ from numbers import Number
 
 from pyflume import FlumeData
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import VOLUME_GALLONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -14,7 +19,6 @@ from .const import (
     FLUME_AUTH,
     FLUME_DEVICES,
     FLUME_HTTP_SESSION,
-    FLUME_QUERIES_SENSOR,
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
     KEY_DEVICE_LOCATION,
@@ -23,6 +27,47 @@ from .const import (
 )
 from .coordinator import FlumeDeviceDataUpdateCoordinator
 from .entity import FlumeEntity
+
+FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="current_interval",
+        name="Current",
+        native_unit_of_measurement=f"{VOLUME_GALLONS}/m",
+    ),
+    SensorEntityDescription(
+        key="month_to_date",
+        name="Current Month",
+        native_unit_of_measurement=VOLUME_GALLONS,
+        device_class=SensorDeviceClass.VOLUME,
+    ),
+    SensorEntityDescription(
+        key="week_to_date",
+        name="Current Week",
+        native_unit_of_measurement=VOLUME_GALLONS,
+        device_class=SensorDeviceClass.VOLUME,
+    ),
+    SensorEntityDescription(
+        key="today",
+        name="Current Day",
+        native_unit_of_measurement=VOLUME_GALLONS,
+        device_class=SensorDeviceClass.VOLUME,
+    ),
+    SensorEntityDescription(
+        key="last_60_min",
+        name="60 Minutes",
+        native_unit_of_measurement=f"{VOLUME_GALLONS}/h",
+    ),
+    SensorEntityDescription(
+        key="last_24_hrs",
+        name="24 Hours",
+        native_unit_of_measurement=f"{VOLUME_GALLONS}/d",
+    ),
+    SensorEntityDescription(
+        key="last_30_days",
+        name="30 Days",
+        native_unit_of_measurement=f"{VOLUME_GALLONS}/mo",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -40,7 +85,10 @@ async def async_setup_entry(
 
     flume_entity_list = []
     for device in flume_devices.device_list:
-        if device[KEY_DEVICE_TYPE] != FLUME_TYPE_SENSOR:
+        if (
+            device[KEY_DEVICE_TYPE] != FLUME_TYPE_SENSOR
+            or KEY_DEVICE_LOCATION not in device
+        ):
             continue
 
         device_id = device[KEY_DEVICE_ID]

@@ -10,8 +10,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -214,12 +215,12 @@ class DenonDevice(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self._pwstate == "PWSTANDBY":
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._pwstate == "PWON":
-            return STATE_ON
+            return MediaPlayerState.ON
 
         return None
 

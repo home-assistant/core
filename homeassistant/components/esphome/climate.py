@@ -13,8 +13,7 @@ from aioesphomeapi import (
     ClimateSwingMode,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -39,6 +38,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -212,13 +212,13 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             features |= ClimateEntityFeature.SWING_MODE
         return features
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def hvac_mode(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
         return _CLIMATE_MODES.from_esphome(self._state.mode)
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def hvac_action(self) -> str | None:
         """Return current action."""
@@ -227,7 +227,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             return None
         return _CLIMATE_ACTIONS.from_esphome(self._state.action)
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def fan_mode(self) -> str | None:
         """Return current fan setting."""
@@ -235,7 +235,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             self._state.fan_mode
         )
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
@@ -243,31 +243,31 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             self._state.preset_compat(self._api_version)
         )
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def swing_mode(self) -> str | None:
         """Return current swing mode."""
         return _SWING_MODES.from_esphome(self._state.swing_mode)
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._state.current_temperature
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._state.target_temperature_low
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""

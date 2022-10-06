@@ -72,9 +72,6 @@ async def test_cloud_form(hass):
     ), patch(
         "homeassistant.components.risco.config_flow.RiscoCloud.close"
     ) as mock_close, patch(
-        "homeassistant.components.risco.config_flow.SLEEP_INTERVAL",
-        0,
-    ), patch(
         "homeassistant.components.risco.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -168,9 +165,6 @@ async def test_local_form(hass):
     ), patch(
         "homeassistant.components.risco.config_flow.RiscoLocal.disconnect"
     ) as mock_close, patch(
-        "homeassistant.components.risco.config_flow.SLEEP_INTERVAL",
-        0,
-    ), patch(
         "homeassistant.components.risco.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:

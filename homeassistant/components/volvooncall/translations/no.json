@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
@@ -14,6 +15,7 @@
                     "password": "Passord",
                     "region": "Region",
                     "scandinavian_miles": "Bruk Skandinaviske Miles",
+                    "unit_system": "Enhetssystem",
                     "username": "Brukernavn"
                 }
             }

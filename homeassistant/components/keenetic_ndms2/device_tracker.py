@@ -97,10 +97,10 @@ class KeeneticTracker(ScannerEntity):
         )
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return (
-            self._last_seen
+            self._last_seen is not None
             and (dt_util.utcnow() - self._last_seen)
             < self._router.consider_home_interval
         )
@@ -144,12 +144,12 @@ class KeeneticTracker(ScannerEntity):
             }
         return None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Client entity created."""
         _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
 
         @callback
-        def update_device():
+        def update_device() -> None:
             _LOGGER.debug(
                 "Updating Keenetic tracked device %s (%s)",
                 self.entity_id,

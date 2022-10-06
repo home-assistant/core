@@ -7,7 +7,8 @@
             "link_local_address": "Tautan alamat lokal tidak didukung",
             "missing_configuration": "Integrasi LaMetric tidak dikonfigurasi. Silakan ikuti dokumentasi.",
             "no_devices": "Pengguna yang diotorisasi tidak memiliki perangkat LaMetric",
-            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})"
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
+            "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",

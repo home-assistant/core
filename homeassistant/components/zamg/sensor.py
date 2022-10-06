@@ -264,7 +264,7 @@ class ZamgSensor(SensorEntity):
             ATTR_UPDATED: self.probe.last_update.isoformat(),
         }
 
-    def update(self):
+    def update(self) -> None:
         """Delegate update to probe."""
         self.probe.update()
 

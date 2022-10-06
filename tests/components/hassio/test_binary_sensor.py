@@ -75,6 +75,7 @@ def mock_all(aioclient_mock, request):
                 "result": "ok",
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
+                "auto_update": True,
                 "addons": [
                     {
                         "name": "test",
@@ -137,9 +138,6 @@ def mock_all(aioclient_mock, request):
 @pytest.mark.parametrize(
     "entity_id,expected",
     [
-        ("binary_sensor.home_assistant_operating_system_update_available", "off"),
-        ("binary_sensor.test_update_available", "on"),
-        ("binary_sensor.test2_update_available", "off"),
         ("binary_sensor.test_running", "on"),
         ("binary_sensor.test2_running", "off"),
     ],

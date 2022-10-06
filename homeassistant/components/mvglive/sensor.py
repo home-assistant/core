@@ -141,7 +141,7 @@ class MVGLiveSensor(SensorEntity):
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the state."""
         self.data.update()
         if not self.data.departures:

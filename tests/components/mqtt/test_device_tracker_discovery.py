@@ -1,24 +1,27 @@
-"""The tests for the  MQTT device_tracker discovery platform."""
+"""The tests for the  MQTT device_tracker platform."""
 
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import device_tracker
+from homeassistant.components import device_tracker, mqtt
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, Platform
 from homeassistant.setup import async_setup_component
 
-from .test_common import help_test_setting_blocked_attribute_via_mqtt_json_message
+from .test_common import (
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_setup_manual_entity_from_yaml,
+)
 
 from tests.common import async_fire_mqtt_message, mock_device_registry, mock_registry
 
 DEFAULT_CONFIG = {
-    device_tracker.DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "state_topic": "test-topic",
+    mqtt.DOMAIN: {
+        device_tracker.DOMAIN: {
+            "name": "test",
+            "state_topic": "test-topic",
+        }
     }
 }
 
@@ -56,7 +59,7 @@ async def test_discover_device_tracker(hass, mqtt_mock_entry_no_yaml_config, cap
 
     assert state is not None
     assert state.name == "test"
-    assert ("device_tracker", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("device_tracker", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @pytest.mark.no_fail_on_log_exception
@@ -433,3 +436,18 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
         DEFAULT_CONFIG,
         None,
     )
+
+
+async def test_setup_with_modern_schema(hass, mock_device_tracker_conf):
+    """Test setup using the modern schema."""
+    dev_id = "jan"
+    entity_id = f"{device_tracker.DOMAIN}.{dev_id}"
+    topic = "/location/jan"
+
+    config = {
+        mqtt.DOMAIN: {device_tracker.DOMAIN: {"name": dev_id, "state_topic": topic}}
+    }
+
+    await help_test_setup_manual_entity_from_yaml(hass, config)
+
+    assert hass.states.get(entity_id) is not None

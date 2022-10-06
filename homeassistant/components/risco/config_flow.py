@@ -1,7 +1,6 @@
 """Config flow for Risco integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import logging
 
@@ -32,7 +31,6 @@ from .const import (
     DEFAULT_OPTIONS,
     DOMAIN,
     RISCO_STATES,
-    SLEEP_INTERVAL,
     TYPE_LOCAL,
 )
 
@@ -149,9 +147,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(info["title"])
                 self._abort_if_unique_id_configured()
-
-                # Risco can hang if we don't wait before creating a new connection
-                await asyncio.sleep(SLEEP_INTERVAL)
 
                 return self.async_create_entry(
                     title=info["title"], data={**user_input, **{CONF_TYPE: TYPE_LOCAL}}

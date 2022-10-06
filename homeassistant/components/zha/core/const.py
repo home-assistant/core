@@ -95,6 +95,7 @@ CHANNEL_TEMPERATURE = "temperature"
 CHANNEL_THERMOSTAT = "thermostat"
 CHANNEL_ZDO = "zdo"
 CHANNEL_ZONE = ZONE = "ias_zone"
+CHANNEL_INOVELLI = "inovelli_vzm31sn_cluster"
 
 CLUSTER_COMMAND_SERVER = "server"
 CLUSTER_COMMANDS_CLIENT = "client_commands"
@@ -145,7 +146,7 @@ CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 
 CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
+        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): cv.positive_int,
         vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
         vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
         vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
@@ -396,12 +397,6 @@ ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 ZHA_DEVICES_LOADED_EVENT = "zha_devices_loaded_event"
 
-EFFECT_BLINK = 0x00
-EFFECT_BREATHE = 0x01
-EFFECT_OKAY = 0x02
-
-EFFECT_DEFAULT_VARIANT = 0x00
-
 
 class Strobe(t.enum8):
     """Strobe enum."""
@@ -412,3 +407,7 @@ class Strobe(t.enum8):
 
 STARTUP_FAILURE_DELAY_S = 3
 STARTUP_RETRIES = 3
+
+EZSP_OVERWRITE_EUI64 = (
+    "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+)

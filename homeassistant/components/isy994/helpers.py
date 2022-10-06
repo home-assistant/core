@@ -17,7 +17,7 @@ from pyisy.programs import Programs
 from pyisy.variables import Variables
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.climate.const import DOMAIN as CLIMATE
+from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR

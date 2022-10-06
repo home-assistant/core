@@ -12,6 +12,9 @@
             "user": {
                 "data": {
                     "host": "Sunucu"
+                },
+                "data_description": {
+                    "host": "Pure Energie Meter cihaz\u0131n\u0131z\u0131n IP adresi veya ana bilgisayar ad\u0131."
                 }
             },
             "zeroconf_confirm": {

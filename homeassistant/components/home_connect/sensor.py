@@ -49,11 +49,11 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Return true if the binary sensor is on."""
+        """Return sensor value."""
         return self._state
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if the sensor is available."""
         return self._state is not None
 

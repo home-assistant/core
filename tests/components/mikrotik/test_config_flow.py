@@ -1,5 +1,4 @@
 """Test Mikrotik setup process."""
-from datetime import timedelta
 from unittest.mock import patch
 
 import librouteros
@@ -14,7 +13,6 @@ from homeassistant.components.mikrotik.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -24,28 +22,14 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry
 
 DEMO_USER_INPUT = {
-    CONF_NAME: "Home router",
     CONF_HOST: "0.0.0.0",
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
     CONF_PORT: 8278,
     CONF_VERIFY_SSL: False,
-}
-
-DEMO_CONFIG = {
-    CONF_NAME: "Home router",
-    CONF_HOST: "0.0.0.0",
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-    CONF_PORT: 8278,
-    CONF_VERIFY_SSL: False,
-    CONF_FORCE_DHCP: False,
-    CONF_ARP_PING: False,
-    CONF_DETECTION_TIME: timedelta(seconds=30),
 }
 
 DEMO_CONFIG_ENTRY = {
-    CONF_NAME: "Home router",
     CONF_HOST: "0.0.0.0",
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
@@ -97,8 +81,7 @@ async def test_flow_works(hass, api):
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home router"
-    assert result["data"][CONF_NAME] == "Home router"
+    assert result["title"] == "Mikrotik (0.0.0.0)"
     assert result["data"][CONF_HOST] == "0.0.0.0"
     assert result["data"][CONF_USERNAME] == "username"
     assert result["data"][CONF_PASSWORD] == "password"
@@ -151,25 +134,6 @@ async def test_host_already_configured(hass, auth_error):
     assert result["reason"] == "already_configured"
 
 
-async def test_name_exists(hass, api):
-    """Test name already configured."""
-
-    entry = MockConfigEntry(domain=DOMAIN, data=DEMO_CONFIG_ENTRY)
-    entry.add_to_hass(hass)
-    user_input = DEMO_USER_INPUT.copy()
-    user_input[CONF_HOST] = "0.0.0.1"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input
-    )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {CONF_NAME: "name_exists"}
-
-
 async def test_connection_error(hass, conn_error):
     """Test error when connection is unsuccessful."""
 
@@ -198,3 +162,99 @@ async def test_wrong_credentials(hass, auth_error):
         CONF_USERNAME: "invalid_auth",
         CONF_PASSWORD: "invalid_auth",
     }
+
+
+async def test_reauth_success(hass, api):
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEMO_USER_INPUT,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=DEMO_USER_INPUT,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {CONF_USERNAME: "username"}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_failed(hass, auth_error):
+    """Test reauth fails due to wrong password."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEMO_USER_INPUT,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=DEMO_USER_INPUT,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-wrong-password",
+        },
+    )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {
+        CONF_PASSWORD: "invalid_auth",
+    }
+
+
+async def test_reauth_failed_conn_error(hass, conn_error):
+    """Test reauth failed due to connection error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEMO_USER_INPUT,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=DEMO_USER_INPUT,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-wrong-password",
+        },
+    )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
