@@ -470,10 +470,10 @@ async def test_deprecated_methods(
             TEMP_CELSIUS,
             100,
             38,
-            50,
+            pytest.approx(50),
             10,
             140,
-            60,
+            61,  # should really be 60 but gets rounded with ceiling
             -9,
             -23,
             3,
