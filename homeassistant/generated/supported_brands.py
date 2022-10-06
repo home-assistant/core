@@ -13,6 +13,7 @@ HAS_SUPPORTED_BRANDS = [
     "renault",
     "switchbee",
     "thermobeacon",
+    "upb",
     "wemo",
     "yalexs_ble",
 ]
