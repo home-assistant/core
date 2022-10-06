@@ -491,9 +491,8 @@ class PrometheusMetrics:
                     float(mode == current_mode)
                 )
 
-    def _handle_sensor(self, state):
+    def _handle_generic(self, domain, state):
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
-        domain = "sensor"
 
         for metric_handler in self._metric_name_handlers:
             metric = metric_handler(state, unit, domain)
@@ -501,9 +500,9 @@ class PrometheusMetrics:
                 break
 
         if metric is not None:
-            documentation = "State of the sensor"
+            documentation = f"State of the {domain}"
             if unit:
-                documentation = f"Sensor data measured in {unit}"
+                documentation = f"{domain.title()} data measured in {unit}"
 
             _metric = self._metric(metric, self.prometheus_cli.Gauge, documentation)
 
@@ -519,8 +518,11 @@ class PrometheusMetrics:
 
         self._battery(state)
 
+    def _handle_sensor(self, state):
+        return self._handle_generic("sensor", state)
+
     def _handle_number(self, state):
-        return self._handle_sensor(state)
+        return self._handle_generic("number", state)
 
     def _metric_name_default_metric(self, state, unit, domain):
         """Get default metric."""
