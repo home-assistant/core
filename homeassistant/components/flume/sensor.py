@@ -19,12 +19,11 @@ from .const import (
     FLUME_AUTH,
     FLUME_DEVICES,
     FLUME_HTTP_SESSION,
-    FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
     KEY_DEVICE_LOCATION,
     KEY_DEVICE_LOCATION_NAME,
     KEY_DEVICE_LOCATION_TIMEZONE,
-    KEY_DEVICE_TYPE,
+    _filter_flume_devices,
 )
 from .coordinator import FlumeDeviceDataUpdateCoordinator
 from .entity import FlumeEntity
@@ -82,12 +81,9 @@ async def async_setup_entry(
 
     flume_auth = flume_domain_data[FLUME_AUTH]
     http_session = flume_domain_data[FLUME_HTTP_SESSION]
-    flume_devices = [
-        device
-        for device in flume_domain_data[FLUME_DEVICES].device_list
-        if KEY_DEVICE_LOCATION_NAME in device[KEY_DEVICE_LOCATION]
-        and device[KEY_DEVICE_TYPE] == FLUME_TYPE_SENSOR
-    ]
+    flume_devices = _filter_flume_devices(
+        flume_domain_data[FLUME_DEVICES].device_list, just_sensors=True
+    )
 
     flume_entity_list = []
     for device in flume_devices:

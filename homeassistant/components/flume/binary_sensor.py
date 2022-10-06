@@ -25,6 +25,7 @@ from .const import (
     KEY_DEVICE_TYPE,
     NOTIFICATION_HIGH_FLOW,
     NOTIFICATION_LEAK_DETECTED,
+    _filter_flume_devices,
 )
 from .coordinator import (
     FlumeDeviceConnectionUpdateCoordinator,
@@ -87,12 +88,9 @@ async def async_setup_entry(
     notification_coordinator = FlumeNotificationDataUpdateCoordinator(
         hass=hass, auth=flume_auth
     )
-
-    flume_devices = [
-        device
-        for device in flume_domain_data[FLUME_DEVICES].device_list
-        if KEY_DEVICE_LOCATION_NAME in device[KEY_DEVICE_LOCATION]
-    ]
+    flume_devices = _filter_flume_devices(
+        flume_domain_data[FLUME_DEVICES].device_list, just_sensors=False
+    )
 
     for device in flume_devices:
         device_id = device[KEY_DEVICE_ID]
