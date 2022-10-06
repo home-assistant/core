@@ -68,7 +68,6 @@ DEFAULT_DATA = {
 
 SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 IMAGE_PREVIEWS_ACTIVE = "previews"
-PREVIEW_EXPIRY_TIME = 5  # minutes
 
 
 def build_schema(
