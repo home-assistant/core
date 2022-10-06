@@ -17,6 +17,7 @@ from .const import (
     DEVICE_SCAN_INTERVAL,
     DOMAIN,
     FLUME_AUTH,
+    FLUME_DEVICES,
     FLUME_HTTP_SESSION,
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
@@ -79,12 +80,12 @@ async def async_setup_entry(
     """Set up the Flume sensor."""
 
     flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
-
+    flume_devices = flume_domain_data[FLUME_DEVICES]
     flume_auth = flume_domain_data[FLUME_AUTH]
     http_session = flume_domain_data[FLUME_HTTP_SESSION]
     flume_devices = [
         device
-        for device in get_valid_flume_devices(flume_domain_data)
+        for device in get_valid_flume_devices(flume_devices)
         if device[KEY_DEVICE_TYPE] == FLUME_TYPE_SENSOR
     ]
     flume_entity_list = []
