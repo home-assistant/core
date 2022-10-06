@@ -47,19 +47,3 @@ NOTIFICATION_BRIDGE_DISCONNECT = "Bridge Disconnection"
 BRIDGE_NOTIFICATION_KEY = "connected"
 BRIDGE_NOTIFICATION_RULE = "Bridge Disconnection"
 NOTIFICATION_LEAK_DETECTED = "Flume Smart Leak Alert"
-
-
-def _filter_flume_devices(device_list: list, just_sensors: bool):
-    """Filter flume devices."""
-    if just_sensors:
-        return [
-            device
-            for device in device_list
-            if KEY_DEVICE_LOCATION_NAME in device[KEY_DEVICE_LOCATION]
-            and device[KEY_DEVICE_TYPE] == FLUME_TYPE_SENSOR
-        ]
-    return [
-        device
-        for device in device_list
-        if KEY_DEVICE_LOCATION_NAME in device[KEY_DEVICE_LOCATION]
-    ]
