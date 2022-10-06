@@ -422,7 +422,7 @@ def test_speed_convert(
 @pytest.mark.parametrize(
     "value,from_unit,expected,to_unit",
     [
-        (100, TEMP_CELSIUS, 212, TEMP_FAHRENHEIT),
+        (100, TEMP_CELSIUS, pytest.approx(212), TEMP_FAHRENHEIT),
         (100, TEMP_CELSIUS, 373.15, TEMP_KELVIN),
         (100, TEMP_FAHRENHEIT, pytest.approx(37.77777777777778), TEMP_CELSIUS),
         (100, TEMP_FAHRENHEIT, pytest.approx(310.92777777777775), TEMP_KELVIN),
