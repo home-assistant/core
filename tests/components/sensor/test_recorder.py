@@ -1,6 +1,6 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
-from datetime import timedelta
+from datetime import datetime, timedelta
 import math
 from statistics import mean
 from unittest.mock import patch
@@ -9,10 +9,15 @@ import pytest
 from pytest import approx
 
 from homeassistant import loader
-from homeassistant.components.recorder import history
+from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, history
 from homeassistant.components.recorder.db_schema import StatisticsMeta
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMetaData,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.statistics import (
+    async_import_statistics,
     get_metadata,
     list_statistic_ids,
     statistics_during_period,
@@ -3754,6 +3759,52 @@ async def test_validate_statistics_unit_change_no_conversion(
         ],
     }
     await assert_validation_result(client, expected)
+
+
+async def test_validate_statistics_other_domain(hass, hass_ws_client, recorder_mock):
+    """Test sensor does not raise issues for statistics for other domains."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    # Create statistics for another domain
+    metadata: StatisticMetaData = {
+        "has_mean": True,
+        "has_sum": True,
+        "name": None,
+        "source": RECORDER_DOMAIN,
+        "statistic_id": "number.test",
+        "unit_of_measurement": None,
+    }
+    statistics: StatisticData = {
+        "last_reset": None,
+        "max": None,
+        "mean": None,
+        "min": None,
+        "start": datetime(2020, 10, 6, tzinfo=dt_util.UTC),
+        "state": None,
+        "sum": None,
+    }
+    async_import_statistics(hass, metadata, (statistics,))
+    await async_recorder_block_till_done(hass)
+
+    # We should not get complains about the missing number entity
+    await assert_validation_result(client, {})
 
 
 def record_meter_states(hass, zero, entity_id, _attributes, seq):
