@@ -91,15 +91,28 @@ class HeatMeterSensor(
             else:
                 self._attr_native_value = asdict(self.coordinator.data)[self.key]
 
+        # Some models will supply MWh directly. If not, GJ will be converted to MWh.
         if self.key == "heat_usage":
-            self._attr_native_value = convert_gj_to_mwh(
-                self.coordinator.data.heat_usage_gj
-            )
+            if (
+                hasattr(self.coordinator.data, "heat_usage_mwh")
+                and self.coordinator.data.heat_usage_mwh is not None
+            ):
+                self._attr_native_value = self.coordinator.data.heat_usage_mwh
+            else:
+                self._attr_native_value = convert_gj_to_mwh(
+                    self.coordinator.data.heat_usage_gj
+                )
 
         if self.key == "heat_previous_year":
-            self._attr_native_value = convert_gj_to_mwh(
-                self.coordinator.data.heat_previous_year_gj
-            )
+            if (
+                hasattr(self.coordinator.data, "heat_previous_year_mwh")
+                and self.coordinator.data.heat_previous_year_mwh is not None
+            ):
+                self._attr_native_value = self.coordinator.data.heat_previous_year_mwh
+            else:
+                self._attr_native_value = convert_gj_to_mwh(
+                    self.coordinator.data.heat_previous_year_gj
+                )
 
         self.async_write_ha_state()
 
