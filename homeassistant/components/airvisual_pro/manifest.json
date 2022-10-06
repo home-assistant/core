@@ -1,0 +1,13 @@
+{
+  "domain": "airvisual_pro",
+  "name": "AirVisual Pro",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airvisual_pro",
+  "requirements": ["pyairvisual==2022.07.0"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@bachya"],
+  "iot_class": "local_polling"
+}
