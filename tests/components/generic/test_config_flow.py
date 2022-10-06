@@ -158,11 +158,10 @@ async def test_form_reject_still_preview(
         )
     assert result1["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result1["step_id"] == "user_confirm_still"
-    with mock_create_stream:
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            user_input={CONF_CONFIRMED_OK: False},
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_CONFIRMED_OK: False},
+    )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
 
