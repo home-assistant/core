@@ -3291,7 +3291,7 @@ async def test_platform_async_validate_condition_config(hass):
 
 
 async def test_disabled_condition(hass: HomeAssistant) -> None:
-    """Test a disabled condition returns none passes."""
+    """Test a disabled condition returns none."""
     config = {
         "enabled": False,
         "condition": "state",
