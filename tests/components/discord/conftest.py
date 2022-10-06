@@ -18,8 +18,7 @@ TARGET = "1234567890"
 def discord_notification_service(hass: HomeAssistant) -> DiscordNotificationService:
     """Set up discord notification service."""
     hass.config.allowlist_external_urls.add(URL_ATTACHMENT)
-    token = "token"
-    return DiscordNotificationService(hass, token)
+    return DiscordNotificationService(hass, "token")
 
 
 @pytest.fixture
@@ -29,14 +28,11 @@ def discord_aiohttp_mock_factory(
     """Create Discord service mock from factory."""
 
     def _discord_aiohttp_mock_factory(
-        content_length_header: str = None,
+        headers: dict[str, str] = None,
     ) -> AiohttpClientMocker:
-        if content_length_header is not None:
+        if headers is not None:
             aioclient_mock.get(
-                URL_ATTACHMENT,
-                status=HTTPStatus.OK,
-                content=CONTENT,
-                headers={"Content-Length": content_length_header},
+                URL_ATTACHMENT, status=HTTPStatus.OK, content=CONTENT, headers=headers
             )
         else:
             aioclient_mock.get(

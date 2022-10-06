@@ -30,7 +30,8 @@ async def test_get_file_from_url(
     discord_aiohttp_mock_factory: AiohttpClientMocker,
 ) -> None:
     """Test getting a file from a URL."""
-    discord_aiohttp_mock = discord_aiohttp_mock_factory(str(len(CONTENT)))
+    headers = {"Content-Length": str(len(CONTENT))}
+    discord_aiohttp_mock = discord_aiohttp_mock_factory(headers)
     result = await discord_notification_service.async_get_file_from_url(
         URL_ATTACHMENT, True, len(CONTENT)
     )
@@ -62,7 +63,8 @@ async def test_get_file_from_url_with_large_attachment(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test getting file from URL with large attachment (per Content-Length header) throws error."""
-    discord_aiohttp_mock = discord_aiohttp_mock_factory(str(len(CONTENT) + 1))
+    headers = {"Content-Length": str(len(CONTENT) + 1)}
+    discord_aiohttp_mock = discord_aiohttp_mock_factory(headers)
     with caplog.at_level(
         logging.WARNING, logger="homeassistant.components.discord.notify"
     ):

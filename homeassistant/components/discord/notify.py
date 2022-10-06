@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from io import BytesIO
 import logging
-import ntpath
 import os.path
 from typing import Any, cast
 
@@ -84,13 +83,12 @@ class DiscordNotificationService(BaseNotificationService):
             timeout=30,
             raise_for_status=True,
         ) as resp:
-            if (
-                resp.headers.get("Content-Length") is not None
-                and int(str(resp.headers.get("Content-Length"))) > max_file_size
-            ):
+            content_length = resp.headers.get("Content-Length")
+
+            if content_length is not None and int(content_length) > max_file_size:
                 _LOGGER.error(
                     "Attachment too large (Content-Length reports %s). Max size: %s bytes",
-                    int(str(resp.headers.get("Content-Length"))),
+                    int(content_length),
                     max_file_size,
                 )
                 return None
@@ -98,7 +96,7 @@ class DiscordNotificationService(BaseNotificationService):
             file_size = 0
             byte_chunks = bytearray()
 
-            async for byte_chunk in resp.content.iter_chunked(1024):
+            async for byte_chunk, _ in resp.content.iter_chunks():
                 file_size += len(byte_chunk)
                 if file_size > max_file_size:
                     _LOGGER.error(
@@ -116,7 +114,7 @@ class DiscordNotificationService(BaseNotificationService):
         """Login to Discord, send message to channel(s) and log out."""
         nextcord.VoiceClient.warn_nacl = False
         discord_bot = nextcord.Client()
-        images = None
+        images = []
         embedding = None
 
         if ATTR_TARGET not in kwargs:
@@ -151,35 +149,26 @@ class DiscordNotificationService(BaseNotificationService):
                 embeds.append(embed)
 
         if ATTR_IMAGES in data:
-            images = []
-
             for image in data.get(ATTR_IMAGES, []):
                 image_exists = await self.hass.async_add_executor_job(
                     self.file_exists, image
                 )
 
-                filename = ntpath.basename(image)
+                filename = os.path.basename(image)
 
                 if image_exists:
                     images.append((image, filename))
 
         if ATTR_URLS in data:
-            images = [] if images is None else images
-
-            if ATTR_VERIFY_SSL in data:
-                verify_ssl = data[ATTR_VERIFY_SSL]
-            else:
-                verify_ssl = True
-
             for url in data.get(ATTR_URLS, []):
                 file = await self.async_get_file_from_url(
                     url,
-                    verify_ssl,
+                    data.get(ATTR_VERIFY_SSL, True),
                     MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,
                 )
 
                 if file is not None:
-                    filename = ntpath.basename(url)
+                    filename = os.path.basename(url)
 
                     images.append((BytesIO(file), filename))
 
