@@ -227,6 +227,7 @@ CONF_SENSOR_TYPE: Final = "sensor_type"
 CONF_SEQUENCE: Final = "sequence"
 CONF_SERVICE: Final = "service"
 CONF_SERVICE_DATA: Final = "data"
+CONF_SERVICE_DATA_TEMPLATE: Final = "data_template"
 CONF_SERVICE_TEMPLATE: Final = "service_template"
 CONF_SHOW_ON_MAP: Final = "show_on_map"
 CONF_SLAVE: Final = "slave"
@@ -559,7 +560,10 @@ VOLUME_CUBIC_METERS: Final = "m³"
 VOLUME_CUBIC_FEET: Final = "ft³"
 
 VOLUME_GALLONS: Final = "gal"
+"""US gallon (British gallon is not yet supported)"""
+
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
+"""US fluid ounce (British fluid ounce is not yet supported)"""
 
 # Volume Flow Rate units
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"

@@ -196,7 +196,7 @@ class SwitcherClimateEntity(
         if not self._remote.modes_features[self.coordinator.data.mode]["fan_levels"]:
             raise HomeAssistantError("Current mode doesn't support setting Fan Mode")
 
-        await self._async_control_breeze_device(fan_mode=HA_TO_DEVICE_FAN[fan_mode])
+        await self._async_control_breeze_device(fan_level=HA_TO_DEVICE_FAN[fan_mode])
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
@@ -213,6 +213,6 @@ class SwitcherClimateEntity(
             raise HomeAssistantError("Current mode doesn't support setting Swing Mode")
 
         if swing_mode == SWING_VERTICAL:
-            await self._async_control_breeze_device(swing_mode=ThermostatSwing.ON)
+            await self._async_control_breeze_device(swing=ThermostatSwing.ON)
         else:
-            await self._async_control_breeze_device(swing_mode=ThermostatSwing.OFF)
+            await self._async_control_breeze_device(swing=ThermostatSwing.OFF)

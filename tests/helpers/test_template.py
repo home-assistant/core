@@ -973,11 +973,26 @@ def test_average(hass):
     assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
     assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
 
+    # Testing of default values
+    assert template.Template("{{ average([1, 2, 3], -1) }}", hass).async_render() == 2
+    assert template.Template("{{ average([], -1) }}", hass).async_render() == -1
+    assert template.Template("{{ average([], default=-1) }}", hass).async_render() == -1
+    assert (
+        template.Template("{{ average([], 5, default=-1) }}", hass).async_render() == -1
+    )
+    assert (
+        template.Template("{{ average(1, 'a', 3, default=-1) }}", hass).async_render()
+        == -1
+    )
+
     with pytest.raises(TemplateError):
         template.Template("{{ 1 | average }}", hass).async_render()
 
     with pytest.raises(TemplateError):
         template.Template("{{ average() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ average([]) }}", hass).async_render()
 
 
 def test_min(hass):

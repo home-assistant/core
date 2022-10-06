@@ -11,20 +11,7 @@ def raise_mirrored_entries(hass: HomeAssistant, observations, text: str = "") ->
     """If there are mirrored entries, the user is probably using a workaround for a patched bug."""
     if len(observations) != 2:
         return
-    true_sums_1: bool = (
-        round(
-            observations[0]["prob_given_true"] + observations[1]["prob_given_true"], 1
-        )
-        == 1.0
-    )
-    false_sums_1: bool = (
-        round(
-            observations[0]["prob_given_false"] + observations[1]["prob_given_false"], 1
-        )
-        == 1.0
-    )
-    same_states: bool = observations[0]["platform"] == observations[1]["platform"]
-    if true_sums_1 & false_sums_1 & same_states:
+    if observations[0].is_mirror(observations[1]):
         issue_registry.async_create_issue(
             hass,
             DOMAIN,

@@ -23,9 +23,6 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "confirm": {
-                "description": "Do you want to start set up?"
-            },
             "content_type": {
                 "data": {
                     "content_type": "Content Type"
@@ -45,6 +42,13 @@
                     "verify_ssl": "Verify SSL certificate"
                 },
                 "description": "Enter the settings to connect to the camera."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "This image looks good."
+                },
+                "description": "![Camera Still Image Preview]({preview_url})",
+                "title": "Preview"
             }
         }
     },
