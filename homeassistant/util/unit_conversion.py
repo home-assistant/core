@@ -106,8 +106,9 @@ class BaseUnitConverter:
 
         pint_from, pint_to = cls._get_pint_units(from_unit, to_unit)
 
+        quantity = _UNIT_REGISTRY.Quantity(value, pint_from)
         try:
-            return (value * pint_from).m_as(pint_to)  # type: ignore[no-any-return]
+            return quantity.m_as(pint_to)
         except pint.DimensionalityError as err:
             raise HomeAssistantError(str(err)) from err
 
@@ -116,25 +117,30 @@ class BaseUnitConverter:
         """Get unit ratio between units of measurement."""
         pint_from, pint_to = cls._get_pint_units(from_unit, to_unit)
 
+        quantity = _UNIT_REGISTRY.Quantity(1, pint_from)
         try:
-            return pint_to.m_as(pint_from)  # type: ignore[no-any-return]
+            return 1 / quantity.m_as(pint_to)
         except pint.DimensionalityError as err:
             raise HomeAssistantError(str(err)) from err
 
     @classmethod
     def _get_pint_units(
         cls, from_unit: str, to_unit: str
-    ) -> tuple[pint.Quantity, pint.Quantity]:
+    ) -> tuple[pint.Unit, pint.Unit]:
         """Get unit ratio between units of measurement."""
         try:
-            pint_from = _UNIT_REGISTRY(_PINT_UNIT_MAP.get(from_unit, from_unit))
+            pint_from: pint.Unit = getattr(
+                _UNIT_REGISTRY, _PINT_UNIT_MAP.get(from_unit, from_unit)
+            )
         except pint.UndefinedUnitError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
             ) from err
 
         try:
-            pint_to = _UNIT_REGISTRY(_PINT_UNIT_MAP.get(to_unit, to_unit))
+            pint_to: pint.Unit = getattr(
+                _UNIT_REGISTRY, _PINT_UNIT_MAP.get(to_unit, to_unit)
+            )
         except pint.UndefinedUnitError as err:
             raise HomeAssistantError(
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
@@ -250,50 +256,6 @@ class TemperatureConverter(BaseUnitConverter):
     }
 
     @classmethod
-    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
-        """Convert a temperature from one unit to another.
-
-        eg. 10°C will return 50°F
-
-        For converting an interval between two temperatures, please use
-        `convert_interval` instead.
-        """
-        # We cannot use the implementation from BaseUnitConverter here because the temperature
-        # units do not use the same floor: 0°C, 0°F and 0K do not align
-        if from_unit == to_unit:
-            return value
-
-        if from_unit == TEMP_CELSIUS:
-            if to_unit == TEMP_FAHRENHEIT:
-                return cls._celsius_to_fahrenheit(value)
-            if to_unit == TEMP_KELVIN:
-                return cls._celsius_to_kelvin(value)
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
-            )
-
-        if from_unit == TEMP_FAHRENHEIT:
-            if to_unit == TEMP_CELSIUS:
-                return cls._fahrenheit_to_celsius(value)
-            if to_unit == TEMP_KELVIN:
-                return cls._celsius_to_kelvin(cls._fahrenheit_to_celsius(value))
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
-            )
-
-        if from_unit == TEMP_KELVIN:
-            if to_unit == TEMP_CELSIUS:
-                return cls._kelvin_to_celsius(value)
-            if to_unit == TEMP_FAHRENHEIT:
-                return cls._celsius_to_fahrenheit(cls._kelvin_to_celsius(value))
-            raise HomeAssistantError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
-            )
-        raise HomeAssistantError(
-            UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
-        )
-
-    @classmethod
     def convert_interval(cls, interval: float, from_unit: str, to_unit: str) -> float:
         """Convert a temperature interval from one unit to another.
 
@@ -302,29 +264,20 @@ class TemperatureConverter(BaseUnitConverter):
         For converting a temperature value, please use `convert` as this method
         skips floor adjustment.
         """
-        # We use BaseUnitConverter implementation here because we are only interested
-        # in the ratio between the units.
-        return super().convert(interval, from_unit, to_unit)
+        return interval / cls.get_unit_ratio(from_unit, to_unit)
 
     @classmethod
-    def _fahrenheit_to_celsius(cls, fahrenheit: float) -> float:
-        """Convert a temperature in Fahrenheit to Celsius."""
-        return (fahrenheit - 32.0) / 1.8
+    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
+        """Get unit ratio between units of measurement."""
+        pint_from, pint_to = cls._get_pint_units(from_unit, to_unit)
+        pint_from = getattr(_UNIT_REGISTRY, f"delta_{pint_from}", pint_from)
+        pint_to = getattr(_UNIT_REGISTRY, f"delta_{pint_to}", pint_to)
 
-    @classmethod
-    def _kelvin_to_celsius(cls, kelvin: float) -> float:
-        """Convert a temperature in Kelvin to Celsius."""
-        return kelvin - 273.15
-
-    @classmethod
-    def _celsius_to_fahrenheit(cls, celsius: float) -> float:
-        """Convert a temperature in Celsius to Fahrenheit."""
-        return celsius * 1.8 + 32.0
-
-    @classmethod
-    def _celsius_to_kelvin(cls, celsius: float) -> float:
-        """Convert a temperature in Celsius to Kelvin."""
-        return celsius + 273.15
+        quantity = _UNIT_REGISTRY.Quantity(1, pint_from)
+        try:
+            return 1 / quantity.m_as(pint_to)
+        except pint.DimensionalityError as err:
+            raise HomeAssistantError(str(err)) from err
 
 
 class VolumeConverter(BaseUnitConverter):
