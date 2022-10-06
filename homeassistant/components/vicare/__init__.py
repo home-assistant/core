@@ -33,6 +33,12 @@ class ViCareRequiredKeysMixin:
 
     value_getter: Callable[[Device], bool]
 
+@dataclass()
+class ViCareToggleKeysMixin:
+    """Mixin for enable/disable callables for toggle."""
+    enabler: Callable[[Device], bool]
+    disabler: Callable[[Device], bool]
+
 
 @dataclass()
 class ViCareRequiredKeysMixinWithSet:
