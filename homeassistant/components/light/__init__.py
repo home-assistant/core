@@ -788,7 +788,7 @@ class LightEntity(ToggleEntity):
     _attr_max_color_temp_kelvin: int | None = None
     _attr_min_color_temp_kelvin: int | None = None
     _attr_max_mireds: int = 500  # 2000 K
-    _attr_min_mireds: int = 153  # 6535 K
+    _attr_min_mireds: int = 153  # 6500 K
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
