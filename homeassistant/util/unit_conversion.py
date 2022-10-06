@@ -116,7 +116,7 @@ class BaseUnitConverter:
                 UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             ) from err
 
-        return value * to_ratio / from_ratio
+        return float(value * to_ratio / from_ratio)
 
     @classmethod
     def get_unit_ratio(cls, from_unit: str, to_unit: str) -> Fraction:
