@@ -3,6 +3,7 @@ Bleak connection backend.
 
 This creates a new event loop that is used to integrate bleak's
 asyncio functions to synchronous architecture of python-eq3bt.
+adapted from the original python-eq3bt bleakconnection class
 """
 from __future__ import annotations
 
@@ -13,7 +14,7 @@ import logging
 from bleak import BleakClient, BleakError
 from bleak.backends.characteristic import BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
-import eq3bt as eq3
+import eq3bt as eq3  # pylint: disable=import-error
 
 from homeassistant import core
 from homeassistant.components import bluetooth
