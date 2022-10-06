@@ -12,6 +12,8 @@ import re
 import sys
 from typing import Any, cast
 
+from numpy import var
+
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import condition as device_condition
 from homeassistant.components.sensor import SensorDeviceClass
@@ -175,7 +177,7 @@ async def async_from_config(
             hass: HomeAssistant, variables: TemplateVarsType = None
         ) -> bool:
             """Condition not enabled, will always pass."""
-            return True
+            return None
 
         return disabled_condition
 
@@ -204,7 +206,7 @@ async def async_and_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if not check(hass, variables):
+                    if check(hass, variables) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -235,7 +237,7 @@ async def async_or_from_config(
         for index, check in enumerate(checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(hass, variables):
+                    if check(hass, variables) is True:
                         return True
             except ConditionError as ex:
                 errors.append(
