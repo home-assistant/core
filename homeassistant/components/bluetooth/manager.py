@@ -263,14 +263,25 @@ class BluetoothManager:
             }
             disappeared = history_set.difference(active_addresses)
             for address in disappeared:
-                if advertising_interval := advertisment_tracker.intervals.get(address):
+                #
+                # For non-connectable devices we also check the device has exceeded
+                # the advertising interval before we mark it as unavailable
+                # since it may have gone to sleep and since we do not need an active connection
+                # to it we can only determine its availability by the lack of advertisements
+                #
+                if not connectable and (
+                    advertising_interval := advertisment_tracker.intervals.get(address)
+                ):
                     time_since_seen = monotonic_now - history[address].time
                     if time_since_seen < advertising_interval:
                         continue
+
                 service_info = history.pop(address)
                 self._advertisement_tracker.async_remove_address(address)
+
                 if not (callbacks := unavailable_callbacks.get(address)):
                     continue
+
                 for callback in callbacks:
                     try:
                         callback(service_info)
