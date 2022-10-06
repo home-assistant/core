@@ -1,4 +1,4 @@
-"""Config flow for Whirlpool Sixth Sense integration."""
+"""Config flow for Whirlpool Appliances integration."""
 from __future__ import annotations
 
 import asyncio

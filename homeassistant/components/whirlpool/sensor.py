@@ -1,4 +1,4 @@
-"""The Washer/Dryer Sensor for Whirlpool account."""
+"""The Washer/Dryer Sensor for Whirlpool Appliances."""
 from __future__ import annotations
 
 from collections.abc import Callable

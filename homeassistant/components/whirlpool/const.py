@@ -1,4 +1,4 @@
-"""Constants for the Whirlpool Sixth Sense integration."""
+"""Constants for the Whirlpool Appliances integration."""
 
 from whirlpool.backendselector import Region
 
