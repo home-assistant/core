@@ -26,9 +26,6 @@ from homeassistant.util.color import (
 )
 
 from .const import (
-    BLOCK,
-    DATA_CONFIG_ENTRY,
-    DOMAIN,
     DUAL_MODE_LIGHT_MODELS,
     FIRMWARE_PATTERN,
     KELVIN_MAX_VALUE,
@@ -39,11 +36,10 @@ from .const import (
     MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
     RGBW_MODELS,
-    RPC,
     SHBLB_1_RGB_EFFECTS,
     STANDARD_RGB_EFFECTS,
 )
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import (
     async_remove_shelly_entity,
@@ -77,8 +73,8 @@ def async_setup_block_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for block device."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
-
+    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    assert coordinator
     blocks = []
     assert coordinator.device.blocks
     for block in coordinator.device.blocks:
@@ -108,7 +104,8 @@ def async_setup_rpc_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
+    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    assert coordinator
     switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
 
     switch_ids = []

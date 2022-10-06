@@ -56,8 +56,8 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
     def as_dict(self) -> dict[str, Any]:
         """Return as dict.
 
-        The dataclass as_dict method is not used because
-        it will try to deepcopy objc data which will fail.
+        The dataclass asdict method is not used because
+        it will try to deepcopy pyobjc data which will fail.
         """
         return {
             "name": self.name,
