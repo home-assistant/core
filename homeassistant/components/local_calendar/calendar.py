@@ -21,6 +21,7 @@ from homeassistant.components.calendar import (
     EVENT_SUMMARY,
     EVENT_UID,
     CalendarEntity,
+    CalendarEntityFeature,
     CalendarEvent,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -55,6 +56,7 @@ class LocalCalendarEntity(CalendarEntity):
     """A calendar entity backed by a local iCalendar file."""
 
     _attr_has_entity_name = True
+    _attr_supported_features = CalendarEntityFeature.MUTABLE
 
     def __init__(
         self, store: LocalCalendarStore, calendar: Calendar, name: str, entity_id: str

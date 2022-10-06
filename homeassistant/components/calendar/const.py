@@ -1,6 +1,15 @@
 """Constants for calendar components."""
 
+from enum import IntEnum
+
 CONF_EVENT = "event"
+
+
+class CalendarEntityFeature(IntEnum):
+    """Supported features of the calendar entity."""
+
+    MUTABLE = 1
+
 
 # rfc5545 fields
 EVENT_UID = "uid"

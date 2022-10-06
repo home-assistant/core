@@ -13,6 +13,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
+from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -40,6 +41,7 @@ from .const import (
     EVENT_START,
     EVENT_SUMMARY,
     EVENT_UID,
+    CalendarEntityFeature,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -376,6 +378,17 @@ async def handle_calendar_event_create(
         connection.send_error(msg["id"], "failed", str(ex))
         return
 
+    if (
+        not entity.supported_features
+        or not entity.supported_features & CalendarEntityFeature.MUTABLE
+    ):
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], ERR_NOT_SUPPORTED, "Calendar does not support event creation"
+            )
+        )
+        return
+
     try:
         result = await entity.async_create_event(**msg[CONF_EVENT])
     except HomeAssistantError as ex:
@@ -403,6 +416,17 @@ async def handle_calendar_event_delete(
         entity = _get_calendar_entity(hass, msg["entity_id"])
     except HomeAssistantError as ex:
         connection.send_error(msg["id"], "failed", str(ex))
+        return
+
+    if (
+        not entity.supported_features
+        or not entity.supported_features & CalendarEntityFeature.MUTABLE
+    ):
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], ERR_NOT_SUPPORTED, "Calendar does not support event deletion"
+            )
+        )
         return
 
     try:
