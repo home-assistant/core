@@ -137,8 +137,7 @@ def schema_type_to_vol(field_type):
     """Convert a schema type to a voluptuous type."""
     if issubclass(field_type, zigpy.types.FixedIntType):
         return vol.All(
-            vol.Coerce(int),
-            vol.Range(0, field_type._size),  # pylint: disable=protected-access
+            vol.Coerce(int), vol.Range(field_type.min_value, field_type.max_value)
         )
     return str
 
