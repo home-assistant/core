@@ -201,10 +201,16 @@ def _normalize_states(
             if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
                 hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
                 _LOGGER.warning(
-                    "%s has unit %s which can't be converted to %s",
+                    "The unit of %s (%s) can not be converted to the unit of previously "
+                    "compiled statistics (%s). Generation of long term statistics "
+                    "will be suppressed unless the unit changes back to %s or a "
+                    "compatible unit. "
+                    "Go to %s to fix this",
                     entity_id,
                     state_unit,
                     statistics_unit,
+                    statistics_unit,
+                    LINK_DEV_STATISTICS,
                 )
             continue
 
