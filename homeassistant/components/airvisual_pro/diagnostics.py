@@ -11,7 +11,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-TO_REDACT = (CONF_PASSWORD,)
+CONF_MAC_ADDRESS = "mac_address"
+CONF_SERIAL_NUMBER = "serial_number"
+
+TO_REDACT = (
+    CONF_MAC_ADDRESS,
+    CONF_PASSWORD,
+    CONF_SERIAL_NUMBER,
+)
 
 
 async def async_get_config_entry_diagnostics(
@@ -25,5 +32,5 @@ async def async_get_config_entry_diagnostics(
             "title": entry.title,
             "data": async_redact_data(dict(entry.data), TO_REDACT),
         },
-        "data": coordinator.data,
+        "data": async_redact_data(coordinator.data, TO_REDACT),
     }

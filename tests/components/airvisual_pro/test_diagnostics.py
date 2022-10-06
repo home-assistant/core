@@ -32,7 +32,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisua
                 "temperature_F": "73.4",
                 "voc": "-1",
             },
-            "serial_number": "XXXXXXX",
+            "serial_number": REDACTED,
             "settings": {
                 "follow_mode": "station",
                 "followed_station": "0",
@@ -65,7 +65,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisua
                 "datetime": 1665072044,
                 "device_name": "AIRVISUAL-XXXXXXX",
                 "ip_address": "192.168.1.101",
-                "mac_address": "1234567890ab",
+                "mac_address": REDACTED,
                 "model": 20,
                 "sensor_life": {"pm2_5": 1567924345130},
                 "sensor_pm25_serial": "00000005050224011145",
