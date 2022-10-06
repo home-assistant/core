@@ -247,6 +247,15 @@ class Doods(ImageProcessingEntity):
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
+        
+        # save picture without boxes
+        for path in paths:
+            path_orig = os.path.split(path)
+            path_orig = os.path.join(path_orig[0], 'origin_' + path_orig[1])
+            
+            _LOGGER.info("Saving original image to %s", path_orig)
+            os.makedirs(os.path.dirname(path_orig), exist_ok=True)
+            img.save(path_orig)
 
         # Draw custom global region/area
         if self._area != [0, 0, 1, 1]:
