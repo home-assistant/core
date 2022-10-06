@@ -87,7 +87,9 @@ class ESPHomeClient(BaseBleakClient):
         config_entry = self.domain_data.get_by_unique_id(self._source)
         # The config_entry should never be None since its guarded
         # by the async_can_connect function, but if it is,
-        # we can't do anything about it.
+        # we can't do anything about it as its too late and it crashed
+        # just as we were making the connection after we validated
+        # it was available and has a free connection slot.
         assert (
             config_entry is not None
         ), f"ESPHome device {self._source} is unexpected disconnected"
