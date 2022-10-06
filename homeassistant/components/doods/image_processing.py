@@ -36,6 +36,7 @@ ATTR_MATCHES = "matches"
 ATTR_SUMMARY = "summary"
 ATTR_TOTAL_MATCHES = "total_matches"
 ATTR_PROCESS_TIME = "process_time"
+ATTR_RES_FILE = "res_file"
 
 CONF_AUTH_KEY = "auth_key"
 CONF_DETECTOR = "detector"
@@ -215,6 +216,7 @@ class Doods(ImageProcessingEntity):
         self._total_matches = 0
         self._last_image = None
         self._process_time = 0
+        self._paths = []
 
     @property
     def camera_entity(self):
@@ -241,18 +243,19 @@ class Doods(ImageProcessingEntity):
             },
             ATTR_TOTAL_MATCHES: self._total_matches,
             ATTR_PROCESS_TIME: self._process_time,
+            ATTR_RES_FILE: self._paths,
         }
 
     def _save_image(self, image, matches, paths):
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
-        
+
         # save picture without boxes
         for path in paths:
             path_orig = os.path.split(path)
-            path_orig = os.path.join(path_orig[0], 'origin_' + path_orig[1])
-            
+            path_orig = os.path.join(path_orig[0], "origin_" + path_orig[1])
+
             _LOGGER.info("Saving original image to %s", path_orig)
             os.makedirs(os.path.dirname(path_orig), exist_ok=True)
             img.save(path_orig)
@@ -402,6 +405,7 @@ class Doods(ImageProcessingEntity):
                     paths.append(path_template)
             self._save_image(image, matches, paths)
 
+        self._paths = paths
         self._matches = matches
         self._total_matches = total_matches
         self._process_time = time.monotonic() - start
