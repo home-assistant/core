@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Effekt f\u00f6r alla lysdioder",
+            "issue_individual_led_effect": "Effekt f\u00f6r enskilda lysdioder",
             "squawk": "Kraxa",
             "warn": "Varna"
         },
