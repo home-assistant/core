@@ -74,8 +74,8 @@ _POUND_TO_G = Fraction(45359237, 100000)
 _OUNCE_TO_G = Fraction(_POUND_TO_G, 16)
 
 # Pressure conversion constants
-_STANDARD_GRAVITY = 9.80665
-_MERCURY_DENSITY = 13.5951
+_STANDARD_GRAVITY = Fraction(9.80665)
+_MERCURY_DENSITY = Fraction(13.5951)
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = Fraction(1, 1000)  # 1 L = 0.001 m³
@@ -222,7 +222,7 @@ class PressureConverter(BaseUnitConverter):
         PRESSURE_INHG: Fraction(
             1, _IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY
         ),
-        PRESSURE_PSI: Fraction(6894.757293168),
+        PRESSURE_PSI: Fraction(1, Fraction(6894.757293168)),
         PRESSURE_MMHG: Fraction(
             1, _MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY
         ),
