@@ -493,9 +493,10 @@ class PrometheusMetrics:
 
     def _handle_sensor(self, state):
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+        domain = "sensor"
 
         for metric_handler in self._metric_name_handlers:
-            metric = metric_handler(state, unit)
+            metric = metric_handler(state, unit, domain)
             if metric is not None:
                 break
 
@@ -521,39 +522,39 @@ class PrometheusMetrics:
     def _handle_number(self, state):
         return self._handle_sensor(state)
 
-    def _metric_name_default_metric(self, state, unit):
+    def _metric_name_default_metric(self, state, unit, domain):
         """Get default metric."""
         return self._default_metric
 
     @staticmethod
-    def _metric_name_attribute_metric(state, unit):
+    def _metric_name_attribute_metric(state, unit, domain):
         """Get metric based on device class attribute."""
         metric = state.attributes.get(ATTR_DEVICE_CLASS)
         if metric is not None:
-            return f"sensor_{metric}_{unit}"
+            return f"{domain}_{metric}_{unit}"
         return None
 
-    def _metric_name_override_metric(self, state, unit):
+    def _metric_name_override_metric(self, state, unit, domain):
         """Get metric from override in configuration."""
         if self._override_metric:
             return self._override_metric
         return None
 
-    def _metric_name_override_component_metric(self, state, unit):
+    def _metric_name_override_component_metric(self, state, unit, domain):
         """Get metric from override in component confioguration."""
         return self._component_config.get(state.entity_id).get(CONF_OVERRIDE_METRIC)
 
     @staticmethod
-    def _metric_name_fallback_metric(state, unit):
+    def _metric_name_fallback_metric(state, unit, domain):
         """Get metric from fallback logic for compatibility."""
         if unit in (None, ""):
             try:
                 state_helper.state_as_number(state)
             except ValueError:
-                _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
+                _LOGGER.debug("Unsupported entity: %s", state.entity_id)
                 return None
-            return "sensor_state"
-        return f"sensor_unit_{unit}"
+            return f"{domain}_state"
+        return f"{domain}_unit_{unit}"
 
     @staticmethod
     def _unit_string(unit):
