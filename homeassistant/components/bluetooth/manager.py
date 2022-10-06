@@ -268,6 +268,7 @@ class BluetoothManager:
                     if time_since_seen < advertising_interval:
                         continue
                 service_info = history.pop(address)
+                self._advertisement_tracker.async_remove_address(address)
                 if not (callbacks := unavailable_callbacks.get(address)):
                     continue
                 for callback in callbacks:
@@ -367,19 +368,7 @@ class BluetoothManager:
             self._connectable_history[address] = service_info
             # Bleak callbacks must get a connectable device
 
-        if (
-            address in self._unavailable_callbacks
-            and address not in self._advertisement_tracker.intervals
-        ):
-            # Non-connectables cannot use the bluetooth stack to determine
-            # if the device is unavailable so we need to figure out how
-            # often is broadcasting advertisements to determine if it is
-            # unavailable.
-            #
-            # The advertisement tracker is designed to work for all devices
-            # but we only want to use it for non-connectable devices since
-            # the bluetooth stack provides a better way to determine if
-            # a connectable device is unavailable.
+        if address not in self._advertisement_tracker.intervals:
             self._advertisement_tracker.async_collect(service_info)
 
         # If the advertisement data is the same as the last time we saw it, we
@@ -438,11 +427,8 @@ class BluetoothManager:
         @hass_callback
         def _async_remove_callback() -> None:
             unavailable_callbacks[address].remove(callback)
-            if unavailable_callbacks[address]:
-                return
-            if not connectable:
-                self._advertisement_tracker.async_remove_address(address)
-            del unavailable_callbacks[address]
+            if not unavailable_callbacks[address]:
+                del unavailable_callbacks[address]
 
         return _async_remove_callback
 
