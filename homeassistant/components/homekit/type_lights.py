@@ -193,7 +193,10 @@ class Light(HomeAccessory):
                 params[ATTR_COLOR_TEMP] = temp
             elif self.rgbww_supported:
                 params[ATTR_RGBWW_COLOR] = color_temperature_to_rgbww(
-                    temp, bright_val, self.min_mireds, self.max_mireds
+                    color_temperature_mired_to_kelvin(temp),
+                    bright_val,
+                    color_temperature_mired_to_kelvin(self.max_mireds),
+                    color_temperature_mired_to_kelvin(self.min_mireds),
                 )
             elif self.rgbw_supported:
                 params[ATTR_RGBW_COLOR] = (*(0,) * 3, bright_val)

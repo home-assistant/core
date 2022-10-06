@@ -4,7 +4,7 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "auth_failed": "Nie uda\u0142o si\u0119 pobra\u0107 klucza API aplikacji",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "reauth_successful": "Ponowna autoryzacja przebieg\u0142a pomy\u015blnie",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
