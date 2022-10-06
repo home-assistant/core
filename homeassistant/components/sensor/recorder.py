@@ -24,7 +24,7 @@ from homeassistant.components.recorder.models import (
     StatisticResult,
 )
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
@@ -689,6 +689,8 @@ def validate_statistics(
                 )
 
     for statistic_id in sensor_statistic_ids - sensor_entity_ids:
+        if split_entity_id(statistic_id)[0] != DOMAIN:
+            continue
         # There is no sensor matching the statistics_id
         validation_result[statistic_id].append(
             statistics.ValidationIssue(
