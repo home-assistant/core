@@ -20,7 +20,7 @@ from .unit_conversion import PressureConverter
 
 VALID_UNITS = PressureConverter.VALID_UNITS
 UNIT_CONVERSION: dict[str, float] = {
-    key: PressureConverter.get_unit_ratio(key, PressureConverter.NORMALIZED_UNIT)
+    key: float(PressureConverter.get_unit_ratio(key, PressureConverter.NORMALIZED_UNIT))
     for key in VALID_UNITS
 }
 

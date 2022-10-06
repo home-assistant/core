@@ -74,8 +74,8 @@ _POUND_TO_G = Fraction(45359237, 100000)
 _OUNCE_TO_G = Fraction(_POUND_TO_G, 16)
 
 # Pressure conversion constants
-_STANDARD_GRAVITY = Fraction(9.80665)
-_MERCURY_DENSITY = Fraction(13.5951)
+_STANDARD_GRAVITY = Fraction(980665, 100000)
+_MERCURY_DENSITY = Fraction(135951, 10000)
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = Fraction(1, 1000)  # 1 L = 0.001 m³
@@ -120,9 +120,9 @@ class BaseUnitConverter:
         return float(new_value)
 
     @classmethod
-    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
+    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> Fraction:
         """Get unit ratio between units of measurement."""
-        return float(cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit])
+        return Fraction(cls._UNIT_CONVERSION[from_unit], cls._UNIT_CONVERSION[to_unit])
 
 
 class DistanceConverter(BaseUnitConverter):
@@ -279,7 +279,7 @@ class TemperatureConverter(BaseUnitConverter):
     }
     _UNIT_CONVERSION: dict[str, Fraction | int] = {
         TEMP_CELSIUS: 1,
-        TEMP_FAHRENHEIT: Fraction(1.8),
+        TEMP_FAHRENHEIT: Fraction(18, 10),
         TEMP_KELVIN: 1,
     }
 
