@@ -45,9 +45,9 @@ class DomainData:
         """Set the BleakGATTServiceCollection for the given address."""
         self._gatt_services_cache[address] = services
 
-    def get_by_unique_id(self, unique_id: str) -> ConfigEntry:
+    def get_by_unique_id(self, unique_id: str) -> ConfigEntry | None:
         """Get the config entry by its unique ID."""
-        return self._entry_by_unique_id[unique_id]
+        return self._entry_by_unique_id.get(unique_id)
 
     def get_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
         """Return the runtime entry data associated with this config entry.

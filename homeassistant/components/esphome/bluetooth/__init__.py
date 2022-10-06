@@ -30,7 +30,13 @@ _LOGGER = logging.getLogger(__name__)
 def async_can_connect(source: str) -> bool:
     """Check if a given source can make another connection."""
     domain_data = DomainData.get(async_get_hass())
-    entry = domain_data.get_by_unique_id(source)
+    if (entry := domain_data.get_by_unique_id(source)) is None:
+        _LOGGER.warning(
+            "Device %s was found to be unexpected disconnected while checking for Bluetooth connections; "
+            "Check the ESPHome device serial console logs",
+            source,
+        )
+        return False
     entry_data = domain_data.get_entry_data(entry)
     _LOGGER.debug(
         "Checking if %s can connect, available=%s, ble_connections_free=%s",
