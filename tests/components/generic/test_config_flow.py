@@ -146,8 +146,11 @@ async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
 
 
 @respx.mock
-async def test_form_reject_still_preview(hass, mock_create_stream, user_flow):
+async def test_form_reject_still_preview(
+    hass, fakeimgbytes_png, mock_create_stream, user_flow
+):
     """Test we go back to the config screen if the user rejects the still preview."""
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with mock_create_stream:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
@@ -155,10 +158,11 @@ async def test_form_reject_still_preview(hass, mock_create_stream, user_flow):
         )
     assert result1["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result1["step_id"] == "user_confirm_still"
-    result2 = await hass.config_entries.flow.async_configure(
-        result1["flow_id"],
-        user_input={CONF_CONFIRMED_OK: False},
-    )
+    with mock_create_stream:
+        result2 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"],
+            user_input={CONF_CONFIRMED_OK: False},
+        )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
 
