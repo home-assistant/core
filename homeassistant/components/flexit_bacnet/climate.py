@@ -171,15 +171,3 @@ class FlexitClimateEntity(ClimateEntity):
             "exhaust_air_temperature": self._device.exhaust_air_temperature,
             "electric_heater_power": self._device.electric_heater_power,
         }
-
-    def set_humidity(self, humidity: int) -> None:
-        """Set new target humidity."""
-        raise NotImplementedError
-
-    def set_fan_mode(self, fan_mode: str) -> None:
-        """Set new target fan mode."""
-        raise NotImplementedError
-
-    def set_swing_mode(self, swing_mode: str) -> None:
-        """Set new target swing operation."""
-        raise NotImplementedError
