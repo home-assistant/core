@@ -26,15 +26,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    AIOSHELLY_DEVICE_TIMEOUT_SEC,
-    BLOCK,
-    DATA_CONFIG_ENTRY,
-    DOMAIN,
-    LOGGER,
-    SHTRV_01_TEMPERATURE_SETTINGS,
-)
-from .coordinator import ShellyBlockCoordinator
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, LOGGER, SHTRV_01_TEMPERATURE_SETTINGS
+from .coordinator import ShellyBlockCoordinator, get_entry_data
 from .utils import get_device_entry_gen
 
 
@@ -48,10 +41,8 @@ async def async_setup_entry(
     if get_device_entry_gen(config_entry) == 2:
         return
 
-    coordinator: ShellyBlockCoordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-        config_entry.entry_id
-    ][BLOCK]
-
+    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    assert coordinator
     if coordinator.device.initialized:
         async_setup_climate_entities(async_add_entities, coordinator)
     else:

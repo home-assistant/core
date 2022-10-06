@@ -18,21 +18,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    AIOSHELLY_DEVICE_TIMEOUT_SEC,
-    BLOCK,
-    DATA_CONFIG_ENTRY,
-    DOMAIN,
-    LOGGER,
-    REST,
-    RPC,
-    RPC_POLL,
-)
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, LOGGER
 from .coordinator import (
     ShellyBlockCoordinator,
-    ShellyRestCoordinator,
     ShellyRpcCoordinator,
     ShellyRpcPollingCoordinator,
+    get_entry_data,
 )
 from .utils import (
     async_remove_shelly_entity,
@@ -54,10 +45,8 @@ def async_setup_entry_attribute_entities(
     ],
 ) -> None:
     """Set up entities for attributes."""
-    coordinator: ShellyBlockCoordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-        config_entry.entry_id
-    ][BLOCK]
-
+    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    assert coordinator
     if coordinator.device.initialized:
         async_setup_block_attribute_entities(
             hass, async_add_entities, coordinator, sensors, sensor_class
@@ -166,13 +155,10 @@ def async_setup_entry_rpc(
     sensor_class: Callable,
 ) -> None:
     """Set up entities for REST sensors."""
-    coordinator: ShellyRpcCoordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-        config_entry.entry_id
-    ][RPC]
-
-    polling_coordinator: ShellyRpcPollingCoordinator = hass.data[DOMAIN][
-        DATA_CONFIG_ENTRY
-    ][config_entry.entry_id][RPC_POLL]
+    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    assert coordinator
+    polling_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc_poll
+    assert polling_coordinator
 
     entities = []
     for sensor_id in sensors:
@@ -220,10 +206,8 @@ def async_setup_entry_rest(
     sensor_class: Callable,
 ) -> None:
     """Set up entities for REST sensors."""
-    coordinator: ShellyRestCoordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-        config_entry.entry_id
-    ][REST]
-
+    coordinator = get_entry_data(hass)[config_entry.entry_id].rest
+    assert coordinator
     entities = []
     for sensor_id in sensors:
         description = sensors.get(sensor_id)

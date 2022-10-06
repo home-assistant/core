@@ -17,8 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BLOCK, CONF_SLEEP_PERIOD, DATA_CONFIG_ENTRY, DOMAIN
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .const import CONF_SLEEP_PERIOD
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     RestEntityDescription,
     RpcEntityDescription,
@@ -178,11 +178,9 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     ) -> None:
         """Install the latest firmware version."""
         config_entry = self.block_coordinator.entry
-        block_coordinator = self.hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry.entry_id
-        ].get(BLOCK)
+        coordinator = get_entry_data(self.hass)[config_entry.entry_id].block
         self._in_progress_old_version = self.installed_version
-        await self.entity_description.install(block_coordinator)
+        await self.entity_description.install(coordinator)
 
 
 class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
