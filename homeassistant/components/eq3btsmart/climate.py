@@ -30,6 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import PRESET_CLOSED, PRESET_NO_HOLD, PRESET_OPEN, PRESET_PERMANENT_HOLD
+from .homeassistantbleakconnection import HomeAssistantBleakConnection
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,10 +83,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the eQ-3 BLE thermostats."""
@@ -95,7 +96,7 @@ def setup_platform(
         mac = device_cfg[CONF_MAC]
         devices.append(EQ3BTSmartThermostat(mac, name))
 
-    add_entities(devices, True)
+    async_add_entities(devices, True)
 
 
 class EQ3BTSmartThermostat(ClimateEntity):
@@ -114,7 +115,9 @@ class EQ3BTSmartThermostat(ClimateEntity):
         # We want to avoid name clash with this module.
         self._attr_name = name
         self._attr_unique_id = format_mac(mac)
-        self._thermostat = eq3.Thermostat(mac)
+        self._thermostat = eq3.Thermostat(
+            mac, None, connection_cls=HomeAssistantBleakConnection
+        )
 
     @property
     def available(self) -> bool:
