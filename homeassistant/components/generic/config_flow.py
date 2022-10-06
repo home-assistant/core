@@ -336,6 +336,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     # temporary preview for user to check the image
                     self.context["preview_cam"] = user_input
                     return await self.async_step_user_confirm_still()
+        elif self.user_input:
+            user_input = self.user_input
         else:
             user_input = DEFAULT_DATA.copy()
         return self.async_show_form(
@@ -350,11 +352,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user clicking confirm after still preview."""
         if user_input:
             if not user_input.get(CONF_CONFIRMED_OK):
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=build_schema(self.user_input),
-                    errors={},
-                )
+                return await self.async_step_user()
             return self.async_create_entry(
                 title=self.title, data={}, options=self.user_input
             )
