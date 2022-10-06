@@ -475,7 +475,7 @@ bthome-ble==1.2.2
 bthomehub5-devicelist==0.1.1
 
 # homeassistant.components.bt_smarthub
-btsmarthub_devicelist==0.2.2
+btsmarthub_devicelist==0.2.3
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -865,7 +865,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221005.0
+home-assistant-frontend==20221006.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
