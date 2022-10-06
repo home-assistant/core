@@ -735,7 +735,8 @@ async def websocket_device_cluster_commands(
                         ID: cmd_id,
                         ATTR_NAME: cmd.name,
                         "schema": voluptuous_serialize.convert(
-                            cluster_command_schema_to_vol_schema(cmd.schema)
+                            cluster_command_schema_to_vol_schema(cmd.schema),
+                            custom_serializer=cv.custom_serializer,
                         ),
                     }
                 )
@@ -746,7 +747,8 @@ async def websocket_device_cluster_commands(
                         ID: cmd_id,
                         ATTR_NAME: cmd.name,
                         "schema": voluptuous_serialize.convert(
-                            cluster_command_schema_to_vol_schema(cmd.schema)
+                            cluster_command_schema_to_vol_schema(cmd.schema),
+                            custom_serializer=cv.custom_serializer,
                         ),
                     }
                 )

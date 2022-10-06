@@ -10,6 +10,7 @@ import asyncio
 import binascii
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+import enum
 import functools
 import itertools
 import logging
@@ -28,7 +29,7 @@ import zigpy.zdo.types as zdo_types
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import IntegrationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CLUSTER_TYPE_IN,
@@ -135,7 +136,17 @@ def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
 
 def schema_type_to_vol(field_type):
     """Convert a schema type to a voluptuous type."""
-    if issubclass(field_type, zigpy.types.FixedIntType):
+    if issubclass(field_type, enum.Flag) and len(field_type.__members__.keys()):
+        return cv.multi_select(
+            [key.replace("_", " ") for key in field_type.__members__.keys()]
+        )
+    if issubclass(field_type, enum.Enum) and len(field_type.__members__.keys()):
+        return vol.In([key.replace("_", " ") for key in field_type.__members__.keys()])
+    if (
+        issubclass(field_type, zigpy.types.FixedIntType)
+        or issubclass(field_type, enum.Flag)
+        or issubclass(field_type, enum.Enum)
+    ):
         return vol.All(
             vol.Coerce(int), vol.Range(field_type.min_value, field_type.max_value)
         )
