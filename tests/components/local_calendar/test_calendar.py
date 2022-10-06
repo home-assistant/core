@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 import urllib
-import zoneinfo
 
 from aiohttp import ClientSession, ClientWebSocketResponse
 import pytest
@@ -63,13 +62,6 @@ def set_time_zone(hass: HomeAssistant):
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round
     hass.config.set_time_zone("America/Regina")
-    # This currently assumes home assistant timezone and python timezone are in
-    # sync, which is not necessarily the case. Plumb through an explicit timezone
-    # from home assistant to the calendar so that 'start of day' conversions can work
-    with patch(
-        "ical.util.local_timezone", return_value=zoneinfo.ZoneInfo("America/Regina")
-    ):
-        yield
 
 
 @pytest.fixture(name="config_entry")
