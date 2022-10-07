@@ -3309,6 +3309,7 @@ async def test_disabled_condition(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.test", "off")
     assert test(hass) is None
 
+
 async def test_and_condition_with_disabled_condition(hass):
     """Test the 'and' condition with one of the conditions disabled."""
     config = {
@@ -3372,6 +3373,7 @@ async def test_and_condition_with_disabled_condition(hass):
             "conditions/1/entity_id/0": [{"result": {"result": True, "state": 100.0}}],
         }
     )
+
 
 async def test_or_condition_with_disabled_condition(hass):
     """Test the 'or' condition with one of the conditions disabled."""
