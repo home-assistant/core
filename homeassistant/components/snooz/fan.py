@@ -67,7 +67,8 @@ class SnoozFan(FanEntity, RestoreEntity):
         self._is_on: bool | None = None
         self._percentage: int | None = None
 
-    def _write_state_changed(self) -> None:
+    @callback
+    def _async_write_state_changed(self) -> None:
         # cache state for restore entity
         if not self.assumed_state:
             self._is_on = self._device.state.on
