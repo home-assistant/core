@@ -256,6 +256,8 @@ def get_ted5000(self) -> str | None:
             ENTITY_CARBONRATE: carbon_rate / 100,
             ENTITY_METERREAD: read_date,
         }
+        
+        return mtus
 
 
 class Ted5000Data:
@@ -264,7 +266,6 @@ class Ted5000Data:
     def __init__(self, url):
         """Initialize the data object."""
         self.url = url
-        self._data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
