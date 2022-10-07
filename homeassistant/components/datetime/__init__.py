@@ -51,7 +51,7 @@ FMT_DATETIME = f"{FMT_DATE} {FMT_TIME}"
 # mypy: disallow-any-generics
 
 
-def validate_svc_attrs_and_split_date_time(config):
+def _validate_svc_attrs_and_split_date_time(config):
     """Validate set_datetime service attributes and split date/time components."""
     has_date_or_time_attr = any(key in config for key in (ATTR_DATE, ATTR_TIME))
     if (
@@ -91,15 +91,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.has_at_least_one_key(
                 ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
             ),
-            validate_svc_attrs_and_split_date_time,
+            _validate_svc_attrs_and_split_date_time,
         ),
-        async_set_datetime,
+        _async_set_datetime,
     )
 
     return True
 
 
-async def async_set_datetime(entity: DateTimeEntity, service_call: ServiceCall) -> None:
+async def _async_set_datetime(
+    entity: DateTimeEntity, service_call: ServiceCall
+) -> None:
     """Service call wrapper to set a new datetime."""
     date_: date | None = service_call.data.get(ATTR_DATE)
     time_: time | None = service_call.data.get(ATTR_TIME)
@@ -128,9 +130,7 @@ async def async_set_datetime(entity: DateTimeEntity, service_call: ServiceCall) 
             assert isinstance(entity.value, datetime)
             time_ = entity.value.time()
 
-        return await entity.async_set_datetime(
-            datetime.combine(date_, time_, dt_util.DEFAULT_TIME_ZONE)
-        )
+        return await entity.async_set_datetime(datetime.combine(date_, time_))
 
     if date_:
         return await entity.async_set_datetime(date_)
@@ -209,6 +209,7 @@ class DateTimeEntity(Entity):
     @final
     def state(self) -> str | None:
         """Return the entity state."""
+        _LOGGER.error(self.value)
         if self.value is None:
             return None
         if self.has_date and self.has_time:
@@ -273,9 +274,10 @@ class DateTimeEntity(Entity):
     def value(self) -> datetime | date | time | None:
         """Return the entity value to represent the entity state."""
         # If there is an entity mode and native value type mismatch, the native value
-        # is invalid and we must return None
-        if (not self.has_time and isinstance(self.native_value, time)) or (
-            not self.has_date and isinstance(self.native_value, date)
+        # is invalid and we must return None. We use __class__ because datetime is a
+        # subclass of date.
+        if (self.has_time and self.native_value.__class__ == date) or (
+            self.has_date and self.native_value.__class__ == time
         ):
             return None
 

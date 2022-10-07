@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
 
@@ -27,14 +26,14 @@ async def async_setup_platform(
             DemoDateTime(
                 "datetime",
                 "Date and Time",
-                dt_util.now(),
+                datetime(2020, 1, 1, 12, 0, 0),
                 "mdi:calendar-clock",
                 False,
             ),
             DemoDateTime(
                 "date",
                 "Date",
-                dt_util.now().date(),
+                date(2020, 1, 1),
                 "mdi:calendar",
                 False,
                 mode=DateTimeMode.DATE,
@@ -42,7 +41,7 @@ async def async_setup_platform(
             DemoDateTime(
                 "time",
                 "Time",
-                dt_util.now().time(),
+                time(12, 0, 0),
                 "mdi:clock",
                 False,
                 mode=DateTimeMode.TIME,
