@@ -210,6 +210,7 @@ homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
+homeassistant.components.radarr.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
