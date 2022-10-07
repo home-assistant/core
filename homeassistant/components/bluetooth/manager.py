@@ -68,6 +68,7 @@ APPLE_START_BYTES_WANTED: Final = {
 
 RSSI_SWITCH_THRESHOLD = 6
 
+MONOTONIC_TIME: Final = time.monotonic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -249,8 +250,8 @@ class BluetoothManager:
 
     @hass_callback
     def _async_check_unavailable(self, now: datetime) -> None:
-        """Watch for unavailable devices."""
-        monotonic_now = time.monotonic()
+        """Watch for unavailable devices and cleanup state history."""
+        monotonic_now = MONOTONIC_TIME()
         connectable_history = self._connectable_history
         all_history = self._history
         removed_addresses: set[str] = set()
@@ -373,12 +374,21 @@ class BluetoothManager:
             return
 
         self._history[address] = service_info
+        source = service_info.source
 
         if connectable:
             self._connectable_history[address] = service_info
             # Bleak callbacks must get a connectable device
 
-        if address not in self._advertisement_tracker.intervals:
+        # Track advertisement intervals to determine when we need to
+        # switch adapters or mark a device as unavailable
+        advertisement_tracker = self._advertisement_tracker
+        if (
+            last_source := advertisement_tracker.sources.get(address)
+        ) and last_source != source:
+            # Source changed, remove the old address from the tracker
+            self._advertisement_tracker.async_remove_address(address)
+        if address not in advertisement_tracker.intervals:
             self._advertisement_tracker.async_collect(service_info)
 
         # If the advertisement data is the same as the last time we saw it, we
@@ -391,7 +401,6 @@ class BluetoothManager:
         ):
             return
 
-        source = service_info.source
         if connectable:
             # Bleak callbacks must get a connectable device
             for callback_filters in self._bleak_callbacks:
