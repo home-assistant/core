@@ -63,6 +63,6 @@ class AdvertisementTracker:
     @callback
     def async_remove_source(self, source: str) -> None:
         """Remove the tracker."""
-        for address in list(self.sources):
-            if self.sources[address] == source:
+        for address, tracked_source in list(self.sources.items()):
+            if tracked_source == source:
                 self.async_remove_address(address)
