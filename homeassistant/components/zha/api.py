@@ -190,7 +190,7 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_COMMAND): cv.positive_int,
             vol.Required(ATTR_COMMAND_TYPE): cv.string,
-            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
+            vol.Optional(ATTR_ARGS): dict,
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
@@ -1296,10 +1296,11 @@ def async_load_api(hass: HomeAssistant) -> None:
         cluster_type: str = service.data[ATTR_CLUSTER_TYPE]
         command: int = service.data[ATTR_COMMAND]
         command_type: str = service.data[ATTR_COMMAND_TYPE]
-        args: list = service.data[ATTR_ARGS]
+        args: dict = service.data[ATTR_ARGS]
         manufacturer: int | None = service.data.get(ATTR_MANUFACTURER)
         zha_device = zha_gateway.get_device(ieee)
         response = None
+        _LOGGER.warning("Service data: %s", service.data)
         if zha_device is not None:
             if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
                 manufacturer = zha_device.manufacturer_code
@@ -1308,7 +1309,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 cluster_id,
                 command,
                 command_type,
-                *args,
+                args,
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )

@@ -153,6 +153,20 @@ def schema_type_to_vol(field_type):
     return str
 
 
+def process_fields(fields: dict[str, Any], schema: CommandSchema) -> dict[str, Any]:
+    """Process fields."""
+    processed_fields = {}
+    for field in schema.fields:
+        if field.name not in fields:
+            continue
+        value = fields[field.name]
+        if issubclass(field.type, enum.Enum) or issubclass(field.type, enum.Flag):
+            value = field.type[value.replace(" ", "_")]
+            _LOGGER.warning("Converted %s to %s", fields[field.name], value)
+        processed_fields[field.name] = value
+    return processed_fields
+
+
 @callback
 def async_is_bindable_target(source_zha_device, target_zha_device):
     """Determine if target is bindable to source."""

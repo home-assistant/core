@@ -74,7 +74,7 @@ from .const import (
     UNKNOWN_MODEL,
     ZHA_OPTIONS,
 )
-from .helpers import LogMixin, async_get_zha_config_value
+from .helpers import LogMixin, async_get_zha_config_value, process_fields
 
 if TYPE_CHECKING:
     from ..api import ClusterBinding
@@ -664,7 +664,7 @@ class ZHADevice(LogMixin):
         cluster_id,
         command,
         command_type,
-        *args,
+        args,
         cluster_type=CLUSTER_TYPE_IN,
         manufacturer=None,
     ):
@@ -672,12 +672,22 @@ class ZHADevice(LogMixin):
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
-        if command_type == CLUSTER_COMMAND_SERVER:
-            response = await cluster.command(
-                command, *args, manufacturer=manufacturer, expect_reply=True
-            )
-        else:
-            response = await cluster.client_command(command, *args)
+        commands = (
+            cluster.server_commands
+            if command_type == CLUSTER_COMMAND_SERVER
+            else cluster.client_commands
+        )
+        _LOGGER.warning(
+            "Processed zcl command args: %s",
+            process_fields(args, commands[command].schema),
+        )
+        zcl_command = commands[command].schema(
+            **process_fields(args, commands[command].schema)
+        )
+        _LOGGER.warning("ZCL command: %s", zcl_command)
+        response = await (
+            getattr(cluster, commands[command].name)(**zcl_command.__dict__)
+        )
 
         self.debug(
             "Issued cluster command: %s %s %s %s %s %s %s",
