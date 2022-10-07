@@ -9,5 +9,6 @@
   "homekit": {},
   "dependencies": [],
   "codeowners": ["@bachya"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pyairvisual", "pysmb"]
 }
