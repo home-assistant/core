@@ -328,3 +328,50 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
 
     assert switchbot_device_went_unavailable is False
     switchbot_device_unavailable_cancel()
+
+
+async def test_advertisment_interval_longer_increasing_than_adapter_stack_timeout_adapter_change_not_connectable(
+    hass, caplog, enable_bluetooth, macos_adapter
+):
+    """Test device with a increasing advertisement interval with an adapter change that is not connectable."""
+    start_monotonic_time = time.monotonic()
+    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_adv = AdvertisementData(
+        local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+    )
+    switchbot_device_went_unavailable = False
+
+    @callback
+    def _switchbot_device_unavailable_callback(_address: str) -> None:
+        """Switchbot device unavailable callback."""
+        nonlocal switchbot_device_went_unavailable
+        switchbot_device_went_unavailable = True
+
+    for i in range(ADVERTISING_TIMES_NEEDED, 2 * ADVERTISING_TIMES_NEEDED):
+        inject_advertisement_with_time_and_source(
+            hass,
+            switchbot_device,
+            switchbot_adv,
+            start_monotonic_time + (i**2),
+            "new",
+        )
+
+    switchbot_device_unavailable_cancel = async_track_unavailable(
+        hass,
+        _switchbot_device_unavailable_callback,
+        switchbot_device.address,
+        connectable=False,
+    )
+
+    monotonic_now = start_monotonic_time + UNAVAILABLE_TRACK_SECONDS + 1
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is False
+    switchbot_device_unavailable_cancel()
