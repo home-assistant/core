@@ -148,7 +148,7 @@ SHBLB_1_RGB_EFFECTS: Final = {
 SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "min": 4,
     "max": 31,
-    "step": 1,
+    "step": 0.5,
 }
 
 # Kelvin value for colorTemp
