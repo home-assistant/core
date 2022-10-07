@@ -7,7 +7,8 @@ from pysnooz.device import SnoozDevice
 class SnoozConfigurationData:
     """Configuration data for Snooz."""
 
-    def __init__(self, ble_device: BLEDevice, device: SnoozDevice) -> None:
+    def __init__(self, ble_device: BLEDevice, device: SnoozDevice, title: str) -> None:
         """Initialize configuration data."""
         self.ble_device = ble_device
         self.device = device
+        self.title = title

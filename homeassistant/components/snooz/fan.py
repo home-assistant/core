@@ -12,11 +12,10 @@ from pysnooz.commands import (
     turn_off,
     turn_on,
 )
-from pysnooz.device import SnoozDevice
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,32 +30,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up Snooz device from a config entry."""
 
-    address: str = entry.data[CONF_ADDRESS]
     data: SnoozConfigurationData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [
-            SnoozFan(
-                hass,
-                data.device.display_name,
-                address,
-                data.device,
-            )
-        ]
-    )
+    async_add_entities([SnoozFan(hass, data)])
 
 
 class SnoozFan(FanEntity, RestoreEntity):
     """Fan representation of a Snooz device."""
 
-    def __init__(self, hass, name: str, address: str, device: SnoozDevice) -> None:
+    def __init__(self, hass, data: SnoozConfigurationData) -> None:
         """Initialize a Snooz fan entity."""
         self.hass = hass
-        self._address = address
-        self._device = device
-        self._attr_unique_id = address
+        self._device = data.device
+        self._attr_name = data.title
+        self._attr_unique_id = data.device.address
         self._attr_supported_features = FanEntityFeature.SET_SPEED
-        self._attr_name = name
         self._attr_should_poll = False
         self._is_on: bool | None = None
         self._percentage: int | None = None
