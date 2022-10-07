@@ -1,6 +1,6 @@
 {
   "domain": "tradfri",
-  "name": "IKEA Tradfri",
+  "name": "IKEA TR\u00c5DFRI",
   "integrations": ["tradfri"],
   "iot_standards": ["zigbee"]
 }
