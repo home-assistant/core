@@ -22,11 +22,13 @@ from .const import (
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
     KEY_DEVICE_LOCATION,
+    KEY_DEVICE_LOCATION_NAME,
     KEY_DEVICE_LOCATION_TIMEZONE,
     KEY_DEVICE_TYPE,
 )
 from .coordinator import FlumeDeviceDataUpdateCoordinator
 from .entity import FlumeEntity
+from .util import get_valid_flume_devices
 
 FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -78,21 +80,20 @@ async def async_setup_entry(
     """Set up the Flume sensor."""
 
     flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
-
+    flume_devices = flume_domain_data[FLUME_DEVICES]
     flume_auth = flume_domain_data[FLUME_AUTH]
     http_session = flume_domain_data[FLUME_HTTP_SESSION]
-    flume_devices = flume_domain_data[FLUME_DEVICES]
-
+    flume_devices = [
+        device
+        for device in get_valid_flume_devices(flume_devices)
+        if device[KEY_DEVICE_TYPE] == FLUME_TYPE_SENSOR
+    ]
     flume_entity_list = []
-    for device in flume_devices.device_list:
-        if (
-            device[KEY_DEVICE_TYPE] != FLUME_TYPE_SENSOR
-            or KEY_DEVICE_LOCATION not in device
-        ):
-            continue
+    for device in flume_devices:
 
         device_id = device[KEY_DEVICE_ID]
         device_timezone = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_TIMEZONE]
+        device_location_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]
 
         flume_device = FlumeData(
             flume_auth,
@@ -113,6 +114,7 @@ async def async_setup_entry(
                     coordinator=coordinator,
                     description=description,
                     device_id=device_id,
+                    location_name=device_location_name,
                 )
                 for description in FLUME_QUERIES_SENSOR
             ]
@@ -126,15 +128,6 @@ class FlumeSensor(FlumeEntity, SensorEntity):
     """Representation of the Flume sensor."""
 
     coordinator: FlumeDeviceDataUpdateCoordinator
-
-    def __init__(
-        self,
-        coordinator: FlumeDeviceDataUpdateCoordinator,
-        device_id: str,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Inlitializer function with type hints."""
-        super().__init__(coordinator, description, device_id)
 
     @property
     def native_value(self):
