@@ -1155,6 +1155,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/tesla_wall_connector/ @einarhauks
 /tests/components/tesla_wall_connector/ @einarhauks
 /homeassistant/components/text/ @home-assistant/core
+/tests/components/text/ @home-assistant/core
 /homeassistant/components/tfiac/ @fredrike @mellado
 /homeassistant/components/thermobeacon/ @bdraco
 /tests/components/thermobeacon/ @bdraco
