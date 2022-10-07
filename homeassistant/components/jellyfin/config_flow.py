@@ -8,7 +8,7 @@ import uuid
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
@@ -40,10 +40,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if "device_id" not in user_input:
-                user_input["device_id"] = str(uuid.uuid4())
+            if CONF_DEVICE_ID not in user_input:
+                user_input[CONF_DEVICE_ID] = str(uuid.uuid4())
 
-            client = create_client(device_id=user_input["device_id"])
+            client = create_client(device_id=user_input[CONF_DEVICE_ID])
             try:
                 userid = await validate_input(self.hass, user_input, client)
             except CannotConnect:
