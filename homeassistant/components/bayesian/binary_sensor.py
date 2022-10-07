@@ -34,7 +34,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
-    _TrackTemplateResultInfo,
     async_track_state_change_event,
     async_track_template_result,
 )
@@ -190,7 +189,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
         self._attr_is_on = False
-        self._callbacks: list[_TrackTemplateResultInfo] = []
+        self._callbacks: list = []
 
         self.prior = prior
         self.probability = prior
