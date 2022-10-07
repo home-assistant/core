@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+import uuid
 
 import voluptuous as vol
 
@@ -39,7 +40,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            client = create_client()
+            if "device_id" not in user_input:
+                user_input["device_id"] = str(uuid.uuid4())
+
+            client = create_client(device_id=user_input["device_id"])
             try:
                 userid = await validate_input(self.hass, user_input, client)
             except CannotConnect:
