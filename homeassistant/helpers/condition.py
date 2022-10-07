@@ -12,8 +12,6 @@ import re
 import sys
 from typing import Any, cast
 
-from numpy import var
-
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import condition as device_condition
 from homeassistant.components.sensor import SensorDeviceClass
@@ -176,8 +174,8 @@ async def async_from_config(
         def disabled_condition(
             hass: HomeAssistant, variables: TemplateVarsType = None
         ) -> bool:
-            """Condition not enabled, will always pass."""
-            return None
+            """Condition not enabled, will act as if it didn't exist."""
+            return
 
         return disabled_condition
 
