@@ -179,7 +179,7 @@ def setup_platform(
     entities = []
 
     # Create MTU sensors
-    for mtu in gateway.data:
+    for mtu in range(1, gateway.mtus + 1):
         for description in SENSOR_TYPES_BASIC:
             entities.append(Ted5000SensorEntity(gateway, mtu, description, name))
         if mode in {"advanced", "extended"}:  # advanced or extended
@@ -256,7 +256,7 @@ def get_ted5000(self) -> str | None:
             ENTITY_CARBONRATE: carbon_rate / 100,
             ENTITY_METERREAD: read_date,
         }
-        
+
         return mtus
 
 
@@ -266,12 +266,13 @@ class Ted5000Data:
     def __init__(self, url):
         """Initialize the data object."""
         self.url = url
+        self.mtus = 0
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from ted5000."""
         # Update data
-        get_ted5000(self)
+        self.mtus = get_ted5000(self)
 
 
 class Ted5000SensorEntity(SensorEntity):
