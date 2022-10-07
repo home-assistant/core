@@ -71,6 +71,10 @@ _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 _POUND_TO_G = 453.59237
 _OUNCE_TO_G = _POUND_TO_G / 16
 
+# Pressure conversion constants
+_STANDARD_GRAVITY = 9.80665
+_MERCURY_DENSITY = 13.5951
+
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
 _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
@@ -211,9 +215,9 @@ class PressureConverter(BaseUnitConverter):
         PRESSURE_BAR: 1 / 100000,
         PRESSURE_CBAR: 1 / 1000,
         PRESSURE_MBAR: 1 / 100,
-        PRESSURE_INHG: 1 / 3386.389,
+        PRESSURE_INHG: 1 / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
         PRESSURE_PSI: 1 / 6894.757,
-        PRESSURE_MMHG: 1 / 133.322,
+        PRESSURE_MMHG: 1 / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
     }
     VALID_UNITS = {
         PRESSURE_PA,

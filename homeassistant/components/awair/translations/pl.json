@@ -29,7 +29,7 @@
                 "data": {
                     "host": "Adres IP"
                 },
-                "description": "Post\u0119puj zgodnie z [tymi instrukcjami]( {url} ), aby dowiedzie\u0107 si\u0119, jak w\u0142\u0105czy\u0107 lokalny interfejs API Awair. \n\n Po zako\u0144czeniu kliknij Prze\u015blij."
+                "description": "Post\u0119puj zgodnie z [tymi instrukcjami]({url}), aby dowiedzie\u0107 si\u0119, jak w\u0142\u0105czy\u0107 lokalny interfejs API Awair. \n\n Po zako\u0144czeniu kliknij Zatwierd\u017a."
             },
             "local_pick": {
                 "data": {
