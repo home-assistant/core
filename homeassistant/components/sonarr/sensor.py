@@ -110,15 +110,7 @@ class SonarrSensor(SonarrEntity[SonarrDataT], SensorEntity):
     """Implementation of the Sonarr sensor."""
 
     coordinator: SonarrDataUpdateCoordinator
-    entity_description: SonarrSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: SonarrDataUpdateCoordinator[SonarrDataT],
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize Sonarr sensor."""
-        super().__init__(coordinator, description)
+    entity_description: SonarrSensorEntityDescription[SonarrDataT]
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:

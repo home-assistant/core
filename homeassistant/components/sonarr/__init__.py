@@ -1,4 +1,6 @@
 """The Sonarr component."""
+from __future__ import annotations
+
 from typing import Any
 
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
