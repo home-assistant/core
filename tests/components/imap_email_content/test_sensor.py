@@ -1,4 +1,5 @@
 """The tests for the IMAP email content sensor platform."""
+import base64
 from collections import deque
 import datetime
 import email
@@ -142,6 +143,118 @@ async def test_multi_part_only_other_text(hass):
     await hass.async_block_till_done()
     assert sensor.state == "Link"
     assert sensor.extra_state_attributes["body"] == "Test Message"
+
+
+async def test_multi_part_with_text_base64_encoded(hass):
+    """Test multi part emails with text and html encoded in base64."""
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Link"
+    msg["From"] = "sender@test.com"
+
+    text = "Test Message"
+    html = "<html><head></head><body>Test Message</body></html>"
+
+    # with utf-8 charset, MIMEText créate an base64 encoded body
+    textPart = MIMEText(text, "plain", _charset="utf-8")
+    htmlPart = MIMEText(html, "html", _charset="utf-8")
+    assert textPart["Content-Transfer-Encoding"] == "base64"
+    assert htmlPart["Content-Transfer-Encoding"] == "base64"
+
+    msg.attach(textPart)
+    msg.attach(htmlPart)
+
+    sensor = imap_email_content.EmailContentSensor(
+        hass,
+        FakeEMailReader(deque([msg])),
+        "test_emails_sensor",
+        ["sender@test.com"],
+        None,
+    )
+
+    sensor.entity_id = "sensor.emailtest"
+    sensor.async_schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+    assert sensor.state == "Link"
+    assert sensor.extra_state_attributes["body"] == text
+
+
+async def test_multi_part_only_html_base64_encoded(hass):
+    """Test multi part emails with only HTML encoded in base64."""
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Link"
+    msg["From"] = "sender@test.com"
+
+    html = "<html><head></head><body>Test Message</body></html>"
+
+    # with utf-8 charset, MIMEText créate an base64 encoded body
+    htmlPart = MIMEText(html, "html", _charset="utf-8")
+    assert htmlPart["Content-Transfer-Encoding"] == "base64"
+
+    msg.attach(htmlPart)
+
+    sensor = imap_email_content.EmailContentSensor(
+        hass,
+        FakeEMailReader(deque([msg])),
+        "test_emails_sensor",
+        ["sender@test.com"],
+        None,
+    )
+
+    sensor.entity_id = "sensor.emailtest"
+    sensor.async_schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+    assert sensor.state == "Link"
+    assert sensor.extra_state_attributes["body"] == html
+
+
+async def test_multi_part_only_other_text_base64_encoded(hass):
+    """Test multi part emails with only untyped text encoded in base64."""
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Link"
+    msg["From"] = "sender@test.com"
+
+    untyped = "Test Message"
+
+    # with utf-8 charset, MIMEText créate an base64 encoded body
+    htmlPart = MIMEText(untyped, "text", _charset="utf-8")
+    assert htmlPart["Content-Transfer-Encoding"] == "base64"
+
+    msg.attach(htmlPart)
+
+    sensor = imap_email_content.EmailContentSensor(
+        hass,
+        FakeEMailReader(deque([msg])),
+        "test_emails_sensor",
+        ["sender@test.com"],
+        None,
+    )
+
+    sensor.entity_id = "sensor.emailtest"
+    sensor.async_schedule_update_ha_state(True)
+    await hass.async_block_till_done()
+    assert sensor.state == "Link"
+    assert sensor.extra_state_attributes["body"] == untyped
+
+
+async def test_get_decoded_body_base64_encoded(hass):
+    """Test get_decoded_body with a base64 encoded body."""
+    body = "Test Message"
+    body_encoded = base64.b64encode(body.encode("utf8"))
+
+    assert (
+        imap_email_content.EmailContentSensor.get_decoded_body(body_encoded, "base64")
+        == body
+    )
+
+
+async def test_get_decoded_body_quoted_printable(hass):
+    """Test get_decoded_body with a plain text body."""
+    body = "Test Message"
+
+    assert (
+        imap_email_content.EmailContentSensor.get_decoded_body(body, "quoted-printable")
+        == body
+    )
 
 
 async def test_multiple_emails(hass):

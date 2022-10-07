@@ -1,6 +1,7 @@
 """Email sensor support."""
 from __future__ import annotations
 
+import base64
 from collections import deque
 import datetime
 import email
@@ -231,26 +232,42 @@ class EmailContentSensor(SensorEntity):
         for part in email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
                 if message_text is None:
+                    message_text_encoding = part["Content-Transfer-Encoding"]
                     message_text = part.get_payload()
             elif part.get_content_type() == "text/html":
                 if message_html is None:
+                    message_html_encoding = part["Content-Transfer-Encoding"]
                     message_html = part.get_payload()
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
             ):
+                message_untyped_text_encoding = part["Content-Transfer-Encoding"]
                 message_untyped_text = part.get_payload()
 
         if message_text is not None:
-            return message_text
+            return EmailContentSensor.get_decoded_body(
+                message_text, message_text_encoding
+            )
 
         if message_html is not None:
-            return message_html
+            return EmailContentSensor.get_decoded_body(
+                message_html, message_html_encoding
+            )
 
         if message_untyped_text is not None:
-            return message_untyped_text
+            return EmailContentSensor.get_decoded_body(
+                message_untyped_text, message_untyped_text_encoding
+            )
 
         return email_message.get_payload()
+
+    @staticmethod
+    def get_decoded_body(body, encoding):
+        """Return the decoded body if encoding is base64."""
+        if "base64" == encoding:
+            return base64.standard_b64decode(body).decode("utf-8")
+        return body
 
     def update(self) -> None:
         """Read emails and publish state change."""
