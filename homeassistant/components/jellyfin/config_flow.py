@@ -25,6 +25,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def _generate_device_id():
+    """Generate a random UUID4 string to identify ourselves."""
+    return str(uuid.uuid4())
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jellyfin."""
 
@@ -41,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if CONF_DEVICE_ID not in user_input:
-                user_input[CONF_DEVICE_ID] = str(uuid.uuid4())
+                user_input[CONF_DEVICE_ID] = _generate_devicd_id()
 
             client = create_client(device_id=user_input[CONF_DEVICE_ID])
             try:
