@@ -83,6 +83,13 @@ class HeatMeterSensor(
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        if self.coordinator.data is None:
+            _LOGGER.debug(
+                "Cannot update %s: could not read any data from the Heat Meter",
+                self.key,
+            )
+            return
+
         if self.key in asdict(self.coordinator.data):
             if self.device_class == SensorDeviceClass.TIMESTAMP:
                 self._attr_native_value = dt_util.as_utc(
@@ -93,9 +100,8 @@ class HeatMeterSensor(
 
         # Some models will supply MWh directly. If not, GJ will be converted to MWh.
         if self.key == "heat_usage":
-            if (
-                hasattr(self.coordinator.data, "heat_usage_mwh")
-                and self.coordinator.data.heat_usage_mwh is not None
+            if hasattr(self.coordinator.data, "heat_usage_mwh") and isinstance(
+                self.coordinator.data.heat_usage_mwh, float
             ):
                 self._attr_native_value = self.coordinator.data.heat_usage_mwh
             else:
@@ -104,9 +110,8 @@ class HeatMeterSensor(
                 )
 
         if self.key == "heat_previous_year":
-            if (
-                hasattr(self.coordinator.data, "heat_previous_year_mwh")
-                and self.coordinator.data.heat_previous_year_mwh is not None
+            if hasattr(self.coordinator.data, "heat_previous_year_mwh") and isinstance(
+                self.coordinator.data.heat_previous_year_mwh, float
             ):
                 self._attr_native_value = self.coordinator.data.heat_previous_year_mwh
             else:
@@ -115,8 +120,12 @@ class HeatMeterSensor(
                 )
 
         self.async_write_ha_state()
+        _LOGGER.debug(
+            "Updated value of %s",
+            self.key,
+        )
 
 
-def convert_gj_to_mwh(gigajoule) -> float:
+def convert_gj_to_mwh(gigajoule: float) -> float:
     """Convert GJ to MWh using the conversion value."""
     return round(gigajoule * GJ_TO_MWH, 5)
