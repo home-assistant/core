@@ -232,6 +232,7 @@ homeassistant.components.sensor.*
 homeassistant.components.senz.*
 homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
+homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*

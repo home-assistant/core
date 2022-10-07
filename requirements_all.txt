@@ -546,7 +546,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.28.0
+dbus-fast==1.29.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -889,7 +889,7 @@ horimote==0.4.1
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.6.1
+huawei-lte-api==1.6.3
 
 # homeassistant.components.hydrawise
 hydrawiser==0.2
@@ -1789,7 +1789,7 @@ pyotgw==2.0.3
 pyotp==2.7.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.5.3
+pyoverkiz==1.5.5
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
