@@ -1,0 +1,13 @@
+flame_height:
+  name: Set Flame Height
+  description: Set the flame height of the fireplace
+  fields:
+    height:
+      name: Flame Height
+      description: 0 is off, valid heights are 1-5
+      required: true
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 5
