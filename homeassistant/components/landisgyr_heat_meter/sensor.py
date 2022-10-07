@@ -120,6 +120,10 @@ class HeatMeterSensor(
         """Handle updated data from the coordinator."""
         self.update_values_from_api()
         self.async_write_ha_state()
+        _LOGGER.debug(
+            "Updated value of %s",
+            self.key,
+        )
 
 
 def energy_unit_from_data(data) -> str | None:
