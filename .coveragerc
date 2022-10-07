@@ -649,8 +649,6 @@ omit =
     homeassistant/components/kodi/const.py
     homeassistant/components/kodi/media_player.py
     homeassistant/components/kodi/notify.py
-    homeassistant/components/konnected/__init__.py
-    homeassistant/components/konnected/panel.py
     homeassistant/components/kostal_plenticore/__init__.py
     homeassistant/components/kostal_plenticore/const.py
     homeassistant/components/kostal_plenticore/helper.py
