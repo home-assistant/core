@@ -25,6 +25,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up pushover from a config entry."""
 
+    # remove unique_id for beta users
+    if entry.unique_id is not None:
+        hass.config_entries.async_update_entry(entry, unique_id=None)
+
     pushover_api = PushoverAPI(entry.data[CONF_API_KEY])
     try:
         await hass.async_add_executor_job(

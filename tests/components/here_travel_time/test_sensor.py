@@ -179,10 +179,6 @@ async def test_sensor(
         hass.states.get("sensor.test_distance").attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == expected_distance_unit
     )
-    assert hass.states.get("sensor.test_route").state == (
-        "US-29 - K St NW; US-29 - Whitehurst Fwy; "
-        "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
-    )
     assert (
         hass.states.get("sensor.test_duration_in_traffic").state
         == expected_duration_in_traffic
