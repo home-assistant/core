@@ -230,10 +230,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             then calculate the new probability.
             """
 
-            entity: str | None = event.data.get(CONF_ENTITY_ID)
-            if entity is None:
-                _LOGGER.error("Entity ID is NoneType for event %s", event.data)
-                return
+            entity: str = event.data[CONF_ENTITY_ID]
 
             self.current_observations.update(self._record_entity_observations(entity))
             self.async_set_context(event.context)
