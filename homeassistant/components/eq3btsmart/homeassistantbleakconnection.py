@@ -3,7 +3,9 @@ Bleak connection backend.
 
 This creates a new event loop that is used to integrate bleak's
 asyncio functions to synchronous architecture of python-eq3bt.
-adapted from the original python-eq3bt bleakconnection class
+
+License: The MIT License (MIT), 2016 Markus Peter
+The file was copied from https://github.com/rytilahti/python-eq3bt and modified
 """
 from __future__ import annotations
 
