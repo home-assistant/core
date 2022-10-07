@@ -14,7 +14,6 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    BINARY_SENSOR_DESCRIPTION_CONNECTED,
     DOMAIN,
     FLUME_AUTH,
     FLUME_DEVICES,
@@ -33,6 +32,11 @@ from .coordinator import (
 )
 from .entity import FlumeEntity
 from .util import get_valid_flume_devices
+
+BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
+    name="Connected",
+    key="connected",
+)
 
 
 @dataclass
