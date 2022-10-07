@@ -46,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if CONF_DEVICE_ID not in user_input:
-                user_input[CONF_DEVICE_ID] = _generate_devicd_id()
+                user_input[CONF_DEVICE_ID] = _generate_device_id()
 
             client = create_client(device_id=user_input[CONF_DEVICE_ID])
             try:
