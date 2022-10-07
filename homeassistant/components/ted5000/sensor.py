@@ -200,8 +200,6 @@ def get_ted5000(self) -> int | None:
     url = self.url
     self.data = {}
     self.data_utility = {}
-    
-    mtus = 0
 
     try:
         request = requests.get(url, timeout=10)
@@ -259,7 +257,9 @@ def get_ted5000(self) -> int | None:
             ENTITY_METERREAD: read_date,
         }
 
-    return mtus
+        return mtus
+
+    return 0
 
 
 class Ted5000Data:
