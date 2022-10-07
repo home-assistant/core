@@ -202,7 +202,7 @@ def get_ted5000(self) -> str | None:
     self.data_utility = {}
 
     try:
-        request = requests.get(self.url, timeout=10)
+        request = requests.get(url, timeout=10)
     except requests.exceptions.RequestException as err:
         _LOGGER.error("No connection to endpoint: %s", err)
     else:
@@ -264,6 +264,7 @@ class Ted5000Data:
     def __init__(self, url):
         """Initialize the data object."""
         self.url = url
+        self._data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
