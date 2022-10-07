@@ -5,9 +5,15 @@ from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Generic
+from typing import Any, Generic
 
-from aiopyarr import Diskspace, RadarrQueueDetail as RadarrQueueItem, RootFolder
+from aiopyarr import (
+    Diskspace,
+    RadarrQueue,
+    RadarrQueueDetail as RadarrQueueItem,
+    RootFolder,
+    SystemStatus,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -51,8 +57,8 @@ def get_space(data: list[Diskspace], name: str) -> str:
 
 
 def get_modified_description(
-    description: RadarrSensorEntityDescription, mount: RootFolder
-) -> tuple[RadarrSensorEntityDescription, str]:
+    description: RadarrSensorEntityDescription[T], mount: RootFolder
+) -> tuple[RadarrSensorEntityDescription[T], str]:
     """Return modified description and folder name."""
     desc = deepcopy(description)
     name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
@@ -65,7 +71,7 @@ def get_modified_description(
 class RadarrSensorEntityDescriptionMixIn(Generic[T]):
     """Mixin for required keys."""
 
-    value_fn: Callable[[T, str], str]
+    value_fn: Callable[[T, str], str | int | datetime]
 
 
 @dataclass
@@ -78,12 +84,12 @@ class RadarrSensorEntityDescription(
         [T], dict[str, StateType | datetime] | None
     ] = lambda _: None
     description_fn: Callable[
-        [RadarrSensorEntityDescription, RootFolder],
-        tuple[RadarrSensorEntityDescription, str] | None,
-    ] = lambda _, __: None
+        [RadarrSensorEntityDescription[T], RootFolder],
+        tuple[RadarrSensorEntityDescription[T], str] | None,
+    ] | None = None
 
 
-SENSOR_TYPES: dict[str, RadarrSensorEntityDescription] = {
+SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     "disk_space": RadarrSensorEntityDescription(
         key="disk_space",
         name="Disk space",
@@ -92,7 +98,7 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription] = {
         value_fn=get_space,
         description_fn=get_modified_description,
     ),
-    "movie": RadarrSensorEntityDescription(
+    "movie": RadarrSensorEntityDescription[int](
         key="movies",
         name="Movies",
         native_unit_of_measurement="Movies",
@@ -100,7 +106,7 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription] = {
         entity_registry_enabled_default=False,
         value_fn=lambda data, _: data,
     ),
-    "queue": RadarrSensorEntityDescription(
+    "queue": RadarrSensorEntityDescription[RadarrQueue](
         key="queue",
         name="Queue",
         native_unit_of_measurement="Movies",
@@ -110,7 +116,7 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription] = {
         value_fn=lambda data, _: data.totalRecords,
         attributes_fn=lambda data: {i.title: queue_str(i) for i in data.records},
     ),
-    "status": RadarrSensorEntityDescription(
+    "status": RadarrSensorEntityDescription[SystemStatus](
         key="start_time",
         name="Start time",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -166,10 +172,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Radarr sensors based on a config entry."""
-    coordinators: dict[str, RadarrDataUpdateCoordinator] = hass.data[DOMAIN][
+    coordinators: dict[str, RadarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
         entry.entry_id
     ]
-    entities = []
+    entities: list[RadarrSensor[Any]] = []
     for coordinator_type, description in SENSOR_TYPES.items():
         coordinator = coordinators[coordinator_type]
         if coordinator_type != "disk_space":
@@ -183,16 +189,16 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RadarrSensor(RadarrEntity, SensorEntity):
+class RadarrSensor(RadarrEntity[T], SensorEntity):
     """Implementation of the Radarr sensor."""
 
-    coordinator: RadarrDataUpdateCoordinator
-    entity_description: RadarrSensorEntityDescription
+    coordinator: RadarrDataUpdateCoordinator[T]
+    entity_description: RadarrSensorEntityDescription[T]
 
     def __init__(
         self,
-        coordinator: RadarrDataUpdateCoordinator,
-        description: RadarrSensorEntityDescription,
+        coordinator: RadarrDataUpdateCoordinator[T],
+        description: RadarrSensorEntityDescription[T],
         folder_name: str = "",
     ) -> None:
         """Create Radarr entity."""
@@ -205,7 +211,7 @@ class RadarrSensor(RadarrEntity, SensorEntity):
         return self.entity_description.attributes_fn(self.coordinator.data)
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | int | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data, self.folder_name)
 

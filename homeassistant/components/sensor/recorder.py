@@ -24,7 +24,7 @@ from homeassistant.components.recorder.models import (
     StatisticResult,
 )
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util import dt as dt_util
@@ -149,13 +149,20 @@ def _normalize_states(
 
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-    if state_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER or (
-        old_metadata
-        and old_metadata["unit_of_measurement"]
-        not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER
+    statistics_unit: str | None
+    if not old_metadata:
+        # We've not seen this sensor before, the first valid state determines the unit
+        # used for statistics
+        statistics_unit = state_unit
+    else:
+        # We have seen this sensor before, use the unit from metadata
+        statistics_unit = old_metadata["unit_of_measurement"]
+
+    if (
+        not statistics_unit
+        or statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER
     ):
-        # We're either not normalizing this device class or this entity is not stored
-        # in a unit which can be converted, return the states as they are
+        # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
         if len(all_units) > 1:
@@ -182,12 +189,8 @@ def _normalize_states(
         state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         return state_unit, state_unit, fstates
 
-    converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[state_unit]
+    converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
-
-    statistics_unit: str | None = None
-    if old_metadata:
-        statistics_unit = old_metadata["unit_of_measurement"]
 
     for fstate, state in fstates:
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -198,14 +201,18 @@ def _normalize_states(
             if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
                 hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
                 _LOGGER.warning(
-                    "%s has unit %s which can't be converted to %s",
+                    "The unit of %s (%s) can not be converted to the unit of previously "
+                    "compiled statistics (%s). Generation of long term statistics "
+                    "will be suppressed unless the unit changes back to %s or a "
+                    "compatible unit. "
+                    "Go to %s to fix this",
                     entity_id,
                     state_unit,
                     statistics_unit,
+                    statistics_unit,
+                    LINK_DEV_STATISTICS,
                 )
             continue
-        if statistics_unit is None:
-            statistics_unit = state_unit
 
         valid_fstates.append(
             (
@@ -682,6 +689,8 @@ def validate_statistics(
                 )
 
     for statistic_id in sensor_statistic_ids - sensor_entity_ids:
+        if split_entity_id(statistic_id)[0] != DOMAIN:
+            continue
         # There is no sensor matching the statistics_id
         validation_result[statistic_id].append(
             statistics.ValidationIssue(
