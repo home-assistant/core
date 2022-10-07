@@ -92,7 +92,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current WLED segment number value."""
-        return getattr(
+        return getattr(  # type: ignore[no-any-return]
             self.coordinator.data.state.segments[self._segment],
             self.entity_description.key,
         )
