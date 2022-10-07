@@ -20,7 +20,7 @@ class MockTextEntity(TextEntity):
     """Mock text device to use in tests."""
 
     def __init__(
-        self, native_value="hello", native_min=None, native_max=None, pattern=None
+        self, native_value="test", native_min=None, native_max=None, pattern=None
     ):
         """Initialize mock text entity."""
         self._attr_native_value = native_value
@@ -85,10 +85,10 @@ async def test_text_set_value(hass):
         )
 
     await _async_set_value(
-        text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "test"})
+        text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "test2"})
     )
 
-    assert text.state == "test"
+    assert text.state == "test2"
 
 
 async def test_text_value_outside_bounds(hass):
