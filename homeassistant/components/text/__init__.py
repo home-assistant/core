@@ -53,20 +53,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
         {vol.Required(ATTR_VALUE): cv.string},
-        async_set_value,
+        _async_set_value,
     )
 
     return True
 
 
-async def async_set_value(entity: TextEntity, service_call: ServiceCall) -> None:
+async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to set a new value."""
     value = service_call.data[ATTR_VALUE]
-    if value < entity.min:
+    if len(value) < entity.min:
         raise ValueError(
             f"Value {value} for {entity.name} is too short (minimum length {entity.min})"
         )
-    if value < entity.max:
+    if len(value) > entity.max:
         raise ValueError(
             f"Value {value} for {entity.name} is too long (maximum length {entity.max})"
         )
@@ -156,7 +156,7 @@ class TextEntity(Entity):
     @final
     def max(self) -> int:
         """Return the maximum length of the value."""
-        return max(self.native_max, MAX_LENGTH_STATE_STATE)
+        return min(self.native_max, MAX_LENGTH_STATE_STATE)
 
     @property
     def pattern(self) -> str | None:
@@ -172,13 +172,13 @@ class TextEntity(Entity):
     @final
     def value(self) -> str | None:
         """Return the entity value to represent the entity state."""
-        if self.native_value is None:
-            return None
-        if len(self.native_value) < self.min:
-            return None
         if (
-            self.pattern is not None
-            and re.compile(self.pattern).match(self.native_value) is None
+            self.native_value is None
+            or len(self.native_value) < self.min
+            or (
+                self.pattern is not None
+                and re.compile(self.pattern).match(self.native_value) is None
+            )
         ):
             return None
         if len(self.native_value) > self.max:
