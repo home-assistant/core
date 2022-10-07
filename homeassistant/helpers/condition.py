@@ -10,7 +10,7 @@ import functools as ft
 import logging
 import re
 import sys
-from typing import Any, cast
+from typing import Any, cast, Optional
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import condition as device_condition
