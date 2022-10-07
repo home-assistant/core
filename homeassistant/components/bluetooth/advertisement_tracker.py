@@ -16,7 +16,7 @@ class AdvertisementTracker:
     def __init__(self) -> None:
         """Initialize the tracker."""
         self.intervals: dict[str, float] = {}
-        self._sources: dict[str, str] = {}
+        self.sources: dict[str, str] = {}
         self._timings: dict[str, list[float]] = {}
 
     @callback
@@ -24,7 +24,7 @@ class AdvertisementTracker:
         """Return diagnostics."""
         return {
             "intervals": self.intervals,
-            "sources": self._sources,
+            "sources": self.sources,
             "timings": self._timings,
         }
 
@@ -33,20 +33,12 @@ class AdvertisementTracker:
         """Collect timings for the tracker.
 
         For performance reasons, it is the responsibility of the
-        caller to check if the device already has an interval set in the
-        tracker before calling this function.
+        caller to check if the device already has an interval set or
+        the source has changed before calling this function.
         """
         address = service_info.address
-        tracked_source = self._sources.get(address)
-        current_source = service_info.source
-
-        if tracked_source != current_source:
-            # Source has changed, start tracking this source
-            timings = self._timings[address] = []
-            self._sources[address] = current_source
-        else:
-            timings = self._timings[address]
-
+        self.sources[address] = service_info.source
+        timings = self._timings.setdefault(address, [])
         timings.append(service_info.time)
         if len(timings) != ADVERTISING_TIMES_NEEDED:
             return
@@ -65,12 +57,12 @@ class AdvertisementTracker:
     def async_remove_address(self, address: str) -> None:
         """Remove the tracker."""
         self.intervals.pop(address, None)
-        self._sources.pop(address, None)
+        self.sources.pop(address, None)
         self._timings.pop(address, None)
 
     @callback
     def async_remove_source(self, source: str) -> None:
         """Remove the tracker."""
-        for address in list(self._sources):
-            if self._sources[address] == source:
+        for address in list(self.sources):
+            if self.sources[address] == source:
                 self.async_remove_address(address)
