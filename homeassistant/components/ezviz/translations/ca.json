@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "El compte ja est\u00e0 configurat",
-            "ezviz_cloud_account_missing": "Falta el compte d'Ezviz cloud. Torna'l a configurar",
+            "ezviz_cloud_account_missing": "Falta el compte d'EZVIZ cloud. Torna'l a configurar",
             "unknown": "Error inesperat"
         },
         "error": {
@@ -17,7 +17,7 @@
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 },
-                "description": "Introdueix les credencials RTSP per a la c\u00e0mera Ezviz {serial} amb IP {ip_address}",
+                "description": "Introdueix les credencials RTSP de la c\u00e0mera EZVIZ {serial} amb IP {ip_address}",
                 "title": "S'ha descobert una c\u00e0mera EZVIZ"
             },
             "user": {
