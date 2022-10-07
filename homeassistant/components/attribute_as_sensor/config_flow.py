@@ -9,8 +9,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     CONF_UNIT_OF_MEASUREMENT,
-    SensorDeviceClass,
-    SensorStateClass,
+    DEVICE_CLASSES,
+    STATE_CLASSES,
 )
 from homeassistant.const import (
     CONF_ATTRIBUTE,
@@ -39,19 +39,23 @@ CONFIG_SCHEMA = vol.Schema(
     }
 )
 
-
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=[e.value for e in SensorDeviceClass])
+            selector.SelectSelectorConfig(
+                options=DEVICE_CLASSES, mode=selector.SelectSelectorMode.DROPDOWN
+            )
         ),
         vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=[e.value for e in SensorStateClass])
+            selector.SelectSelectorConfig(
+                options=STATE_CLASSES, mode=selector.SelectSelectorMode.DROPDOWN
+            )
         ),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelectorConfig(
-            options=[TEMP_CELSIUS, TEMP_FAHRENHEIT],
-            custom_value=True,
-            mode=selector.SelectSelectorMode.DROPDOWN,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[TEMP_CELSIUS, TEMP_FAHRENHEIT],
+                custom_value=True,
+            )
         ),
     }
 )
