@@ -1,6 +1,4 @@
 """Base Entity for Sonarr."""
-from __future__ import annotations
-
 from aiopyarr import SystemStatus
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
@@ -31,11 +29,8 @@ class SonarrEntity(Entity):
         self.system_status = system_status
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return device information about the application."""
-        if self._device_id is None:
-            return None
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             name="Activity Sensor",
