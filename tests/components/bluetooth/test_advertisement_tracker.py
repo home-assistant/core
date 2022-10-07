@@ -6,7 +6,10 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 
-from homeassistant.components.bluetooth import async_track_unavailable
+from homeassistant.components.bluetooth import (
+    async_register_scanner,
+    async_track_unavailable,
+)
 from homeassistant.components.bluetooth.advertisement_tracker import (
     ADVERTISING_TIMES_NEEDED,
 )
@@ -14,6 +17,7 @@ from homeassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
+from homeassistant.components.bluetooth.models import BaseHaScanner
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
@@ -283,6 +287,16 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     )
     switchbot_device_went_unavailable = False
 
+    class FakeScanner(BaseHaScanner):
+        """Fake scanner."""
+
+        @property
+        def discovered_devices(self) -> list[BLEDevice]:
+            return []
+
+    scanner = FakeScanner(hass, "new")
+    cancel_scanner = async_register_scanner(hass, scanner, False)
+
     @callback
     def _switchbot_device_unavailable_callback(_address: str) -> None:
         """Switchbot device unavailable callback."""
@@ -327,6 +341,20 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         await hass.async_block_till_done()
 
     assert switchbot_device_went_unavailable is False
+    cancel_scanner()
+
+    # Now that the scanner is gone we should go back to the stack default timeout
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is True
+
     switchbot_device_unavailable_cancel()
 
 
