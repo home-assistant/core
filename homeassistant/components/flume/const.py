@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.const import Platform
 
 DOMAIN = "flume"
@@ -47,3 +48,9 @@ NOTIFICATION_BRIDGE_DISCONNECT = "Bridge Disconnection"
 BRIDGE_NOTIFICATION_KEY = "connected"
 BRIDGE_NOTIFICATION_RULE = "Bridge Disconnection"
 NOTIFICATION_LEAK_DETECTED = "Flume Smart Leak Alert"
+
+
+BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
+    name="Connected",
+    key="connected",
+)

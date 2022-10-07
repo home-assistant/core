@@ -14,6 +14,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    BINARY_SENSOR_DESCRIPTION_CONNECTED,
     DOMAIN,
     FLUME_AUTH,
     FLUME_DEVICES,
@@ -93,10 +94,7 @@ async def async_setup_entry(
 
         connection_sensor = FlumeConnectionBinarySensor(
             coordinator=connection_coordinator,
-            description=BinarySensorEntityDescription(
-                name="Connected",
-                key="connected",
-            ),
+            description=BINARY_SENSOR_DESCRIPTION_CONNECTED,
             device_id=device_id,
             location_name=device_location_name,
             is_bridge=(device[KEY_DEVICE_TYPE] is FLUME_TYPE_BRIDGE),
