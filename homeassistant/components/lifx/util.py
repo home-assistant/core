@@ -14,11 +14,10 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
-    preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -81,8 +80,6 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
     """
     hue, saturation, brightness, kelvin = [None] * 4
 
-    preprocess_turn_on_alternatives(hass, kwargs)
-
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
     elif ATTR_RGB_COLOR in kwargs:
@@ -90,17 +87,15 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
     elif ATTR_XY_COLOR in kwargs:
         hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
 
+    if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        kelvin = kwargs.pop(ATTR_COLOR_TEMP_KELVIN)
+        saturation = 0
+
     if hue is not None:
         assert saturation is not None
         hue = int(hue / 360 * 65535)
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
-
-    if ATTR_COLOR_TEMP in kwargs:
-        kelvin = int(
-            color_util.color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-        )
-        saturation = 0
 
     if ATTR_BRIGHTNESS in kwargs:
         brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
