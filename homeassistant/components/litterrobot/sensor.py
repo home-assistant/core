@@ -109,8 +109,8 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
         RobotSensorEntityDescription[LitterRobot4](
             key="pet_weight",
             name="Pet weight",
-            icon="mdi:scale",
             native_unit_of_measurement=MASS_POUNDS,
+            device_class=SensorDeviceClass.WEIGHT,
         ),
     ],
     FeederRobot: [

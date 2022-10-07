@@ -37,6 +37,8 @@ omit =
     homeassistant/components/airnow/sensor.py
     homeassistant/components/airthings/__init__.py
     homeassistant/components/airthings/sensor.py
+    homeassistant/components/airthings_ble/__init__.py
+    homeassistant/components/airthings_ble/sensor.py
     homeassistant/components/airtouch4/__init__.py
     homeassistant/components/airtouch4/climate.py
     homeassistant/components/airtouch4/const.py
@@ -405,9 +407,11 @@ omit =
     homeassistant/components/flick_electric/sensor.py
     homeassistant/components/flock/notify.py
     homeassistant/components/flume/__init__.py
+    homeassistant/components/flume/binary_sensor.py
     homeassistant/components/flume/coordinator.py
     homeassistant/components/flume/entity.py
     homeassistant/components/flume/sensor.py
+    homeassistant/components/flume/util.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
@@ -658,7 +662,6 @@ omit =
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/notify.py
-    homeassistant/components/lametric/number.py
     homeassistant/components/lannouncer/notify.py
     homeassistant/components/lastfm/sensor.py
     homeassistant/components/launch_library/__init__.py
@@ -1104,6 +1107,7 @@ omit =
     homeassistant/components/shelly/__init__.py
     homeassistant/components/shelly/binary_sensor.py
     homeassistant/components/shelly/climate.py
+    homeassistant/components/shelly/coordinator.py
     homeassistant/components/shelly/entity.py
     homeassistant/components/shelly/light.py
     homeassistant/components/shelly/number.py
@@ -1230,7 +1234,9 @@ omit =
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbee/__init__.py
     homeassistant/components/switchbee/button.py
+    homeassistant/components/switchbee/climate.py
     homeassistant/components/switchbee/coordinator.py
+    homeassistant/components/switchbee/cover.py
     homeassistant/components/switchbee/entity.py
     homeassistant/components/switchbee/light.py
     homeassistant/components/switchbee/switch.py
@@ -1421,6 +1427,7 @@ omit =
     homeassistant/components/velbus/const.py
     homeassistant/components/velbus/cover.py
     homeassistant/components/velbus/diagnostics.py
+    homeassistant/components/velbus/entity.py
     homeassistant/components/velbus/light.py
     homeassistant/components/velbus/sensor.py
     homeassistant/components/velbus/switch.py

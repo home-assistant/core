@@ -17,7 +17,7 @@ from .common import selected_platforms
 async def test_cover_setup_and_services(hass, config_entry, netatmo_auth):
     """Test setup and services."""
     with selected_platforms(["cover"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 

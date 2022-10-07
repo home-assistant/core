@@ -11,8 +11,9 @@
     },
     "issues": {
         "removed_yaml": {
-            "title": "La configuraci\u00f3 YAML d'Uptime s'ha eliminat"
+            "description": "La configuraci\u00f3 de data i temps d'engegada mitjan\u00e7ant YAML s'ha eliminat.\n\nHome Assistant ja no utilitza la configuraci\u00f3 YAML existent.\n\nElimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "La configuraci\u00f3 YAML de data i temps d'engegada s'ha eliminat"
         }
     },
-    "title": "Temps en funcionament"
+    "title": "Data i temps d'engegada"
 }

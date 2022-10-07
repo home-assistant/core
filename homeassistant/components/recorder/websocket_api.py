@@ -291,7 +291,7 @@ def ws_change_statistics_unit(
         vol.Required("statistic_id"): str,
         vol.Required("start_time"): str,
         vol.Required("adjustment"): vol.Any(float, int),
-        vol.Required("display_unit"): vol.Any(str, None),
+        vol.Required("adjustment_unit_of_measurement"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -320,25 +320,26 @@ async def ws_adjust_sum_statistics(
         return
     metadata = metadatas[0]
 
-    def valid_units(statistics_unit: str | None, display_unit: str | None) -> bool:
-        if statistics_unit == display_unit:
+    def valid_units(statistics_unit: str | None, adjustment_unit: str | None) -> bool:
+        if statistics_unit == adjustment_unit:
             return True
         converter = STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
-        if converter is not None and display_unit in converter.VALID_UNITS:
+        if converter is not None and adjustment_unit in converter.VALID_UNITS:
             return True
         return False
 
     stat_unit = metadata["statistics_unit_of_measurement"]
-    if not valid_units(stat_unit, msg["display_unit"]):
+    adjustment_unit = msg["adjustment_unit_of_measurement"]
+    if not valid_units(stat_unit, adjustment_unit):
         connection.send_error(
             msg["id"],
             "invalid_units",
-            f"Can't convert {stat_unit} to {msg['display_unit']}",
+            f"Can't convert {stat_unit} to {adjustment_unit}",
         )
         return
 
     get_instance(hass).async_adjust_statistics(
-        msg["statistic_id"], start_time, msg["adjustment"], msg["display_unit"]
+        msg["statistic_id"], start_time, msg["adjustment"], adjustment_unit
     )
     connection.send_result(msg["id"])
 
@@ -375,7 +376,6 @@ def ws_import_statistics(
     """Import statistics."""
     metadata = msg["metadata"]
     stats = msg["stats"]
-    metadata["state_unit_of_measurement"] = metadata["unit_of_measurement"]
 
     if valid_entity_id(metadata["statistic_id"]):
         async_import_statistics(hass, metadata, stats)
