@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from aiopyarr import ArrConnectionException, ArrException, SystemStatus
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -267,7 +267,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
             return len(self.data[key])
 
         if key == "queue" and self.data.get(key) is not None:
-            return self.data[key].totalRecords
+            return cast(int, self.data[key].totalRecords)
 
         if key == "series" and self.data.get(key) is not None:
             return len(self.data[key])
@@ -276,6 +276,6 @@ class SonarrSensor(SonarrEntity, SensorEntity):
             return len(self.data[key])
 
         if key == "wanted" and self.data.get(key) is not None:
-            return self.data[key].totalRecords
+            return cast(int, self.data[key].totalRecords)
 
         return None

@@ -33,9 +33,6 @@ class SonarrEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device information about the application."""
-        if self._device_id is None:
-            return None
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             name="Activity Sensor",
