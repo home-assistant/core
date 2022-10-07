@@ -14,11 +14,11 @@ from .const import DOMAIN
 CONF_MAC_ADDRESS = "mac_address"
 CONF_SERIAL_NUMBER = "serial_number"
 
-TO_REDACT = (
+TO_REDACT = {
     CONF_MAC_ADDRESS,
     CONF_PASSWORD,
     CONF_SERIAL_NUMBER,
-)
+}
 
 
 async def async_get_config_entry_diagnostics(
