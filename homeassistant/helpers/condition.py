@@ -173,9 +173,9 @@ async def async_from_config(
         @trace_condition_function
         def disabled_condition(
             hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> bool:
+        ) -> Optional[bool]:
             """Condition not enabled, will act as if it didn't exist."""
-            return
+            return None
 
         return disabled_condition
 
