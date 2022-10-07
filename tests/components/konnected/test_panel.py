@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.konnected import config_flow, panel
+from homeassistant.components.konnected.errors import CannotConnect
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
@@ -151,6 +152,11 @@ async def test_create_and_setup(hass, mock_panel):
         "discovery": True,
         "endpoint": "http://192.168.1.1:8123/api/konnected",
     }
+
+    mock_panel.put_zone.side_effect = mock_panel.ClientError
+    mock_panel.put_device.side_effect = mock_panel.ClientError
+    with pytest.raises(CannotConnect):
+        await device.update_switch("1", 0)
 
     # confirm the device settings are saved in hass.data
     assert device.stored_configuration == {
