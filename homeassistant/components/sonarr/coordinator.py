@@ -1,7 +1,6 @@
 """Data update coordinator for the Sonarr integration."""
 from __future__ import annotations
 
-from abc import abstractmethod
 from datetime import timedelta
 from typing import TypeVar, Union, cast
 
@@ -12,6 +11,7 @@ from aiopyarr import (
     SonarrQueue,
     SonarrSeries,
     SonarrWantedMissing,
+    SystemStatus,
     exceptions,
 )
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -25,21 +25,21 @@ import homeassistant.util.dt as dt_util
 
 from .const import CONF_UPCOMING_DAYS, CONF_WANTED_MAX_ITEMS, DOMAIN, LOGGER
 
-T = TypeVar(
-    "T",
+SonarrDataT = TypeVar(
+    "SonarrDataT",
     bound=Union[
         list[SonarrCalendar],
         list[Command],
         list[Diskspace],
         SonarrQueue,
         list[SonarrSeries],
-        str,
+        SystemStatus,
         SonarrWantedMissing,
     ],
 )
 
 
-class SonarrDataUpdateCoordinator(DataUpdateCoordinator[T]):
+class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
     """Data update coordinator for the Sonarr integration."""
 
     config_entry: ConfigEntry
@@ -61,7 +61,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[T]):
         self.host_configuration = host_configuration
         self.system_version: str | None = None
 
-    async def _async_update_data(self) -> T:
+    async def _async_update_data(self) -> SonarrDataT:
         """Get the latest data from Sonarr."""
         try:
             return await self._fetch_data()
@@ -73,8 +73,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[T]):
                 "API Key is no longer valid. Please reauthenticate"
             ) from ex
 
-    @abstractmethod
-    async def _fetch_data(self) -> T:
+    async def _fetch_data(self) -> SonarrDataT:
         """Fetch the actual data."""
         raise NotImplementedError
 
@@ -88,7 +87,7 @@ class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalen
         start = dt_util.as_utc(local)
         end = start + timedelta(days=self.config_entry.options[CONF_UPCOMING_DAYS])
         return cast(
-            list,
+            list[SonarrCalendar],
             await self.api_client.async_get_calendar(
                 start_date=start, end_date=end, include_series=True
             ),
@@ -129,12 +128,12 @@ class SeriesDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrSeries]
         return cast(list[SonarrSeries], await self.api_client.async_get_series())
 
 
-class StatusDataUpdateCoordinator(SonarrDataUpdateCoordinator[str]):
+class StatusDataUpdateCoordinator(SonarrDataUpdateCoordinator[SystemStatus]):
     """Status update coordinator for Sonarr."""
 
-    async def _fetch_data(self) -> str:
+    async def _fetch_data(self) -> SystemStatus:
         """Fetch the data."""
-        return (await self.api_client.async_get_system_status()).version
+        return await self.api_client.async_get_system_status()
 
 
 class WantedDataUpdateCoordinator(SonarrDataUpdateCoordinator[SonarrWantedMissing]):

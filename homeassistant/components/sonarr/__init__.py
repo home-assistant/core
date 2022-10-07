@@ -1,4 +1,6 @@
 """The Sonarr component."""
+from typing import Any
+
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
 
@@ -61,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass),
     )
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    coordinators: dict[str, SonarrDataUpdateCoordinator] = {
+    coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = {
         "upcoming": CalendarDataUpdateCoordinator(hass, host_configuration, sonarr),
         "commands": CommandsDataUpdateCoordinator(hass, host_configuration, sonarr),
         "diskspace": DiskSpaceDataUpdateCoordinator(hass, host_configuration, sonarr),
@@ -75,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
         if isinstance(coordinator, StatusDataUpdateCoordinator):
-            _version = coordinator.data
+            _version = coordinator.data.version
         coordinator.system_version = _version
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

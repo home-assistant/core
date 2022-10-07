@@ -4,15 +4,15 @@ from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import SonarrDataUpdateCoordinator
+from .coordinator import SonarrDataT, SonarrDataUpdateCoordinator
 
 
-class SonarrEntity(CoordinatorEntity[SonarrDataUpdateCoordinator]):
+class SonarrEntity(CoordinatorEntity[SonarrDataUpdateCoordinator[SonarrDataT]]):
     """Defines a base Sonarr entity."""
 
     def __init__(
         self,
-        coordinator: SonarrDataUpdateCoordinator,
+        coordinator: SonarrDataUpdateCoordinator[SonarrDataT],
         description: EntityDescription,
     ) -> None:
         """Initialize the Sonarr entity."""

@@ -22,20 +22,20 @@ from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import SonarrDataUpdateCoordinator, T
+from .coordinator import SonarrDataT, SonarrDataUpdateCoordinator
 from .entity import SonarrEntity
 
 
 @dataclass
-class SonarrSensorEntityDescriptionMixIn(Generic[T]):
+class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
     """Mixin for Sonarr sensor."""
 
-    value_fn: Callable[[T], StateType]
+    value_fn: Callable[[SonarrDataT], StateType]
 
 
 @dataclass
 class SonarrSensorEntityDescription(
-    SensorEntityDescription, SonarrSensorEntityDescriptionMixIn[T]
+    SensorEntityDescription, SonarrSensorEntityDescriptionMixIn[SonarrDataT]
 ):
     """Class to describe a Sonarr sensor."""
 
@@ -97,19 +97,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
-    coordinators: dict[str, SonarrDataUpdateCoordinator] = hass.data[DOMAIN][
+    coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
         entry.entry_id
     ]
     async_add_entities(
-        SonarrSensor(
-            coordinators[coordinator_type],
-            description,
-        )
+        SonarrSensor(coordinators[coordinator_type], description)
         for coordinator_type, description in SENSOR_TYPES.items()
     )
 
 
-class SonarrSensor(SonarrEntity, SensorEntity):
+class SonarrSensor(SonarrEntity[SonarrDataT], SensorEntity):
     """Implementation of the Sonarr sensor."""
 
     coordinator: SonarrDataUpdateCoordinator
@@ -117,7 +114,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: SonarrDataUpdateCoordinator,
+        coordinator: SonarrDataUpdateCoordinator[SonarrDataT],
         description: SensorEntityDescription,
     ) -> None:
         """Initialize Sonarr sensor."""
