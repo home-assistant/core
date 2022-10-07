@@ -128,7 +128,7 @@ class NukiEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
         self._nuki_device = nuki_device
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the lock."""
         return self._nuki_device.name
 
