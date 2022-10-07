@@ -663,7 +663,6 @@ omit =
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/notify.py
-    homeassistant/components/lametric/number.py
     homeassistant/components/lannouncer/notify.py
     homeassistant/components/lastfm/sensor.py
     homeassistant/components/launch_library/__init__.py

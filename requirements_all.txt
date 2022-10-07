@@ -546,7 +546,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.26.0
+dbus-fast==1.28.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1505,7 +1505,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.7.0
+pydaikin==2.7.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
