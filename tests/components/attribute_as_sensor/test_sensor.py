@@ -24,7 +24,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import get_fixture_path
 
 
-async def test_attribute_as_sensor(hass: HomeAssistant):
+async def test_attribute_as_sensor(hass: HomeAssistant) -> None:
     """Test the sensor."""
     config = {
         "sensor": {
@@ -57,7 +57,7 @@ async def test_attribute_as_sensor(hass: HomeAssistant):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
 
-async def test_attribute_as_sensor_missing_attribute(hass: HomeAssistant):
+async def test_attribute_as_sensor_missing_attribute(hass: HomeAssistant) -> None:
     """Test the sensor with faulty attribute."""
     config = {
         "sensor": {
@@ -90,7 +90,7 @@ async def test_attribute_as_sensor_missing_attribute(hass: HomeAssistant):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
 
 
-async def test_reload(hass: HomeAssistant):
+async def test_reload(hass: HomeAssistant) -> None:
     """Verify we can reload filter sensors."""
     hass.states.async_set("sensor.test_1", 10, {"test_attribute": 20})
 
