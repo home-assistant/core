@@ -162,6 +162,7 @@ homeassistant.components.lacrosse_view.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
+homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
 homeassistant.components.litterrobot.*
