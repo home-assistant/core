@@ -356,13 +356,13 @@ class BayesianBinarySensor(BinarySensorEntity):
                     1 - observation.prob_given_false,
                 )
                 continue
-            if observation.observed is None:
-                if observation.entity_id is not None:
-                    _LOGGER.debug(
-                        "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
-                        observation.entity_id,
-                    )
-                    continue
+            # observation.observed is None
+            if observation.entity_id is not None:
+                _LOGGER.debug(
+                    "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
+                    observation.entity_id,
+                )
+                continue
             _LOGGER.debug(
                 "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
             )
