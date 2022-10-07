@@ -1,6 +1,8 @@
 """Support for Aqualink temperature sensors."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -9,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -45,13 +49,21 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
     @property
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
-        if self.dev.state == "":
+        if not isinstance(self.dev.state, str) or self.dev.state == "":
             return None
 
         try:
             return int(self.dev.state)
         except ValueError:
+            pass
+
+        try:
             return float(self.dev.state)
+        except ValueError:
+            pass
+
+        _LOGGER.debug("Unknown value: '%s'", self.dev)
+        return None
 
     @property
     def device_class(self) -> str | None:
