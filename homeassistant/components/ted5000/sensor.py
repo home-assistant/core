@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-
 import logging
 
 import requests
@@ -11,8 +10,8 @@ import xmltodict
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SensorEntity,
     SensorDeviceClass,
+    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -27,7 +26,6 @@ from homeassistant.const import (
     POWER_WATT,
     TIME_DAYS,
 )
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -130,10 +128,7 @@ SENSOR_TYPES_EXTENDED: tuple[SensorEntityDescription, ...] = (
         name="Current Tier",
     ),
     # Current TOU (0 = Disabled)
-    SensorEntityDescription(
-        key=ENTITY_TOU,
-        name="Current TOU"
-    ),
+    SensorEntityDescription(key=ENTITY_TOU, name="Current TOU"),
     # Current TOU Description (if Current TOU is 0 => Not Configured)
     SensorEntityDescription(
         key=ENTITY_TOUDESC,
@@ -163,6 +158,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     }
 )
 
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -181,7 +177,7 @@ def setup_platform(
     gateway.update()
 
     entities = []
-    
+
     # Create MTU sensors
     for mtu in gateway.data:
         for description in SENSOR_TYPES_BASIC:
@@ -200,7 +196,7 @@ def setup_platform(
 
 def get_ted5000(self) -> str | None:
     """Collect data from the ted5000 gateway."""
-    
+
     url = self.url
     self.data = {}
     self.data_utility = {}
@@ -302,6 +298,10 @@ class Ted5000SensorEntity(SensorEntity):
         self.gateway.update()
         if self._mtu > 0:
             if self.entity_description.key in self.gateway.data[self._mtu]:
-                self._attr_native_value = self.gateway.data[self._mtu][self.entity_description.key]
+                self._attr_native_value = self.gateway.data[self._mtu][
+                    self.entity_description.key
+                ]
         if self.entity_description.key in self.gateway.data_utility:
-            self._attr_native_value = self.gateway.data_utility[self.entity_description.key]
+            self._attr_native_value = self.gateway.data_utility[
+                self.entity_description.key
+            ]
