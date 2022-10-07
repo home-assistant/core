@@ -90,14 +90,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor."""
-    entity_id = config[CONF_ENTITY_ID]
-    name = config[CONF_NAME]
-    attribute = config[CONF_ATTRIBUTE]
-    unique_id = config.get(CONF_UNIQUE_ID)
-    icon = config.get(CONF_ICON)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    state_class = config.get(CONF_STATE_CLASS)
-    uom = config.get(CONF_UNIT_OF_MEASUREMENT)
+    entity_id: str = config[CONF_ENTITY_ID]
+    name: str = config[CONF_NAME]
+    attribute: str = config[CONF_ATTRIBUTE]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    icon: str | None = config.get(CONF_ICON)
+    device_class: str | None = config.get(CONF_DEVICE_CLASS)
+    state_class: str | None = config.get(CONF_STATE_CLASS)
+    uom: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
@@ -105,7 +105,7 @@ async def async_setup_platform(
         [
             AttributeSensor(
                 entity_id,
-                attribute,
+                attribute.lower(),
                 icon,
                 device_class,
                 state_class,
