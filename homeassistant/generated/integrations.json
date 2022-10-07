@@ -1921,7 +1921,7 @@
       "name": "IHC Controller"
     },
     "ikea": {
-      "name": "IKEA",
+      "name": "IKEA Tradfri",
       "integrations": {
         "tradfri": {
           "config_flow": true,
