@@ -194,7 +194,7 @@ def setup_platform(
     add_entities(entities, True)
 
 
-def get_ted5000(self) -> str | None:
+def get_ted5000(self) -> int | None:
     """Collect data from the ted5000 gateway."""
 
     url = self.url
