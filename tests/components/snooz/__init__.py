@@ -1,9 +1,9 @@
 """Tests for the Snooz component."""
 from __future__ import annotations
 
+from pysnooz.device import SnoozDevice
 from pysnooz.testing import MockSnoozClient
 
-from homeassistant.components.snooz.models import SnoozConfigurationData
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from tests.common import MockConfigEntry
@@ -57,9 +57,9 @@ class SnoozFixture:
         self,
         entry: MockConfigEntry,
         client: MockSnoozClient,
-        data: SnoozConfigurationData,
+        device: SnoozDevice,
     ) -> None:
         """Initialize a Snooz fixture."""
         self.entry = entry
         self.client = client
-        self.data = data
+        self.device = device
