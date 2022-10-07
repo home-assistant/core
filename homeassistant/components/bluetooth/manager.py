@@ -105,7 +105,7 @@ class BluetoothManager:
         """Init bluetooth manager."""
         self.hass = hass
         self._integration_matcher = integration_matcher
-        self._cancel_unavailable_tracking: list[CALLBACK_TYPE] = []
+        self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
 
         self._advertisement_tracker = AdvertisementTracker()
 
@@ -197,9 +197,8 @@ class BluetoothManager:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
         if self._cancel_unavailable_tracking:
-            for cancel in self._cancel_unavailable_tracking:
-                cancel()
-            self._cancel_unavailable_tracking.clear()
+            self._cancel_unavailable_tracking()
+            self._cancel_unavailable_tracking = None
         uninstall_multiple_bleak_catcher()
 
     async def async_get_devices_by_address(
@@ -242,20 +241,24 @@ class BluetoothManager:
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
         """Set up the unavailable tracking."""
-        self._async_setup_unavailable_tracking(True)
-        self._async_setup_unavailable_tracking(False)
+        self._cancel_unavailable_tracking = async_track_time_interval(
+            self.hass,
+            self._async_check_unavailable,
+            timedelta(seconds=UNAVAILABLE_TRACK_SECONDS),
+        )
 
     @hass_callback
-    def _async_setup_unavailable_tracking(self, connectable: bool) -> None:
-        """Set up the unavailable tracking."""
-        unavailable_callbacks = self._get_unavailable_callbacks_by_type(connectable)
-        advertisment_tracker = self._advertisement_tracker
-        history = self._get_history_by_type(connectable)
+    def _async_check_unavailable(self, now: datetime) -> None:
+        """Watch for unavailable devices."""
+        monotonic_now = time.monotonic()
+        connectable_history = self._connectable_history
+        all_history = self._history
+        removed_addresses: set[str] = set()
 
-        @hass_callback
-        def _async_check_unavailable(now: datetime) -> None:
-            """Watch for unavailable devices."""
-            monotonic_now = time.monotonic()
+        for connectable in (True, False):
+            unavailable_callbacks = self._get_unavailable_callbacks_by_type(connectable)
+            intervals = self._advertisement_tracker.intervals
+            history = connectable_history if connectable else all_history
             history_set = set(history)
             active_addresses = {
                 device.address
@@ -269,15 +272,13 @@ class BluetoothManager:
                 # since it may have gone to sleep and since we do not need an active connection
                 # to it we can only determine its availability by the lack of advertisements
                 #
-                if not connectable and (
-                    advertising_interval := advertisment_tracker.intervals.get(address)
-                ):
+                if not connectable and (advertising_interval := intervals.get(address)):
                     time_since_seen = monotonic_now - history[address].time
-                    if time_since_seen < advertising_interval:
+                    if time_since_seen <= advertising_interval:
                         continue
 
                 service_info = history.pop(address)
-                self._advertisement_tracker.async_remove_address(address)
+                removed_addresses.add(address)
 
                 if not (callbacks := unavailable_callbacks.get(address)):
                     continue
@@ -288,13 +289,11 @@ class BluetoothManager:
                     except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception("Error in unavailable callback")
 
-        self._cancel_unavailable_tracking.append(
-            async_track_time_interval(
-                self.hass,
-                _async_check_unavailable,
-                timedelta(seconds=UNAVAILABLE_TRACK_SECONDS),
-            )
-        )
+        # If we removed the device from both the connectable history
+        # and all history then we can remove it from the advertisement tracker
+        for address in removed_addresses:
+            if address not in connectable_history and address not in all_history:
+                self._advertisement_tracker.async_remove_address(address)
 
     def _prefer_previous_adv(
         self, old: BluetoothServiceInfoBleak, new: BluetoothServiceInfoBleak
