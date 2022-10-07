@@ -1,8 +1,8 @@
 """Support gathering ted5000 information."""
 from __future__ import annotations
 
-from contextlib import suppress
 from datetime import timedelta
+
 import logging
 
 import requests
@@ -10,24 +10,24 @@ import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorDeviceClass,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
+    SensorDeviceClass,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_HIDDEN,
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,
     CONF_PORT,
-    CURRENCY_DOLLAR,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
     TIME_DAYS,
 )
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,11 +36,125 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "ted"
+DOMAIN = "ted"
+
+ENTITY_MTU_POWER = "power"
+ENTITY_MTU_VOLTAGE = "voltage"
+ENTITY_MTU_TODAY = "daily_energy"
+ENTITY_MTU_MONTH = "monthly_energy"
+ENTITY_MTU_PF = "pf"
+
+ENTITY_MTUS = "MTUs"
+ENTITY_RATE = "CurrentRate"
+ENTITY_DAYSLEFT = "DaysLeftInBillingCycle"
+ENTITY_PLANTYPE = "PlanType"
+ENTITY_TIER = "CurrentTier"
+ENTITY_TOU = "CurrentTOU"
+ENTITY_TOUDESC = "CurrentTOUDescription"
+ENTITY_CARBONRATE = "CarbonRate"
+ENTITY_METERREAD = "MeterReadDate"
+
+DEFAULT_NAME = DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+SENSOR_TYPES_BASIC: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ENTITY_MTU_POWER,
+        name="Power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=POWER_WATT,
+    ),
+    SensorEntityDescription(
+        key=ENTITY_MTU_VOLTAGE,
+        name="Voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+    ),
+)
+
+SENSOR_TYPES_ADVANCED: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ENTITY_MTU_TODAY,
+        name="Energy Daily",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
+        key=ENTITY_MTU_MONTH,
+        name="Energy Monthly",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
+        key=ENTITY_MTU_PF,
+        name="Power Factor",
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+)
+
+SENSOR_TYPES_EXTENDED: tuple[SensorEntityDescription, ...] = (
+    # MTUs Quantity
+    SensorEntityDescription(
+        key=ENTITY_MTUS,
+        name="MTU Quantity",
+    ),
+    # Current Rate $/kWh
+    SensorEntityDescription(
+        key=ENTITY_RATE,
+        name="Current Rate",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="$/kWh",
+    ),
+    # Days left in billing cycle
+    SensorEntityDescription(
+        key=ENTITY_DAYSLEFT,
+        name="Days Left Billing Cycle",
+        native_unit_of_measurement=TIME_DAYS,
+    ),
+    # Plan type (Flat, Tier, TOU, Tier+TOU)
+    SensorEntityDescription(
+        key=ENTITY_PLANTYPE,
+        name="Plan Type",
+    ),
+    # Current Tier (0 = Disabled)
+    SensorEntityDescription(
+        key=ENTITY_TIER,
+        name="Current Tier",
+    ),
+    # Current TOU (0 = Disabled)
+    SensorEntityDescription(
+        key=ENTITY_TOU,
+        name="Current TOU"
+    ),
+    # Current TOU Description (if Current TOU is 0 => Not Configured)
+    SensorEntityDescription(
+        key=ENTITY_TOUDESC,
+        name="Current TOU Description",
+    ),
+    # Carbon Rate lbs/kW
+    SensorEntityDescription(
+        key=ENTITY_CARBONRATE,
+        name="Carbon Rate",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="lbs/kW",
+    ),
+    # Meter read date
+    SensorEntityDescription(
+        key=ENTITY_METERREAD,
+        name="Meter Read Date",
+    ),
+)
+
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
@@ -49,270 +163,145 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Ted5000 platform."""
+    """Set up the ted5000 sensor platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
     mode = config.get(CONF_MODE)
     url = f"http://{host}:{port}/api/LiveData.xml"
 
-    gateway = Ted5000Gateway(url)
-
+    gateway = Ted5000Data(url)
     # Get MTU information to create the sensors.
     gateway.update()
 
-    dev_mtus = []
-    dev_utility = []
-
+    entities = []
+    
     # Create MTU sensors
     for mtu in gateway.data:
-        dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 0, POWER_WATT))
-        dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 1, ELECTRIC_POTENTIAL_VOLT))
+        for description in SENSOR_TYPES_BASIC:
+            entities.append(Ted5000SensorEntity(gateway, mtu, description, name))
         if mode in {"advanced", "extended"}:  # advanced or extended
-            dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 2, ENERGY_KILO_WATT_HOUR))
-            dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 3, ENERGY_KILO_WATT_HOUR))
-            dev_mtus.append(Ted5000Sensor(gateway, name, mtu, 4, PERCENTAGE))
+            for description in SENSOR_TYPES_ADVANCED:
+                entities.append(Ted5000SensorEntity(gateway, mtu, description, name))
 
     # Create utility sensors
     if mode == "extended":  # extended only
-        # MTUs Quantity
-        dev_utility.append(Ted5000Utility(gateway, name, 0, ATTR_HIDDEN))
-        # Current Rate $/kWh
-        dev_utility.append(Ted5000Utility(gateway, name, 1, CURRENCY_DOLLAR))
-        # Days left in billing cycle
-        dev_utility.append(Ted5000Utility(gateway, name, 2, TIME_DAYS))
-        # Plan type (Flat, Tier, TOU, Tier+TOU)
-        dev_utility.append(Ted5000Utility(gateway, name, 3, ATTR_HIDDEN))
-        # Current Tier (0 = Disabled)
-        dev_utility.append(Ted5000Utility(gateway, name, 4, ATTR_HIDDEN))
-        # Current TOU (0 = Disabled)
-        dev_utility.append(Ted5000Utility(gateway, name, 5, ATTR_HIDDEN))
-        # Current TOU Description (if Current TOU is 0 => Not Configured)
-        dev_utility.append(Ted5000Utility(gateway, name, 6, ATTR_HIDDEN))
-        # Carbon Rate lbs/kW
-        dev_utility.append(Ted5000Utility(gateway, name, 7, ATTR_HIDDEN))
-        # Meter read date
-        dev_utility.append(Ted5000Utility(gateway, name, 8, ATTR_HIDDEN))
+        for description in SENSOR_TYPES_EXTENDED:
+            entities.append(Ted5000SensorEntity(gateway, 0, description, name))
 
-    add_entities(dev_mtus)
-    add_entities(dev_utility)
+    add_entities(entities, True)
 
 
-class Ted5000Sensor(SensorEntity):
-    """Implementation of a Ted5000 MTU sensor."""
+def get_ted5000(self) -> str | None:
+    """Collect data from the ted5000 gateway."""
+    
+    url = self.url
+    self.data = {}
+    self.data_utility = {}
 
-    def __init__(self, gateway, name, mtu, ptr, unit):
-        """Initialize the sensor."""
-        dclass = {
-            POWER_WATT: SensorDeviceClass.POWER,
-            ELECTRIC_POTENTIAL_VOLT: SensorDeviceClass.VOLTAGE,
-            ENERGY_KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
-            PERCENTAGE: SensorDeviceClass.POWER_FACTOR,
+    try:
+        request = requests.get(self.url, timeout=10)
+    except requests.exceptions.RequestException as err:
+        _LOGGER.error("No connection to endpoint: %s", err)
+    else:
+        doc = xmltodict.parse(request.text)
+        mtus = int(doc["LiveData"]["System"]["NumberMTU"])
+
+        # MTU Data
+        for mtu in range(1, mtus + 1):
+            power = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
+            voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
+            energy_tdy = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerTDY"])
+            energy_mtd = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerMTD"])
+            power_factor = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PF"])
+
+            self.data[mtu] = {
+                ENTITY_MTU_POWER: power,
+                ENTITY_MTU_VOLTAGE: voltage / 10,
+                ENTITY_MTU_TODAY: energy_tdy / 1000,
+                ENTITY_MTU_MONTH: energy_mtd / 1000,
+                ENTITY_MTU_PF: power_factor / 10,
+            }
+
+        # Utility Data
+        current_rate = int(doc["LiveData"]["Utility"]["CurrentRate"])
+        days_left = int(doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"])
+        plan_type = int(doc["LiveData"]["Utility"]["PlanType"])
+        plan_type_str = {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
+        carbon_rate = int(doc["LiveData"]["Utility"]["CarbonRate"])
+        read_date = int(doc["LiveData"]["Utility"]["MeterReadDate"])
+
+        if plan_type in (0, 2):
+            current_tier = 0
+        else:
+            current_tier = int(doc["LiveData"]["Utility"]["CurrentTier"]) + 1
+
+        if plan_type < 2:
+            current_tou = 0
+            current_tou_str = "Not Configured"
+        else:
+            current_tou = int(doc["LiveData"]["Utility"]["CurrentTOU"]) + 1
+            current_tou_str = doc["LiveData"]["Utility"]["CurrentTOUDescription"]
+
+        self.data_utility = {
+            ENTITY_MTUS: mtus,
+            ENTITY_RATE: current_rate / 100000,
+            ENTITY_DAYSLEFT: days_left,
+            ENTITY_PLANTYPE: plan_type_str[plan_type],
+            ENTITY_TIER: current_tier,
+            ENTITY_TOU: current_tou,
+            ENTITY_TOUDESC: current_tou_str,
+            ENTITY_CARBONRATE: carbon_rate / 100,
+            ENTITY_METERREAD: read_date,
         }
-        sclass = {
-            POWER_WATT: SensorStateClass.MEASUREMENT,
-            ELECTRIC_POTENTIAL_VOLT: SensorStateClass.MEASUREMENT,
-            ENERGY_KILO_WATT_HOUR: SensorStateClass.TOTAL_INCREASING,
-            PERCENTAGE: SensorStateClass.MEASUREMENT,
-        }
-        suffix = {
-            0: "power",
-            1: "voltage",
-            2: "energy_daily",
-            3: "energy_monthly",
-            4: "pf",
-        }
-        self._gateway = gateway
-        self._name = f"{name} mtu{mtu} {suffix[ptr]}"
-        self._mtu = mtu
-        self._ptr = ptr
-        self._unit = unit
-        self._dclass = dclass[unit]
-        self._sclass = sclass[unit]
-        self.update()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
-
-    @property
-    def device_class(self):
-        """Return the device class the value is expressed in."""
-        return self._dclass
-
-    @property
-    def state_class(self):
-        """Return the state class the value is expressed in."""
-        return self._sclass
-
-    @property
-    def native_value(self):
-        """Return the state of the resources."""
-        with suppress(KeyError):
-            return self._gateway.data[self._mtu][self._ptr]
-
-    def update(self):
-        """Get the latest data from REST API."""
-        self._gateway.update()
 
 
-class Ted5000Utility(SensorEntity):
-    """Implementation of a Ted5000 utility sensors."""
-
-    def __init__(self, gateway, name, ptr, unit):
-        """Initialize the sensor."""
-        dclass = {
-            ATTR_HIDDEN: ATTR_HIDDEN,
-            CURRENCY_DOLLAR: SensorDeviceClass.MONETARY,
-            TIME_DAYS: ATTR_HIDDEN,
-        }
-        sclass = {
-            ATTR_HIDDEN: ATTR_HIDDEN,
-            CURRENCY_DOLLAR: SensorStateClass.MEASUREMENT,
-            TIME_DAYS: ATTR_HIDDEN,
-        }
-        units = {
-            0: ATTR_HIDDEN,
-            1: "$/kWh",
-            2: TIME_DAYS,
-            3: ATTR_HIDDEN,
-            4: ATTR_HIDDEN,
-            5: ATTR_HIDDEN,
-            6: ATTR_HIDDEN,
-            7: "lbs/kW",
-            8: ATTR_HIDDEN,
-        }
-        suffix = {
-            0: "MTUs",
-            1: "CurrentRate",
-            2: "DaysLeftInBillingCycle",
-            3: "PlanType",
-            4: "CurrentTier",
-            5: "CurrentTOU",
-            6: "CurrentTOUDescription",
-            7: "CarbonRate",
-            8: "MeterReadDate",
-        }
-        self._gateway = gateway
-        self._name = f"{name} Utility {suffix[ptr]}"
-        self._ptr = ptr
-        self._unit = units[ptr]
-        self._dclass = dclass[unit]
-        self._sclass = sclass[unit]
-        self.update()
-
-    @property
-    def name(self):
-        """Return the friendly_name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        if self._unit is not ATTR_HIDDEN:
-            return self._unit
-
-    @property
-    def device_class(self):
-        """Return the device class the value is expressed in."""
-        if self._dclass is not ATTR_HIDDEN:
-            return self._dclass
-
-    @property
-    def state_class(self):
-        """Return the state class the value is expressed in."""
-        if self._sclass is not ATTR_HIDDEN:
-            return self._sclass
-
-    @property
-    def native_value(self):
-        """Return the state of the resources."""
-        with suppress(KeyError):
-            return self._gateway.data_utility[self._ptr]
-
-    def update(self) -> None:
-        """Get the latest data from REST API."""
-        self._gateway.update()
-
-
-class Ted5000Gateway:
-    """The class for handling the data retrieval."""
+class Ted5000Data:
+    """Collect data from the ted5000 gateway."""
 
     def __init__(self, url):
         """Initialize the data object."""
         self.url = url
-        self.data = {}
-        self.data_utility = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from the Ted5000 XML API."""
+        """Get the latest data from ted5000."""
+        # Update data
+        get_ted5000(self)
 
-        try:
-            request = requests.get(self.url, timeout=10)
-        except requests.exceptions.RequestException as err:
-            _LOGGER.error("No connection to endpoint: %s", err)
+
+class Ted5000SensorEntity(SensorEntity):
+    """Representation of the current ted5000 data."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        gateway,
+        mtu,
+        description: SensorEntityDescription,
+        name,
+    ):
+        """Initialize the sensor."""
+        self.entity_description = description
+        if mtu > 0:
+            self._attr_name = f"{name} MTU{mtu} {description.name}"
         else:
-            doc = xmltodict.parse(request.text)
-            mtus = int(doc["LiveData"]["System"]["NumberMTU"])
+            self._attr_name = f"{name} Utility {description.name}"
+        self.gateway = gateway
+        self._mtu = mtu
 
-            # MTU data
-            for mtu in range(1, mtus + 1):
-                power = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
-                voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
-                energy_tdy = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerTDY"])
-                energy_mtd = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerMTD"])
-                power_factor = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PF"])
-
-                self.data[mtu] = {
-                    0: power,
-                    1: voltage / 10,
-                    2: energy_tdy / 1000,
-                    3: energy_mtd / 1000,
-                    4: power_factor / 10,
-                }
-
-            # Utility Data
-            current_rate = int(doc["LiveData"]["Utility"]["CurrentRate"])
-            days_left = int(doc["LiveData"]["Utility"]["DaysLeftInBillingCycle"])
-            plan_type = int(doc["LiveData"]["Utility"]["PlanType"])
-            plan_type_str = {0: "Flat", 1: "Tier", 2: "TOU", 3: "Tier+TOU"}
-            carbon_rate = int(doc["LiveData"]["Utility"]["CarbonRate"])
-            read_date = int(doc["LiveData"]["Utility"]["MeterReadDate"])
-
-            if plan_type in (0, 2):
-                current_tier = 0
-            else:
-                current_tier = int(doc["LiveData"]["Utility"]["CurrentTier"]) + 1
-
-            if plan_type < 2:
-                current_tou = 0
-                current_tou_str = "Not Configured"
-            else:
-                current_tou = int(doc["LiveData"]["Utility"]["CurrentTOU"]) + 1
-                current_tou_str = doc["LiveData"]["Utility"]["CurrentTOUDescription"]
-
-            self.data_utility = {
-                0: mtus,
-                1: current_rate / 100000,
-                2: days_left,
-                3: plan_type_str[plan_type],
-                4: current_tier,
-                5: current_tou,
-                6: current_tou_str,
-                7: carbon_rate / 100,
-                8: read_date,
-            }
+    def update(self):
+        """Get the latest data from Ted5000 and update the state."""
+        self.gateway.update()
+        if self._mtu > 0:
+            if self.entity_description.key in self.gateway.data[self._mtu]:
+                self._attr_native_value = self.gateway.data[self._mtu][self.entity_description.key]
+        if self.entity_description.key in self.gateway.data_utility:
+            self._attr_native_value = self.gateway.data_utility[self.entity_description.key]
