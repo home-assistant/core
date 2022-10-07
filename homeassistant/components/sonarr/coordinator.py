@@ -115,7 +115,7 @@ class QueueDataUpdateCoordinator(SonarrDataUpdateCoordinator[SonarrQueue]):
     """Queue update coordinator."""
 
     async def _fetch_data(self) -> SonarrQueue:
-        """Fetch the health data."""
+        """Fetch the data."""
         return await self.api_client.async_get_queue(
             include_series=True, include_episode=True
         )
@@ -125,7 +125,7 @@ class SeriesDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrSeries]
     """Series update coordinator."""
 
     async def _fetch_data(self) -> list[SonarrSeries]:
-        """Fetch the movies data."""
+        """Fetch the data."""
         return cast(list[SonarrSeries], await self.api_client.async_get_series())
 
 
@@ -141,7 +141,7 @@ class WantedDataUpdateCoordinator(SonarrDataUpdateCoordinator[SonarrWantedMissin
     """Wanted update coordinator."""
 
     async def _fetch_data(self) -> SonarrWantedMissing:
-        """Fetch the movies data."""
+        """Fetch the data."""
         return await self.api_client.async_get_wanted(
             page_size=self.config_entry.options[CONF_WANTED_MAX_ITEMS],
             include_series=True,
