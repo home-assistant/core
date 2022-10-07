@@ -1,0 +1,10 @@
+sensor:
+  - platform: attribute_as_sensor
+    entity_id: sensor.test_1
+    name: second_test
+    icon: mdi:test-icon
+    attribute: test_attribute
+    device_class: temperature
+    state_class: measurement
+    unit_of_measurement: °C
+    unique_id: very_unique_id
