@@ -568,8 +568,8 @@ build.json @home-assistant/supervisor
 /tests/components/isy994/ @bdraco @shbatm
 /homeassistant/components/izone/ @Swamp-Ig
 /tests/components/izone/ @Swamp-Ig
-/homeassistant/components/jellyfin/ @j-stienstra
-/tests/components/jellyfin/ @j-stienstra
+/homeassistant/components/jellyfin/ @j-stienstra @ctalkington
+/tests/components/jellyfin/ @j-stienstra @ctalkington
 /homeassistant/components/jewish_calendar/ @tsvi
 /tests/components/jewish_calendar/ @tsvi
 /homeassistant/components/juicenet/ @jesserockz

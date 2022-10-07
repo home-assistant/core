@@ -15,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Jellyfin from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    client = create_client()
+    client = create_client(device_id=entry.entry_id)
     try:
         await validate_input(hass, dict(entry.data), client)
     except CannotConnect as ex:
