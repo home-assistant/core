@@ -139,7 +139,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
     """Wrap a condition function to enable basic tracing."""
 
     @ft.wraps(condition)
-    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool | None:
         """Trace condition."""
         with trace_condition(variables):
             result = condition(hass, variables)
@@ -173,7 +173,7 @@ async def async_from_config(
         @trace_condition_function
         def disabled_condition(
             hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> Optional[bool]:
+        ) -> bool | None:
             """Condition not enabled, will act as if it didn't exist."""
             return None
 
