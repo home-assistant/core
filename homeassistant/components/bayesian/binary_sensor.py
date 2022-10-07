@@ -273,7 +273,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
                 # in some cases a template may update because of the absence of an entity
                 if entity is not None:
-                    observation.entity_id = str(entity)
+                    observation.entity_id = entity
 
                 self.current_observations[observation.id] = observation
 
@@ -294,7 +294,7 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         self.current_observations.update(self._initialize_current_observations())
         self.probability = self._calculate_new_probability()
-        self._attr_is_on = bool(self.probability >= self._probability_threshold)
+        self._attr_is_on = self.probability >= self._probability_threshold
 
         # detect mirrored entries
         for entity, observations in self.observations_by_entity.items():
@@ -332,8 +332,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         for observation in self.observations_by_entity[entity]:
             platform = observation.platform
 
-            observed: bool | None = self.observation_handlers[platform](observation)
-            observation.observed = observed
+            observation.observed = self.observation_handlers[platform](observation)
 
             local_observations[observation.id] = observation
 
@@ -349,22 +348,24 @@ class BayesianBinarySensor(BinarySensorEntity):
                     observation.prob_given_true,
                     observation.prob_given_false,
                 )
-            elif observation.observed is False:
+                continue
+            if observation.observed is False:
                 prior = update_probability(
                     prior,
                     1 - observation.prob_given_true,
                     1 - observation.prob_given_false,
                 )
-            elif observation.observed is None:
+                continue
+            if observation.observed is None:
                 if observation.entity_id is not None:
                     _LOGGER.debug(
                         "Observation for entity '%s' returned None, it will not be used for Bayesian updating",
                         observation.entity_id,
                     )
-                else:
-                    _LOGGER.debug(
-                        "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
-                    )
+                    continue
+            _LOGGER.debug(
+                "Observation for template entity returned None rather than a valid boolean, it will not be used for Bayesian updating",
+            )
         # the prior has been updated and is now the posterior
         return prior
 
