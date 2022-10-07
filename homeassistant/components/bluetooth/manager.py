@@ -382,14 +382,12 @@ class BluetoothManager:
 
         # Track advertisement intervals to determine when we need to
         # switch adapters or mark a device as unavailable
-        advertisement_tracker = self._advertisement_tracker
-        if (
-            last_source := advertisement_tracker.sources.get(address)
-        ) and last_source != source:
+        tracker = self._advertisement_tracker
+        if (last_source := tracker.sources.get(address)) and last_source != source:
             # Source changed, remove the old address from the tracker
-            self._advertisement_tracker.async_remove_address(address)
-        if address not in advertisement_tracker.intervals:
-            self._advertisement_tracker.async_collect(service_info)
+            tracker.async_remove_address(address)
+        if address not in tracker.intervals:
+            tracker.async_collect(service_info)
 
         # If the advertisement data is the same as the last time we saw it, we
         # don't need to do anything else.
