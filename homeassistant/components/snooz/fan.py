@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from pysnooz.api import SnoozDeviceState, UnknownSnoozState
@@ -25,11 +24,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 from .models import SnoozConfigurationData
-
-# transitions logging is pretty verbose, so only enable warnings/errors
-logging.getLogger("transitions.core").setLevel(logging.WARNING)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -92,20 +86,14 @@ class SnoozFan(FanEntity, RestoreEntity):
                 self._is_on = None
             self._percentage = last_state.attributes.get(ATTR_PERCENTAGE)
 
-        self.async_on_remove(self._async_subscribe_to_device_events())
+        self.async_on_remove(self._async_subscribe_to_device_change())
 
     @callback
-    def _async_subscribe_to_device_events(self) -> Callable[[], None]:
-        events = self._device.events
+    def _async_subscribe_to_device_change(self) -> Callable[[], None]:
+        def on_change():
+            self._write_state_changed()
 
-        def unsubscribe():
-            events.on_connection_status_change -= self._on_connection_status_changed
-            events.on_state_change -= self._on_device_state_changed
-
-        events.on_connection_status_change += self._on_connection_status_changed
-        events.on_state_change += self._on_device_state_changed
-
-        return unsubscribe
+        return self._device.subscribe_to_state_change(on_change)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect the device when removed."""
