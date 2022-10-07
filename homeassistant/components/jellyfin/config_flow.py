@@ -25,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _generate_device_id():
+def _generate_device_id() -> str:
     """Generate a random UUID4 string to identify ourselves."""
     return str(uuid.uuid4())
 
