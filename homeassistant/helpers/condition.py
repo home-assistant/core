@@ -10,7 +10,7 @@ import functools as ft
 import logging
 import re
 import sys
-from typing import Any, cast, Optional
+from typing import Any, Optional, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import condition as device_condition
@@ -80,7 +80,7 @@ INPUT_ENTITY_ID = re.compile(
     r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
 )
 
-ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
+ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], Optional[bool]]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
