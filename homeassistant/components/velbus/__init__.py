@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     controller = Velbus(
         entry.data[CONF_PORT],
-        cache_dir=hass.config.path(".storage/velbuscache/"),
+        cache_dir=hass.config.path(f".storage/velbuscache/{entry.entry_id}/"),
     )
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id]["cntrl"] = controller
