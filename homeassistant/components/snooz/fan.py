@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from pysnooz.api import SnoozDeviceState, UnknownSnoozState
+from pysnooz.api import UnknownSnoozState
 from pysnooz.commands import (
     SnoozCommandData,
     SnoozCommandResultStatus,
@@ -12,7 +12,7 @@ from pysnooz.commands import (
     turn_off,
     turn_on,
 )
-from pysnooz.device import SnoozConnectionStatus, SnoozDevice
+from pysnooz.device import SnoozDevice
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -61,19 +61,14 @@ class SnoozFan(FanEntity, RestoreEntity):
         self._is_on: bool | None = None
         self._percentage: int | None = None
 
-    def _write_state_changed(self) -> None:
+    @callback
+    def _async_write_state_changed(self) -> None:
         # cache state for restore entity
         if not self.assumed_state:
             self._is_on = self._device.state.on
             self._percentage = self._device.state.volume
 
         self.async_write_ha_state()
-
-    def _on_connection_status_changed(self, new_status: SnoozConnectionStatus) -> None:
-        self._write_state_changed()
-
-    def _on_device_state_changed(self, new_state: SnoozDeviceState) -> None:
-        self._write_state_changed()
 
     async def async_added_to_hass(self) -> None:
         """Restore state and subscribe to device events."""
@@ -90,10 +85,7 @@ class SnoozFan(FanEntity, RestoreEntity):
 
     @callback
     def _async_subscribe_to_device_change(self) -> Callable[[], None]:
-        def on_change():
-            self._write_state_changed()
-
-        return self._device.subscribe_to_state_change(on_change)
+        return self._device.subscribe_to_state_change(self._async_write_state_changed)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect the device when removed."""
@@ -137,4 +129,4 @@ class SnoozFan(FanEntity, RestoreEntity):
             raise HomeAssistantError(
                 f"Command {command} failed with status {result.status.name}"
             )
-        self._write_state_changed()
+        self._async_write_state_changed()
