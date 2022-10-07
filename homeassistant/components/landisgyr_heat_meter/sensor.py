@@ -27,8 +27,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensor platform."""
-    _LOGGER.info("The Landis+Gyr Heat Meter sensor platform is being set up!")
-
     unique_id = entry.entry_id
     coordinator = hass.data[DOMAIN][entry.entry_id]
 

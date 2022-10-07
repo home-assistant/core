@@ -99,13 +99,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
                 # validate and retrieve the model and device number for a unique id
                 data = await self.hass.async_add_executor_job(heat_meter.read)
-                _LOGGER.debug("Got data from Ultraheat API: %s", data)
 
         except Exception as err:
             _LOGGER.warning("Failed read data from: %s. %s", port, err)
             raise CannotConnect(f"Error communicating with device: {err}") from err
 
-        _LOGGER.debug("Successfully connected to %s", port)
+        _LOGGER.debug("Successfully connected to %s. Got data: %s", port, data)
         return data.model, data.device_number
 
     async def get_ports(self) -> dict:

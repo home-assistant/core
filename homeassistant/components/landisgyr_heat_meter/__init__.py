@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Fetch data from the API."""
-        _LOGGER.info("Polling on %s", entry.data[CONF_DEVICE])
+        _LOGGER.debug("Polling on %s", entry.data[CONF_DEVICE])
         return await hass.async_add_executor_job(api.read)
 
     # Polling is only daily to prevent battery drain.
