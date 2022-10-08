@@ -431,8 +431,13 @@ def get_persist_filename_for_entry_id(entry_id: str) -> str:
 
 
 def get_aid_storage_filename_for_entry_id(entry_id: str) -> str:
-    """Determine the ilename of homekit aid storage file."""
+    """Determine the filename of homekit aid storage file."""
     return f"{DOMAIN}.{entry_id}.aids"
+
+
+def get_iid_storage_filename_for_entry_id(entry_id: str) -> str:
+    """Determine the filename of homekit iid storage file."""
+    return f"{DOMAIN}.{entry_id}.iids"
 
 
 def get_persist_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str) -> str:
@@ -444,6 +449,13 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str) ->
     """Determine the path to the homekit aid storage file."""
     return hass.config.path(
         STORAGE_DIR, get_aid_storage_filename_for_entry_id(entry_id)
+    )
+
+
+def get_iid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str) -> str:
+    """Determine the path to the homekit iid storage file."""
+    return hass.config.path(
+        STORAGE_DIR, get_iid_storage_filename_for_entry_id(entry_id)
     )
 
 
@@ -470,9 +482,13 @@ def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str) -> bool:
     """Remove the state files from disk."""
     persist_file_path = get_persist_fullpath_for_entry_id(hass, entry_id)
     aid_storage_path = get_aid_storage_fullpath_for_entry_id(hass, entry_id)
+    iid_storage_path = get_iid_storage_fullpath_for_entry_id(hass, entry_id)
+
     os.unlink(persist_file_path)
     if os.path.exists(aid_storage_path):
         os.unlink(aid_storage_path)
+    if os.path.exists(iid_storage_path):
+        os.unlink(iid_storage_path)
     return True
 
 

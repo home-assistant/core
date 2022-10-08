@@ -7,7 +7,10 @@ from uuid import UUID
 
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
+from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_OTHER
+from pyhap.iid_manager import IIDManager
+from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
@@ -83,6 +86,7 @@ from .const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
+from .iidmanager import AccessoryIIDStorage
 from .util import (
     accessory_friendly_name,
     async_dismiss_setup_message,
@@ -598,6 +602,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         entry_id: str,
         bridge_name: str,
         entry_title: str,
+        iid_manager: HomeIIDManager,
         **kwargs: Any,
     ) -> None:
         """Initialize a AccessoryDriver object."""
@@ -606,6 +611,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._entry_id = entry_id
         self._bridge_name = bridge_name
         self._entry_title = entry_title
+        self.iid_manager = iid_manager
 
     @pyhap_callback  # type: ignore[misc]
     def pair(
@@ -632,3 +638,29 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
             self.state.pincode,
             self.accessory.xhm_uri(),
         )
+
+
+class HomeIIDManager(IIDManager):  # type: ignore[misc]
+    """IID Manager that remembers IIDs between restarts."""
+
+    def __init__(self, iid_storage: AccessoryIIDStorage) -> None:
+        """Initialize a IIDManager object."""
+        super().__init__()
+        self._iid_storage = iid_storage
+
+    def get_iid_for_obj(self, obj: Characteristic | Service) -> int:
+        """Get IID for object."""
+        aid = obj.broker.aid
+        if isinstance(obj, Characteristic):
+            iid = self._iid_storage.get_or_allocate_iid(
+                aid, obj.service.type_id, obj.type_id, obj.unique_id
+            )
+        else:
+            iid = self._iid_storage.get_or_allocate_iid(
+                aid, obj.type_id, None, obj.unique_id
+            )
+        if iid in self.iids:
+            raise RuntimeError(
+                f"IID {iid} already in use by another object: {self.iids[iid]}"
+            )
+        return iid
