@@ -33,9 +33,9 @@ START_TIMEOUT = 15
 
 MAX_DBUS_SETUP_SECONDS = 5
 
-# Anything after 30s is considered stale, we have buffer
-# for start timeouts and execution time
-STALE_ADVERTISEMENT_SECONDS: Final = 30 + START_TIMEOUT + MAX_DBUS_SETUP_SECONDS
+# The maximum time between advertisements for a device to be considered
+# stale when the advertisement tracker cannot determine the interval.
+FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS: Final = 60 * 15
 
 
 # We must recover before we hit the 180s mark

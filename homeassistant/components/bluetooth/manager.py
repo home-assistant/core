@@ -25,8 +25,8 @@ from .advertisement_tracker import AdvertisementTracker
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     NO_RSSI_VALUE,
-    STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
 )
@@ -302,7 +302,7 @@ class BluetoothManager:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
             stale_seconds := self._advertisement_tracker.intervals.get(
-                new.address, STALE_ADVERTISEMENT_SECONDS
+                new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
             )
         ):
             # If the old advertisement is stale, any new advertisement is preferred
