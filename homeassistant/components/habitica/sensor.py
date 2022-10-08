@@ -18,6 +18,7 @@ from homeassistant.util import Throttle
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+MDI_CLIPBOARD_LIST_OUTLINE = "mdi:clipboard-list-outline"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
@@ -40,14 +41,14 @@ SENSORS_TYPES = {
 
 TASKS_TYPES = {
     "habits": SensorType(
-        "Habits", "mdi:clipboard-list-outline", "n_of_tasks", ["habits"]
+        "Habits", MDI_CLIPBOARD_LIST_OUTLINE, "n_of_tasks", ["habits"]
     ),
     "dailys": SensorType(
-        "Dailys", "mdi:clipboard-list-outline", "n_of_tasks", ["dailys"]
+        "Dailys", MDI_CLIPBOARD_LIST_OUTLINE, "n_of_tasks", ["dailys"]
     ),
-    "todos": SensorType("TODOs", "mdi:clipboard-list-outline", "n_of_tasks", ["todos"]),
+    "todos": SensorType("TODOs", MDI_CLIPBOARD_LIST_OUTLINE, "n_of_tasks", ["todos"]),
     "rewards": SensorType(
-        "Rewards", "mdi:clipboard-list-outline", "n_of_tasks", ["rewards"]
+        "Rewards", MDI_CLIPBOARD_LIST_OUTLINE, "n_of_tasks", ["rewards"]
     ),
 }
 

@@ -26,6 +26,10 @@ PROTOCOL_HTTP: Final = "http-get"
 PROTOCOL_RTSP: Final = "rtsp-rtp-udp"
 PROTOCOL_ANY: Final = "*"
 STREAMABLE_PROTOCOLS: Final = [PROTOCOL_HTTP, PROTOCOL_RTSP, PROTOCOL_ANY]
+MUSIC_TRACK = "object.item.audioItem.musicTrack"
+VIDEO_BRADCAST = "object.item.videoItem.videoBroadcast"
+VIDEO_PROGRAM = "object.item.epgItem.videoProgram"
+MUSIC_ARTIST = "object.container.person.musicArtist"
 
 # Map UPnP class to media_player media_content_type
 MEDIA_TYPE_MAP: Mapping[str, MediaType] = {
@@ -34,22 +38,22 @@ MEDIA_TYPE_MAP: Mapping[str, MediaType] = {
     "object.item.imageItem": MediaType.IMAGE,
     "object.item.imageItem.photo": MediaType.IMAGE,
     "object.item.audioItem": MediaType.MUSIC,
-    "object.item.audioItem.musicTrack": MediaType.MUSIC,
+    MUSIC_TRACK: MediaType.MUSIC,
     "object.item.audioItem.audioBroadcast": MediaType.MUSIC,
     "object.item.audioItem.audioBook": MediaType.PODCAST,
     "object.item.videoItem": MediaType.VIDEO,
     "object.item.videoItem.movie": MediaType.MOVIE,
-    "object.item.videoItem.videoBroadcast": MediaType.TVSHOW,
+    VIDEO_BRADCAST: MediaType.TVSHOW,
     "object.item.videoItem.musicVideoClip": MediaType.VIDEO,
     "object.item.playlistItem": MediaType.PLAYLIST,
     "object.item.textItem": MediaType.URL,
     "object.item.bookmarkItem": MediaType.URL,
     "object.item.epgItem": MediaType.EPISODE,
     "object.item.epgItem.audioProgram": MediaType.EPISODE,
-    "object.item.epgItem.videoProgram": MediaType.EPISODE,
+    VIDEO_PROGRAM: MediaType.EPISODE,
     "object.container": MediaType.PLAYLIST,
     "object.container.person": MediaType.ARTIST,
-    "object.container.person.musicArtist": MediaType.ARTIST,
+    MUSIC_ARTIST: MediaType.ARTIST,
     "object.container.playlistContainer": MediaType.PLAYLIST,
     "object.container.album": MediaType.ALBUM,
     "object.container.album.musicAlbum": MediaType.ALBUM,
@@ -71,21 +75,21 @@ MEDIA_TYPE_MAP: Mapping[str, MediaType] = {
 # directly, in which case it's not specified and other defaults will be used.
 MEDIA_UPNP_CLASS_MAP: Mapping[MediaType | str, str] = {
     MediaType.ALBUM: "object.container.album.musicAlbum",
-    MediaType.ARTIST: "object.container.person.musicArtist",
-    MediaType.CHANNEL: "object.item.videoItem.videoBroadcast",
+    MediaType.ARTIST: MUSIC_ARTIST,
+    MediaType.CHANNEL: VIDEO_BRADCAST,
     MediaType.CHANNELS: "object.container.channelGroup",
-    MediaType.COMPOSER: "object.container.person.musicArtist",
-    MediaType.CONTRIBUTING_ARTIST: "object.container.person.musicArtist",
-    MediaType.EPISODE: "object.item.epgItem.videoProgram",
+    MediaType.COMPOSER: MUSIC_ARTIST,
+    MediaType.CONTRIBUTING_ARTIST: MUSIC_ARTIST,
+    MediaType.EPISODE: VIDEO_PROGRAM,
     MediaType.GENRE: "object.container.genre",
     MediaType.IMAGE: "object.item.imageItem",
     MediaType.MOVIE: "object.item.videoItem.movie",
-    MediaType.MUSIC: "object.item.audioItem.musicTrack",
+    MediaType.MUSIC: MUSIC_TRACK,
     MediaType.PLAYLIST: "object.item.playlistItem",
     MediaType.PODCAST: "object.item.audioItem.audioBook",
-    MediaType.SEASON: "object.item.epgItem.videoProgram",
-    MediaType.TRACK: "object.item.audioItem.musicTrack",
-    MediaType.TVSHOW: "object.item.videoItem.videoBroadcast",
+    MediaType.SEASON: VIDEO_PROGRAM,
+    MediaType.TRACK: MUSIC_TRACK,
+    MediaType.TVSHOW: VIDEO_BRADCAST,
     MediaType.URL: "object.item.bookmarkItem",
     MediaType.VIDEO: "object.item.videoItem",
 }

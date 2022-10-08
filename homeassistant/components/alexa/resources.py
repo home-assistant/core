@@ -1,5 +1,8 @@
 """Alexa Resources and Assets."""
 
+# @type
+AT_TYPE="@type"
+
 
 class AlexaGlobalCatalog:
     """The Global Alexa catalog.
@@ -188,6 +191,8 @@ class AlexaGlobalCatalog:
     # Quick Wash, Fast Wash, Wash Quickly, Speed Wash
     VALUE_QUICK_WASH = "Alexa.Value.QuickWash"
 
+    
+
 
 class AlexaCapabilityResource:
     """Base class for Alexa capabilityResources, modeResources, and presetResources objects.
@@ -219,9 +224,9 @@ class AlexaCapabilityResource:
         labels = []
         for label in resources:
             if label in AlexaGlobalCatalog.__dict__.values():
-                label = {"@type": "asset", "value": {"assetId": label}}
+                label = {AT_TYPE: "asset", "value": {"assetId": label}}
             else:
-                label = {"@type": "text", "value": {"text": label, "locale": "en-US"}}
+                label = {AT_TYPE: "text", "value": {"text": label, "locale": "en-US"}}
 
             labels.append(label)
 
@@ -363,14 +368,14 @@ class AlexaSemantics:
     def add_states_to_value(self, states, value):
         """Add StatesToValue stateMappings."""
         self._add_state_mapping(
-            {"@type": self.STATES_TO_VALUE, "states": states, "value": value}
+            {AT_TYPE: self.STATES_TO_VALUE, "states": states, "value": value}
         )
 
     def add_states_to_range(self, states, min_value, max_value):
         """Add StatesToRange stateMappings."""
         self._add_state_mapping(
             {
-                "@type": self.STATES_TO_RANGE,
+                AT_TYPE: self.STATES_TO_RANGE,
                 "states": states,
                 "range": {"minimumValue": min_value, "maximumValue": max_value},
             }
@@ -380,7 +385,7 @@ class AlexaSemantics:
         """Add ActionsToDirective actionMappings."""
         self._add_action_mapping(
             {
-                "@type": self.ACTIONS_TO_DIRECTIVE,
+                AT_TYPE: self.ACTIONS_TO_DIRECTIVE,
                 "actions": actions,
                 "directive": {"name": directive, "payload": payload},
             }

@@ -69,6 +69,8 @@ UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
 UPDATE_PRESETS_INTERVAL = timedelta(minutes=30)
 UPDATE_SERVICES_INTERVAL = timedelta(minutes=30)
 
+AT_NAME = "@name"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOSTS): vol.All(
@@ -253,11 +255,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._sync_status = resp["SyncStatus"].copy()
 
         if not self._name:
-            self._name = self._sync_status.get("@name", self.host)
+            self._name = self._sync_status.get(AT_NAME, self.host)
         if not self._id:
             self._id = self._sync_status.get("@id", None)
         if not self._bluesound_device_name:
-            self._bluesound_device_name = self._sync_status.get("@name", self.host)
+            self._bluesound_device_name = self._sync_status.get(AT_NAME, self.host)
         if not self._icon:
             self._icon = self._sync_status.get("@icon", self.host)
 
@@ -500,8 +502,8 @@ class BluesoundPlayer(MediaPlayerEntity):
         def _create_preset_item(item):
             self._preset_items.append(
                 {
-                    "title": item.get("@name", ""),
-                    "name": item.get("@name", ""),
+                    "title": item.get(AT_NAME, ""),
+                    "name": item.get(AT_NAME, ""),
                     "type": "preset",
                     "image": item.get("@image", ""),
                     "is_raw_url": True,
@@ -531,10 +533,10 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._services_items.append(
                 {
                     "title": item.get("@displayname", ""),
-                    "name": item.get("@name", ""),
+                    "name": item.get(AT_NAME, ""),
                     "type": item.get("@type", ""),
                     "image": item.get("@icon", ""),
-                    "url": item.get("@name", ""),
+                    "url": item.get(AT_NAME, ""),
                 }
             )
 
@@ -966,7 +968,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         cmd = "Skip"
         if self._status and "actions" in self._status:
             for action in self._status["actions"]["action"]:
-                if "@name" in action and "@url" in action and action["@name"] == "skip":
+                if AT_NAME in action and "@url" in action and action[AT_NAME] == "skip":
                     cmd = action["@url"]
 
         return await self.send_bluesound_command(cmd)
@@ -979,7 +981,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         cmd = "Back"
         if self._status and "actions" in self._status:
             for action in self._status["actions"]["action"]:
-                if "@name" in action and "@url" in action and action["@name"] == "back":
+                if AT_NAME in action and "@url" in action and action[AT_NAME] == "back":
                     cmd = action["@url"]
 
         return await self.send_bluesound_command(cmd)

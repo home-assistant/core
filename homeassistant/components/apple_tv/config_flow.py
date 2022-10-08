@@ -36,6 +36,8 @@ DEFAULT_START_OFF = False
 
 DISCOVERY_AGGREGATION_TIME = 15  # seconds
 
+UNEXPECTED_EXCEPTION = "Unexpected exception"
+
 
 async def device_scan(hass, identifier, loop):
     """Scan for a specific device using identifier as filter."""
@@ -152,7 +154,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except DeviceAlreadyConfigured:
                 errors["base"] = "already_configured"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception(UNEXPECTED_EXCEPTION)
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
@@ -281,7 +283,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except DeviceAlreadyConfigured:
             return self.async_abort(reason="already_configured")
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.exception(UNEXPECTED_EXCEPTION)
             return self.async_abort(reason="unknown")
 
         return await next_func()
@@ -403,7 +405,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Authentication problem")
             abort_reason = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.exception(UNEXPECTED_EXCEPTION)
             abort_reason = "unknown"
 
         if abort_reason:
@@ -438,7 +440,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Authentication problem")
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception(UNEXPECTED_EXCEPTION)
                 errors["base"] = "unknown"
 
         return self.async_show_form(

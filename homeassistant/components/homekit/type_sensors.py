@@ -60,7 +60,9 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
+SET_DENSITY = "%s: Set density to %d"
+SET_AIR_QUALITY = "%s: Set air_quality to %d"
+SET_TO = "%s: Set to %d"
 
 class SI(NamedTuple):
     """Service info."""
@@ -184,10 +186,10 @@ class AirQualitySensor(HomeAccessory):
         if (density := convert_to_float(new_state.state)) is not None:
             if self.char_density.value != density:
                 self.char_density.set_value(density)
-                _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+                _LOGGER.debug(SET_DENSITY, self.entity_id, density)
             air_quality = density_to_air_quality(density)
             self.char_quality.set_value(air_quality)
-            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+            _LOGGER.debug(SET_AIR_QUALITY, self.entity_id, air_quality)
 
 
 @TYPES.register("PM10Sensor")
@@ -210,11 +212,11 @@ class PM10Sensor(AirQualitySensor):
             return
         if self.char_density.value != density:
             self.char_density.set_value(density)
-            _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+            _LOGGER.debug(SET_DENSITY, self.entity_id, density)
         air_quality = density_to_air_quality_pm10(density)
         if self.char_quality.value != air_quality:
             self.char_quality.set_value(air_quality)
-            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+            _LOGGER.debug(SET_AIR_QUALITY, self.entity_id, air_quality)
 
 
 @TYPES.register("PM25Sensor")
@@ -237,11 +239,11 @@ class PM25Sensor(AirQualitySensor):
             return
         if self.char_density.value != density:
             self.char_density.set_value(density)
-            _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+            _LOGGER.debug(SET_DENSITY, self.entity_id, density)
         air_quality = density_to_air_quality(density)
         if self.char_quality.value != air_quality:
             self.char_quality.set_value(air_quality)
-            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+            _LOGGER.debug(SET_AIR_QUALITY, self.entity_id, air_quality)
 
 
 @TYPES.register("CarbonMonoxideSensor")
@@ -276,7 +278,7 @@ class CarbonMonoxideSensor(HomeAccessory):
                 self.char_peak.set_value(value)
             co_detected = value > THRESHOLD_CO
             self.char_detected.set_value(co_detected)
-            _LOGGER.debug("%s: Set to %d", self.entity_id, value)
+            _LOGGER.debug(SET_TO, self.entity_id, value)
 
 
 @TYPES.register("CarbonDioxideSensor")
@@ -311,7 +313,7 @@ class CarbonDioxideSensor(HomeAccessory):
                 self.char_peak.set_value(value)
             co2_detected = value > THRESHOLD_CO2
             self.char_detected.set_value(co2_detected)
-            _LOGGER.debug("%s: Set to %d", self.entity_id, value)
+            _LOGGER.debug(SET_TO, self.entity_id, value)
 
 
 @TYPES.register("LightSensor")
@@ -335,7 +337,7 @@ class LightSensor(HomeAccessory):
         """Update accessory after state change."""
         if (luminance := convert_to_float(new_state.state)) is not None:
             self.char_light.set_value(luminance)
-            _LOGGER.debug("%s: Set to %d", self.entity_id, luminance)
+            _LOGGER.debug(SET_TO, self.entity_id, luminance)
 
 
 @TYPES.register("BinarySensor")
@@ -369,4 +371,4 @@ class BinarySensor(HomeAccessory):
         state = new_state.state
         detected = self.format(state in (STATE_ON, STATE_HOME))
         self.char_detected.set_value(detected)
-        _LOGGER.debug("%s: Set to %d", self.entity_id, detected)
+        _LOGGER.debug(SET_TO, self.entity_id, detected)

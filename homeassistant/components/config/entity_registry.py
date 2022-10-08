@@ -21,6 +21,8 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
+ENTRY_NOT_FOUND = "Entity not found"
+
 
 async def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
@@ -79,7 +81,7 @@ def websocket_get_entity(hass, connection, msg):
 
     if (entry := registry.entities.get(msg["entity_id"])) is None:
         connection.send_message(
-            websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
+            websocket_api.error_message(msg["id"], ERR_NOT_FOUND, ENTRY_NOT_FOUND)
         )
         return
 
@@ -130,7 +132,7 @@ def websocket_update_entity(hass, connection, msg):
     entity_id = msg["entity_id"]
     if not (entity_entry := registry.async_get(entity_id)):
         connection.send_message(
-            websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
+            websocket_api.error_message(msg["id"], ERR_NOT_FOUND, ENTRY_NOT_FOUND)
         )
         return
 
@@ -216,7 +218,7 @@ def websocket_remove_entity(hass, connection, msg):
 
     if msg["entity_id"] not in registry.entities:
         connection.send_message(
-            websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
+            websocket_api.error_message(msg["id"], ERR_NOT_FOUND, ENTRY_NOT_FOUND)
         )
         return
 

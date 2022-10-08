@@ -65,6 +65,12 @@ ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
 
 UNIT_PAGES = "p"
 
+MDI_FILE_DOCUMENT_OUTLINE = "mdi:file-document-outline"
+
+MDI_CHART_DONUT = "mdi:chart-donut"
+
+MDI_PRINTER_3D_NOZZLE = "mdi:printer-3d-nozzle"
+
 ATTRS_MAP: dict[str, tuple[str, str]] = {
     ATTR_DRUM_REMAINING_LIFE: (ATTR_DRUM_REMAINING_PAGES, ATTR_DRUM_COUNTER),
     ATTR_BLACK_DRUM_REMAINING_LIFE: (
@@ -195,7 +201,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_PAGE_COUNTER,
-        icon="mdi:file-document-outline",
+        icon=MDI_FILE_DOCUMENT_OUTLINE,
         name="Page counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -203,7 +209,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_BW_COUNTER,
-        icon="mdi:file-document-outline",
+        icon=MDI_FILE_DOCUMENT_OUTLINE,
         name="B/W counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -211,7 +217,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_COLOR_COUNTER,
-        icon="mdi:file-document-outline",
+        icon=MDI_FILE_DOCUMENT_OUTLINE,
         name="Color counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -219,7 +225,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_DUPLEX_COUNTER,
-        icon="mdi:file-document-outline",
+        icon=MDI_FILE_DOCUMENT_OUTLINE,
         name="Duplex unit pages counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
@@ -227,7 +233,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_DRUM_REMAINING_LIFE,
-        icon="mdi:chart-donut",
+        icon=MDI_CHART_DONUT,
         name="Drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -235,7 +241,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_BLACK_DRUM_REMAINING_LIFE,
-        icon="mdi:chart-donut",
+        icon=MDI_CHART_DONUT,
         name="Black drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -243,7 +249,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_CYAN_DRUM_REMAINING_LIFE,
-        icon="mdi:chart-donut",
+        icon=MDI_CHART_DONUT,
         name="Cyan drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -251,7 +257,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_MAGENTA_DRUM_REMAINING_LIFE,
-        icon="mdi:chart-donut",
+        icon=MDI_CHART_DONUT,
         name="Magenta drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -259,7 +265,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_YELLOW_DRUM_REMAINING_LIFE,
-        icon="mdi:chart-donut",
+        icon=MDI_CHART_DONUT,
         name="Yellow drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -307,7 +313,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_BLACK_TONER_REMAINING,
-        icon="mdi:printer-3d-nozzle",
+        icon=MDI_PRINTER_3D_NOZZLE,
         name="Black toner remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -315,7 +321,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_CYAN_TONER_REMAINING,
-        icon="mdi:printer-3d-nozzle",
+        icon=MDI_PRINTER_3D_NOZZLE,
         name="Cyan toner remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -323,7 +329,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_MAGENTA_TONER_REMAINING,
-        icon="mdi:printer-3d-nozzle",
+        icon=MDI_PRINTER_3D_NOZZLE,
         name="Magenta toner remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -331,7 +337,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_YELLOW_TONER_REMAINING,
-        icon="mdi:printer-3d-nozzle",
+        icon=MDI_PRINTER_3D_NOZZLE,
         name="Yellow toner remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -339,7 +345,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_BLACK_INK_REMAINING,
-        icon="mdi:printer-3d-nozzle",
+        icon=MDI_PRINTER_3D_NOZZLE,
         name="Black ink remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -347,7 +353,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_CYAN_INK_REMAINING,
-        icon="mdi:printer-3d-nozzle",
+        icon=MDI_PRINTER_3D_NOZZLE,
         name="Cyan ink remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -355,7 +361,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_MAGENTA_INK_REMAINING,
-        icon="mdi:printer-3d-nozzle",
+        icon=MDI_PRINTER_3D_NOZZLE,
         name="Magenta ink remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -363,7 +369,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key=ATTR_YELLOW_INK_REMAINING,
-        icon="mdi:printer-3d-nozzle",
+        icon=MDI_PRINTER_3D_NOZZLE,
         name="Yellow ink remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

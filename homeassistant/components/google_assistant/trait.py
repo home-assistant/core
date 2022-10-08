@@ -164,7 +164,9 @@ COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 TRAITS = []
 
 FAN_SPEED_MAX_SPEED_COUNT = 5
-
+PRESET_MODE ="preset mode"
+SOUND_MODE = "sound mode"
+COMMAND_NOT_SUPPORTED = "Command not supported"
 
 def register_trait(trait):
     """Decorate a function to register a trait."""
@@ -1549,8 +1551,8 @@ class ModesTrait(_Trait):
     commands = [COMMAND_MODES]
 
     SYNONYMS = {
-        "preset mode": ["preset mode", "mode", "preset"],
-        "sound mode": ["sound mode", "effects"],
+        PRESET_MODE: [PRESET_MODE, "mode", "preset"],
+        SOUND_MODE: [SOUND_MODE, "effects"],
         "option": ["option", "setting", "mode", "value"],
     }
 
@@ -1606,8 +1608,8 @@ class ModesTrait(_Trait):
         modes = []
 
         for domain, attr, name in (
-            (fan.DOMAIN, fan.ATTR_PRESET_MODES, "preset mode"),
-            (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
+            (fan.DOMAIN, fan.ATTR_PRESET_MODES, PRESET_MODE),
+            (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, SOUND_MODE),
             (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
             (select.DOMAIN, select.ATTR_OPTIONS, "option"),
             (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
@@ -1634,10 +1636,10 @@ class ModesTrait(_Trait):
 
         if self.state.domain == fan.DOMAIN:
             if fan.ATTR_PRESET_MODES in attrs:
-                mode_settings["preset mode"] = attrs.get(fan.ATTR_PRESET_MODE)
+                mode_settings[PRESET_MODE] = attrs.get(fan.ATTR_PRESET_MODE)
         elif self.state.domain == media_player.DOMAIN:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
-                mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
+                mode_settings[SOUND_MODE] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
             mode_settings["option"] = self.state.state
         elif self.state.domain == select.DOMAIN:
@@ -1659,7 +1661,7 @@ class ModesTrait(_Trait):
         settings = params.get("updateModeSettings")
 
         if self.state.domain == fan.DOMAIN:
-            preset_mode = settings["preset mode"]
+            preset_mode = settings[PRESET_MODE]
             await self.hass.services.async_call(
                 fan.DOMAIN,
                 fan.SERVICE_SET_PRESET_MODE,
@@ -1729,7 +1731,7 @@ class ModesTrait(_Trait):
             return
 
         if self.state.domain == media_player.DOMAIN and (
-            sound_mode := settings.get("sound mode")
+            sound_mode := settings.get(SOUND_MODE)
         ):
             await self.hass.services.async_call(
                 media_player.DOMAIN,
@@ -2033,7 +2035,7 @@ class VolumeTrait(_Trait):
             self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
             & media_player.SUPPORT_VOLUME_SET
         ):
-            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
+            raise SmartHomeError(ERR_NOT_SUPPORTED, COMMAND_NOT_SUPPORTED)
 
         await self._set_volume_absolute(data, level / 100)
 
@@ -2062,7 +2064,7 @@ class VolumeTrait(_Trait):
                     context=data.context,
                 )
         else:
-            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
+            raise SmartHomeError(ERR_NOT_SUPPORTED, COMMAND_NOT_SUPPORTED)
 
     async def _execute_mute(self, data, params):
         mute = params["mute"]
@@ -2071,7 +2073,7 @@ class VolumeTrait(_Trait):
             self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
             & media_player.SUPPORT_VOLUME_MUTE
         ):
-            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
+            raise SmartHomeError(ERR_NOT_SUPPORTED, COMMAND_NOT_SUPPORTED)
 
         await self.hass.services.async_call(
             media_player.DOMAIN,
@@ -2093,7 +2095,7 @@ class VolumeTrait(_Trait):
         elif command == COMMAND_MUTE:
             await self._execute_mute(data, params)
         else:
-            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
+            raise SmartHomeError(ERR_NOT_SUPPORTED, COMMAND_NOT_SUPPORTED)
 
 
 def _verify_pin_challenge(data, state, challenge):
@@ -2236,7 +2238,7 @@ class TransportControlTrait(_Trait):
         elif command == COMMAND_MEDIA_STOP:
             service = media_player.SERVICE_MEDIA_STOP
         else:
-            raise SmartHomeError(ERR_NOT_SUPPORTED, "Command not supported")
+            raise SmartHomeError(ERR_NOT_SUPPORTED, COMMAND_NOT_SUPPORTED)
 
         await self.hass.services.async_call(
             media_player.DOMAIN,

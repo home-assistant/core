@@ -43,6 +43,7 @@ ATTR_RATING = "rating"
 ATTR_SEASON = "season"
 ATTR_TREND = "trend"
 ATTR_ZIP_CODE = "zip_code"
+MDI_FLOWER = "mdi:flower"
 
 API_CATEGORY_MAPPING = {
     TYPE_ALLERGY_TODAY: TYPE_ALLERGY_INDEX,
@@ -80,12 +81,12 @@ FORECAST_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_ALLERGY_FORECAST,
         name="Allergy index: forecasted average",
-        icon="mdi:flower",
+        icon=MDI_FLOWER,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_FORECAST,
         name="Asthma index: forecasted average",
-        icon="mdi:flower",
+        icon=MDI_FLOWER,
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_FORECAST,
@@ -98,24 +99,24 @@ INDEX_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_ALLERGY_TODAY,
         name="Allergy index: today",
-        icon="mdi:flower",
+        icon=MDI_FLOWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ALLERGY_TOMORROW,
         name="Allergy index: tomorrow",
-        icon="mdi:flower",
+        icon=MDI_FLOWER,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TODAY,
         name="Asthma index: today",
-        icon="mdi:flower",
+        icon=MDI_FLOWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TOMORROW,
         name="Asthma index: tomorrow",
-        icon="mdi:flower",
+        icon=MDI_FLOWER,
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_TODAY,

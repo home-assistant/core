@@ -75,6 +75,8 @@ ATTR_SUPPLY_FAN_DUTY = "supply_fan_duty"
 ATTR_SUPPLY_FAN_SPEED = "supply_fan_speed"
 ATTR_SUPPLY_HUMIDITY = "supply_humidity"
 ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
+MDI_FAN_PLUS = "mdi:fan-plus"
+MDI_FAN_MINUS = "mdi:fan-minus"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,7 +163,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Supply fan speed",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
-        icon="mdi:fan-plus",
+        icon=MDI_FAN_PLUS,
         sensor_id=SENSOR_FAN_SUPPLY_SPEED,
     ),
     ComfoconnectSensorEntityDescription(
@@ -169,7 +171,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Supply fan duty",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:fan-plus",
+        icon=MDI_FAN_PLUS,
         sensor_id=SENSOR_FAN_SUPPLY_DUTY,
     ),
     ComfoconnectSensorEntityDescription(
@@ -177,7 +179,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Exhaust fan speed",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
-        icon="mdi:fan-minus",
+        icon=MDI_FAN_MINUS,
         sensor_id=SENSOR_FAN_EXHAUST_SPEED,
     ),
     ComfoconnectSensorEntityDescription(
@@ -185,7 +187,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Exhaust fan duty",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:fan-minus",
+        icon=MDI_FAN_MINUS,
         sensor_id=SENSOR_FAN_EXHAUST_DUTY,
     ),
     ComfoconnectSensorEntityDescription(
@@ -210,7 +212,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Supply airflow",
         native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-        icon="mdi:fan-plus",
+        icon=MDI_FAN_PLUS,
         sensor_id=SENSOR_FAN_SUPPLY_FLOW,
     ),
     ComfoconnectSensorEntityDescription(
@@ -218,7 +220,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         name="Exhaust airflow",
         native_unit_of_measurement=VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
-        icon="mdi:fan-minus",
+        icon=MDI_FAN_MINUS,
         sensor_id=SENSOR_FAN_EXHAUST_FLOW,
     ),
     ComfoconnectSensorEntityDescription(

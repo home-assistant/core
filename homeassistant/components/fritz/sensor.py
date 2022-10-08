@@ -32,7 +32,8 @@ from .common import AvmWrapper, ConnectionInfo, FritzBoxBaseEntity
 from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
 
 _LOGGER = logging.getLogger(__name__)
-
+MDI_UPLOAD = "mdi:upload"
+MDI_DOWNLOAD = "mdi:download"
 
 def _uptime_calculation(seconds_uptime: float, last_value: datetime | None) -> datetime:
     """Calculate uptime with deviation."""
@@ -175,7 +176,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Upload Throughput",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         value_fn=_retrieve_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -183,14 +184,14 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Download Throughput",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         value_fn=_retrieve_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="max_kb_s_sent",
         name="Max Connection Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_sent_state,
     ),
@@ -198,7 +199,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="max_kb_s_received",
         name="Max Connection Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_received_state,
     ),
@@ -207,7 +208,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="GB sent",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_GIGABYTES,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         value_fn=_retrieve_gb_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -215,28 +216,28 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="GB received",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_GIGABYTES,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         value_fn=_retrieve_gb_received_state,
     ),
     FritzSensorEntityDescription(
         key="link_kb_s_sent",
         name="Link Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         value_fn=_retrieve_link_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
         key="link_kb_s_received",
         name="Link Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         value_fn=_retrieve_link_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="link_noise_margin_sent",
         name="Link Upload Noise Margin",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         value_fn=_retrieve_link_noise_margin_sent_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -244,7 +245,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_noise_margin_received",
         name="Link Download Noise Margin",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         value_fn=_retrieve_link_noise_margin_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -252,7 +253,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_attenuation_sent",
         name="Link Upload Power Attenuation",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         value_fn=_retrieve_link_attenuation_sent_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -260,7 +261,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_attenuation_received",
         name="Link Download Power Attenuation",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         value_fn=_retrieve_link_attenuation_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),

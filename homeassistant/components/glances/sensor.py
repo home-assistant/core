@@ -29,6 +29,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import GlancesData
 from .const import CPU_ICON, DATA_UPDATED, DOMAIN
 
+MDI_HARDDISK = "mdi:harddisk"
+MDI_MEMORY = "mdi:memory"
+MDI_DOCKER = "mdi:docker"
 
 @dataclass
 class GlancesSensorEntityDescription(SensorEntityDescription):
@@ -44,7 +47,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="fs",
         name_suffix="used percent",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:harddisk",
+        icon=MDI_HARDDISK,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -52,7 +55,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="fs",
         name_suffix="used",
         native_unit_of_measurement=DATA_GIBIBYTES,
-        icon="mdi:harddisk",
+        icon=MDI_HARDDISK,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -60,7 +63,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="fs",
         name_suffix="free",
         native_unit_of_measurement=DATA_GIBIBYTES,
-        icon="mdi:harddisk",
+        icon=MDI_HARDDISK,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -68,7 +71,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="mem",
         name_suffix="RAM used percent",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:memory",
+        icon=MDI_MEMORY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -76,7 +79,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="mem",
         name_suffix="RAM used",
         native_unit_of_measurement=DATA_MEBIBYTES,
-        icon="mdi:memory",
+        icon=MDI_MEMORY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -84,7 +87,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="mem",
         name_suffix="RAM free",
         native_unit_of_measurement=DATA_MEBIBYTES,
-        icon="mdi:memory",
+        icon=MDI_MEMORY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -92,7 +95,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="memswap",
         name_suffix="Swap used percent",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:memory",
+        icon=MDI_MEMORY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -100,7 +103,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="memswap",
         name_suffix="Swap used",
         native_unit_of_measurement=DATA_GIBIBYTES,
-        icon="mdi:memory",
+        icon=MDI_MEMORY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -108,7 +111,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="memswap",
         name_suffix="Swap free",
         native_unit_of_measurement=DATA_GIBIBYTES,
-        icon="mdi:memory",
+        icon=MDI_MEMORY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -190,7 +193,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="docker_active",
         type="docker",
         name_suffix="Containers active",
-        icon="mdi:docker",
+        icon=MDI_DOCKER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -198,7 +201,7 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="docker",
         name_suffix="Containers CPU used",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:docker",
+        icon=MDI_DOCKER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
@@ -206,21 +209,21 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         type="docker",
         name_suffix="Containers RAM used",
         native_unit_of_measurement=DATA_MEBIBYTES,
-        icon="mdi:docker",
+        icon=MDI_DOCKER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
         key="used",
         type="raid",
         name_suffix="Raid used",
-        icon="mdi:harddisk",
+        icon=MDI_HARDDISK,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     GlancesSensorEntityDescription(
         key="available",
         type="raid",
         name_suffix="Raid available",
-        icon="mdi:harddisk",
+        icon=MDI_HARDDISK,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )

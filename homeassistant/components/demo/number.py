@@ -11,6 +11,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
+MDI_SQUARE_WAVE = "mdi:square-wave"
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -33,7 +34,7 @@ async def async_setup_platform(
                 "pwm1",
                 "PWM 1",
                 0.42,
-                "mdi:square-wave",
+                MDI_SQUARE_WAVE,
                 False,
                 native_min_value=0.0,
                 native_max_value=1.0,
@@ -44,7 +45,7 @@ async def async_setup_platform(
                 "large_range",
                 "Large Range",
                 500,
-                "mdi:square-wave",
+                MDI_SQUARE_WAVE,
                 False,
                 native_min_value=1,
                 native_max_value=1000,
@@ -54,7 +55,7 @@ async def async_setup_platform(
                 "small_range",
                 "Small Range",
                 128,
-                "mdi:square-wave",
+                MDI_SQUARE_WAVE,
                 False,
                 native_min_value=1,
                 native_max_value=255,

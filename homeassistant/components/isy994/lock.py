@@ -15,7 +15,7 @@ from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
 
 VALUE_TO_STATE = {0: False, 100: True}
-
+UNABLE_TO_LOCK_DEVICE = "Unable to lock device"
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -46,12 +46,12 @@ class ISYLockEntity(ISYNodeEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Send the lock command to the ISY994 device."""
         if not await self._node.secure_lock():
-            _LOGGER.error("Unable to lock device")
+            _LOGGER.error(UNABLE_TO_LOCK_DEVICE)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send the unlock command to the ISY994 device."""
         if not await self._node.secure_unlock():
-            _LOGGER.error("Unable to lock device")
+            _LOGGER.error(UNABLE_TO_LOCK_DEVICE)
 
 
 class ISYLockProgramEntity(ISYProgramEntity, LockEntity):
@@ -65,7 +65,7 @@ class ISYLockProgramEntity(ISYProgramEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         if not await self._actions.run_then():
-            _LOGGER.error("Unable to lock device")
+            _LOGGER.error(UNABLE_TO_LOCK_DEVICE)
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""

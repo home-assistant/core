@@ -27,6 +27,8 @@ from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+MAP_MARKER_DISTANCE = "mdi:map-marker-distance"
+
 
 @dataclass
 class BMWSensorEntityDescription(SensorEntityDescription):
@@ -93,7 +95,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key="remaining_range_total",
         name="Remaining range total",
         key_class="fuel_and_battery",
-        icon="mdi:map-marker-distance",
+        icon=MAP_MARKER_DISTANCE,
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
     ),
@@ -101,7 +103,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key="remaining_range_electric",
         name="Remaining range electric",
         key_class="fuel_and_battery",
-        icon="mdi:map-marker-distance",
+        icon=MAP_MARKER_DISTANCE,
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
     ),
@@ -109,7 +111,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key="remaining_range_fuel",
         name="Remaining range fuel",
         key_class="fuel_and_battery",
-        icon="mdi:map-marker-distance",
+        icon=MAP_MARKER_DISTANCE,
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
     ),

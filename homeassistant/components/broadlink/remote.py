@@ -59,6 +59,10 @@ FLAG_STORAGE_VERSION = 1
 CODE_SAVE_DELAY = 15
 FLAG_SAVE_DELAY = 15
 
+WARN_CANCELLED = "%s canceled: %s entity is turned off"
+
+FAILED_TO_CALL = "Failed to call %s: %s"
+
 COMMAND_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_COMMAND): vol.All(
@@ -213,7 +217,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         if not self._attr_is_on:
             _LOGGER.warning(
-                "%s canceled: %s entity is turned off", service, self.entity_id
+                WARN_CANCELLED, service, self.entity_id
             )
             return
 
@@ -223,7 +227,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             code_list = self._extract_codes(commands, subdevice)
         except ValueError as err:
-            _LOGGER.error("Failed to call %s: %s", service, err)
+            _LOGGER.error(FAILED_TO_CALL, service, err)
             raise
 
         rf_flags = {0xB2, 0xD7}
@@ -231,7 +235,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             c[0] in rf_flags for codes in code_list for c in codes
         ):
             err_msg = f"{self.entity_id} doesn't support sending RF commands"
-            _LOGGER.error("Failed to call %s: %s", service, err_msg)
+            _LOGGER.error(FAILED_TO_CALL, service, err_msg)
             raise ValueError(err_msg)
 
         at_least_one_sent = False
@@ -269,7 +273,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         if not self._attr_is_on:
             _LOGGER.warning(
-                "%s canceled: %s entity is turned off", service, self.entity_id
+                WARN_CANCELLED, service, self.entity_id
             )
             return
 
@@ -285,7 +289,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
             else:
                 err_msg = f"{self.entity_id} doesn't support learning RF commands"
-                _LOGGER.error("Failed to call %s: %s", service, err_msg)
+                _LOGGER.error(FAILED_TO_CALL, service, err_msg)
                 raise ValueError(err_msg)
 
             should_store = False
@@ -430,7 +434,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         if not self._attr_is_on:
             _LOGGER.warning(
-                "%s canceled: %s entity is turned off",
+                WARN_CANCELLED,
                 service,
                 self.entity_id,
             )

@@ -53,6 +53,15 @@ CONF_TOMORROW = "include_tomorrow"
 
 DEFAULT_NAME = "GTFS Sensor"
 DEFAULT_PATH = "gtfs"
+MDI_TRAIN = "mdi:train"
+MDI_TRAM = "mdi:tram"
+MDI_BUS = "mdi:bus"
+MDI_FERRY = "mdi:ferry"
+MDI_TRAIN_VARIANT = "mdi:train-variant"
+MDI_SUBWAY_VARIANT = "mdi:subway-variant"
+MDI_TAXI = "mdi:taxi"
+DROP_OFF_TYPE = "Drop Off Type"
+PICKUP_TYPE = "Pickup Type"
 
 BICYCLE_ALLOWED_DEFAULT = STATE_UNKNOWN
 BICYCLE_ALLOWED_OPTIONS = {1: True, 2: False}
@@ -63,88 +72,88 @@ DROP_OFF_TYPE_OPTIONS = {
     2: "Call Agency",
     3: "Contact Driver",
 }
-ICON = "mdi:train"
+ICON = MDI_TRAIN
 ICONS = {
-    0: "mdi:tram",
+    0: MDI_TRAM,
     1: "mdi:subway",
-    2: "mdi:train",
-    3: "mdi:bus",
-    4: "mdi:ferry",
-    5: "mdi:train-variant",
+    2: MDI_TRAIN,
+    3: MDI_BUS,
+    4: MDI_FERRY,
+    5: MDI_TRAIN_VARIANT,
     6: "mdi:gondola",
     7: "mdi:stairs",
-    100: "mdi:train",
-    101: "mdi:train",
-    102: "mdi:train",
-    103: "mdi:train",
+    100: MDI_TRAIN,
+    101: MDI_TRAIN,
+    102: MDI_TRAIN,
+    103: MDI_TRAIN,
     104: "mdi:train-car",
-    105: "mdi:train",
-    106: "mdi:train",
-    107: "mdi:train",
-    108: "mdi:train",
-    109: "mdi:train",
-    110: "mdi:train-variant",
-    111: "mdi:train-variant",
-    112: "mdi:train-variant",
-    113: "mdi:train-variant",
-    114: "mdi:train-variant",
-    115: "mdi:train-variant",
-    116: "mdi:train-variant",
-    117: "mdi:train-variant",
-    200: "mdi:bus",
-    201: "mdi:bus",
-    202: "mdi:bus",
-    203: "mdi:bus",
-    204: "mdi:bus",
-    205: "mdi:bus",
-    206: "mdi:bus",
-    207: "mdi:bus",
-    208: "mdi:bus",
-    209: "mdi:bus",
-    400: "mdi:subway-variant",
-    401: "mdi:subway-variant",
+    105: MDI_TRAIN,
+    106: MDI_TRAIN,
+    107: MDI_TRAIN,
+    108: MDI_TRAIN,
+    109: MDI_TRAIN,
+    110: MDI_TRAIN_VARIANT,
+    111: MDI_TRAIN_VARIANT,
+    112: MDI_TRAIN_VARIANT,
+    113: MDI_TRAIN_VARIANT,
+    114: MDI_TRAIN_VARIANT,
+    115: MDI_TRAIN_VARIANT,
+    116: MDI_TRAIN_VARIANT,
+    117: MDI_TRAIN_VARIANT,
+    200: MDI_BUS,
+    201: MDI_BUS,
+    202: MDI_BUS,
+    203: MDI_BUS,
+    204: MDI_BUS,
+    205: MDI_BUS,
+    206: MDI_BUS,
+    207: MDI_BUS,
+    208: MDI_BUS,
+    209: MDI_BUS,
+    400: MDI_SUBWAY_VARIANT,
+    401: MDI_SUBWAY_VARIANT,
     402: "mdi:subway",
-    403: "mdi:subway-variant",
-    404: "mdi:subway-variant",
-    405: "mdi:subway-variant",
-    700: "mdi:bus",
-    701: "mdi:bus",
-    702: "mdi:bus",
-    703: "mdi:bus",
-    704: "mdi:bus",
-    705: "mdi:bus",
-    706: "mdi:bus",
-    707: "mdi:bus",
-    708: "mdi:bus",
-    709: "mdi:bus",
-    710: "mdi:bus",
-    711: "mdi:bus",
+    403: MDI_SUBWAY_VARIANT,
+    404: MDI_SUBWAY_VARIANT,
+    405: MDI_SUBWAY_VARIANT,
+    700: MDI_BUS,
+    701: MDI_BUS,
+    702: MDI_BUS,
+    703: MDI_BUS,
+    704: MDI_BUS,
+    705: MDI_BUS,
+    706: MDI_BUS,
+    707: MDI_BUS,
+    708: MDI_BUS,
+    709: MDI_BUS,
+    710: MDI_BUS,
+    711: MDI_BUS,
     712: "mdi:bus-school",
     713: "mdi:bus-school",
-    714: "mdi:bus",
-    715: "mdi:bus",
-    716: "mdi:bus",
-    800: "mdi:bus",
-    900: "mdi:tram",
-    901: "mdi:tram",
-    902: "mdi:tram",
-    903: "mdi:tram",
-    904: "mdi:tram",
-    905: "mdi:tram",
-    906: "mdi:tram",
-    1000: "mdi:ferry",
+    714: MDI_BUS,
+    715: MDI_BUS,
+    716: MDI_BUS,
+    800: MDI_BUS,
+    900: MDI_TRAM,
+    901: MDI_TRAM,
+    902: MDI_TRAM,
+    903: MDI_TRAM,
+    904: MDI_TRAM,
+    905: MDI_TRAM,
+    906: MDI_TRAM,
+    1000: MDI_FERRY,
     1100: "mdi:airplane",
-    1200: "mdi:ferry",
+    1200: MDI_FERRY,
     1300: "mdi:airplane",
     1400: "mdi:gondola",
-    1500: "mdi:taxi",
-    1501: "mdi:taxi",
-    1502: "mdi:ferry",
-    1503: "mdi:train-variant",
+    1500: MDI_TAXI,
+    1501: MDI_TAXI,
+    1502: MDI_FERRY,
+    1503: MDI_TRAIN_VARIANT,
     1504: "mdi:bicycle-basket",
-    1505: "mdi:taxi",
+    1505: MDI_TAXI,
     1506: "mdi:car-multiple",
-    1507: "mdi:taxi",
+    1507: MDI_TAXI,
     1700: "mdi:train-car",
     1702: "mdi:horse-variant",
 }
@@ -445,8 +454,8 @@ def get_next_departure(
     origin_stop_time = {
         "Arrival Time": origin_arrival_time,
         "Departure Time": origin_depart_time,
-        "Drop Off Type": item["origin_drop_off_type"],
-        "Pickup Type": item["origin_pickup_type"],
+        DROP_OFF_TYPE: item["origin_drop_off_type"],
+        PICKUP_TYPE: item["origin_pickup_type"],
         "Shape Dist Traveled": item["origin_dist_traveled"],
         "Headsign": item["origin_stop_headsign"],
         "Sequence": item["origin_stop_sequence"],
@@ -456,8 +465,8 @@ def get_next_departure(
     destination_stop_time = {
         "Arrival Time": dest_arrival_time,
         "Departure Time": dest_depart_time,
-        "Drop Off Type": item["dest_drop_off_type"],
-        "Pickup Type": item["dest_pickup_type"],
+        DROP_OFF_TYPE: item["dest_drop_off_type"],
+        PICKUP_TYPE: item["dest_pickup_type"],
         "Shape Dist Traveled": item["dest_dist_traveled"],
         "Headsign": item["dest_stop_headsign"],
         "Sequence": item["dest_stop_sequence"],
@@ -768,11 +777,11 @@ class GTFSDepartureSensor(SensorEntity):
         if self._departure:
             self.append_keys(self._departure["origin_stop_time"], prefix)
             self._attributes[ATTR_DROP_OFF_ORIGIN] = DROP_OFF_TYPE_OPTIONS.get(
-                self._departure["origin_stop_time"]["Drop Off Type"],
+                self._departure["origin_stop_time"][DROP_OFF_TYPE],
                 DROP_OFF_TYPE_DEFAULT,
             )
             self._attributes[ATTR_PICKUP_ORIGIN] = PICKUP_TYPE_OPTIONS.get(
-                self._departure["origin_stop_time"]["Pickup Type"], PICKUP_TYPE_DEFAULT
+                self._departure["origin_stop_time"][PICKUP_TYPE], PICKUP_TYPE_DEFAULT
             )
             self._attributes[ATTR_TIMEPOINT_ORIGIN] = TIMEPOINT_OPTIONS.get(
                 self._departure["origin_stop_time"]["Timepoint"], TIMEPOINT_DEFAULT
@@ -784,11 +793,11 @@ class GTFSDepartureSensor(SensorEntity):
         if self._departure:
             self.append_keys(self._departure["destination_stop_time"], prefix)
             self._attributes[ATTR_DROP_OFF_DESTINATION] = DROP_OFF_TYPE_OPTIONS.get(
-                self._departure["destination_stop_time"]["Drop Off Type"],
+                self._departure["destination_stop_time"][DROP_OFF_TYPE],
                 DROP_OFF_TYPE_DEFAULT,
             )
             self._attributes[ATTR_PICKUP_DESTINATION] = PICKUP_TYPE_OPTIONS.get(
-                self._departure["destination_stop_time"]["Pickup Type"],
+                self._departure["destination_stop_time"][PICKUP_TYPE],
                 PICKUP_TYPE_DEFAULT,
             )
             self._attributes[ATTR_TIMEPOINT_DESTINATION] = TIMEPOINT_OPTIONS.get(

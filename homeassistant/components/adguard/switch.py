@@ -19,6 +19,7 @@ from .entity import AdGuardHomeEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
+SHIELD_CHECK = "mdi:shield-check"
 
 
 @dataclass
@@ -41,7 +42,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="protection",
         name="Protection",
-        icon="mdi:shield-check",
+        icon=SHIELD_CHECK,
         is_on_fn=lambda adguard: adguard.protection_enabled,
         turn_on_fn=lambda adguard: adguard.enable_protection,
         turn_off_fn=lambda adguard: adguard.disable_protection,
@@ -49,7 +50,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="parental",
         name="Parental control",
-        icon="mdi:shield-check",
+        icon=SHIELD_CHECK,
         is_on_fn=lambda adguard: adguard.parental.enabled,
         turn_on_fn=lambda adguard: adguard.parental.enable,
         turn_off_fn=lambda adguard: adguard.parental.disable,
@@ -57,7 +58,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="safesearch",
         name="Safe search",
-        icon="mdi:shield-check",
+        icon=SHIELD_CHECK,
         is_on_fn=lambda adguard: adguard.safesearch.enabled,
         turn_on_fn=lambda adguard: adguard.safesearch.enable,
         turn_off_fn=lambda adguard: adguard.safesearch.disable,
@@ -65,7 +66,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="safebrowsing",
         name="Safe browsing",
-        icon="mdi:shield-check",
+        icon=SHIELD_CHECK,
         is_on_fn=lambda adguard: adguard.safebrowsing.enabled,
         turn_on_fn=lambda adguard: adguard.safebrowsing.enable,
         turn_off_fn=lambda adguard: adguard.safebrowsing.disable,
@@ -73,7 +74,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="filtering",
         name="Filtering",
-        icon="mdi:shield-check",
+        icon=SHIELD_CHECK,
         is_on_fn=lambda adguard: adguard.filtering.enabled,
         turn_on_fn=lambda adguard: adguard.filtering.enable,
         turn_off_fn=lambda adguard: adguard.filtering.disable,
@@ -81,7 +82,7 @@ SWITCHES: tuple[AdGuardHomeSwitchEntityDescription, ...] = (
     AdGuardHomeSwitchEntityDescription(
         key="querylog",
         name="Query log",
-        icon="mdi:shield-check",
+        icon=SHIELD_CHECK,
         is_on_fn=lambda adguard: adguard.querylog.enabled,
         turn_on_fn=lambda adguard: adguard.querylog.enable,
         turn_off_fn=lambda adguard: adguard.querylog.disable,

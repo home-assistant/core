@@ -45,6 +45,7 @@ ATTR_GCM_API_KEY = "gcm_api_key"
 ATTR_VAPID_PUB_KEY = "vapid_pub_key"
 ATTR_VAPID_PRV_KEY = "vapid_prv_key"
 ATTR_VAPID_EMAIL = "vapid_email"
+INVALID_JSON = "Invalid JSON"
 
 
 def gcm_api_deprecated(value):
@@ -219,7 +220,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
+            return self.json_message(INVALID_JSON, HTTPStatus.BAD_REQUEST)
         try:
             data = REGISTER_SCHEMA(data)
         except vol.Invalid as ex:
@@ -264,7 +265,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
+            return self.json_message(INVALID_JSON, HTTPStatus.BAD_REQUEST)
 
         subscription = data.get(ATTR_SUBSCRIPTION)
 
@@ -368,7 +369,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
+            return self.json_message(INVALID_JSON, HTTPStatus.BAD_REQUEST)
 
         event_payload = {
             ATTR_TAG: data.get(ATTR_TAG),

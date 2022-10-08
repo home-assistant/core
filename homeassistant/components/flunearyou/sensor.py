@@ -38,6 +38,7 @@ SENSOR_TYPE_USER_LEPTO = "lepto"
 SENSOR_TYPE_USER_NO_SYMPTOMS = "none"
 SENSOR_TYPE_USER_SYMPTOMS = "symptoms"
 SENSOR_TYPE_USER_TOTAL = "total"
+MDI_ALERT = "mdi:alert"
 
 CDC_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -56,49 +57,49 @@ USER_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_CHICK,
         name="Avian flu symptoms",
-        icon="mdi:alert",
+        icon=MDI_ALERT,
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_DENGUE,
         name="Dengue fever symptoms",
-        icon="mdi:alert",
+        icon=MDI_ALERT,
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_FLU,
         name="Flu symptoms",
-        icon="mdi:alert",
+        icon=MDI_ALERT,
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_LEPTO,
         name="Leptospirosis symptoms",
-        icon="mdi:alert",
+        icon=MDI_ALERT,
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_NO_SYMPTOMS,
         name="No symptoms",
-        icon="mdi:alert",
+        icon=MDI_ALERT,
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_SYMPTOMS,
         name="Flu-like symptoms",
-        icon="mdi:alert",
+        icon=MDI_ALERT,
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_USER_TOTAL,
         name="Total symptoms",
-        icon="mdi:alert",
+        icon=MDI_ALERT,
         native_unit_of_measurement="reports",
         state_class=SensorStateClass.MEASUREMENT,
     ),

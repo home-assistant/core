@@ -44,7 +44,18 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
+MDI_TIMER_OUTLINE = "mdi:timer-outline"
+MDI_IP = "mdi:ip"
+MDI_SPEEDOMETER = "mdi:speedometer"
+MDI_SIGNAL_CELLULAR_OUTLINE = "mdi:signal-cellular-outline"
+MDI_SIGNAL_CELLULAR_1 = "mdi:signal-cellular-1"
+MDI_SIGNAL_CELLULAR_2 = "mdi:signal-cellular-2"
+MDI_SIGNAL_CELLULAR_3 = "mdi:signal-cellular-3"
+MDI_MAP_MARKER = "mdi:map-marker"
+MDI_EMAIL_ARROW_LEFT = "mdi:email-arrow-left"
+MDI_DOWNLOAD = "mdi:download"
+MDI_UPLOAD = "mdi:upload"
+MDI_EMAIL = "mdi:email"
 
 class SensorMeta(NamedTuple):
     """Metadata for defining sensors."""
@@ -70,19 +81,19 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_DEVICE_INFORMATION, "uptime"): SensorMeta(
         name="Uptime",
-        icon="mdi:timer-outline",
+        icon=MDI_TIMER_OUTLINE,
         native_unit_of_measurement=TIME_SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_DEVICE_INFORMATION, "WanIPAddress"): SensorMeta(
         name="WAN IP address",
-        icon="mdi:ip",
+        icon=MDI_IP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,
     ),
     (KEY_DEVICE_INFORMATION, "WanIPv6Address"): SensorMeta(
         name="WAN IPv6 address",
-        icon="mdi:ip",
+        icon=MDI_IP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     #
@@ -99,12 +110,12 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_DEVICE_SIGNAL, "cqi0"): SensorMeta(
         name="CQI 0",
-        icon="mdi:speedometer",
+        icon=MDI_SPEEDOMETER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_DEVICE_SIGNAL, "cqi1"): SensorMeta(
         name="CQI 1",
-        icon="mdi:speedometer",
+        icon=MDI_SPEEDOMETER,
     ),
     (KEY_DEVICE_SIGNAL, "dl_mcs"): SensorMeta(
         name="Downlink MCS",
@@ -115,7 +126,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         icon=lambda x: (
             "mdi:speedometer-slow",
             "mdi:speedometer-medium",
-            "mdi:speedometer",
+            MDI_SPEEDOMETER,
         )[bisect((8, 15), x if x is not None else -1000)],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -128,10 +139,10 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         # https://wiki.teltonika.lt/view/EC/IO
         icon=lambda x: (
-            "mdi:signal-cellular-outline",
-            "mdi:signal-cellular-1",
-            "mdi:signal-cellular-2",
-            "mdi:signal-cellular-3",
+            MDI_SIGNAL_CELLULAR_OUTLINE,
+            MDI_SIGNAL_CELLULAR_1,
+            MDI_SIGNAL_CELLULAR_2,
+            MDI_SIGNAL_CELLULAR_3,
         )[bisect((-20, -10, -6), x if x is not None else -1000)],
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -142,7 +153,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_DEVICE_SIGNAL, "lac"): SensorMeta(
         name="LAC",
-        icon="mdi:map-marker",
+        icon=MDI_MAP_MARKER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_DEVICE_SIGNAL, "ltedlfreq"): SensorMeta(
@@ -182,7 +193,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_DEVICE_SIGNAL, "rac"): SensorMeta(
         name="RAC",
-        icon="mdi:map-marker",
+        icon=MDI_MAP_MARKER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_DEVICE_SIGNAL, "rrc_status"): SensorMeta(
@@ -194,10 +205,10 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         # https://wiki.teltonika.lt/view/RSCP
         icon=lambda x: (
-            "mdi:signal-cellular-outline",
-            "mdi:signal-cellular-1",
-            "mdi:signal-cellular-2",
-            "mdi:signal-cellular-3",
+            MDI_SIGNAL_CELLULAR_OUTLINE,
+            MDI_SIGNAL_CELLULAR_1,
+            MDI_SIGNAL_CELLULAR_2,
+            MDI_SIGNAL_CELLULAR_3,
         )[bisect((-95, -85, -75), x if x is not None else -1000)],
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -207,10 +218,10 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/rsrp.php
         icon=lambda x: (
-            "mdi:signal-cellular-outline",
-            "mdi:signal-cellular-1",
-            "mdi:signal-cellular-2",
-            "mdi:signal-cellular-3",
+            MDI_SIGNAL_CELLULAR_OUTLINE,
+            MDI_SIGNAL_CELLULAR_1,
+            MDI_SIGNAL_CELLULAR_2,
+            MDI_SIGNAL_CELLULAR_3,
         )[bisect((-110, -95, -80), x if x is not None else -1000)],
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -221,10 +232,10 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/rsrq.php
         icon=lambda x: (
-            "mdi:signal-cellular-outline",
-            "mdi:signal-cellular-1",
-            "mdi:signal-cellular-2",
-            "mdi:signal-cellular-3",
+            MDI_SIGNAL_CELLULAR_OUTLINE,
+            MDI_SIGNAL_CELLULAR_1,
+            MDI_SIGNAL_CELLULAR_2,
+            MDI_SIGNAL_CELLULAR_3,
         )[bisect((-11, -8, -5), x if x is not None else -1000)],
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -235,10 +246,10 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         # https://eyesaas.com/wi-fi-signal-strength/
         icon=lambda x: (
-            "mdi:signal-cellular-outline",
-            "mdi:signal-cellular-1",
-            "mdi:signal-cellular-2",
-            "mdi:signal-cellular-3",
+            MDI_SIGNAL_CELLULAR_OUTLINE,
+            MDI_SIGNAL_CELLULAR_1,
+            MDI_SIGNAL_CELLULAR_2,
+            MDI_SIGNAL_CELLULAR_3,
         )[bisect((-80, -70, -60), x if x is not None else -1000)],
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -249,10 +260,10 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         # http://www.lte-anbieter.info/technik/sinr.php
         icon=lambda x: (
-            "mdi:signal-cellular-outline",
-            "mdi:signal-cellular-1",
-            "mdi:signal-cellular-2",
-            "mdi:signal-cellular-3",
+            MDI_SIGNAL_CELLULAR_OUTLINE,
+            MDI_SIGNAL_CELLULAR_1,
+            MDI_SIGNAL_CELLULAR_2,
+            MDI_SIGNAL_CELLULAR_3,
         )[bisect((0, 5, 10), x if x is not None else -1000)],
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -260,7 +271,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_DEVICE_SIGNAL, "tac"): SensorMeta(
         name="TAC",
-        icon="mdi:map-marker",
+        icon=MDI_MAP_MARKER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_DEVICE_SIGNAL, "tdd"): SensorMeta(
@@ -285,7 +296,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         icon=lambda x: (
             "mdi:speedometer-slow",
             "mdi:speedometer-medium",
-            "mdi:speedometer",
+            MDI_SPEEDOMETER,
         )[bisect((8, 15), x if x is not None else -1000)],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -299,7 +310,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         )
     ),
     (KEY_MONITORING_CHECK_NOTIFICATIONS, "UnreadMessage"): SensorMeta(
-        name="SMS unread", icon="mdi:email-arrow-left"
+        name="SMS unread", icon=MDI_EMAIL_ARROW_LEFT
     ),
     KEY_MONITORING_MONTH_STATISTICS: SensorMeta(
         exclude=re.compile(r"^month(duration|lastcleartime)$", re.IGNORECASE)
@@ -307,13 +318,13 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     (KEY_MONITORING_MONTH_STATISTICS, "CurrentMonthDownload"): SensorMeta(
         name="Current month download",
         native_unit_of_measurement=DATA_BYTES,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     (KEY_MONITORING_MONTH_STATISTICS, "CurrentMonthUpload"): SensorMeta(
         name="Current month upload",
         native_unit_of_measurement=DATA_BYTES,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     KEY_MONITORING_STATUS: SensorMeta(
@@ -337,22 +348,22 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_MONITORING_STATUS, "PrimaryDns"): SensorMeta(
         name="Primary DNS server",
-        icon="mdi:ip",
+        icon=MDI_IP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_MONITORING_STATUS, "PrimaryIPv6Dns"): SensorMeta(
         name="Primary IPv6 DNS server",
-        icon="mdi:ip",
+        icon=MDI_IP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_MONITORING_STATUS, "SecondaryDns"): SensorMeta(
         name="Secondary DNS server",
-        icon="mdi:ip",
+        icon=MDI_IP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     (KEY_MONITORING_STATUS, "SecondaryIPv6Dns"): SensorMeta(
         name="Secondary IPv6 DNS server",
-        icon="mdi:ip",
+        icon=MDI_IP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     KEY_MONITORING_TRAFFIC_STATISTICS: SensorMeta(
@@ -361,48 +372,48 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentConnectTime"): SensorMeta(
         name="Current connection duration",
         native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
+        icon=MDI_TIMER_OUTLINE,
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownload"): SensorMeta(
         name="Current connection download",
         native_unit_of_measurement=DATA_BYTES,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownloadRate"): SensorMeta(
         name="Current download rate",
         native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentUpload"): SensorMeta(
         name="Current connection upload",
         native_unit_of_measurement=DATA_BYTES,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentUploadRate"): SensorMeta(
         name="Current upload rate",
         native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalConnectTime"): SensorMeta(
         name="Total connected duration",
         native_unit_of_measurement=TIME_SECONDS,
-        icon="mdi:timer-outline",
+        icon=MDI_TIMER_OUTLINE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalDownload"): SensorMeta(
         name="Total download",
         native_unit_of_measurement=DATA_BYTES,
-        icon="mdi:download",
+        icon=MDI_DOWNLOAD,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalUpload"): SensorMeta(
         name="Total upload",
         native_unit_of_measurement=DATA_BYTES,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     #
@@ -454,11 +465,11 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_SMS_SMS_COUNT, "LocalInbox"): SensorMeta(
         name="SMS inbox (device)",
-        icon="mdi:email",
+        icon=MDI_EMAIL,
     ),
     (KEY_SMS_SMS_COUNT, "LocalMax"): SensorMeta(
         name="SMS capacity (device)",
-        icon="mdi:email",
+        icon=MDI_EMAIL,
     ),
     (KEY_SMS_SMS_COUNT, "LocalOutbox"): SensorMeta(
         name="SMS outbox (device)",
@@ -466,7 +477,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_SMS_SMS_COUNT, "LocalUnread"): SensorMeta(
         name="SMS unread (device)",
-        icon="mdi:email-arrow-left",
+        icon=MDI_EMAIL_ARROW_LEFT,
     ),
     (KEY_SMS_SMS_COUNT, "SimDraft"): SensorMeta(
         name="SMS drafts (SIM)",
@@ -474,11 +485,11 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_SMS_SMS_COUNT, "SimInbox"): SensorMeta(
         name="SMS inbox (SIM)",
-        icon="mdi:email",
+        icon=MDI_EMAIL,
     ),
     (KEY_SMS_SMS_COUNT, "SimMax"): SensorMeta(
         name="SMS capacity (SIM)",
-        icon="mdi:email",
+        icon=MDI_EMAIL,
     ),
     (KEY_SMS_SMS_COUNT, "SimOutbox"): SensorMeta(
         name="SMS outbox (SIM)",
@@ -486,11 +497,11 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     ),
     (KEY_SMS_SMS_COUNT, "SimUnread"): SensorMeta(
         name="SMS unread (SIM)",
-        icon="mdi:email-arrow-left",
+        icon=MDI_EMAIL_ARROW_LEFT,
     ),
     (KEY_SMS_SMS_COUNT, "SimUsed"): SensorMeta(
         name="SMS messages (SIM)",
-        icon="mdi:email-arrow-left",
+        icon=MDI_EMAIL_ARROW_LEFT,
     ),
 }
 

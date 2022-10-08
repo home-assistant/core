@@ -13,11 +13,13 @@ from homeassistant.helpers.update_coordinator import (
 from . import get_coordinator
 from .const import ATTRIBUTION
 
+MDI_CAR = "mdi:car"
+
 SENSORS = {
-    "free_space_short": "mdi:car",
-    "free_space_long": "mdi:car",
-    "short_capacity": "mdi:car",
-    "long_capacity": "mdi:car",
+    "free_space_short": MDI_CAR,
+    "free_space_long": MDI_CAR,
+    "short_capacity": MDI_CAR,
+    "long_capacity": MDI_CAR,
 }
 
 

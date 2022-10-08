@@ -33,14 +33,15 @@ ATTR_DEVICE_OVERHEATED = "device_overheated"
 ATTR_DEVICE_OVERLOADED = "device_overloaded"
 ATTR_DEVICE_UNTERVOLTAGE = "device_undervoltage"
 ATTR_EVENT_DELAY = "event_delay"
+MDI_ALERT = "mdi:alert"
 
 DEVICE_ATTRIBUTE_ICONS = {
     "lowBat": "mdi:battery-outline",
     "sabotage": "mdi:shield-alert",
-    "dutyCycle": "mdi:alert",
-    "deviceOverheated": "mdi:alert",
-    "deviceOverloaded": "mdi:alert",
-    "deviceUndervoltage": "mdi:alert",
+    "dutyCycle": MDI_ALERT,
+    "deviceOverheated": MDI_ALERT,
+    "deviceOverloaded": MDI_ALERT,
+    "deviceUndervoltage": MDI_ALERT,
     "configPending": "mdi:alert-circle",
 }
 

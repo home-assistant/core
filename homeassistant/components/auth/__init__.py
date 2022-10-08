@@ -158,6 +158,8 @@ from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
 
+INVALID_CODE = "Invalid code"
+
 StoreResultType = Callable[[str, Credentials], str]
 RetrieveResultType = Callable[[str, str], Optional[Credentials]]
 
@@ -277,7 +279,7 @@ class TokenView(HomeAssistantView):
 
         if (code := data.get("code")) is None:
             return self.json(
-                {"error": "invalid_request", "error_description": "Invalid code"},
+                {"error": "invalid_request", "error_description": INVALID_CODE},
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
@@ -285,7 +287,7 @@ class TokenView(HomeAssistantView):
 
         if credential is None or not isinstance(credential, Credentials):
             return self.json(
-                {"error": "invalid_request", "error_description": "Invalid code"},
+                {"error": "invalid_request", "error_description": INVALID_CODE},
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
@@ -415,7 +417,7 @@ class LinkUserView(HomeAssistantView):
         credentials = self._retrieve_credentials(data["client_id"], data["code"])
 
         if credentials is None:
-            return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
+            return self.json_message(INVALID_CODE, status_code=HTTPStatus.BAD_REQUEST)
 
         linked_user = await hass.auth.async_get_user_by_credentials(credentials)
         if linked_user != user and linked_user is not None:

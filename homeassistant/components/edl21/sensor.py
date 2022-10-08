@@ -41,6 +41,8 @@ DOMAIN = "edl21"
 CONF_SERIAL_PORT = "serial_port"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
+MDI_FLASH = "mdi:flash"
+MDI_SINE_WAVE = "mdi:sine-wave"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -55,14 +57,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # C=0: General purpose objects
     # D=0: Free ID-numbers for utilities
     SensorEntityDescription(
-        key="1-0:0.0.9*255", name="Electricity ID", icon="mdi:flash"
+        key="1-0:0.0.9*255", name="Electricity ID", icon=MDI_FLASH
     ),
     # D=2: Program entries
     SensorEntityDescription(
-        key="1-0:0.2.0*0", name="Configuration program version number", icon="mdi:flash"
+        key="1-0:0.2.0*0", name="Configuration program version number", icon=MDI_FLASH
     ),
     SensorEntityDescription(
-        key="1-0:0.2.0*1", name="Firmware version number", icon="mdi:flash"
+        key="1-0:0.2.0*1", name="Firmware version number", icon=MDI_FLASH
     ),
     # C=1: Active power +
     # D=8: Time integral 1
@@ -120,7 +122,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # D=7: Instantaneous value
     # E=0: Total
     SensorEntityDescription(
-        key="1-0:14.7.0*255", name="Supply frequency", icon="mdi:sine-wave"
+        key="1-0:14.7.0*255", name="Supply frequency", icon=MDI_SINE_WAVE
     ),
     # C=15: Active power absolute
     # D=7: Instantaneous value
@@ -227,20 +229,20 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # E=15: U(L2) x I(L2)
     # E=26: U(L3) x I(L3)
     SensorEntityDescription(
-        key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle", icon=MDI_SINE_WAVE
     ),
     SensorEntityDescription(
-        key="1-0:81.7.15*255", name="U(L2)/I(L2) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.15*255", name="U(L2)/I(L2) phase angle", icon=MDI_SINE_WAVE
     ),
     SensorEntityDescription(
-        key="1-0:81.7.26*255", name="U(L3)/I(L3) phase angle", icon="mdi:sine-wave"
+        key="1-0:81.7.26*255", name="U(L3)/I(L3) phase angle", icon=MDI_SINE_WAVE
     ),
     # C=96: Electricity-related service entries
     SensorEntityDescription(
-        key="1-0:96.1.0*255", name="Metering point ID 1", icon="mdi:flash"
+        key="1-0:96.1.0*255", name="Metering point ID 1", icon=MDI_FLASH
     ),
     SensorEntityDescription(
-        key="1-0:96.5.0*255", name="Internal operating status", icon="mdi:flash"
+        key="1-0:96.5.0*255", name="Internal operating status", icon=MDI_FLASH
     ),
 )
 

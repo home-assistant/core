@@ -48,7 +48,7 @@ PLATFORMS = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
+FJÄRÅSKUPAN = "Fjäråskupan"
 
 class Coordinator(DataUpdateCoordinator[State]):
     """Update coordinator for each device."""
@@ -62,7 +62,7 @@ class Coordinator(DataUpdateCoordinator[State]):
         self._refresh_was_scheduled = False
 
         super().__init__(
-            hass, _LOGGER, name="Fjäråskupan", update_interval=timedelta(seconds=120)
+            hass, _LOGGER, name=FJÄRÅSKUPAN, update_interval=timedelta(seconds=120)
         )
 
     async def _async_refresh(
@@ -147,8 +147,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device_info = DeviceInfo(
                 connections={(dr.CONNECTION_BLUETOOTH, service_info.address)},
                 identifiers={(DOMAIN, service_info.address)},
-                manufacturer="Fjäråskupan",
-                name="Fjäråskupan",
+                manufacturer=FJÄRÅSKUPAN,
+                name=FJÄRÅSKUPAN,
             )
 
             coordinator: Coordinator = Coordinator(hass, device, device_info)

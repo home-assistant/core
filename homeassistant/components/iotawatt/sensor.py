@@ -41,7 +41,7 @@ from .const import (
 from .coordinator import IotawattUpdater
 
 _LOGGER = logging.getLogger(__name__)
-
+MDI_FLASH = "mdi:flash"
 
 @dataclass
 class IotaWattSensorEntityDescription(SensorEntityDescription):
@@ -62,7 +62,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
         "Hz",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
         entity_registry_enabled_default=False,
     ),
     "PF": IotaWattSensorEntityDescription(
@@ -89,21 +89,21 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
         "VA",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
         entity_registry_enabled_default=False,
     ),
     "VAR": IotaWattSensorEntityDescription(
         "VAR",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
         entity_registry_enabled_default=False,
     ),
     "VARh": IotaWattSensorEntityDescription(
         "VARh",
         native_unit_of_measurement=VOLT_AMPERE_REACTIVE_HOURS,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
         entity_registry_enabled_default=False,
     ),
     "Volts": IotaWattSensorEntityDescription(

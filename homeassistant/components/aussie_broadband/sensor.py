@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SERVICE_ID
 
+MDI_PHONE = "mdi:phone"
 
 @dataclass
 class SensorValueEntityDescription(SensorEntityDescription):
@@ -58,14 +59,14 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         key="national",
         name="National calls",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:phone",
+        icon=MDI_PHONE,
         value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
         key="mobile",
         name="Mobile calls",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:phone",
+        icon=MDI_PHONE,
         value=lambda x: x.get("calls"),
     ),
     SensorValueEntityDescription(
@@ -95,14 +96,14 @@ SENSOR_DESCRIPTIONS: tuple[SensorValueEntityDescription, ...] = (
         name="Voicemail calls",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:phone",
+        icon=MDI_PHONE,
     ),
     SensorValueEntityDescription(
         key="other",
         name="Other calls",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:phone",
+        icon=MDI_PHONE,
     ),
     # Generic sensors
     SensorValueEntityDescription(

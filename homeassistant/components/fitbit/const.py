@@ -44,7 +44,10 @@ DEFAULT_CONFIG: Final[dict[str, str]] = {
     CONF_CLIENT_SECRET: "CLIENT_SECRET_HERE",
 }
 DEFAULT_CLOCK_FORMAT: Final = "24H"
-
+MDI_FIRE = "mdi:fire"
+MDI_WALK = "mdi:walk"
+MDI_HUMAN = "mdi:human"
+MDI_SLEEP = "mdi:sleep"
 
 @dataclass
 class FitbitRequiredKeysMixin:
@@ -63,19 +66,19 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         key="activities/activityCalories",
         name="Activity Calories",
         unit_type="cal",
-        icon="mdi:fire",
+        icon=MDI_FIRE,
     ),
     FitbitSensorEntityDescription(
         key="activities/calories",
         name="Calories",
         unit_type="cal",
-        icon="mdi:fire",
+        icon=MDI_FIRE,
     ),
     FitbitSensorEntityDescription(
         key="activities/caloriesBMR",
         name="Calories BMR",
         unit_type="cal",
-        icon="mdi:fire",
+        icon=MDI_FIRE,
     ),
     FitbitSensorEntityDescription(
         key="activities/distance",
@@ -87,13 +90,13 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         key="activities/elevation",
         name="Elevation",
         unit_type="",
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="activities/floors",
         name="Floors",
         unit_type="floors",
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="activities/heart",
@@ -105,13 +108,13 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         key="activities/minutesFairlyActive",
         name="Minutes Fairly Active",
         unit_type=TIME_MINUTES,
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesLightlyActive",
         name="Minutes Lightly Active",
         unit_type=TIME_MINUTES,
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="activities/minutesSedentary",
@@ -129,19 +132,19 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         key="activities/steps",
         name="Steps",
         unit_type="steps",
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/activityCalories",
         name="Tracker Activity Calories",
         unit_type="cal",
-        icon="mdi:fire",
+        icon=MDI_FIRE,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/calories",
         name="Tracker Calories",
         unit_type="cal",
-        icon="mdi:fire",
+        icon=MDI_FIRE,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/distance",
@@ -153,25 +156,25 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         key="activities/tracker/elevation",
         name="Tracker Elevation",
         unit_type="",
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/floors",
         name="Tracker Floors",
         unit_type="floors",
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesFairlyActive",
         name="Tracker Minutes Fairly Active",
         unit_type=TIME_MINUTES,
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesLightlyActive",
         name="Tracker Minutes Lightly Active",
         unit_type=TIME_MINUTES,
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="activities/tracker/minutesSedentary",
@@ -189,61 +192,61 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         key="activities/tracker/steps",
         name="Tracker Steps",
         unit_type="steps",
-        icon="mdi:walk",
+        icon=MDI_WALK,
     ),
     FitbitSensorEntityDescription(
         key="body/bmi",
         name="BMI",
         unit_type="BMI",
-        icon="mdi:human",
+        icon=MDI_HUMAN,
     ),
     FitbitSensorEntityDescription(
         key="body/fat",
         name="Body Fat",
         unit_type=PERCENTAGE,
-        icon="mdi:human",
+        icon=MDI_HUMAN,
     ),
     FitbitSensorEntityDescription(
         key="body/weight",
         name="Weight",
         unit_type="",
-        icon="mdi:human",
+        icon=MDI_HUMAN,
     ),
     FitbitSensorEntityDescription(
         key="sleep/awakeningsCount",
         name="Awakenings Count",
         unit_type="times awaken",
-        icon="mdi:sleep",
+        icon=MDI_SLEEP,
     ),
     FitbitSensorEntityDescription(
         key="sleep/efficiency",
         name="Sleep Efficiency",
         unit_type=PERCENTAGE,
-        icon="mdi:sleep",
+        icon=MDI_SLEEP,
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesAfterWakeup",
         name="Minutes After Wakeup",
         unit_type=TIME_MINUTES,
-        icon="mdi:sleep",
+        icon=MDI_SLEEP,
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesAsleep",
         name="Sleep Minutes Asleep",
         unit_type=TIME_MINUTES,
-        icon="mdi:sleep",
+        icon=MDI_SLEEP,
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesAwake",
         name="Sleep Minutes Awake",
         unit_type=TIME_MINUTES,
-        icon="mdi:sleep",
+        icon=MDI_SLEEP,
     ),
     FitbitSensorEntityDescription(
         key="sleep/minutesToFallAsleep",
         name="Sleep Minutes to Fall Asleep",
         unit_type=TIME_MINUTES,
-        icon="mdi:sleep",
+        icon=MDI_SLEEP,
     ),
     FitbitSensorEntityDescription(
         key="sleep/startTime",

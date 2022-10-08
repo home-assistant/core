@@ -114,6 +114,7 @@ SERVICE_SEE_PAYLOAD_SCHEMA: Final[vol.Schema] = vol.Schema(
 
 YAML_DEVICES: Final = "known_devices.yaml"
 EVENT_NEW_DEVICE: Final = "device_tracker_new_device"
+HASS_SET = "hass should be set by async_setup_scanner_platform"
 
 
 class SeeCallback(Protocol):
@@ -860,7 +861,7 @@ class DeviceScanner:
         """Scan for devices."""
         assert (
             self.hass is not None
-        ), "hass should be set by async_setup_scanner_platform"
+        ), HASS_SET
         return await self.hass.async_add_executor_job(self.scan_devices)
 
     def get_device_name(self, device: str) -> str | None:
@@ -871,7 +872,7 @@ class DeviceScanner:
         """Get the name of a device."""
         assert (
             self.hass is not None
-        ), "hass should be set by async_setup_scanner_platform"
+        ), HASS_SET
         return await self.hass.async_add_executor_job(self.get_device_name, device)
 
     def get_extra_attributes(self, device: str) -> dict:
@@ -882,7 +883,7 @@ class DeviceScanner:
         """Get the extra attributes of a device."""
         assert (
             self.hass is not None
-        ), "hass should be set by async_setup_scanner_platform"
+        ), HASS_SET
         return await self.hass.async_add_executor_job(self.get_extra_attributes, device)
 
 

@@ -78,6 +78,7 @@ MAP_UNIT_SYSTEM: dict[
     "uk2": "uk2_unit",
 }
 
+MDI_WEATHER_NIGHT = "mdi:weather-night"
 
 @dataclass
 class DarkskySensorEntityDescription(SensorEntityDescription):
@@ -416,7 +417,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "moon_phase": DarkskySensorEntityDescription(
         key="moon_phase",
         name="Moon Phase",
-        icon="mdi:weather-night",
+        icon=MDI_WEATHER_NIGHT,
         forecast_mode=["daily"],
     ),
     "sunrise_time": DarkskySensorEntityDescription(
@@ -428,7 +429,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "sunset_time": DarkskySensorEntityDescription(
         key="sunset_time",
         name="Sunset",
-        icon="mdi:weather-night",
+        icon=MDI_WEATHER_NIGHT,
         forecast_mode=["daily"],
     ),
     "alerts": DarkskySensorEntityDescription(
@@ -454,7 +455,7 @@ CONDITION_PICTURES: dict[str, ConditionPicture] = {
     ),
     "clear-night": ConditionPicture(
         entity_picture="/static/images/darksky/weather-night.svg",
-        icon="mdi:weather-night",
+        icon=MDI_WEATHER_NIGHT,
     ),
     "rain": ConditionPicture(
         entity_picture="/static/images/darksky/weather-pouring.svg",

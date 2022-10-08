@@ -72,7 +72,7 @@ VALVE_TYPE: dict[str, ValveInfo] = {
 ACTIVATE_ONLY_SWITCH_DOMAINS = {"button", "input_button", "scene", "script"}
 
 ACTIVATE_ONLY_RESET_SECONDS = 10
-
+SET_SWITCH_STATE_TO = SET_SWITCH_STATE_TO
 
 @TYPES.register("Outlet")
 class Outlet(HomeAccessory):
@@ -96,7 +96,7 @@ class Outlet(HomeAccessory):
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        _LOGGER.debug(SET_SWITCH_STATE_TO, self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self.async_call_service(DOMAIN, service, params)
@@ -182,7 +182,7 @@ class Vacuum(Switch):
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        _LOGGER.debug(SET_SWITCH_STATE_TO, self.entity_id, value)
         state = self.hass.states.get(self.entity_id)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
@@ -230,7 +230,7 @@ class Valve(HomeAccessory):
 
     def set_state(self, value):
         """Move value state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        _LOGGER.debug(SET_SWITCH_STATE_TO, self.entity_id, value)
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF

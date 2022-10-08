@@ -40,7 +40,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
+UNEXCEPTED_EXCEPTION = "Unexpected exception"
 
 def _get_ezviz_client_instance(data):
     """Initialize a new instance of EzvizClientApi."""
@@ -206,7 +206,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
 
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception(UNEXCEPTED_EXCEPTION)
                 return self.async_abort(reason="unknown")
 
         data_schema = vol.Schema(
@@ -248,7 +248,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
 
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception(UNEXCEPTED_EXCEPTION)
                 return self.async_abort(reason="unknown")
 
         data_schema_custom_url = vol.Schema(
@@ -289,7 +289,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
 
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception(UNEXCEPTED_EXCEPTION)
                 return self.async_abort(reason="unknown")
 
         discovered_camera_schema = vol.Schema(

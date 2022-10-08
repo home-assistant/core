@@ -18,41 +18,43 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+MDI_WATER = "mdi:water"
+
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="black",
         name="Ink level Black",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="photoblack",
         name="Ink level Photoblack",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="magenta",
         name="Ink level Magenta",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="cyan",
         name="Ink level Cyan",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="yellow",
         name="Ink level Yellow",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
         key="clean",
         name="Cleaning level",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PERCENTAGE,
     ),
 )

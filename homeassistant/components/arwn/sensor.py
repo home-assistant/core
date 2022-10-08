@@ -24,6 +24,8 @@ DOMAIN = "arwn"
 DATA_ARWN = "arwn"
 TOPIC = "arwn/#"
 
+MDI_WATER = "mdi:water"
+
 
 def discover_sensors(topic, payload):
     """Given a topic, dynamically create the right sensor type.
@@ -52,11 +54,11 @@ def discover_sensors(topic, payload):
                 "Rain Since Midnight",
                 "since_midnight",
                 PRECIPITATION_INCHES,
-                "mdi:water",
+                MDI_WATER,
             )
         return (
-            ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, "mdi:water"),
-            ArwnSensor(topic + "/rate", "Rainfall Rate", "rate", unit, "mdi:water"),
+            ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, MDI_WATER),
+            ArwnSensor(topic + "/rate", "Rainfall Rate", "rate", unit, MDI_WATER),
         )
     if domain == "barometer":
         return ArwnSensor(topic, "Barometer", "pressure", unit, "mdi:thermometer-lines")

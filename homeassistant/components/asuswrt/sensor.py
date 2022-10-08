@@ -34,6 +34,7 @@ from .const import (
 )
 from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
 
+CPU_32_BIT = "mdi:cpu-32-bit"
 
 @dataclass
 class AsusWrtSensorEntityDescription(SensorEntityDescription):
@@ -92,7 +93,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[0],
         name="Load Avg (1m)",
-        icon="mdi:cpu-32-bit",
+        icon=CPU_32_BIT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -102,7 +103,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[1],
         name="Load Avg (5m)",
-        icon="mdi:cpu-32-bit",
+        icon=CPU_32_BIT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -112,7 +113,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[2],
         name="Load Avg (15m)",
-        icon="mdi:cpu-32-bit",
+        icon=CPU_32_BIT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

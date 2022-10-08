@@ -34,6 +34,11 @@ from . import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_PREFIX = "UPS "
+INFORMATION_OUTLINE = "mdi:information-outline"
+CALENDER_CLOCK = "mdi:calendar-clock"
+MDI_FLASH = "mdi:flash"
+MDI_TIMER_OUTLINE = "mdi:timer-outline"
+MDI_TRANSFER = "mdi:transfer"
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="alarmdel",
@@ -48,33 +53,33 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="apc",
         name="Status Data",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="apcmodel",
         name="Model",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="badbatts",
         name="Bad Batteries",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="battdate",
         name="Battery Replaced",
-        icon="mdi:calendar-clock",
+        icon=CALENDER_CLOCK,
     ),
     SensorEntityDescription(
         key="battstat",
         name="Battery Status",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="battv",
         name="Battery Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="bcharge",
@@ -90,17 +95,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="cumonbatt",
         name="Total Time on Battery",
-        icon="mdi:timer-outline",
+        icon=MDI_TIMER_OUTLINE,
     ),
     SensorEntityDescription(
         key="date",
         name="Status Date",
-        icon="mdi:calendar-clock",
+        icon=CALENDER_CLOCK,
     ),
     SensorEntityDescription(
         key="dipsw",
         name="Dip Switch Settings",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="dlowbatt",
@@ -110,43 +115,43 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="driver",
         name="Driver",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="dshutd",
         name="Shutdown Delay",
-        icon="mdi:timer-outline",
+        icon=MDI_TIMER_OUTLINE,
     ),
     SensorEntityDescription(
         key="dwake",
         name="Wake Delay",
-        icon="mdi:timer-outline",
+        icon=MDI_TIMER_OUTLINE,
     ),
     SensorEntityDescription(
         key="end apc",
         name="Date and Time",
-        icon="mdi:calendar-clock",
+        icon=CALENDER_CLOCK,
     ),
     SensorEntityDescription(
         key="extbatts",
         name="External Batteries",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="firmware",
         name="Firmware Version",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="hitrans",
         name="Transfer High",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="hostname",
         name="Hostname",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="humidity",
@@ -163,24 +168,24 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="lastxfer",
         name="Last Transfer",
-        icon="mdi:transfer",
+        icon=MDI_TRANSFER,
     ),
     SensorEntityDescription(
         key="linefail",
         name="Input Voltage Status",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="linefreq",
         name="Line Frequency",
         native_unit_of_measurement=FREQUENCY_HERTZ,
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="linev",
         name="Input Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="loadpct",
@@ -198,7 +203,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="lotrans",
         name="Transfer Low",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="mandate",
@@ -208,13 +213,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="masterupd",
         name="Master Update",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="maxlinev",
         name="Input Voltage High",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="maxtime",
@@ -231,47 +236,47 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="minlinev",
         name="Input Voltage Low",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="mintimel",
         name="Shutdown Time",
-        icon="mdi:timer-outline",
+        icon=MDI_TIMER_OUTLINE,
     ),
     SensorEntityDescription(
         key="model",
         name="Model",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="nombattv",
         name="Battery Nominal Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="nominv",
         name="Nominal Input Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="nomoutv",
         name="Nominal Output Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="nompower",
         name="Nominal Output Power",
         native_unit_of_measurement=POWER_WATT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="nomapnt",
         name="Nominal Apparent Power",
         native_unit_of_measurement=POWER_VOLT_AMPERE,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="numxfers",
@@ -282,28 +287,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="outcurnt",
         name="Output Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="outputv",
         name="Output Voltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        icon="mdi:flash",
+        icon=MDI_FLASH,
     ),
     SensorEntityDescription(
         key="reg1",
         name="Register 1 Fault",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="reg2",
         name="Register 2 Fault",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="reg3",
         name="Register 3 Fault",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="retpct",
@@ -314,37 +319,37 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="selftest",
         name="Last Self Test",
-        icon="mdi:calendar-clock",
+        icon=CALENDER_CLOCK,
     ),
     SensorEntityDescription(
         key="sense",
         name="Sensitivity",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="serialno",
         name="Serial Number",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="starttime",
         name="Startup Time",
-        icon="mdi:calendar-clock",
+        icon=CALENDER_CLOCK,
     ),
     SensorEntityDescription(
         key="statflag",
         name="Status Flag",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="status",
         name="Status",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="stesti",
         name="Self Test Interval",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="timeleft",
@@ -354,37 +359,37 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="tonbatt",
         name="Time on Battery",
-        icon="mdi:timer-outline",
+        icon=MDI_TIMER_OUTLINE,
     ),
     SensorEntityDescription(
         key="upsmode",
         name="Mode",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="upsname",
         name="Name",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="version",
         name="Daemon Info",
-        icon="mdi:information-outline",
+        icon=INFORMATION_OUTLINE,
     ),
     SensorEntityDescription(
         key="xoffbat",
         name="Transfer from Battery",
-        icon="mdi:transfer",
+        icon=MDI_TRANSFER,
     ),
     SensorEntityDescription(
         key="xoffbatt",
         name="Transfer from Battery",
-        icon="mdi:transfer",
+        icon=MDI_TRANSFER,
     ),
     SensorEntityDescription(
         key="xonbatt",
         name="Transfer to Battery",
-        icon="mdi:transfer",
+        icon=MDI_TRANSFER,
     ),
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]

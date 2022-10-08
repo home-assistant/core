@@ -42,6 +42,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SLOTS = "slots"
 
+FAILED_SEND_PACKET = "Failed to send packet: %s"
+
 SWITCH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
@@ -190,7 +192,7 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
         try:
             await device.async_request(device.api.send_data, packet)
         except (BroadlinkException, OSError) as err:
-            _LOGGER.error("Failed to send packet: %s", err)
+            _LOGGER.error(FAILED_SEND_PACKET, err)
             return False
         return True
 
@@ -210,7 +212,7 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
         try:
             await device.async_request(device.api.set_power, packet)
         except (BroadlinkException, OSError) as err:
-            _LOGGER.error("Failed to send packet: %s", err)
+            _LOGGER.error(FAILED_SEND_PACKET, err)
             return False
         return True
 
@@ -254,7 +256,7 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
         try:
             await device.async_request(device.api.set_power, self._slot, packet)
         except (BroadlinkException, OSError) as err:
-            _LOGGER.error("Failed to send packet: %s", err)
+            _LOGGER.error(FAILED_SEND_PACKET, err)
             return False
         return True
 
@@ -286,6 +288,6 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         try:
             await device.async_request(device.api.set_state, **state)
         except (BroadlinkException, OSError) as err:
-            _LOGGER.error("Failed to send packet: %s", err)
+            _LOGGER.error(FAILED_SEND_PACKET, err)
             return False
         return True

@@ -23,6 +23,8 @@ import homeassistant.util.dt as dt_util
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+MDI_CALENDAR_CLOCK = "mdi:calendar-clock"
+MDI_WEATHER_NIGHT = "mdi:weather-night"
 
 INFO_SENSORS = (
     SensorEntityDescription(
@@ -61,47 +63,47 @@ TIME_SENSORS = (
     SensorEntityDescription(
         key="talit",
         name="Talit and Tefillin",
-        icon="mdi:calendar-clock",
+        icon=MDI_CALENDAR_CLOCK,
     ),
     SensorEntityDescription(
         key="sunrise",
         name="Hanetz Hachama",
-        icon="mdi:calendar-clock",
+        icon=MDI_CALENDAR_CLOCK,
     ),
     SensorEntityDescription(
         key="gra_end_shma",
         name='Latest time for Shma Gr"a',
-        icon="mdi:calendar-clock",
+        icon=MDI_CALENDAR_CLOCK,
     ),
     SensorEntityDescription(
         key="mga_end_shma",
         name='Latest time for Shma MG"A',
-        icon="mdi:calendar-clock",
+        icon=MDI_CALENDAR_CLOCK,
     ),
     SensorEntityDescription(
         key="gra_end_tfila",
         name='Latest time for Tefilla Gr"a',
-        icon="mdi:calendar-clock",
+        icon=MDI_CALENDAR_CLOCK,
     ),
     SensorEntityDescription(
         key="mga_end_tfila",
         name='Latest time for Tefilla MG"A',
-        icon="mdi:calendar-clock",
+        icon=MDI_CALENDAR_CLOCK,
     ),
     SensorEntityDescription(
         key="midday",
         name="Chatzot Hayom",
-        icon="mdi:calendar-clock",
+        icon=MDI_CALENDAR_CLOCK,
     ),
     SensorEntityDescription(
         key="big_mincha",
         name="Mincha Gedola",
-        icon="mdi:calendar-clock",
+        icon=MDI_CALENDAR_CLOCK,
     ),
     SensorEntityDescription(
         key="small_mincha",
         name="Mincha Ketana",
-        icon="mdi:calendar-clock",
+        icon=MDI_CALENDAR_CLOCK,
     ),
     SensorEntityDescription(
         key="plag_mincha",
@@ -116,7 +118,7 @@ TIME_SENSORS = (
     SensorEntityDescription(
         key="first_stars",
         name="T'set Hakochavim",
-        icon="mdi:weather-night",
+        icon=MDI_WEATHER_NIGHT,
     ),
     SensorEntityDescription(
         key="upcoming_shabbat_candle_lighting",
@@ -126,7 +128,7 @@ TIME_SENSORS = (
     SensorEntityDescription(
         key="upcoming_shabbat_havdalah",
         name="Upcoming Shabbat Havdalah",
-        icon="mdi:weather-night",
+        icon=MDI_WEATHER_NIGHT,
     ),
     SensorEntityDescription(
         key="upcoming_candle_lighting",
@@ -136,7 +138,7 @@ TIME_SENSORS = (
     SensorEntityDescription(
         key="upcoming_havdalah",
         name="Upcoming Havdalah",
-        icon="mdi:weather-night",
+        icon=MDI_WEATHER_NIGHT,
     ),
 )
 

@@ -24,7 +24,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
+MACHINE_NAME = "Machine Name"
 
 # Can't use all vol types: https://github.com/home-assistant/core/issues/32819
 DATA_SCHEMA_DICT = {
@@ -163,14 +163,14 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered forked-daapd device."""
         version_num = 0
         zeroconf_properties = discovery_info.properties
-        if zeroconf_properties.get("Machine Name"):
+        if zeroconf_properties.get(MACHINE_NAME):
             with suppress(ValueError):
                 version_num = int(
                     zeroconf_properties.get("mtd-version", "0").split(".")[0]
                 )
         if version_num < 27:
             return self.async_abort(reason="not_forked_daapd")
-        await self.async_set_unique_id(zeroconf_properties["Machine Name"])
+        await self.async_set_unique_id(zeroconf_properties[MACHINE_NAME])
         self._abort_if_unique_id_configured()
 
         # Update title and abort if we already have an entry for this host
@@ -179,14 +179,14 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 continue
             self.hass.config_entries.async_update_entry(
                 entry,
-                title=zeroconf_properties["Machine Name"],
+                title=zeroconf_properties[MACHINE_NAME],
             )
             return self.async_abort(reason="already_configured")
 
         zeroconf_data = {
             CONF_HOST: discovery_info.host,
             CONF_PORT: discovery_info.port,
-            CONF_NAME: zeroconf_properties["Machine Name"],
+            CONF_NAME: zeroconf_properties[MACHINE_NAME],
         }
         self.discovery_schema = vol.Schema(fill_in_schema_dict(zeroconf_data))
         self.context.update({"title_placeholders": zeroconf_data})

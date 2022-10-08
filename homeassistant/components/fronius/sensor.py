@@ -41,7 +41,8 @@ if TYPE_CHECKING:
     )
 
 ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
-
+MDI_CURRENT_DC = "mdi:current-dc"
+MDI_FLASH_OUTLINE = "mdi:flash-outline"
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -119,7 +120,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:current-dc",
+        icon=MDI_CURRENT_DC,
     ),
     SensorEntityDescription(
         key="current_dc_2",
@@ -127,7 +128,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:current-dc",
+        icon=MDI_CURRENT_DC,
     ),
     SensorEntityDescription(
         key="power_ac",
@@ -150,7 +151,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:current-dc",
+        icon=MDI_CURRENT_DC,
     ),
     SensorEntityDescription(
         key="voltage_dc_2",
@@ -158,7 +159,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:current-dc",
+        icon=MDI_CURRENT_DC,
     ),
     # device status entities
     SensorEntityDescription(
@@ -300,7 +301,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash-outline",
+        icon=MDI_FLASH_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -309,7 +310,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash-outline",
+        icon=MDI_FLASH_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -318,7 +319,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash-outline",
+        icon=MDI_FLASH_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -327,7 +328,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash-outline",
+        icon=MDI_FLASH_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -363,7 +364,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash-outline",
+        icon=MDI_FLASH_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -372,7 +373,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash-outline",
+        icon=MDI_FLASH_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -381,7 +382,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash-outline",
+        icon=MDI_FLASH_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -390,7 +391,7 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:flash-outline",
+        icon=MDI_FLASH_OUTLINE,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -606,7 +607,7 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:current-dc",
+        icon=MDI_CURRENT_DC,
     ),
     SensorEntityDescription(
         key="voltage_dc",
@@ -614,7 +615,7 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:current-dc",
+        icon=MDI_CURRENT_DC,
     ),
     SensorEntityDescription(
         key="voltage_dc_maximum_cell",
@@ -622,7 +623,7 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:current-dc",
+        icon=MDI_CURRENT_DC,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -631,7 +632,7 @@ STORAGE_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:current-dc",
+        icon=MDI_CURRENT_DC,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(

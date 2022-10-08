@@ -119,6 +119,8 @@ SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
 
+HOME_ASSISTANT = "Home Assistant"
+
 
 SCHEMA_NO_DATA = vol.Schema({})
 
@@ -809,7 +811,7 @@ def async_register_os_in_dev_reg(
     """Register OS in the device registry."""
     params = DeviceInfo(
         identifiers={(DOMAIN, "OS")},
-        manufacturer="Home Assistant",
+        manufacturer=HOME_ASSISTANT,
         model=SupervisorEntityModel.OS,
         sw_version=os_dict[ATTR_VERSION],
         name="Home Assistant Operating System",
@@ -827,7 +829,7 @@ def async_register_core_in_dev_reg(
     """Register OS in the device registry."""
     params = DeviceInfo(
         identifiers={(DOMAIN, "core")},
-        manufacturer="Home Assistant",
+        manufacturer=HOME_ASSISTANT,
         model=SupervisorEntityModel.CORE,
         sw_version=core_dict[ATTR_VERSION],
         name="Home Assistant Core",
@@ -845,7 +847,7 @@ def async_register_supervisor_in_dev_reg(
     """Register OS in the device registry."""
     params = DeviceInfo(
         identifiers={(DOMAIN, "supervisor")},
-        manufacturer="Home Assistant",
+        manufacturer=HOME_ASSISTANT,
         model=SupervisorEntityModel.SUPERVIOSR,
         sw_version=supervisor_dict[ATTR_VERSION],
         name="Home Assistant Supervisor",

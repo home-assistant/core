@@ -40,6 +40,10 @@ PRICE = "CAD"
 
 DEFAULT_NAME = "EBox"
 
+MDI_DOWNLOD = "mdi:download"
+
+MDI_UPLOAD = "mdi:upload"
+
 REQUESTS_TIMEOUT = 15
 SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
@@ -62,7 +66,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="limit",
         name="Data limit",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:download",
+        icon=MDI_DOWNLOD,
     ),
     SensorEntityDescription(
         key="days_left",
@@ -74,55 +78,55 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="before_offpeak_download",
         name="Download before offpeak",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:download",
+        icon=MDI_DOWNLOD,
     ),
     SensorEntityDescription(
         key="before_offpeak_upload",
         name="Upload before offpeak",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
     ),
     SensorEntityDescription(
         key="before_offpeak_total",
         name="Total before offpeak",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:download",
+        icon=MDI_DOWNLOD,
     ),
     SensorEntityDescription(
         key="offpeak_download",
         name="Offpeak download",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:download",
+        icon=MDI_DOWNLOD,
     ),
     SensorEntityDescription(
         key="offpeak_upload",
         name="Offpeak Upload",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
     ),
     SensorEntityDescription(
         key="offpeak_total",
         name="Offpeak Total",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:download",
+        icon=MDI_DOWNLOD,
     ),
     SensorEntityDescription(
         key="download",
         name="Download",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:download",
+        icon=MDI_DOWNLOD,
     ),
     SensorEntityDescription(
         key="upload",
         name="Upload",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:upload",
+        icon=MDI_UPLOAD,
     ),
     SensorEntityDescription(
         key="total",
         name="Total",
         native_unit_of_measurement=DATA_GIGABITS,
-        icon="mdi:download",
+        icon=MDI_DOWNLOD,
     ),
 )
 

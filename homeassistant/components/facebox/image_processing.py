@@ -42,7 +42,8 @@ FACEBOX_NAME = "name"
 CLASSIFIER = "facebox"
 DATA_FACEBOX = "facebox_classifiers"
 FILE_PATH = "file_path"
-
+AUTH_ERROR = "AuthenticationError on %s"
+CONNECTION_ERROR = "ConnectionError: Is %s running?"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -70,12 +71,12 @@ def check_box_health(url, username, password):
     try:
         response = requests.get(url, **kwargs, timeout=10)
         if response.status_code == HTTPStatus.UNAUTHORIZED:
-            _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
+            _LOGGER.error(AUTH_ERROR, CLASSIFIER)
             return None
         if response.status_code == HTTPStatus.OK:
             return response.json()["hostname"]
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
+        _LOGGER.error(CONNECTION_ERROR, CLASSIFIER)
         return None
 
 
@@ -120,11 +121,11 @@ def post_image(url, image, username, password):
             url, json={"base64": encode_image(image)}, timeout=10, **kwargs
         )
         if response.status_code == HTTPStatus.UNAUTHORIZED:
-            _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
+            _LOGGER.error(AUTH_ERROR, CLASSIFIER)
             return None
         return response
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
+        _LOGGER.error(CONNECTION_ERROR, CLASSIFIER)
         return None
 
 
@@ -143,7 +144,7 @@ def teach_file(url, name, file_path, username, password):
                 **kwargs,
             )
         if response.status_code == HTTPStatus.UNAUTHORIZED:
-            _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
+            _LOGGER.error(AUTH_ERROR, CLASSIFIER)
         elif response.status_code == HTTPStatus.BAD_REQUEST:
             _LOGGER.error(
                 "%s teaching of file %s failed with message:%s",
@@ -152,7 +153,7 @@ def teach_file(url, name, file_path, username, password):
                 response.text,
             )
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
+        _LOGGER.error(CONNECTION_ERROR, CLASSIFIER)
 
 
 def valid_file_path(file_path):

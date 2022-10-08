@@ -62,7 +62,7 @@ DEFAULT_DATA = {
 }
 
 SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
-
+IMAGE_JPEG = "image/jpeg"
 
 def build_schema(
     user_input: Mapping[str, Any],
@@ -142,7 +142,7 @@ async def async_test_still(
     """Verify that the still image is valid before we create an entity."""
     fmt = None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
-        return {}, info.get(CONF_CONTENT_TYPE, "image/jpeg")
+        return {}, info.get(CONF_CONTENT_TYPE, IMAGE_JPEG)
     try:
         if not isinstance(url, template_helper.Template):
             url = template_helper.Template(url, hass)
@@ -313,7 +313,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                         # If user didn't specify a still image URL,
                         # The automatically generated still image that stream generates
                         # is always jpeg
-                        user_input[CONF_CONTENT_TYPE] = "image/jpeg"
+                        user_input[CONF_CONTENT_TYPE] = IMAGE_JPEG
 
                     return self.async_create_entry(
                         title=name, data={}, options=user_input
@@ -342,7 +342,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
             import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-        still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
+        still_format = import_config.get(CONF_CONTENT_TYPE, IMAGE_JPEG)
         import_config[CONF_CONTENT_TYPE] = still_format
         return self.async_create_entry(title=name, data={}, options=import_config)
 
@@ -376,7 +376,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     # If user didn't specify a still image URL,
                     # The automatically generated still image that stream generates
                     # is always jpeg
-                    still_format = "image/jpeg"
+                    still_format = IMAGE_JPEG
                 data = {
                     CONF_AUTHENTICATION: user_input.get(CONF_AUTHENTICATION),
                     CONF_STREAM_SOURCE: user_input.get(CONF_STREAM_SOURCE),

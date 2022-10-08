@@ -56,6 +56,18 @@ MEASURED_LABEL = "Measured"
 TIMEFRAME_LABEL = "Timeframe"
 SYMBOL = "symbol"
 
+MDI_GUAGE = "mdi:gauge"
+
+MDI_WEATHER_WINDY = "mdi:weather-windy"
+
+MDI_CPMPASS_OUTLINE = "mdi:compass-outline"
+
+MDI_WEATHER_POURING = "mdi:weather-pouring"
+
+MDI_WEATHER_PARTIALY_CLOUDY = "mdi:weather-partly-cloudy"
+
+NO_FORCAST = "No forecast for fcday=%s"
+
 # Schedule next call after (minutes):
 SCHEDULE_OK = 10
 # When an error occurred, new call after (minutes):
@@ -72,19 +84,19 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="barometerfc",
         name="Barometer value",
-        icon="mdi:gauge",
+        icon=MDI_GUAGE,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="barometerfcname",
         name="Barometer",
-        icon="mdi:gauge",
+        icon=MDI_GUAGE,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="barometerfcnamenl",
         name="Barometer",
-        icon="mdi:gauge",
+        icon=MDI_GUAGE,
     ),
     SensorEntityDescription(
         key="condition",
@@ -138,31 +150,31 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="windspeed",
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="windforce",
         name="Wind force",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="winddirection",
         name="Wind direction",
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="windazimuth",
         name="Wind direction azimuth",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="pressure",
         name="Pressure",
         native_unit_of_measurement=PRESSURE_HPA,
-        icon="mdi:gauge",
+        icon=MDI_GUAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -175,13 +187,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="windgust",
         name="Wind gust",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="precipitation",
         name="Precipitation",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -195,27 +207,27 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="precipitation_forecast_average",
         name="Precipitation forecast average",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="precipitation_forecast_total",
         name="Precipitation forecast total",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="rainlast24hour",
         name="Rain last 24h",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="rainlasthour",
         name="Rain last hour",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="temperature_1d",
@@ -281,268 +293,268 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="rain_1d",
         name="Rain 1d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="rain_2d",
         name="Rain 2d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="rain_3d",
         name="Rain 3d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="rain_4d",
         name="Rain 4d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="rain_5d",
         name="Rain 5d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="minrain_1d",
         name="Minimum rain 1d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="minrain_2d",
         name="Minimum rain 2d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="minrain_3d",
         name="Minimum rain 3d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="minrain_4d",
         name="Minimum rain 4d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="minrain_5d",
         name="Minimum rain 5d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     # new in json api (>1.0.0):
     SensorEntityDescription(
         key="maxrain_1d",
         name="Maximum rain 1d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="maxrain_2d",
         name="Maximum rain 2d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="maxrain_3d",
         name="Maximum rain 3d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="maxrain_4d",
         name="Maximum rain 4d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="maxrain_5d",
         name="Maximum rain 5d",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="rainchance_1d",
         name="Rainchance 1d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="rainchance_2d",
         name="Rainchance 2d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="rainchance_3d",
         name="Rainchance 3d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="rainchance_4d",
         name="Rainchance 4d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="rainchance_5d",
         name="Rainchance 5d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-pouring",
+        icon=MDI_WEATHER_POURING,
     ),
     SensorEntityDescription(
         key="sunchance_1d",
         name="Sunchance 1d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=MDI_WEATHER_PARTIALY_CLOUDY,
     ),
     SensorEntityDescription(
         key="sunchance_2d",
         name="Sunchance 2d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=MDI_WEATHER_PARTIALY_CLOUDY,
     ),
     SensorEntityDescription(
         key="sunchance_3d",
         name="Sunchance 3d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=MDI_WEATHER_PARTIALY_CLOUDY,
     ),
     SensorEntityDescription(
         key="sunchance_4d",
         name="Sunchance 4d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=MDI_WEATHER_PARTIALY_CLOUDY,
     ),
     SensorEntityDescription(
         key="sunchance_5d",
         name="Sunchance 5d",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:weather-partly-cloudy",
+        icon=MDI_WEATHER_PARTIALY_CLOUDY,
     ),
     SensorEntityDescription(
         key="windforce_1d",
         name="Wind force 1d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="windforce_2d",
         name="Wind force 2d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="windforce_3d",
         name="Wind force 3d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="windforce_4d",
         name="Wind force 4d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="windforce_5d",
         name="Wind force 5d",
         native_unit_of_measurement="Bft",
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="windspeed_1d",
         name="Wind speed 1d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="windspeed_2d",
         name="Wind speed 2d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="windspeed_3d",
         name="Wind speed 3d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="windspeed_4d",
         name="Wind speed 4d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="windspeed_5d",
         name="Wind speed 5d",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
-        icon="mdi:weather-windy",
+        icon=MDI_WEATHER_WINDY,
     ),
     SensorEntityDescription(
         key="winddirection_1d",
         name="Wind direction 1d",
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="winddirection_2d",
         name="Wind direction 2d",
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="winddirection_3d",
         name="Wind direction 3d",
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="winddirection_4d",
         name="Wind direction 4d",
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="winddirection_5d",
         name="Wind direction 5d",
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="windazimuth_1d",
         name="Wind direction azimuth 1d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="windazimuth_2d",
         name="Wind direction azimuth 2d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="windazimuth_3d",
         name="Wind direction azimuth 3d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="windazimuth_4d",
         name="Wind direction azimuth 4d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="windazimuth_5d",
         name="Wind direction azimuth 5d",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:compass-outline",
+        icon=MDI_CPMPASS_OUTLINE,
     ),
     SensorEntityDescription(
         key="condition_1d",
@@ -751,7 +763,7 @@ class BrSensor(SensorEntity):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s", fcday)
+                    _LOGGER.warning(NO_FORCAST, fcday)
                     return False
 
                 if condition:
@@ -783,7 +795,7 @@ class BrSensor(SensorEntity):
                         self._attr_native_value = round(self.state * 3.6, 1)
                     return True
                 except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s", fcday)
+                    _LOGGER.warning(NO_FORCAST, fcday)
                     return False
 
             # update all other sensors
@@ -793,7 +805,7 @@ class BrSensor(SensorEntity):
                 )
                 return True
             except IndexError:
-                _LOGGER.warning("No forecast for fcday=%s", fcday)
+                _LOGGER.warning(NO_FORCAST, fcday)
                 return False
 
         if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):

@@ -17,6 +17,8 @@ IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 KNOWN_HOSTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 WANTED_UUID_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 
+GOOGLE_CAST = "Google Cast"
+
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
@@ -50,7 +52,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._wanted_uuid.add(cfg[CONF_UUID])
 
         data = self._get_data()
-        return self.async_create_entry(title="Google Cast", data=data)
+        return self.async_create_entry(title=GOOGLE_CAST, data=data)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -88,7 +90,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._known_hosts = known_hosts
                 data = self._get_data()
             if not bad_hosts:
-                return self.async_create_entry(title="Google Cast", data=data)
+                return self.async_create_entry(title=GOOGLE_CAST, data=data)
 
         fields = {}
         fields[vol.Optional(CONF_KNOWN_HOSTS, default="")] = str
@@ -103,7 +105,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = self._get_data()
 
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            return self.async_create_entry(title="Google Cast", data=data)
+            return self.async_create_entry(title=GOOGLE_CAST, data=data)
 
         return self.async_show_form(step_id="confirm")
 

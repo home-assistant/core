@@ -28,6 +28,7 @@ OUTLET_IN_USE = "outlet_in_use"
 ATTR_IN_USE = "in_use"
 ATTR_IS_CONFIGURED = "is_configured"
 ATTR_REMAINING_DURATION = "remaining_duration"
+MDI_LOCK_OPEN = "mdi:lock-open"
 
 
 @dataclass
@@ -42,19 +43,19 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
     CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_PAIRING_MODE,
         name="Pairing Mode",
-        icon="mdi:lock-open",
+        icon=MDI_LOCK_OPEN,
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE,
         name="Pairing Mode",
-        icon="mdi:lock-open",
+        icon=MDI_LOCK_OPEN,
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS,
         name="Lock Physical Controls",
-        icon="mdi:lock-open",
+        icon=MDI_LOCK_OPEN,
         entity_category=EntityCategory.CONFIG,
     ),
 }

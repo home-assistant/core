@@ -57,6 +57,8 @@ from .const import (
 
 UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
 
+MDI_PULSE = "mdi:pulse"
+GAS_CONSUMPTION = "Gas consumption"
 
 @dataclass
 class DSMRSensorEntityDescriptionMixin:
@@ -231,7 +233,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L1_COUNT,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
+        icon=MDI_PULSE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -240,7 +242,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L2_COUNT,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
+        icon=MDI_PULSE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -249,7 +251,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference=obis_references.VOLTAGE_SWELL_L3_COUNT,
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
-        icon="mdi:pulse",
+        icon=MDI_PULSE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -346,7 +348,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="hourly_gas_meter_reading",
-        name="Gas consumption",
+        name=GAS_CONSUMPTION,
         obis_reference=obis_references.HOURLY_GAS_METER_READING,
         dsmr_versions={"4", "5", "5L"},
         is_gas=True,
@@ -356,7 +358,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="belgium_5min_gas_meter_reading",
-        name="Gas consumption",
+        name=GAS_CONSUMPTION,
         obis_reference=obis_references.BELGIUM_5MIN_GAS_METER_READING,
         dsmr_versions={"5B"},
         is_gas=True,
@@ -366,7 +368,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="gas_meter_reading",
-        name="Gas consumption",
+        name=GAS_CONSUMPTION,
         obis_reference=obis_references.GAS_METER_READING,
         dsmr_versions={"2.2"},
         is_gas=True,

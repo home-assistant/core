@@ -24,7 +24,7 @@ DEFAULT_DEVICE_NAME = "Unknown device"
 # to store the cookie
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-
+MDI_TELEVISION_GUIDE = "mdi:television-guide"
 
 CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -61,10 +61,10 @@ DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 # Icons
 DEVICE_ICONS = {
-    "freebox_delta": "mdi:television-guide",
-    "freebox_hd": "mdi:television-guide",
-    "freebox_mini": "mdi:television-guide",
-    "freebox_player": "mdi:television-guide",
+    "freebox_delta": MDI_TELEVISION_GUIDE,
+    "freebox_hd": MDI_TELEVISION_GUIDE,
+    "freebox_mini": MDI_TELEVISION_GUIDE,
+    "freebox_player": MDI_TELEVISION_GUIDE,
     "ip_camera": "mdi:cctv",
     "ip_phone": "mdi:phone-voip",
     "laptop": "mdi:laptop",

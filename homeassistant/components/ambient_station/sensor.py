@@ -109,12 +109,14 @@ TYPE_WINDSPDMPH_AVG10M = "windspdmph_avg10m"
 TYPE_WINDSPDMPH_AVG2M = "windspdmph_avg2m"
 TYPE_WINDSPEEDMPH = "windspeedmph"
 TYPE_YEARLYRAININ = "yearlyrainin"
+MDI_WATER = "mdi:water"
+WEATHER_WINDY = "mdi:weather-windy"
 
 SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_24HOURRAININ,
         name="24 hr rain",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PRECIPITATION_INCHES,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -166,7 +168,7 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_DAILYRAININ,
         name="Daily rain",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PRECIPITATION_INCHES,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -180,7 +182,7 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_EVENTRAININ,
         name="Event rain",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PRECIPITATION_INCHES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -194,7 +196,7 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_HOURLYRAININ,
         name="Hourly rain rate",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -285,7 +287,7 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_LASTRAIN,
         name="Last rain",
-        icon="mdi:water",
+        icon=MDI_WATER,
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -306,14 +308,14 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_MAXDAILYGUST,
         name="Max gust",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_MONTHLYRAININ,
         name="Monthly rain",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PRECIPITATION_INCHES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -584,7 +586,7 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_TOTALRAININ,
         name="Lifetime rain",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PRECIPITATION_INCHES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -598,64 +600,64 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_WEEKLYRAININ,
         name="Weekly rain",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PRECIPITATION_INCHES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR,
         name="Wind dir",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY,
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG10M,
         name="Wind dir avg 10m",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY,
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG2M,
         name="Wind dir avg 2m",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY,
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTDIR,
         name="Gust dir",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY,
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTMPH,
         name="Wind gust",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG10M,
         name="Wind avg 10m",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG2M,
         name="Wind avg 2m",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPEEDMPH,
         name="Wind speed",
-        icon="mdi:weather-windy",
+        icon=WEATHER_WINDY,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_YEARLYRAININ,
         name="Yearly rain",
-        icon="mdi:water",
+        icon=MDI_WATER,
         native_unit_of_measurement=PRECIPITATION_INCHES,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),

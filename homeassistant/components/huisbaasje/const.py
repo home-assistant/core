@@ -14,6 +14,7 @@ from homeassistant.const import ENERGY_KILO_WATT_HOUR, TIME_HOURS, VOLUME_CUBIC_
 DATA_COORDINATOR = "coordinator"
 
 DOMAIN = "huisbaasje"
+MDI_COUNTER = "mdi:counter"
 
 FLOW_CUBIC_METERS_PER_HOUR = f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}"
 
@@ -146,7 +147,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
         "state_class": SensorStateClass.TOTAL_INCREASING,
-        "icon": "mdi:counter",
+        "icon": MDI_COUNTER,
         "precision": 1,
     },
     {
@@ -156,7 +157,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_WEEK,
         "state_class": SensorStateClass.TOTAL_INCREASING,
-        "icon": "mdi:counter",
+        "icon": MDI_COUNTER,
         "precision": 1,
     },
     {
@@ -166,7 +167,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_MONTH,
         "state_class": SensorStateClass.TOTAL_INCREASING,
-        "icon": "mdi:counter",
+        "icon": MDI_COUNTER,
         "precision": 1,
     },
     {
@@ -176,7 +177,7 @@ SENSORS_INFO = [
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_YEAR,
         "state_class": SensorStateClass.TOTAL_INCREASING,
-        "icon": "mdi:counter",
+        "icon": MDI_COUNTER,
         "precision": 1,
     },
 ]

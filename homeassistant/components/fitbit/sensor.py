@@ -56,6 +56,8 @@ from .const import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
+DEVICES_BATTERY = "devices/battery"
+
 _CONFIGURING: dict[str, str] = {}
 
 SCAN_INTERVAL: Final = datetime.timedelta(minutes=30)
@@ -219,7 +221,7 @@ def setup_platform(
             for description in FITBIT_RESOURCES_LIST
             if description.key in monitored_resources
         ]
-        if "devices/battery" in monitored_resources:
+        if DEVICES_BATTERY in monitored_resources:
             entities.extend(
                 [
                     FitbitSensor(
@@ -376,7 +378,7 @@ class FitbitSensor(SensorEntity):
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if (
-            self.entity_description.key == "devices/battery"
+            self.entity_description.key == DEVICES_BATTERY
             and self.extra is not None
             and (extra_battery := self.extra.get("battery")) is not None
             and (battery_level := BATTERY_LEVELS.get(extra_battery)) is not None
@@ -399,7 +401,7 @@ class FitbitSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data from the Fitbit API and update the states."""
         resource_type = self.entity_description.key
-        if resource_type == "devices/battery" and self.extra is not None:
+        if resource_type == DEVICES_BATTERY and self.extra is not None:
             registered_devs: list[dict[str, Any]] = self.client.get_devices()
             device_id = self.extra.get("id")
             self.extra = list(
