@@ -653,15 +653,16 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
         """Get IID for object."""
         aid = obj.broker.aid
         if isinstance(obj, Characteristic):
+            service = obj.service
             iid = self._iid_storage.get_or_allocate_iid(
-                aid, obj.service.type_id, obj.type_id, obj.unique_id
+                aid, service.type_id, service.unique_id, obj.type_id, obj.unique_id
             )
         else:
             iid = self._iid_storage.get_or_allocate_iid(
-                aid, obj.type_id, None, obj.unique_id
+                aid, obj.type_id, obj.unique_id, None, None
             )
         if iid in self.objs:
             raise RuntimeError(
-                f"IID {iid} already in use by another object: {self.objs[iid]}"
+                f"Cannot assign IID {iid} to {obj} as it is already in use by: {self.objs[iid]}"
             )
         return iid

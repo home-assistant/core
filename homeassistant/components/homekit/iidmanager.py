@@ -59,16 +59,15 @@ class AccessoryIIDStorage:
         self,
         aid: int,
         service_uuid: UUID,
+        service_unique_id: str | None,
         char_uuid: UUID | None,
-        unique_id: str | None,
+        char_unique_id: str | None,
     ) -> int:
         """Generate a stable iid."""
         service_hap_type: str = uuid_to_hap_type(service_uuid)
         char_hap_type: str | None = uuid_to_hap_type(char_uuid) if char_uuid else None
         # Allocation key must be a string since we are saving it to JSON
-        allocation_key = (
-            f'{aid}_{service_hap_type}_{char_hap_type or ""}_{unique_id or ""}'
-        )
+        allocation_key = f'{aid}_{service_hap_type}_{service_unique_id or ""}_{char_hap_type or ""}_{char_unique_id or ""}'
         if allocation_key in self._allocations:
             return self._allocations[allocation_key]
         next_iid = self._allocated_iids[-1] + 1 if self._allocated_iids else 1
