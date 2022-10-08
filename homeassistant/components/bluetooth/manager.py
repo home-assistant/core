@@ -358,10 +358,9 @@ class BluetoothManager:
         connectable = service_info.connectable
         address = device.address
         all_history = self._connectable_history if connectable else self._history
-        old_service_info = all_history.get(address)
         source = service_info.source
         if (
-            old_service_info
+            (old_service_info := all_history.get(address))
             and source != old_service_info.source
             and self._prefer_previous_adv_from_different_source(
                 old_service_info, service_info
