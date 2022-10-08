@@ -543,7 +543,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.26.0
+dbus-fast==1.29.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1309,7 +1309,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.21.3
+plugwise==0.21.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2475,7 +2475,7 @@ vallox-websocket-api==2.12.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.10.2
+velbus-aio==2022.10.3
 
 # homeassistant.components.venstar
 venstarcolortouch==0.18
