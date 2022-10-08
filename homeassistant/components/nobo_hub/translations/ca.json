@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar - comprova el n\u00famero de s\u00e8rie",
+            "invalid_ip": "Adre\u00e7a IP inv\u00e0lida",
+            "invalid_serial": "N\u00famero de s\u00e8rie inv\u00e0lid",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "manual": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP",
+                    "serial": "N\u00famero de s\u00e8rie (12 d\u00edgits)"
+                },
+                "description": "Configura un Nob\u00f8 Ecohub que no ha estat descobert a la teva xarxa local. Si el teu concentrador es troba en una altra xarxa, pots connectar-lo introduint el n\u00famero de s\u00e8rie complet (12 d\u00edgits) i la seva adre\u00e7a IP."
+            },
+            "selected": {
+                "data": {
+                    "serial_suffix": "Sufix del n\u00famero de s\u00e8rie (3 d\u00edgits)"
+                },
+                "description": "Configurant {hub}.\n\nPer connectar-te al hub, has d'introduir els darrers 3 d\u00edgits del n\u00famero de s\u00e8rie del hub."
+            },
+            "user": {
+                "data": {
+                    "device": "Hubs descoberts"
+                },
+                "description": "Selecciona el Nob\u00f8 Ecohub a configurar"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "override_type": "Tipus de substituci\u00f3"
+                },
+                "description": "Selecciona substitueix el tipus \"Ara\" (\"Now\") per finalitzar la substituci\u00f3 del canvi de perfil de la setmana vinent."
+            }
+        }
+    }
+}

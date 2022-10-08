@@ -49,6 +49,12 @@
             "button_triple_press": "\"{subtype}\" cliccato tre volte"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "{platform} MQTT configurata manualmente trovata sotto la voce della piattaforma `{platform}`. \n\nSposta la configurazione sulla voce di integrazione `mqtt` e riavvia Home Assistant per risolvere questo problema. Consulta la [documentazione]({more_info_url}), per ulteriori informazioni.",
+            "title": "La/e tua/e {platform} MQTT configurata/e manualmente ha/hanno bisogno di attenzione"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Argomento birth non valido.",

@@ -12,8 +12,8 @@
             "good": "Bueno",
             "hazardous": "Da\u00f1ino",
             "moderate": "Moderado",
-            "unhealthy": "Insalubre",
-            "unhealthy_sensitive": "Insalubre para grupos sensibles",
+            "unhealthy": "Poco saludable",
+            "unhealthy_sensitive": "Poco saludable para grupos sensibles",
             "very_unhealthy": "Muy poco saludable"
         }
     }

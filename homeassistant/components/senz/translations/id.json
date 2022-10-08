@@ -16,5 +16,11 @@
                 "title": "Pilih Metode Autentikasi"
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Proses konfigurasi nVent RAYCHEM SENZ lewat YAML telah dihapus.\n\nKonfigurasi YAML yang ada tidak digunakan oleh Home Assistant.\n\nHapus konfigurasi YAML dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML nVent RAYCHEM SENZ telah dihapus"
+        }
     }
 }

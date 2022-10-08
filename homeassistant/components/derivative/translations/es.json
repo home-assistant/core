@@ -15,8 +15,8 @@
                     "time_window": "Si se establece, el valor del sensor es un promedio m\u00f3vil ponderado en el tiempo de las derivadas dentro de esta ventana.",
                     "unit_prefix": "La salida se escalar\u00e1 seg\u00fan el prefijo m\u00e9trico seleccionado y la unidad de tiempo de la derivada."
                 },
-                "description": "Crea un sensor que ama la derivada de otro sensor.",
-                "title": "A\u00f1ade sensor derivativo"
+                "description": "Crea un sensor que estima la derivada de un sensor.",
+                "title": "A\u00f1adir sensor de derivaci\u00f3n"
             }
         }
     },
@@ -33,11 +33,11 @@
                 },
                 "data_description": {
                     "round": "Controla el n\u00famero de d\u00edgitos decimales en la salida.",
-                    "time_window": "Si se establece, el valor del sensor es una media m\u00f3vil ponderada en el tiempo de las derivadas dentro de esta ventana.",
-                    "unit_prefix": "a salida se escalar\u00e1 seg\u00fan el prefijo m\u00e9trico y la unidad de tiempo de la derivada seleccionados."
+                    "time_window": "Si se establece, el valor del sensor es un promedio m\u00f3vil ponderado en el tiempo de las derivadas dentro de esta ventana.",
+                    "unit_prefix": "La salida se escalar\u00e1 seg\u00fan el prefijo m\u00e9trico seleccionado y la unidad de tiempo de la derivada."
                 }
             }
         }
     },
-    "title": "Sensor derivatiu"
+    "title": "Sensor de derivaci\u00f3n"
 }

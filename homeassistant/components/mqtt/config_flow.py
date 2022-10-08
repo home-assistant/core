@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Callable
 import queue
+from types import MappingProxyType
 from typing import Any
 
 import voluptuous as vol
@@ -15,11 +17,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PORT,
-    CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import ConfigType
 
 from .client import MqttClientSetup
 from .const import (
@@ -30,13 +32,13 @@ from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_WILL_MESSAGE,
-    DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
+    DEFAULT_PORT,
     DEFAULT_WILL,
     DOMAIN,
 )
-from .util import MQTT_WILL_BIRTH_SCHEMA
+from .util import MQTT_WILL_BIRTH_SCHEMA, get_mqtt_data
 
 MQTT_TIMEOUT = 5
 
@@ -56,9 +58,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return MQTTOptionsFlowHandler(config_entry)
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -66,34 +66,37 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_broker()
 
     async def async_step_broker(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: ConfigType | None = None
     ) -> FlowResult:
         """Confirm the setup."""
-        errors = {}
-
-        if user_input is not None:
+        yaml_config: ConfigType = get_mqtt_data(self.hass, True).config or {}
+        errors: dict[str, str] = {}
+        fields: OrderedDict[Any, Any] = OrderedDict()
+        validated_user_input: ConfigType = {}
+        if await async_get_broker_settings(
+            self.hass,
+            fields,
+            yaml_config,
+            None,
+            user_input,
+            validated_user_input,
+            errors,
+        ):
+            test_config: ConfigType = yaml_config.copy()
+            test_config.update(validated_user_input)
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
-                user_input[CONF_BROKER],
-                user_input[CONF_PORT],
-                user_input.get(CONF_USERNAME),
-                user_input.get(CONF_PASSWORD),
+                test_config,
             )
 
             if can_connect:
-                user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
+                validated_user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
                 return self.async_create_entry(
-                    title=user_input[CONF_BROKER], data=user_input
+                    title=validated_user_input[CONF_BROKER],
+                    data=validated_user_input,
                 )
 
             errors["base"] = "cannot_connect"
-
-        fields = OrderedDict()
-        fields[vol.Required(CONF_BROKER)] = str
-        fields[vol.Required(CONF_PORT, default=1883)] = vol.Coerce(int)
-        fields[vol.Optional(CONF_USERNAME)] = str
-        fields[vol.Optional(CONF_PASSWORD)] = str
 
         return self.async_show_form(
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
@@ -111,26 +114,22 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm a Hass.io discovery."""
-        errors = {}
+        errors: dict[str, str] = {}
         assert self._hassio_discovery
 
         if user_input is not None:
-            data = self._hassio_discovery
+            data: ConfigType = self._hassio_discovery.copy()
+            data[CONF_BROKER] = data.pop(CONF_HOST)
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
-                data[CONF_HOST],
-                data[CONF_PORT],
-                data.get(CONF_USERNAME),
-                data.get(CONF_PASSWORD),
-                data.get(CONF_PROTOCOL),
+                data,
             )
 
             if can_connect:
                 return self.async_create_entry(
                     title=data["addon"],
                     data={
-                        CONF_BROKER: data[CONF_HOST],
+                        CONF_BROKER: data[CONF_BROKER],
                         CONF_PORT: data[CONF_PORT],
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
@@ -164,44 +163,31 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the MQTT broker configuration."""
-        errors = {}
-        current_config = self.config_entry.data
-        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
-        if user_input is not None:
+        errors: dict[str, str] = {}
+        yaml_config: ConfigType = get_mqtt_data(self.hass, True).config or {}
+        fields: OrderedDict[Any, Any] = OrderedDict()
+        validated_user_input: ConfigType = {}
+        if await async_get_broker_settings(
+            self.hass,
+            fields,
+            yaml_config,
+            self.config_entry.data,
+            user_input,
+            validated_user_input,
+            errors,
+        ):
+            test_config: ConfigType = yaml_config.copy()
+            test_config.update(validated_user_input)
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                self.hass,
-                user_input[CONF_BROKER],
-                user_input[CONF_PORT],
-                user_input.get(CONF_USERNAME),
-                user_input.get(CONF_PASSWORD),
+                test_config,
             )
 
             if can_connect:
-                self.broker_config.update(user_input)
+                self.broker_config.update(validated_user_input)
                 return await self.async_step_options()
 
             errors["base"] = "cannot_connect"
-
-        fields = OrderedDict()
-        current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
-        current_port = current_config.get(CONF_PORT, yaml_config.get(CONF_PORT))
-        current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
-        current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
-        fields[vol.Required(CONF_BROKER, default=current_broker)] = str
-        fields[vol.Required(CONF_PORT, default=current_port)] = vol.Coerce(int)
-        fields[
-            vol.Optional(
-                CONF_USERNAME,
-                description={"suggested_value": current_user},
-            )
-        ] = str
-        fields[
-            vol.Optional(
-                CONF_PASSWORD,
-                description={"suggested_value": current_pass},
-            )
-        ] = str
 
         return self.async_show_form(
             step_id="broker",
@@ -211,57 +197,68 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_options(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: ConfigType | None = None
     ) -> FlowResult:
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
-        yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
-        options_config: dict[str, Any] = {}
-        if user_input is not None:
-            bad_birth = False
-            bad_will = False
+        yaml_config = get_mqtt_data(self.hass, True).config or {}
+        options_config: ConfigType = {}
+        bad_input: bool = False
 
+        def _birth_will(birt_or_will: str) -> dict:
+            """Return the user input for birth or will."""
+            assert user_input
+            return {
+                ATTR_TOPIC: user_input[f"{birt_or_will}_topic"],
+                ATTR_PAYLOAD: user_input.get(f"{birt_or_will}_payload", ""),
+                ATTR_QOS: user_input[f"{birt_or_will}_qos"],
+                ATTR_RETAIN: user_input[f"{birt_or_will}_retain"],
+            }
+
+        def _validate(
+            field: str, values: ConfigType, error_code: str, schema: Callable
+        ):
+            """Validate the user input."""
+            nonlocal bad_input
+            try:
+                option_values = schema(values)
+                options_config[field] = option_values
+            except vol.Invalid:
+                errors["base"] = error_code
+                bad_input = True
+
+        if user_input is not None:
+            # validate input
+            options_config[CONF_DISCOVERY] = user_input[CONF_DISCOVERY]
             if "birth_topic" in user_input:
-                birth_message = {
-                    ATTR_TOPIC: user_input["birth_topic"],
-                    ATTR_PAYLOAD: user_input.get("birth_payload", ""),
-                    ATTR_QOS: user_input["birth_qos"],
-                    ATTR_RETAIN: user_input["birth_retain"],
-                }
-                try:
-                    birth_message = MQTT_WILL_BIRTH_SCHEMA(birth_message)
-                    options_config[CONF_BIRTH_MESSAGE] = birth_message
-                except vol.Invalid:
-                    errors["base"] = "bad_birth"
-                    bad_birth = True
+                _validate(
+                    CONF_BIRTH_MESSAGE,
+                    _birth_will("birth"),
+                    "bad_birth",
+                    MQTT_WILL_BIRTH_SCHEMA,
+                )
             if not user_input["birth_enable"]:
                 options_config[CONF_BIRTH_MESSAGE] = {}
 
             if "will_topic" in user_input:
-                will_message = {
-                    ATTR_TOPIC: user_input["will_topic"],
-                    ATTR_PAYLOAD: user_input.get("will_payload", ""),
-                    ATTR_QOS: user_input["will_qos"],
-                    ATTR_RETAIN: user_input["will_retain"],
-                }
-                try:
-                    will_message = MQTT_WILL_BIRTH_SCHEMA(will_message)
-                    options_config[CONF_WILL_MESSAGE] = will_message
-                except vol.Invalid:
-                    errors["base"] = "bad_will"
-                    bad_will = True
+                _validate(
+                    CONF_WILL_MESSAGE,
+                    _birth_will("will"),
+                    "bad_will",
+                    MQTT_WILL_BIRTH_SCHEMA,
+                )
             if not user_input["will_enable"]:
                 options_config[CONF_WILL_MESSAGE] = {}
 
-            options_config[CONF_DISCOVERY] = user_input[CONF_DISCOVERY]
-
-            if not bad_birth and not bad_will:
+            if not bad_input:
                 updated_config = {}
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=updated_config
+                    self.config_entry,
+                    data=updated_config,
+                    title=str(self.broker_config[CONF_BROKER]),
                 )
                 return self.async_create_entry(title="", data={})
 
@@ -281,6 +278,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_DISCOVERY, yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
         )
 
+        # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
         fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = bool
 
@@ -334,24 +332,68 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-def try_connection(hass, broker, port, username, password, protocol="3.1"):
+async def async_get_broker_settings(
+    hass: HomeAssistant,
+    fields: OrderedDict[Any, Any],
+    yaml_config: ConfigType,
+    entry_config: MappingProxyType[str, Any] | None,
+    user_input: ConfigType | None,
+    validated_user_input: ConfigType,
+    errors: dict[str, str],
+) -> bool:
+    """Build the config flow schema to collect the broker settings.
+
+    Returns True when settings are collected successfully.
+    """
+    user_input_basic: ConfigType = ConfigType()
+    current_config = entry_config.copy() if entry_config is not None else ConfigType()
+
+    if user_input is not None:
+        validated_user_input.update(user_input)
+        return True
+
+    # Update the current settings the the new posted data to fill the defaults
+    current_config.update(user_input_basic)
+
+    # Get default settings (if any)
+    current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
+    current_port = current_config.get(
+        CONF_PORT, yaml_config.get(CONF_PORT, DEFAULT_PORT)
+    )
+    current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
+    current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
+
+    # Build form
+    fields[vol.Required(CONF_BROKER, default=current_broker)] = str
+    fields[vol.Required(CONF_PORT, default=current_port)] = vol.Coerce(int)
+    fields[
+        vol.Optional(
+            CONF_USERNAME,
+            description={"suggested_value": current_user},
+        )
+    ] = str
+    fields[
+        vol.Optional(
+            CONF_PASSWORD,
+            description={"suggested_value": current_pass},
+        )
+    ] = str
+
+    # Show form
+    return False
+
+
+def try_connection(
+    user_input: ConfigType,
+) -> bool:
     """Test if we can connect to an MQTT broker."""
     # We don't import on the top because some integrations
     # should be able to optionally rely on MQTT.
     import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-    # Get the config from configuration.yaml
-    yaml_config = hass.data.get(DATA_MQTT_CONFIG, {})
-    entry_config = {
-        CONF_BROKER: broker,
-        CONF_PORT: port,
-        CONF_USERNAME: username,
-        CONF_PASSWORD: password,
-        CONF_PROTOCOL: protocol,
-    }
-    client = MqttClientSetup({**yaml_config, **entry_config}).client
+    client = MqttClientSetup(user_input).client
 
-    result = queue.Queue(maxsize=1)
+    result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
     def on_connect(client_, userdata, flags, result_code):
         """Handle connection result."""
@@ -359,7 +401,7 @@ def try_connection(hass, broker, port, username, password, protocol="3.1"):
 
     client.on_connect = on_connect
 
-    client.connect_async(broker, port)
+    client.connect_async(user_input[CONF_BROKER], user_input[CONF_PORT])
     client.loop_start()
 
     try:

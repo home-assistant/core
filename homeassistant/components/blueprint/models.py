@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
 import pathlib
 import shutil
@@ -35,6 +36,7 @@ from .const import (
 )
 from .errors import (
     BlueprintException,
+    BlueprintInUse,
     FailedToLoad,
     FileAlreadyExists,
     InvalidBlueprint,
@@ -183,11 +185,13 @@ class DomainBlueprints:
         hass: HomeAssistant,
         domain: str,
         logger: logging.Logger,
+        blueprint_in_use: Callable[[HomeAssistant, str], bool],
     ) -> None:
         """Initialize a domain blueprints instance."""
         self.hass = hass
         self.domain = domain
         self.logger = logger
+        self._blueprint_in_use = blueprint_in_use
         self._blueprints: dict[str, Blueprint | None] = {}
         self._load_lock = asyncio.Lock()
 
@@ -302,6 +306,8 @@ class DomainBlueprints:
 
     async def async_remove_blueprint(self, blueprint_path: str) -> None:
         """Remove a blueprint file."""
+        if self._blueprint_in_use(self.hass, blueprint_path):
+            raise BlueprintInUse(self.domain, blueprint_path)
         path = self.blueprint_folder / blueprint_path
         await self.hass.async_add_executor_job(path.unlink)
         self._blueprints[blueprint_path] = None

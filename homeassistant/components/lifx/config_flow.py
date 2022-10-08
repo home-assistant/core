@@ -6,7 +6,7 @@ import socket
 from typing import Any
 
 from aiolifx.aiolifx import Light
-from aiolifx_connection import LIFXConnection
+from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
 from homeassistant import config_entries

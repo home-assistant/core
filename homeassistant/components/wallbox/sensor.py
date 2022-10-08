@@ -85,6 +85,7 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
         name="Added Range",
         precision=0,
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     CHARGER_ADDED_ENERGY_KEY: WallboxSensorEntityDescription(

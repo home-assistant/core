@@ -7,5 +7,6 @@
   "after_dependencies": ["media_player"],
   "codeowners": ["@pvizeli"],
   "quality_scale": "internal",
-  "loggers": ["mutagen"]
+  "loggers": ["mutagen"],
+  "integration_type": "entity"
 }

@@ -9,11 +9,29 @@
             "unknown": "\u041d\u0435\u043f\u0440\u0435\u0434\u0432\u0438\u0434\u0435\u043d\u043d\u0430\u044f \u043e\u0448\u0438\u0431\u043a\u0430."
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "\u041f\u0430\u0440\u043e\u043b\u044c",
+                    "pin": "PIN-\u043a\u043e\u0434",
+                    "username": "\u0418\u043c\u044f \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "\u0425\u043e\u0441\u0442",
+                    "pin": "PIN-\u043a\u043e\u0434",
+                    "port": "\u041f\u043e\u0440\u0442"
+                }
+            },
             "user": {
                 "data": {
                     "password": "\u041f\u0430\u0440\u043e\u043b\u044c",
                     "pin": "PIN-\u043a\u043e\u0434",
                     "username": "\u0418\u043c\u044f \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f"
+                },
+                "menu_options": {
+                    "cloud": "\u041e\u0431\u043b\u0430\u043a\u043e Risco (\u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u0442\u0441\u044f)",
+                    "local": "\u041b\u043e\u043a\u0430\u043b\u044c\u043d\u0430\u044f \u043f\u0430\u043d\u0435\u043b\u044c Risco (\u0440\u0430\u0441\u0448\u0438\u0440\u0435\u043d\u043d\u0430\u044f)"
                 }
             }
         }

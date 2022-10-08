@@ -114,7 +114,7 @@ class PushBulletNotificationSensor(SensorEntity):
 
         self._attr_name = f"Pushbullet {description.key}"
 
-    def update(self):
+    def update(self) -> None:
         """Fetch the latest data from the sensor.
 
         This will fetch the 'sensor reading' into self._state but also all

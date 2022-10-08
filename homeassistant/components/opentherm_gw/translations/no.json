@@ -3,7 +3,8 @@
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
-            "id_exists": "Gateway ID finnes allerede"
+            "id_exists": "Gateway ID finnes allerede",
+            "timeout_connect": "Tidsavbrudd oppretter forbindelse"
         },
         "step": {
             "init": {

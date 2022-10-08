@@ -41,8 +41,10 @@
             },
             "origin_menu": {
                 "menu_options": {
-                    "origin_coordinates": "Bruk kartplassering"
-                }
+                    "origin_coordinates": "Bruk kartplassering",
+                    "origin_entity": "Bruke en enhet"
+                },
+                "title": "Velg Opprinnelse"
             },
             "user": {
                 "data": {

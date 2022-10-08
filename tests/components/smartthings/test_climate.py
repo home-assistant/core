@@ -8,7 +8,7 @@ from pysmartthings import Attribute, Capability
 from pysmartthings.device import Status
 import pytest
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,

@@ -5,7 +5,7 @@
             "unknown": "Nepri\u010dakovana napaka"
         },
         "error": {
-            "cannot_connect": "Povezava ni uspela, poskusite znova"
+            "cannot_connect": "Povezava ni uspela"
         },
         "flow_title": "Roku: {name}",
         "step": {

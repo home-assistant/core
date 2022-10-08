@@ -142,7 +142,7 @@ class FibaroSensor(FibaroDevice, SensorEntity):
                     fibaro_device.properties.unit, fibaro_device.properties.unit
                 )
 
-    def update(self):
+    def update(self) -> None:
         """Update the state."""
         with suppress(KeyError, ValueError):
             self._attr_native_value = float(self.fibaro_device.properties.value)

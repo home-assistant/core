@@ -5,7 +5,6 @@ from typing import Any
 
 from awesomeversion import AwesomeVersion
 
-from homeassistant.components import mysensors
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -37,6 +36,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
@@ -94,12 +94,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "V_WEIGHT": SensorEntityDescription(
         key="V_WEIGHT",
         native_unit_of_measurement=MASS_KILOGRAMS,
-        icon="mdi:weight-kilogram",
+        device_class=SensorDeviceClass.WEIGHT,
     ),
     "V_DISTANCE": SensorEntityDescription(
         key="V_DISTANCE",
         native_unit_of_measurement=LENGTH_METERS,
-        icon="mdi:ruler",
+        device_class=SensorDeviceClass.DISTANCE,
     ),
     "V_IMPEDANCE": SensorEntityDescription(
         key="V_IMPEDANCE",

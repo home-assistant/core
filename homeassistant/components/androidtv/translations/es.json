@@ -8,15 +8,15 @@
             "adbkey_not_file": "No se ha encontrado el archivo de claves ADB",
             "cannot_connect": "No se pudo conectar",
             "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
-            "key_and_server": "S\u00f3lo proporciona la clave ADB o el servidor ADB",
+            "key_and_server": "Solo proporcione la clave ADB o el servidor ADB",
             "unknown": "Error inesperado"
         },
         "step": {
             "user": {
                 "data": {
-                    "adb_server_ip": "Direcci\u00f3n IP del servidor ADB (dejar vac\u00edo para no utilizarlo)",
+                    "adb_server_ip": "Direcci\u00f3n IP del servidor ADB (d\u00e9jalo vac\u00edo para no usarlo)",
                     "adb_server_port": "Puerto del servidor ADB",
-                    "adbkey": "Ruta de acceso a su archivo de clave ADB (d\u00e9jelo vac\u00edo para que se genere autom\u00e1ticamente)",
+                    "adbkey": "Ruta a tu archivo de clave ADB (d\u00e9jalo en blanco para generarlo autom\u00e1ticamente)",
                     "device_class": "Tipo de dispositivo",
                     "host": "Host",
                     "port": "Puerto"
@@ -31,31 +31,31 @@
         "step": {
             "apps": {
                 "data": {
-                    "app_delete": "Marque para eliminar esta aplicaci\u00f3n",
-                    "app_id": "ID de la aplicaci\u00f3n",
+                    "app_delete": "Marcar para eliminar esta aplicaci\u00f3n",
+                    "app_id": "ID de aplicaci\u00f3n",
                     "app_name": "Nombre de la aplicaci\u00f3n"
                 },
-                "description": "Configurar el ID de la aplicaci\u00f3n {app_id}",
+                "description": "Configurar el ID de aplicaci\u00f3n {app_id}",
                 "title": "Configurar aplicaciones de Android TV"
             },
             "init": {
                 "data": {
                     "apps": "Configurar la lista de aplicaciones",
                     "exclude_unnamed_apps": "Excluir aplicaciones con nombre desconocido de la lista de fuentes",
-                    "get_sources": "Recupere las aplicaciones en ejecuci\u00f3n como lista de fuentes",
+                    "get_sources": "Recuperar las aplicaciones en ejecuci\u00f3n como la lista de fuentes",
                     "screencap": "Usar captura de pantalla para la car\u00e1tula del \u00e1lbum",
                     "state_detection_rules": "Configurar reglas de detecci\u00f3n de estado",
-                    "turn_off_command": "Comando de apagado del shell de ADB (dejar vac\u00edo por defecto)",
-                    "turn_on_command": "Comando de activaci\u00f3n del shell ADB (dejar vac\u00edo por defecto)"
+                    "turn_off_command": "Comando de apagado de shell ADB (d\u00e9jalo vac\u00edo para usar el comando por defecto)",
+                    "turn_on_command": "Comando de encendido de shell ADB (d\u00e9jalo vac\u00edo para usar el comando por defecto)"
                 }
             },
             "rules": {
                 "data": {
-                    "rule_delete": "Marque para eliminar esta regla",
-                    "rule_id": "ID de la aplicaci\u00f3n",
-                    "rule_values": "Lista de reglas de detecci\u00f3n de estados (ver documentaci\u00f3n)"
+                    "rule_delete": "Marcar para eliminar esta regla",
+                    "rule_id": "ID de aplicaci\u00f3n",
+                    "rule_values": "Lista de reglas de detecci\u00f3n de estado (ver documentaci\u00f3n)"
                 },
-                "description": "Configurar la regla de detecci\u00f3n del ID {rule_id} de la aplicaci\u00f3n",
+                "description": "Configura la regla de detecci\u00f3n para la identificaci\u00f3n de la aplicaci\u00f3n {rule_id}",
                 "title": "Configurar las reglas de detecci\u00f3n de estado de Android TV"
             }
         }

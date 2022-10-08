@@ -2,19 +2,19 @@
     "config": {
         "abort": {
             "already_configured": "La cuenta ya est\u00e1 configurada",
-            "external_error": "Se produjo una excepci\u00f3n de otro flujo.",
-            "external_setup": "Logi Circle se ha configurado correctamente a partir de otro flujo.",
-            "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n."
+            "external_error": "Ocurri\u00f3 una excepci\u00f3n desde otro flujo.",
+            "external_setup": "Logi Circle se configur\u00f3 correctamente desde otro flujo.",
+            "missing_configuration": "El componente no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n."
         },
         "error": {
-            "authorize_url_timeout": "Tiempo de espera agotado durante la generaci\u00f3n de la URL de autorizaci\u00f3n.",
-            "follow_link": "Accede al enlace e identif\u00edcate antes de pulsar Enviar.",
+            "authorize_url_timeout": "Se agot\u00f3 el tiempo de espera para generar la URL de autorizaci\u00f3n.",
+            "follow_link": "Por favor, sigue el enlace y autent\u00edcate antes de pulsar Enviar.",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "step": {
             "auth": {
-                "description": "Accede al siguiente enlace y <b>Acepta</b> el acceso a tu cuenta Logi Circle, despu\u00e9s vuelve y pulsa en <b>Enviar</b> a continuaci\u00f3n.\n\n[Link]({authorization_url})",
-                "title": "Autenticaci\u00f3n con Logi Circle"
+                "description": "Por favor, sigue el enlace a continuaci\u00f3n y **Acepta** el acceso a tu cuenta Logi Circle, luego regresa y pulsa **Enviar** a continuaci\u00f3n. \n\n[Enlace]({authorization_url})",
+                "title": "Autenticar con Logi Circle"
             },
             "user": {
                 "data": {
