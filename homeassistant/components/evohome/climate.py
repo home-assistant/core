@@ -291,10 +291,15 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     async def async_update(self) -> None:
         """Get the latest state data for a Zone."""
-        await super().async_update()
+        # Ignore update requests (and avoid I/O) if the entity is disabled
+        if not self.enabled or not self.available:
+            return
 
+        await super().async_update()  # might perform I/O to update schedule
         for attr in STATE_ATTRS_ZONES:
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)
+
+        await self.coordinator.async_request_refresh()
 
 
 class EvoController(EvoClimateEntity):
@@ -394,11 +399,15 @@ class EvoController(EvoClimateEntity):
 
     async def async_update(self) -> None:
         """Get the latest state data for a Controller."""
-        self._device_state_attrs = {}
+        # Ignore update requests if the entity is disabled/unavailable
+        if not self.enabled or not self.available:
+            return
 
-        attrs = self._device_state_attrs
+        self._device_state_attrs = {}
         for attr in STATE_ATTRS_TCS:
-            if attr == "activeFaults":
-                attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
-            else:
-                attrs[attr] = getattr(self._evo_tcs, attr)
+            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
+        self._device_state_attrs["activeSystemFaults"] = self._device_state_attrs.pop(
+            "activeFaults"
+        )
+
+        await self.coordinator.async_request_refresh()

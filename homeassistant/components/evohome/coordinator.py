@@ -15,6 +15,7 @@ import evohomeasync
 import evohomeasync2
 
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -105,25 +106,17 @@ def _dt_local_to_aware(dt_naive: datetime) -> datetime:
     return dt_aware.replace(microsecond=0)
 
 
-class EvoDataUpdateCoordinator(DataUpdateCoordinator[None]):
-    """Class to manage fetching data from single endpoint for evohome."""
-
-    async def async_request_refresh(self, *args) -> None:
-        """Request a refresh."""
-        await super().async_request_refresh(*args)  # wrapper exists only to remove arg
-
-
 class EvoBroker:
     """Container for evohome client and data."""
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         client: evohomeasync2.EvohomeClient,
         client_v1: evohomeasync.EvohomeClient | None,
         store: Store[dict[str, Any]],
-        coordinator: EvoDataUpdateCoordinator,
-        params,
+        coordinator: DataUpdateCoordinator,
+        params: dict,
     ) -> None:
         """Initialize the evohome client and its data structure."""
 
@@ -217,7 +210,7 @@ class EvoBroker:
             user_data = client_v1.user_data if client_v1 else None
             return user_data.get("sessionId") if user_data else None
 
-        assert self.client_v1 is not None  # mypy
+        assert self.client_v1 is not None  # mypy hint
 
         session_id = get_session_id(self.client_v1)
 

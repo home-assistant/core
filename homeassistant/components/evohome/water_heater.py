@@ -128,7 +128,12 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
 
     async def async_update(self) -> None:
         """Get the latest state data for a DHW controller."""
-        await super().async_update()
+        # Ignore update requests (and avoid I/O) if the entity is disabled/unavailable
+        if not self.enabled or not self.available:
+            return
 
+        await super().async_update()  # might perform I/O to update schedule
         for attr in STATE_ATTRS_DHW:
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)
+
+        await self.coordinator.async_request_refresh()

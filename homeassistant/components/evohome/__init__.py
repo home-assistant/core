@@ -30,19 +30,17 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_LOCATION_IDX, DOMAIN, GWS, STORAGE_KEY, STORAGE_VER, TCS
-from .coordinator import (
-    EvoBroker,
-    EvoDataUpdateCoordinator,
-    _contextualise_v2_exception,
-)
+from .coordinator import EvoBroker, _contextualise_v2_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,7 +174,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         session=async_get_clientsession(hass),
     )
 
-    coordinator = EvoDataUpdateCoordinator(
+    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=DOMAIN,
@@ -199,10 +197,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
     setup_service_functions(hass, broker)
-
-    async_track_time_interval(
-        hass, coordinator.async_request_refresh, config[DOMAIN][CONF_SCAN_INTERVAL]
-    )
 
     return True
 
@@ -486,16 +480,12 @@ class EvoChild(EvoDevice):
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
 
     async def async_update(self) -> None:
-        """Update the entity."""
-        # Ignore update requests if the entity is disabled
-        if not self.enabled or not self.available:
-            return
+        """Update the entity's schedule (does I/O), when required."""
+        self._device_state_attrs = {}
 
         next_sp_from = self._setpoints.get("next_sp_from", "2000-01-01T00:00:00+00:00")
         next_sp_from_dt = dt_util.parse_datetime(next_sp_from)
         if next_sp_from_dt is None or dt_util.now() >= next_sp_from_dt:
             await self._update_schedule()  # no schedule, or it's out-of-date
 
-        self._device_state_attrs = {"setpoints": self.setpoints}
-
-        await self.coordinator.async_request_refresh()
+        self._device_state_attrs["setpoints"] = self.setpoints
