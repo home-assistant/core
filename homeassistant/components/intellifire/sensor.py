@@ -60,7 +60,7 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         icon="mdi:fire-circle",
         name="Flame Height",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.flameheight,
+        value_fn=lambda data: (data.flameheight + 1),
     ),
     IntellifireSensorEntityDescription(
         key="temperature",

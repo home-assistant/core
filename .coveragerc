@@ -575,13 +575,14 @@ omit =
     homeassistant/components/insteon/light.py
     homeassistant/components/insteon/schemas.py
     homeassistant/components/insteon/switch.py
-    homeassistant/components/insteon/utils.py
+    homeassistant/components/insteon/utils.py    
     homeassistant/components/intellifire/__init__.py
     homeassistant/components/intellifire/binary_sensor.py
     homeassistant/components/intellifire/climate.py
     homeassistant/components/intellifire/coordinator.py
     homeassistant/components/intellifire/entity.py
     homeassistant/components/intellifire/fan.py
+    homeassistant/components/intellifire/number.py
     homeassistant/components/intellifire/sensor.py
     homeassistant/components/intellifire/switch.py
     homeassistant/components/intesishome/*

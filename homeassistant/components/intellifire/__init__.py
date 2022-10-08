@@ -24,6 +24,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.FAN,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
