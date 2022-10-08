@@ -18,10 +18,12 @@ from zigpy.profiles import PROFILES
 import zigpy.quirks
 from zigpy.types.named import EUI64, NWK
 from zigpy.zcl.clusters.general import Groups, Identify
+from zigpy.zcl.foundation import Status as ZclStatus
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.const import ATTR_COMMAND, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -668,27 +670,22 @@ class ZHADevice(LogMixin):
         cluster_type=CLUSTER_TYPE_IN,
         manufacturer=None,
     ):
-        """Issue a command against specified zigbee cluster on this entity."""
+        """Issue a command against specified zigbee cluster on this device."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
-            return None
+            raise ValueError(
+                f"Cluster {cluster_id} not found on endpoint {endpoint_id} while issuing command {command} with args {args}"
+            )
         commands = (
             cluster.server_commands
             if command_type == CLUSTER_COMMAND_SERVER
             else cluster.client_commands
         )
-        _LOGGER.warning(
-            "Processed zcl command args: %s",
-            process_fields(args, commands[command].schema),
-        )
-        zcl_command = commands[command].schema(
-            **process_fields(args, commands[command].schema)
-        )
-        _LOGGER.warning("ZCL command: %s", zcl_command)
         response = await (
-            getattr(cluster, commands[command].name)(**zcl_command.__dict__)
+            getattr(cluster, commands[command].name)(
+                **process_fields(args, commands[command].schema)
+            )
         )
-
         self.debug(
             "Issued cluster command: %s %s %s %s %s %s %s",
             f"{ATTR_CLUSTER_ID}: {cluster_id}",
@@ -699,7 +696,12 @@ class ZHADevice(LogMixin):
             f"{ATTR_MANUFACTURER}: {manufacturer}",
             f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
         )
-        return response
+        if isinstance(response, Exception):
+            raise HomeAssistantError("Failed to issue cluster command") from response
+        if response[1] is not ZclStatus.SUCCESS:
+            raise HomeAssistantError(
+                f"Failed to issue cluster command with status: {response[1]}"
+            )
 
     async def async_add_to_group(self, group_id: int) -> None:
         """Add this device to the provided zigbee group."""

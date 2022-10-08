@@ -1299,11 +1299,10 @@ def async_load_api(hass: HomeAssistant) -> None:
         args: dict = service.data[ATTR_ARGS]
         manufacturer: int | None = service.data.get(ATTR_MANUFACTURER)
         zha_device = zha_gateway.get_device(ieee)
-        response = None
-        _LOGGER.warning("Service data: %s", service.data)
         if zha_device is not None:
             if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
                 manufacturer = zha_device.manufacturer_code
+
             response = await zha_device.issue_cluster_command(
                 endpoint_id,
                 cluster_id,
@@ -1313,25 +1312,27 @@ def async_load_api(hass: HomeAssistant) -> None:
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
-        _LOGGER.debug(
-            "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: %s %s: [%s] %s: %s",
-            ATTR_CLUSTER_ID,
-            cluster_id,
-            ATTR_CLUSTER_TYPE,
-            cluster_type,
-            ATTR_ENDPOINT_ID,
-            endpoint_id,
-            ATTR_COMMAND,
-            command,
-            ATTR_COMMAND_TYPE,
-            command_type,
-            ATTR_ARGS,
-            args,
-            ATTR_MANUFACTURER,
-            manufacturer,
-            RESPONSE,
-            response,
-        )
+            _LOGGER.debug(
+                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: %s %s: [%s] %s: %s",
+                ATTR_CLUSTER_ID,
+                cluster_id,
+                ATTR_CLUSTER_TYPE,
+                cluster_type,
+                ATTR_ENDPOINT_ID,
+                endpoint_id,
+                ATTR_COMMAND,
+                command,
+                ATTR_COMMAND_TYPE,
+                command_type,
+                ATTR_ARGS,
+                args,
+                ATTR_MANUFACTURER,
+                manufacturer,
+                RESPONSE,
+                response,
+            )
+        else:
+            raise ValueError(f"Device with IEEE {str(ieee)} not found")
 
     async_register_admin_service(
         hass,
