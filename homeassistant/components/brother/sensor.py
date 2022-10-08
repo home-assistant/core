@@ -28,6 +28,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import BrotherDataUpdateCoordinator
 from .const import DATA_CONFIG_ENTRY, DOMAIN
 
+ATTR_COUNTER = "counter"
+ATTR_REMAINING_PAGES = "remaining_pages"
+
 UNIT_PAGES = "p"
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,8 +109,8 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.drum_remaining_life,
         extra_state_attrs=lambda data: {
-            "remaining_pages": data.drum_remaining_pages,
-            "counter": data.drum_counter,
+            ATTR_REMAINING_PAGES: data.drum_remaining_pages,
+            ATTR_COUNTER: data.drum_counter,
         },
     ),
     BrotherSensorEntityDescription(
@@ -119,8 +122,8 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.black_drum_remaining_life,
         extra_state_attrs=lambda data: {
-            "remaining_pages": data.black_drum_remaining_pages,
-            "counter": data.black_drum_counter,
+            ATTR_REMAINING_PAGES: data.black_drum_remaining_pages,
+            ATTR_COUNTER: data.black_drum_counter,
         },
     ),
     BrotherSensorEntityDescription(
@@ -132,8 +135,8 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.cyan_drum_remaining_life,
         extra_state_attrs=lambda data: {
-            "remaining_pages": data.cyan_drum_remaining_pages,
-            "counter": data.cyan_drum_counter,
+            ATTR_REMAINING_PAGES: data.cyan_drum_remaining_pages,
+            ATTR_COUNTER: data.cyan_drum_counter,
         },
     ),
     BrotherSensorEntityDescription(
@@ -145,8 +148,8 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.magenta_drum_remaining_life,
         extra_state_attrs=lambda data: {
-            "remaining_pages": data.magenta_drum_remaining_pages,
-            "counter": data.magenta_drum_counter,
+            ATTR_REMAINING_PAGES: data.magenta_drum_remaining_pages,
+            ATTR_COUNTER: data.magenta_drum_counter,
         },
     ),
     BrotherSensorEntityDescription(
@@ -158,8 +161,8 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.yellow_drum_remaining_life,
         extra_state_attrs=lambda data: {
-            "remaining_pages": data.yellow_drum_remaining_pages,
-            "counter": data.yellow_drum_counter,
+            ATTR_REMAINING_PAGES: data.yellow_drum_remaining_pages,
+            ATTR_COUNTER: data.yellow_drum_counter,
         },
     ),
     BrotherSensorEntityDescription(
