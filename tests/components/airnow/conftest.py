@@ -1,6 +1,6 @@
 """Define fixtures for AirNow tests."""
 import json
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -34,18 +34,25 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="response", scope="session")
-def response_fixture():
-    """Define task data."""
+@pytest.fixture(name="data", scope="session")
+def data_fixture():
+    """Define a fixture for response data."""
     return json.loads(load_fixture("response.json", "airnow"))
 
 
+@pytest.fixture(name="mock_api_get")
+def mock_api_get_fixture(data):
+    """Define a fixture for a mock "get" coroutine function."""
+    return AsyncMock(return_value=data)
+
+
 @pytest.fixture(name="setup_airnow")
-async def setup_airnow_fixture(hass, config):
+async def setup_airnow_fixture(hass, config, mock_api_get):
     """Define a fixture to set up AirNow."""
-    with patch("pyairnow.WebServiceAPI._get", return_value=config), patch(
-        "homeassistant.components.airnow.PLATFORMS", []
-    ):
+    with patch("pyairnow.WebServiceAPI._get", mock_api_get), patch(
+        "homeassistant.components.airnow.config_flow.WebServiceAPI._get",
+        mock_api_get,
+    ), patch("homeassistant.components.airnow.PLATFORMS", []):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         yield
