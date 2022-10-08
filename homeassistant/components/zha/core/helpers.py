@@ -168,13 +168,26 @@ def convert_to_zcl_values(
                 value = field.type(
                     functools.reduce(
                         operator.ior,
-                        [field.type[flag.replace(" ", "_")] for flag in value],
+                        [
+                            field.type[flag.replace(" ", "_")]
+                            if isinstance(flag, str)
+                            else field.type(flag)
+                            for flag in value
+                        ],
                     )
                 )
             else:
-                value = field.type[value.replace(" ", "_")]
+                value = (
+                    field.type[value.replace(" ", "_")]
+                    if isinstance(value, str)
+                    else field.type(value)
+                )
         elif issubclass(field.type, enum.Enum):
-            value = field.type[value.replace(" ", "_")]
+            value = (
+                field.type[value.replace(" ", "_")]
+                if isinstance(value, str)
+                else field.type(value)
+            )
         else:
             value = field.type(value)
         _LOGGER.debug(
