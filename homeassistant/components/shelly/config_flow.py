@@ -29,6 +29,8 @@ from .utils import (
     get_info_gen,
     get_model_name,
     get_rpc_device_name,
+    get_rpc_device_sleep_period,
+    get_ws_context,
 )
 
 HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
@@ -54,8 +56,10 @@ async def validate_input(
 
     async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
         if get_info_gen(info) == 2:
+            ws_context = await get_ws_context(hass)
             rpc_device = await RpcDevice.create(
                 aiohttp_client.async_get_clientsession(hass),
+                ws_context,
                 options,
             )
             await rpc_device.shutdown()
@@ -63,7 +67,7 @@ async def validate_input(
 
             return {
                 "title": get_rpc_device_name(rpc_device),
-                CONF_SLEEP_PERIOD: 0,
+                CONF_SLEEP_PERIOD: get_rpc_device_sleep_period(rpc_device.config),
                 "model": rpc_device.shelly.get("model"),
                 "gen": 2,
             }
