@@ -31,6 +31,7 @@ class DiscoveredSnooz:
     info: BluetoothServiceInfo
     device: SnoozAdvertisementData
 
+
 class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Snooz."""
 
