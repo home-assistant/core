@@ -11,18 +11,14 @@ from aioesphomeapi import BluetoothLEAdvertisement
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
-from homeassistant.components.bluetooth import BaseHaScanner, HaBluetoothConnector
-from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    BaseHaScanner,
+    BluetoothServiceInfoBleak,
+    HaBluetoothConnector,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
-
-# We have to set this quite high as we don't know
-# when devices fall out of the esphome device's stack
-# like we do with BlueZ so its safer to assume its available
-# since if it does go out of range and it is in range
-# of another device the timeout is much shorter and it will
-# switch over to using that adapter anyways.
-ADV_STALE_TIME = 60 * 15  # seconds
 
 TWO_CHAR = re.compile("..")
 
@@ -62,7 +58,7 @@ class ESPHomeScanner(BaseHaScanner):
         expired = [
             address
             for address, timestamp in self._discovered_device_timestamps.items()
-            if now - timestamp > ADV_STALE_TIME
+            if now - timestamp > FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
         ]
         for address in expired:
             del self._discovered_devices[address]
