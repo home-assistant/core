@@ -47,6 +47,7 @@ CONF_BOTTOM = "bottom"
 CONF_RIGHT = "right"
 CONF_LEFT = "left"
 CONF_FILE_OUT = "file_out"
+CONF_SAVE_ORIG = "save_original"
 
 AREA_SCHEMA = vol.Schema(
     {
@@ -73,6 +74,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TIMEOUT, default=90): cv.positive_int,
         vol.Optional(CONF_AUTH_KEY, default=""): cv.string,
         vol.Optional(CONF_FILE_OUT, default=[]): vol.All(cv.ensure_list, [cv.template]),
+        vol.Optional(CONF_SAVE_ORIG, default=False): cv.boolean,
         vol.Optional(CONF_CONFIDENCE, default=0.0): vol.Range(min=0, max=100),
         vol.Optional(CONF_LABELS, default=[]): vol.All(
             cv.ensure_list, [vol.Any(cv.string, LABEL_SCHEMA)]
@@ -141,6 +143,7 @@ class Doods(ImageProcessingEntity):
             self._name = f"Doods {name}"
         self._doods = doods
         self._file_out = config[CONF_FILE_OUT]
+        self._save_orig = config[CONF_SAVE_ORIG]
         self._detector_name = detector["name"]
 
         # detector config and aspect ratio
@@ -252,13 +255,14 @@ class Doods(ImageProcessingEntity):
         draw = ImageDraw.Draw(img)
 
         # save picture without boxes
-        for path in paths:
-            path_orig = os.path.split(path)
-            path_orig = os.path.join(path_orig[0], "origin_" + path_orig[1])
+        if self._save_orig:
+            for path in paths:
+                path_orig = os.path.split(path)
+                path_orig = os.path.join(path_orig[0], "origin_" + path_orig[1])
 
-            _LOGGER.info("Saving original image to %s", path_orig)
-            os.makedirs(os.path.dirname(path_orig), exist_ok=True)
-            img.save(path_orig)
+                _LOGGER.info("Saving original image to %s", path_orig)
+                os.makedirs(os.path.dirname(path_orig), exist_ok=True)
+                img.save(path_orig)
 
         if matches is None:
             # draw only original image if no matches are found
