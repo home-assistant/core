@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "reauth_unsuccessful": "B\u0142\u0105d ponownego uwierzytelnienia, usu\u0144 integracj\u0119 i skonfiguruj j\u0105 ponownie",
             "unsupported_firmware": "Urz\u0105dzenie u\u017cywa nieobs\u0142ugiwanej wersji firmware"
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "Czy chcesz skonfigurowa\u0107 {model} ({host})?\n\nUrz\u0105dzenia zasilane bateryjnie, z ustawionym has\u0142em, nale\u017cy wybudzi\u0107 przed konfiguracj\u0105.\nUrz\u0105dzenia zasilane bateryjnie, bez ustawionego has\u0142a, zostan\u0105 dodane, gdy si\u0119 wybudz\u0105. Mo\u017cesz r\u0119cznie wybudzi\u0107 urz\u0105dzenie przyciskiem na obudowie lub poczeka\u0107 na aktualizacj\u0119 danych z urz\u0105dzenia."
             },
             "credentials": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"

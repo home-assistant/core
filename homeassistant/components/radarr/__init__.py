@@ -1,6 +1,8 @@
 """The Radarr component."""
 from __future__ import annotations
 
+from typing import Any, cast
+
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
@@ -29,6 +31,7 @@ from .coordinator import (
     MoviesDataUpdateCoordinator,
     RadarrDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
+    T,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
@@ -50,15 +53,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_yaml",
             )
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "removed_attributes",
-                breaks_in_ha_version="2022.10.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="removed_attributes",
-            )
 
     return True
 
@@ -74,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host_configuration=host_configuration,
         session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
     )
-    coordinators: dict[str, RadarrDataUpdateCoordinator] = {
+    coordinators: dict[str, RadarrDataUpdateCoordinator[Any]] = {
         "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, radarr),
         "health": HealthDataUpdateCoordinator(hass, host_configuration, radarr),
         "movie": MoviesDataUpdateCoordinator(hass, host_configuration, radarr),
@@ -95,15 +89,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
+class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator[T]]):
     """Defines a base Radarr entity."""
 
     _attr_has_entity_name = True
-    coordinator: RadarrDataUpdateCoordinator
+    coordinator: RadarrDataUpdateCoordinator[T]
 
     def __init__(
         self,
-        coordinator: RadarrDataUpdateCoordinator,
+        coordinator: RadarrDataUpdateCoordinator[T],
         description: EntityDescription | None = None,
         name: str | None = None,
     ) -> None:
@@ -125,5 +119,7 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
             name=self.coordinator.config_entry.title,
         )
         if isinstance(self.coordinator, StatusDataUpdateCoordinator):
-            device_info[ATTR_SW_VERSION] = self.coordinator.data.version
+            device_info[ATTR_SW_VERSION] = cast(
+                StatusDataUpdateCoordinator, self.coordinator
+            ).data.version
         return device_info

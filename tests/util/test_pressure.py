@@ -11,10 +11,17 @@ from homeassistant.const import (
     PRESSURE_PA,
     PRESSURE_PSI,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.pressure as pressure_util
 
 INVALID_SYMBOL = "bob"
 VALID_SYMBOL = PRESSURE_PA
+
+
+def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert pressure_util.convert(2, PRESSURE_PA, PRESSURE_PA) == 2
+    assert "use unit_conversion.PressureConverter instead" in caplog.text
 
 
 def test_convert_same_unit():
@@ -30,10 +37,10 @@ def test_convert_same_unit():
 
 def test_convert_invalid_unit():
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         pressure_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         pressure_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
 
@@ -111,7 +118,7 @@ def test_convert_from_inhg():
         101.59167
     )
     assert pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_MMHG) == pytest.approx(
-        762.002
+        762
     )
 
 
@@ -119,23 +126,23 @@ def test_convert_from_mmhg():
     """Test conversion from mmHg to other units."""
     inhg = 30
     assert pressure_util.convert(inhg, PRESSURE_MMHG, PRESSURE_PSI) == pytest.approx(
-        0.580102
+        0.580103
     )
     assert pressure_util.convert(inhg, PRESSURE_MMHG, PRESSURE_KPA) == pytest.approx(
-        3.99966
+        3.99967
     )
     assert pressure_util.convert(inhg, PRESSURE_MMHG, PRESSURE_HPA) == pytest.approx(
-        39.9966
+        39.9967
     )
     assert pressure_util.convert(inhg, PRESSURE_MMHG, PRESSURE_PA) == pytest.approx(
-        3999.66
+        3999.67
     )
     assert pressure_util.convert(inhg, PRESSURE_MMHG, PRESSURE_MBAR) == pytest.approx(
-        39.9966
+        39.9967
     )
     assert pressure_util.convert(inhg, PRESSURE_MMHG, PRESSURE_CBAR) == pytest.approx(
-        3.99966
+        3.99967
     )
     assert pressure_util.convert(inhg, PRESSURE_MMHG, PRESSURE_INHG) == pytest.approx(
-        1.181099
+        1.181102
     )

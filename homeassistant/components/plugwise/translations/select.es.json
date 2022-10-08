@@ -1,0 +1,9 @@
+{
+    "state": {
+        "plugwise__regulation_mode": {
+            "cooling": "Refrigeraci\u00f3n",
+            "heating": "Calefacci\u00f3n",
+            "off": "Apagado"
+        }
+    }
+}

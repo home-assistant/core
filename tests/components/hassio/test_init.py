@@ -92,7 +92,11 @@ def mock_all(aioclient_mock, request, os_info):
         "http://127.0.0.1/supervisor/info",
         json={
             "result": "ok",
-            "data": {"version_latest": "1.0.0", "version": "1.0.0"},
+            "data": {
+                "version_latest": "1.0.0",
+                "version": "1.0.0",
+                "auto_update": True,
+            },
             "addons": [
                 {
                     "name": "test",
@@ -536,6 +540,7 @@ async def test_device_registry_calls(hass):
     supervisor_mock_data = {
         "version": "1.0.0",
         "version_latest": "1.0.0",
+        "auto_update": True,
         "addons": [
             {
                 "name": "test",
@@ -586,6 +591,7 @@ async def test_device_registry_calls(hass):
     supervisor_mock_data = {
         "version": "1.0.0",
         "version_latest": "1.0.0",
+        "auto_update": True,
         "addons": [
             {
                 "name": "test2",
@@ -620,6 +626,7 @@ async def test_device_registry_calls(hass):
     supervisor_mock_data = {
         "version": "1.0.0",
         "version_latest": "1.0.0",
+        "auto_update": True,
         "addons": [
             {
                 "name": "test2",

@@ -25,6 +25,10 @@
             },
             "pick_implementation": {
                 "title": "Selecciona el m\u00e9todo de autenticaci\u00f3n"
+            },
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de Hojas de c\u00e1lculo de Google necesita volver a autenticar tu cuenta",
+                "title": "Volver a autenticar la integraci\u00f3n"
             }
         }
     }

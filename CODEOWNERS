@@ -45,6 +45,8 @@ build.json @home-assistant/supervisor
 /tests/components/airnow/ @asymworks
 /homeassistant/components/airthings/ @danielhiversen
 /tests/components/airthings/ @danielhiversen
+/homeassistant/components/airthings_ble/ @vincegio
+/tests/components/airthings_ble/ @vincegio
 /homeassistant/components/airtouch4/ @LonePurpleWolf
 /tests/components/airtouch4/ @LonePurpleWolf
 /homeassistant/components/airvisual/ @bachya
@@ -78,6 +80,8 @@ build.json @home-assistant/supervisor
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
 /tests/components/apache_kafka/ @bachya
+/homeassistant/components/apcupsd/ @yuxincs
+/tests/components/apcupsd/ @yuxincs
 /homeassistant/components/api/ @home-assistant/core
 /tests/components/api/ @home-assistant/core
 /homeassistant/components/apple_tv/ @postlund
@@ -127,6 +131,8 @@ build.json @home-assistant/supervisor
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1
 /tests/components/balboa/ @garbled1
+/homeassistant/components/bayesian/ @HarvsG
+/tests/components/bayesian/ @HarvsG
 /homeassistant/components/beewi_smartclim/ @alemuro
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
@@ -158,7 +164,7 @@ build.json @home-assistant/supervisor
 /tests/components/brunt/ @eavanvalkenburg
 /homeassistant/components/bsblan/ @liudger
 /tests/components/bsblan/ @liudger
-/homeassistant/components/bt_smarthub/ @jxwolstenholme
+/homeassistant/components/bt_smarthub/ @typhoon2099
 /homeassistant/components/bthome/ @Ernst79
 /tests/components/bthome/ @Ernst79
 /homeassistant/components/buienradar/ @mjj4791 @ties @Robbie1221
@@ -261,7 +267,8 @@ build.json @home-assistant/supervisor
 /tests/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /homeassistant/components/dsmr/ @Robbie1221 @frenck
 /tests/components/dsmr/ @Robbie1221 @frenck
-/homeassistant/components/dsmr_reader/ @depl0y
+/homeassistant/components/dsmr_reader/ @depl0y @glodenox
+/tests/components/dsmr_reader/ @depl0y @glodenox
 /homeassistant/components/dunehd/ @bieniu
 /tests/components/dunehd/ @bieniu
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @Hummel95
@@ -418,6 +425,7 @@ build.json @home-assistant/supervisor
 /tests/components/google_assistant/ @home-assistant/cloud
 /homeassistant/components/google_cloud/ @lufton
 /homeassistant/components/google_sheets/ @tkdrob
+/tests/components/google_sheets/ @tkdrob
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
 /homeassistant/components/govee_ble/ @bdraco
@@ -596,8 +604,8 @@ build.json @home-assistant/supervisor
 /tests/components/kulersky/ @emlove
 /homeassistant/components/lacrosse_view/ @IceBotYT
 /tests/components/lacrosse_view/ @IceBotYT
-/homeassistant/components/lametric/ @robbiet480 @frenck
-/tests/components/lametric/ @robbiet480 @frenck
+/homeassistant/components/lametric/ @robbiet480 @frenck @bachya
+/tests/components/lametric/ @robbiet480 @frenck @bachya
 /homeassistant/components/landisgyr_heat_meter/ @vpathuis
 /tests/components/landisgyr_heat_meter/ @vpathuis
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
