@@ -340,13 +340,6 @@ class BluetoothManager:
         """Handle a new advertisement from any scanner.
 
         Callbacks from all the scanners arrive here.
-
-        In the future we will only process callbacks if
-
-        - The device is not in the history
-        - The RSSI is above a certain threshold better than
-          than the source from the history or the timestamp
-          in the history is older than 180s
         """
 
         # Pre-filter noisy apple devices as they can account for 20-35% of the
@@ -365,10 +358,9 @@ class BluetoothManager:
         connectable = service_info.connectable
         address = device.address
         all_history = self._connectable_history if connectable else self._history
-        old_service_info = all_history.get(address)
         source = service_info.source
         if (
-            old_service_info
+            (old_service_info := all_history.get(address))
             and source != old_service_info.source
             and self._prefer_previous_adv_from_different_source(
                 old_service_info, service_info
