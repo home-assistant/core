@@ -395,17 +395,20 @@ class Doods(ImageProcessingEntity):
 
         # Save Images
         if total_matches and self._file_out:
-            paths = []
-            for path_template in self._file_out:
-                if isinstance(path_template, template.Template):
-                    paths.append(
-                        path_template.render(camera_entity=self._camera_entity)
-                    )
-                else:
-                    paths.append(path_template)
+            paths = self._gen_paths()
             self._save_image(image, matches, paths)
 
         self._paths = paths
         self._matches = matches
         self._total_matches = total_matches
         self._process_time = time.monotonic() - start
+
+    def _gen_paths(self):
+        paths = []
+        for path_template in self._file_out:
+            if isinstance(path_template, template.Template):
+                paths.append(path_template.render(camera_entity=self._camera_entity))
+            else:
+                paths.append(path_template)
+
+        return paths
