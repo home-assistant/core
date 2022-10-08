@@ -9,8 +9,8 @@
                     "unit_of_measurement": "Unit of Measurement"
                 },
                 "data_description": {
-                    "attribute": "Select the Attribute from the entity that you like to get as sensor.",
-                    "unit_of_measurement": "Select an unit of measurement or add your own custom UoM"
+                    "attribute": "Select the attribute that you would like to use as a sensor.",
+                    "unit_of_measurement": "Select a pre-defined unit of measurement or customize your own."
                 }
             },
             "user": {
@@ -19,7 +19,7 @@
                     "icon": "Icon",
                     "name": "Name"
                 },
-                "description": "Create a sensor that derives it's value from an attribute from another entity.",
+                "description": "Create a sensor that derive it's value from an attribute of another entity.",
                 "title": "Add Attribute as Sensor"
             }
         }
@@ -33,7 +33,7 @@
                     "unit_of_measurement": "Unit of Measurement"
                 },
                 "data_description": {
-                    "unit_of_measurement": "Select an unit of measurement or add your own custom UoM"
+                    "unit_of_measurement": "Select a pre-defined unit of measurement or customize your own."
                 }
             }
         }
