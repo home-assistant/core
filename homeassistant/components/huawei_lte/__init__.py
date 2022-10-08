@@ -490,10 +490,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Huawei LTE component."""
 
-    # dicttoxml (used by huawei-lte-api) has uselessly verbose INFO level.
-    # https://github.com/quandyfactory/dicttoxml/issues/60
-    logging.getLogger("dicttoxml").setLevel(logging.WARNING)
-
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
 
