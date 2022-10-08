@@ -25,6 +25,36 @@ MOCK_SETTINGS = {
     "rollers": [{"positioning": True}],
 }
 
+
+def mock_light_set_state(
+    turn="on",
+    mode="color",
+    red=45,
+    green=55,
+    blue=65,
+    white=70,
+    gain=19,
+    temp=4050,
+    brightness=50,
+    effect=0,
+    transition=0,
+):
+    """Mock light block set_state."""
+    return {
+        "ison": turn == "on",
+        "mode": mode,
+        "red": red,
+        "green": green,
+        "blue": blue,
+        "white": white,
+        "gain": gain,
+        "temp": temp,
+        "brightness": brightness,
+        "effect": effect,
+        "transition": transition,
+    }
+
+
 MOCK_BLOCKS = [
     Mock(
         sensor_ids={"inputEvent": "S", "inputEventCnt": 2},
@@ -42,6 +72,15 @@ MOCK_BLOCKS = [
                 "state": go,
             }
         ),
+    ),
+    Mock(
+        sensor_ids={},
+        channel="0",
+        output=mock_light_set_state()["ison"],
+        colorTemp=mock_light_set_state()["temp"],
+        **mock_light_set_state(),
+        type="light",
+        set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
 ]
 
