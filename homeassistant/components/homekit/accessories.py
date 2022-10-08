@@ -270,6 +270,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             driver=driver,
             display_name=cleanup_name_for_homekit(name),
             aid=aid,
+            iid_manager=driver.iid_manager,
             *args,
             **kwargs,
         )
@@ -569,7 +570,7 @@ class HomeBridge(Bridge):  # type: ignore[misc]
 
     def __init__(self, hass: HomeAssistant, driver: HomeDriver, name: str) -> None:
         """Initialize a Bridge object."""
-        super().__init__(driver, name)
+        super().__init__(driver, name, iid_manager=driver.iid_manager)
         self.set_info_service(
             firmware_revision=format_version(__version__),
             manufacturer=MANUFACTURER,
