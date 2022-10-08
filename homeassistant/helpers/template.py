@@ -1096,7 +1096,9 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     )
 
 
-def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
+def device_attr_item(
+    hass: HomeAssistant, device_or_entity_id: str, attr_name: str
+) -> Any:
     """Get the device specific attribute."""
     device_reg = device_registry.async_get(hass)
     if not isinstance(device_or_entity_id, str):
@@ -1112,6 +1114,16 @@ def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -
     if device is None or not hasattr(device, attr_name):
         return None
     return getattr(device, attr_name)
+
+
+def device_attr(
+    hass: HomeAssistant, device_or_entity_id: str | list, attr_name: str
+) -> Any:
+    """Get the device specific attribute."""
+    if isinstance(device_or_entity_id, str):
+        return device_attr_item(hass, device_or_entity_id, attr_name)
+
+    return [device_attr_item(hass, id, attr_name) for id in device_or_entity_id]
 
 
 def is_device_attr(
@@ -2110,6 +2122,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             ),
             Ext(
                 "device_attr",
+                filt=pass_context(hassfunction(device_attr)),
                 glob=hassfunction(device_attr),
                 support_limited=False,
                 require_hass=True,
