@@ -52,7 +52,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if "Invalid authentication" in str(error):
                     errors["base"] = "invalid_auth"
                 if "Could not find a camera with the specified name" in str(error):
-                    errors["base"] = "invalid_station"
+                    errors["base"] = "invalid_location"
                 if "Found multiple camera with the specified name" in str(error):
                     errors["base"] = "more_locations"
             else:
@@ -94,7 +94,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if "Invalid authentication" in str(error):
                     errors["base"] = "invalid_auth"
                 if "Could not find a camera with the specified name" in str(error):
-                    errors["base"] = "invalid_station"
+                    errors["base"] = "invalid_location"
                 if "Found multiple camera with the specified name" in str(error):
                     errors["base"] = "more_locations"
 

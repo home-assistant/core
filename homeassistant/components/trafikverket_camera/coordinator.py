@@ -18,14 +18,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_LOCATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-TIME_BETWEEN_UPDATES = timedelta(seconds=20)
+TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 
 @dataclass
 class CameraData:
     """Dataclass for Camera data."""
 
-    data: CameraInfo | None
+    data: CameraInfo
     image: bytes | None
 
 
@@ -44,9 +44,9 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
         self._camera_api = TrafikverketCamera(self.session, entry.data[CONF_API_KEY])
         self._location = entry.data[CONF_LOCATION]
 
-    async def _async_update_data(self) -> CameraInfo:
+    async def _async_update_data(self) -> CameraData:
         """Fetch data from Trafikverket."""
-        camera_data: CameraInfo | None = None
+        camera_data: CameraInfo
         image: bytes | None = None
         try:
             camera_data = await self._camera_api.async_get_camera(self._location)
@@ -54,6 +54,9 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
             if "Invalid authentication" in str(error):
                 raise ConfigEntryAuthFailed from error
             raise UpdateFailed from error
+
+        if camera_data.photourl is None:
+            return CameraData(data=camera_data, image=None)
 
         image_url = camera_data.photourl
         if camera_data.fullsizephoto:

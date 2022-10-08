@@ -75,23 +75,20 @@ class TVCamera(CoordinatorEntity[TVDataUpdateCoordinator], Camera):
     @property
     def is_on(self) -> bool:
         """Return camera on."""
-        if self.coordinator.data.data:
-            return bool(self.coordinator.data.data.active is True)
-        return False
+        return bool(self.coordinator.data.data.active is True)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
-        if self.coordinator.data.data:
-            return {
-                "deleted": self.coordinator.data.data.deleted,
-                "description": self.coordinator.data.data.description,
-                "direction": self.coordinator.data.data.direction,
-                "full_size_photo": self.coordinator.data.data.fullsizephoto,
-                "last_modified": self.coordinator.data.data.modified,
-                "photo time": self.coordinator.data.data.phototime,
-                "photo url": self.coordinator.data.data.photourl,
-                "status": self.coordinator.data.data.status,
-                "type": self.coordinator.data.data.camera_type,
-            }
-        return None
+        return {
+            "deleted": self.coordinator.data.data.deleted,
+            "description": self.coordinator.data.data.description,
+            "direction": self.coordinator.data.data.direction,
+            "full_size_photo": self.coordinator.data.data.fullsizephoto,
+            "last_modified": self.coordinator.data.data.modified,
+            "location": self.coordinator.data.data.location,
+            "photo time": self.coordinator.data.data.phototime,
+            "photo url": self.coordinator.data.data.photourl,
+            "status": self.coordinator.data.data.status,
+            "type": self.coordinator.data.data.camera_type,
+        }

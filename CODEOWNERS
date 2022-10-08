@@ -1297,6 +1297,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/tractive/ @Danielhiversen @zhulik @bieniu
 /tests/components/tractive/ @Danielhiversen @zhulik @bieniu
 /homeassistant/components/trafikverket_camera/ @gjohansson-ST
+/tests/components/trafikverket_camera/ @gjohansson-ST
 /homeassistant/components/trafikverket_ferry/ @gjohansson-ST
 /tests/components/trafikverket_ferry/ @gjohansson-ST
 /homeassistant/components/trafikverket_train/ @endor-force @gjohansson-ST
