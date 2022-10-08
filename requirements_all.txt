@@ -1030,7 +1030,7 @@ london-tube-status==0.5
 luftdaten==0.7.2
 
 # homeassistant.components.lupusec
-lupupy==0.0.24
+lupupy==0.1.9
 
 # homeassistant.components.lw12wifi
 lw12==0.9.2
