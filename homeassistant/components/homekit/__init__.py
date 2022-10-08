@@ -444,7 +444,7 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
             matching_instances = [
                 homekit
                 for homekit in _async_all_homekit_instances(hass)
-                if homekit.driver
+                if hasattr(homekit, "driver")
                 and device_registry.format_mac(homekit.driver.state.mac) in macs
             ]
             if not matching_instances:

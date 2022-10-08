@@ -22,7 +22,7 @@ AID_MANAGER_SAVE_DELAY = 2
 
 ALLOCATIONS_KEY = "allocations"
 
-IID_MIN = 2
+IID_MIN = 1
 IID_MAX = 18446744073709551615
 
 
@@ -37,7 +37,7 @@ class AccessoryIIDStorage:
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
         """Create a new iid store."""
         self._hass = hass
-        self._allocations: dict[tuple[int, str, str | None, str | None], int] = {}
+        self._allocations: dict[str, int] = {}
         self._allocated_iids: list[int] = []
         self._entry_id = entry_id
         self._store: Store | None = None
@@ -65,7 +65,10 @@ class AccessoryIIDStorage:
         """Generate a stable iid."""
         service_hap_type: str = uuid_to_hap_type(service_uuid)
         char_hap_type: str | None = uuid_to_hap_type(char_uuid) if char_uuid else None
-        allocation_key = (aid, service_hap_type, char_hap_type, unique_id)
+        # Allocation key must be a string since we are saving it to JSON
+        allocation_key = (
+            f'{aid}_{service_hap_type}_{char_hap_type or ""}_{unique_id or ""}'
+        )
         if allocation_key in self._allocations:
             return self._allocations[allocation_key]
         if not self._allocated_iids:
