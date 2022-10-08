@@ -300,8 +300,10 @@ class BluetoothManager:
         self, old: BluetoothServiceInfoBleak, new: BluetoothServiceInfoBleak
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
-        if new.time - old.time > self._advertisement_tracker.intervals.get(
-            new.address, STALE_ADVERTISEMENT_SECONDS
+        if new.time - old.time > (
+            stale_seconds := self._advertisement_tracker.intervals.get(
+                new.address, STALE_ADVERTISEMENT_SECONDS
+            )
         ):
             # If the old advertisement is stale, any new advertisement is preferred
             _LOGGER.debug(
@@ -313,7 +315,7 @@ class BluetoothManager:
                 new.source,
                 new.connectable,
                 new.time - old.time,
-                STALE_ADVERTISEMENT_SECONDS,
+                stale_seconds,
             )
             return False
         if new.device.rssi - RSSI_SWITCH_THRESHOLD > (old.device.rssi or NO_RSSI_VALUE):
