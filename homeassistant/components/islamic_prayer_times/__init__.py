@@ -70,48 +70,29 @@ class IslamicPrayerClient:
     async def async_schedule_future_update(self):
         """Schedule future update for sensors.
 
-        Midnight is a calculated time.  The specifics of the calculation
-        depends on the method of the prayer time calculation.  This calculated
-        midnight is the time at which the time to pray the Isha prayers have
-        expired.
-
-        Calculated Midnight: The Islamic midnight.
-        Traditional Midnight: 12:00AM
-
-        Update logic for prayer times:
-
-        If the Calculated Midnight is before the traditional midnight then wait
-        until the traditional midnight to run the update.  This way the day
-        will have changed over and we don't need to do any fancy calculations.
-
-        If the Calculated Midnight is after the traditional midnight, then wait
-        until after the calculated Midnight.  We don't want to update the prayer
-        times too early or else the timings might be incorrect.
-
-        Example:
-        calculated midnight = 11:23PM (before traditional midnight)
-        Update time: 12:00AM
-
-        calculated midnight = 1:35AM (after traditional midnight)
-        update time: 1:36AM.
+        Always schedule update on 02:01 AM local time to anticipate daylight saving time changes.
+        
+        Islamic calculated midnight would be almost always before 02:00 AM, so it should not need
+        special handling.
+        The caveat is that the sensor would be inaccurate between 00:00-02:00AM each day.
 
         """
         _LOGGER.debug("Scheduling next update for Islamic prayer times")
 
         now = dt_util.utcnow()
-
-        midnight_dt = self.prayer_times_info["Midnight"]
-
-        if now > dt_util.as_utc(midnight_dt):
-            next_update_at = midnight_dt + timedelta(days=1, minutes=1)
+        
+        dst_change = dt_util.start_of_local_day(now) + timedelta(hours=2, minutes=1)
+        
+        if(now < dst_change):
+            next_update_at = dst_change
             _LOGGER.debug(
-                "Midnight is after day the changes so schedule update for after Midnight the next day"
+                "Current time is before 02:01 AM so update is scheduled on 2:01 AM today to anticipate DST change"
             )
         else:
+            next_update_at = dst_change + timedelta(days=1)
             _LOGGER.debug(
-                "Midnight is before the day changes so schedule update for the next start of day"
+                "Schedule update for 02:01 AM the next day"
             )
-            next_update_at = dt_util.start_of_local_day(now + timedelta(days=1))
 
         _LOGGER.info("Next update scheduled for: %s", next_update_at)
 
