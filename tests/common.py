@@ -369,7 +369,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
     msg = ReceiveMessage(topic, payload, qos, retain)
-    hass.data["mqtt"]._mqtt_handle_message(msg)
+    hass.data["mqtt"].client._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -469,12 +469,15 @@ def mock_area_registry(hass, mock_entries=None):
     return registry
 
 
-def mock_device_registry(hass, mock_entries=None, mock_deleted_entries=None):
+def mock_device_registry(hass, mock_entries=None):
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
-    registry.devices = mock_entries or OrderedDict()
-    registry.deleted_devices = mock_deleted_entries or OrderedDict()
-    registry._rebuild_index()
+    registry.devices = device_registry.DeviceRegistryItems()
+    if mock_entries is None:
+        mock_entries = {}
+    for key, entry in mock_entries.items():
+        registry.devices[key] = entry
+    registry.deleted_devices = device_registry.DeviceRegistryItems()
 
     hass.data[device_registry.DATA_REGISTRY] = registry
     return registry

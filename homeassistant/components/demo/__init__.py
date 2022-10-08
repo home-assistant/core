@@ -260,7 +260,7 @@ async def _insert_sum_statistics(
     start: datetime.datetime,
     end: datetime.datetime,
     max_diff: float,
-):
+) -> None:
     statistics: list[StatisticData] = []
     now = start
     sum_ = 0.0

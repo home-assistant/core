@@ -44,6 +44,8 @@
             "button_2": "Andra knappen",
             "button_3": "Tredje knappen",
             "button_4": "Fj\u00e4rde knappen",
+            "clock_wise": "Rotation medurs",
+            "counter_clock_wise": "Rotation moturs",
             "dim_down": "Dimma ned",
             "dim_up": "Dimma upp",
             "double_buttons_1_3": "F\u00f6rsta och tredje knapparna",
@@ -61,7 +63,8 @@
             "remote_double_button_long_press": "B\u00e5da \"{subtype}\" sl\u00e4pptes efter en l\u00e5ngtryckning",
             "remote_double_button_short_press": "B\u00e5da \"{subtyp}\" sl\u00e4pptes",
             "repeat": "Knappen \" {subtype} \" h\u00f6lls nedtryckt",
-            "short_release": "Knappen \" {subtype} \" sl\u00e4pps efter kort tryckning"
+            "short_release": "Knappen \" {subtype} \" sl\u00e4pps efter kort tryckning",
+            "start": "\" {subtype} \" trycktes f\u00f6rst"
         }
     },
     "options": {

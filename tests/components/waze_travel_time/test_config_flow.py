@@ -176,7 +176,7 @@ async def test_dupe(hass):
 
 
 @pytest.mark.usefixtures("invalidate_config_entry")
-async def test_invalid_config_entry(hass):
+async def test_invalid_config_entry(hass, caplog):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -190,3 +190,5 @@ async def test_invalid_config_entry(hass):
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    assert "Error trying to validate entry" in caplog.text

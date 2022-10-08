@@ -5,7 +5,7 @@
         },
         "step": {
             "bluetooth_confirm": {
-                "description": "Ingin menambahkan katup Bluetooth Melnor `{nama}` ke Home Assistant?",
+                "description": "Ingin menambahkan katup Bluetooth Melnor `{name}` ke Home Assistant?",
                 "title": "Katup Bluetooth Melnor yang ditemukan"
             }
         }

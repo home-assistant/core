@@ -78,7 +78,9 @@ class VulcanCalendarEntity(CalendarEntity):
         """Return the next upcoming event."""
         return self._event
 
-    async def async_get_events(self, hass, start_date, end_date) -> list[CalendarEvent]:
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         try:
             events = await get_lessons(

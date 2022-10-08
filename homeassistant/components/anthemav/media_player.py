@@ -12,16 +12,10 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -163,7 +157,9 @@ class AnthemAVR(MediaPlayerEntity):
 
     def set_states(self) -> None:
         """Set all the states from the device to the entity."""
-        self._attr_state = STATE_ON if self._zone.power is True else STATE_OFF
+        self._attr_state = (
+            MediaPlayerState.ON if self._zone.power else MediaPlayerState.OFF
+        )
         self._attr_is_volume_muted = self._zone.mute
         self._attr_volume_level = self._zone.volume_as_percentage
         self._attr_media_title = self._zone.input_name

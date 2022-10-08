@@ -11,8 +11,7 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
+    FanEntityFeature,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
@@ -492,7 +491,7 @@ async def test_set_percentage(hass, calls):
     for state, value in [
         (STATE_ON, 100),
         (STATE_ON, 66),
-        (STATE_OFF, 0),
+        (STATE_ON, 0),
     ]:
         await common.async_set_percentage(hass, _TEST_FAN, value)
         assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == value
@@ -517,12 +516,122 @@ async def test_increase_decrease_speed(hass, calls):
         (common.async_set_percentage, 100, STATE_ON, 100),
         (common.async_decrease_speed, None, STATE_ON, 66),
         (common.async_decrease_speed, None, STATE_ON, 33),
-        (common.async_decrease_speed, None, STATE_OFF, 0),
+        (common.async_decrease_speed, None, STATE_ON, 0),
         (common.async_increase_speed, None, STATE_ON, 33),
     ]:
         await func(hass, _TEST_FAN, extra)
         assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == value
         _verify(hass, state, value, None, None, None)
+
+
+async def test_no_value_template(hass, calls):
+    """Test a fan without a value_template."""
+    await _register_fan_sources(hass)
+
+    with assert_setup_component(1, "fan"):
+        test_fan_config = {
+            "preset_mode_template": "{{ states('input_select.preset_mode') }}",
+            "percentage_template": "{{ states('input_number.percentage') }}",
+            "oscillating_template": "{{ states('input_select.osc') }}",
+            "direction_template": "{{ states('input_select.direction') }}",
+            "turn_on": [
+                {
+                    "service": "input_boolean.turn_on",
+                    "entity_id": _STATE_INPUT_BOOLEAN,
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "turn_on",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "turn_off": [
+                {
+                    "service": "input_boolean.turn_off",
+                    "entity_id": _STATE_INPUT_BOOLEAN,
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "turn_off",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "set_preset_mode": [
+                {
+                    "service": "input_select.select_option",
+                    "data_template": {
+                        "entity_id": _PRESET_MODE_INPUT_SELECT,
+                        "option": "{{ preset_mode }}",
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_preset_mode",
+                        "caller": "{{ this.entity_id }}",
+                        "option": "{{ preset_mode }}",
+                    },
+                },
+            ],
+            "set_percentage": [
+                {
+                    "service": "input_number.set_value",
+                    "data_template": {
+                        "entity_id": _PERCENTAGE_INPUT_NUMBER,
+                        "value": "{{ percentage }}",
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_value",
+                        "caller": "{{ this.entity_id }}",
+                        "value": "{{ percentage }}",
+                    },
+                },
+            ],
+        }
+        assert await setup.async_setup_component(
+            hass,
+            "fan",
+            {"fan": {"platform": "template", "fans": {"test_fan": test_fan_config}}},
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    await common.async_turn_on(hass, _TEST_FAN)
+    _verify(hass, STATE_ON, 0, None, None, None)
+
+    await common.async_turn_off(hass, _TEST_FAN)
+    _verify(hass, STATE_OFF, 0, None, None, None)
+
+    percent = 100
+    await common.async_set_percentage(hass, _TEST_FAN, percent)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == percent
+    _verify(hass, STATE_ON, percent, None, None, None)
+
+    await common.async_turn_off(hass, _TEST_FAN)
+    _verify(hass, STATE_OFF, percent, None, None, None)
+
+    preset = "auto"
+    await common.async_set_preset_mode(hass, _TEST_FAN, preset)
+    assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == preset
+    _verify(hass, STATE_ON, percent, None, None, preset)
+
+    await common.async_turn_off(hass, _TEST_FAN)
+    _verify(hass, STATE_OFF, percent, None, None, preset)
+
+    await common.async_set_direction(hass, _TEST_FAN, True)
+    _verify(hass, STATE_OFF, percent, None, None, preset)
+
+    await common.async_oscillate(hass, _TEST_FAN, True)
+    _verify(hass, STATE_OFF, percent, None, None, preset)
 
 
 async def test_increase_decrease_speed_default_speed_count(hass, calls):
@@ -586,10 +695,7 @@ def _verify(
     assert attributes.get(ATTR_PRESET_MODE) == expected_preset_mode
 
 
-async def _register_components(
-    hass, speed_list=None, preset_modes=None, speed_count=None
-):
-    """Register basic components for testing."""
+async def _register_fan_sources(hass):
     with assert_setup_component(1, "input_boolean"):
         assert await setup.async_setup_component(
             hass, "input_boolean", {"input_boolean": {"state": None}}
@@ -630,6 +736,13 @@ async def _register_components(
                 }
             },
         )
+
+
+async def _register_components(
+    hass, speed_list=None, preset_modes=None, speed_count=None
+):
+    """Register basic components for testing."""
+    await _register_fan_sources(hass)
 
     with assert_setup_component(1, "fan"):
         value_template = """
@@ -879,7 +992,7 @@ async def test_implemented_percentage(hass, speed_count, percentage_step):
     state = hass.states.get("fan.mechanical_ventilation")
     attributes = state.attributes
     assert attributes["percentage_step"] == percentage_step
-    assert attributes.get("supported_features") & SUPPORT_SET_SPEED
+    assert attributes.get("supported_features") & FanEntityFeature.SET_SPEED
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -947,4 +1060,4 @@ async def test_implemented_preset_mode(hass, start_ha):
     state = hass.states.get("fan.mechanical_ventilation")
     attributes = state.attributes
     assert attributes.get("percentage") is None
-    assert attributes.get("supported_features") & SUPPORT_PRESET_MODE
+    assert attributes.get("supported_features") & FanEntityFeature.PRESET_MODE

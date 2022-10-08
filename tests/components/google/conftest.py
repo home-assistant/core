@@ -9,12 +9,15 @@ from unittest.mock import Mock, mock_open, patch
 
 from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
-from oauth2client.client import Credentials, OAuth2Credentials
+from oauth2client.client import OAuth2Credentials
 import pytest
 import yaml
 
-from homeassistant.components.google import CONF_TRACK_NEW, DOMAIN
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.google import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -115,22 +118,6 @@ def mock_calendars_yaml(
         yield mocked_open_function
 
 
-class FakeStorage:
-    """A fake storage object for persiting creds."""
-
-    def __init__(self) -> None:
-        """Initialize FakeStorage."""
-        self._creds: Credentials | None = None
-
-    def get(self) -> Credentials | None:
-        """Get credentials from storage."""
-        return self._creds
-
-    def put(self, creds: Credentials) -> None:
-        """Put credentials in storage."""
-        self._creds = creds
-
-
 @pytest.fixture
 def token_scopes() -> list[str]:
     """Fixture for scopes used during test."""
@@ -161,14 +148,6 @@ def creds(
         user_agent="n/a",
         scopes=token_scopes,
     )
-
-
-@pytest.fixture(autouse=True)
-def storage() -> YieldFixture[FakeStorage]:
-    """Fixture to populate an existing token file for read on startup."""
-    storage = FakeStorage()
-    with patch("homeassistant.components.google.Storage", return_value=storage):
-        yield storage
 
 
 @pytest.fixture
@@ -212,16 +191,6 @@ def config_entry(
         },
         options=config_entry_options,
     )
-
-
-@pytest.fixture
-def mock_token_read(
-    hass: HomeAssistant,
-    creds: OAuth2Credentials,
-    storage: FakeStorage,
-) -> None:
-    """Fixture to populate an existing token file for read on startup."""
-    storage.put(creds)
 
 
 @pytest.fixture
@@ -327,33 +296,17 @@ def set_time_zone(hass):
 
 
 @pytest.fixture
-def google_config_track_new() -> None:
-    """Fixture for tests to set the 'track_new' configuration.yaml setting."""
-    return None
-
-
-@pytest.fixture
-def google_config(google_config_track_new: bool | None) -> dict[str, Any]:
-    """Fixture for overriding component config."""
-    google_config = {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET}
-    if google_config_track_new is not None:
-        google_config[CONF_TRACK_NEW] = google_config_track_new
-    return google_config
-
-
-@pytest.fixture
-def config(google_config: dict[str, Any]) -> dict[str, Any]:
-    """Fixture for overriding component config."""
-    return {DOMAIN: google_config} if google_config else {}
-
-
-@pytest.fixture
-def component_setup(hass: HomeAssistant, config: dict[str, Any]) -> ComponentSetup:
+def component_setup(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> ComponentSetup:
     """Fixture for setting up the integration."""
 
     async def _setup_func() -> bool:
-        result = await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-        return result
+        assert await async_setup_component(hass, "application_credentials", {})
+        await async_import_client_credential(
+            hass, DOMAIN, ClientCredential("client-id", "client-secret"), "device_auth"
+        )
+        config_entry.add_to_hass(hass)
+        return await hass.config_entries.async_setup(config_entry.entry_id)
 
     return _setup_func

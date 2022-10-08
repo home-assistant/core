@@ -636,7 +636,7 @@ def _apply_update(  # noqa: C901
                         fake_start_time += timedelta(minutes=5)
 
         # When querying the database, be careful to only explicitly query for columns
-        # which were present in schema version 21. If querying the table, SQLAlchemy
+        # which were present in schema version 22. If querying the table, SQLAlchemy
         # will refer to future columns.
         with session_scope(session=session_maker()) as session:
             for sum_statistic in session.query(StatisticsMeta.id).filter_by(
@@ -747,6 +747,13 @@ def _apply_update(  # noqa: C901
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
             )
+    elif new_version == 30:
+        # This added a column to the statistics_meta table, removed again before
+        # release of HA Core 2022.10.0
+        # SQLite 3.31.0 does not support dropping columns.
+        # Once we require SQLite >= 3.35.5, we should drop the column:
+        # ALTER TABLE statistics_meta DROP COLUMN state_unit_of_measurement
+        pass
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

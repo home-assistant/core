@@ -629,11 +629,33 @@ async def test_default_profiles_group(
             },
             {
                 light.ATTR_COLOR_TEMP: 600,
+                light.ATTR_COLOR_TEMP_KELVIN: 1666,
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
             {
                 light.ATTR_COLOR_TEMP: 600,
+                light.ATTR_COLOR_TEMP_KELVIN: 1666,
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+        (
+            # Color temp in turn on params, color from profile ignored
+            {
+                light.ATTR_COLOR_TEMP_KELVIN: 6500,
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_COLOR_TEMP: 153,
+                light.ATTR_COLOR_TEMP_KELVIN: 6500,
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_COLOR_TEMP: 153,
+                light.ATTR_COLOR_TEMP_KELVIN: 6500,
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
@@ -1440,7 +1462,7 @@ async def test_light_service_call_color_conversion(hass, enable_custom_integrati
     _, data = entity5.last_call("turn_on")
     assert data == {"brightness": 255, "rgbw_color": (0, 0, 0, 255)}
     _, data = entity6.last_call("turn_on")
-    # The midpoint the the white channels is warm, compensated by adding green + blue
+    # The midpoint of the the white channels is warm, compensated by adding green + blue
     assert data == {"brightness": 255, "rgbww_color": (0, 76, 141, 255, 255)}
 
     await hass.services.async_call(
@@ -1843,7 +1865,7 @@ async def test_light_service_call_color_temp_emulation(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 200}
+    assert data == {"brightness": 255, "color_temp": 200, "color_temp_kelvin": 5000}
     _, data = entity1.last_call("turn_on")
     assert data == {"brightness": 255, "hs_color": (27.001, 19.243)}
     _, data = entity2.last_call("turn_on")
@@ -1868,6 +1890,10 @@ async def test_light_service_call_color_temp_conversion(
 
     entity1 = platform.ENTITIES[1]
     entity1.supported_color_modes = {light.ColorMode.RGBWW}
+    assert entity1.min_mireds == 153
+    assert entity1.max_mireds == 500
+    assert entity1.min_color_temp_kelvin == 2000
+    assert entity1.max_color_temp_kelvin == 6535
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1895,7 +1921,7 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 153}
+    assert data == {"brightness": 255, "color_temp": 153, "color_temp_kelvin": 6535}
     _, data = entity1.last_call("turn_on")
     # Home Assistant uses RGBCW so a mireds of 153 should be maximum cold at 100% brightness so 255
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 255, 0)}
@@ -1914,7 +1940,7 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 128, "color_temp": 500}
+    assert data == {"brightness": 128, "color_temp": 500, "color_temp_kelvin": 2000}
     _, data = entity1.last_call("turn_on")
     # Home Assistant uses RGBCW so a mireds of 500 should be maximum warm at 50% brightness so 128
     assert data == {"brightness": 128, "rgbww_color": (0, 0, 0, 0, 128)}
@@ -1933,7 +1959,7 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 327}
+    assert data == {"brightness": 255, "color_temp": 327, "color_temp_kelvin": 3058}
     _, data = entity1.last_call("turn_on")
     # Home Assistant uses RGBCW so a mireds of 328 should be the midway point at 100% brightness so 127 (rounding), 128
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 127, 128)}
@@ -1952,7 +1978,7 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 240}
+    assert data == {"brightness": 255, "color_temp": 240, "color_temp_kelvin": 4166}
     _, data = entity1.last_call("turn_on")
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 191, 64)}
 
@@ -1970,7 +1996,7 @@ async def test_light_service_call_color_temp_conversion(
         blocking=True,
     )
     _, data = entity0.last_call("turn_on")
-    assert data == {"brightness": 255, "color_temp": 410}
+    assert data == {"brightness": 255, "color_temp": 410, "color_temp_kelvin": 2439}
     _, data = entity1.last_call("turn_on")
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 66, 189)}
 

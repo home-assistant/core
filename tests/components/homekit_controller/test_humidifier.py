@@ -2,10 +2,9 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from homeassistant.components.humidifier import DOMAIN
-from homeassistant.components.humidifier.const import MODE_AUTO, MODE_NORMAL
+from homeassistant.components.humidifier import DOMAIN, MODE_AUTO, MODE_NORMAL
 
-from tests.components.homekit_controller.common import setup_test_component
+from .common import setup_test_component
 
 
 def create_humidifier_service(accessory):

@@ -15,15 +15,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -190,6 +184,8 @@ async def async_setup_platform(
 class KefMediaPlayer(MediaPlayerEntity):
     """Kef Player Object."""
 
+    _attr_icon = "mdi:speaker-wireless"
+
     def __init__(
         self,
         name,
@@ -206,8 +202,8 @@ class KefMediaPlayer(MediaPlayerEntity):
         unique_id,
     ):
         """Initialize the media player."""
-        self._name = name
-        self._sources = sources
+        self._attr_name = name
+        self._attr_source_list = sources
         self._speaker = AsyncKefSpeaker(
             host,
             port,
@@ -217,15 +213,11 @@ class KefMediaPlayer(MediaPlayerEntity):
             inverse_speaker_mode,
             loop=loop,
         )
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._supports_on = supports_on
         self._speaker_type = speaker_type
 
-        self._state = None
-        self._muted = None
-        self._source = None
-        self._volume = None
-        self._is_online = None
+        self._attr_available = False
         self._dsp = None
         self._update_dsp_task_remover = None
 
@@ -243,75 +235,32 @@ class KefMediaPlayer(MediaPlayerEntity):
         if supports_on:
             self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
     async def async_update(self) -> None:
         """Update latest state."""
         _LOGGER.debug("Running async_update")
         try:
-            self._is_online = await self._speaker.is_online()
-            if self._is_online:
+            self._attr_available = await self._speaker.is_online()
+            if self.available:
                 (
-                    self._volume,
-                    self._muted,
+                    self._attr_volume_level,
+                    self._attr_is_volume_muted,
                 ) = await self._speaker.get_volume_and_is_muted()
                 state = await self._speaker.get_state()
-                self._source = state.source
-                self._state = STATE_ON if state.is_on else STATE_OFF
+                self._attr_source = state.source
+                self._attr_state = (
+                    MediaPlayerState.ON if state.is_on else MediaPlayerState.OFF
+                )
                 if self._dsp is None:
                     # Only do this when necessary because it is a slow operation
                     await self.update_dsp()
             else:
-                self._muted = None
-                self._source = None
-                self._volume = None
-                self._state = STATE_OFF
+                self._attr_is_volume_muted = None
+                self._attr_source = None
+                self._attr_volume_level = None
+                self._attr_state = MediaPlayerState.OFF
         except (ConnectionError, TimeoutError) as err:
             _LOGGER.debug("Error in `update`: %s", err)
-            self._state = None
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._muted
-
-    @property
-    def source(self):
-        """Name of the current input source."""
-        return self._source
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._sources
-
-    @property
-    def available(self):
-        """Return if the speaker is reachable online."""
-        return self._is_online
-
-    @property
-    def unique_id(self):
-        """Return the device unique id."""
-        return self._unique_id
-
-    @property
-    def icon(self):
-        """Return the device's icon."""
-        return "mdi:speaker-wireless"
+            self._attr_state = None
 
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
@@ -344,7 +293,7 @@ class KefMediaPlayer(MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if source in self.source_list:
+        if self.source_list is not None and source in self.source_list:
             await self._speaker.set_source(source)
         else:
             raise ValueError(f"Unknown input source: {source}.")
@@ -367,7 +316,7 @@ class KefMediaPlayer(MediaPlayerEntity):
 
     async def update_dsp(self, _=None) -> None:
         """Update the DSP settings."""
-        if self._speaker_type == "LS50" and self._state == STATE_OFF:
+        if self._speaker_type == "LS50" and self.state == MediaPlayerState.OFF:
             # The LSX is able to respond when off the LS50 has to be on.
             return
 

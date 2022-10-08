@@ -2,11 +2,12 @@
 
 import copy
 import json
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 import uuid
 
 import pytest
 import serial.tools.list_ports
+from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkNotFormed
@@ -46,9 +47,17 @@ def disable_platform_only():
 
 
 @pytest.fixture(autouse=True)
+def reduce_reconnect_timeout():
+    """Reduces reconnect timeout to speed up tests."""
+    with patch("homeassistant.components.zha.config_flow.CONNECT_DELAY_S", 0.01):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_app():
     """Mock zigpy app interface."""
     mock_app = AsyncMock()
+    mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
 
     with patch(
@@ -228,10 +237,10 @@ async def test_efr32_via_zeroconf(hass):
     await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "socket://192.168.1.200:6638"
+    assert result3["title"] == "socket://192.168.1.200:1234"
     assert result3["data"] == {
         CONF_DEVICE: {
-            CONF_DEVICE_PATH: "socket://192.168.1.200:6638",
+            CONF_DEVICE_PATH: "socket://192.168.1.200:1234",
             CONF_BAUDRATE: 115200,
             CONF_FLOWCONTROL: "software",
         },
@@ -1474,21 +1483,28 @@ async def test_options_flow_defaults(async_setup_entry, async_unload_effect, has
     # Unload it ourselves
     entry.state = config_entries.ConfigEntryState.NOT_LOADED
 
+    # Reconfigure ZHA
+    assert result1["step_id"] == "prompt_migrate_or_reconfigure"
+    result2 = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={"next_step_id": config_flow.OPTIONS_INTENT_RECONFIGURE},
+    )
+
     # Current path is the default
-    assert result1["step_id"] == "choose_serial_port"
-    assert "/dev/ttyUSB0" in result1["data_schema"]({})[CONF_DEVICE_PATH]
+    assert result2["step_id"] == "choose_serial_port"
+    assert "/dev/ttyUSB0" in result2["data_schema"]({})[CONF_DEVICE_PATH]
 
     # Autoprobing fails, we have to manually choose the radio type
-    result2 = await hass.config_entries.options.async_configure(
+    result3 = await hass.config_entries.options.async_configure(
         flow["flow_id"], user_input={}
     )
 
     # Current radio type is the default
-    assert result2["step_id"] == "manual_pick_radio_type"
-    assert result2["data_schema"]({})[CONF_RADIO_TYPE] == RadioType.znp.description
+    assert result3["step_id"] == "manual_pick_radio_type"
+    assert result3["data_schema"]({})[CONF_RADIO_TYPE] == RadioType.znp.description
 
     # Continue on to port settings
-    result3 = await hass.config_entries.options.async_configure(
+    result4 = await hass.config_entries.options.async_configure(
         flow["flow_id"],
         user_input={
             CONF_RADIO_TYPE: RadioType.znp.description,
@@ -1496,12 +1512,12 @@ async def test_options_flow_defaults(async_setup_entry, async_unload_effect, has
     )
 
     # The defaults match our current settings
-    assert result3["step_id"] == "manual_port_config"
-    assert result3["data_schema"]({}) == entry.data[CONF_DEVICE]
+    assert result4["step_id"] == "manual_port_config"
+    assert result4["data_schema"]({}) == entry.data[CONF_DEVICE]
 
     with patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True)):
         # Change the serial port path
-        result4 = await hass.config_entries.options.async_configure(
+        result5 = await hass.config_entries.options.async_configure(
             flow["flow_id"],
             user_input={
                 # Change everything
@@ -1512,18 +1528,18 @@ async def test_options_flow_defaults(async_setup_entry, async_unload_effect, has
         )
 
     # The radio has been detected, we can move on to creating the config entry
-    assert result4["step_id"] == "choose_formation_strategy"
+    assert result5["step_id"] == "choose_formation_strategy"
 
     async_setup_entry.assert_not_called()
 
-    result5 = await hass.config_entries.options.async_configure(
+    result6 = await hass.config_entries.options.async_configure(
         result1["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
 
-    assert result5["type"] == FlowResultType.CREATE_ENTRY
-    assert result5["data"] == {}
+    assert result6["type"] == FlowResultType.CREATE_ENTRY
+    assert result6["data"] == {}
 
     # The updated entry contains correct settings
     assert entry.data == {
@@ -1579,33 +1595,39 @@ async def test_options_flow_defaults_socket(hass):
             flow["flow_id"], user_input={}
         )
 
-    # Radio path must be manually entered
-    assert result1["step_id"] == "choose_serial_port"
-    assert result1["data_schema"]({})[CONF_DEVICE_PATH] == config_flow.CONF_MANUAL_PATH
-
+    assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
-        flow["flow_id"], user_input={}
+        flow["flow_id"],
+        user_input={"next_step_id": config_flow.OPTIONS_INTENT_RECONFIGURE},
     )
 
-    # Current radio type is the default
-    assert result2["step_id"] == "manual_pick_radio_type"
-    assert result2["data_schema"]({})[CONF_RADIO_TYPE] == RadioType.znp.description
+    # Radio path must be manually entered
+    assert result2["step_id"] == "choose_serial_port"
+    assert result2["data_schema"]({})[CONF_DEVICE_PATH] == config_flow.CONF_MANUAL_PATH
 
-    # Continue on to port settings
     result3 = await hass.config_entries.options.async_configure(
         flow["flow_id"], user_input={}
     )
 
+    # Current radio type is the default
+    assert result3["step_id"] == "manual_pick_radio_type"
+    assert result3["data_schema"]({})[CONF_RADIO_TYPE] == RadioType.znp.description
+
+    # Continue on to port settings
+    result4 = await hass.config_entries.options.async_configure(
+        flow["flow_id"], user_input={}
+    )
+
     # The defaults match our current settings
-    assert result3["step_id"] == "manual_port_config"
-    assert result3["data_schema"]({}) == entry.data[CONF_DEVICE]
+    assert result4["step_id"] == "manual_port_config"
+    assert result4["data_schema"]({}) == entry.data[CONF_DEVICE]
 
     with patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True)):
-        result4 = await hass.config_entries.options.async_configure(
+        result5 = await hass.config_entries.options.async_configure(
             flow["flow_id"], user_input={}
         )
 
-    assert result4["step_id"] == "choose_formation_strategy"
+    assert result5["step_id"] == "choose_formation_strategy"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", return_value=True)
@@ -1641,14 +1663,82 @@ async def test_options_flow_restarts_running_zha_if_cancelled(async_setup_entry,
 
     entry.state = config_entries.ConfigEntryState.NOT_LOADED
 
+    assert result1["step_id"] == "prompt_migrate_or_reconfigure"
+    result2 = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={"next_step_id": config_flow.OPTIONS_INTENT_RECONFIGURE},
+    )
+
     # Radio path must be manually entered
-    assert result1["step_id"] == "choose_serial_port"
+    assert result2["step_id"] == "choose_serial_port"
 
     async_setup_entry.reset_mock()
 
     # Abort the flow
-    hass.config_entries.options.async_abort(result1["flow_id"])
+    hass.config_entries.options.async_abort(result2["flow_id"])
     await hass.async_block_till_done()
 
     # ZHA was set up once more
     async_setup_entry.assert_called_once_with(hass, entry)
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_options_flow_migration_reset_old_adapter(hass, mock_app):
+    """Test options flow for migrating from an old radio."""
+
+    entry = MockConfigEntry(
+        version=config_flow.ZhaConfigFlowHandler.VERSION,
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "/dev/serial/by-id/old_radio",
+                CONF_BAUDRATE: 12345,
+                CONF_FLOWCONTROL: None,
+            },
+            CONF_RADIO_TYPE: "znp",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+
+    # ZHA gets unloaded
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload", return_value=True
+    ):
+        result1 = await hass.config_entries.options.async_configure(
+            flow["flow_id"], user_input={}
+        )
+
+    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+
+    assert result1["step_id"] == "prompt_migrate_or_reconfigure"
+    result2 = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={"next_step_id": config_flow.OPTIONS_INTENT_MIGRATE},
+    )
+
+    # User must explicitly approve radio reset
+    assert result2["step_id"] == "intent_migrate"
+
+    mock_app.reset_network_info = AsyncMock()
+
+    result3 = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={},
+    )
+
+    mock_app.reset_network_info.assert_awaited_once()
+
+    # Now we can unplug the old radio
+    assert result3["step_id"] == "instruct_unplug"
+
+    # And move on to choosing the new radio
+    result4 = await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        user_input={},
+    )
+    assert result4["step_id"] == "choose_serial_port"
