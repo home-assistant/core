@@ -123,10 +123,6 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell TCC system."""
 
-    # conf = config.get(DOMAIN)
-    # if conf is None:
-    #     return bool(hass.config_entries.async_entries(DOMAIN))
-
     store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
     tokens, user_data = await EvoBroker.load_auth_tokens(store, config[DOMAIN])
 
