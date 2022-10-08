@@ -7,7 +7,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.enphase_envoy.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 
@@ -22,18 +21,18 @@ async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "1.1.1.1",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
         },
     )
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy 1234"
     assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_NAME: "Envoy 1234",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        "host": "1.1.1.1",
+        "name": "Envoy 1234",
+        "username": "test-username",
+        "password": "test-password",
     }
 
 
@@ -59,10 +58,10 @@ async def test_user_no_serial_number(
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_NAME: "Envoy",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        "host": "1.1.1.1",
+        "name": "Envoy",
+        "username": "test-username",
+        "password": "test-password",
     }
 
 
@@ -97,10 +96,10 @@ async def test_user_fetching_serial_fails(
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_NAME: "Envoy",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        "host": "1.1.1.1",
+        "name": "Envoy",
+        "username": "test-username",
+        "password": "test-password",
     }
 
 
@@ -204,10 +203,10 @@ async def test_zeroconf(hass: HomeAssistant, setup_enphase_envoy) -> None:
     assert result2["title"] == "Envoy 1234"
     assert result2["result"].unique_id == "1234"
     assert result2["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_NAME: "Envoy 1234",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        "host": "1.1.1.1",
+        "name": "Envoy 1234",
+        "username": "test-username",
+        "password": "test-password",
     }
 
 
@@ -251,7 +250,7 @@ async def test_zeroconf_serial_already_exists(
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 
-    assert config_entry.data[CONF_HOST] == "4.4.4.4"
+    assert config_entry.data["host"] == "4.4.4.4"
 
 
 async def test_zeroconf_serial_already_exists_ignores_ipv6(
@@ -274,7 +273,7 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
     assert result["type"] == "abort"
     assert result["reason"] == "not_ipv4_address"
 
-    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data["host"] == "1.1.1.1"
 
 
 @pytest.mark.parametrize("serial_number", [None])
