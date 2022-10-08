@@ -2595,6 +2595,12 @@ async def test_device_attr(hass):
         "sensor", "test", "test", suggested_object_id="test", device_id=device_entry.id
     )
 
+    device_entry2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:FF")},
+        model="test2",
+    )
+
     # Test non existent device attribute (device_attr)
     info = render_to_info(
         hass, f"{{{{ device_attr('{device_entry.id}', 'invalid_attr') }}}}"
@@ -2631,8 +2637,22 @@ async def test_device_attr(hass):
     assert info.rate_limit is None
 
     # Test valid device attribute match (device_attr)
+    # as a function
     info = render_to_info(hass, f"{{{{ device_attr('{device_entry.id}', 'model') }}}}")
     assert_result_info(info, "test")
+    assert info.rate_limit is None
+
+    # as a filter with a single item
+    info = render_to_info(hass, f"{{{{ '{device_entry.id}'|device_attr('model') }}}}")
+    assert_result_info(info, "test")
+    assert info.rate_limit is None
+
+    # as a filter with a list
+    info = render_to_info(
+        hass,
+        f"{{{{ ['{device_entry.id}', '{device_entry2.id}']|device_attr('model') }}}}",
+    )
+    assert_result_info(info, ["test", "test2"])
     assert info.rate_limit is None
 
     # Test valid device attribute match (device_attr)
