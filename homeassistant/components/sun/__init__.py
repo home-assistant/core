@@ -222,7 +222,9 @@ class Sun(Entity):
             self.phase = before
         return next_utc
 
-    def _get_previous_event(self, utc_point_in_time, sun_event):
+    def _get_previous_event(
+        self, utc_point_in_time: datetime, sun_event: str
+    ) -> datetime:
         return get_location_astral_event_previous(
             self.location, self.elevation, sun_event, utc_point_in_time
         )
