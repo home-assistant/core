@@ -260,6 +260,10 @@ class Doods(ImageProcessingEntity):
             os.makedirs(os.path.dirname(path_orig), exist_ok=True)
             img.save(path_orig)
 
+        if matches is None:
+            # draw only original image if no matches are found
+            return
+
         # Draw custom global region/area
         if self._area != [0, 0, 1, 1]:
             draw_box(
@@ -332,6 +336,12 @@ class Doods(ImageProcessingEntity):
         if not response or "error" in response:
             if "error" in response:
                 _LOGGER.error(response["error"])
+
+            paths = self._gen_paths()
+            self._save_image(
+                image, None, paths
+            )  # save original image even when nothing is detected
+
             self._matches = matches
             self._total_matches = total_matches
             self._process_time = time.monotonic() - start
