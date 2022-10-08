@@ -340,13 +340,6 @@ class BluetoothManager:
         """Handle a new advertisement from any scanner.
 
         Callbacks from all the scanners arrive here.
-
-        In the future we will only process callbacks if
-
-        - The device is not in the history
-        - The RSSI is above a certain threshold better than
-          than the source from the history or the timestamp
-          in the history is older than 180s
         """
 
         # Pre-filter noisy apple devices as they can account for 20-35% of the
