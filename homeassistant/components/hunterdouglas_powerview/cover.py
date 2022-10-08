@@ -12,15 +12,12 @@ from aiopvapi.helpers.constants import (
     ATTR_POSITION1,
     ATTR_POSITION2,
     ATTR_POSITION_DATA,
-)
-from aiopvapi.resources.shade import (
     ATTR_POSKIND1,
     ATTR_POSKIND2,
     MAX_POSITION,
     MIN_POSITION,
-    BaseShade,
-    factory as PvShade,
 )
+from aiopvapi.resources.shade import BaseShade, factory as PvShade
 import async_timeout
 
 from homeassistant.components.cover import (
