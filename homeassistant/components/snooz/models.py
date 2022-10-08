@@ -1,14 +1,15 @@
 """Data models for the Snooz component."""
 
+from dataclasses import dataclass
+
 from bleak.backends.device import BLEDevice
 from pysnooz.device import SnoozDevice
 
 
+@dataclass
 class SnoozConfigurationData:
     """Configuration data for Snooz."""
 
-    def __init__(self, ble_device: BLEDevice, device: SnoozDevice, title: str) -> None:
-        """Initialize configuration data."""
-        self.ble_device = ble_device
-        self.device = device
-        self.title = title
+    ble_device: BLEDevice
+    device: SnoozDevice
+    title: str

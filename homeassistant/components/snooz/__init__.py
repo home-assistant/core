@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Could not find Snooz with address {address}. Try power cycling the device"
         )
 
-    device = SnoozDevice(ble_device, token, hass.loop)
+    device = SnoozDevice(ble_device, token)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SnoozConfigurationData(
         ble_device, device, entry.title
