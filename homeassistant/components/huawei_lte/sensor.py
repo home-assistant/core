@@ -1,4 +1,4 @@
-"""Support for Huawei LTE sensors."""
+"""Support for Huawei/SoyeaLink LTE sensors."""
 from __future__ import annotations
 
 from bisect import bisect
@@ -539,7 +539,7 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
 
 @dataclass
 class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
-    """Huawei LTE sensor entity."""
+    """Huawei/SoyeaLink LTE sensor entity."""
 
     key: str
     item: str

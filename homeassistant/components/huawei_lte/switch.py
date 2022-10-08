@@ -1,4 +1,4 @@
-"""Support for Huawei LTE switches."""
+"""Support for Huawei/SoyeaLink LTE switches."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -45,7 +45,7 @@ async def async_setup_entry(
 
 @dataclass
 class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
-    """Huawei LTE switch device base class."""
+    """Huawei/SoyeaLink LTE switch device base class."""
 
     key: str = field(init=False)
     item: str = field(init=False)
@@ -90,7 +90,7 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
 
 @dataclass
 class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
-    """Huawei LTE mobile data switch device."""
+    """Huawei/SoyeaLink LTE mobile data switch device."""
 
     _attr_name: str = field(default="Mobile data", init=False)
 
@@ -122,7 +122,7 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
 
 @dataclass
 class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
-    """Huawei LTE WiFi guest network switch device."""
+    """Huawei/SoyeaLink LTE WiFi guest network switch device."""
 
     _attr_name: str = field(default="WiFi guest network", init=False)
 

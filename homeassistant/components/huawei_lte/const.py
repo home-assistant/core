@@ -1,4 +1,4 @@
-"""Huawei LTE constants."""
+"""Huawei/SoyeaLink LTE constants."""
 
 DOMAIN = "huawei_lte"
 

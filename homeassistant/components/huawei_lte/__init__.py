@@ -1,4 +1,4 @@
-"""Support for Huawei LTE routers."""
+"""Support for Huawei/SoyeaLink LTE routers."""
 from __future__ import annotations
 
 from collections import defaultdict
@@ -321,7 +321,7 @@ class HuaweiLteData(NamedTuple):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Huawei LTE component from config entry."""
+    """Set up Huawei/SoyeaLink LTE component from config entry."""
     url = entry.data[CONF_URL]
 
     def get_connection() -> Connection:
@@ -488,7 +488,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Huawei LTE component."""
+    """Set up Huawei/SoyeaLink LTE component."""
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
@@ -580,7 +580,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 @dataclass
 class HuaweiLteBaseEntity(Entity):
-    """Huawei LTE entity base class."""
+    """Huawei/SoyeaLink LTE entity base class."""
 
     router: Router
 

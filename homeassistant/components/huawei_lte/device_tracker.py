@@ -1,4 +1,4 @@
-"""Support for device tracking of Huawei LTE routers."""
+"""Support for device tracking of Huawei/SoyeaLink LTE routers."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -175,7 +175,7 @@ def _better_snakecase(text: str) -> str:
 
 @dataclass
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
-    """Huawei LTE router scanner entity."""
+    """Huawei/SoyeaLink LTE router scanner entity."""
 
     _mac_address: str
 

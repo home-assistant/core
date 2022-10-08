@@ -1,4 +1,4 @@
-"""Utilities for the Huawei LTE integration."""
+"""Utilities for the Huawei/SoyeaLink LTE integration."""
 from __future__ import annotations
 
 from huawei_lte_api.Session import GetResponseType

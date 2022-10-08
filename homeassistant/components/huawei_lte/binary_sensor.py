@@ -1,4 +1,4 @@
-"""Support for Huawei LTE binary sensors."""
+"""Support for Huawei/SoyeaLink LTE binary sensors."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -50,7 +50,7 @@ async def async_setup_entry(
 
 @dataclass
 class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntityWithDevice, BinarySensorEntity):
-    """Huawei LTE binary sensor device base class."""
+    """Huawei/SoyeaLink LTE binary sensor device base class."""
 
     key: str = field(init=False)
     item: str = field(init=False)
@@ -103,7 +103,7 @@ CONNECTION_STATE_ATTRIBUTES = {
 
 @dataclass
 class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
-    """Huawei LTE mobile connection binary sensor."""
+    """Huawei/SoyeaLink LTE mobile connection binary sensor."""
 
     _attr_name: str = field(default="Mobile connection", init=False)
 
@@ -152,7 +152,7 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
 
 
 class HuaweiLteBaseWifiStatusBinarySensor(HuaweiLteBaseBinarySensor):
-    """Huawei LTE WiFi status binary sensor base class."""
+    """Huawei/SoyeaLink LTE WiFi status binary sensor base class."""
 
     @property
     def is_on(self) -> bool:
@@ -172,7 +172,7 @@ class HuaweiLteBaseWifiStatusBinarySensor(HuaweiLteBaseBinarySensor):
 
 @dataclass
 class HuaweiLteWifiStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
-    """Huawei LTE WiFi status binary sensor."""
+    """Huawei/SoyeaLink LTE WiFi status binary sensor."""
 
     _attr_name: str = field(default="WiFi status", init=False)
 
@@ -184,7 +184,7 @@ class HuaweiLteWifiStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
 
 @dataclass
 class HuaweiLteWifi24ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
-    """Huawei LTE 2.4GHz WiFi status binary sensor."""
+    """Huawei/SoyeaLink LTE 2.4GHz WiFi status binary sensor."""
 
     _attr_name: str = field(default="2.4GHz WiFi status", init=False)
 
@@ -196,7 +196,7 @@ class HuaweiLteWifi24ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
 
 @dataclass
 class HuaweiLteWifi5ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
-    """Huawei LTE 5GHz WiFi status binary sensor."""
+    """Huawei/SoyeaLink LTE 5GHz WiFi status binary sensor."""
 
     _attr_name: str = field(default="5GHz WiFi status", init=False)
 
@@ -208,7 +208,7 @@ class HuaweiLteWifi5ghzStatusBinarySensor(HuaweiLteBaseWifiStatusBinarySensor):
 
 @dataclass
 class HuaweiLteSmsStorageFullBinarySensor(HuaweiLteBaseBinarySensor):
-    """Huawei LTE SMS storage full binary sensor."""
+    """Huawei/SoyeaLink LTE SMS storage full binary sensor."""
 
     _attr_name: str = field(default="SMS storage full", init=False)
 

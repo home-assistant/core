@@ -1,4 +1,4 @@
-"""Config flow for the Huawei LTE platform."""
+"""Config flow for the Huawei/SoyeaLink LTE platform."""
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle Huawei LTE config flow."""
+    """Handle Huawei/SoyeaLink LTE config flow."""
 
     VERSION = 3
 
@@ -231,7 +231,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
 
-        # Attempt to distinguish from other non-LTE Huawei router devices, at least
+        # Attempt to distinguish from other non-LTE router devices, at least
         # some ones we are interested in have "Mobile Wi-Fi" friendlyName.
         if (
             "mobile"
@@ -295,7 +295,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Huawei LTE options flow."""
+    """Huawei/SoyeaLink LTE options flow."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""

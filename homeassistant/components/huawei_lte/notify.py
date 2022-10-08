@@ -1,4 +1,4 @@
-"""Support for Huawei LTE router notifications."""
+"""Support for Huawei/SoyeaLink LTE router notifications."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -36,7 +36,7 @@ async def async_get_service(
 
 @dataclass
 class HuaweiLteSmsNotificationService(BaseNotificationService):
-    """Huawei LTE router SMS notification service."""
+    """Huawei/SoyeaLink LTE router SMS notification service."""
 
     router: Router
     default_targets: list[str]
