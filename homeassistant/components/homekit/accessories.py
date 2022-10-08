@@ -321,8 +321,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             serv_info.configure_char(
                 CHAR_HARDWARE_REVISION, value=hw_version[:MAX_VERSION_LENGTH]
             )
-            self.iid_manager.assign(char)
             char.broker = self
+            self.iid_manager.assign(char)
 
         self.category = category
         self.entity_id = entity_id
