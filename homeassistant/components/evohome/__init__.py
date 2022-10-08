@@ -22,6 +22,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -183,7 +184,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     coordinator.update_method = broker.async_update
-    await coordinator.async_config_entry_first_refresh()  # will save access tokens too
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as exc:
+        # evohome doesn't yet use config flow, so ConfigEntryNotReady is not appropriate
+        ex = RuntimeError()
+        ex.__cause__ = coordinator.last_exception
+        raise ex from exc
 
     hass.async_create_task(
         async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
