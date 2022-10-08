@@ -60,6 +60,14 @@ class VelbusCover(VelbusEntity, CoverEntity):
         return self._channel.is_closed()
 
     @property
+    def is_opening(self) -> bool:
+        return self._channel.is_opening()
+
+    @property
+    def is_closing(self) -> bool:
+        return self._channel.is_closing()
+
+    @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
