@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Generic
 
 from aiopyarr import (
+    Command,
     Diskspace,
     SonarrCalendar,
     SonarrQueue,
@@ -39,15 +40,18 @@ class SonarrSensorEntityDescription(
 ):
     """Class to describe a Sonarr sensor."""
 
+    attributes_fn: Callable[[SonarrDataT], dict[str, str] | None] = lambda _: None
+
 
 SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
-    "commands": SonarrSensorEntityDescription(
+    "commands": SonarrSensorEntityDescription[list[Command]](
         key="commands",
         name="Sonarr Commands",
         icon="mdi:code-braces",
         native_unit_of_measurement="Commands",
         entity_registry_enabled_default=False,
         value_fn=len,
+        attributes_fn=lambda data: {c.name: c.status for c in data},
     ),
     "diskspace": SonarrSensorEntityDescription[list[Diskspace]](
         key="diskspace",
@@ -56,6 +60,10 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         native_unit_of_measurement=DATA_GIGABYTES,
         entity_registry_enabled_default=False,
         value_fn=lambda data: f"{sum(disk.freeSpace for disk in data) / 1024**3:.2f}",
+        attributes_fn=lambda data: {
+            d.path: f"{d.freeSpace / 1024**3:.2f}/{d.totalSpace / 1024**3:.2f}{DATA_GIGABYTES} ({(d.freeSpace / 1024**3) / (d.totalSpace / 1024**3) * 100:.2f}%)"
+            for d in data
+        },
     ),
     "queue": SonarrSensorEntityDescription[SonarrQueue](
         key="queue",
@@ -64,6 +72,10 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.totalRecords,
+        attributes_fn=lambda data: {
+            f"{i.series.title} {f'S{i.episode.seasonNumber:02d}E{i.episode.episodeNumber:02d}'}": f"{100 * (1 - (1 if i.size == 0 else i.sizeleft / i.size)):.2f}%"
+            for i in data.records
+        },
     ),
     "series": SonarrSensorEntityDescription[list[SonarrSeries]](
         key="series",
@@ -72,6 +84,10 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         native_unit_of_measurement="Series",
         entity_registry_enabled_default=False,
         value_fn=len,
+        attributes_fn=lambda data: {
+            i.title: f"{getattr(i.statistics,'episodeFileCount', 0)}/{getattr(i.statistics, 'episodeCount', 0)} Episodes"
+            for i in data
+        },
     ),
     "upcoming": SonarrSensorEntityDescription[list[SonarrCalendar]](
         key="upcoming",
@@ -79,6 +95,9 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         icon="mdi:television",
         native_unit_of_measurement="Episodes",
         value_fn=len,
+        attributes_fn=lambda data: {
+            e.series.title: f"S{e.seasonNumber:02d}E{e.episodeNumber:02d}" for e in data
+        },
     ),
     "wanted": SonarrSensorEntityDescription[SonarrWantedMissing](
         key="wanted",
@@ -87,6 +106,12 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.totalRecords,
+        attributes_fn=lambda data: {
+            f"{i.series.title} {f'S{i.seasonNumber:02d}E{i.episodeNumber:02d}'}": dt_util.as_local(
+                i.airDateUtc.replace(tzinfo=dt_util.UTC)
+            ).isoformat()
+            for i in data.records
+        },
     ),
 }
 
@@ -115,50 +140,7 @@ class SonarrSensor(SonarrEntity[SonarrDataT], SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the entity."""
-        attrs = {}
-        key = self.entity_description.key
-        data = self.coordinator.data
-
-        if key == "diskspace":
-            for disk in data:
-                free = disk.freeSpace / 1024**3
-                total = disk.totalSpace / 1024**3
-                usage = free / total * 100
-
-                attrs[
-                    disk.path
-                ] = f"{free:.2f}/{total:.2f}{self.unit_of_measurement} ({usage:.2f}%)"
-        elif key == "commands":
-            for command in data:
-                attrs[command.name] = command.status
-        elif key == "queue":
-            for item in data.records:
-                remaining = 1 if item.size == 0 else item.sizeleft / item.size
-                remaining_pct = 100 * (1 - remaining)
-                identifier = f"S{item.episode.seasonNumber:02d}E{item.episode. episodeNumber:02d}"
-
-                name = f"{item.series.title} {identifier}"
-                attrs[name] = f"{remaining_pct:.2f}%"
-        elif key == "series":
-            for item in data:
-                stats = item.statistics
-                attrs[
-                    item.title
-                ] = f"{getattr(stats,'episodeFileCount', 0)}/{getattr(stats, 'episodeCount', 0)} Episodes"
-        elif key == "upcoming":
-            for episode in data:
-                identifier = f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
-                attrs[episode.series.title] = identifier
-        elif key == "wanted":
-            for item in data.records:
-                identifier = f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}"
-
-                name = f"{item.series.title} {identifier}"
-                attrs[name] = dt_util.as_local(
-                    item.airDateUtc.replace(tzinfo=dt_util.UTC)
-                ).isoformat()
-
-        return attrs
+        return self.entity_description.attributes_fn(self.coordinator.data)
 
     @property
     def native_value(self) -> StateType:
