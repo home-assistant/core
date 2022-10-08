@@ -11,6 +11,7 @@ from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -50,6 +51,8 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
         try:
             camera_data = await self._camera_api.async_get_camera(self._location)
         except ValueError as error:
+            if "Invalid authentication" in str(error):
+                raise ConfigEntryAuthFailed from error
             raise UpdateFailed from error
 
         image_url = camera_data.photourl
