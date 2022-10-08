@@ -32,7 +32,7 @@ def patch_async_setup_entry(return_value=True):
 
 SERVICE_INFO = BluetoothServiceInfoBleak(
     name="mibp",
-    service_uuids=["00001831-0000-1000-8000-00805f9b34fb"],
+    service_uuids=["0000abcd-0000-1000-8000-00805f9b34fb"],
     address="aa:bb:cc:dd:ee:ff",
     manufacturer_data={},
     service_data={},
@@ -41,7 +41,7 @@ SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=AdvertisementData(
         local_name="mibp",
         manufacturer_data={},
-        service_uuids=["00001831-0000-1000-8000-00805f9b34fb"],
+        service_uuids=["0000abcd-0000-1000-8000-00805f9b34fb"],
     ),
     device=BLEDevice("aa:bb:cc:dd:ee:ff", "mibp"),
     time=0,

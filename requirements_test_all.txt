@@ -19,7 +19,7 @@ HAP-python==4.5.0
 PyFlick==0.0.2
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.6
+PyMicroBot==0.0.8
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks

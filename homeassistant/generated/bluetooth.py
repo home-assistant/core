@@ -177,11 +177,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "domain": "keymitt_ble",
-        "service_uuid": "00001831-0000-1000-8000-00805f9b34fb",
-    },
-    {
-        "domain": "keymitt_ble",
-        "service_data_uuid": "00001831-0000-1000-8000-00805f9b34fb",
+        "service_uuid": "0000abcd-0000-1000-8000-00805f9b34fb",
     },
     {
         "domain": "keymitt_ble",

@@ -23,7 +23,7 @@ PyFlick==0.0.2
 PyMVGLive==1.1.4
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.6
+PyMicroBot==0.0.8
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
