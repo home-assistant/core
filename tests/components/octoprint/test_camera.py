@@ -1,4 +1,4 @@
-"""The tests for Octoptint binary sensor module."""
+"""The tests for Octoptint camera module."""
 
 from unittest.mock import patch
 
