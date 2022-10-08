@@ -33,66 +33,6 @@ UNIT_PAGES = "p"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Add Brother entities from a config_entry."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
-
-    # Due to the change of the attribute name of one sensor, it is necessary to migrate
-    # the unique_id to the new one.
-    entity_registry = er.async_get(hass)
-    old_unique_id = f"{coordinator.data.serial.lower()}_b/w_counter"
-    if entity_id := entity_registry.async_get_entity_id(
-        PLATFORM, DOMAIN, old_unique_id
-    ):
-        new_unique_id = f"{coordinator.data.serial.lower()}_bw_counter"
-        _LOGGER.debug(
-            "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
-            entity_id,
-            old_unique_id,
-            new_unique_id,
-        )
-        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-    sensors = []
-
-    device_info = DeviceInfo(
-        configuration_url=f"http://{entry.data[CONF_HOST]}/",
-        identifiers={(DOMAIN, coordinator.data.serial)},
-        manufacturer="Brother",
-        model=coordinator.data.model,
-        name=coordinator.data.model,
-        sw_version=coordinator.data.firmware,
-    )
-
-    for description in SENSOR_TYPES:
-        if description.value(coordinator.data) is not None:
-            sensors.append(BrotherPrinterSensor(coordinator, description, device_info))
-    async_add_entities(sensors, False)
-
-
-class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
-    """Define an Brother Printer sensor."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: BrotherDataUpdateCoordinator,
-        description: BrotherSensorEntityDescription,
-        device_info: DeviceInfo,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-        self._attrs: dict[str, Any] = {}
-        self._attr_device_info = device_info
-        self._attr_native_value = description.value(coordinator.data)
-        self._attr_extra_state_attributes = description.state_attrs(coordinator.data)
-        self._attr_unique_id = f"{coordinator.data.serial.lower()}_{description.key}"
-        self.entity_description = description
-
-
 @dataclass
 class BrotherSensorRequiredKeysMixin:
     """Class for Brother entity required keys."""
@@ -362,3 +302,63 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_attrs=lambda _: {},
     ),
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Add Brother entities from a config_entry."""
+    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
+
+    # Due to the change of the attribute name of one sensor, it is necessary to migrate
+    # the unique_id to the new one.
+    entity_registry = er.async_get(hass)
+    old_unique_id = f"{coordinator.data.serial.lower()}_b/w_counter"
+    if entity_id := entity_registry.async_get_entity_id(
+        PLATFORM, DOMAIN, old_unique_id
+    ):
+        new_unique_id = f"{coordinator.data.serial.lower()}_bw_counter"
+        _LOGGER.debug(
+            "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+            entity_id,
+            old_unique_id,
+            new_unique_id,
+        )
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+    sensors = []
+
+    device_info = DeviceInfo(
+        configuration_url=f"http://{entry.data[CONF_HOST]}/",
+        identifiers={(DOMAIN, coordinator.data.serial)},
+        manufacturer="Brother",
+        model=coordinator.data.model,
+        name=coordinator.data.model,
+        sw_version=coordinator.data.firmware,
+    )
+
+    for description in SENSOR_TYPES:
+        if description.value(coordinator.data) is not None:
+            sensors.append(BrotherPrinterSensor(coordinator, description, device_info))
+    async_add_entities(sensors, False)
+
+
+class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
+    """Define an Brother Printer sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: BrotherDataUpdateCoordinator,
+        description: BrotherSensorEntityDescription,
+        device_info: DeviceInfo,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+        self._attrs: dict[str, Any] = {}
+        self._attr_device_info = device_info
+        self._attr_native_value = description.value(coordinator.data)
+        self._attr_extra_state_attributes = description.state_attrs(coordinator.data)
+        self._attr_unique_id = f"{coordinator.data.serial.lower()}_{description.key}"
+        self.entity_description = description
