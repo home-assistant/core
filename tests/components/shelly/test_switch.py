@@ -1,4 +1,4 @@
-"""The scene tests for the myq platform."""
+"""Tests for Shelly switch platform."""
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
