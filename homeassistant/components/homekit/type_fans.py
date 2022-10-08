@@ -105,7 +105,9 @@ class Fan(HomeAccessory):
             )
         elif self.preset_modes:
             for preset_mode in self.preset_modes:
-                preset_serv = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
+                preset_serv = self.add_preload_service(
+                    SERV_SWITCH, CHAR_NAME, unique_id=preset_mode
+                )
                 serv_fan.add_linked_service(preset_serv)
                 preset_serv.configure_char(
                     CHAR_NAME,

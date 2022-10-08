@@ -38,7 +38,7 @@ pyyaml==6.0
 requests==2.28.1
 scapy==2.4.5
 sqlalchemy==1.4.41
-typing-extensions>=3.10.0.2,<5.0
+typing-extensions>=4.4.0,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
 yarl==1.8.1
@@ -114,9 +114,8 @@ multidict>=6.0.2
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
 
-# Pin backoff for compatibility until most libraries have been updated
-# https://github.com/home-assistant/core/pull/70817
-backoff<2.0
+# Version 2.0 added typing, prevent accidental fallbacks
+backoff>=2.0
 
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
