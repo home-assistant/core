@@ -109,7 +109,6 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         try:
             return float(self.dev.state)
         except ValueError:
-            _LOGGER.debug("Unknown temperature: '%s'", self.dev)
             return 0.0
 
     @refresh_system
