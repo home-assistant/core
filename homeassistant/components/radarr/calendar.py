@@ -31,8 +31,6 @@ class RadarrEventMixIn:
 class RadarrEvent(CalendarEvent, RadarrEventMixIn):
     """A class to describe a Radarr calendar event."""
 
-    description: str
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -86,24 +84,16 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
         """Get the latest data."""
         self._event = None
         _date = datetime.today()
-        attr: dict[str, list[str]] = {}
         while self._event is None:
             await self.async_get_events(self.hass, _date, _date + timedelta(days=1))
             for event in self._events:
                 if event.start != _date.date():
                     break
-                if attr:
-                    attr["message"].append(event.summary)
-                    attr["description"].append(event.description)
-                    attr["release_type"].append(event.release_type)
-                    continue
-                attr = {
-                    "message": [event.summary],
-                    "description": [event.description],
-                    "release_type": [event.release_type],
-                }
                 self._event = event
-            self._attr_extra_state_attributes = attr
+                self._attr_extra_state_attributes = {"release_type": event.release_type}
+            # Prevent infinite loop in case there is nothing recent in the calendar
+            if (_date - datetime.today()).days > 45:
+                break
             _date = _date + timedelta(days=1)
 
 
