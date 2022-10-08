@@ -17,6 +17,29 @@ from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the fans."""
+    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    description = NumberEntityDescription(
+        key="flame_control",
+        name="Flame control",
+        icon="mdi:arrow-expand-vertical",
+    )
+
+    async_add_entities(
+        [
+            IntellifireFlameControlEntity(
+                coordinator=coordinator, description=description
+            )
+        ]
+    )
+
+
 @dataclass
 class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
     """Flame height control entity."""
@@ -37,8 +60,8 @@ class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current Flame Height segment number value."""
+        # UI uses 1-5 for flame height, backing lib uses 0-4
         value = self.coordinator.read_api.data.flameheight + 1
-        LOGGER.debug("%s Value: %s", self._attr_name, value)
         return value
 
     async def async_set_native_value(self, value: float) -> None:
@@ -52,23 +75,3 @@ class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
         )
         await self.coordinator.control_api.set_flame_height(height=value_to_send)
         await self.async_update_ha_state(force_refresh=True)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the fans."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    description = NumberEntityDescription(
-        key="flame_control",
-        name="Flame control",
-        icon="mdi:arrow-expand-vertical",
-    )
-    entity = IntellifireFlameControlEntity(
-        coordinator=coordinator, description=description
-    )
-
-    async_add_entities([entity])
