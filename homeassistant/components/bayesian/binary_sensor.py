@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
     CONF_STATE,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -99,6 +100,7 @@ TEMPLATE_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): cv.string,
         vol.Required(CONF_OBSERVATIONS): vol.Schema(
             vol.All(
@@ -133,6 +135,7 @@ async def async_setup_platform(
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name: str = config[CONF_NAME]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
     observations: list[ConfigType] = config[CONF_OBSERVATIONS]
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
@@ -151,7 +154,12 @@ async def async_setup_platform(
     async_add_entities(
         [
             BayesianBinarySensor(
-                name, prior, observations, probability_threshold, device_class
+                name,
+                unique_id,
+                prior,
+                observations,
+                probability_threshold,
+                device_class,
             )
         ]
     )
@@ -165,6 +173,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
+        unique_id: str | None,
         prior: float,
         observations: list[ConfigType],
         probability_threshold: float,
@@ -172,6 +181,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the Bayesian sensor."""
         self._attr_name = name
+        self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
         self._observations = [
             Observation(
                 entity_id=observation.get(CONF_ENTITY_ID),
