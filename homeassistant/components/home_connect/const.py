@@ -2,8 +2,8 @@
 
 DOMAIN = "home_connect"
 
-OAUTH2_AUTHORIZE = "https://simulator.home-connect.com/security/oauth/authorize"
-OAUTH2_TOKEN = "https://simulator.home-connect.com/security/oauth/token"
+OAUTH2_AUTHORIZE = "https://api.home-connect.com/security/oauth/authorize"
+OAUTH2_TOKEN = "https://api.home-connect.com/security/oauth/token"
 
 BSH_POWER_STATE = "BSH.Common.Setting.PowerState"
 BSH_POWER_ON = "BSH.Common.EnumType.PowerState.On"
