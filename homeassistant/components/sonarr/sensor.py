@@ -31,6 +31,7 @@ from .entity import SonarrEntity
 class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
     """Mixin for Sonarr sensor."""
 
+    attributes_fn: Callable[[SonarrDataT], dict[str, str]]
     value_fn: Callable[[SonarrDataT], StateType]
 
 
@@ -40,7 +41,42 @@ class SonarrSensorEntityDescription(
 ):
     """Class to describe a Sonarr sensor."""
 
-    attributes_fn: Callable[[SonarrDataT], dict[str, str] | None] = lambda _: None
+
+def get_disk_space_attr(disks: list[Diskspace]) -> dict[str, str]:
+    """Create the attributes for disk space."""
+    attrs = {}
+    for disk in disks:
+        free = disk.freeSpace / 1024**3
+        total = disk.totalSpace / 1024**3
+        usage = free / total * 100
+        attrs[disk.path] = f"{free:.2f}/{total:.2f}{DATA_GIGABYTES} ({usage:.2f}%)"
+    return attrs
+
+
+def get_queue_attr(queue: SonarrQueue) -> dict[str, str]:
+    """Create the attributes for series queue."""
+    attrs = {}
+    for item in queue.records:
+        remaining = 1 if item.size == 0 else item.sizeleft / item.size
+        remaining_pct = 100 * (1 - remaining)
+        identifier = (
+            f"S{item.episode.seasonNumber:02d}E{item.episode. episodeNumber:02d}"
+        )
+        attrs[f"{item.series.title} {identifier}"] = f"{remaining_pct:.2f}%"
+    return attrs
+
+
+def get_wanted_attr(wanted: SonarrWantedMissing) -> dict[str, str]:
+    """Create the attributes for missing series."""
+    attrs = {}
+    for item in wanted.records:
+        identifier = f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}"
+
+        name = f"{item.series.title} {identifier}"
+        attrs[name] = dt_util.as_local(
+            item.airDateUtc.replace(tzinfo=dt_util.UTC)
+        ).isoformat()
+    return attrs
 
 
 SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
@@ -60,10 +96,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         native_unit_of_measurement=DATA_GIGABYTES,
         entity_registry_enabled_default=False,
         value_fn=lambda data: f"{sum(disk.freeSpace for disk in data) / 1024**3:.2f}",
-        attributes_fn=lambda data: {
-            d.path: f"{d.freeSpace / 1024**3:.2f}/{d.totalSpace / 1024**3:.2f}{DATA_GIGABYTES} ({(d.freeSpace / 1024**3) / (d.totalSpace / 1024**3) * 100:.2f}%)"
-            for d in data
-        },
+        attributes_fn=get_disk_space_attr,
     ),
     "queue": SonarrSensorEntityDescription[SonarrQueue](
         key="queue",
@@ -72,10 +105,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.totalRecords,
-        attributes_fn=lambda data: {
-            f"{i.series.title} {f'S{i.episode.seasonNumber:02d}E{i.episode.episodeNumber:02d}'}": f"{100 * (1 - (1 if i.size == 0 else i.sizeleft / i.size)):.2f}%"
-            for i in data.records
-        },
+        attributes_fn=get_queue_attr,
     ),
     "series": SonarrSensorEntityDescription[list[SonarrSeries]](
         key="series",
@@ -106,12 +136,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.totalRecords,
-        attributes_fn=lambda data: {
-            f"{i.series.title} {f'S{i.seasonNumber:02d}E{i.episodeNumber:02d}'}": dt_util.as_local(
-                i.airDateUtc.replace(tzinfo=dt_util.UTC)
-            ).isoformat()
-            for i in data.records
-        },
+        attributes_fn=get_wanted_attr,
     ),
 }
 
@@ -134,11 +159,11 @@ async def async_setup_entry(
 class SonarrSensor(SonarrEntity[SonarrDataT], SensorEntity):
     """Implementation of the Sonarr sensor."""
 
-    coordinator: SonarrDataUpdateCoordinator
+    coordinator: SonarrDataUpdateCoordinator[SonarrDataT]
     entity_description: SonarrSensorEntityDescription[SonarrDataT]
 
     @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the entity."""
         return self.entity_description.attributes_fn(self.coordinator.data)
 
