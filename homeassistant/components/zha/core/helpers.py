@@ -14,6 +14,7 @@ import enum
 import functools
 import itertools
 import logging
+import operator
 from random import uniform
 import re
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -153,18 +154,35 @@ def schema_type_to_vol(field_type):
     return str
 
 
-def process_fields(fields: dict[str, Any], schema: CommandSchema) -> dict[str, Any]:
-    """Process fields."""
-    processed_fields = {}
+def convert_to_zcl_values(
+    fields: dict[str, Any], schema: CommandSchema
+) -> dict[str, Any]:
+    """Convert user input to ZCL values."""
+    converted_fields = {}
     for field in schema.fields:
         if field.name not in fields:
             continue
         value = fields[field.name]
-        if issubclass(field.type, enum.Enum) or issubclass(field.type, enum.Flag):
+        if issubclass(field.type, enum.Flag):
+            if isinstance(value, list):
+                value = field.type(
+                    functools.reduce(
+                        operator.ior,
+                        [field.type[flag.replace(" ", "_")] for flag in value],
+                    )
+                )
+            else:
+                value = field.type[value.replace(" ", "_")]
+        elif issubclass(field.type, enum.Enum):
             value = field.type[value.replace(" ", "_")]
-            _LOGGER.warning("Converted %s to %s", fields[field.name], value)
-        processed_fields[field.name] = value
-    return processed_fields
+        _LOGGER.debug(
+            "Converted ZCL schema field(%s) value from: %s to: %s",
+            field.name,
+            fields[field.name],
+            value,
+        )
+        converted_fields[field.name] = value
+    return converted_fields
 
 
 @callback

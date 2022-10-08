@@ -17,8 +17,9 @@ import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.quirks
 from zigpy.types.named import EUI64, NWK
+from zigpy.zcl.clusters import Cluster
 from zigpy.zcl.clusters.general import Groups, Identify
-from zigpy.zcl.foundation import Status as ZclStatus
+from zigpy.zcl.foundation import Status as ZclStatus, ZCLCommandDef
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.const import ATTR_COMMAND, ATTR_NAME
@@ -76,7 +77,7 @@ from .const import (
     UNKNOWN_MODEL,
     ZHA_OPTIONS,
 )
-from .helpers import LogMixin, async_get_zha_config_value, process_fields
+from .helpers import LogMixin, async_get_zha_config_value, convert_to_zcl_values
 
 if TYPE_CHECKING:
     from ..api import ClusterBinding
@@ -560,7 +561,7 @@ class ZHADevice(LogMixin):
         return device_info
 
     @callback
-    def async_get_clusters(self):
+    def async_get_clusters(self) -> dict[int, dict[str, dict[int, Cluster]]]:
         """Get all clusters for this device."""
         return {
             ep_id: {
@@ -594,9 +595,11 @@ class ZHADevice(LogMixin):
         }
 
     @callback
-    def async_get_cluster(self, endpoint_id, cluster_id, cluster_type=CLUSTER_TYPE_IN):
+    def async_get_cluster(
+        self, endpoint_id: int, cluster_id: int, cluster_type: str = CLUSTER_TYPE_IN
+    ) -> Cluster:
         """Get zigbee cluster from this entity."""
-        clusters = self.async_get_clusters()
+        clusters: dict[int, dict[str, dict[int, Cluster]]] = self.async_get_clusters()
         return clusters[endpoint_id][cluster_type][cluster_id]
 
     @callback
@@ -662,28 +665,31 @@ class ZHADevice(LogMixin):
 
     async def issue_cluster_command(
         self,
-        endpoint_id,
-        cluster_id,
-        command,
-        command_type,
-        args,
-        cluster_type=CLUSTER_TYPE_IN,
-        manufacturer=None,
-    ):
+        endpoint_id: int,
+        cluster_id: int,
+        command: int,
+        command_type: str,
+        args: dict[str, Any],
+        cluster_type: str = CLUSTER_TYPE_IN,
+        manufacturer: int | None = None,
+    ) -> None:
         """Issue a command against specified zigbee cluster on this device."""
-        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
-        if cluster is None:
+        try:
+            cluster: Cluster = self.async_get_cluster(
+                endpoint_id, cluster_id, cluster_type
+            )
+        except KeyError as exc:
             raise ValueError(
                 f"Cluster {cluster_id} not found on endpoint {endpoint_id} while issuing command {command} with args {args}"
-            )
-        commands = (
+            ) from exc
+        commands: dict[int, ZCLCommandDef] = (
             cluster.server_commands
             if command_type == CLUSTER_COMMAND_SERVER
             else cluster.client_commands
         )
         response = await (
             getattr(cluster, commands[command].name)(
-                **process_fields(args, commands[command].schema)
+                **convert_to_zcl_values(args, commands[command].schema)
             )
         )
         self.debug(
