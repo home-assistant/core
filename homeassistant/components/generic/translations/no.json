@@ -45,6 +45,13 @@
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "description": "Angi innstillingene for \u00e5 koble til kameraet."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Dette bildet ser bra ut."
+                },
+                "description": "![Camera Still Image Preview]( {preview_url} )",
+                "title": "Forh\u00e5ndsvisning"
             }
         }
     },
