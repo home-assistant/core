@@ -296,46 +296,42 @@ class BluetoothManager:
             if address not in connectable_history and address not in all_history:
                 self._advertisement_tracker.async_remove_address(address)
 
-    def _prefer_previous_adv(
+    def _prefer_previous_adv_from_different_source(
         self, old: BluetoothServiceInfoBleak, new: BluetoothServiceInfoBleak
     ) -> bool:
-        """Prefer previous advertisement if it is better."""
+        """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > self._advertisement_tracker.intervals.get(
             new.address, STALE_ADVERTISEMENT_SECONDS
         ):
             # If the old advertisement is stale, any new advertisement is preferred
-            if _LOGGER.isEnabledFor(logging.DEBUG) and new.source != old.source:
-                _LOGGER.debug(
-                    "%s (%s): Switching from %s[%s] to %s[%s] (time elapsed:%s > stale seconds:%s)",
-                    new.advertisement.local_name,
-                    new.device.address,
-                    old.source,
-                    old.connectable,
-                    new.source,
-                    new.connectable,
-                    new.time - old.time,
-                    STALE_ADVERTISEMENT_SECONDS,
-                )
+            _LOGGER.debug(
+                "%s (%s): Switching from %s[%s] to %s[%s] (time elapsed:%s > stale seconds:%s)",
+                new.advertisement.local_name,
+                new.device.address,
+                old.source,
+                old.connectable,
+                new.source,
+                new.connectable,
+                new.time - old.time,
+                STALE_ADVERTISEMENT_SECONDS,
+            )
             return False
         if new.device.rssi - RSSI_SWITCH_THRESHOLD > (old.device.rssi or NO_RSSI_VALUE):
             # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
-            if _LOGGER.isEnabledFor(logging.DEBUG) and new.source != old.source:
-                _LOGGER.debug(
-                    "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
-                    new.advertisement.local_name,
-                    new.device.address,
-                    old.source,
-                    old.connectable,
-                    new.source,
-                    new.connectable,
-                    new.device.rssi,
-                    RSSI_SWITCH_THRESHOLD,
-                    old.device.rssi,
-                )
+            _LOGGER.debug(
+                "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
+                new.advertisement.local_name,
+                new.device.address,
+                old.source,
+                old.connectable,
+                new.source,
+                new.connectable,
+                new.device.rssi,
+                RSSI_SWITCH_THRESHOLD,
+                old.device.rssi,
+            )
             return False
-        # If the source is the different, the old one is preferred because its
-        # not stale and its RSSI_SWITCH_THRESHOLD less than the new one
-        return old.source != new.source
+        return True
 
     @hass_callback
     def scanner_adv_received(self, service_info: BluetoothServiceInfoBleak) -> None:
@@ -368,13 +364,17 @@ class BluetoothManager:
         address = device.address
         all_history = self._connectable_history if connectable else self._history
         old_service_info = all_history.get(address)
-        if old_service_info and self._prefer_previous_adv(
-            old_service_info, service_info
+        source = service_info.source
+        if (
+            old_service_info
+            and source != old_service_info.source
+            and self._prefer_previous_adv_from_different_source(
+                old_service_info, service_info
+            )
         ):
             return
 
         self._history[address] = service_info
-        source = service_info.source
 
         if connectable:
             self._connectable_history[address] = service_info
