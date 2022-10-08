@@ -158,7 +158,7 @@ def convert_to_zcl_values(
     fields: dict[str, Any], schema: CommandSchema
 ) -> dict[str, Any]:
     """Convert user input to ZCL values."""
-    converted_fields = {}
+    converted_fields: dict[str, Any] = {}
     for field in schema.fields:
         if field.name not in fields:
             continue
