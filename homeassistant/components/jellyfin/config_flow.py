@@ -35,6 +35,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the Jellyfin config flow."""
+        self.device_id: str | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -45,10 +49,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if CONF_DEVICE_ID not in user_input:
-                user_input[CONF_DEVICE_ID] = _generate_device_id()
+            if self.device_id is None:
+                self.device_id = _generate_device_id()
 
-            client = create_client(device_id=user_input[CONF_DEVICE_ID])
+            client = create_client(device_id=self.device_id)
             try:
                 userid = await validate_input(self.hass, user_input, client)
             except CannotConnect:
@@ -63,7 +67,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_URL], data=user_input
+                    title=user_input[CONF_URL],
+                    data={CONF_DEVICE_ID: self.device_id, **user_input},
                 )
 
         return self.async_show_form(

@@ -76,6 +76,7 @@ def _login(
 ) -> None:
     """Assert that the user can log in to the Jellyfin server."""
     response = connection_manager.login(url, username, password)
+
     if "AccessToken" not in response:
         raise InvalidAuth
 
