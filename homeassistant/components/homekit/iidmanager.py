@@ -71,9 +71,7 @@ class AccessoryIIDStorage:
         )
         if allocation_key in self._allocations:
             return self._allocations[allocation_key]
-        if not self._allocated_iids:
-            self._allocated_iids = [IID_MIN]
-        next_iid = self._allocated_iids[-1] + 1
+        next_iid = self._allocated_iids[-1] + 1 if self._allocated_iids else 1
         self._allocations[allocation_key] = next_iid
         self._allocated_iids.append(next_iid)
         self._async_schedule_save()

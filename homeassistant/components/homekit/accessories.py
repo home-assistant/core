@@ -660,8 +660,8 @@ class HomeIIDManager(IIDManager):  # type: ignore[misc]
             iid = self._iid_storage.get_or_allocate_iid(
                 aid, obj.type_id, None, obj.unique_id
             )
-        if iid in self.iids:
+        if iid in self.objs:
             raise RuntimeError(
-                f"IID {iid} already in use by another object: {self.iids[iid]}"
+                f"IID {iid} already in use by another object: {self.objs[iid]}"
             )
         return iid
