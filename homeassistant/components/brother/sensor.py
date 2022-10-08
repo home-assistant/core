@@ -28,46 +28,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import BrotherDataUpdateCoordinator
 from .const import DATA_CONFIG_ENTRY, DOMAIN
 
-ATTR_BLACK_DRUM_COUNTER = "black_drum_counter"
-ATTR_BLACK_DRUM_REMAINING_LIFE = "black_drum_remaining_life"
-ATTR_BLACK_DRUM_REMAINING_PAGES = "black_drum_remaining_pages"
-ATTR_COUNTER = "counter"
-ATTR_CYAN_DRUM_COUNTER = "cyan_drum_counter"
-ATTR_CYAN_DRUM_REMAINING_LIFE = "cyan_drum_remaining_life"
-ATTR_CYAN_DRUM_REMAINING_PAGES = "cyan_drum_remaining_pages"
-ATTR_DRUM_COUNTER = "drum_counter"
-ATTR_DRUM_REMAINING_LIFE = "drum_remaining_life"
-ATTR_DRUM_REMAINING_PAGES = "drum_remaining_pages"
-ATTR_MAGENTA_DRUM_COUNTER = "magenta_drum_counter"
-ATTR_MAGENTA_DRUM_REMAINING_LIFE = "magenta_drum_remaining_life"
-ATTR_MAGENTA_DRUM_REMAINING_PAGES = "magenta_drum_remaining_pages"
-ATTR_MANUFACTURER = "Brother"
-ATTR_REMAINING_PAGES = "remaining_pages"
-ATTR_YELLOW_DRUM_COUNTER = "yellow_drum_counter"
-ATTR_YELLOW_DRUM_REMAINING_LIFE = "yellow_drum_remaining_life"
-ATTR_YELLOW_DRUM_REMAINING_PAGES = "yellow_drum_remaining_pages"
-
 UNIT_PAGES = "p"
-
-ATTRS_MAP: dict[str, tuple[str, str]] = {
-    ATTR_DRUM_REMAINING_LIFE: (ATTR_DRUM_REMAINING_PAGES, ATTR_DRUM_COUNTER),
-    ATTR_BLACK_DRUM_REMAINING_LIFE: (
-        ATTR_BLACK_DRUM_REMAINING_PAGES,
-        ATTR_BLACK_DRUM_COUNTER,
-    ),
-    ATTR_CYAN_DRUM_REMAINING_LIFE: (
-        ATTR_CYAN_DRUM_REMAINING_PAGES,
-        ATTR_CYAN_DRUM_COUNTER,
-    ),
-    ATTR_MAGENTA_DRUM_REMAINING_LIFE: (
-        ATTR_MAGENTA_DRUM_REMAINING_PAGES,
-        ATTR_MAGENTA_DRUM_COUNTER,
-    ),
-    ATTR_YELLOW_DRUM_REMAINING_LIFE: (
-        ATTR_YELLOW_DRUM_REMAINING_PAGES,
-        ATTR_YELLOW_DRUM_COUNTER,
-    ),
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,7 +60,7 @@ async def async_setup_entry(
     device_info = DeviceInfo(
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
         identifiers={(DOMAIN, coordinator.data.serial)},
-        manufacturer=ATTR_MANUFACTURER,
+        manufacturer="Brother",
         model=coordinator.data.model,
         name=coordinator.data.model,
         sw_version=coordinator.data.firmware,
@@ -127,21 +88,9 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self._attrs: dict[str, Any] = {}
         self._attr_device_info = device_info
         self._attr_native_value = description.value(coordinator.data)
+        self._attr_extra_state_attributes = description.state_attrs(coordinator.data)
         self._attr_unique_id = f"{coordinator.data.serial.lower()}_{description.key}"
         self.entity_description = description
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        remaining_pages, drum_counter = ATTRS_MAP.get(
-            self.entity_description.key, (None, None)
-        )
-        if remaining_pages and drum_counter:
-            self._attrs[ATTR_REMAINING_PAGES] = getattr(
-                self.coordinator.data, remaining_pages
-            )
-            self._attrs[ATTR_COUNTER] = getattr(self.coordinator.data, drum_counter)
-        return self._attrs
 
 
 @dataclass
@@ -149,6 +98,7 @@ class BrotherSensorRequiredKeysMixin:
     """Class for Brother entity required keys."""
 
     value: Callable[[BrotherSensors], StateType | datetime]
+    state_attrs: Callable[[BrotherSensors], dict[str, Any]]
 
 
 @dataclass
@@ -165,6 +115,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         name="Status",
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.status,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="page_counter",
@@ -174,6 +125,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.page_counter,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="bw_counter",
@@ -183,6 +135,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.bw_counter,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="color_counter",
@@ -192,6 +145,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.color_counter,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="duplex_unit_pages_counter",
@@ -201,6 +155,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.duplex_unit_pages_counter,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="drum_remaining_life",
@@ -210,6 +165,10 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.drum_remaining_life,
+        state_attrs=lambda data: {
+            "remaining_pages": data.drum_remaining_pages,
+            "counter": data.drum_counter,
+        },
     ),
     BrotherSensorEntityDescription(
         key="black_drum_remaining_life",
@@ -219,6 +178,10 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.black_drum_remaining_life,
+        state_attrs=lambda data: {
+            "remaining_pages": data.black_drum_remaining_pages,
+            "counter": data.black_drum_counter,
+        },
     ),
     BrotherSensorEntityDescription(
         key="cyan_drum_remaining_life",
@@ -228,6 +191,10 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.cyan_drum_remaining_life,
+        state_attrs=lambda data: {
+            "remaining_pages": data.cyan_drum_remaining_pages,
+            "counter": data.cyan_drum_counter,
+        },
     ),
     BrotherSensorEntityDescription(
         key="magenta_drum_remaining_life",
@@ -237,6 +204,10 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.magenta_drum_remaining_life,
+        state_attrs=lambda data: {
+            "remaining_pages": data.magenta_drum_remaining_pages,
+            "counter": data.magenta_drum_counter,
+        },
     ),
     BrotherSensorEntityDescription(
         key="yellow_drum_remaining_life",
@@ -246,6 +217,10 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.yellow_drum_remaining_life,
+        state_attrs=lambda data: {
+            "remaining_pages": data.yellow_drum_remaining_pages,
+            "counter": data.yellow_drum_counter,
+        },
     ),
     BrotherSensorEntityDescription(
         key="belt_unit_remaining_life",
@@ -255,6 +230,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.belt_unit_remaining_life,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="fuser_remaining_life",
@@ -264,6 +240,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.fuser_remaining_life,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="laser_remaining_life",
@@ -273,6 +250,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.laser_remaining_life,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="pf_kit_1_remaining_life",
@@ -282,6 +260,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.pf_kit_1_remaining_life,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="pf_kit_mp_remaining_life",
@@ -291,6 +270,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.pf_kit_mp_remaining_life,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="black_toner_remaining",
@@ -300,6 +280,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.black_toner_remaining,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="cyan_toner_remaining",
@@ -309,6 +290,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.cyan_toner_remaining,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="magenta_toner_remaining",
@@ -318,6 +300,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.magenta_toner_remaining,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="yellow_toner_remaining",
@@ -327,6 +310,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.yellow_toner_remaining,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="black_ink_remaining",
@@ -336,6 +320,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.black_ink_remaining,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="cyan_ink_remaining",
@@ -345,6 +330,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.cyan_ink_remaining,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="magenta_ink_remaining",
@@ -354,6 +340,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.magenta_ink_remaining,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="yellow_ink_remaining",
@@ -363,6 +350,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.yellow_ink_remaining,
+        state_attrs=lambda _: {},
     ),
     BrotherSensorEntityDescription(
         key="uptime",
@@ -371,5 +359,6 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.uptime,
+        state_attrs=lambda _: {},
     ),
 )
