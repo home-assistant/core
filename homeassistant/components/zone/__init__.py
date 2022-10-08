@@ -229,19 +229,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     if component.get_entity("zone.home"):
-        return True
+      #return True
 
-    home_zone = Zone(_home_conf(hass))
-    home_zone.entity_id = ENTITY_ID_HOME
-    await component.async_add_entities([home_zone])
+        home_zone = Zone(_home_conf(hass))
+        home_zone.entity_id = ENTITY_ID_HOME
+        await component.async_add_entities([home_zone])
 
-    async def core_config_updated(_: Event) -> None:
-        """Handle core config updated."""
-        await home_zone.async_update_config(_home_conf(hass))
+        async def core_config_updated(_: Event) -> None:
+            """Handle core config updated."""
+            await home_zone.async_update_config(_home_conf(hass))
 
-    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
+        hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
 
-    hass.data[DOMAIN] = storage_collection
+        hass.data[DOMAIN] = storage_collection
 
     return True
 
