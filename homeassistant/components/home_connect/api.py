@@ -33,6 +33,7 @@ from .const import (
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_STANDBY,
+    OPERATION_STATE_DEVICE_CLASS,
     SIGNAL_UPDATE_ENTITIES,
 )
 
@@ -197,7 +198,7 @@ class DeviceWithOpState(HomeConnectDevice):
                 ATTR_UNIT: None,
                 ATTR_KEY: BSH_OPERATION_STATE,
                 ATTR_ICON: "mdi:state-machine",
-                ATTR_DEVICE_CLASS: None,
+                ATTR_DEVICE_CLASS: OPERATION_STATE_DEVICE_CLASS,
                 ATTR_SIGN: 1,
             }
         ]

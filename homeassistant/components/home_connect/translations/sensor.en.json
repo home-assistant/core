@@ -1,0 +1,15 @@
+{
+    "state": {
+        "operation__state": {
+            "aborting": "Aborting",
+            "action_required": "Action required",
+            "delayed_start": "Delayed start",
+            "error": "Error",
+            "finished": "Finished",
+            "inactive": "Inactive",
+            "pause": "Paused",
+            "ready": "Ready",
+            "run": "Run"
+        }
+    }
+}

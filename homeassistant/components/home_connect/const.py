@@ -2,8 +2,8 @@
 
 DOMAIN = "home_connect"
 
-OAUTH2_AUTHORIZE = "https://api.home-connect.com/security/oauth/authorize"
-OAUTH2_TOKEN = "https://api.home-connect.com/security/oauth/token"
+OAUTH2_AUTHORIZE = "https://simulator.home-connect.com/security/oauth/authorize"
+OAUTH2_TOKEN = "https://simulator.home-connect.com/security/oauth/token"
 
 BSH_POWER_STATE = "BSH.Common.Setting.PowerState"
 BSH_POWER_ON = "BSH.Common.EnumType.PowerState.On"
@@ -52,3 +52,17 @@ ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
+
+OPERATION_STATE_DEVICE_CLASS = "operation__state"
+
+OPERATION_STATE_TRANSLATION: dict[str, str] = {
+    "BSH.Common.EnumType.OperationState.Inactive": "inactive",
+    "BSH.Common.EnumType.OperationState.Ready": "ready",
+    "BSH.Common.EnumType.OperationState.DelayedStart": "delayed_start",
+    "BSH.Common.EnumType.OperationState.Run": "run",
+    "BSH.Common.EnumType.OperationState.Pause": "pause",
+    "BSH.Common.EnumType.OperationState.ActionRequired": "action_required",
+    "BSH.Common.EnumType.OperationState.Finished": "finished",
+    "BSH.Common.EnumType.OperationState.Error": "error",
+    "BSH.Common.EnumType.OperationState.Aborting": "aborting",
+}
