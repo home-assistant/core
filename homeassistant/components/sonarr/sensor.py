@@ -43,7 +43,7 @@ class SonarrSensorEntityDescription(
 SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     "commands": SonarrSensorEntityDescription(
         key="commands",
-        name="Sonarr Commands",
+        name="Commands",
         icon="mdi:code-braces",
         native_unit_of_measurement="Commands",
         entity_registry_enabled_default=False,
@@ -51,7 +51,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "diskspace": SonarrSensorEntityDescription[list[Diskspace]](
         key="diskspace",
-        name="Sonarr Disk Space",
+        name="Disk space",
         icon="mdi:harddisk",
         native_unit_of_measurement=DATA_GIGABYTES,
         entity_registry_enabled_default=False,
@@ -59,7 +59,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "queue": SonarrSensorEntityDescription[SonarrQueue](
         key="queue",
-        name="Sonarr Queue",
+        name="Queue",
         icon="mdi:download",
         native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,
@@ -67,7 +67,7 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "series": SonarrSensorEntityDescription[list[SonarrSeries]](
         key="series",
-        name="Sonarr Shows",
+        name="Shows",
         icon="mdi:television",
         native_unit_of_measurement="Series",
         entity_registry_enabled_default=False,
@@ -75,14 +75,14 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     ),
     "upcoming": SonarrSensorEntityDescription[list[SonarrCalendar]](
         key="upcoming",
-        name="Sonarr Upcoming",
+        name="Upcoming",
         icon="mdi:television",
         native_unit_of_measurement="Episodes",
         value_fn=len,
     ),
     "wanted": SonarrSensorEntityDescription[SonarrWantedMissing](
         key="wanted",
-        name="Sonarr Wanted",
+        name="Wanted",
         icon="mdi:television",
         native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,
