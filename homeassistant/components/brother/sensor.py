@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -347,6 +347,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     """Define an Brother Printer sensor."""
 
     _attr_has_entity_name = True
+    entity_description: BrotherSensorEntityDescription
 
     def __init__(
         self,
@@ -356,9 +357,17 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attrs: dict[str, Any] = {}
         self._attr_device_info = device_info
-        self._attr_native_value = description.value(coordinator.data)
         self._attr_extra_state_attributes = description.state_attrs(coordinator.data)
+        self._attr_native_value = description.value(coordinator.data)
         self._attr_unique_id = f"{coordinator.data.serial.lower()}_{description.key}"
         self.entity_description = description
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_native_value = self.entity_description.value(self.coordinator.data)
+        self._attr_extra_state_attributes = self.entity_description.state_attrs(
+            self.coordinator.data
+        )
+        self.async_write_ha_state()
