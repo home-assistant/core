@@ -118,7 +118,7 @@ class SnoozFan(FanEntity, RestoreEntity):
         result = await self._device.async_execute_command(command)
 
         if result.status == SnoozCommandResultStatus.CANCELLED:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Command %s was cancelled after %s", command, result.duration
             )
             return
