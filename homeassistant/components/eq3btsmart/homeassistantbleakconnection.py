@@ -37,7 +37,6 @@ class HomeAssistantBleakConnection:
         self._callbacks = {}
         self._notifyevent = asyncio.Event()
         self._notification_handle = None
-        self._scanner = bluetooth.async_get_scanner(self._hass)
 
         self._loop = self._hass.loop
 
