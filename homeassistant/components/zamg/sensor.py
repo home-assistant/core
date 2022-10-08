@@ -35,7 +35,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -287,7 +287,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.coordinator.data[self.station_id].get(
             self.entity_description.para_name
