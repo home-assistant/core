@@ -45,6 +45,9 @@
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
                 },
                 "description": "Saisissez les param\u00e8tres de connexion \u00e0 la cam\u00e9ra."
+            },
+            "user_confirm_still": {
+                "title": "Aper\u00e7u"
             }
         }
     },
