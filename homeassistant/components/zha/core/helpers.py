@@ -175,6 +175,8 @@ def convert_to_zcl_values(
                 value = field.type[value.replace(" ", "_")]
         elif issubclass(field.type, enum.Enum):
             value = field.type[value.replace(" ", "_")]
+        else:
+            value = field.type(value)
         _LOGGER.debug(
             "Converted ZCL schema field(%s) value from: %s to: %s",
             field.name,
