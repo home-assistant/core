@@ -1,6 +1,6 @@
 {
   "state": {
-    "operation__state": {
+    "home_connect__operation_state": {
       "inactive": "Inactive",
       "ready": "Ready",
       "delayed_start": "Delayed start",

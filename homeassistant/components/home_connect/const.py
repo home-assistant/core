@@ -53,7 +53,7 @@ ATTR_SIGN = "sign"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
-OPERATION_STATE_DEVICE_CLASS = "operation__state"
+OPERATION_STATE_DEVICE_CLASS = "home_connect__operation_state"
 
 OPERATION_STATE_TRANSLATION: dict[str, str] = {
     "BSH.Common.EnumType.OperationState.Inactive": "inactive",
