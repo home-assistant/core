@@ -28,11 +28,6 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
 
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
-
     async def _async_update_data(self) -> ZamgDevice:
         """Fetch data from ZAMG api."""
         try:
