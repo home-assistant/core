@@ -10,18 +10,17 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-import aiohttp.client_exceptions
+from aiohttp import ClientConnectionError, ClientError, ClientResponseError
 import evohomeasync
 import evohomeasync2
 
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_USERNAME
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS, UTC_OFFSET
+from .const import CONF_LOCATION_IDX, GWS, TCS, UTC_OFFSET
 
 ACCESS_TOKEN = "access_token"
 ACCESS_TOKEN_EXPIRES = "access_token_expires"
@@ -31,45 +30,65 @@ USER_DATA = "user_data"
 _LOGGER = logging.getLogger(__name__)
 
 
-def _handle_exception(err) -> None:
-    """Return False if the exception can't be ignored."""
+def _contextualise_v1_exception(err) -> str:
+    """If possible, return a useful/contextual error message for a failed v1 update."""
     try:
         raise err
 
-    except evohomeasync2.AuthenticationError:
-        _LOGGER.error(
-            "Failed to authenticate with the vendor's server. "
-            "Check your username and password. NB: Some special password characters "
-            "that work correctly via the website will not work via the web API. "
-            "Message is: %s",
-            err,
+    except ClientError:
+        return (
+            "Unable to obtain the latest high-precision temperatures. "
+            "Proceeding with low-precision temperatures. "
+            "Check your network and the vendor's service status page. "
+            f"Message is: {err}"
         )
 
-    except aiohttp.ClientConnectionError:
-        # this appears to be a common occurrence with the vendor's servers
-        _LOGGER.warning(
+    except IndexError:
+        return (
+            "The v2 API's configured location doesn't match "
+            "the v1 API's default location (there is more than one location), "
+            "so the high-precision feature will be disabled"
+        )
+
+
+def _contextualise_v2_exception(err) -> str:
+    """If possible, return a useful/contextual error message for a failed v2 update."""
+    try:
+        raise err
+
+    except ClientConnectionError:
+        return (
             "Unable to connect with the vendor's server. "
             "Check your network and the vendor's service status page. "
-            "Message is: %s",
-            err,
+            f"Message is: {err}"
         )
 
-    except aiohttp.ClientResponseError:
+    except ClientResponseError:
         if err.status == HTTPStatus.SERVICE_UNAVAILABLE:
-            _LOGGER.warning(
+            return (
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
 
-        elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
-            _LOGGER.warning(
-                "The vendor's API rate limit has been exceeded. "
-                "If this message persists, consider increasing the %s",
-                CONF_SCAN_INTERVAL,
+        if err.status == HTTPStatus.TOO_MANY_REQUESTS:
+            return (
+                "You have exceeded the vendor's API rate limit. If this message "
+                f"persists, consider increasing the {CONF_SCAN_INTERVAL}"
             )
 
-        else:
-            raise  # we don't expect/handle any other Exceptions
+        return (
+            "The vendor has returned an unexpected error. "
+            "Check the vendor's service status page"
+            f"Message is: {err}"
+        )
+
+    except evohomeasync2.AuthenticationError:
+        return (
+            "Failed to authenticate with the vendor's server. "
+            "Check your username and password. NB: Some special password characters "
+            "that work correctly via their website won't work via their RESTful API. "
+            f"Message is: {err}"
+        )
 
 
 def _dt_aware_to_naive(dt_aware: datetime) -> datetime:
@@ -89,7 +108,9 @@ def _dt_local_to_aware(dt_naive: datetime) -> datetime:
 class EvoDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching data from single endpoint for evohome."""
 
-    pass  # pylint: disable=unnecessary-pass
+    async def async_request_refresh(self, *args) -> None:
+        """Request a refresh."""
+        await super().async_request_refresh(*args)  # wrapper exists only to remove arg
 
 
 class EvoBroker:
@@ -101,6 +122,7 @@ class EvoBroker:
         client: evohomeasync2.EvohomeClient,
         client_v1: evohomeasync.EvohomeClient | None,
         store: Store[dict[str, Any]],
+        coordinator: EvoDataUpdateCoordinator,
         params,
     ) -> None:
         """Initialize the evohome client and its data structure."""
@@ -109,6 +131,7 @@ class EvoBroker:
         self.client = client
         self.client_v1 = client_v1
         self._store = store
+        self.coordinator = coordinator
         self.params = params
 
         loc_idx = params[CONF_LOCATION_IDX]
@@ -119,15 +142,15 @@ class EvoBroker:
         )
         self.temps: dict[str, Any] | None = {}
 
-    async def load_auth_tokens(self) -> tuple[dict, dict | None]:
+    async def _load_auth_tokens(self) -> tuple[dict, dict | None]:
+        return await self.load_auth_tokens(self._store, self.params)
+
+    @staticmethod
+    async def load_auth_tokens(store, params) -> tuple[dict, dict | None]:
         """Load access tokens and session IDs from the store.
 
         Using these will avoid exceeding the vendor's API rate limits.
         """
-        return await self._load_auth_tokens(self._store, self.params)
-
-    @staticmethod
-    async def _load_auth_tokens(store, params) -> tuple[dict, dict | None]:
         app_storage = await store.async_load()
         tokens = dict(app_storage or {})
 
@@ -145,34 +168,38 @@ class EvoBroker:
         user_data = tokens.pop(USER_DATA, None)
         return (tokens, user_data)
 
-    async def save_auth_tokens(self) -> None:
+    async def _save_auth_tokens(self) -> None:
+        await self.save_auth_tokens(self._store, self.client, self.client_v1)
+
+    @staticmethod
+    async def save_auth_tokens(store, client, client_v1) -> None:
         """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
-        access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
+        access_token_expires = _dt_local_to_aware(client.access_token_expires)
 
         app_storage = {
-            CONF_USERNAME: self.client.username,
-            REFRESH_TOKEN: self.client.refresh_token,
-            ACCESS_TOKEN: self.client.access_token,
+            CONF_USERNAME: client.username,
+            REFRESH_TOKEN: client.refresh_token,
+            ACCESS_TOKEN: client.access_token,
             ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
         }
 
-        if self.client_v1 and self.client_v1.user_data:
+        if client_v1 and client_v1.user_data:
             app_storage[USER_DATA] = {
-                "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
-                "sessionId": self.client_v1.user_data["sessionId"],
+                "userInfo": {"userID": client_v1.user_data["userInfo"]["userID"]},
+                "sessionId": client_v1.user_data["sessionId"],
             }
         else:
             app_storage[USER_DATA] = None
 
-        await self._store.async_save(app_storage)
+        await store.async_save(app_storage)
 
     async def call_client_api(self, api_function, update_state=True) -> Any:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
-        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            _handle_exception(err)
+        except (ClientError, evohomeasync2.AuthenticationError) as err:
+            _LOGGER.warning(_contextualise_v2_exception(err))
             return
 
         if update_state:  # wait a moment for system to quiesce before updating state
@@ -181,47 +208,39 @@ class EvoBroker:
         return result
 
     async def _update_v1_api_temps(self, *args, **kwargs) -> None:
-        """Get the latest high-precision temperatures of the default Location."""
+        """Get the latest high-precision temperatures of the default Location.
 
-        assert self.client_v1
+        This leverages the v1 API (the v2 API has less precision).
+        """
 
         def get_session_id(client_v1) -> str | None:
             user_data = client_v1.user_data if client_v1 else None
             return user_data.get("sessionId") if user_data else None
+
+        assert self.client_v1 is not None  # mypy
 
         session_id = get_session_id(self.client_v1)
 
         try:
             temps = list(await self.client_v1.temperatures(force_refresh=True))
 
-        except aiohttp.ClientError as err:
-            _LOGGER.warning(
-                "Unable to obtain the latest high-precision temperatures. "
-                "Check your network and the vendor's service status page. "
-                "Proceeding with low-precision temperatures. "
-                "Message is: %s",
-                err,
-            )
+        except ClientError as err:
+            _LOGGER.warning(_contextualise_v1_exception(err))
             self.temps = None  # these are now stale, will fall back to v2 temps
 
-        else:
-            if (
-                str(self.client_v1.location_id)
-                != self.client.locations[self.params[CONF_LOCATION_IDX]].locationId
-            ):
-                _LOGGER.warning(
-                    "The v2 API's configured location doesn't match "
-                    "the v1 API's default location (there is more than one location), "
-                    "so the high-precision feature will be disabled"
-                )
-                self.client_v1 = self.temps = None
-            else:
-                self.temps = {str(i["id"]): i["temp"] for i in temps}
+        if (
+            str(self.client_v1.location_id)
+            != self.client.locations[self.params[CONF_LOCATION_IDX]].locationId
+        ):
+            _LOGGER.warning(_contextualise_v1_exception(IndexError))
+            self.client_v1 = self.temps = None  # disable v1 temps altogether
+            return
 
+        self.temps = {str(i["id"]): i["temp"] for i in temps}
         _LOGGER.debug("Temperatures = %s", self.temps)
 
         if session_id != get_session_id(self.client_v1):
-            await self.save_auth_tokens()
+            await self._save_auth_tokens()
 
     async def _update_v2_api_state(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
@@ -230,19 +249,19 @@ class EvoBroker:
         loc_idx = self.params[CONF_LOCATION_IDX]
         try:
             status = await self.client.locations[loc_idx].status()
-        except aiohttp.ClientError as err:
-            _handle_exception(err)
-            # raise
+        except ClientError as err:
+            _LOGGER.error(_contextualise_v2_exception(err))
+            raise
         except evohomeasync2.AuthenticationError as err:
-            _handle_exception(err)
-            # raise UpdateFailed
-        else:
-            async_dispatcher_send(self.hass, DOMAIN)
+            _LOGGER.error(_contextualise_v2_exception(err))
+            raise UpdateFailed from err
 
-            _LOGGER.debug("Status = %s", status)
+        _LOGGER.debug("Status = %s", status)
 
         if access_token != self.client.access_token:
-            await self.save_auth_tokens()
+            await self._save_auth_tokens()
+
+        self.coordinator.async_update_listeners()
 
     async def async_update(self, *args, **kwargs) -> None:
         """Get the latest state data of an entire Honeywell TCC Location.
@@ -254,4 +273,4 @@ class EvoBroker:
         if self.client_v1:
             await self._update_v1_api_temps()
 
-        await self._update_v2_api_state()
+        await self._update_v2_api_state()  # may: raise ClientError, UpdateFailed

@@ -30,15 +30,19 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_LOCATION_IDX, DOMAIN, GWS, STORAGE_KEY, STORAGE_VER, TCS
-from .coordinator import EvoBroker, _handle_exception  # , EvoDataUpdateCoordinator
+from .coordinator import (
+    EvoBroker,
+    EvoDataUpdateCoordinator,
+    _contextualise_v2_exception,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,12 +130,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     #     return bool(hass.config_entries.async_entries(DOMAIN))
 
     store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
-    (
-        tokens,
-        user_data,
-    ) = await EvoBroker._load_auth_tokens(  # pylint: disable=protected-access
-        store, config[DOMAIN]
-    )
+    tokens, user_data = await EvoBroker.load_auth_tokens(store, config[DOMAIN])
 
     client_v2 = evohomeasync2.EvohomeClient(
         config[DOMAIN][CONF_USERNAME],
@@ -143,7 +142,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     try:
         await client_v2.login()
     except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-        _handle_exception(err)
+        _LOGGER.error(_contextualise_v2_exception(err))
         return False
     finally:
         config[DOMAIN][CONF_PASSWORD] = "REDACTED"
@@ -177,19 +176,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         session=async_get_clientsession(hass),
     )
 
+    coordinator = EvoDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=DOMAIN,
+        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
+    )
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["broker"] = broker = EvoBroker(
-        hass, client_v2, client_v1, store, config[DOMAIN]
+        hass, client_v2, client_v1, store, coordinator, config[DOMAIN]
     )
-    # hass.data[DOMAIN]["coordinator"] = EvoDataUpdateCoordinator(
-    #     hass,
-    #     _LOGGER,
-    #     update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-    #     update_method=broker.async_update
-    # )
 
-    await broker.save_auth_tokens()
-    await broker.async_update()  # get initial state
+    coordinator.update_method = broker.async_update
+    await coordinator.async_config_entry_first_refresh()  # will save access tokens too
 
     hass.async_create_task(
         async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
@@ -198,12 +198,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.async_create_task(
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
+    setup_service_functions(hass, broker)
 
     async_track_time_interval(
-        hass, broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
+        hass, coordinator.async_request_refresh, config[DOMAIN][CONF_SCAN_INTERVAL]
     )
-
-    setup_service_functions(hass, broker)
 
     return True
 
@@ -327,28 +326,25 @@ def setup_service_functions(hass: HomeAssistant, broker):
     )
 
 
-class EvoDevice(Entity):
+class EvoDevice(CoordinatorEntity):
     """Base for any evohome device.
 
     This includes the Controller, (up to 12) Heating Zones and (optionally) a
     DHW controller.
     """
 
-    _attr_should_poll = False
-
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize the evohome entity."""
+        super().__init__(evo_broker.coordinator)
+
         self._evo_device = evo_device
         self._evo_broker = evo_broker
         self._evo_tcs = evo_broker.tcs
 
         self._device_state_attrs: dict[str, Any] = {}
 
-    async def async_refresh(self, payload: dict | None = None) -> None:
+    async def async_handle_signal(self, *, payload: dict) -> None:
         """Process any signals."""
-        if payload is None:
-            self.async_schedule_update_ha_state(force_refresh=True)
-            return
         if payload["unique_id"] != self._attr_unique_id:
             return
         if payload["service"] in (SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE):
@@ -379,7 +375,8 @@ class EvoDevice(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        async_dispatcher_connect(self.hass, DOMAIN, self.async_refresh)
+        await super().async_added_to_hass()
+        async_dispatcher_connect(self.hass, DOMAIN, self.async_handle_signal)
 
 
 class EvoChild(EvoDevice):
@@ -471,6 +468,15 @@ class EvoChild(EvoDevice):
 
         return self._setpoints
 
+    @property
+    def should_poll(self) -> bool:
+        """Return True as entity has to be polled for state.
+
+        Despite being a CoordinatorEntity, polling is necessary as each evohome child
+        downloads it's own schedules when required.
+        """
+        return True
+
     async def _update_schedule(self) -> None:
         """Get the latest schedule, if any."""
         self._schedule = await self._evo_broker.call_client_api(
@@ -480,10 +486,16 @@ class EvoChild(EvoDevice):
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
 
     async def async_update(self) -> None:
-        """Get the latest state data."""
+        """Update the entity."""
+        # Ignore update requests if the entity is disabled
+        if not self.enabled or not self.available:
+            return
+
         next_sp_from = self._setpoints.get("next_sp_from", "2000-01-01T00:00:00+00:00")
         next_sp_from_dt = dt_util.parse_datetime(next_sp_from)
         if next_sp_from_dt is None or dt_util.now() >= next_sp_from_dt:
             await self._update_schedule()  # no schedule, or it's out-of-date
 
         self._device_state_attrs = {"setpoints": self.setpoints}
+
+        await self.coordinator.async_request_refresh()
