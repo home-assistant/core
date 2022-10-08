@@ -41,6 +41,7 @@ from ..const import (
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from ..models import MqttValueTemplate
+from ..util import get_mqtt_data
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -191,6 +192,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             state = self._templates[
                 CONF_STATE_TEMPLATE
             ].async_render_with_possible_json_value(msg.payload)
@@ -256,7 +260,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 else:
                     _LOGGER.warning("Unsupported effect value received")
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._topics[CONF_STATE_TOPIC] is not None:
             self._sub_state = subscription.async_prepare_subscribe_topics(
@@ -270,6 +276,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                         "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
+                self,
             )
 
     async def _subscribe_topics(self):

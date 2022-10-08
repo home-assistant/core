@@ -32,7 +32,7 @@ from ..const import (
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
-from ..util import valid_publish_topic
+from ..util import get_mqtt_data, valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -202,6 +202,9 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle state MQTT message."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = json_loads(msg.payload)
             if STATE in payload and (
                 payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
@@ -211,7 +214,9 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 )
                 del payload[STATE]
             self._state_attrs.update(payload)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._config.get(CONF_STATE_TOPIC):
             topics["state_position_topic"] = {
@@ -221,7 +226,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 "encoding": self._config[CONF_ENCODING] or None,
             }
         self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+            self.hass, self._sub_state, topics, self
         )
 
     async def _subscribe_topics(self):

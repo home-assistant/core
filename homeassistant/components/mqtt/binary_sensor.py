@@ -47,6 +47,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,6 +201,9 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle a new received MQTT state message."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             # auto-expire enabled?
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
 
@@ -260,7 +264,9 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     self.hass, off_delay, off_delay_listener
                 )
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
@@ -273,6 +279,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
+            self,
         )
 
     async def _subscribe_topics(self):

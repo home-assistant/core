@@ -35,6 +35,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,6 +155,9 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
 
             if payload.lower() == "none":
@@ -169,7 +173,9 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                 return
 
             self._attr_current_option = payload
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -186,6 +192,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                         "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
+                self,
             )
 
     async def _subscribe_topics(self):

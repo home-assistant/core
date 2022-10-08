@@ -54,6 +54,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import get_mqtt_data
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -236,6 +237,9 @@ class MqttSiren(MqttEntity, SirenEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle new MQTT state messages."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = self._value_template(msg.payload)
             if not payload or payload == PAYLOAD_EMPTY_JSON:
                 _LOGGER.debug(
@@ -283,7 +287,9 @@ class MqttSiren(MqttEntity, SirenEntity):
                     )
                     return
             self._update(process_turn_on_params(self, json_payload))
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -300,6 +306,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                         "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
+                self,
             )
 
     async def _subscribe_topics(self):

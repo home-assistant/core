@@ -692,8 +692,8 @@ async def test_availability_with_shared_state_topic(
 
     async_fire_mqtt_message(hass, "test-topic", "100")
     await hass.async_block_till_done()
-    # Initially the state and the availability chahe the state
-    assert len(events) == 2
+    # Initially the state and the availability change
+    assert len(events) == 1
 
     events.clear()
     async_fire_mqtt_message(hass, "test-topic", "50")

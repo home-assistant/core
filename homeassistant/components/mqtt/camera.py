@@ -162,6 +162,7 @@ class MqttCamera(MqttEntity, Camera):
                     "encoding": None,
                 }
             },
+            self,
         )
 
     async def _subscribe_topics(self):

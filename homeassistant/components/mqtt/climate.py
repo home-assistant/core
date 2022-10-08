@@ -55,7 +55,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -477,6 +477,10 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_action_received(msg):
             """Handle receiving action via MQTT."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
+
             payload = render_template(msg, CONF_ACTION_TEMPLATE)
             if not payload or payload == PAYLOAD_NONE:
                 _LOGGER.debug(
@@ -494,18 +498,26 @@ class MqttClimate(MqttEntity, ClimateEntity):
                     payload,
                 )
                 return
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic,
+                self,
+            )
 
         add_subscription(topics, CONF_ACTION_TOPIC, handle_action_received)
 
         @callback
         def handle_temperature_received(msg, template_name, attr):
             """Handle temperature coming via MQTT."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = render_template(msg, template_name)
 
             try:
                 setattr(self, attr, float(payload))
-                self.async_write_ha_state()
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                    msg.topic, self
+                )
             except ValueError:
                 _LOGGER.error("Could not parse temperature from %s", payload)
 
@@ -558,13 +570,18 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @callback
         def handle_mode_received(msg, template_name, attr, mode_list):
             """Handle receiving listed mode via MQTT."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = render_template(msg, template_name)
 
             if payload not in self._config[mode_list]:
                 _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
             else:
                 setattr(self, attr, payload)
-                self.async_write_ha_state()
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                    msg.topic, self
+                )
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -607,6 +624,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @callback
         def handle_onoff_mode_received(msg, template_name, attr):
             """Handle receiving on/off mode via MQTT."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = render_template(msg, template_name)
             payload_on = self._config[CONF_PAYLOAD_ON]
             payload_off = self._config[CONF_PAYLOAD_OFF]
@@ -623,7 +643,10 @@ class MqttClimate(MqttEntity, ClimateEntity):
             else:
                 _LOGGER.error("Invalid %s mode: %s", attr, payload)
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic,
+                self,
+            )
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -637,10 +660,15 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_preset_mode_received(msg):
             """Handle receiving preset mode via MQTT."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             preset_mode = render_template(msg, CONF_PRESET_MODE_VALUE_TEMPLATE)
             if preset_mode in [PRESET_NONE, PAYLOAD_NONE]:
                 self._preset_mode = None
-                self.async_write_ha_state()
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                    msg.topic, self
+                )
                 return
             if not preset_mode:
                 _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
@@ -654,14 +682,16 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 )
             else:
                 self._preset_mode = preset_mode
-                self.async_write_ha_state()
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                    msg.topic, self
+                )
 
         add_subscription(
             topics, CONF_PRESET_MODE_STATE_TOPIC, handle_preset_mode_received
         )
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+            self.hass, self._sub_state, topics, self
         )
 
     async def _subscribe_topics(self):

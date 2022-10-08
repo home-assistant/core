@@ -29,6 +29,7 @@ from ..const import CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from ..models import MqttValueTemplate
+from ..util import get_mqtt_data
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
@@ -106,7 +107,9 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             else:
                 self._location_name = msg.payload
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self, register_callback=True
+            )
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
@@ -118,6 +121,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     "qos": self._config[CONF_QOS],
                 }
             },
+            self,
         )
 
     async def _subscribe_topics(self):

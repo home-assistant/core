@@ -33,6 +33,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate
+from .util import get_mqtt_data
 
 CONF_PAYLOAD_LOCK = "payload_lock"
 CONF_PAYLOAD_UNLOCK = "payload_unlock"
@@ -158,7 +159,11 @@ class MqttLock(MqttEntity, LockEntity):
             elif payload == self._config[CONF_STATE_UNLOCKED]:
                 self._state = False
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic,
+                self,
+                register_callback=True,
+            )
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
@@ -175,6 +180,7 @@ class MqttLock(MqttEntity, LockEntity):
                         "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
+                self,
             )
 
     async def _subscribe_topics(self):

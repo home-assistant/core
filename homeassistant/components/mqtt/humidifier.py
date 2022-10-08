@@ -51,7 +51,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_DEVICE_CLASS = "device_class"
@@ -299,6 +299,9 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new received MQTT message."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = self._value_templates[CONF_STATE](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
@@ -309,7 +312,9 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 self._state = False
             elif payload == PAYLOAD_NONE:
                 self._state = None
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -323,6 +328,9 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         @log_messages(self.hass, self.entity_id)
         def target_humidity_received(msg):
             """Handle new received MQTT message for the target humidity."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             rendered_target_humidity_payload = self._value_templates[ATTR_HUMIDITY](
                 msg.payload
             )
@@ -331,7 +339,9 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 return
             if rendered_target_humidity_payload == self._payload["HUMIDITY_RESET"]:
                 self._target_humidity = None
-                self.async_write_ha_state()
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                    msg.topic, self
+                )
                 return
             try:
                 target_humidity = round(float(rendered_target_humidity_payload))
@@ -355,7 +365,9 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 )
                 return
             self._target_humidity = target_humidity
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._topic[CONF_TARGET_HUMIDITY_STATE_TOPIC] is not None:
             topics[CONF_TARGET_HUMIDITY_STATE_TOPIC] = {
@@ -370,10 +382,15 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         @log_messages(self.hass, self.entity_id)
         def mode_received(msg):
             """Handle new received MQTT message for mode."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             mode = self._value_templates[ATTR_MODE](msg.payload)
             if mode == self._payload["MODE_RESET"]:
                 self._mode = None
-                self.async_write_ha_state()
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                    msg.topic, self
+                )
                 return
             if not mode:
                 _LOGGER.debug("Ignoring empty mode from '%s'", msg.topic)
@@ -388,7 +405,9 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 return
 
             self._mode = mode
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._topic[CONF_MODE_STATE_TOPIC] is not None:
             topics[CONF_MODE_STATE_TOPIC] = {
@@ -400,7 +419,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._mode = None
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+            self.hass, self._sub_state, topics, self
         )
 
     async def _subscribe_topics(self):

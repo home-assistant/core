@@ -38,7 +38,6 @@ from .config import MQTT_RO_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC
 from .debug_info import log_messages
 from .mixins import (
-    CONF_AVAILABILITY_TOPIC,
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
@@ -47,7 +46,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate
-from .util import valid_subscribe_topic
+from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -181,20 +180,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         else:
             self._expired = None
 
-        shared_topic = (
-            config[CONF_STATE_TOPIC]
-            if (config[CONF_STATE_TOPIC] == config.get(CONF_AVAILABILITY_TOPIC))
-            else None
-        )
-
-        MqttEntity.__init__(
-            self,
-            hass,
-            config,
-            config_entry,
-            discovery_data,
-            shared_topic=shared_topic,
-        )
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -314,7 +300,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 or self._config[CONF_LAST_RESET_TOPIC] == self._config[CONF_STATE_TOPIC]
             ):
                 _update_last_reset(msg)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self, register_callback=True
+            )
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],
@@ -328,7 +316,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
         def last_reset_message_received(msg):
             """Handle new last_reset messages."""
             _update_last_reset(msg)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self, register_callback=True
+            )
 
         if (
             CONF_LAST_RESET_TOPIC in self._config
@@ -342,7 +332,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             }
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+            self.hass, self._sub_state, topics, self
         )
 
     async def _subscribe_topics(self):

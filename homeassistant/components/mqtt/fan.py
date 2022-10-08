@@ -55,7 +55,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
@@ -381,6 +381,9 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new received MQTT message."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = self._value_templates[CONF_STATE](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
@@ -391,7 +394,9 @@ class MqttFan(MqttEntity, FanEntity):
                 self._state = False
             elif payload == PAYLOAD_NONE:
                 self._state = None
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -405,6 +410,9 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def percentage_received(msg):
             """Handle new received MQTT message for the percentage."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
                 msg.payload
             )
@@ -413,7 +421,9 @@ class MqttFan(MqttEntity, FanEntity):
                 return
             if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
                 self._percentage = None
-                self.async_write_ha_state()
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                    msg.topic, self
+                )
                 return
             try:
                 percentage = ranged_value_to_percentage(
@@ -436,7 +446,9 @@ class MqttFan(MqttEntity, FanEntity):
                 )
                 return
             self._percentage = percentage
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._topic[CONF_PERCENTAGE_STATE_TOPIC] is not None:
             topics[CONF_PERCENTAGE_STATE_TOPIC] = {
@@ -451,6 +463,9 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def preset_mode_received(msg):
             """Handle new received MQTT message for preset mode."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             preset_mode = self._value_templates[ATTR_PRESET_MODE](msg.payload)
             if preset_mode == self._payload["PRESET_MODE_RESET"]:
                 self._preset_mode = None
@@ -469,7 +484,9 @@ class MqttFan(MqttEntity, FanEntity):
                 return
 
             self._preset_mode = preset_mode
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._topic[CONF_PRESET_MODE_STATE_TOPIC] is not None:
             topics[CONF_PRESET_MODE_STATE_TOPIC] = {
@@ -484,6 +501,9 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
@@ -492,7 +512,9 @@ class MqttFan(MqttEntity, FanEntity):
                 self._oscillation = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
                 self._oscillation = False
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
             topics[CONF_OSCILLATION_STATE_TOPIC] = {
@@ -504,7 +526,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._oscillation = False
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+            self.hass, self._sub_state, topics, self
         )
 
     async def _subscribe_topics(self):

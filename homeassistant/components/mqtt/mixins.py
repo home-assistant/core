@@ -424,6 +424,9 @@ class MqttAttributes(Entity):
         @callback
         @log_messages(self.hass, self.entity_id)
         def attributes_message_received(msg: ReceiveMessage) -> None:
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             try:
                 payload = attr_tpl(msg.payload)
                 json_dict = json_loads(payload) if isinstance(payload, str) else None
@@ -435,7 +438,9 @@ class MqttAttributes(Entity):
                         and k not in self._attributes_extra_blocked
                     }
                     self._attributes = filtered_dict
-                    self.async_write_ha_state()
+                    get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                        msg.topic, self
+                    )
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
                     self._attributes = None
@@ -454,6 +459,7 @@ class MqttAttributes(Entity):
                     "encoding": self._attributes_config[CONF_ENCODING] or None,
                 }
             },
+            self,
         )
 
     async def _attributes_subscribe_topics(self):
@@ -475,10 +481,9 @@ class MqttAttributes(Entity):
 class MqttAvailability(Entity):
     """Mixin used for platforms that report availability."""
 
-    def __init__(self, config: dict, shared_topic: str | None = None) -> None:
+    def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
-        self._shared_topic = shared_topic
         self._available: dict = {}
         self._available_latest = False
         self._availability_setup_from_config(config)
@@ -548,10 +553,9 @@ class MqttAvailability(Entity):
                 self._available[topic] = False
                 self._available_latest = False
 
-            if (topic == self._shared_topic) and self._available_latest and self.state:
-                return
-
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                topic, self, register_callback=True
+            )
 
         self._available = {
             topic: (self._available[topic] if topic in self._available else False)
@@ -571,6 +575,7 @@ class MqttAvailability(Entity):
             self.hass,
             self._availability_sub_state,
             topics,
+            self,
         )
 
     async def _availability_subscribe_topics(self):
@@ -999,7 +1004,7 @@ class MqttEntity(
     _attr_should_poll = False
     _entity_id_format: str
 
-    def __init__(self, hass, config, config_entry, discovery_data, shared_topic=None):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Entity."""
         self.hass = hass
         self._config = config
@@ -1014,7 +1019,7 @@ class MqttEntity(
 
         # Initialize mixin classes
         MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config, shared_topic)
+        MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, hass, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
 

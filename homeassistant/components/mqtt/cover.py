@@ -51,7 +51,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -373,6 +373,9 @@ class MqttCover(MqttEntity, CoverEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle new MQTT state messages."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = self._value_template(msg.payload)
 
             if not payload:
@@ -405,12 +408,17 @@ class MqttCover(MqttEntity, CoverEntity):
                 )
                 return
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         @callback
         @log_messages(self.hass, self.entity_id)
         def position_message_received(msg):
             """Handle new MQTT position messages."""
+            get_mqtt_data(self.hass).state_write_requests.register_callback(
+                msg.topic, self
+            )
             payload = self._get_position_template(msg.payload)
 
             if not payload:
@@ -451,7 +459,9 @@ class MqttCover(MqttEntity, CoverEntity):
                     else STATE_OPEN
                 )
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                msg.topic, self
+            )
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
             topics["get_position_topic"] = {
@@ -478,7 +488,7 @@ class MqttCover(MqttEntity, CoverEntity):
             }
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics
+            self.hass, self._sub_state, topics, self
         )
 
     async def _subscribe_topics(self):
