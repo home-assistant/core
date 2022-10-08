@@ -5892,6 +5892,11 @@
         }
       }
     },
+    "trafikverket_camera": {
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "name": "Trafikverket Camera"
+    },
     "transmission": {
       "name": "Transmission",
       "integration_type": "hub",

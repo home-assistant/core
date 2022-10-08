@@ -479,6 +479,7 @@ FLOWS = {
         "traccar",
         "tractive",
         "tradfri",
+        "trafikverket_camera",
         "trafikverket_ferry",
         "trafikverket_train",
         "trafikverket_weatherstation",

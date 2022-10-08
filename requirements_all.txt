@@ -2193,6 +2193,9 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.3.5
 
+# homeassistant.components.trafikverket_camera
+pytrafikverket==0.2.1
+
 # homeassistant.components.usb
 pyudev==0.23.2
 

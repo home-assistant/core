@@ -323,6 +323,7 @@ homeassistant.components.tplink.*
 homeassistant.components.tplink_omada.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
+homeassistant.components.trafikverket_camera.*
 homeassistant.components.trafikverket_ferry.*
 homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
