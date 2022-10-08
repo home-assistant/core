@@ -12,14 +12,14 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Trykk og hold nede Hjem-knappen p\u00e5 {name} til enheten genererer en lyd (omtrent to sekunder), og send deretter innen 30 sekunder.",
+                "description": "Pass p\u00e5 at iRobot-appen ikke kj\u00f8rer p\u00e5 noen enhet. Trykk og hold Hjem-knappen p\u00e5 {name} til enheten genererer en lyd (omtrent to sekunder), og send deretter inn innen 30 sekunder.",
                 "title": "Hent passord"
             },
             "link_manual": {
                 "data": {
                     "password": "Passord"
                 },
-                "description": "Passordet kan ikke hentes fra enheten automatisk. F\u00f8lg trinnene som er beskrevet i dokumentasjonen p\u00e5: {auth_help_url}",
+                "description": "Passordet kunne ikke hentes fra enheten automatisk. S\u00f8rg for at iRobot-appen ikke er \u00e5pen p\u00e5 noen enhet mens du pr\u00f8ver \u00e5 hente passordet. F\u00f8lg trinnene som er beskrevet i dokumentasjonen p\u00e5: {auth_help_url}",
                 "title": "Skriv inn passord"
             },
             "manual": {

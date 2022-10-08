@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Inga hemkoordinater \u00e4r inst\u00e4llda i Home Assistant-konfigurationen"
+        },
+        "error": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
         "step": {
             "user": {
                 "data": {

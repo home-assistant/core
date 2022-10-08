@@ -1,7 +1,7 @@
 """Const for Velbus."""
 from typing import Final
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -63,7 +62,7 @@ async def async_setup_entry(
 class AbstractAemetSensor(CoordinatorEntity[WeatherUpdateCoordinator], SensorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,

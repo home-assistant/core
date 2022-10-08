@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
+            "no_unconfigured_devices": "Tidak ditemukan perangkat yang tidak dikonfigurasi."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "invalid_key_format": "Kunci offline harus berupa string heksadesimal 32 byte.",
+            "invalid_key_index": "Slot kunci offline harus berupa bilangan bulat antara 0 dan 255.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "integration_discovery_confirm": {
+                "description": "Ingin menyiapkan {name} melalui Bluetooth dengan alamat {address} ?"
+            },
+            "user": {
+                "data": {
+                    "address": "Alamat Bluetooth",
+                    "key": "Kunci Offline (string heksadesimal 32 byte)",
+                    "slot": "Slot Kunci Offline (Bilangan Bulat antara 0 dan 255)"
+                },
+                "description": "Lihat dokumentasi untuk mengetahui cara menemukan kunci offline."
+            }
+        }
+    }
+}

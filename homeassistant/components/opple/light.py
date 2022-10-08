@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyoppleio.OppleLightDevice import OppleLightDevice
 import voluptuous as vol
@@ -68,7 +69,7 @@ class OppleLight(LightEntity):
         self._color_temp = None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if light is available."""
         return self._device.is_online
 
@@ -107,7 +108,7 @@ class OppleLight(LightEntity):
         """Return maximum supported color temperature."""
         return 333
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on light %s %s", self._device.ip, kwargs)
         if not self.is_on:
@@ -120,12 +121,12 @@ class OppleLight(LightEntity):
             color_temp = mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
             self._device.color_temperature = color_temp
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._device.power_on = False
         _LOGGER.debug("Turn off light %s", self._device.ip)
 
-    def update(self):
+    def update(self) -> None:
         """Synchronize state with light."""
         prev_available = self.available
         self._device.update()

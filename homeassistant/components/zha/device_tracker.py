@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools
 import time
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -49,16 +49,17 @@ async def async_setup_entry(
 class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     """Represent a tracked device."""
 
+    _attr_should_poll = True  # BaseZhaEntity defaults to False
+
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA device tracker."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._battery_channel = self.cluster_channels.get(CHANNEL_POWER_CONFIGURATION)
         self._connected = False
         self._keepalive_interval = 60
-        self._should_poll = True
         self._battery_level = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         if self._battery_channel:
@@ -68,7 +69,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
                 self.async_battery_percentage_remaining_updated,
             )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Handle polling."""
         if self.zha_device.last_seen is None:
             self._connected = False
@@ -85,9 +86,9 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return self._connected
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @callback
     def async_battery_percentage_remaining_updated(self, attr_id, attr_name, value):

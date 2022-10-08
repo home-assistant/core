@@ -66,6 +66,6 @@ class AutomateNotificationService(BaseNotificationService):
             "payload": message,
         }
 
-        response = requests.post(_RESOURCE, json=data)
+        response = requests.post(_RESOURCE, json=data, timeout=10)
         if response.status_code != HTTPStatus.OK:
             _LOGGER.error("Error sending message: %s", response)

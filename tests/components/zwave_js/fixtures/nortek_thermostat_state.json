@@ -61,10 +61,10 @@
       "nodeId": 67,
       "index": 0,
       "installerIcon": 4608,
-      "userIcon": 4608
+      "userIcon": 4608,
+      "commandClasses": []
     }
   ],
-  "commandClasses": [],
   "values": [
     {
       "commandClassName": "Manufacturer Specific",

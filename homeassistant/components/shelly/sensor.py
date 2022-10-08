@@ -32,8 +32,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from . import BlockDeviceWrapper
 from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
+from .coordinator import ShellyBlockCoordinator
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -46,7 +46,12 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen, get_device_uptime, temperature_unit
+from .utils import (
+    get_device_entry_gen,
+    get_device_uptime,
+    is_rpc_device_externally_powered,
+    temperature_unit,
+)
 
 
 @dataclass
@@ -276,7 +281,7 @@ SENSORS: Final = {
         key="adc|adc",
         name="ADC",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        value=lambda value: round(value, 1),
+        value=lambda value: round(value, 2),
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -350,7 +355,17 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        use_polling_wrapper=True,
+        use_polling_coordinator=True,
+    ),
+    "temperature_0": RpcSensorDescription(
+        key="temperature:0",
+        sub_key="tC",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value=lambda status, _: round(status, 1),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=True,
     ),
     "rssi": RpcSensorDescription(
         key="wifi",
@@ -361,7 +376,7 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        use_polling_wrapper=True,
+        use_polling_coordinator=True,
     ),
     "uptime": RpcSensorDescription(
         key="sys",
@@ -371,7 +386,29 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        use_polling_wrapper=True,
+        use_polling_coordinator=True,
+    ),
+    "humidity_0": RpcSensorDescription(
+        key="humidity:0",
+        sub_key="rh",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        value=lambda status, _: round(status, 1),
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=True,
+    ),
+    "battery": RpcSensorDescription(
+        key="devicepower:0",
+        sub_key="battery",
+        name="Battery",
+        native_unit_of_measurement=PERCENTAGE,
+        value=lambda status, _: status["percent"],
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=is_rpc_device_externally_powered,
+        entity_registry_enabled_default=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -428,13 +465,13 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
 
     def __init__(
         self,
-        wrapper: BlockDeviceWrapper,
+        coordinator: ShellyBlockCoordinator,
         block: Block,
         attribute: str,
         description: BlockSensorDescription,
     ) -> None:
         """Initialize sensor."""
-        super().__init__(wrapper, block, attribute, description)
+        super().__init__(coordinator, block, attribute, description)
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         if unit_fn := description.unit_fn:
@@ -475,7 +512,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
 
     def __init__(
         self,
-        wrapper: BlockDeviceWrapper,
+        coordinator: ShellyBlockCoordinator,
         block: Block | None,
         attribute: str,
         description: BlockSensorDescription,
@@ -483,7 +520,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
         sensors: Mapping[tuple[str, str], BlockSensorDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
-        super().__init__(wrapper, block, attribute, description, entry, sensors)
+        super().__init__(coordinator, block, attribute, description, entry, sensors)
 
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         if block and (unit_fn := description.unit_fn):

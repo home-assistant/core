@@ -70,7 +70,7 @@ class AccuWeatherEntity(
         # Coordinator data is used also for sensors which don't have units automatically
         # converted, hence the weather entity's native units follow the configured unit
         # system
-        if coordinator.is_metric:
+        if coordinator.hass.config.units.is_metric:
             self._attr_native_precipitation_unit = LENGTH_MILLIMETERS
             self._attr_native_pressure_unit = PRESSURE_HPA
             self._attr_native_temperature_unit = TEMP_CELSIUS

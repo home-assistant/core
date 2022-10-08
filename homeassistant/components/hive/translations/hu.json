@@ -41,7 +41,7 @@
                     "scan_interval": "Szkennel\u00e9si intervallum (m\u00e1sodperc)",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
-                "description": "Adja meg a Hive bejelentkez\u00e9si adatait \u00e9s konfigur\u00e1ci\u00f3j\u00e1t.",
+                "description": "Adja meg a Hive bejelentkez\u00e9si adatait.",
                 "title": "Hive Bejelentkez\u00e9s"
             }
         }

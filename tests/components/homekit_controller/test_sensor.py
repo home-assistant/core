@@ -1,11 +1,22 @@
 """Basic checks for HomeKit sensor."""
+from unittest.mock import patch
+
+from aiohomekit.model import Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
+from aiohomekit.testing import FakePairing
 
+from homeassistant.components.homekit_controller.sensor import (
+    thread_node_capability_to_str,
+    thread_status_to_str,
+)
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 
-from tests.components.homekit_controller.common import Helper, setup_test_component
+from .common import TEST_DEVICE_SERVICE_INFO, Helper, setup_test_component
+
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 def create_temperature_sensor_service(accessory):
@@ -317,3 +328,53 @@ async def test_sensor_unavailable(hass, utcnow):
     # Energy sensor has non-responsive characteristics so should be unavailable
     state = await energy_helper.poll_and_get_state()
     assert state.state == "unavailable"
+
+
+def test_thread_node_caps_to_str():
+    """Test all values of this enum get a translatable string."""
+    assert (
+        thread_node_capability_to_str(ThreadNodeCapabilities.BORDER_ROUTER_CAPABLE)
+        == "border_router_capable"
+    )
+    assert (
+        thread_node_capability_to_str(ThreadNodeCapabilities.ROUTER_ELIGIBLE)
+        == "router_eligible"
+    )
+    assert thread_node_capability_to_str(ThreadNodeCapabilities.FULL) == "full"
+    assert thread_node_capability_to_str(ThreadNodeCapabilities.MINIMAL) == "minimal"
+    assert thread_node_capability_to_str(ThreadNodeCapabilities.SLEEPY) == "sleepy"
+    assert thread_node_capability_to_str(ThreadNodeCapabilities(128)) == "none"
+
+
+def test_thread_status_to_str():
+    """Test all values of this enum get a translatable string."""
+    assert thread_status_to_str(ThreadStatus.BORDER_ROUTER) == "border_router"
+    assert thread_status_to_str(ThreadStatus.LEADER) == "leader"
+    assert thread_status_to_str(ThreadStatus.ROUTER) == "router"
+    assert thread_status_to_str(ThreadStatus.CHILD) == "child"
+    assert thread_status_to_str(ThreadStatus.JOINING) == "joining"
+    assert thread_status_to_str(ThreadStatus.DETACHED) == "detached"
+    assert thread_status_to_str(ThreadStatus.DISABLED) == "disabled"
+
+
+async def test_rssi_sensor(
+    hass, utcnow, entity_registry_enabled_by_default, enable_bluetooth
+):
+    """Test an rssi sensor."""
+
+    inject_bluetooth_service_info(hass, TEST_DEVICE_SERVICE_INFO)
+
+    class FakeBLEPairing(FakePairing):
+        """Fake BLE pairing."""
+
+        @property
+        def transport(self):
+            return Transport.BLE
+
+    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
+        # Any accessory will do for this test, but we need at least
+        # one or the rssi sensor will not be created
+        await setup_test_component(
+            hass, create_battery_level_sensor, suffix="battery", connection="BLE"
+        )
+        assert hass.states.get("sensor.testdevice_signal_strength").state == "-56"

@@ -11,7 +11,7 @@ from homeassistant.components.blackbird.media_player import (
     PLATFORM_SCHEMA,
     setup_platform,
 )
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,

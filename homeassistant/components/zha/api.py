@@ -6,6 +6,8 @@ import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import voluptuous as vol
+import zigpy.backups
+from zigpy.backups import NetworkBackup
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
 from zigpy.zcl.clusters.security import IasAce
@@ -43,10 +45,12 @@ from .core.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    CONF_RADIO_TYPE,
     CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
     DOMAIN,
+    EZSP_OVERWRITE_EUI64,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
@@ -229,6 +233,15 @@ def _cv_cluster_binding(value: dict[str, Any]) -> ClusterBinding:
     )
 
 
+def _cv_zigpy_network_backup(value: dict[str, Any]) -> zigpy.backups.NetworkBackup:
+    """Transform a zigpy network backup."""
+
+    try:
+        return zigpy.backups.NetworkBackup.from_dict(value)
+    except ValueError as err:
+        raise vol.Invalid(str(err)) from err
+
+
 GROUP_MEMBER_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -302,7 +315,7 @@ async def websocket_permit_devices(
         )
     else:
         await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
-    connection.send_result(msg["id"])
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin
@@ -989,7 +1002,7 @@ async def websocket_get_configuration(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get ZHA configuration."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
     def custom_serializer(schema: Any) -> Any:
@@ -1015,6 +1028,12 @@ async def websocket_get_configuration(
         data["data"][section] = zha_gateway.config_entry.options.get(
             CUSTOM_CONFIGURATION, {}
         ).get(section, {})
+
+        # send default values for unconfigured options
+        for entry in data["schemas"][section]:
+            if data["data"][section].get(entry["name"]) is None:
+                data["data"][section][entry["name"]] = entry["default"]
+
     connection.send_result(msg[ID], data)
 
 
@@ -1034,6 +1053,22 @@ async def websocket_update_zha_configuration(
     options = zha_gateway.config_entry.options
     data_to_save = {**options, **{CUSTOM_CONFIGURATION: msg["data"]}}
 
+    for section, schema in ZHA_CONFIG_SCHEMAS.items():
+        for entry in schema.schema:
+            # remove options that match defaults
+            if (
+                data_to_save[CUSTOM_CONFIGURATION].get(section, {}).get(entry)
+                == entry.default()
+            ):
+                data_to_save[CUSTOM_CONFIGURATION][section].pop(entry)
+            # remove entire section block if empty
+            if not data_to_save[CUSTOM_CONFIGURATION][section]:
+                data_to_save[CUSTOM_CONFIGURATION].pop(section)
+
+    # remove entire custom_configuration block if empty
+    if not data_to_save[CUSTOM_CONFIGURATION]:
+        data_to_save.pop(CUSTOM_CONFIGURATION)
+
     _LOGGER.info(
         "Updating ZHA custom configuration options from %s to %s",
         options,
@@ -1045,6 +1080,99 @@ async def websocket_update_zha_configuration(
     )
     status = await hass.config_entries.async_reload(zha_gateway.config_entry.entry_id)
     connection.send_result(msg[ID], status)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/settings"})
+@websocket_api.async_response
+async def websocket_get_network_settings(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get ZHA network settings."""
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # Serialize the current network settings
+    backup = NetworkBackup(
+        node_info=application_controller.state.node_info,
+        network_info=application_controller.state.network_info,
+    )
+
+    connection.send_result(
+        msg[ID],
+        {
+            "radio_type": zha_gateway.config_entry.data[CONF_RADIO_TYPE],
+            "settings": backup.as_dict(),
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backups/list"})
+@websocket_api.async_response
+async def websocket_list_network_backups(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get ZHA network settings."""
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # Serialize known backups
+    connection.send_result(
+        msg[ID], [backup.as_dict() for backup in application_controller.backups]
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/network/backups/create"})
+@websocket_api.async_response
+async def websocket_create_network_backup(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Create a ZHA network backup."""
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+
+    # This can take 5-30s
+    backup = await application_controller.backups.create_backup(load_devices=True)
+    connection.send_result(
+        msg[ID],
+        {
+            "backup": backup.as_dict(),
+            "is_complete": backup.is_complete(),
+        },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/network/backups/restore",
+        vol.Required("backup"): _cv_zigpy_network_backup,
+        vol.Optional("ezsp_force_write_eui64", default=False): cv.boolean,
+    }
+)
+@websocket_api.async_response
+async def websocket_restore_network_backup(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Restore a ZHA network backup."""
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    application_controller = zha_gateway.application_controller
+    backup = msg["backup"]
+
+    if msg["ezsp_force_write_eui64"]:
+        backup.network_info.stack_specific.setdefault("ezsp", {})[
+            EZSP_OVERWRITE_EUI64
+        ] = True
+
+    # This can take 30-40s
+    try:
+        await application_controller.backups.restore_backup(backup)
+    except ValueError as err:
+        connection.send_error(msg[ID], websocket_api.const.ERR_INVALID_FORMAT, str(err))
+    else:
+        connection.send_result(msg[ID])
 
 
 @callback
@@ -1356,6 +1484,10 @@ def async_load_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_update_topology)
     websocket_api.async_register_command(hass, websocket_get_configuration)
     websocket_api.async_register_command(hass, websocket_update_zha_configuration)
+    websocket_api.async_register_command(hass, websocket_get_network_settings)
+    websocket_api.async_register_command(hass, websocket_list_network_backups)
+    websocket_api.async_register_command(hass, websocket_create_network_backup)
+    websocket_api.async_register_command(hass, websocket_restore_network_backup)
 
 
 @callback

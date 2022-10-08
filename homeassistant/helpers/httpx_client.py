@@ -7,7 +7,7 @@ from typing import Any
 
 import httpx
 
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
+from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 
@@ -15,8 +15,8 @@ from .frame import warn_use
 
 DATA_ASYNC_CLIENT = "httpx_async_client"
 DATA_ASYNC_CLIENT_NOVERIFY = "httpx_async_client_noverify"
-SERVER_SOFTWARE = "HomeAssistant/{0} httpx/{1} Python/{2[0]}.{2[1]}".format(
-    __version__, httpx.__version__, sys.version_info
+SERVER_SOFTWARE = "{0}/{1} httpx/{2} Python/{3[0]}.{3[1]}".format(
+    APPLICATION_NAME, __version__, httpx.__version__, sys.version_info
 )
 USER_AGENT = "User-Agent"
 

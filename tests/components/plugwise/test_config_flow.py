@@ -36,7 +36,8 @@ TEST_USERNAME2 = "stretch"
 TEST_DISCOVERY = ZeroconfServiceInfo(
     host=TEST_HOST,
     addresses=[TEST_HOST],
-    hostname=f"{TEST_HOSTNAME}.local.",
+    # The added `-2` is to simulate mDNS collision
+    hostname=f"{TEST_HOSTNAME}-2.local.",
     name="mock_name",
     port=DEFAULT_PORT,
     properties={
