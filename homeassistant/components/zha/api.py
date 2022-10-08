@@ -1303,7 +1303,7 @@ def async_load_api(hass: HomeAssistant) -> None:
             if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
                 manufacturer = zha_device.manufacturer_code
 
-            response = await zha_device.issue_cluster_command(
+            await zha_device.issue_cluster_command(
                 endpoint_id,
                 cluster_id,
                 command,
@@ -1313,7 +1313,7 @@ def async_load_api(hass: HomeAssistant) -> None:
                 manufacturer=manufacturer,
             )
             _LOGGER.debug(
-                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: %s %s: [%s] %s: %s",
+                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: %s %s: [%s]",
                 ATTR_CLUSTER_ID,
                 cluster_id,
                 ATTR_CLUSTER_TYPE,
@@ -1328,8 +1328,6 @@ def async_load_api(hass: HomeAssistant) -> None:
                 args,
                 ATTR_MANUFACTURER,
                 manufacturer,
-                RESPONSE,
-                response,
             )
         else:
             raise ValueError(f"Device with IEEE {str(ieee)} not found")
