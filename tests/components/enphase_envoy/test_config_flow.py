@@ -29,10 +29,10 @@ async def test_form(hass: HomeAssistant, config, setup_enphase_envoy) -> None:
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy 1234"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "name": "Envoy 1234",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_HOST: "1.1.1.1",
+        CONF_NAME: "Envoy 1234",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
     }
 
 
@@ -58,10 +58,10 @@ async def test_user_no_serial_number(
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "name": "Envoy",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_HOST: "1.1.1.1",
+        CONF_NAME: "Envoy",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
     }
 
 
@@ -96,10 +96,10 @@ async def test_user_fetching_serial_fails(
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Envoy"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "name": "Envoy",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_HOST: "1.1.1.1",
+        CONF_NAME: "Envoy",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
     }
 
 
@@ -198,10 +198,10 @@ async def test_zeroconf(hass: HomeAssistant, setup_enphase_envoy) -> None:
     assert result2["title"] == "Envoy 1234"
     assert result2["result"].unique_id == "1234"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "name": "Envoy 1234",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_HOST: "1.1.1.1",
+        CONF_NAME: "Envoy 1234",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
     }
 
 
