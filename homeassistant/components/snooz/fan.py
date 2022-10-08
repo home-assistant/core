@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from pysnooz.api import UnknownSnoozState
@@ -24,8 +23,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 from .models import SnoozConfigurationData
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -103,8 +100,13 @@ class SnoozFan(FanEntity, RestoreEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn on the device."""
-        await self._async_execute_command(turn_on(percentage))
+        """Turn on the device. Setting to 0 turns off the device."""
+        command = turn_on(percentage)
+
+        if percentage == 0:
+            command.on = False
+
+        await self._async_execute_command(command)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
@@ -117,14 +119,9 @@ class SnoozFan(FanEntity, RestoreEntity):
     async def _async_execute_command(self, command: SnoozCommandData) -> None:
         result = await self._device.async_execute_command(command)
 
-        if result.status == SnoozCommandResultStatus.CANCELLED:
-            _LOGGER.warning(
-                "Command %s was cancelled after %s", command, result.duration
-            )
-            return
-
-        if result.status != SnoozCommandResultStatus.SUCCESSFUL:
+        if result.status == SnoozCommandResultStatus.SUCCESSFUL:
+            self._async_write_state_changed()
+        elif result.status != SnoozCommandResultStatus.CANCELLED:
             raise HomeAssistantError(
                 f"Command {command} failed with status {result.status.name} after {result.duration}"
             )
-        self._async_write_state_changed()
