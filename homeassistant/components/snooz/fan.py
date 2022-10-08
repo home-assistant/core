@@ -5,7 +5,7 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-from pysnooz.api import SnoozDeviceState, UnknownSnoozState
+from pysnooz.api import UnknownSnoozState
 from pysnooz.commands import (
     SnoozCommandData,
     SnoozCommandResultStatus,
@@ -13,11 +13,10 @@ from pysnooz.commands import (
     turn_off,
     turn_on,
 )
-from pysnooz.device import SnoozConnectionStatus, SnoozDevice
 
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,9 +24,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
 from .models import SnoozConfigurationData
-
-# transitions logging is pretty verbose, so only enable warnings/errors
-logging.getLogger("transitions.core").setLevel(logging.WARNING)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,49 +33,33 @@ async def async_setup_entry(
 ) -> None:
     """Set up Snooz device from a config entry."""
 
-    address: str = entry.data[CONF_ADDRESS]
     data: SnoozConfigurationData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [
-            SnoozFan(
-                hass,
-                data.device.display_name,
-                address,
-                data.device,
-            )
-        ]
-    )
+    async_add_entities([SnoozFan(hass, data)])
 
 
 class SnoozFan(FanEntity, RestoreEntity):
     """Fan representation of a Snooz device."""
 
-    def __init__(self, hass, name: str, address: str, device: SnoozDevice) -> None:
+    def __init__(self, hass, data: SnoozConfigurationData) -> None:
         """Initialize a Snooz fan entity."""
         self.hass = hass
-        self._address = address
-        self._device = device
-        self._attr_unique_id = address
+        self._device = data.device
+        self._attr_name = data.title
+        self._attr_unique_id = data.device.address
         self._attr_supported_features = FanEntityFeature.SET_SPEED
-        self._attr_name = name
         self._attr_should_poll = False
         self._is_on: bool | None = None
         self._percentage: int | None = None
 
-    def _write_state_changed(self) -> None:
+    @callback
+    def _async_write_state_changed(self) -> None:
         # cache state for restore entity
         if not self.assumed_state:
             self._is_on = self._device.state.on
             self._percentage = self._device.state.volume
 
         self.async_write_ha_state()
-
-    def _on_connection_status_changed(self, new_status: SnoozConnectionStatus) -> None:
-        self._write_state_changed()
-
-    def _on_device_state_changed(self, new_state: SnoozDeviceState) -> None:
-        self._write_state_changed()
 
     async def async_added_to_hass(self) -> None:
         """Restore state and subscribe to device events."""
@@ -92,20 +72,11 @@ class SnoozFan(FanEntity, RestoreEntity):
                 self._is_on = None
             self._percentage = last_state.attributes.get(ATTR_PERCENTAGE)
 
-        self.async_on_remove(self._async_subscribe_to_device_events())
+        self.async_on_remove(self._async_subscribe_to_device_change())
 
     @callback
-    def _async_subscribe_to_device_events(self) -> Callable[[], None]:
-        events = self._device.events
-
-        def unsubscribe():
-            events.on_connection_status_change -= self._on_connection_status_changed
-            events.on_state_change -= self._on_device_state_changed
-
-        events.on_connection_status_change += self._on_connection_status_changed
-        events.on_state_change += self._on_device_state_changed
-
-        return unsubscribe
+    def _async_subscribe_to_device_change(self) -> Callable[[], None]:
+        return self._device.subscribe_to_state_change(self._async_write_state_changed)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect the device when removed."""
@@ -145,8 +116,15 @@ class SnoozFan(FanEntity, RestoreEntity):
 
     async def _async_execute_command(self, command: SnoozCommandData) -> None:
         result = await self._device.async_execute_command(command)
+
+        if result.status == SnoozCommandResultStatus.CANCELLED:
+            _LOGGER.warning(
+                "Command %s was cancelled after %s", command, result.duration
+            )
+            return
+
         if result.status != SnoozCommandResultStatus.SUCCESSFUL:
             raise HomeAssistantError(
-                f"Command {command} failed with status {result.status.name}"
+                f"Command {command} failed with status {result.status.name} after {result.duration}"
             )
-        self._write_state_changed()
+        self._async_write_state_changed()

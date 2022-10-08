@@ -31,14 +31,6 @@ class DiscoveredSnooz:
     info: BluetoothServiceInfo
     device: SnoozAdvertisementData
 
-    def __init__(
-        self, info: BluetoothServiceInfo, device: SnoozAdvertisementData
-    ) -> None:
-        """Initialize a discovery object."""
-        self.info = info
-        self.device = device
-
-
 class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Snooz."""
 
