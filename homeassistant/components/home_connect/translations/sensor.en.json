@@ -1,6 +1,6 @@
 {
     "state": {
-        "operation__state": {
+        "home_connect__operation_state": {
             "aborting": "Aborting",
             "action_required": "Action required",
             "delayed_start": "Delayed start",
