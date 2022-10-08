@@ -1423,7 +1423,7 @@ pytradfri[async]==9.0.0
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.2.0.1
+pytrafikverket==0.2.1
 
 # homeassistant.components.usb
 pyudev==0.23.2
