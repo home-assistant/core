@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_NAME, CONF_QUOTE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -15,7 +15,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_BASE, DOMAIN, LOGGER
+from .const import DEFAULT_BASE, DOMAIN
 from .coordinator import OpenexchangeratesCoordinator
 
 ATTRIBUTION = "Data provided by openexchangerates.org"
@@ -47,20 +47,6 @@ async def async_setup_platform(
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-    LOGGER.warning(
-        "Configuration of Open Exchange Rates integration in YAML is deprecated and "
-        "will be removed in Home Assistant 2022.11.; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed from"
-        " your configuration.yaml file"
     )
 
 
