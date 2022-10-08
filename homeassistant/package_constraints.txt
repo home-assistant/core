@@ -38,7 +38,7 @@ pyyaml==6.0
 requests==2.28.1
 scapy==2.4.5
 sqlalchemy==1.4.41
-typing-extensions>=3.10.0.2,<5.0
+typing-extensions>=4.4.0,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
 yarl==1.8.1
