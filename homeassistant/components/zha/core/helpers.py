@@ -135,7 +135,7 @@ def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
     )
 
 
-def schema_type_to_vol(field_type):
+def schema_type_to_vol(field_type: Any) -> Any:
     """Convert a schema type to a voluptuous type."""
     if issubclass(field_type, enum.Flag) and len(field_type.__members__.keys()):
         return cv.multi_select(
