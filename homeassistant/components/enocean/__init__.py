@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from enocean.utils import combine_hex, to_hex_string
+from enocean.utils import combine_hex, from_hex_string, to_hex_string
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -184,7 +184,8 @@ def _setup_yaml_import(
             config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
         )
 
-        # process the platform configs
+        # group platform configs by id
+        enocean_platform_configs_by_id: dict[str, list[EnOceanPlatformConfig]] = {}
         for platform_config in enocean_platform_configs:
             dev_id = platform_config.config.get(CONF_ENOCEAN_DEVICE_ID, None)
 
@@ -195,6 +196,21 @@ def _setup_yaml_import(
                 continue
 
             dev_id_string = to_hex_string(dev_id)
+
+            if dev_id_string not in enocean_platform_configs_by_id:
+                enocean_platform_configs_by_id[dev_id_string] = [platform_config]
+            else:
+                enocean_platform_configs_by_id[dev_id_string].append(platform_config)
+
+        # process the enocean platform configs by id
+        for dev_id_string, platform_configs in enocean_platform_configs_by_id.items():
+            LOGGER.debug(
+                "Device '%s' has '%i' platform configs",
+                dev_id_string,
+                len(enocean_platform_configs_by_id[dev_id_string]),
+            )
+
+            dev_id = from_hex_string(dev_id_string)
 
             if _is_configured(
                 dev_id=dev_id, configured_enocean_devices=configured_enocean_devices
@@ -209,39 +225,40 @@ def _setup_yaml_import(
             old_unique_ids[dev_id_string] = {}
             old_entities[dev_id_string] = {}
 
-            import_config: EnOceanImportConfig = _get_import_config(
-                dev_id_string=dev_id_string,
-                dev_id=dev_id,
-                platform_config=platform_config,
-                enocean_devices_to_add=enocean_devices_to_add,
-            )
-
-            new_unique_ids[dev_id_string].append(import_config.new_unique_id)
-            old_unique_ids[dev_id_string][
-                import_config.new_unique_id
-            ] = import_config.old_unique_id
-
-            if import_config.device_type is not None:
-                enocean_devices_to_add.append(
-                    {
-                        CONF_ENOCEAN_DEVICE_ID: dev_id_string,
-                        CONF_ENOCEAN_EEP: import_config.device_type.eep,
-                        CONF_ENOCEAN_MANUFACTURER: import_config.device_type.manufacturer,
-                        CONF_ENOCEAN_MODEL: import_config.device_type.model,
-                        CONF_ENOCEAN_DEVICE_NAME: platform_config.config.get(
-                            "name", "Imported EnOcean device " + dev_id_string
-                        ),
-                        CONF_ENOCEAN_SENDER_ID: "",
-                    }
+            for platform_config in platform_configs:
+                import_config: EnOceanImportConfig = _get_import_config(
+                    dev_id_string=dev_id_string,
+                    dev_id=dev_id,
+                    platform_config=platform_config,
+                    enocean_devices_to_add=enocean_devices_to_add,
                 )
 
-                LOGGER.warning(
-                    "Scheduling EnOcean device %s for import as '%s %s' [EEP %s]",
-                    dev_id_string,
-                    import_config.device_type.manufacturer,
-                    import_config.device_type.model,
-                    import_config.device_type.eep,
-                )
+                new_unique_ids[dev_id_string].append(import_config.new_unique_id)
+                old_unique_ids[dev_id_string][
+                    import_config.new_unique_id
+                ] = import_config.old_unique_id
+
+                if import_config.device_type is not None:
+                    enocean_devices_to_add.append(
+                        {
+                            CONF_ENOCEAN_DEVICE_ID: dev_id_string,
+                            CONF_ENOCEAN_EEP: import_config.device_type.eep,
+                            CONF_ENOCEAN_MANUFACTURER: import_config.device_type.manufacturer,
+                            CONF_ENOCEAN_MODEL: import_config.device_type.model,
+                            CONF_ENOCEAN_DEVICE_NAME: platform_config.config.get(
+                                "name", "Imported EnOcean device " + dev_id_string
+                            ),
+                            CONF_ENOCEAN_SENDER_ID: "",
+                        }
+                    )
+
+                    LOGGER.warning(
+                        "Scheduling EnOcean device %s for import as '%s %s' [EEP %s]",
+                        dev_id_string,
+                        import_config.device_type.manufacturer,
+                        import_config.device_type.model,
+                        import_config.device_type.eep,
+                    )
 
         if len(enocean_devices_to_add) < 1:
             LOGGER.warning(
