@@ -58,7 +58,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return MQTTOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -66,13 +68,13 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_broker()
 
     async def async_step_broker(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm the setup."""
         yaml_config: ConfigType = get_mqtt_data(self.hass, True).config or {}
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
-        validated_user_input: ConfigType = {}
+        validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
             self.hass,
             fields,
@@ -82,7 +84,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             validated_user_input,
             errors,
         ):
-            test_config: ConfigType = yaml_config.copy()
+            test_config: dict[str, Any] = yaml_config.copy()
             test_config.update(validated_user_input)
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
@@ -118,7 +120,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._hassio_discovery
 
         if user_input is not None:
-            data: ConfigType = self._hassio_discovery.copy()
+            data: dict[str, Any] = self._hassio_discovery.copy()
             data[CONF_BROKER] = data.pop(CONF_HOST)
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
@@ -166,7 +168,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
         yaml_config: ConfigType = get_mqtt_data(self.hass, True).config or {}
         fields: OrderedDict[Any, Any] = OrderedDict()
-        validated_user_input: ConfigType = {}
+        validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
             self.hass,
             fields,
@@ -176,7 +178,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             validated_user_input,
             errors,
         ):
-            test_config: ConfigType = yaml_config.copy()
+            test_config: dict[str, Any] = yaml_config.copy()
             test_config.update(validated_user_input)
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
@@ -197,13 +199,13 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_options(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
         yaml_config = get_mqtt_data(self.hass, True).config or {}
-        options_config: ConfigType = {}
+        options_config: dict[str, Any] = {}
         bad_input: bool = False
 
         def _birth_will(birt_or_will: str) -> dict:
@@ -217,7 +219,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             }
 
         def _validate(
-            field: str, values: ConfigType, error_code: str, schema: Callable
+            field: str, values: dict[str, Any], error_code: str, schema: Callable
         ):
             """Validate the user input."""
             nonlocal bad_input
@@ -337,16 +339,16 @@ async def async_get_broker_settings(
     fields: OrderedDict[Any, Any],
     yaml_config: ConfigType,
     entry_config: MappingProxyType[str, Any] | None,
-    user_input: ConfigType | None,
-    validated_user_input: ConfigType,
+    user_input: dict[str, Any] | None,
+    validated_user_input: dict[str, Any],
     errors: dict[str, str],
 ) -> bool:
     """Build the config flow schema to collect the broker settings.
 
     Returns True when settings are collected successfully.
     """
-    user_input_basic: ConfigType = ConfigType()
-    current_config = entry_config.copy() if entry_config is not None else ConfigType()
+    user_input_basic: dict[str, Any] = {}
+    current_config = entry_config.copy() if entry_config is not None else {}
 
     if user_input is not None:
         validated_user_input.update(user_input)
@@ -384,7 +386,7 @@ async def async_get_broker_settings(
 
 
 def try_connection(
-    user_input: ConfigType,
+    user_input: dict[str, Any],
 ) -> bool:
     """Test if we can connect to an MQTT broker."""
     # We don't import on the top because some integrations
