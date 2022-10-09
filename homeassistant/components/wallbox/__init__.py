@@ -17,6 +17,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import (
@@ -125,11 +126,11 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
                 data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
             )
-
+            print(self._wallbox.jwtTokenTtl)
             return data
 
         except requests.exceptions.HTTPError as wallbox_connection_error:
-            raise ConnectionError from wallbox_connection_error
+            raise UpdateFailed from wallbox_connection_error
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
