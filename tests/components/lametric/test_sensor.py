@@ -30,7 +30,7 @@ async def test_wifi_signal(
     state = hass.states.get("sensor.frenck_s_lametric_wi_fi_signal")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Wi-Fi Signal"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Wi-Fi signal"
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
