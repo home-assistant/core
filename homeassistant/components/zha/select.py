@@ -123,6 +123,7 @@ class ZHADefaultToneSelectEntity(
     """Representation of a ZHA default siren tone select entity."""
 
     _enum = IasWd.Warning.WarningMode
+    _attr_name = "Default siren tone"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -132,6 +133,7 @@ class ZHADefaultSirenLevelSelectEntity(
     """Representation of a ZHA default siren level select entity."""
 
     _enum = IasWd.Warning.SirenLevel
+    _attr_name = "Default siren level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -141,6 +143,7 @@ class ZHADefaultStrobeLevelSelectEntity(
     """Representation of a ZHA default siren strobe level select entity."""
 
     _enum = IasWd.StrobeLevel
+    _attr_name = "Default strobe level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -148,6 +151,7 @@ class ZHADefaultStrobeSelectEntity(ZHANonZCLSelectEntity, id_suffix=Strobe.__nam
     """Representation of a ZHA default siren strobe select entity."""
 
     _enum = Strobe
+    _attr_name = "Default strobe"
 
 
 class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
