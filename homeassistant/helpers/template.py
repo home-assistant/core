@@ -2040,17 +2040,27 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             require_hass: bool = False,
         ) -> None:
 
+            valid = True
+
             if not hass and require_hass:
                 filt = glob = test = dummy_func(name)
+                valid = False
             elif limited and not support_limited:
                 filt = glob = test = warn_limited(name)
+                valid = False
 
             if test is not None:
                 self.tests[name] = test
             if filt is not None:
-                self.filters[name] = filt
+                self.filters[name] = (
+                    pass_context(hassfunction(filt)) if require_hass and valid else filt
+                )
             if glob is not None:
-                self.globals[name] = glob
+                self.globals[name] = (
+                    hassfunction(glob)
+                    if require_hass and valid and name != "states"
+                    else glob
+                )
 
         # Home Assistant Jinja extensions
         add_ext("round", filt=forgiving_round)
@@ -2110,102 +2120,102 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         add_ext("version", filt=version, glob=version)
         add_ext(
             "entry_id",
-            filt=pass_context(hassfunction(entry_id)),
-            glob=hassfunction(entry_id),
+            filt=entry_id,
+            glob=entry_id,
             require_hass=True,
         )
         add_ext(
             "device_entities",
-            filt=pass_context(hassfunction(device_entities)),
-            glob=hassfunction(device_entities),
+            filt=device_entities,
+            glob=device_entities,
             require_hass=True,
         )
         add_ext(
             "closest",
-            filt=pass_context(hassfunction(closest_filter)),
-            glob=hassfunction(closest),
+            filt=closest_filter,
+            glob=closest,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "distance",
-            glob=hassfunction(distance),
+            glob=distance,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "expand",
-            filt=pass_context(hassfunction(expand)),
-            glob=hassfunction(expand),
+            filt=expand,
+            glob=expand,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "device_attr",
-            glob=hassfunction(device_attr),
+            glob=device_attr,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "is_device_attr",
-            glob=hassfunction(is_device_attr),
+            glob=is_device_attr,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "device_id",
-            filt=pass_context(hassfunction(device_id)),
-            glob=hassfunction(device_id),
+            filt=device_id,
+            glob=device_id,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "area_id",
-            filt=pass_context(hassfunction(area_id)),
-            glob=hassfunction(area_id),
+            filt=area_id,
+            glob=area_id,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "area_name",
-            filt=pass_context(hassfunction(area_name)),
-            glob=hassfunction(area_name),
+            filt=area_name,
+            glob=area_name,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "area_entities",
-            filt=pass_context(hassfunction(area_entities)),
-            glob=hassfunction(area_entities),
+            filt=area_entities,
+            glob=area_entities,
             require_hass=True,
         )
         add_ext(
             "area_devices",
-            filt=pass_context(hassfunction(area_devices)),
-            glob=hassfunction(area_devices),
+            filt=area_devices,
+            glob=area_devices,
             require_hass=True,
         )
         add_ext(
             "integration_entities",
-            filt=pass_context(hassfunction(integration_entities)),
-            glob=hassfunction(integration_entities),
+            filt=integration_entities,
+            glob=integration_entities,
             require_hass=True,
         )
         add_ext(
             "is_state",
-            glob=hassfunction(is_state),
+            glob=is_state,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "is_state_attr",
-            glob=hassfunction(is_state_attr),
+            glob=is_state_attr,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "state_attr",
-            glob=hassfunction(state_attr),
+            glob=state_attr,
             support_limited=False,
             require_hass=True,
         )
@@ -2217,13 +2227,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         )
         add_ext(
             "utcnow",
-            glob=hassfunction(utcnow),
+            glob=utcnow,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "now",
-            glob=hassfunction(now),
+            glob=now,
             support_limited=False,
             require_hass=True,
         )
