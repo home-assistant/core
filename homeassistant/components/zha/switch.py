@@ -304,6 +304,7 @@ class HueMotionTriggerIndicatorSwitch(
     """Representation of a ZHA motion triggering configuration entity."""
 
     _zcl_attribute: str = "trigger_indicator"
+    _attr_name = "LED Trigger Indicator"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
