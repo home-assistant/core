@@ -45,7 +45,7 @@ async def async_setup_entry(
             )
             button_device["device_name"] = button_numbers.get(
                 int(button_device["button_number"]),
-                " ".join(("button", str(button_device["button_number"]))),
+                f"button {button_device['button_number']}",
             )
 
     async_add_entities(
