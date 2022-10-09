@@ -525,7 +525,7 @@ class StartUpCurrentLevelConfigurationEntity(
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "start_up_current_level"
-    _attr_name = "Start-up level"
+    _attr_name = "Start-up current level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
