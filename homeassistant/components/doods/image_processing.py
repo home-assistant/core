@@ -37,6 +37,7 @@ ATTR_SUMMARY = "summary"
 ATTR_TOTAL_MATCHES = "total_matches"
 ATTR_PROCESS_TIME = "process_time"
 ATTR_RES_FILE = "res_file"
+ATTR_CONTEXT = "context"
 
 CONF_AUTH_KEY = "auth_key"
 CONF_DETECTOR = "detector"
@@ -247,6 +248,7 @@ class Doods(ImageProcessingEntity):
             ATTR_TOTAL_MATCHES: self._total_matches,
             ATTR_PROCESS_TIME: self._process_time,
             ATTR_RES_FILE: self._paths,
+            ATTR_CONTEXT: self._context,
         }
 
     def _save_image(self, image, matches, paths):
