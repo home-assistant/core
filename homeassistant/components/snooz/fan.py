@@ -32,15 +32,14 @@ async def async_setup_entry(
 
     data: SnoozConfigurationData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([SnoozFan(hass, data)])
+    async_add_entities([SnoozFan(data)])
 
 
 class SnoozFan(FanEntity, RestoreEntity):
     """Fan representation of a Snooz device."""
 
-    def __init__(self, hass, data: SnoozConfigurationData) -> None:
+    def __init__(self, data: SnoozConfigurationData) -> None:
         """Initialize a Snooz fan entity."""
-        self.hass = hass
         self._device = data.device
         self._attr_name = data.title
         self._attr_unique_id = data.device.address
@@ -74,10 +73,6 @@ class SnoozFan(FanEntity, RestoreEntity):
     @callback
     def _async_subscribe_to_device_change(self) -> Callable[[], None]:
         return self._device.subscribe_to_state_change(self._async_write_state_changed)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect the device when removed."""
-        await self._device.async_disconnect()
 
     @property
     def percentage(self) -> int | None:
