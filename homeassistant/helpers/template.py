@@ -8,7 +8,6 @@ import collections.abc
 from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache, lru_cache, partial, wraps
 import json
@@ -1987,29 +1986,6 @@ class LoggingUndefined(jinja2.Undefined):
         return super().__bool__()
 
 
-@dataclass
-class Ext:
-    """Jinja extension definition."""
-
-    # name of the global/filter/test
-    name: str
-
-    # Function to call when used as a filter, or None
-    filt: Callable[[str], bool] | None = None
-
-    # Function/value for when it's used as a global, or None
-    glob: Callable | float | None = None
-
-    # Function to call when used as a test, or None
-    test: Callable[[Any], bool] | None = None
-
-    # True if the function/filter/test is supported in a limited template
-    support_limited: bool = True
-
-    # True if the function/filter/test requires a valid hass instance
-    require_hass: bool = False
-
-
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -2038,195 +2014,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             return pass_context(wrapper)
 
-        # Home Assistant Jinja extensions
-        exts = [
-            Ext("round", filt=forgiving_round),
-            Ext("multiply", filt=multiply),
-            Ext("log", filt=logarithm, glob=logarithm),
-            Ext("sin", filt=sine, glob=sine),
-            Ext("cos", filt=cosine, glob=cosine),
-            Ext("tan", filt=tangent, glob=tangent),
-            Ext("asin", filt=arc_sine, glob=arc_sine),
-            Ext("acos", filt=arc_cosine, glob=arc_cosine),
-            Ext("atan", filt=arc_tangent, glob=arc_tangent),
-            Ext("atan2", filt=arc_tangent2, glob=arc_tangent2),
-            Ext("sqrt", filt=square_root, glob=square_root),
-            Ext("as_datetime", filt=as_datetime, glob=as_datetime),
-            Ext("as_timedelta", filt=as_timedelta, glob=as_timedelta),
-            Ext(
-                "as_timestamp", filt=forgiving_as_timestamp, glob=forgiving_as_timestamp
-            ),
-            Ext("today_at", filt=today_at, glob=today_at),
-            Ext("as_local", filt=dt_util.as_local, glob=dt_util.as_local),
-            Ext("timestamp_custom", filt=timestamp_custom),
-            Ext("timestamp_local", filt=timestamp_local),
-            Ext("timestamp_utc", filt=timestamp_utc),
-            Ext("to_json", filt=to_json),
-            Ext("from_json", filt=from_json),
-            Ext("is_defined", filt=fail_when_undefined),
-            Ext("random", filt=random_every_time),
-            Ext("base64_encode", filt=base64_encode),
-            Ext("base64_decode", filt=base64_decode),
-            Ext("ordinal", filt=ordinal),
-            Ext("regex_match", filt=regex_match, glob=regex_match),
-            Ext("regex_replace", filt=regex_replace),
-            Ext("regex_search", filt=regex_search, glob=regex_search),
-            Ext("regex_findall", filt=regex_findall),
-            Ext("regex_findall_index", filt=regex_findall_index),
-            Ext("bitwise_and", filt=bitwise_and),
-            Ext("bitwise_or", filt=bitwise_or),
-            Ext("pack", filt=struct_pack, glob=struct_pack),
-            Ext("unpack", filt=struct_unpack, glob=struct_unpack),
-            Ext("ord", filt=ord),
-            Ext("is_number", filt=is_number, glob=is_number, test=is_number),
-            Ext("float", filt=forgiving_float_filter, glob=forgiving_float),
-            Ext("int", filt=forgiving_int_filter, glob=forgiving_int),
-            Ext("relative_time", filt=relative_time, glob=relative_time),
-            Ext("slugify", filt=slugify, glob=slugify),
-            Ext("iif", filt=iif, glob=iif),
-            Ext("bool", filt=forgiving_boolean, glob=forgiving_boolean),
-            Ext("pi", glob=math.pi),
-            Ext("tau", glob=math.pi * 2),
-            Ext("e", glob=math.e),
-            Ext("strptime", glob=strptime),
-            Ext("urlencode", glob=urlencode),
-            Ext("average", filt=average, glob=average),
-            Ext("timedelta", glob=timedelta),
-            Ext("max", glob=min_max_from_filter(self.filters["max"], "max")),
-            Ext("min", glob=min_max_from_filter(self.filters["min"], "min")),
-            Ext("version", filt=version, glob=version),
-            Ext(
-                "entry_id",
-                filt=pass_context(hassfunction(entry_id)),
-                glob=hassfunction(entry_id),
-                require_hass=True,
-            ),
-            Ext(
-                "device_entities",
-                filt=pass_context(hassfunction(device_entities)),
-                glob=hassfunction(device_entities),
-                require_hass=True,
-            ),
-            Ext(
-                "closest",
-                filt=pass_context(hassfunction(closest_filter)),
-                glob=hassfunction(closest),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "distance",
-                glob=hassfunction(distance),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "expand",
-                filt=pass_context(hassfunction(expand)),
-                glob=hassfunction(expand),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "device_attr",
-                glob=hassfunction(device_attr),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "is_device_attr",
-                glob=hassfunction(is_device_attr),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "device_id",
-                filt=pass_context(hassfunction(device_id)),
-                glob=hassfunction(device_id),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "area_id",
-                filt=pass_context(hassfunction(area_id)),
-                glob=hassfunction(area_id),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "area_name",
-                filt=pass_context(hassfunction(area_name)),
-                glob=hassfunction(area_name),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "area_entities",
-                filt=pass_context(hassfunction(area_entities)),
-                glob=hassfunction(area_entities),
-                require_hass=True,
-            ),
-            Ext(
-                "area_devices",
-                filt=pass_context(hassfunction(area_devices)),
-                glob=hassfunction(area_devices),
-                require_hass=True,
-            ),
-            Ext(
-                "integration_entities",
-                filt=pass_context(hassfunction(integration_entities)),
-                glob=hassfunction(integration_entities),
-                require_hass=True,
-            ),
-            Ext(
-                "is_state",
-                glob=hassfunction(is_state),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "is_state_attr",
-                glob=hassfunction(is_state_attr),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "state_attr",
-                glob=hassfunction(state_attr),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "states",
-                glob=AllStates(hass),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "utcnow",
-                glob=hassfunction(utcnow),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "now",
-                glob=hassfunction(now),
-                support_limited=False,
-                require_hass=True,
-            ),
-            Ext(
-                "match",
-                test=regex_match,
-            ),
-            Ext(
-                "search",
-                test=regex_search,
-            ),
-        ]
-
         # Only device_entities is available to limited templates, mark other
         # functions and filters as unsupported.
-        def unsupported(name):
+        def warn_limited(name: str) -> Callable:
             def warn_unsupported(*args, **kwargs):
                 raise TemplateError(
                     f"Use of '{name}' is not supported in limited templates"
@@ -2235,29 +2025,240 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             return warn_unsupported
 
         # When hass is None, populate all functions & filters that can be used later to pass validation
-        def dummy_func(name):
+        def dummy_func(name: str) -> Callable:
             def warn_dummy(*args, **kwargs):
                 pass
 
             return warn_dummy
 
-        def assign_func(
-            ext: Ext, filt: Callable, glob: Callable, test: Callable
+        def add_ext(
+            name: str,
+            filt: Callable | None = None,
+            glob: Callable | None = None,
+            test: Callable | None = None,
+            support_limited: bool = False,
+            require_hass: bool = False,
         ) -> None:
-            if ext.filt is not None:
-                self.filters[ext.name] = filt
-            if ext.glob is not None:
-                self.globals[ext.name] = glob
-            if ext.test is not None:
-                self.tests[ext.name] = test
 
-        for ext in exts:
-            if not hass and ext.require_hass:
-                assign_func(ext, *[dummy_func(ext.name)] * 3)
-            elif limited and not ext.support_limited:
-                assign_func(ext, *[unsupported(ext.name)] * 3)
+            if not hass and require_hass:
+                self.filters[name] = dummy_func(name)
+                self.globals[name] = dummy_func(name)
+                self.tests[name] = dummy_func(name)
+            elif limited and not support_limited:
+                self.filters[name] = warn_limited(name)
+                self.globals[name] = warn_limited(name)
+                self.tests[name] = warn_limited(name)
             else:
-                assign_func(ext, ext.filt, ext.glob, ext.test)
+                if test is not None:
+                    self.tests[name] = test
+                if filt is not None:
+                    self.filters[name] = filt
+                if glob is not None:
+                    self.globals[name] = glob
+
+        # Home Assistant Jinja extensions
+        add_ext("round", filt=forgiving_round)
+        add_ext("multiply", filt=multiply)
+        add_ext("log", filt=logarithm, glob=logarithm)
+        add_ext("sin", filt=sine, glob=sine)
+        add_ext("cos", filt=cosine, glob=cosine)
+        add_ext("tan", filt=tangent, glob=tangent)
+        add_ext("asin", filt=arc_sine, glob=arc_sine)
+        add_ext("acos", filt=arc_cosine, glob=arc_cosine)
+        add_ext("atan", filt=arc_tangent, glob=arc_tangent)
+        add_ext("atan2", filt=arc_tangent2, glob=arc_tangent2)
+        add_ext("sqrt", filt=square_root, glob=square_root)
+        add_ext("as_datetime", filt=as_datetime, glob=as_datetime)
+        add_ext("as_timedelta", filt=as_timedelta, glob=as_timedelta)
+        add_ext(
+            "as_timestamp", filt=forgiving_as_timestamp, glob=forgiving_as_timestamp
+        )
+        add_ext("today_at", filt=today_at, glob=today_at)
+        add_ext("as_local", filt=dt_util.as_local, glob=dt_util.as_local)
+        add_ext("timestamp_custom", filt=timestamp_custom)
+        add_ext("timestamp_local", filt=timestamp_local)
+        add_ext("timestamp_utc", filt=timestamp_utc)
+        add_ext("to_json", filt=to_json)
+        add_ext("from_json", filt=from_json)
+        add_ext("is_defined", filt=fail_when_undefined)
+        add_ext("random", filt=random_every_time)
+        add_ext("base64_encode", filt=base64_encode)
+        add_ext("base64_decode", filt=base64_decode)
+        add_ext("ordinal", filt=ordinal)
+        add_ext("regex_match", filt=regex_match, glob=regex_match)
+        add_ext("regex_replace", filt=regex_replace)
+        add_ext("regex_search", filt=regex_search, glob=regex_search)
+        add_ext("regex_findall", filt=regex_findall)
+        add_ext("regex_findall_index", filt=regex_findall_index)
+        add_ext("bitwise_and", filt=bitwise_and)
+        add_ext("bitwise_or", filt=bitwise_or)
+        add_ext("pack", filt=struct_pack, glob=struct_pack)
+        add_ext("unpack", filt=struct_unpack, glob=struct_unpack)
+        add_ext("ord", filt=ord)
+        add_ext("is_number", filt=is_number, glob=is_number, test=is_number)
+        add_ext("float", filt=forgiving_float_filter, glob=forgiving_float)
+        add_ext("int", filt=forgiving_int_filter, glob=forgiving_int)
+        add_ext("relative_time", filt=relative_time, glob=relative_time)
+        add_ext("slugify", filt=slugify, glob=slugify)
+        add_ext("iif", filt=iif, glob=iif)
+        add_ext("bool", filt=forgiving_boolean, glob=forgiving_boolean)
+        add_ext("pi", glob=math.pi)
+        add_ext("tau", glob=math.pi * 2)
+        add_ext("e", glob=math.e)
+        add_ext("strptime", glob=strptime)
+        add_ext("urlencode", glob=urlencode)
+        add_ext("average", filt=average, glob=average)
+        add_ext("timedelta", glob=timedelta)
+        add_ext("max", glob=min_max_from_filter(self.filters["max"], "max"))
+        add_ext("min", glob=min_max_from_filter(self.filters["min"], "min"))
+        add_ext("version", filt=version, glob=version)
+        add_ext(
+            "entry_id",
+            filt=pass_context(hassfunction(entry_id)),
+            glob=hassfunction(entry_id),
+            require_hass=True,
+        )
+        add_ext(
+            "device_entities",
+            filt=pass_context(hassfunction(device_entities)),
+            glob=hassfunction(device_entities),
+            require_hass=True,
+        )
+        add_ext(
+            "closest",
+            filt=pass_context(hassfunction(closest_filter)),
+            glob=hassfunction(closest),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "distance",
+            glob=hassfunction(distance),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "expand",
+            filt=pass_context(hassfunction(expand)),
+            glob=hassfunction(expand),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "device_attr",
+            glob=hassfunction(device_attr),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "is_device_attr",
+            glob=hassfunction(is_device_attr),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "device_id",
+            filt=pass_context(hassfunction(device_id)),
+            glob=hassfunction(device_id),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "area_id",
+            filt=pass_context(hassfunction(area_id)),
+            glob=hassfunction(area_id),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "area_name",
+            filt=pass_context(hassfunction(area_name)),
+            glob=hassfunction(area_name),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "area_entities",
+            filt=pass_context(hassfunction(area_entities)),
+            glob=hassfunction(area_entities),
+            require_hass=True,
+        )
+        add_ext(
+            "area_devices",
+            filt=pass_context(hassfunction(area_devices)),
+            glob=hassfunction(area_devices),
+            require_hass=True,
+        )
+        add_ext(
+            "integration_entities",
+            filt=pass_context(hassfunction(integration_entities)),
+            glob=hassfunction(integration_entities),
+            require_hass=True,
+        )
+        add_ext(
+            "is_state",
+            glob=hassfunction(is_state),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "is_state_attr",
+            glob=hassfunction(is_state_attr),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "state_attr",
+            glob=hassfunction(state_attr),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "states",
+            glob=AllStates(hass),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "utcnow",
+            glob=hassfunction(utcnow),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "now",
+            glob=hassfunction(now),
+            support_limited=False,
+            require_hass=True,
+        )
+        add_ext(
+            "match",
+            test=regex_match,
+        )
+        add_ext(
+            "search",
+            test=regex_search,
+        )
+
+        # def assign_func(
+        #     ext: Ext, filt: Callable, glob: Callable, test: Callable
+        # ) -> None:
+        #     if ext.filt is not None:
+        #         self.filters[ext.name] = filt
+        #     if ext.glob is not None:
+        #         self.globals[ext.name] = (
+        #             hassfunction(glob) if ext.require_hass else glob
+        #         )
+        #     if ext.test is not None:
+        #         self.tests[ext.name] = test
+
+        # for ext in exts:
+        #     if not hass and ext.require_hass:
+        #         assign_func(ext, *[dummy_func(ext.name)] * 3)
+        #     elif limited and not ext.support_limited:
+        #         assign_func(ext, *[unsupported(ext.name)] * 3)
+        #     else:
+        #         assign_func(ext, ext.filt, ext.glob, ext.test)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
