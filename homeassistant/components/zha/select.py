@@ -258,7 +258,7 @@ class HueV1MotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"
     """Representation of a ZHA motion sensitivity configuration entity."""
 
     _select_attr = "sensitivity"
-    _attr_name = "Hue Motion Sensitivity"
+    _attr_name = "Hue motion sensitivity"
     _enum = HueV1MotionSensitivities
 
 
@@ -281,7 +281,7 @@ class HueV2MotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"
     """Representation of a ZHA motion sensitivity configuration entity."""
 
     _select_attr = "sensitivity"
-    _attr_name = "Hue Motion Sensitivity"
+    _attr_name = "Hue motion sensitivity"
     _enum = HueV2MotionSensitivities
 
 
