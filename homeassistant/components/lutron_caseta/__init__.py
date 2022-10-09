@@ -232,16 +232,20 @@ def _async_register_button_devices(
             # use the parent_device for HA device info
             ha_device = bridge_devices[device["parent_device"]]
 
-        if "serial" not in ha_device or ha_device["serial"] in seen:
+        ha_device_serial = _handle_none_keypad_serial(
+            ha_device, bridge_device["serial"]
+        )
+
+        if "serial" not in ha_device or ha_device_serial in seen:
             continue
-        seen.add(ha_device["serial"])
+        seen.add(ha_device_serial)
 
         area, name = _area_and_name_from_name(ha_device["name"])
         device_args: dict[str, Any] = {
             "name": f"{area} {name}",
             "manufacturer": MANUFACTURER,
             "config_entry_id": config_entry_id,
-            "identifiers": {(DOMAIN, ha_device["serial"])},
+            "identifiers": {(DOMAIN, ha_device_serial)},
             "model": f"{ha_device['model']} ({ha_device['type']})",
             "via_device": (DOMAIN, bridge_device["serial"]),
         }
@@ -253,6 +257,10 @@ def _async_register_button_devices(
         device_info_by_device_id.setdefault(ha_device["device_id"], device_args)
 
     return button_devices_by_dr_id, device_info_by_device_id
+
+
+def _handle_none_keypad_serial(keypad_device: dict, bridge_serial: int) -> str:
+    return keypad_device["serial"] or f"{bridge_serial}_{keypad_device['device_id']}"
 
 
 def _area_and_name_from_name(device_name: str) -> tuple[str, str]:
@@ -301,16 +309,20 @@ def _async_subscribe_pico_remote_events(
             # use the parent_device for HA device info
             ha_device = bridge_devices[device["parent_device"]]
 
+        ha_device_serial = _handle_none_keypad_serial(
+            ha_device, bridge_devices[BRIDGE_DEVICE_ID]["serial"]
+        )
+
         type_ = _lutron_model_to_device_type(ha_device["model"], ha_device["type"])
         area, name = _area_and_name_from_name(ha_device["name"])
         leap_button_number = device["button_number"]
         lip_button_number = async_get_lip_button(type_, leap_button_number)
-        hass_device = dev_reg.async_get_device({(DOMAIN, ha_device["serial"])})
+        hass_device = dev_reg.async_get_device({(DOMAIN, ha_device_serial)})
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
             {
-                ATTR_SERIAL: ha_device["serial"],
+                ATTR_SERIAL: ha_device_serial,
                 ATTR_TYPE: type_,
                 ATTR_BUTTON_NUMBER: lip_button_number,
                 ATTR_LEAP_BUTTON_NUMBER: leap_button_number,

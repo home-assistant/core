@@ -67,6 +67,25 @@ MOCK_BUTTON_DEVICES = [
         "model": "RRST-W4B-XX",
         "serial": 43845547,
     },
+    {
+        "device_id": "786",
+        "Name": "Example Homeowner Keypad",
+        "ID": 3,
+        "Area": {"Name": "Front Steps"},
+        "Buttons": [
+            {"Number": 12},
+            {"Number": 13},
+            {"Number": 14},
+            {"Number": 15},
+            {"Number": 16},
+            {"Number": 17},
+            {"Number": 18},
+        ],
+        "leap_name": "Front Steps_Example Homeowner Keypad",
+        "type": "HomeownerKeypad",
+        "model": "Homeowner Keypad",
+        "serial": None,
+    },
 ]
 
 
@@ -176,6 +195,18 @@ async def test_get_triggers_for_non_button_device(hass, device_reg):
     )
 
     assert triggers == []
+
+
+async def test_none_serial_keypad(hass, device_reg):
+    """Test serial assignment for keypads without serials."""
+    config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
+
+    keypad_device = device_reg.async_get_or_create(
+        config_entry_id=config_entry_id,
+        identifiers={(DOMAIN, "1234_786")},
+    )
+
+    assert keypad_device is not None
 
 
 async def test_if_fires_on_button_event(hass, calls, device_reg):
