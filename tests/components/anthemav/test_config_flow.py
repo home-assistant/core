@@ -95,29 +95,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_import_configuration(
-    hass: HomeAssistant, mock_connection_create: AsyncMock, mock_anthemav: AsyncMock
-) -> None:
-    """Test we import existing configuration."""
-    config = {
-        "host": "1.1.1.1",
-        "port": 14999,
-        "name": "Anthem Av Import",
-    }
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        "host": "1.1.1.1",
-        "port": 14999,
-        "name": "Anthem Av Import",
-        "mac": "00:00:00:00:00:01",
-        "model": "MRX 520",
-    }
-
-
 @pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
 async def test_device_already_configured(
     hass: HomeAssistant,
