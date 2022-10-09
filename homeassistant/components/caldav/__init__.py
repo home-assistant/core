@@ -26,7 +26,7 @@ PLATFORMS = [Platform.CALENDAR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Caldav component."""
     try:
-        calendars = await async_caldav_connect(hass, entry.data)
+        calendars = await async_caldav_connect(hass, entry)
     except CALDAV_EXCEPTIONS as error:
         raise ConfigEntryNotReady from error
 
@@ -55,12 +55,12 @@ def _caldav_connect(client: caldav.DAVClient) -> list[caldav.Calendar]:
     return client.principal().calendars()
 
 
-async def async_caldav_connect(hass, data_entry):
+async def async_caldav_connect(hass: HomeAssistant, entry: ConfigEntry):
     """Connect to caldav server."""
     client = caldav.DAVClient(
-        url=data_entry[CONF_URL],
-        username=data_entry[CONF_USERNAME],
-        password=data_entry[CONF_PASSWORD],
-        ssl_verify_cert=data_entry[CONF_VERIFY_SSL],
+        url=entry.data[CONF_URL],
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
+        ssl_verify_cert=entry.data[CONF_VERIFY_SSL],
     )
     return await hass.async_add_executor_job(_caldav_connect, client)
