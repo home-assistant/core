@@ -1,7 +1,7 @@
 {
   "issues": {
     "manual_migration": {
-      "description": "The Bayesian integration now also updates the probability if the observed `to_state`, `above`, `below`, or `value_template` evaluates to `False` rather than only `True`. So it is no longer required to have duplicate, complementary entries for each binary state. Please remove the mirrored entry for `{entity}`.",
+      "description": "The Bayesian integration now also updates the probability if the observed `to_state`, `above`, `below`, or `value_template` evaluates to `False` rather than only `True`. So it is no longer required to have duplicate, complementary entries for each binary state. Please remove the mirrored entry for `{entity}` or else the probability updates may be duplicated. If these probabilities are deliberately configured for 2 states of a sensor that can hold more than 2 states then your `prob_given_true`s and `prob_given_false`s should not sum to 1 as other states are possible (but will be ignored).",
       "title": "Manual YAML fix required for Bayesian"
     },
     "no_prob_given_false": {
