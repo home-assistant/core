@@ -9,9 +9,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.uuid import random_uuid_hex
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
-from .const import DOMAIN
+from .const import CONF_CLIENT_DEVICE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,10 +25,19 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def _generate_client_device_id() -> str:
+    """Generate a random UUID4 string to identify ourselves."""
+    return random_uuid_hex()
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jellyfin."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the Jellyfin config flow."""
+        self.client_device_id: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -39,7 +49,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            client = create_client()
+            if self.client_device_id is None:
+                self.client_device_id = _generate_client_device_id()
+
+            client = create_client(device_id=self.client_device_id)
             try:
                 userid = await validate_input(self.hass, user_input, client)
             except CannotConnect:
@@ -54,7 +67,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_URL], data=user_input
+                    title=user_input[CONF_URL],
+                    data={CONF_CLIENT_DEVICE_ID: self.client_device_id, **user_input},
                 )
 
         return self.async_show_form(

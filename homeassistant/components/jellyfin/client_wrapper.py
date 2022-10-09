@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import socket
 from typing import Any
-import uuid
 
 from jellyfin_apiclient_python import Jellyfin, JellyfinClient
 from jellyfin_apiclient_python.api import API
@@ -34,21 +33,18 @@ async def validate_input(
     return userid
 
 
-def create_client() -> JellyfinClient:
+def create_client(device_id: str, device_name: str | None = None) -> JellyfinClient:
     """Create a new Jellyfin client."""
+    if device_name is None:
+        device_name = socket.gethostname()
+
     jellyfin = Jellyfin()
+
     client = jellyfin.get_client()
-    _setup_client(client)
-    return client
-
-
-def _setup_client(client: JellyfinClient) -> None:
-    """Configure the Jellyfin client with a number of required properties."""
-    player_name = socket.gethostname()
-    client_uuid = str(uuid.uuid4())
-
-    client.config.app(USER_APP_NAME, CLIENT_VERSION, player_name, client_uuid)
+    client.config.app(USER_APP_NAME, CLIENT_VERSION, device_name, device_id)
     client.config.http(USER_AGENT)
+
+    return client
 
 
 def _connect(client: JellyfinClient, url: str, username: str, password: str) -> str:
@@ -75,6 +71,7 @@ def _login(
 ) -> None:
     """Assert that the user can log in to the Jellyfin server."""
     response = connection_manager.login(url, username, password)
+
     if "AccessToken" not in response:
         raise InvalidAuth
 
