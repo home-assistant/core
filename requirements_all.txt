@@ -949,7 +949,7 @@ iperf3==0.1.11
 ismartgate==4.0.4
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.8.1
+jellyfin-apiclient-python==1.9.2
 
 # homeassistant.components.rest
 jsonpath==0.82
