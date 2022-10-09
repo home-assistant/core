@@ -11,7 +11,12 @@ from .helpers import Observation
 def raise_mirrored_entries(
     hass: HomeAssistant, observations: list[Observation], text: str = ""
 ) -> None:
-    """If there are mirrored entries, the user is probably using a workaround for a patched bug."""
+    """If there are mirrored entries, the user is probably using a workaround for a patched bug.
+    
+    In rare cases the user may have happened to configure 2 entries for a non binary sensor and 
+    is ignoring the other possible states - this will still technically be an incorrect (but
+    working) config as prob_given_true should not sum to 1 if more than the 2 states are possible.
+    """
     if len(observations) != 2:
         return
     if observations[0].is_mirror(observations[1]):
