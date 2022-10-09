@@ -134,17 +134,19 @@ async def async_setup_services(hass: HomeAssistant, entities: list[Alert]) -> No
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Alert component from a config entry."""
 
-    name = entry.options[CONF_NAME]
-    watched_entity_id = entry.options[CONF_ENTITY_ID]
-    alert_state = entry.options[CONF_STATE]
-    repeat = entry.options[CONF_REPEAT]
-    skip_first = entry.options[CONF_SKIP_FIRST]
-    message_template = entry.options.get(CONF_ALERT_MESSAGE)
-    done_message_template = entry.options.get(CONF_DONE_MESSAGE)
-    notifiers = entry.options[CONF_NOTIFIERS]
-    can_ack = entry.options[CONF_CAN_ACK]
-    title_template = entry.options.get(CONF_TITLE)
+    name: str = entry.options[CONF_NAME]
+    watched_entity_id: str = entry.options[CONF_ENTITY_ID]
+    alert_state: str = entry.options[CONF_STATE]
+    repeat: list[str] = entry.options[CONF_REPEAT]
+    skip_first: bool = entry.options[CONF_SKIP_FIRST]
+    message_template: str | None = entry.options.get(CONF_ALERT_MESSAGE)
+    done_message_template: str | None = entry.options.get(CONF_DONE_MESSAGE)
+    notifiers: list[str] = entry.options[CONF_NOTIFIERS]
+    can_ack: bool = entry.options[CONF_CAN_ACK]
+    title_template: str | None = entry.options.get(CONF_TITLE)
     data: dict[Any, Any] = entry.options.get(CONF_DATA, {})
+
+    repeat_float = [float(number) for number in repeat]
 
     entity = Alert(
         hass,
@@ -152,13 +154,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name,
         watched_entity_id,
         alert_state,
-        repeat,
+        repeat_float,
         skip_first,
-        message_template,
-        done_message_template,
+        Template(message_template) if message_template else None,  # type: ignore[no-untyped-call]
+        Template(done_message_template) if done_message_template else None,  # type: ignore[no-untyped-call]
         notifiers,
         can_ack,
-        title_template,
+        Template(title_template) if title_template else None,  # type: ignore[no-untyped-call]
         data,
     )
 

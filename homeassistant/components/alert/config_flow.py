@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -41,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(),
     }
-)  # .extend(OPTIONS_SCHEMA.schema)
+)
 
 
 def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
@@ -50,10 +49,10 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
         number_list = []
         if isinstance(user_input[CONF_REPEAT], list):
             for number_string in user_input[CONF_REPEAT]:
-                new_number = float(number_string)
+                new_number = str(int(number_string))
                 number_list.append(new_number)
         if isinstance(user_input[CONF_REPEAT], str):
-            new_number = float(user_input[CONF_REPEAT])
+            new_number = str(int(user_input[CONF_REPEAT]))
             number_list.append(new_number)
     except ValueError as error:
         raise SchemaFlowError("repeat_error") from error
@@ -62,14 +61,12 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
     return user_input
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
 def get_options_schema(
     flow_handler: SchemaConfigFlowHandler,
     user_input: dict[str, Any],
 ) -> vol.Schema:
     """Get schema for additional options."""
+
     return vol.Schema(
         {
             vol.Required(CONF_STATE, default=STATE_ON): selector.TextSelector(),
@@ -96,19 +93,15 @@ def get_notifier_schema(
     user_input: dict[str, Any],
 ) -> vol.Schema:
     """Update list with notify services."""
-    _LOGGER.debug("user_input %s", user_input)
     hass = async_get_hass()
     all_services = hass.services.async_services()
-    # _LOGGER.debug("Services: %s", all_services)
     notify_services = all_services.get("notify", {})
     notify_keys = []
     for key in notify_services.keys():
         notify_keys.append(key)
 
-    _LOGGER.debug("keys: %s", notify_keys)
-
     notify_options = [
-        selector.SelectOptionDict(value=f"notify.{key}", label=key)
+        selector.SelectOptionDict(value=key, label=key.replace("_", " ").title())
         for key in notify_keys
     ]
 

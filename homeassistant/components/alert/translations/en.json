@@ -4,29 +4,37 @@
             "repeat_error": "List of repeats in minutes needs to be integer or float"
         },
         "step": {
-            "options": {
+            "notifier": {
                 "data": {
-                    "can_acknowledge": "Can acknowledge",
                     "data": "Message data",
                     "done_message": "Message when alert stop",
                     "message": "Message",
                     "notifiers": "Notify entities",
-                    "repeat": "Repeat",
-                    "skip_first": "Skip first alert",
-                    "state": "State",
                     "title": "Message title"
                 },
                 "data_description": {
-                    "can_acknowledge": "Allows the alert to be acknowledable",
                     "data": "Extra parameters to send with the notifier",
                     "done_message": "Notify message with template support when alert has stoppped.",
                     "message": "Notify message with template support.",
                     "notifiers": "One or more notify entities to recieve the alert",
-                    "repeat": "Number of minutes before the notification should be repeated. Can be either a number or a list of numbers",
-                    "state": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median.",
                     "title": "Notify title with template support."
                 },
-                "description": "Create an alert which notifies you on problematic issues.",
+                "description": "Configure notifier settings.",
+                "title": "Add alert for entity state"
+            },
+            "options": {
+                "data": {
+                    "can_acknowledge": "Can acknowledge",
+                    "repeat": "Repeat",
+                    "skip_first": "Skip first alert",
+                    "state": "State"
+                },
+                "data_description": {
+                    "can_acknowledge": "Allows the alert to be acknowledable",
+                    "repeat": "Number of minutes before the notification should be repeated. Can be either a number or a list of numbers",
+                    "state": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median."
+                },
+                "description": "Configure alert parameters.",
                 "title": "Add alert for entity state"
             },
             "user": {
@@ -47,25 +55,33 @@
             "init": {
                 "data": {
                     "can_acknowledge": "Can acknowledge",
+                    "repeat": "Repeat",
+                    "skip_first": "Skip first alert",
+                    "state": "State"
+                },
+                "data_description": {
+                    "can_acknowledge": "Allows the alert to be acknowledable",
+                    "repeat": "Number of minutes before the notification should be repeated. Can be either a number or a list of numbers",
+                    "state": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median."
+                },
+                "description": "Configure alert parameters."
+            },
+            "notifier": {
+                "data": {
                     "data": "Message data",
                     "done_message": "Message when alert stop",
                     "message": "Message",
                     "notifiers": "Notify entities",
-                    "repeat": "Repeat",
-                    "skip_first": "Skip first alert",
-                    "state": "State",
                     "title": "Message title"
                 },
                 "data_description": {
-                    "can_acknowledge": "Allows the alert to be acknowledable",
                     "data": "Extra parameters to send with the notifier",
                     "done_message": "Notify message with template support when alert has stoppped.",
                     "message": "Notify message with template support.",
                     "notifiers": "One or more notify entities to recieve the alert",
-                    "repeat": "Number of minutes before the notification should be repeated. Can be either a number or a list of numbers",
-                    "state": "Controls the number of decimal digits in the output when the statistics characteristic is mean or median.",
                     "title": "Notify title with template support."
-                }
+                },
+                "description": "Configure notifier settings."
             }
         }
     },
