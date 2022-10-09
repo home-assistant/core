@@ -79,6 +79,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.SCENE,
     Platform.SWITCH,
+    Platform.BUTTON,
 ]
 
 
