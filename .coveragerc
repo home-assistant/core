@@ -407,9 +407,11 @@ omit =
     homeassistant/components/flick_electric/sensor.py
     homeassistant/components/flock/notify.py
     homeassistant/components/flume/__init__.py
+    homeassistant/components/flume/binary_sensor.py
     homeassistant/components/flume/coordinator.py
     homeassistant/components/flume/entity.py
     homeassistant/components/flume/sensor.py
+    homeassistant/components/flume/util.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
@@ -660,7 +662,6 @@ omit =
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
     homeassistant/components/lametric/notify.py
-    homeassistant/components/lametric/number.py
     homeassistant/components/lannouncer/notify.py
     homeassistant/components/lastfm/sensor.py
     homeassistant/components/launch_library/__init__.py
@@ -1108,7 +1109,6 @@ omit =
     homeassistant/components/shelly/climate.py
     homeassistant/components/shelly/coordinator.py
     homeassistant/components/shelly/entity.py
-    homeassistant/components/shelly/light.py
     homeassistant/components/shelly/number.py
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/utils.py

@@ -23,7 +23,7 @@ PyFlick==0.0.2
 PyMVGLive==1.1.4
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.6
+PyMicroBot==0.0.8
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -156,7 +156,7 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==11.1.0
+aioesphomeapi==11.1.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -276,7 +276,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.4
 
 # homeassistant.components.unifi
-aiounifi==37
+aiounifi==38
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -404,7 +404,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.34.1
+bellows==0.34.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.10.4
@@ -543,7 +543,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.26.0
+dbus-fast==1.33.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -886,7 +886,7 @@ horimote==0.4.1
 httplib2==0.20.4
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.6.1
+huawei-lte-api==1.6.3
 
 # homeassistant.components.hydrawise
 hydrawiser==0.2
@@ -1030,7 +1030,7 @@ london-tube-status==0.5
 luftdaten==0.7.2
 
 # homeassistant.components.lupusec
-lupupy==0.0.24
+lupupy==0.1.9
 
 # homeassistant.components.lw12wifi
 lw12==0.9.2
@@ -1309,7 +1309,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.21.3
+plugwise==0.21.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1439,7 +1439,7 @@ pyalmond==0.0.2
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.1.0
+pyatmo==7.1.1
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1502,7 +1502,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.7.0
+pydaikin==2.7.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1786,7 +1786,7 @@ pyotgw==2.0.3
 pyotp==2.7.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.5.3
+pyoverkiz==1.5.5
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2063,7 +2063,7 @@ pytradfri[async]==9.0.0
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.2.0.1
+pytrafikverket==0.2.1
 
 # homeassistant.components.usb
 pyudev==0.23.2
@@ -2478,7 +2478,7 @@ vallox-websocket-api==2.12.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.10.2
+velbus-aio==2022.10.3
 
 # homeassistant.components.venstar
 venstarcolortouch==0.18
@@ -2610,16 +2610,16 @@ ziggo-mediabox-xl==1.1.0
 zigpy-deconz==0.19.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.16.0
+zigpy-xbee==0.16.1
 
 # homeassistant.components.zha
-zigpy-zigate==0.10.0
+zigpy-zigate==0.10.1
 
 # homeassistant.components.zha
-zigpy-znp==0.9.0
+zigpy-znp==0.9.1
 
 # homeassistant.components.zha
-zigpy==0.51.2
+zigpy==0.51.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

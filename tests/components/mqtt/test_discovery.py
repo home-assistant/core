@@ -945,9 +945,9 @@ async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog)
         '      "payload_not_available": "not_available"'
         "    },"
         "    {"
-        '      "topic":"avail_item2/~",'
-        '      "payload_available": "available",'
-        '      "payload_not_available": "not_available"'
+        '      "t":"avail_item2/~",'
+        '      "pl_avail": "available",'
+        '      "pl_not_avail": "not_available"'
         "    }"
         "  ],"
         '  "dev":{'
@@ -999,9 +999,9 @@ async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplo
         '  "stat_t": "test_topic/~",'
         '  "cmd_t": "~/test_topic",'
         '  "availability": {'
-        '    "topic":"~/avail_item1",'
-        '    "payload_available": "available",'
-        '    "payload_not_available": "not_available"'
+        '    "t":"~/avail_item1",'
+        '    "pl_avail": "available",'
+        '    "pl_not_avail": "not_available"'
         "  },"
         '  "dev":{'
         '    "ids":["5706DF"],'

@@ -23,6 +23,9 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "confirm": {
+                "description": "Do you want to start set up?"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Content Type"
