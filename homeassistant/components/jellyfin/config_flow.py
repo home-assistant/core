@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-import uuid
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util.uuid import random_uuid_hex
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
 from .const import DOMAIN
@@ -27,7 +27,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 def _generate_device_id() -> str:
     """Generate a random UUID4 string to identify ourselves."""
-    return str(uuid.uuid4())
+    return random_uuid_hex()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
