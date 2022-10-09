@@ -2,8 +2,8 @@
 from unittest.mock import MagicMock
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.jellyfin.const import DOMAIN
-from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.components.jellyfin.const import CONF_CLIENT_DEVICE_ID, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -31,9 +31,9 @@ async def test_abort_if_existing_entry(hass: HomeAssistant):
 
 async def test_form(
     hass: HomeAssistant,
-    mock_device_id: MagicMock,
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
+    mock_client_device_id: MagicMock,
     mock_setup_entry: MagicMock,
 ):
     """Test the complete configuration form."""
@@ -57,7 +57,7 @@ async def test_form(
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_URL
     assert result2["data"] == {
-        CONF_DEVICE_ID: "TEST-UUID",
+        CONF_CLIENT_DEVICE_ID: "TEST-UUID",
         CONF_URL: TEST_URL,
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
@@ -73,6 +73,7 @@ async def test_form_cannot_connect(
     hass: HomeAssistant,
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
+    mock_client_device_id: MagicMock,
 ):
     """Test we handle an unreachable server."""
     result = await hass.config_entries.flow.async_init(
@@ -103,6 +104,7 @@ async def test_form_invalid_auth(
     hass: HomeAssistant,
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
+    mock_client_device_id: MagicMock,
 ):
     """Test that we can handle invalid credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -162,7 +164,7 @@ async def test_form_persists_device_id_on_error(
     hass: HomeAssistant,
     mock_jellyfin: MagicMock,
     mock_client: MagicMock,
-    mock_device_id: MagicMock,
+    mock_client_device_id: MagicMock,
 ):
     """Test that we can handle invalid credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -171,7 +173,7 @@ async def test_form_persists_device_id_on_error(
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_device_id.return_value = "TEST-UUID-1"
+    mock_client_device_id.return_value = "TEST-UUID-1"
     mock_client.auth.login.return_value = MOCK_UNSUCCESFUL_LOGIN_RESPONSE
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -186,10 +188,8 @@ async def test_form_persists_device_id_on_error(
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
-    # assert result2["data"]
-    # assert result2["data"][CONF_DEVICE_ID] == "TEST-UUID"
 
-    mock_device_id.return_value = "TEST-UUID-2"
+    mock_client_device_id.return_value = "TEST-UUID-2"
     mock_client.auth.login.return_value = MOCK_SUCCESFUL_LOGIN_RESPONSE
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -205,7 +205,7 @@ async def test_form_persists_device_id_on_error(
     assert result3
     assert result3["type"] == "create_entry"
     assert result3["data"] == {
-        CONF_DEVICE_ID: "TEST-UUID-1",
+        CONF_CLIENT_DEVICE_ID: "TEST-UUID-1",
         CONF_URL: TEST_URL,
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,

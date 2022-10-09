@@ -27,13 +27,13 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_device_id() -> Generator[None, MagicMock, None]:
+def mock_client_device_id() -> Generator[None, MagicMock, None]:
     """Mock generating device id."""
     with patch(
-        "homeassistant.components.jellyfin.config_flow._generate_device_id"
-    ) as device_id_mock:
-        device_id_mock.return_value = "TEST-UUID"
-        yield device_id_mock
+        "homeassistant.components.jellyfin.config_flow._generate_client_device_id"
+    ) as id_mock:
+        id_mock.return_value = "TEST-UUID"
+        yield id_mock
 
 
 @pytest.fixture

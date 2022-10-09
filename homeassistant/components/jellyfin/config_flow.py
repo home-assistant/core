@@ -7,12 +7,12 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util.uuid import random_uuid_hex
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
-from .const import DOMAIN
+from .const import CONF_CLIENT_DEVICE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _generate_device_id() -> str:
+def _generate_client_device_id() -> str:
     """Generate a random UUID4 string to identify ourselves."""
     return random_uuid_hex()
 
@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Jellyfin config flow."""
-        self.device_id: str | None = None
+        self.client_device_id: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -49,10 +49,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if self.device_id is None:
-                self.device_id = _generate_device_id()
+            if self.client_device_id is None:
+                self.client_device_id = _generate_client_device_id()
 
-            client = create_client(device_id=self.device_id)
+            client = create_client(device_id=self.client_device_id)
             try:
                 userid = await validate_input(self.hass, user_input, client)
             except CannotConnect:
@@ -68,7 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=user_input[CONF_URL],
-                    data={CONF_DEVICE_ID: self.device_id, **user_input},
+                    data={CONF_CLIENT_DEVICE_ID: self.client_device_id, **user_input},
                 )
 
         return self.async_show_form(
