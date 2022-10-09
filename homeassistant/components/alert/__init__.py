@@ -164,9 +164,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_setup_services(hass, [entity])
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     entity.async_write_ha_state()
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload an Alert entry."""
+
+    return True
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -174,7 +187,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     entities: list[Alert] = []
 
     if DOMAIN not in config:
-        return False
+        return True
 
     for object_id, cfg in config[DOMAIN].items():
         if not cfg:

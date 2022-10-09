@@ -69,13 +69,7 @@ def get_options_schema(
     flow_handler: SchemaConfigFlowHandler,
     user_input: dict[str, Any],
 ) -> vol.Schema:
-    """Update list with notify services."""
-    hass = async_get_hass()
-    all_services = hass.services.async_services()
-    _LOGGER.debug("Services: %s", all_services)
-    notify_services = all_services.get("notify")
-    notify_keys = list(notify_services.keys()) if notify_services else []
-
+    """Get schema for additional options."""
     return vol.Schema(
         {
             vol.Required(CONF_STATE, default=STATE_ON): selector.TextSelector(),
@@ -93,9 +87,36 @@ def get_options_schema(
             vol.Required(
                 CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST
             ): selector.BooleanSelector(),
+        }
+    )
+
+
+def get_notifier_schema(
+    flow_handler: SchemaConfigFlowHandler,
+    user_input: dict[str, Any],
+) -> vol.Schema:
+    """Update list with notify services."""
+    _LOGGER.debug("user_input %s", user_input)
+    hass = async_get_hass()
+    all_services = hass.services.async_services()
+    # _LOGGER.debug("Services: %s", all_services)
+    notify_services = all_services.get("notify", {})
+    notify_keys = []
+    for key in notify_services.keys():
+        notify_keys.append(key)
+
+    _LOGGER.debug("keys: %s", notify_keys)
+
+    notify_options = [
+        selector.SelectOptionDict(value=f"notify.{key}", label=key)
+        for key in notify_keys
+    ]
+
+    return vol.Schema(
+        {
             vol.Required(CONF_NOTIFIERS): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=notify_keys,
+                    options=notify_options,
                     multiple=True,
                 )
             ),
@@ -115,11 +136,22 @@ CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "options": SchemaFlowFormStep(
         get_options_schema,
         validate_input,
+        next_step=lambda _: "notifier",
+    ),
+    "notifier": SchemaFlowFormStep(
+        get_notifier_schema,
     ),
 }
 
 OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(get_options_schema, validate_input)
+    "init": SchemaFlowFormStep(
+        get_options_schema,
+        validate_input,
+        next_step=lambda _: "notifier",
+    ),
+    "notifier": SchemaFlowFormStep(
+        get_notifier_schema,
+    ),
 }
 
 
