@@ -2041,20 +2041,16 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ) -> None:
 
             if not hass and require_hass:
-                self.filters[name] = dummy_func(name)
-                self.globals[name] = dummy_func(name)
-                self.tests[name] = dummy_func(name)
+                filt = glob = test = dummy_func(name)
             elif limited and not support_limited:
-                self.filters[name] = warn_limited(name)
-                self.globals[name] = warn_limited(name)
-                self.tests[name] = warn_limited(name)
-            else:
-                if test is not None:
-                    self.tests[name] = test
-                if filt is not None:
-                    self.filters[name] = filt
-                if glob is not None:
-                    self.globals[name] = glob
+                filt = glob = test = warn_limited(name)
+
+            if test is not None:
+                self.tests[name] = test
+            if filt is not None:
+                self.filters[name] = filt
+            if glob is not None:
+                self.globals[name] = glob
 
         # Home Assistant Jinja extensions
         add_ext("round", filt=forgiving_round)
