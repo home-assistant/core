@@ -38,9 +38,8 @@ async def async_setup_entry(
 class SnoozFan(FanEntity, RestoreEntity):
     """Fan representation of a Snooz device."""
 
-    def __init__(self, hass, data: SnoozConfigurationData) -> None:
+    def __init__(self, data: SnoozConfigurationData) -> None:
         """Initialize a Snooz fan entity."""
-        self.hass = hass
         self._device = data.device
         self._attr_name = data.title
         self._attr_unique_id = data.device.address
