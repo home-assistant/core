@@ -14,15 +14,14 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     COLOR_GROUP,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
-    preprocess_turn_on_alternatives,
 )
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -98,10 +97,10 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
                 )
             ),
         ),
-        vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
+        vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): vol.All(
+            vol.Coerce(int), vol.Range(min=1500, max=9000)
         ),
-        vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
+        vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): cv.positive_int,
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
         ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
         ATTR_MODE: vol.In(PULSE_MODES),
@@ -250,7 +249,6 @@ class LIFXManager:
             await self.effects_conductor.start(effect, bulbs)
 
         elif service == SERVICE_EFFECT_COLORLOOP:
-            preprocess_turn_on_alternatives(self.hass, kwargs)
 
             brightness = None
             if ATTR_BRIGHTNESS in kwargs:

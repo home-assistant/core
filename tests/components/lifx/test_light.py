@@ -20,6 +20,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
@@ -784,9 +785,9 @@ async def test_color_light_with_temp(
         ColorMode.COLOR_TEMP,
         ColorMode.HS,
     ]
-    assert attributes[ATTR_HS_COLOR] == (31.007, 6.862)
-    assert attributes[ATTR_RGB_COLOR] == (255, 246, 237)
-    assert attributes[ATTR_XY_COLOR] == (0.339, 0.338)
+    assert attributes[ATTR_HS_COLOR] == (30.754, 7.122)
+    assert attributes[ATTR_RGB_COLOR] == (255, 246, 236)
+    assert attributes[ATTR_XY_COLOR] == (0.34, 0.339)
     bulb.color = [65535, 65535, 65535, 65535]
 
     await hass.services.async_call(
@@ -911,7 +912,7 @@ async def test_white_bulb(hass: HomeAssistant) -> None:
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [
         ColorMode.COLOR_TEMP,
     ]
-    assert attributes[ATTR_COLOR_TEMP] == 166
+    assert attributes[ATTR_COLOR_TEMP_KELVIN] == 6000
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
@@ -1012,10 +1013,10 @@ async def test_white_light_fails(hass):
             await hass.services.async_call(
                 LIGHT_DOMAIN,
                 "turn_on",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 153},
+                {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6000},
                 blocking=True,
             )
-        assert bulb.set_color.calls[0][0][0] == [1, 0, 3, 6535]
+        assert bulb.set_color.calls[0][0][0] == [1, 0, 3, 6000]
         bulb.set_color.reset_mock()
 
 
