@@ -1,33 +1,21 @@
 """Support for openexchangerates.org exchange rates service."""
 from __future__ import annotations
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_NAME, CONF_QUOTE
+from homeassistant.const import CONF_NAME, CONF_QUOTE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_BASE, DOMAIN
+from .const import DOMAIN
 from .coordinator import OpenexchangeratesCoordinator
 
 ATTRIBUTION = "Data provided by openexchangerates.org"
 
 DEFAULT_NAME = "Exchange Rate Sensor"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_QUOTE): cv.string,
-        vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 
 async def async_setup_entry(
