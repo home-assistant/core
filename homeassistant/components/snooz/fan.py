@@ -75,10 +75,6 @@ class SnoozFan(FanEntity, RestoreEntity):
     def _async_subscribe_to_device_change(self) -> Callable[[], None]:
         return self._device.subscribe_to_state_change(self._async_write_state_changed)
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect the device when removed."""
-        await self._device.async_disconnect()
-
     @property
     def percentage(self) -> int | None:
         """Volume level of the device."""
