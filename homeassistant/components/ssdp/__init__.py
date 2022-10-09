@@ -8,18 +8,27 @@ from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
+import socket
 from typing import Any
+from urllib.parse import urljoin
 import xml.etree.ElementTree as ET
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import (
     AddressTupleVXType,
+    DeviceIcon,
     DeviceInfo,
     DeviceOrServiceType,
     SsdpSource,
 )
 from async_upnp_client.description_cache import DescriptionCache
-from async_upnp_client.server import UpnpServer, UpnpServerDevice, UpnpServerService
+from async_upnp_client.server import (
+    SSDP_SEARCH_RESPONDER_OPTION_ALWAYS_REPLY_WITH_ROOT_DEVICE,
+    SSDP_SEARCH_RESPONDER_OPTIONS,
+    UpnpServer,
+    UpnpServerDevice,
+    UpnpServerService,
+)
 from async_upnp_client.ssdp import SSDP_PORT, determine_source_target, is_ipv4_address
 from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
@@ -46,6 +55,8 @@ from homeassistant.loader import async_get_ssdp, bind_hass
 DOMAIN = "ssdp"
 SSDP_SCANNER = "scanner"
 SSDP_SERVER = "server"
+SSDP_SERVER_MIN_PORT = 40000
+SSDP_SERVER_MAX_PORT = 60000
 SCAN_INTERVAL = timedelta(minutes=2)
 
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
@@ -196,11 +207,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     integration_matchers = IntegrationMatchers()
     integration_matchers.async_setup(await async_get_ssdp(hass))
 
-    hass.data[DOMAIN] = {}
-    scanner = hass.data[DOMAIN][SSDP_SCANNER] = Scanner(hass, integration_matchers)
-    asyncio.create_task(scanner.async_start())
+    scanner = Scanner(hass, integration_matchers)
+    server = Server(hass)
+    hass.data[DOMAIN] = {
+        SSDP_SCANNER: scanner,
+        SSDP_SERVER: server,
+    }
 
-    server = hass.data[DOMAIN][SSDP_SERVER] = Server(hass)
+    asyncio.create_task(scanner.async_start())
     asyncio.create_task(server.async_start())
 
     return True
@@ -599,7 +613,36 @@ class HassUpnpServiceDevice(UpnpServerDevice):
         upc=None,
         presentation_url="https://my.home-assistant.io/",
         url="/device.xml",
-        icons=[],
+        icons=[
+            DeviceIcon(
+                mimetype="image/png",
+                width=1024,
+                height=1024,
+                depth=24,
+                url="/static/icons/favicon-1024x1024.png",
+            ),
+            DeviceIcon(
+                mimetype="image/png",
+                width=512,
+                height=512,
+                depth=24,
+                url="/static/icons/favicon-512x512.png",
+            ),
+            DeviceIcon(
+                mimetype="image/png",
+                width=384,
+                height=384,
+                depth=24,
+                url="/static/icons/favicon-384x384.png",
+            ),
+            DeviceIcon(
+                mimetype="image/png",
+                width=192,
+                height=192,
+                depth=24,
+                url="/static/icons/favicon-192x192.png",
+            ),
+        ],
         xml=ET.Element("server_device"),
     )
     EMBEDDED_DEVICES: list[type[UpnpServerDevice]] = []
@@ -619,9 +662,26 @@ class Server:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         await self._async_start_ssdp_servers()
 
-    async def _async_get_free_port(self) -> int:
-        """Get a (random) free TCP port."""
-        return 9876
+    def _get_test_socket(self, source: AddressTupleVXType) -> socket.socket:
+        """Create a socket to test binding ports."""
+        family = socket.AF_INET if is_ipv4_address(source) else socket.AF_INET6
+        test_socket = socket.socket(family, socket.SOCK_STREAM)
+        test_socket.setblocking(False)
+        test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return test_socket
+
+    async def _async_find_next_available_port(self, source: AddressTupleVXType) -> int:
+        """Get a free TCP port."""
+        test_socket = self._get_test_socket(source)
+        for port in range(SSDP_SERVER_MIN_PORT, SSDP_SERVER_MAX_PORT):
+            try:
+                test_socket.bind(source)
+                return port
+            except OSError:
+                if port == SSDP_SERVER_MAX_PORT:
+                    raise
+
+        raise RuntimeError("unreachable")
 
     async def _async_get_instance_udn(self) -> str:
         """Get Unique Device Name for this instance."""
@@ -645,6 +705,14 @@ class Server:
             )
         )
 
+        # Update icon URLs.
+        base_icon_url = get_url(self.hass, allow_cloud=False, allow_external=False)
+        for index, icon in enumerate(HassUpnpServiceDevice.DEVICE_DEFINITION.icons):
+            new_url = urljoin(base_icon_url, icon.url)
+            HassUpnpServiceDevice.DEVICE_DEFINITION.icons[index] = icon._replace(
+                url=new_url
+            )
+
         # Devices are shared between all sources.
         for source_ip in await async_build_source_set(self.hass):
             source_ip_str = str(source_ip)
@@ -658,13 +726,19 @@ class Server:
             else:
                 source_tuple = (source_ip_str, 0)
             source, target = determine_source_target(source_tuple)
-            http_port = await self._async_get_free_port()
+            http_port = await self._async_find_next_available_port(source)
+            _LOGGER.debug("Binding UPnP HTTP server to: %s:%s", source_ip, http_port)
             self._upnp_servers.append(
                 UpnpServer(
                     source=source,
                     target=target,
                     http_port=http_port,
                     server_device=HassUpnpServiceDevice,
+                    options={
+                        SSDP_SEARCH_RESPONDER_OPTIONS: {
+                            SSDP_SEARCH_RESPONDER_OPTION_ALWAYS_REPLY_WITH_ROOT_DEVICE: True
+                        }
+                    },
                 )
             )
         results = await asyncio.gather(
