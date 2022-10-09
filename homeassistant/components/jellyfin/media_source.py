@@ -1,7 +1,6 @@
 """The Media Source implementation for the Jellyfin integration."""
 from __future__ import annotations
 
-import logging
 import mimetypes
 from typing import Any
 
@@ -41,8 +40,6 @@ from .const import (
     MEDIA_TYPE_VIDEO,
     SUPPORTED_COLLECTION_TYPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:

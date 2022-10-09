@@ -1,6 +1,8 @@
 """Constants for the Jellyfin integration."""
-
+import logging
 from typing import Final
+
+from homeassistant.const import Platform
 
 DOMAIN: Final = "jellyfin"
 
@@ -12,6 +14,9 @@ COLLECTION_TYPE_MUSIC: Final = "music"
 CONF_CLIENT_DEVICE_ID: Final = "client_device_id"
 
 DATA_CLIENT: Final = "client"
+DATA_COORDINATORS: Final = "coordinators"
+
+DEFAULT_NAME: Final = "Jellyfin"
 
 ITEM_KEY_COLLECTION_TYPE: Final = "CollectionType"
 ITEM_KEY_ID: Final = "Id"
@@ -41,3 +46,6 @@ SUPPORTED_COLLECTION_TYPES: Final = [COLLECTION_TYPE_MUSIC, COLLECTION_TYPE_MOVI
 
 USER_APP_NAME: Final = "Home Assistant"
 USER_AGENT: Final = f"Home-Assistant/{CLIENT_VERSION}"
+
+PLATFORMS = [Platform.SENSOR]
+LOGGER = logging.getLogger(__package__)
