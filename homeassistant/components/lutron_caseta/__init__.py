@@ -366,9 +366,7 @@ class LutronCasetaDevice(Entity):
             )
         ):
             # Append the child device name to the end of the parent keypad name to create the entity name
-            self._attr_name = " ".join(
-                (parent_device_info["name"], device["device_name"])
-            )
+            self._attr_name = f'{parent_device_info["name"]} {device["device_name"]}'
             # Set the device_info to the same as the Parent Keypad
             # The entities will be nested inside the keypad device
             self._attr_device_info = parent_device_info
