@@ -2240,26 +2240,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             test=regex_search,
         )
 
-        # def assign_func(
-        #     ext: Ext, filt: Callable, glob: Callable, test: Callable
-        # ) -> None:
-        #     if ext.filt is not None:
-        #         self.filters[ext.name] = filt
-        #     if ext.glob is not None:
-        #         self.globals[ext.name] = (
-        #             hassfunction(glob) if ext.require_hass else glob
-        #         )
-        #     if ext.test is not None:
-        #         self.tests[ext.name] = test
-
-        # for ext in exts:
-        #     if not hass and ext.require_hass:
-        #         assign_func(ext, *[dummy_func(ext.name)] * 3)
-        #     elif limited and not ext.support_limited:
-        #         assign_func(ext, *[unsupported(ext.name)] * 3)
-        #     else:
-        #         assign_func(ext, ext.filt, ext.glob, ext.test)
-
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
