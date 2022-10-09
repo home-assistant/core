@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import shutil
 
 from velbusaio.controller import Velbus
 import voluptuous as vol
@@ -138,6 +139,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
     hass.data[DOMAIN].pop(entry.entry_id)
+    await hass.async_add_executor_job(
+        shutil.rmtree,
+        hass.config.path(f".storage/velbuscache/{entry.entry_id}/"),
+    )
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
         hass.services.async_remove(DOMAIN, SERVICE_SCAN)
