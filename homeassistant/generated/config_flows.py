@@ -22,6 +22,7 @@ FLOWS = {
         "airzone",
         "aladdin_connect",
         "alarmdecoder",
+        "alert",
         "almond",
         "amberelectric",
         "ambiclimate",

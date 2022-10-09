@@ -14,6 +14,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     DOMAIN as DOMAIN_NOTIFY,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -37,22 +38,23 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 from homeassistant.util.dt import now
 
+from .const import (
+    CONF_ALERT_MESSAGE,
+    CONF_CAN_ACK,
+    CONF_DATA,
+    CONF_DONE_MESSAGE,
+    CONF_NOTIFIERS,
+    CONF_SKIP_FIRST,
+    CONF_TITLE,
+    DEFAULT_CAN_ACK,
+    DEFAULT_SKIP_FIRST,
+    DOMAIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "alert"
-
-CONF_CAN_ACK = "can_acknowledge"
-CONF_NOTIFIERS = "notifiers"
-CONF_SKIP_FIRST = "skip_first"
-CONF_ALERT_MESSAGE = "message"
-CONF_DONE_MESSAGE = "done_message"
-CONF_TITLE = "title"
-CONF_DATA = "data"
-
-DEFAULT_CAN_ACK = True
-DEFAULT_SKIP_FIRST = False
 
 ALERT_SCHEMA = vol.Schema(
     {
@@ -87,8 +89,88 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+async def async_setup_services(hass: HomeAssistant, entities: list[Alert]) -> None:
+    """Set up alert services for entities."""
+
+    async def async_handle_alert_service(service_call: ServiceCall) -> None:
+        """Handle calls to alert services."""
+        alert: Alert
+        alert_ids = await service.async_extract_entity_ids(hass, service_call)
+
+        for alert_id in alert_ids:
+            for alert in entities:
+                if alert.entity_id != alert_id:
+                    continue
+
+                alert.async_set_context(service_call.context)
+                if service_call.service == SERVICE_TURN_ON:
+                    await alert.async_turn_on()
+                elif service_call.service == SERVICE_TOGGLE:
+                    await alert.async_toggle()
+                else:
+                    await alert.async_turn_off()
+
+    # Setup service calls
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        async_handle_alert_service,
+        schema=ALERT_SERVICE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        async_handle_alert_service,
+        schema=ALERT_SERVICE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_TOGGLE,
+        async_handle_alert_service,
+        schema=ALERT_SERVICE_SCHEMA,
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the Alert component from a config entry."""
+
+    name = entry.options[CONF_NAME]
+    watched_entity_id = entry.options[CONF_ENTITY_ID]
+    alert_state = entry.options[CONF_STATE]
+    repeat = entry.options[CONF_REPEAT]
+    skip_first = entry.options[CONF_SKIP_FIRST]
+    message_template = entry.options.get(CONF_ALERT_MESSAGE)
+    done_message_template = entry.options.get(CONF_DONE_MESSAGE)
+    notifiers = entry.options[CONF_NOTIFIERS]
+    can_ack = entry.options[CONF_CAN_ACK]
+    title_template = entry.options.get(CONF_TITLE)
+    data: dict[Any, Any] = entry.options.get(CONF_DATA, {})
+
+    entity = Alert(
+        hass,
+        slugify(name),
+        name,
+        watched_entity_id,
+        alert_state,
+        repeat,
+        skip_first,
+        message_template,
+        done_message_template,
+        notifiers,
+        can_ack,
+        title_template,
+        data,
+    )
+
+    await async_setup_services(hass, [entity])
+
+    entity.async_write_ha_state()
+
+    return True
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Alert component."""
+    """Set up the Alert component from yaml."""
     entities: list[Alert] = []
 
     for object_id, cfg in config[DOMAIN].items():
@@ -128,42 +210,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not entities:
         return False
 
-    async def async_handle_alert_service(service_call: ServiceCall) -> None:
-        """Handle calls to alert services."""
-        alert_ids = await service.async_extract_entity_ids(hass, service_call)
-
-        for alert_id in alert_ids:
-            for alert in entities:
-                if alert.entity_id != alert_id:
-                    continue
-
-                alert.async_set_context(service_call.context)
-                if service_call.service == SERVICE_TURN_ON:
-                    await alert.async_turn_on()
-                elif service_call.service == SERVICE_TOGGLE:
-                    await alert.async_toggle()
-                else:
-                    await alert.async_turn_off()
-
-    # Setup service calls
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TURN_OFF,
-        async_handle_alert_service,
-        schema=ALERT_SERVICE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TURN_ON,
-        async_handle_alert_service,
-        schema=ALERT_SERVICE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TOGGLE,
-        async_handle_alert_service,
-        schema=ALERT_SERVICE_SCHEMA,
-    )
+    await async_setup_services(hass, entities)
 
     for alert in entities:
         alert.async_write_ha_state()

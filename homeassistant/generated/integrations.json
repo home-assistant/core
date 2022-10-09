@@ -111,9 +111,8 @@
       "name": "AlarmDecoder"
     },
     "alert": {
-      "config_flow": false,
-      "iot_class": "local_push",
-      "name": "Alert"
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "almond": {
       "config_flow": true,
@@ -5195,6 +5194,7 @@
     }
   },
   "translated_name": [
+    "alert",
     "aurora",
     "cert_expiry",
     "cpuspeed",
