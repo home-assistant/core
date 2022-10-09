@@ -27,23 +27,20 @@ async def async_setup_entry(
     """
     data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     bridge = data.bridge
-    bridge_device = data.bridge_device
     scenes = bridge.get_scenes()
-    async_add_entities(
-        LutronCasetaScene(scenes[scene], bridge, bridge_device) for scene in scenes
-    )
+    async_add_entities(LutronCasetaScene(scenes[scene], data) for scene in scenes)
 
 
 class LutronCasetaScene(Scene):
     """Representation of a Lutron Caseta scene."""
 
-    def __init__(self, scene, bridge, bridge_device):
+    def __init__(self, scene, data):
         """Initialize the Lutron Caseta scene."""
         self._scene_id = scene["scene_id"]
-        self._bridge: Smartbridge = bridge
-        bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
+        self._bridge: Smartbridge = data.bridge
+        bridge_unique_id = serial_to_unique_id(data.bridge_device["serial"])
         self._attr_device_info = DeviceInfo(
-            identifiers={(CASETA_DOMAIN, bridge_device["serial"])},
+            identifiers={(CASETA_DOMAIN, data.bridge_device["serial"])},
         )
         self._attr_name = _area_and_name_from_name(scene["name"])[1]
         self._attr_unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"

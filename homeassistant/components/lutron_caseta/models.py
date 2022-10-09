@@ -14,3 +14,4 @@ class LutronCasetaData:
     bridge: Smartbridge
     bridge_device: dict[str, Any]
     button_devices: dict[str, dict]
+    device_info_by_device_id: dict[int, dict[str, Any]]

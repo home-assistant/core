@@ -28,10 +28,9 @@ async def async_setup_entry(
     """
     data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     bridge = data.bridge
-    bridge_device = data.bridge_device
     occupancy_groups = bridge.occupancy_groups
     async_add_entities(
-        LutronOccupancySensor(occupancy_group, bridge, bridge_device)
+        LutronOccupancySensor(occupancy_group, data)
         for occupancy_group in occupancy_groups.values()
     )
 
@@ -41,9 +40,9 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
-    def __init__(self, device, bridge, bridge_device):
+    def __init__(self, device, data):
         """Init an occupancy sensor."""
-        super().__init__(device, bridge, bridge_device)
+        super().__init__(device, data)
         _, name = _area_and_name_from_name(device["name"])
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
