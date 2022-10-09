@@ -9,6 +9,12 @@ append_sheet:
       selector:
         config_entry:
           integration: google_sheets
+    document_id:
+      name: Document ID
+      description: ID of the document to edit.
+      example: "1_4qUcssiORL6VaC11HQ--pas0wW20zt5B694LRdGe3g"
+      selector:
+        text:
     worksheet:
       name: Worksheet
       description: Name of the worksheet. Defaults to the first one in the document.
@@ -19,6 +25,36 @@ append_sheet:
       name: Data
       description: Data to be appended to the worksheet. This puts the values on a new row underneath the matching column (key). Any new key is placed on the top of a new column.
       required: true
-      example: '{"hello": world, "cool": True, "count": 5}'
+      example: '{"temperature": "{{states(''sensor.example.state'')}}"}'
+      selector:
+        object:
+edit_sheet:
+  name: Edit Sheet
+  description: Edit cells within a sheet.
+  fields:
+    config_entry:
+      name: Sheet
+      description: The sheet to modify.
+      required: true
+      selector:
+        config_entry:
+          integration: google_sheets
+    document_id:
+      name: Document ID
+      description: ID of the document to edit.
+      example: "1_4qUcssiORL6VaC11HQ--pas0wW20zt5B694LRdGe3g"
+      selector:
+        text:
+    worksheet:
+      name: Worksheet
+      description: Name of the worksheet. Defaults to the first one in the document.
+      example: "Sheet1"
+      selector:
+        text:
+    data:
+      name: Data
+      description: Data locations to be edited on the worksheet. This puts the values in the cells matching the provided keys.
+      required: true
+      example: '{"A2": "{{states(''sensor.example.state'')}}"}'
       selector:
         object:

@@ -23,13 +23,16 @@ from homeassistant.helpers.selector import ConfigEntrySelector
 from .const import CONF_SHEETS_ACCESS, DATA_CONFIG_ENTRY, DOMAIN, FeatureAccess
 
 DATA = "data"
+DOCUMENT_ID = "document_id"
 WORKSHEET = "worksheet"
 
 SERVICE_APPEND_SHEET = "append_sheet"
+SERVICE_EDIT_SHEET = "edit_sheet"
 
 SHEET_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Optional(DOCUMENT_ID): cv.string,
         vol.Optional(WORKSHEET): cv.string,
         vol.Required(DATA): dict,
     },
@@ -107,11 +110,24 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_setup_service(hass: HomeAssistant) -> None:
     """Add the services for Google Sheets."""
 
-    def _append_to_sheet(call: ServiceCall, entry: ConfigEntry) -> None:
+    async def _async_verify(call: ServiceCall) -> tuple[ConfigEntry, Client]:
+        """Validate service call and return requested worksheet."""
+        entry: ConfigEntry | None = hass.config_entries.async_get_entry(
+            call.data[DATA_CONFIG_ENTRY]
+        )
+        if not entry:
+            raise ValueError(f"Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
+        if not (session := hass.data[DOMAIN].get(entry.entry_id)):
+            raise ValueError(f"Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}")
+        await session.async_ensure_token_valid()
+        return entry, Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
+
+    def _append_to_sheet(
+        call: ServiceCall, entry: ConfigEntry, service: Client
+    ) -> None:
         """Run append in the executor."""
-        service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
         try:
-            sheet = service.open_by_key(entry.unique_id)
+            sheet = service.open_by_key(call.data.get(DOCUMENT_ID, entry.unique_id))
         except RefreshError as ex:
             entry.async_start_reauth(hass)
             raise ex
@@ -128,19 +144,36 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     async def append_to_sheet(call: ServiceCall) -> None:
         """Append new line of data to a Google Sheets document."""
-        entry: ConfigEntry | None = hass.config_entries.async_get_entry(
-            call.data[DATA_CONFIG_ENTRY]
+        await hass.async_add_executor_job(
+            _append_to_sheet, call, *(await _async_verify(call))
         )
-        if not entry:
-            raise ValueError(f"Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
-        if not (session := hass.data[DOMAIN].get(entry.entry_id)):
-            raise ValueError(f"Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}")
-        await session.async_ensure_token_valid()
-        await hass.async_add_executor_job(_append_to_sheet, call, entry)
+
+    def _edit_sheet(call: ServiceCall, entry: ConfigEntry, service: Client) -> None:
+        """Run edit in the executor."""
+        try:
+            sheet = service.open_by_key(call.data.get(DOCUMENT_ID, entry.unique_id))
+        except RefreshError as ex:
+            entry.async_start_reauth(hass)
+            raise ex
+        worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
+        data = [{"range": k, "values": [[v]]} for k, v in call.data[DATA].items()]
+        worksheet.batch_update(data)
+
+    async def edit_sheet(call: ServiceCall) -> None:
+        """Edit Google Sheets document."""
+        await hass.async_add_executor_job(
+            _edit_sheet, call, *(await _async_verify(call))
+        )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_APPEND_SHEET,
         append_to_sheet,
+        schema=SHEET_SERVICE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_EDIT_SHEET,
+        edit_sheet,
         schema=SHEET_SERVICE_SCHEMA,
     )

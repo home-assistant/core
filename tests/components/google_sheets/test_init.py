@@ -135,9 +135,8 @@ async def test_reload_triggers_reauth(
     """Test reload can trigger reauth after change in options."""
     await setup_integration()
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.config_entries.options.async_configure(
@@ -159,9 +158,8 @@ async def test_append_sheet(
     """Test service call appending to a sheet."""
     await setup_integration()
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with patch("homeassistant.components.google_sheets.Client") as mock_client:
         await hass.services.async_call(
@@ -252,3 +250,27 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
+
+
+async def test_edit_sheet(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test service call editing a sheet."""
+    await setup_integration()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch("homeassistant.components.google_sheets.Client") as mock_client:
+        await hass.services.async_call(
+            DOMAIN,
+            "edit_sheet",
+            {
+                "config_entry": config_entry.entry_id,
+                "worksheet": "Sheet1",
+                "data": {"A1": "bar"},
+            },
+            blocking=True,
+        )
+    assert len(mock_client.mock_calls) == 4
