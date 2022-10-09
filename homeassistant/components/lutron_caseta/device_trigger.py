@@ -456,8 +456,8 @@ async def async_get_triggers(
 
 def _device_model_to_type(device_registry_model: str) -> str:
     """Convert a lutron_caseta device registry entry model to type."""
-    *model_list, p_device_type = device_registry_model.split(" ")
-    device_type = p_device_type.replace("(", "").replace(")", "")
+    model_list = device_registry_model.split(" ")
+    device_type = model_list.pop().replace("(", "").replace(")", "")
     return _lutron_model_to_device_type(" ".join(model_list), device_type)
 
 
