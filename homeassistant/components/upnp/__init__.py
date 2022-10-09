@@ -199,6 +199,11 @@ class UpnpBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     format: str = "s"
     unique_id: str | None = None
+    value_key: str | None = None
+
+    def __post_init__(self):
+        """Post initialize."""
+        self.value_key = self.value_key or self.key
 
 
 @dataclass
@@ -207,6 +212,11 @@ class UpnpSensorEntityDescription(SensorEntityDescription):
 
     format: str = "s"
     unique_id: str | None = None
+    value_key: str | None = None
+
+    def __post_init__(self):
+        """Post initialize."""
+        self.value_key = self.value_key or self.key
 
 
 class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
@@ -233,10 +243,7 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> Mapping[str, Any]:
         """Update data."""
         try:
-            update_values = await asyncio.gather(
-                self.device.async_get_traffic_data(),
-                self.device.async_get_status(),
-            )
+            return await self.device.async_get_data()
         except UpnpCommunicationError as exception:
             LOGGER.debug(
                 "Caught exception when updating device: %s, exception: %s",
@@ -246,11 +253,6 @@ class UpnpDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(
                 f"Unable to communicate with IGD at: {self.device.device_url}"
             ) from exception
-
-        return {
-            **update_values[0],
-            **update_values[1],
-        }
 
 
 class UpnpEntity(CoordinatorEntity[UpnpDataUpdateCoordinator]):
