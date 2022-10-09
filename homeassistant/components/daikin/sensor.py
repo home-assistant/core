@@ -45,7 +45,7 @@ class DaikinRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_func: Callable[[Appliance], float | None]
-    outdoor_sensor: bool  # Outdoor sensors should be created only for the outdoor config entry
+    outdoor_sensor: bool  # Outdoor sensors will be linked to the oudoor device
 
 
 @dataclass
