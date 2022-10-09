@@ -15,8 +15,6 @@ from .coordinator import OpenexchangeratesCoordinator
 
 ATTRIBUTION = "Data provided by openexchangerates.org"
 
-DEFAULT_NAME = "Exchange Rate Sensor"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
