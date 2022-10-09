@@ -234,10 +234,52 @@ class AqaraMotionSensitivities(types.enum8):
     channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
 )
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
-    """Representation of a ZHA on off transition time configuration entity."""
+    """Representation of a ZHA motion sensitivity configuration entity."""
 
     _select_attr = "motion_sensitivity"
     _enum = AqaraMotionSensitivities
+
+
+class HueV1MotionSensitivities(types.enum8):
+    """Hue v1 motion sensitivities."""
+
+    Low = 0x00
+    Medium = 0x01
+    High = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="occupancy",
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML001"},
+)
+class HueV1MotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
+    """Representation of a ZHA motion sensitivity configuration entity."""
+
+    _select_attr = "sensitivity"
+    _enum = HueV1MotionSensitivities
+
+
+class HueV2MotionSensitivities(types.enum8):
+    """Hue v2 motion sensitivities."""
+
+    Lowest = 0x00
+    Low = 0x01
+    Medium = 0x02
+    High = 0x03
+    Highest = 0x04
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="occupancy",
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML002", "SML003", "SML004"},
+)
+class HueV2MotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
+    """Representation of a ZHA motion sensitivity configuration entity."""
+
+    _select_attr = "sensitivity"
+    _enum = HueV2MotionSensitivities
 
 
 class AqaraMonitoringModess(types.enum8):
