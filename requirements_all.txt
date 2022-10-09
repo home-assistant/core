@@ -23,7 +23,7 @@ PyFlick==0.0.2
 PyMVGLive==1.1.4
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.6
+PyMicroBot==0.0.8
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -276,7 +276,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.4
 
 # homeassistant.components.unifi
-aiounifi==37
+aiounifi==38
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -401,7 +401,7 @@ beautifulsoup4==4.11.1
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.34.1
+bellows==0.34.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.10.4
@@ -1436,7 +1436,7 @@ pyalmond==0.0.2
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.1.0
+pyatmo==7.1.1
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1499,7 +1499,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.7.0
+pydaikin==2.7.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1783,7 +1783,7 @@ pyotgw==2.0.3
 pyotp==2.7.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.5.3
+pyoverkiz==1.5.5
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2604,16 +2604,16 @@ ziggo-mediabox-xl==1.1.0
 zigpy-deconz==0.19.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.16.0
+zigpy-xbee==0.16.1
 
 # homeassistant.components.zha
-zigpy-zigate==0.10.0
+zigpy-zigate==0.10.1
 
 # homeassistant.components.zha
-zigpy-znp==0.9.0
+zigpy-znp==0.9.1
 
 # homeassistant.components.zha
-zigpy==0.51.2
+zigpy==0.51.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
