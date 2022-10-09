@@ -76,7 +76,7 @@ class PJLinkErrorBinarySensorEntity(PJLinkEntity, BinarySensorEntity):
 
         self.entity_description = description
         self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.name}_{description.key}"
+        self._attr_unique_id = f"{coordinator.projector_unique_id}_{description.key}"
 
         self._async_update_attrs()
 

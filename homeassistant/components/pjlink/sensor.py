@@ -56,7 +56,9 @@ class PJLinkLampHoursSensorEntity(PJLinkEntity, SensorEntity):
 
         self.entity_description = description
         self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.name}_lamp_{lamp_idx}_hours"
+        self._attr_unique_id = (
+            f"{coordinator.projector_unique_id}_lamp_{lamp_idx}_hours"
+        )
         self._async_update_attrs()
 
     @callback
