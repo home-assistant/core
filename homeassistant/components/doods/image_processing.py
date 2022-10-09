@@ -343,9 +343,9 @@ class Doods(ImageProcessingEntity):
             if "error" in response:
                 _LOGGER.error(response["error"])
 
-            paths = self._gen_paths()
+            self._gen_paths()
             self._save_image(
-                image, None, paths
+                image, None, self._paths
             )  # save original image even when nothing is detected
 
             self._matches = matches
@@ -411,10 +411,9 @@ class Doods(ImageProcessingEntity):
 
         # Save Images
         if total_matches and self._file_out:
-            paths = self._gen_paths()
-            self._save_image(image, matches, paths)
+            self._gen_paths()
+            self._save_image(image, matches, self._paths)
 
-        self._paths = paths
         self._matches = matches
         self._total_matches = total_matches
         self._process_time = time.monotonic() - start
@@ -427,4 +426,4 @@ class Doods(ImageProcessingEntity):
             else:
                 paths.append(path_template)
 
-        return paths
+        self._paths = paths
