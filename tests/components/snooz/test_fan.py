@@ -14,8 +14,6 @@ from homeassistant.components.snooz.const import DOMAIN
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
@@ -32,7 +30,7 @@ async def test_turn_on(hass: HomeAssistant, snooz_fan_entity_id: str):
     """Test turning on the device."""
     await hass.services.async_call(
         fan.DOMAIN,
-        SERVICE_TURN_ON,
+        fan.SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
         blocking=True,
     )
@@ -49,7 +47,7 @@ async def test_turn_on_with_percentage(
     """Test turning on the device with a percentage."""
     await hass.services.async_call(
         fan.DOMAIN,
-        SERVICE_TURN_ON,
+        fan.SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: [snooz_fan_entity_id], fan.ATTR_PERCENTAGE: percentage},
         blocking=True,
     )
@@ -77,17 +75,28 @@ async def test_set_percentage(
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
-async def test_turn_on_with_0_percentage(hass: HomeAssistant, snooz_fan_entity_id: str):
-    """Test turning on the device with 0 as the percentage."""
+async def test_set_0_percentage_turns_off(
+    hass: HomeAssistant, snooz_fan_entity_id: str
+):
+    """Test turning off the device by setting the percentage/volume to 0."""
     await hass.services.async_call(
         fan.DOMAIN,
-        SERVICE_TURN_ON,
+        fan.SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: [snooz_fan_entity_id], fan.ATTR_PERCENTAGE: 66},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_SET_PERCENTAGE,
         {ATTR_ENTITY_ID: [snooz_fan_entity_id], fan.ATTR_PERCENTAGE: 0},
         blocking=True,
     )
 
     state = hass.states.get(snooz_fan_entity_id)
     assert state.state == STATE_OFF
+    # doesn't overwrite percentage when turning off
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 66
     assert ATTR_ASSUMED_STATE not in state.attributes
 
 
@@ -95,7 +104,7 @@ async def test_turn_off(hass: HomeAssistant, snooz_fan_entity_id: str):
     """Test turning off the device."""
     await hass.services.async_call(
         fan.DOMAIN,
-        SERVICE_TURN_OFF,
+        fan.SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: [snooz_fan_entity_id]},
         blocking=True,
     )
