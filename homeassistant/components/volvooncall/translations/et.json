@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kasutaja on juba seadistatud"
+            "already_configured": "Kasutaja on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "invalid_auth": "Tuvastamine nurjus",
@@ -14,6 +15,7 @@
                     "password": "Salas\u00f5na",
                     "region": "Piirkond",
                     "scandinavian_miles": "Kasuta Scandinavian Miles",
+                    "unit_system": "\u00dchikute s\u00fcsteem",
                     "username": "Kasutajanimi"
                 }
             }

@@ -9,13 +9,7 @@ DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
-BLOCK: Final = "block"
 DATA_CONFIG_ENTRY: Final = "config_entry"
-DEVICE: Final = "device"
-REST: Final = "rest"
-RPC: Final = "rpc"
-RPC_POLL: Final = "rpc_poll"
-
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
@@ -154,7 +148,7 @@ SHBLB_1_RGB_EFFECTS: Final = {
 SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "min": 4,
     "max": 31,
-    "step": 1,
+    "step": 0.5,
 }
 
 # Kelvin value for colorTemp

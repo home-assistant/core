@@ -13,6 +13,7 @@ from demetriek import (
     Model,
     Notification,
     NotificationIconType,
+    NotificationPriority,
     NotificationSound,
     Simple,
     Sound,
@@ -20,6 +21,7 @@ from demetriek import (
 import voluptuous as vol
 from yarl import URL
 
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
@@ -29,6 +31,7 @@ from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -227,6 +230,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         await lametric.notify(
             notification=Notification(
+                priority=NotificationPriority.CRITICAL,
                 icon_type=NotificationIconType.INFO,
                 model=Model(
                     cycles=2,
@@ -244,6 +248,22 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 CONF_MAC: device.wifi.mac,
             },
         )
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+        """Handle dhcp discovery to update existing entries."""
+        mac = format_mac(discovery_info.macaddress)
+        for entry in self._async_current_entries():
+            if format_mac(entry.data[CONF_MAC]) == mac:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data=entry.data | {CONF_HOST: discovery_info.ip},
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+                return self.async_abort(reason="already_configured")
+
+        return self.async_abort(reason="unknown")
 
     # Replace OAuth create entry with a fetch devices step
     # LaMetric only use OAuth to get device information, but doesn't

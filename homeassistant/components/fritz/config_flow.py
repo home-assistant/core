@@ -13,7 +13,7 @@ from fritzconnection.core.exceptions import FritzConnectionException, FritzSecur
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )

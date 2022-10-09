@@ -62,7 +62,7 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
             ATTR_VERSION: self._iperf3_data.data[ATTR_VERSION],
         }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
@@ -76,7 +76,7 @@ class Iperf3Sensor(RestoreEntity, SensorEntity):
             return
         self._attr_native_value = state.state
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the states."""
         data = self._iperf3_data.data.get(self.entity_description.key)
         if data is not None:

@@ -12,7 +12,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby \u0142\u0105czy\u0142 si\u0119 z serwerem RTSPtoWebRTC dostarczonym przez dodatek: {addon} ?",
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby \u0142\u0105czy\u0142 si\u0119 z serwerem RTSPtoWebRTC dostarczonym przez dodatek: {addon}?",
                 "title": "RTSPtoWebRTC poprzez dodatek Home Assistant"
             },
             "user": {
@@ -21,6 +21,15 @@
                 },
                 "description": "Integracja RTSPtoWebRTC wymaga serwera do t\u0142umaczenia strumieni RTSP na WebRTC. Wprowad\u017a adres URL serwera RTSPtoWebRTC.",
                 "title": "Konfiguracja RTSPtoWebRTC"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stun_server": "Adres serwera STUN (host:port)"
+                }
             }
         }
     }

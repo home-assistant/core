@@ -7,8 +7,7 @@ from typing import Any, Final, cast
 from aiolookin import Climate, MeteoSensor
 from aiolookin.models import UDPCommandType, UDPEvent
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
@@ -16,6 +15,7 @@ from homeassistant.components.climate.const import (
     FAN_MIDDLE,
     SWING_BOTH,
     SWING_OFF,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

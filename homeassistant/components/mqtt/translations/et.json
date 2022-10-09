@@ -49,6 +49,12 @@
             "button_triple_press": "\"{subtype}\" on kolmekordselt kl\u00f5psatud"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "K\u00e4sitsi seadistatud MQTT {platform}  leiti platvormi v\u00f5tme ` {platform} ` alt. \n\n Selle probleemi lahendamiseks teisalda konfiguratsioon sidumisv\u00f5tmesse \"mqtt\" ja taask\u00e4ivitage Home Assistant. Lisateabe saamiseks vaata [dokumentatsiooni]( {more_info_url} ).",
+            "title": "K\u00e4sitsi seadistatud MQTT {platform} vajab t\u00e4helepanu"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Kehtetu loomise teavitus.",

@@ -4,15 +4,9 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.alexa import smart_home
-from homeassistant.components.climate import const as climate
+from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, HVACMode
 from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
-from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-)
+from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ALARM_ARMED_AWAY,
@@ -571,14 +565,14 @@ async def test_report_cover_range_value(hass):
 
 async def test_report_climate_state(hass):
     """Test ThermostatController reports state correctly."""
-    for auto_modes in (climate.HVAC_MODE_AUTO, climate.HVAC_MODE_HEAT_COOL):
+    for auto_modes in (HVACMode.AUTO, HVACMode.HEAT_COOL):
         hass.states.async_set(
             "climate.downstairs",
             auto_modes,
             {
                 "friendly_name": "Climate Downstairs",
                 "supported_features": 91,
-                climate.ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_CURRENT_TEMPERATURE: 34,
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
         )
@@ -590,14 +584,14 @@ async def test_report_climate_state(hass):
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_modes in [climate.HVAC_MODE_OFF]:
+    for off_modes in [HVACMode.OFF]:
         hass.states.async_set(
             "climate.downstairs",
             off_modes,
             {
                 "friendly_name": "Climate Downstairs",
                 "supported_features": 91,
-                climate.ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_CURRENT_TEMPERATURE: 34,
                 ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             },
         )
@@ -616,7 +610,7 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_CURRENT_TEMPERATURE: 34,
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         },
     )
@@ -633,7 +627,7 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 31,
+            ATTR_CURRENT_TEMPERATURE: 31,
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         },
     )
@@ -649,7 +643,7 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Heat",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_CURRENT_TEMPERATURE: 34,
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         },
     )
@@ -665,7 +659,7 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Cool",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_CURRENT_TEMPERATURE: 34,
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         },
     )
@@ -692,7 +686,7 @@ async def test_report_climate_state(hass):
         {
             "friendly_name": "Climate Unsupported",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_CURRENT_TEMPERATURE: 34,
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         },
     )
@@ -727,8 +721,8 @@ async def test_temperature_sensor_climate(hass):
     for bad_value in (STATE_UNKNOWN, STATE_UNAVAILABLE, "not-number"):
         hass.states.async_set(
             "climate.downstairs",
-            climate.HVAC_MODE_HEAT,
-            {climate.ATTR_CURRENT_TEMPERATURE: bad_value},
+            HVACMode.HEAT,
+            {ATTR_CURRENT_TEMPERATURE: bad_value},
         )
 
         properties = await reported_properties(hass, "climate.downstairs")
@@ -736,8 +730,8 @@ async def test_temperature_sensor_climate(hass):
 
     hass.states.async_set(
         "climate.downstairs",
-        climate.HVAC_MODE_HEAT,
-        {climate.ATTR_CURRENT_TEMPERATURE: 34},
+        HVACMode.HEAT,
+        {ATTR_CURRENT_TEMPERATURE: 34},
     )
     properties = await reported_properties(hass, "climate.downstairs")
     properties.assert_equal(
@@ -782,7 +776,9 @@ async def test_report_playback_state(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP,
+            "supported_features": MediaPlayerEntityFeature.PAUSE
+            | MediaPlayerEntityFeature.PLAY
+            | MediaPlayerEntityFeature.STOP,
             "volume_level": 0.75,
         },
     )
@@ -801,7 +797,8 @@ async def test_report_speaker_volume(hass):
         "on",
         {
             "friendly_name": "Test media player speaker",
-            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+            "supported_features": MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_SET,
             "volume_level": None,
             "device_class": "speaker",
         },
@@ -815,7 +812,8 @@ async def test_report_speaker_volume(hass):
             "on",
             {
                 "friendly_name": "Test media player speaker",
-                "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+                "supported_features": MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.VOLUME_SET,
                 "volume_level": good_value / 100,
                 "device_class": "speaker",
             },
@@ -921,11 +919,11 @@ async def test_get_property_blowup(hass, caplog):
     """Test we handle a property blowing up."""
     hass.states.async_set(
         "climate.downstairs",
-        climate.HVAC_MODE_AUTO,
+        HVACMode.AUTO,
         {
             "friendly_name": "Climate Downstairs",
             "supported_features": 91,
-            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_CURRENT_TEMPERATURE: 34,
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         },
     )

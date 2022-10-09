@@ -2,7 +2,7 @@
 
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -37,6 +37,8 @@ async def test_nanoleaf_nl55_setup(hass):
                     unique_id="homekit-AAAA011111111111-19",
                     supported_features=0,
                     capabilities={
+                        "max_color_temp_kelvin": 6535,
+                        "min_color_temp_kelvin": 2127,
                         "max_mireds": 470,
                         "min_mireds": 153,
                         "supported_color_modes": ["color_temp", "hs"],

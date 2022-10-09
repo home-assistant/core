@@ -16,8 +16,10 @@ class SupportedModels(StrEnum):
 
     BOT = "bot"
     BULB = "bulb"
+    CEILING_LIGHT = "ceiling_light"
     CURTAIN = "curtain"
     HYGROMETER = "hygrometer"
+    LIGHT_STRIP = "light_strip"
     CONTACT = "contact"
     PLUG = "plug"
     MOTION = "motion"
@@ -28,6 +30,8 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.CURTAIN: SupportedModels.CURTAIN,
     SwitchbotModel.PLUG_MINI: SupportedModels.PLUG,
     SwitchbotModel.COLOR_BULB: SupportedModels.BULB,
+    SwitchbotModel.LIGHT_STRIP: SupportedModels.LIGHT_STRIP,
+    SwitchbotModel.CEILING_LIGHT: SupportedModels.CEILING_LIGHT,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -36,9 +40,13 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
 }
 
-SUPPORTED_MODEL_TYPES = {
-    **CONNECTABLE_SUPPORTED_MODEL_TYPES,
-    **NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
+SUPPORTED_MODEL_TYPES = (
+    CONNECTABLE_SUPPORTED_MODEL_TYPES | NON_CONNECTABLE_SUPPORTED_MODEL_TYPES
+)
+
+
+HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
+    str(v): k for k, v in SUPPORTED_MODEL_TYPES.items()
 }
 
 # Config Defaults

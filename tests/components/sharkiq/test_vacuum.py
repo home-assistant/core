@@ -33,15 +33,7 @@ from homeassistant.components.vacuum import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
-    SUPPORT_BATTERY,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
+    VacuumEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -65,15 +57,15 @@ from tests.common import MockConfigEntry
 
 VAC_ENTITY_ID = f"vacuum.{SHARK_DEVICE_DICT['product_name'].lower()}"
 EXPECTED_FEATURES = (
-    SUPPORT_BATTERY
-    | SUPPORT_FAN_SPEED
-    | SUPPORT_PAUSE
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_START
-    | SUPPORT_STATE
-    | SUPPORT_STATUS
-    | SUPPORT_STOP
-    | SUPPORT_LOCATE
+    VacuumEntityFeature.BATTERY
+    | VacuumEntityFeature.FAN_SPEED
+    | VacuumEntityFeature.PAUSE
+    | VacuumEntityFeature.RETURN_HOME
+    | VacuumEntityFeature.START
+    | VacuumEntityFeature.STATE
+    | VacuumEntityFeature.STATUS
+    | VacuumEntityFeature.STOP
+    | VacuumEntityFeature.LOCATE
 )
 
 

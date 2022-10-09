@@ -12,6 +12,11 @@
                 "data": {
                     "device": "\u015acie\u017cka urz\u0105dzenia USB"
                 }
+            },
+            "user": {
+                "data": {
+                    "device": "Wybierz urz\u0105dzenie"
+                }
             }
         }
     }

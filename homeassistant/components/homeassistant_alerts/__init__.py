@@ -141,7 +141,6 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
         self.ha_version = AwesomeVersion(
             __version__,
             ensure_strategy=AwesomeVersionStrategy.CALVER,
-            find_first_match=False,
         )
 
     async def _async_update_data(self) -> dict[str, IntegrationAlert]:
@@ -161,14 +160,12 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
                 if "affected_from_version" in alert["homeassistant"]:
                     affected_from_version = AwesomeVersion(
                         alert["homeassistant"]["affected_from_version"],
-                        find_first_match=False,
                     )
                     if self.ha_version < affected_from_version:
                         continue
                 if "resolved_in_version" in alert["homeassistant"]:
                     resolved_in_version = AwesomeVersion(
                         alert["homeassistant"]["resolved_in_version"],
-                        find_first_match=False,
                     )
                     if self.ha_version >= resolved_in_version:
                         continue

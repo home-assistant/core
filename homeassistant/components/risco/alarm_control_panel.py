@@ -235,7 +235,7 @@ class RiscoLocalAlarm(RiscoAlarm):
         self._attr_unique_id = f"{system_id}_{partition_id}_local"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
-            name=f"Risco {system_id} Partition {partition_id}",
+            name=partition.name,
             manufacturer="Risco",
         )
 

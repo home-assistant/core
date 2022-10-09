@@ -22,7 +22,13 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
-from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE, DeconzAlarmEvent, DeconzEvent
+from .deconz_event import (
+    CONF_DECONZ_EVENT,
+    CONF_GESTURE,
+    DeconzAlarmEvent,
+    DeconzEvent,
+    DeconzPresenceEvent,
+)
 from .gateway import DeconzGateway
 
 CONF_SUBTYPE = "subtype"
@@ -476,6 +482,12 @@ LIDL_SILVERCREST_DOORBELL = {
     (CONF_SHORT_PRESS, ""): {CONF_EVENT: 1002},
 }
 
+LIDL_SILVERCREST_BUTTON_REMOTE_MODEL = "TS004F"
+LIDL_SILVERCREST_BUTTON_REMOTE = {
+    (CONF_SHORT_PRESS, ""): {CONF_EVENT: 1002},
+    (CONF_DOUBLE_PRESS, ""): {CONF_EVENT: 1004},
+}
+
 LIGHTIFIY_FOUR_BUTTON_REMOTE_MODEL = "Switch-LIGHTIFY"
 LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_MODEL = "Switch 4x-LIGHTIFY"
 LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_EU_MODEL = "Switch 4x EU-LIGHTIFY"
@@ -601,6 +613,7 @@ REMOTES = {
     LEGRAND_ZGP_TOGGLE_SWITCH_MODEL: LEGRAND_ZGP_TOGGLE_SWITCH,
     LEGRAND_ZGP_SCENE_SWITCH_MODEL: LEGRAND_ZGP_SCENE_SWITCH,
     LIDL_SILVERCREST_DOORBELL_MODEL: LIDL_SILVERCREST_DOORBELL,
+    LIDL_SILVERCREST_BUTTON_REMOTE_MODEL: LIDL_SILVERCREST_BUTTON_REMOTE,
     LIGHTIFIY_FOUR_BUTTON_REMOTE_MODEL: LIGHTIFIY_FOUR_BUTTON_REMOTE,
     LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_MODEL: LIGHTIFIY_FOUR_BUTTON_REMOTE,
     LIGHTIFIY_FOUR_BUTTON_REMOTE_4X_EU_MODEL: LIGHTIFIY_FOUR_BUTTON_REMOTE,
@@ -622,7 +635,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 def _get_deconz_event_from_device(
     hass: HomeAssistant,
     device: dr.DeviceEntry,
-) -> DeconzAlarmEvent | DeconzEvent:
+) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent:
     """Resolve deconz event from device."""
     gateways: dict[str, DeconzGateway] = hass.data.get(DOMAIN, {})
     for gateway in gateways.values():

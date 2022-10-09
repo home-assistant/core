@@ -1,12 +1,12 @@
 """Make sure that handling real world LG HomeKit characteristics isn't broken."""
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_SELECT_SOURCE,
 )
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -54,7 +54,7 @@ async def test_lg_tv(hass):
                     # The LG TV doesn't (at least at this patch level) report
                     # its media state via CURRENT_MEDIA_STATE. Therefore "ok"
                     # is the best we can say.
-                    state="ok",
+                    state="on",
                 ),
             ],
         ),

@@ -649,10 +649,10 @@ DEVICES = [
             "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_iaszone",
             "sensor.climaxtechnology_sd8sc_00_00_03_12tc_rssi",
             "sensor.climaxtechnology_sd8sc_00_00_03_12tc_lqi",
-            "select.climaxtechnology_sd8sc_00_00_03_12tc_defaulttoneselect",
-            "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultsirenlevelselect",
-            "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultstrobelevelselect",
-            "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultstrobeselect",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_tone",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_level",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe_level",
+            "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe",
             "siren.climaxtechnology_sd8sc_00_00_03_12tc_siren",
         ],
         DEV_SIG_ENT_MAP: {
@@ -679,22 +679,22 @@ DEVICES = [
             ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_defaulttoneselect",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_tone",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultsirenlevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_siren_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultstrobelevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_defaultstrobeselect",
+                DEV_SIG_ENT_MAP_ID: "select.climaxtechnology_sd8sc_00_00_03_12tc_default_strobe",
             },
             ("siren", "00:11:22:33:44:55:66:77-1-1282"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
@@ -819,10 +819,10 @@ DEVICES = [
             "binary_sensor.heiman_smokesensor_em_iaszone",
             "sensor.heiman_smokesensor_em_rssi",
             "sensor.heiman_smokesensor_em_lqi",
-            "select.heiman_smokesensor_em_defaulttoneselect",
-            "select.heiman_smokesensor_em_defaultsirenlevelselect",
-            "select.heiman_smokesensor_em_defaultstrobelevelselect",
-            "select.heiman_smokesensor_em_defaultstrobeselect",
+            "select.heiman_smokesensor_em_default_siren_tone",
+            "select.heiman_smokesensor_em_default_siren_level",
+            "select.heiman_smokesensor_em_default_strobe_level",
+            "select.heiman_smokesensor_em_default_strobe",
             "siren.heiman_smokesensor_em_siren",
         ],
         DEV_SIG_ENT_MAP: {
@@ -854,22 +854,22 @@ DEVICES = [
             ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_defaulttoneselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_siren_tone",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_defaultsirenlevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_siren_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_defaultstrobelevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_strobe_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_defaultstrobeselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_smokesensor_em_default_strobe",
             },
             ("siren", "00:11:22:33:44:55:66:77-1-1282"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
@@ -942,32 +942,32 @@ DEVICES = [
             "binary_sensor.heiman_warningdevice_iaszone",
             "sensor.heiman_warningdevice_rssi",
             "sensor.heiman_warningdevice_lqi",
-            "select.heiman_warningdevice_defaulttoneselect",
-            "select.heiman_warningdevice_defaultsirenlevelselect",
-            "select.heiman_warningdevice_defaultstrobelevelselect",
-            "select.heiman_warningdevice_defaultstrobeselect",
+            "select.heiman_warningdevice_default_siren_tone",
+            "select.heiman_warningdevice_default_siren_level",
+            "select.heiman_warningdevice_default_strobe_level",
+            "select.heiman_warningdevice_default_strobe",
             "siren.heiman_warningdevice_siren",
         ],
         DEV_SIG_ENT_MAP: {
             ("select", "00:11:22:33:44:55:66:77-1-1282-WarningMode"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultToneSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_defaulttoneselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_default_siren_tone",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-SirenLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultSirenLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_defaultsirenlevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_default_siren_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-StrobeLevel"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeLevelSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_defaultstrobelevelselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_default_strobe_level",
             },
             ("select", "00:11:22:33:44:55:66:77-1-1282-Strobe"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHADefaultStrobeSelectEntity",
-                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_defaultstrobeselect",
+                DEV_SIG_ENT_MAP_ID: "select.heiman_warningdevice_default_strobe",
             },
             ("siren", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["ias_wd"],
@@ -5493,7 +5493,7 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
             "button.sengled_e11_g13_identifybutton",
-            "light.sengled_e11_g13_light",
+            "light.sengled_e11_g13_mintransitionlight",
             "sensor.sengled_e11_g13_smartenergymetering",
             "sensor.sengled_e11_g13_smartenergysummation",
             "sensor.sengled_e11_g13_rssi",
@@ -5502,8 +5502,8 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.sengled_e11_g13_light",
+                DEV_SIG_ENT_MAP_CLASS: "MinTransitionLight",
+                DEV_SIG_ENT_MAP_ID: "light.sengled_e11_g13_mintransitionlight",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
@@ -5549,7 +5549,7 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
             "button.sengled_e12_n14_identifybutton",
-            "light.sengled_e12_n14_light",
+            "light.sengled_e12_n14_mintransitionlight",
             "sensor.sengled_e12_n14_smartenergymetering",
             "sensor.sengled_e12_n14_smartenergysummation",
             "sensor.sengled_e12_n14_rssi",
@@ -5558,8 +5558,8 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.sengled_e12_n14_light",
+                DEV_SIG_ENT_MAP_CLASS: "MinTransitionLight",
+                DEV_SIG_ENT_MAP_ID: "light.sengled_e12_n14_mintransitionlight",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
@@ -5605,7 +5605,7 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
             "button.sengled_z01_a19nae26_identifybutton",
-            "light.sengled_z01_a19nae26_light",
+            "light.sengled_z01_a19nae26_mintransitionlight",
             "sensor.sengled_z01_a19nae26_smartenergymetering",
             "sensor.sengled_z01_a19nae26_smartenergysummation",
             "sensor.sengled_z01_a19nae26_rssi",
@@ -5614,8 +5614,8 @@ DEVICES = [
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
-                DEV_SIG_ENT_MAP_CLASS: "Light",
-                DEV_SIG_ENT_MAP_ID: "light.sengled_z01_a19nae26_light",
+                DEV_SIG_ENT_MAP_CLASS: "MinTransitionLight",
+                DEV_SIG_ENT_MAP_ID: "light.sengled_z01_a19nae26_mintransitionlight",
             },
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],

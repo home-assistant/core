@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import lock, mqtt
 from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_UNLOCKED,
-    SUPPORT_OPEN,
+    LockEntityFeature,
 )
 from homeassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
@@ -49,15 +49,20 @@ from .test_common import (
     help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
-    help_test_update_with_json_attrs_bad_JSON,
+    help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
 
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
-    LOCK_DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
+    mqtt.DOMAIN: {lock.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
+DEFAULT_CONFIG_LEGACY[lock.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -71,17 +76,18 @@ async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_confi
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
-        LOCK_DOMAIN,
+        mqtt.DOMAIN,
         {
-            LOCK_DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_lock": "LOCK",
-                "payload_unlock": "UNLOCK",
-                "state_locked": "LOCKED",
-                "state_unlocked": "UNLOCKED",
+            mqtt.DOMAIN: {
+                lock.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "state_locked": "LOCKED",
+                    "state_unlocked": "UNLOCKED",
+                }
             }
         },
     )
@@ -110,17 +116,18 @@ async def test_controlling_non_default_state_via_topic(
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
-        LOCK_DOMAIN,
+        mqtt.DOMAIN,
         {
-            LOCK_DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_lock": "LOCK",
-                "payload_unlock": "UNLOCK",
-                "state_locked": "closed",
-                "state_unlocked": "open",
+            mqtt.DOMAIN: {
+                lock.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "state_locked": "closed",
+                    "state_unlocked": "open",
+                }
             }
         },
     )
@@ -148,18 +155,19 @@ async def test_controlling_state_via_topic_and_json_message(
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
         hass,
-        LOCK_DOMAIN,
+        mqtt.DOMAIN,
         {
-            LOCK_DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_lock": "LOCK",
-                "payload_unlock": "UNLOCK",
-                "state_locked": "LOCKED",
-                "state_unlocked": "UNLOCKED",
-                "value_template": "{{ value_json.val }}",
+            mqtt.DOMAIN: {
+                lock.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "state_locked": "LOCKED",
+                    "state_unlocked": "UNLOCKED",
+                    "value_template": "{{ value_json.val }}",
+                }
             }
         },
     )
@@ -186,18 +194,19 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
         hass,
-        LOCK_DOMAIN,
+        mqtt.DOMAIN,
         {
-            LOCK_DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_lock": "LOCK",
-                "payload_unlock": "UNLOCK",
-                "state_locked": "closed",
-                "state_unlocked": "open",
-                "value_template": "{{ value_json.val }}",
+            mqtt.DOMAIN: {
+                lock.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "state_locked": "closed",
+                    "state_unlocked": "open",
+                    "value_template": "{{ value_json.val }}",
+                }
             }
         },
     )
@@ -224,16 +233,17 @@ async def test_sending_mqtt_commands_and_optimistic(
     """Test optimistic mode without state topic."""
     assert await async_setup_component(
         hass,
-        LOCK_DOMAIN,
+        mqtt.DOMAIN,
         {
-            LOCK_DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "payload_lock": "LOCK",
-                "payload_unlock": "UNLOCK",
-                "state_locked": "LOCKED",
-                "state_unlocked": "UNLOCKED",
+            mqtt.DOMAIN: {
+                lock.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "state_locked": "LOCKED",
+                    "state_unlocked": "UNLOCKED",
+                }
             }
         },
     )
@@ -245,7 +255,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
@@ -255,7 +265,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
@@ -271,18 +281,19 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     """Test optimistic mode without state topic."""
     assert await async_setup_component(
         hass,
-        LOCK_DOMAIN,
+        mqtt.DOMAIN,
         {
-            LOCK_DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_lock": "LOCK",
-                "payload_unlock": "UNLOCK",
-                "state_locked": "LOCKED",
-                "state_unlocked": "UNLOCKED",
-                "optimistic": True,
+            mqtt.DOMAIN: {
+                lock.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "state_locked": "LOCKED",
+                    "state_unlocked": "UNLOCKED",
+                    "optimistic": True,
+                }
             }
         },
     )
@@ -294,7 +305,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
@@ -304,7 +315,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
@@ -320,17 +331,18 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     """Test open function of the lock without state topic."""
     assert await async_setup_component(
         hass,
-        LOCK_DOMAIN,
+        mqtt.DOMAIN,
         {
-            LOCK_DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-                "payload_lock": "LOCK",
-                "payload_unlock": "UNLOCK",
-                "payload_open": "OPEN",
-                "state_locked": "LOCKED",
-                "state_unlocked": "UNLOCKED",
+            mqtt.DOMAIN: {
+                lock.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "payload_open": "OPEN",
+                    "state_locked": "LOCKED",
+                    "state_unlocked": "UNLOCKED",
+                }
             }
         },
     )
@@ -340,10 +352,10 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_OPEN
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == LockEntityFeature.OPEN
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
@@ -353,7 +365,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
@@ -363,7 +375,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
@@ -379,19 +391,20 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     """Test open function of the lock without state topic."""
     assert await async_setup_component(
         hass,
-        LOCK_DOMAIN,
+        mqtt.DOMAIN,
         {
-            LOCK_DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "payload_lock": "LOCK",
-                "payload_unlock": "UNLOCK",
-                "payload_open": "OPEN",
-                "state_locked": "LOCKED",
-                "state_unlocked": "UNLOCKED",
-                "optimistic": True,
+            mqtt.DOMAIN: {
+                lock.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "command_topic": "command-topic",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "payload_open": "OPEN",
+                    "state_locked": "LOCKED",
+                    "state_unlocked": "UNLOCKED",
+                    "optimistic": True,
+                }
             }
         },
     )
@@ -401,10 +414,10 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_OPEN
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == LockEntityFeature.OPEN
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
@@ -414,7 +427,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
@@ -424,7 +437,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+        lock.DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
@@ -439,28 +452,28 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock_entry_with_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -469,7 +482,7 @@ async def test_setting_attribute_via_mqtt_json_message(
 ):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry_with_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -480,7 +493,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
-        LOCK_DOMAIN,
+        lock.DOMAIN,
         DEFAULT_CONFIG,
         MQTT_LOCK_ATTRIBUTES_BLOCKED,
     )
@@ -489,7 +502,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock_entry_with_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -498,7 +511,11 @@ async def test_update_with_json_attrs_not_dict(
 ):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        lock.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
@@ -506,40 +523,44 @@ async def test_update_with_json_attrs_bad_json(
     hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test attributes get extracted from a JSON result."""
-    await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock_entry_with_yaml_config, caplog, LOCK_DOMAIN, DEFAULT_CONFIG
+    await help_test_update_with_json_attrs_bad_json(
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        lock.DOMAIN,
+        DEFAULT_CONFIG,
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, caplog, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique id option only creates one lock per unique_id."""
     config = {
-        LOCK_DOMAIN: [
-            {
-                "platform": "mqtt",
-                "name": "Test 1",
-                "state_topic": "test-topic",
-                "command_topic": "test_topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-            {
-                "platform": "mqtt",
-                "name": "Test 2",
-                "state_topic": "test-topic",
-                "command_topic": "test_topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-        ]
+        mqtt.DOMAIN: {
+            lock.DOMAIN: [
+                {
+                    "name": "Test 1",
+                    "state_topic": "test-topic",
+                    "command_topic": "test_topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+                {
+                    "name": "Test 2",
+                    "state_topic": "test-topic",
+                    "command_topic": "test_topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+            ]
+        }
     }
     await help_test_unique_id(
-        hass, mqtt_mock_entry_with_yaml_config, LOCK_DOMAIN, config
+        hass, mqtt_mock_entry_with_yaml_config, lock.DOMAIN, config
     )
 
 
@@ -547,7 +568,7 @@ async def test_discovery_removal_lock(hass, mqtt_mock_entry_no_yaml_config, capl
     """Test removal of discovered lock."""
     data = '{ "name": "test",' '  "command_topic": "test_topic" }'
     await help_test_discovery_removal(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, LOCK_DOMAIN, data
+        hass, mqtt_mock_entry_no_yaml_config, caplog, lock.DOMAIN, data
     )
 
 
@@ -566,7 +587,7 @@ async def test_discovery_update_lock(hass, mqtt_mock_entry_no_yaml_config, caplo
         "availability_topic": "availability_topic2",
     }
     await help_test_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, LOCK_DOMAIN, config1, config2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, lock.DOMAIN, config1, config2
     )
 
 
@@ -586,7 +607,7 @@ async def test_discovery_update_unchanged_lock(
             hass,
             mqtt_mock_entry_no_yaml_config,
             caplog,
-            LOCK_DOMAIN,
+            lock.DOMAIN,
             data1,
             discovery_update,
         )
@@ -598,49 +619,49 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
     await help_test_discovery_broken(
-        hass, mqtt_mock_entry_no_yaml_config, caplog, LOCK_DOMAIN, data1, data2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, lock.DOMAIN, data1, data2
     )
 
 
 async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT lock device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock_entry_no_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT lock device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock_entry_no_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock_entry_no_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock_entry_no_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry_with_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock_entry_no_yaml_config, LOCK_DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, lock.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -649,7 +670,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     await help_test_entity_debug_info_message(
         hass,
         mqtt_mock_entry_no_yaml_config,
-        LOCK_DOMAIN,
+        lock.DOMAIN,
         DEFAULT_CONFIG,
         SERVICE_LOCK,
         command_payload="LOCK",
@@ -679,8 +700,8 @@ async def test_publishing_with_custom_encoding(
     template,
 ):
     """Test publishing MQTT payload with different encoding."""
-    domain = LOCK_DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    domain = lock.DOMAIN
+    config = DEFAULT_CONFIG
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -698,17 +719,19 @@ async def test_publishing_with_custom_encoding(
 
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
-    domain = LOCK_DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    domain = lock.DOMAIN
+    config = DEFAULT_CONFIG
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
 
 
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
-    domain = LOCK_DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    domain = lock.DOMAIN
+    config = DEFAULT_CONFIG_LEGACY[domain]
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
@@ -732,8 +755,8 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry_with_yaml_config,
         caplog,
-        LOCK_DOMAIN,
-        DEFAULT_CONFIG[LOCK_DOMAIN],
+        lock.DOMAIN,
+        DEFAULT_CONFIG[mqtt.DOMAIN][lock.DOMAIN],
         topic,
         value,
         attribute,
@@ -743,18 +766,28 @@ async def test_encoding_subscribable_topics(
 
 async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
     """Test setup manual configured MQTT entity."""
-    platform = LOCK_DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG[platform])
-    config["name"] = "test"
-    del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
-    assert hass.states.get(f"{platform}.test") is not None
+    platform = lock.DOMAIN
+    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
+    assert hass.states.get(f"{platform}.test")
 
 
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
-    domain = LOCK_DOMAIN
-    config = DEFAULT_CONFIG[domain]
+    domain = lock.DOMAIN
+    config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )
+
+
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
+async def test_setup_with_legacy_schema(hass, mqtt_mock_entry_with_yaml_config):
+    """Test a setup with deprecated yaml platform schema."""
+    domain = lock.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[domain])
+    config["name"] = "test"
+    assert await async_setup_component(hass, domain, {domain: config})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+    assert hass.states.get(f"{domain}.test") is not None

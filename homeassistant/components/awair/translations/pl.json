@@ -29,7 +29,7 @@
                 "data": {
                     "host": "Adres IP"
                 },
-                "description": "Lokalny interfejs API Awair musi by\u0107 w\u0142\u0105czony, wykonuj\u0105c nast\u0119puj\u0105ce czynno\u015bci: {url}"
+                "description": "Post\u0119puj zgodnie z [tymi instrukcjami]({url}), aby dowiedzie\u0107 si\u0119, jak w\u0142\u0105czy\u0107 lokalny interfejs API Awair. \n\n Po zako\u0144czeniu kliknij Zatwierd\u017a."
             },
             "local_pick": {
                 "data": {

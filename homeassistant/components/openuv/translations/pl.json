@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Zaktualizuj wszystkie automatyzacje lub skrypty, kt\u00f3re u\u017cywaj\u0105 tej us\u0142ugi, aby zamiast tego u\u017cywa\u0142y us\u0142ugi `{alternate_service}` z jednym z tych identyfikator\u00f3w encji jako docelow\u0105: `{alternate_targets}`.",
+            "title": "Us\u0142uga {deprecated_service} zostanie usuni\u0119ta"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Zaktualizuj wszystkie automatyzacje lub skrypty korzystaj\u0105ce z tej us\u0142ugi, aby zamiast tego u\u017cywa\u0142y us\u0142ugi `{alternate_service}` z `{alternate_targets}` jako docelow\u0105.",
+            "title": "Us\u0142uga {deprecated_service} zostanie usuni\u0119ta"
+        }
+    },
     "options": {
         "step": {
             "init": {

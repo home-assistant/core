@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import platform
+import time
 
 from bluetooth_auto_recovery import recover_adapter
 
@@ -15,6 +16,38 @@ from .const import (
     WINDOWS_DEFAULT_BLUETOOTH_ADAPTER,
     AdapterDetails,
 )
+from .models import BluetoothServiceInfoBleak
+
+
+async def async_load_history_from_system() -> dict[str, BluetoothServiceInfoBleak]:
+    """Load the device and advertisement_data history if available on the current system."""
+    if platform.system() != "Linux":
+        return {}
+    from bluetooth_adapters import (  # pylint: disable=import-outside-toplevel
+        BlueZDBusObjects,
+    )
+
+    bluez_dbus = BlueZDBusObjects()
+    await bluez_dbus.load()
+    now = time.monotonic()
+    return {
+        address: BluetoothServiceInfoBleak(
+            name=history.advertisement_data.local_name
+            or history.device.name
+            or history.device.address,
+            address=history.device.address,
+            rssi=history.device.rssi,
+            manufacturer_data=history.advertisement_data.manufacturer_data,
+            service_data=history.advertisement_data.service_data,
+            service_uuids=history.advertisement_data.service_uuids,
+            source=history.source,
+            device=history.device,
+            advertisement=history.advertisement_data,
+            connectable=False,
+            time=now,
+        )
+        for address, history in bluez_dbus.history.items()
+    }
 
 
 async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
@@ -24,6 +57,7 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
             WINDOWS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
                 address=DEFAULT_ADDRESS,
                 sw_version=platform.release(),
+                passive_scan=False,
             )
         }
     if platform.system() == "Darwin":
@@ -31,6 +65,7 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
             MACOS_DEFAULT_BLUETOOTH_ADAPTER: AdapterDetails(
                 address=DEFAULT_ADDRESS,
                 sw_version=platform.release(),
+                passive_scan=False,
             )
         }
     from bluetooth_adapters import (  # pylint: disable=import-outside-toplevel
@@ -44,7 +79,8 @@ async def async_get_bluetooth_adapters() -> dict[str, AdapterDetails]:
         adapters[adapter] = AdapterDetails(
             address=adapter1["Address"],
             sw_version=adapter1["Name"],  # This is actually the BlueZ version
-            hw_version=adapter1["Modalias"],
+            hw_version=adapter1.get("Modalias"),
+            passive_scan="org.bluez.AdvertisementMonitorManager1" in details,
         )
     return adapters
 

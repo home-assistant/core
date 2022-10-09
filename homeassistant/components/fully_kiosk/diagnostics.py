@@ -51,6 +51,7 @@ SETTINGS_TO_REDACT = {
     "sebExamKey",
     "sebConfigKey",
     "kioskPinEnc",
+    "remoteAdminPasswordEnc",
 }
 
 

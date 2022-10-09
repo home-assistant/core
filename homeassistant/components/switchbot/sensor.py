@@ -21,13 +21,14 @@ from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "rssi": SensorEntityDescription(
         key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -35,6 +36,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="wifi_rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -71,14 +73,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot sensor based on a config entry."""
     coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    entities = [
         SwitchBotSensor(
             coordinator,
             sensor,
         )
         for sensor in coordinator.data["data"]
         if sensor in SENSOR_TYPES
-    )
+    ]
+    entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
+    async_add_entities(entities)
 
 
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
@@ -98,6 +102,15 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
         self.entity_description = SENSOR_TYPES[sensor]
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | int:
         """Return the state of the sensor."""
         return self.data["data"][self._sensor]
+
+
+class SwitchbotRSSISensor(SwitchBotSensor):
+    """Representation of a Switchbot RSSI sensor."""
+
+    @property
+    def native_value(self) -> str | int:
+        """Return the state of the sensor."""
+        return self.coordinator.ble_device.rssi

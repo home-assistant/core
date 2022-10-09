@@ -24,13 +24,13 @@
             },
             "get_encryption_key_4_5": {
                 "data": {
-                    "bindkey": "Bindkey"
+                    "bindkey": "Clau d'enlla\u00e7 (bindkey)"
                 },
                 "description": "Les dades del sensor emeses estan xifrades. Per desxifrar-les necessites una clau d'enlla\u00e7 de 32 car\u00e0cters hexadecimals."
             },
             "get_encryption_key_legacy": {
                 "data": {
-                    "bindkey": "Bindkey"
+                    "bindkey": "Clau d'enlla\u00e7 (bindkey)"
                 },
                 "description": "Les dades del sensor emeses estan xifrades. Per desxifrar-les necessites una clau d'enlla\u00e7 de 24 car\u00e0cters hexadecimals."
             },
