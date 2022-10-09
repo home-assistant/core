@@ -1,5 +1,5 @@
 """Test the Enphase Envoy config flow."""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
@@ -150,25 +150,20 @@ async def test_form_cannot_connect(hass: HomeAssistant, setup_enphase_envoy) -> 
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("mock_get_data", [AsyncMock(side_effect=ValueError)])
+async def test_form_unknown_error(hass: HomeAssistant, setup_enphase_envoy) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    with patch(
-        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
-        side_effect=ValueError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.1",
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
 
@@ -210,7 +205,9 @@ async def test_zeroconf(hass: HomeAssistant, setup_enphase_envoy) -> None:
     }
 
 
-async def test_form_host_already_exists(hass: HomeAssistant, config_entry) -> None:
+async def test_form_host_already_exists(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
     """Test host already exists."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -231,7 +228,7 @@ async def test_form_host_already_exists(hass: HomeAssistant, config_entry) -> No
 
 
 async def test_zeroconf_serial_already_exists(
-    hass: HomeAssistant, config_entry
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
 ) -> None:
     """Test serial number already exists from zeroconf."""
     result = await hass.config_entries.flow.async_init(
@@ -254,7 +251,7 @@ async def test_zeroconf_serial_already_exists(
 
 
 async def test_zeroconf_serial_already_exists_ignores_ipv6(
-    hass: HomeAssistant, config_entry
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
 ) -> None:
     """Test serial number already exists from zeroconf but the discovery is ipv6."""
     result = await hass.config_entries.flow.async_init(
@@ -277,7 +274,9 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
 
 
 @pytest.mark.parametrize("serial_number", [None])
-async def test_zeroconf_host_already_exists(hass: HomeAssistant, config_entry) -> None:
+async def test_zeroconf_host_already_exists(
+    hass: HomeAssistant, config_entry, setup_enphase_envoy
+) -> None:
     """Test hosts already exists from zeroconf."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

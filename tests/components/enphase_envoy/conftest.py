@@ -1,6 +1,8 @@
 """Define test fixtures for Enphase Envoy."""
-from unittest.mock import AsyncMock, patch
+import json
+from unittest.mock import AsyncMock, Mock, patch
 
+from envoy_reader.envoy_reader import ENVOY_MODEL_S
 import pytest
 
 from homeassistant.components.enphase_envoy import DOMAIN
@@ -8,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="config_entry")
@@ -25,7 +27,7 @@ def config_entry_fixture(hass: HomeAssistant, config, serial_number):
 
 
 @pytest.fixture(name="config")
-def config_fixture(hass: HomeAssistant):
+def config_fixture():
     """Define a config entry data fixture."""
     return {
         CONF_HOST: "1.1.1.1",
@@ -35,31 +37,65 @@ def config_fixture(hass: HomeAssistant):
     }
 
 
-@pytest.fixture(name="mock_get_data")
-async def mock_get_data_fixture(hass: HomeAssistant, config, serial_number):
-    """Define a fixture to return a mocked data coroutine function."""
-    return AsyncMock(return_value=True)
+@pytest.fixture(name="gateway_data", scope="session")
+def gateway_data_fixture():
+    """Define a fixture to return gateway data."""
+    return json.loads(load_fixture("data.json", "enphase_envoy"))
+
+
+@pytest.fixture(name="inverters_production_data", scope="session")
+def inverters_production_data_fixture():
+    """Define a fixture to return inverter production data."""
+    return json.loads(load_fixture("inverters_production.json", "enphase_envoy"))
+
+
+@pytest.fixture(name="mock_envoy_reader")
+def mock_envoy_reader_fixture(
+    gateway_data,
+    mock_get_data,
+    mock_get_full_serial_number,
+    mock_inverters_production,
+    serial_number,
+):
+    """Define a fixture to return a mocked envoy_reader."""
+    mock_envoy_reader = Mock(endpoint_type=ENVOY_MODEL_S)
+    mock_envoy_reader.return_value.getData = mock_get_data
+    mock_envoy_reader.return_value.get_full_serial_number = mock_get_full_serial_number
+    mock_envoy_reader.return_value.inverters_production = mock_inverters_production
+
+    for key, value in gateway_data.items():
+        setattr(mock_envoy_reader.return_value, key, AsyncMock(return_value=value))
+
+    return mock_envoy_reader
 
 
 @pytest.fixture(name="mock_get_full_serial_number")
-async def mock_get_full_serial_number_fixture(
-    hass: HomeAssistant, config, serial_number
-):
-    """Define a fixture to return a mocked serial number coroutine function."""
+def mock_get_full_serial_number_fixture(serial_number):
+    """Define a fixture to return a mocked coroutine function for a serial number."""
     return AsyncMock(return_value=serial_number)
 
 
+@pytest.fixture(name="mock_get_data")
+def mock_get_data_fixture():
+    """Define a fixture to return a mocked coroutine function for gateway data."""
+    return AsyncMock()
+
+
+@pytest.fixture(name="mock_inverters_production")
+def mock_inverters_production_fixture(inverters_production_data):
+    """Define a fixture to return a mocked coroutine function for inverter data."""
+    return AsyncMock(return_value=inverters_production_data)
+
+
 @pytest.fixture(name="setup_enphase_envoy")
-async def setup_enphase_envoy_fixture(
-    hass, config, mock_get_data, mock_get_full_serial_number
-):
+async def setup_enphase_envoy_fixture(hass, config, mock_envoy_reader):
     """Define a fixture to set up Enphase Envoy."""
     with patch(
-        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
-        mock_get_data,
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader",
+        mock_envoy_reader,
     ), patch(
-        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.get_full_serial_number",
-        mock_get_full_serial_number,
+        "homeassistant.components.enphase_envoy.EnvoyReader",
+        mock_envoy_reader,
     ), patch(
         "homeassistant.components.enphase_envoy.PLATFORMS", []
     ):
@@ -69,6 +105,6 @@ async def setup_enphase_envoy_fixture(
 
 
 @pytest.fixture(name="serial_number")
-def serial_number_fixture(hass: HomeAssistant):
+def serial_number_fixture():
     """Define a serial number fixture."""
     return "1234"
