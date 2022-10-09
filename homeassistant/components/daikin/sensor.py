@@ -37,7 +37,6 @@ from .const import (
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
     ATTR_TARGET_HUMIDITY,
-    CONF_ENABLE_OUTDOOR_SENSORS,
 )
 
 
@@ -84,7 +83,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_TARGET_HUMIDITY,
-        name="Target Humidity",
+        name="Target humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -93,7 +92,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ALL_POWER,
-        name="Estimated Power Consumption",
+        name="Estimated power consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_KILO_WATT,
@@ -102,7 +101,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COOL_ENERGY,
-        name="Cool Energy Consumption",
+        name="Cool energy consumption",
         icon="mdi:snowflake",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
@@ -112,7 +111,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_HEAT_ENERGY,
-        name="Heat Energy Consumption",
+        name="Heat energy consumption",
         icon="mdi:fire",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
@@ -122,7 +121,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ENERGY_TODAY,
-        name="Energy Consumption",
+        name="Energy consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
@@ -131,7 +130,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_COMPRESSOR_FREQUENCY,
-        name="Compressor Frequency",
+        name="Compressor frequency",
         icon="mdi:fan",
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -142,7 +141,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     ),
     DaikinSensorEntityDescription(
         key=ATTR_ALL_ENERGY_TODAY,
-        name="Energy Consumption",
+        name="Energy consumption",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
@@ -190,10 +189,6 @@ async def async_setup_entry(
         DaikinSensor(daikin_api, description)
         for description in SENSOR_TYPES
         if description.key in sensors
-        and (
-            entry.data.get(CONF_ENABLE_OUTDOOR_SENSORS, True)
-            or not description.outdoor_sensor
-        )
     ]
     async_add_entities(entities)
 
@@ -210,8 +205,6 @@ class DaikinSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         self._api = api
-        # if not description.outdoor_sensor:
-        #     self._attr_name = f"{api.name} {description.name}"
 
     @property
     def unique_id(self) -> str:
