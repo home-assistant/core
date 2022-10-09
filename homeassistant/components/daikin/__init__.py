@@ -122,6 +122,6 @@ class DaikinApi:
             },
             manufacturer="Daikin",
             model=info.get("model"),
-            name="Outdoor" if outdoor_device else info.get("name"),
+            name="Outdoor compressor" if outdoor_device else info.get("name"),
             sw_version=info.get("ver", "").replace("_", "."),
         )
