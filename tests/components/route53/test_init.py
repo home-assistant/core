@@ -10,6 +10,7 @@ from homeassistant.util.dt import utcnow
 
 from requests_mock import Mocker
 from tests.common import async_fire_time_changed
+from typing import Any
 from unittest.mock import patch, MagicMock
 
 IP = "172.13.0.1"
@@ -17,7 +18,7 @@ IP = "172.13.0.1"
 AWS_ACCESS_KEY_ID = "access_key_id"
 AWS_SECRET_ACCESS_KEY = "secret_access_key"
 
-URL = "https://api.ipify.org/"
+DEFAULT_URL = "https://api.ipify.org/"
 TTL = 300
 ZONE = "zone"
 DOMAIN = "domain.example.com"
@@ -37,7 +38,7 @@ async def test_setup(
     boto3: MagicMock,
 ) -> None:
     """Test that set-up adds the cron task."""
-    requests_mock.get(URL, text=IP)
+    requests_mock.get(DEFAULT_URL, text=IP)
     await _setup_component(hass)
 
     async_fire_time_changed(
@@ -54,7 +55,7 @@ async def test_update(
     boto3: MagicMock,
 ) -> None:
     """Test update_records sends the correct values to route53."""
-    requests_mock.get(URL, text=IP)
+    requests_mock.get(DEFAULT_URL, text=IP)
     await _setup_component(hass)
 
     await hass.services.async_call(
@@ -90,18 +91,68 @@ async def test_update(
     )
 
 
-async def _setup_component(hass: HomeAssistant) -> None:
+async def test_update_custom_resolver(
+    hass: HomeAssistant,
+    requests_mock: Mocker,
+    boto3: MagicMock,
+) -> None:
+    """Test update_records supports non-default URL."""
+    non_default_url: str = "https://non-default-url.example.com"
+
+    requests_mock.get(non_default_url, text=IP)
+    await _setup_component(hass, url=non_default_url)
+
+    await hass.services.async_call(
+        route53.DOMAIN,
+        "update_records",
+        blocking=True,
+    )
+
+    assert requests_mock.call_count == 1
+
+    boto3.client.assert_called_once_with(
+        "route53",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    )
+
+    route53_client = boto3.client.return_value
+    route53_client.change_resource_record_sets.assert_called_once_with(
+        HostedZoneId=ZONE,
+        ChangeBatch={
+            "Changes": [
+                {
+                    "Action": "UPSERT",
+                    "ResourceRecordSet": {
+                        "Name": f"{RECORDS[0]}.{DOMAIN}",
+                        "Type": "A",
+                        "TTL": TTL,
+                        "ResourceRecords": [{"Value": IP}],
+                    },
+                },
+            ],
+        },
+    )
+
+
+async def _setup_component(
+    hass: HomeAssistant,
+    url: str = None,
+) -> None:
     """Sets-up the route53 component for multiple tests."""
+    config: dict[str, Any] = {
+        "aws_access_key_id": AWS_ACCESS_KEY_ID,
+        "aws_secret_access_key": AWS_SECRET_ACCESS_KEY,
+        "zone": ZONE,
+        "domain": DOMAIN,
+        "records": RECORDS,
+    }
+
+    if url is not None:
+        config["url"] = url
+
     await async_setup_component(
         hass,
         route53.DOMAIN,
-        {
-            route53.DOMAIN: {
-                "aws_access_key_id": AWS_ACCESS_KEY_ID,
-                "aws_secret_access_key": AWS_SECRET_ACCESS_KEY,
-                "zone": ZONE,
-                "domain": DOMAIN,
-                "records": RECORDS,
-            },
-        },
+        {route53.DOMAIN: config},
     )

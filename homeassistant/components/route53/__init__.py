@@ -20,11 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ACCESS_KEY_ID = "aws_access_key_id"
 CONF_SECRET_ACCESS_KEY = "aws_secret_access_key"
 CONF_RECORDS = "records"
+CONF_URL = "url"
 
 DOMAIN = "route53"
 
 INTERVAL = timedelta(minutes=60)
 DEFAULT_TTL = 300
+DEFAULT_URL = "https://api.ipify.org/"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -36,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_SECRET_ACCESS_KEY): cv.string,
                 vol.Required(CONF_ZONE): cv.string,
                 vol.Optional(CONF_TTL, default=DEFAULT_TTL): cv.positive_int,
+                vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
             }
         )
     },
@@ -51,17 +54,18 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     aws_access_key_id = config[DOMAIN][CONF_ACCESS_KEY_ID]
     aws_secret_access_key = config[DOMAIN][CONF_SECRET_ACCESS_KEY]
     ttl = config[DOMAIN][CONF_TTL]
+    url = config[DOMAIN][CONF_URL]
 
     def update_records_interval(now):
         """Set up recurring update."""
         _update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
+            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl, url
         )
 
     def update_records_service(call: ServiceCall) -> None:
         """Set up service for manual trigger."""
         _update_route53(
-            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
+            aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl, url
         )
 
     track_time_interval(hass, update_records_interval, INTERVAL)
@@ -83,6 +87,7 @@ def _update_route53(
     domain: str,
     records: list[str],
     ttl: int,
+    url: str,
 ):
     _LOGGER.debug("Starting update for zone %s", zone)
 
@@ -94,7 +99,7 @@ def _update_route53(
 
     # Get the IP Address and build an array of changes
     try:
-        ipaddress = requests.get("https://api.ipify.org/", timeout=5).text
+        ipaddress = requests.get(url, timeout=5).text
 
     except requests.RequestException:
         _LOGGER.warning("Unable to reach the ipify service")
