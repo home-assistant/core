@@ -260,10 +260,7 @@ def _async_register_button_devices(
 
 
 def _handle_none_keypad_serial(keypad_device: dict, bridge_serial: int) -> str:
-    return (
-        keypad_device["serial"]
-        or f"{str(bridge_serial)}_{str(keypad_device['device_id'])}"
-    )
+    return keypad_device["serial"] or f"{bridge_serial}_{keypad_device['device_id']}"
 
 
 def _area_and_name_from_name(device_name: str) -> tuple[str, str]:
