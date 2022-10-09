@@ -22,6 +22,7 @@ from .core import discovery
 from .core.const import (
     CHANNEL_IAS_WD,
     CHANNEL_INOVELLI,
+    CHANNEL_OCCUPANCY,
     CHANNEL_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
@@ -249,7 +250,7 @@ class HueV1MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="occupancy",
+    channel_names=CHANNEL_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML001"},
 )
@@ -271,7 +272,7 @@ class HueV2MotionSensitivities(types.enum8):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="occupancy",
+    channel_names=CHANNEL_OCCUPANCY,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML002", "SML003", "SML004"},
 )

@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CHANNEL_BASIC,
     CHANNEL_INOVELLI,
     CHANNEL_ON_OFF,
     DATA_ZHA,
@@ -293,7 +294,7 @@ class P1MotionTriggerIndicatorSwitch(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="basic",
+    channel_names=CHANNEL_BASIC,
     manufacturers={"Philips", "Signify Netherlands B.V."},
     models={"SML001", "SML002", "SML003", "SML004"},
 )
