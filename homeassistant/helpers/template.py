@@ -2036,7 +2036,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             filt: Callable | None = None,
             glob: Callable | None = None,
             test: Callable | None = None,
-            support_limited: bool = False,
+            support_limited: bool = True,
             require_hass: bool = False,
         ) -> None:
 
