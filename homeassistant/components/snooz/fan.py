@@ -100,21 +100,18 @@ class SnoozFan(FanEntity, RestoreEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn on the device. Setting to 0 turns off the device."""
-        command = turn_on(percentage)
-
-        if percentage == 0:
-            command.on = False
-
-        await self._async_execute_command(command)
+        """Turn on the device."""
+        await self._async_execute_command(turn_on(percentage))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         await self._async_execute_command(turn_off())
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set the volume of the device."""
-        await self._async_execute_command(set_volume(percentage))
+        """Set the volume of the device. A value of 0 will turn off the device."""
+        await self._async_execute_command(
+            set_volume(percentage) if percentage > 0 else turn_off()
+        )
 
     async def _async_execute_command(self, command: SnoozCommandData) -> None:
         result = await self._device.async_execute_command(command)
