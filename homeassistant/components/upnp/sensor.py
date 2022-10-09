@@ -1,7 +1,7 @@
 """Support for UPnP/IGD Sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND, TIME_SECONDS
 from homeassistant.core import HomeAssistant
@@ -33,6 +33,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_BYTES,
         format="d",
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
@@ -41,6 +42,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_BYTES,
         format="d",
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_RECEIVED,
@@ -49,6 +51,7 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_PACKETS,
         format="d",
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
@@ -57,11 +60,13 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_PACKETS,
         format="d",
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     UpnpSensorEntityDescription(
         key=ROUTER_IP,
         name="External IP",
         icon="mdi:server-network",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     UpnpSensorEntityDescription(
         key=ROUTER_UPTIME,
@@ -89,6 +94,7 @@ DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
         format=".1f",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
@@ -97,6 +103,7 @@ DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_RATE_KIBIBYTES_PER_SECOND,
         format=".1f",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_RECEIVED,
@@ -106,6 +113,7 @@ DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
         format=".1f",
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
@@ -115,6 +123,7 @@ DERIVED_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
         format=".1f",
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 

@@ -78,7 +78,6 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     # Paths:
     # - ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
     # - user(None): scan --> user({...}) --> create_entry()
-    # - import(None) --> create_entry()
 
     def __init__(self) -> None:
         """Initialize the UPnP/IGD config flow."""

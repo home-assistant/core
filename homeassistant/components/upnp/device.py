@@ -51,7 +51,7 @@ async def async_create_device(hass: HomeAssistant, ssdp_location: str) -> Device
     session = async_get_clientsession(hass, verify_ssl=False)
     requester = AiohttpSessionRequester(session, with_sleep=True, timeout=20)
 
-    factory = UpnpFactory(requester, disable_state_variable_validation=True)
+    factory = UpnpFactory(requester, non_strict=True)
     upnp_device = await factory.async_create_device(ssdp_location)
 
     # Create profile wrapper.
