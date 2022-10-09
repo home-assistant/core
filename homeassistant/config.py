@@ -82,6 +82,9 @@ AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"
 
+DOMAIN_AUTOMATION = "automation"
+DOMAIN_SCRIPT = "script"
+
 LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
 INTEGRATION_LOAD_EXCEPTIONS = (
     IntegrationNotFound,
@@ -541,10 +544,8 @@ def _format_config_error(
         f" (See {getattr(domain_config, '__config_file__', '?')}, "
         f"line {getattr(domain_config, '__line__', '?')}). "
     )
-    try:
+    if domain in [DOMAIN_AUTOMATION, DOMAIN_SCRIPT]:
         message += f"Entry id: {config.get(CONF_ID)}. Alias: {config.get(CONF_ALIAS)}. "
-    except AttributeError:
-        pass
 
     if domain != CONF_CORE and link:
         message += f"Please check the docs at {link}"
