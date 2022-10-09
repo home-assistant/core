@@ -32,7 +32,7 @@ async def async_setup_entry(
 
     data: SnoozConfigurationData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([SnoozFan(hass, data)])
+    async_add_entities([SnoozFan(data)])
 
 
 class SnoozFan(FanEntity, RestoreEntity):
