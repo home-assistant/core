@@ -96,7 +96,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock):
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP_KELVIN: 300},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP_KELVIN: 3000},
         True,
     )
     assert device.set_state_on.call_count == 1
