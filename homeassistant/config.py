@@ -545,8 +545,12 @@ def _format_config_error(
         f"line {getattr(domain_config, '__line__', '?')}). "
     )
     if domain in [DOMAIN_AUTOMATION, DOMAIN_SCRIPT]:
-        message += f"Entry id: {config.get(CONF_ID)}. Alias: {config.get(CONF_ALIAS)}. "
-
+        try:
+            message += (
+                f"Entry id: {config.get(CONF_ID)}. Alias: {config.get(CONF_ALIAS)}. "
+            )
+        except AttributeError:
+            pass
     if domain != CONF_CORE and link:
         message += f"Please check the docs at {link}"
 
