@@ -123,7 +123,7 @@ class ZHADefaultToneSelectEntity(
     """Representation of a ZHA default siren tone select entity."""
 
     _enum = IasWd.Warning.WarningMode
-    _attr_name = "Default Siren Tone"
+    _attr_name = "Default siren tone"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -133,7 +133,7 @@ class ZHADefaultSirenLevelSelectEntity(
     """Representation of a ZHA default siren level select entity."""
 
     _enum = IasWd.Warning.SirenLevel
-    _attr_name = "Default Siren Level"
+    _attr_name = "Default siren level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -143,7 +143,7 @@ class ZHADefaultStrobeLevelSelectEntity(
     """Representation of a ZHA default siren strobe level select entity."""
 
     _enum = IasWd.StrobeLevel
-    _attr_name = "Default Strobe Level"
+    _attr_name = "Default strobe level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -151,7 +151,7 @@ class ZHADefaultStrobeSelectEntity(ZHANonZCLSelectEntity, id_suffix=Strobe.__nam
     """Representation of a ZHA default siren strobe select entity."""
 
     _enum = Strobe
-    _attr_name = "Default Strobe"
+    _attr_name = "Default strobe"
 
 
 class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
@@ -224,7 +224,7 @@ class ZHAStartupOnOffSelectEntity(
 
     _select_attr = "start_up_on_off"
     _enum = OnOff.StartUpOnOff
-    _attr_name = "Start-Up Behavior"
+    _attr_name = "Start-up behavior"
 
 
 class AqaraMotionSensitivities(types.enum8):
@@ -243,7 +243,7 @@ class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"
 
     _select_attr = "motion_sensitivity"
     _enum = AqaraMotionSensitivities
-    _attr_name = "Motion Sensitivity"
+    _attr_name = "Motion sensitivity"
 
 
 class AqaraMonitoringModess(types.enum8):
@@ -259,7 +259,7 @@ class AqaraMonitoringMode(ZCLEnumSelectEntity, id_suffix="monitoring_mode"):
 
     _select_attr = "monitoring_mode"
     _enum = AqaraMonitoringModess
-    _attr_name = "Monitoring Mode"
+    _attr_name = "Monitoring mode"
 
 
 class AqaraApproachDistances(types.enum8):
@@ -276,7 +276,7 @@ class AqaraApproachDistance(ZCLEnumSelectEntity, id_suffix="approach_distance"):
 
     _select_attr = "approach_distance"
     _enum = AqaraApproachDistances
-    _attr_name = "Approach Distance"
+    _attr_name = "Approach distance"
 
 
 class AqaraE1ReverseDirection(types.enum8):
@@ -294,7 +294,7 @@ class AqaraCurtainMode(ZCLEnumSelectEntity, id_suffix="window_covering_mode"):
 
     _select_attr = "window_covering_mode"
     _enum = AqaraE1ReverseDirection
-    _attr_name = "Curtain Mode"
+    _attr_name = "Curtain mode"
 
 
 class InovelliOutputMode(types.enum1):
