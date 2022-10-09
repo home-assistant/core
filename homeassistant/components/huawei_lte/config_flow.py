@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+import re
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
@@ -232,10 +233,13 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         # Attempt to distinguish from other non-LTE Huawei router devices, at least
-        # some ones we are interested in have "Mobile Wi-Fi" friendlyName.
-        if (
-            "mobile"
-            not in discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower()
+        # some of the ones we are interested in include friendlyNames like
+        # "Mobile Wi-Fi", "4G CPE 3", and "华为4G路由 B525". (The last one is
+        # an example why there are no word boundary markers around the regex.)
+        if not re.search(
+            r"[45]G|LTE|Mobile",
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, ""),
+            re.IGNORECASE,
         ):
             return self.async_abort(reason="not_huawei_lte")
 
