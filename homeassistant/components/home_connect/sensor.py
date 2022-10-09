@@ -80,7 +80,10 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
             else:
                 self._state = status[self._key].get(ATTR_VALUE)
                 if self._key == BSH_OPERATION_STATE:
-                    self._state = OPERATION_STATE_TRANSLATION[self._state]
+                    self._state = (
+                        OPERATION_STATE_TRANSLATION.get(self._state)
+                        or self._state.split(".")[-1]
+                    )
         _LOGGER.debug("Updated, new state: %s", self._state)
 
     @property
