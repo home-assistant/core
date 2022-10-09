@@ -211,7 +211,7 @@ async def test_level_control_number(
         Platform.NUMBER,
         zha_device,
         hass,
-        qualifier=attr.replace("_", ""),
+        qualifier=attr,
     )
     assert entity_id is not None
 

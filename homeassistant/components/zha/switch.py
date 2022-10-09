@@ -290,6 +290,7 @@ class P1MotionTriggerIndicatorSwitch(
     """Representation of a ZHA motion triggering configuration entity."""
 
     _zcl_attribute: str = "trigger_indicator"
+    _attr_name = "LED trigger indicator"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -300,6 +301,7 @@ class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     """ZHA BinarySensor."""
 
     _zcl_attribute: str = "child_lock"
+    _attr_name = "Child lock"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -310,6 +312,7 @@ class DisableLed(ZHASwitchConfigurationEntity, id_suffix="disable_led"):
     """ZHA BinarySensor."""
 
     _zcl_attribute: str = "disable_led"
+    _attr_name = "Disable LED"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
