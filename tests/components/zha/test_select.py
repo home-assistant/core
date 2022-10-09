@@ -163,7 +163,7 @@ async def test_select_restore_state(
 ):
     """Test zha select entity restore state."""
 
-    entity_id = "select.fakemanufacturer_fakemodel_defaulttoneselect"
+    entity_id = "select.fakemanufacturer_fakemodel_default_siren_tone"
     core_rs(entity_id, state="Burglar")
 
     zigpy_device = zigpy_device_mock(
