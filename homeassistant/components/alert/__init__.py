@@ -173,6 +173,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component from yaml."""
     entities: list[Alert] = []
 
+    if DOMAIN not in config:
+        return False
+
     for object_id, cfg in config[DOMAIN].items():
         if not cfg:
             cfg = {}

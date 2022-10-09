@@ -7,7 +7,13 @@
         "description": "Create an alert which notifies you on problematic issues.",
         "data": {
           "entity_id": "Input entity",
-          "name": "Name",
+          "name": "Name"
+        }
+      },
+      "options": {
+        "title": "Add alert for entity state",
+        "description": "Configure alert parameters.",
+        "data": {
           "state": "State",
           "repeat": "Repeat",
           "can_acknowledge": "Can acknowledge",
@@ -38,26 +44,25 @@
     "step": {
       "init": {
         "data": {
-          "entity_id": "[%key:component::alert::config::step::user::data::entity_id%]",
-          "state": "[%key:component::alert::config::step::user::data::state%]",
-          "repeat": "[%key:component::alert::config::step::user::data::repeat%]",
-          "can_acknowledge": "[%key:component::alert::config::step::user::data::can_acknowledge%]",
-          "skip_first": "[%key:component::alert::config::step::user::data::skip_first%]",
-          "message": "[%key:component::alert::config::step::user::data::message%]",
-          "done_message": "[%key:component::alert::config::step::user::data::done_message%]",
-          "title": "[%key:component::alert::config::step::user::data::title%]",
-          "data": "[%key:component::alert::config::step::user::data::data%]",
-          "notifiers": "[%key:component::alert::config::step::user::data::notifiers%]"
+          "state": "[%key:component::alert::config::step::options::data::state%]",
+          "repeat": "[%key:component::alert::config::step::options::data::repeat%]",
+          "can_acknowledge": "[%key:component::alert::config::step::options::data::can_acknowledge%]",
+          "skip_first": "[%key:component::alert::config::step::options::data::skip_first%]",
+          "message": "[%key:component::alert::config::step::options::data::message%]",
+          "done_message": "[%key:component::alert::config::step::options::data::done_message%]",
+          "title": "[%key:component::alert::config::step::options::data::title%]",
+          "data": "[%key:component::alert::config::step::options::data::data%]",
+          "notifiers": "[%key:component::alert::config::step::options::data::notifiers%]"
         },
         "data_description": {
-          "state": "[%key:component::alert::config::step::user::data_description::state%]",
-          "repeat": "[%key:component::alert::config::step::user::data_description::repeat%]",
-          "can_acknowledge": "[%key:component::alert::config::step::user::data_description::can_acknowledge%]",
-          "message": "[%key:component::alert::config::step::user::data_description::message%]",
-          "done_message": "[%key:component::alert::config::step::user::data_description::done_message%]",
-          "title": "[%key:component::alert::config::step::user::data_description::title%]",
-          "data": "[%key:component::alert::config::step::user::data_description::data%]",
-          "notifiers": "[%key:component::alert::config::step::user::data_description::notifiers%]"
+          "state": "[%key:component::alert::config::step::options::data_description::state%]",
+          "repeat": "[%key:component::alert::config::step::options::data_description::repeat%]",
+          "can_acknowledge": "[%key:component::alert::config::step::options::data_description::can_acknowledge%]",
+          "message": "[%key:component::alert::config::step::options::data_description::message%]",
+          "done_message": "[%key:component::alert::config::step::options::data_description::done_message%]",
+          "title": "[%key:component::alert::config::step::options::data_description::title%]",
+          "data": "[%key:component::alert::config::step::options::data_description::data%]",
+          "notifiers": "[%key:component::alert::config::step::options::data_description::notifiers%]"
         }
       }
     },

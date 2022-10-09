@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -13,6 +14,7 @@ from homeassistant.const import (
     CONF_STATE,
     STATE_ON,
 )
+from homeassistant.core import async_get_hass
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -34,37 +36,12 @@ from .const import (
     DOMAIN,
 )
 
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_STATE, default=STATE_ON): selector.TextSelector(),
-        vol.Required(CONF_REPEAT): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[],
-                multiple=True,
-                custom_value=True,
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): selector.BooleanSelector(),
-        vol.Required(
-            CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST
-        ): selector.BooleanSelector(),
-        vol.Optional(CONF_ALERT_MESSAGE): selector.TemplateSelector(),
-        vol.Optional(CONF_DONE_MESSAGE): selector.TemplateSelector(),
-        vol.Optional(CONF_TITLE): selector.TemplateSelector(),
-        vol.Optional(CONF_DATA): selector.ObjectSelector(),
-        vol.Required(CONF_NOTIFIERS): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="notify", multiple=True)
-        ),
-    }
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(),
     }
-).extend(OPTIONS_SCHEMA.schema)
+)  # .extend(OPTIONS_SCHEMA.schema)
 
 
 def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
@@ -85,12 +62,64 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
     return user_input
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
+def get_options_schema(
+    flow_handler: SchemaConfigFlowHandler,
+    user_input: dict[str, Any],
+) -> vol.Schema:
+    """Update list with notify services."""
+    hass = async_get_hass()
+    all_services = hass.services.async_services()
+    _LOGGER.debug("Services: %s", all_services)
+    notify_services = all_services.get("notify")
+    notify_keys = list(notify_services.keys()) if notify_services else []
+
+    return vol.Schema(
+        {
+            vol.Required(CONF_STATE, default=STATE_ON): selector.TextSelector(),
+            vol.Required(CONF_REPEAT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[],
+                    multiple=True,
+                    custom_value=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Required(
+                CONF_CAN_ACK, default=DEFAULT_CAN_ACK
+            ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST
+            ): selector.BooleanSelector(),
+            vol.Required(CONF_NOTIFIERS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=notify_keys,
+                    multiple=True,
+                )
+            ),
+            vol.Optional(CONF_ALERT_MESSAGE): selector.TemplateSelector(),
+            vol.Optional(CONF_DONE_MESSAGE): selector.TemplateSelector(),
+            vol.Optional(CONF_TITLE): selector.TemplateSelector(),
+            vol.Optional(CONF_DATA): selector.ObjectSelector(),
+        }
+    )
+
+
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA, validate_input)
+    "user": SchemaFlowFormStep(
+        CONFIG_SCHEMA,
+        next_step=lambda _: "options",
+    ),
+    "options": SchemaFlowFormStep(
+        get_options_schema,
+        validate_input,
+    ),
 }
 
 OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA)
+    "init": SchemaFlowFormStep(get_options_schema, validate_input)
 }
 
 

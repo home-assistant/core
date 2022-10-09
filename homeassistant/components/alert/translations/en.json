@@ -4,14 +4,12 @@
             "repeat_error": "List of repeats in minutes needs to be integer or float"
         },
         "step": {
-            "user": {
+            "options": {
                 "data": {
                     "can_acknowledge": "Can acknowledge",
                     "data": "Message data",
                     "done_message": "Message when alert stop",
-                    "entity_id": "Input entity",
                     "message": "Message",
-                    "name": "Name",
                     "notifiers": "Notify entities",
                     "repeat": "Repeat",
                     "skip_first": "Skip first alert",
@@ -30,6 +28,14 @@
                 },
                 "description": "Create an alert which notifies you on problematic issues.",
                 "title": "Add alert for entity state"
+            },
+            "user": {
+                "data": {
+                    "entity_id": "Input entity",
+                    "name": "Name"
+                },
+                "description": "Create an alert which notifies you on problematic issues.",
+                "title": "Add alert for entity state"
             }
         }
     },
@@ -43,7 +49,6 @@
                     "can_acknowledge": "Can acknowledge",
                     "data": "Message data",
                     "done_message": "Message when alert stop",
-                    "entity_id": "Input entity",
                     "message": "Message",
                     "notifiers": "Notify entities",
                     "repeat": "Repeat",
