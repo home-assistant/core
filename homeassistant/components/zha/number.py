@@ -455,6 +455,7 @@ class AqaraMotionDetectionInterval(
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 65535
     _zcl_attribute: str = "detection_interval"
+    _attr_name = "Detection Interval"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -466,6 +467,7 @@ class OnOffTransitionTimeConfigurationEntity(
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFF
     _zcl_attribute: str = "on_off_transition_time"
+    _attr_name = "On/Off Transition Time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -475,6 +477,7 @@ class OnLevelConfigurationEntity(ZHANumberConfigurationEntity, id_suffix="on_lev
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "on_level"
+    _attr_name = "On Level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -486,6 +489,7 @@ class OnTransitionTimeConfigurationEntity(
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "on_transition_time"
+    _attr_name = "On Transition Time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -497,6 +501,7 @@ class OffTransitionTimeConfigurationEntity(
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "off_transition_time"
+    _attr_name = "Off Transition Time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -508,6 +513,7 @@ class DefaultMoveRateConfigurationEntity(
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFE
     _zcl_attribute: str = "default_move_rate"
+    _attr_name = "Default Move Rate"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -519,6 +525,7 @@ class StartUpCurrentLevelConfigurationEntity(
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "start_up_current_level"
+    _attr_name = "Start-Up Level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -536,6 +543,7 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
     _attr_native_max_value: float = 0x257
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "timer_duration"
+    _attr_name = "Timer Duration"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="ikea_airpurifier")
@@ -548,6 +556,7 @@ class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time")
     _attr_native_max_value: float = 0xFFFFFFFF
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "filter_life_time"
+    _attr_name = "Filter Life Time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
