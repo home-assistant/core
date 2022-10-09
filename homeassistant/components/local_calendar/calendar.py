@@ -48,7 +48,9 @@ async def async_setup_entry(
 
     name = config_entry.data[CONF_CALENDAR_NAME]
     entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
-    entity = LocalCalendarEntity(store, calendar, name, entity_id)
+    entity = LocalCalendarEntity(
+        store, calendar, name, entity_id, unique_id=config_entry.entry_id
+    )
     async_add_entities([entity], True)
 
 
@@ -59,7 +61,12 @@ class LocalCalendarEntity(CalendarEntity):
     _attr_supported_features = CalendarEntityFeature.MUTABLE
 
     def __init__(
-        self, store: LocalCalendarStore, calendar: Calendar, name: str, entity_id: str
+        self,
+        store: LocalCalendarStore,
+        calendar: Calendar,
+        name: str,
+        entity_id: str,
+        unique_id: str,
     ) -> None:
         """Initialize LocalCalendarEntity."""
         self._store = store
@@ -67,7 +74,7 @@ class LocalCalendarEntity(CalendarEntity):
         self._event: CalendarEvent | None = None
         self._attr_name = name.capitalize()
         self.entity_id = entity_id
-        self._attr_unique_id = calendar.prodid
+        self._attr_unique_id = unique_id
 
     @property
     def event(self) -> CalendarEvent | None:
