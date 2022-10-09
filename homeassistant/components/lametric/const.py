@@ -7,7 +7,7 @@ from typing import Final
 from homeassistant.const import Platform
 
 DOMAIN: Final = "lametric"
-PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SWITCH]
+PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=30)
