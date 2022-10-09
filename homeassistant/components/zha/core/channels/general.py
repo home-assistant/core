@@ -152,6 +152,23 @@ class BasicChannel(ZigbeeChannel):
         6: "Emergency mains and transfer switch",
     }
 
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
+        """Initialize Basic channel."""
+        super().__init__(cluster, ch_pool)
+        if self.cluster.endpoint.manufacturer in (
+            "Philips",
+            "Signify Netherlands B.V.",
+        ) and self.cluster.endpoint.model in (
+            "SML001",
+            "SML002",
+            "SML003",
+            "SML004",
+        ):
+            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
+                self.ZCL_INIT_ATTRS.copy()
+            )
+            self.ZCL_INIT_ATTRS["trigger_indicator"] = True
+
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
 class BinaryInput(ZigbeeChannel):

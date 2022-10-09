@@ -293,6 +293,19 @@ class P1MotionTriggerIndicatorSwitch(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="basic",
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML001", "SML002", "SML003", "SML004"},
+)
+class HueMotionTriggerIndicatorSwitch(
+    ZHASwitchConfigurationEntity, id_suffix="trigger_indicator"
+):
+    """Representation of a ZHA motion triggering configuration entity."""
+
+    _zcl_attribute: str = "trigger_indicator"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
     channel_names="ikea_airpurifier",
     models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
 )
