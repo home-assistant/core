@@ -2,10 +2,9 @@
 from unittest.mock import AsyncMock, patch
 
 from anthemav.device_error import DeviceError
-import pytest
 
 from homeassistant.components.anthemav.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -95,13 +94,11 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
 async def test_device_already_configured(
     hass: HomeAssistant,
     mock_connection_create: AsyncMock,
     mock_anthemav: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    source: str,
 ) -> None:
     """Test we import existing configuration."""
     config = {
@@ -111,7 +108,7 @@ async def test_device_already_configured(
 
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source}, data=config
+        DOMAIN, context={"source": SOURCE_USER}, data=config
     )
 
     assert result.get("type") == FlowResultType.ABORT
