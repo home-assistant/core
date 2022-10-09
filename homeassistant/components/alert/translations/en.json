@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "repeat_error": "List of repeats in minutes needs to be integer or float"
+        },
         "step": {
             "user": {
                 "data": {
@@ -31,6 +34,9 @@
         }
     },
     "options": {
+        "error": {
+            "repeat_error": "List of repeats in minutes needs to be integer or float"
+        },
         "step": {
             "init": {
                 "data": {

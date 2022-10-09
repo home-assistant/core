@@ -6,10 +6,17 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENTITY_ID, CONF_REPEAT, CONF_STATE, STATE_ON
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_REPEAT,
+    CONF_STATE,
+    STATE_ON,
+)
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
 )
@@ -54,13 +61,32 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): selector.TextSelector(),
+        vol.Required(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
+
+def validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Validate user input."""
+    try:
+        number_list = []
+        if isinstance(user_input[CONF_REPEAT], list):
+            for number_string in user_input[CONF_REPEAT]:
+                new_number = float(number_string)
+                number_list.append(new_number)
+        if isinstance(user_input[CONF_REPEAT], str):
+            new_number = float(user_input[CONF_REPEAT])
+            number_list.append(new_number)
+    except ValueError as error:
+        raise SchemaFlowError("repeat_error") from error
+
+    user_input[CONF_REPEAT] = number_list
+    return user_input
+
+
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA)
+    "user": SchemaFlowFormStep(CONFIG_SCHEMA, validate_input)
 }
 
 OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {

@@ -29,6 +29,9 @@
           "notifiers": "One or more notify entities to recieve the alert"
         }
       }
+    },
+    "error": {
+      "repeat_error": "List of repeats in minutes needs to be integer or float"
     }
   },
   "options": {
@@ -57,6 +60,9 @@
           "notifiers": "[%key:component::alert::config::step::user::data_description::notifiers%]"
         }
       }
+    },
+    "error": {
+      "repeat_error": "List of repeats in minutes needs to be integer or float"
     }
   }
 }
