@@ -232,7 +232,9 @@ def _async_register_button_devices(
             # use the parent_device for HA device info
             ha_device = bridge_devices[device["parent_device"]]
 
-        ha_device_serial = _handle_keypad_serial(ha_device, bridge_device["serial"])
+        ha_device_serial = _handle_none_keypad_serial(
+            ha_device, bridge_device["serial"]
+        )
 
         if "serial" not in ha_device or ha_device_serial in seen:
             continue
@@ -257,9 +259,10 @@ def _async_register_button_devices(
     return button_devices_by_dr_id, device_info_by_device_id
 
 
-def _handle_keypad_serial(keypad_device: dict, bridge_serial: int) -> str:
-    return keypad_device["serial"] or "_".join(
-        (str(bridge_serial), str(keypad_device["device_id"]))
+def _handle_none_keypad_serial(keypad_device: dict, bridge_serial: int) -> str:
+    return (
+        keypad_device["serial"]
+        or f"{str(bridge_serial)}_{str(keypad_device['device_id'])}"
     )
 
 
@@ -309,7 +312,7 @@ def _async_subscribe_pico_remote_events(
             # use the parent_device for HA device info
             ha_device = bridge_devices[device["parent_device"]]
 
-        ha_device_serial = _handle_keypad_serial(
+        ha_device_serial = _handle_none_keypad_serial(
             ha_device, bridge_devices[BRIDGE_DEVICE_ID]["serial"]
         )
 
