@@ -1700,6 +1700,11 @@
       "iot_class": "local_polling",
       "name": "Harman Kardon AVR"
     },
+    "hassio": {
+      "config_flow": false,
+      "iot_class": "local_polling",
+      "name": "Home Assistant Supervisor"
+    },
     "haveibeenpwned": {
       "config_flow": false,
       "iot_class": "cloud_polling",
