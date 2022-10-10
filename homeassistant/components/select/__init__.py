@@ -72,6 +72,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SelectEntityDescription(EntityDescription):
     """A class that describes select entities."""
 
+    options: list[str] | None = None
+
 
 class SelectEntity(Entity):
     """Representation of a Select entity."""
@@ -99,7 +101,14 @@ class SelectEntity(Entity):
     @property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
-        return self._attr_options
+        if hasattr(self, "_attr_options"):
+            return self._attr_options
+        if (
+            hasattr(self, "entity_description")
+            and self.entity_description.options is not None
+        ):
+            return self.entity_description.options
+        raise AttributeError()
 
     @property
     def current_option(self) -> str | None:
