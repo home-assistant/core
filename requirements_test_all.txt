@@ -293,7 +293,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.0.0
+apprise==1.1.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
