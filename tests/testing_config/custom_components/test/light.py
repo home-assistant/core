@@ -37,8 +37,8 @@ class MockLight(MockToggleEntity, LightEntity):
     """Mock light class."""
 
     color_mode = None
-    max_color_temp_kelvin = 6500
-    min_color_temp_kelvin = 2000
+    _attr_max_color_temp_kelvin = 6500
+    _attr_min_color_temp_kelvin = 2000
     supported_color_modes = None
     supported_features = 0
 
