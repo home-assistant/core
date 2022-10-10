@@ -21,7 +21,7 @@ from .components import http, persistent_notification
 from .const import (
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
-    SIGNAL_BOOTSTRAP_INTEGRATONS,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .exceptions import HomeAssistantError
 from .helpers import (
@@ -431,7 +431,7 @@ async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         if remaining_with_setup_started or not previous_was_empty:
             async_dispatcher_send(
-                hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
+                hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
             )
         previous_was_empty = not remaining_with_setup_started
         await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
@@ -622,7 +622,7 @@ async def _async_set_up_integrations(
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
     watch_task.cancel()
-    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATONS, {})
+    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, {})
 
     _LOGGER.debug(
         "Integration setup times: %s",
