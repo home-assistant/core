@@ -702,6 +702,8 @@ class ZHADevice(LogMixin):
             f"{ATTR_MANUFACTURER}: {manufacturer}",
             f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
         )
+        if response is None:
+            return  # client commands don't return a response
         if isinstance(response, Exception):
             raise HomeAssistantError("Failed to issue cluster command") from response
         if response[1] is not ZclStatus.SUCCESS:
