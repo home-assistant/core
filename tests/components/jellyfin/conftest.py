@@ -10,11 +10,7 @@ from jellyfin_apiclient_python.configuration import Config
 from jellyfin_apiclient_python.connection_manager import ConnectionManager
 import pytest
 
-from .const import (
-    MOCK_SUCCESFUL_CONNECTION_STATE,
-    MOCK_SUCCESFUL_LOGIN_RESPONSE,
-    MOCK_USER_SETTINGS,
-)
+from . import load_json_fixture
 
 
 @pytest.fixture
@@ -40,8 +36,10 @@ def mock_client_device_id() -> Generator[None, MagicMock, None]:
 def mock_auth() -> MagicMock:
     """Return a mocked ConnectionManager."""
     jf_auth = create_autospec(ConnectionManager)
-    jf_auth.connect_to_address.return_value = MOCK_SUCCESFUL_CONNECTION_STATE
-    jf_auth.login.return_value = MOCK_SUCCESFUL_LOGIN_RESPONSE
+    jf_auth.connect_to_address.return_value = load_json_fixture(
+        "auth-connect-address.json"
+    )
+    jf_auth.login.return_value = load_json_fixture("auth-login.json")
 
     return jf_auth
 
@@ -50,7 +48,7 @@ def mock_auth() -> MagicMock:
 def mock_api() -> MagicMock:
     """Return a mocked API."""
     jf_api = create_autospec(API)
-    jf_api.get_user_settings.return_value = MOCK_USER_SETTINGS
+    jf_api.get_user_settings.return_value = load_json_fixture("get-user-settings.json")
 
     return jf_api
 
