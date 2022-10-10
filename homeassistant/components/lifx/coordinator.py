@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
+from math import floor, log10
 from typing import Any, cast
 
 from aiolifx.aiolifx import (
@@ -14,8 +15,13 @@ from aiolifx.aiolifx import (
     TileEffectType,
 )
 from aiolifx.connection import LIFXConnection
+from awesomeversion import AwesomeVersion
 
-from homeassistant.const import Platform
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -42,6 +48,7 @@ from .util import (
 
 REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
+RSSI_DBM_FW = AwesomeVersion("2.77")
 
 
 class FirmwareEffect(IntEnum):
@@ -68,6 +75,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.device: Light = connection.device
         self.lock = asyncio.Lock()
         self.active_effect = FirmwareEffect.OFF
+        self.rssi: int = 0
         update_interval = timedelta(seconds=10)
 
         super().__init__(
@@ -109,6 +117,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     def label(self) -> str:
         """Return the label of the bulb."""
         return cast(str, self.device.label)
+
+    @property
+    def rssi_uom(self) -> str:
+        """Return the RSSI unit of measurement."""
+        if AwesomeVersion(self.device.host_firmware_version) <= RSSI_DBM_FW:
+            return SIGNAL_STRENGTH_DECIBELS
+
+        return SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 
     @property
     def current_infrared_brightness(self) -> str | None:
@@ -168,6 +184,11 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
 
             if lifx_features(self.device)["infrared"]:
                 response = await async_execute_lifx(self.device.get_infrared)
+
+    async def async_update_rssi(self, now: datetime) -> None:
+        """Update RSSI value."""
+        resp = await async_execute_lifx(self.device.get_wifiinfo)
+        self.rssi = int(floor(10 * log10(resp.signal) + 0.5))
 
     async def async_get_color_zones(self) -> None:
         """Get updated color information for each zone."""
