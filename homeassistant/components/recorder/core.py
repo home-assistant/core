@@ -1122,7 +1122,9 @@ class Recorder(threading.Thread):
             # it tried to import it below.
             with contextlib.suppress(ImportError):
                 kwargs["connect_args"] = {"conv": build_mysqldb_conv()}
-        else:
+
+        # Disable extended logging for non SQLite databases
+        if not self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["echo"] = False
 
         if self._using_file_sqlite:
