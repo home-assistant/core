@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import Any
 
 import aiolifx_effects
+from aiolifx_themes.themes import Theme, ThemeLibrary
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -30,7 +31,6 @@ from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator, Light
-from .themes import LIFX_THEMES, get_theme_hsbk
 from .util import convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -153,7 +153,7 @@ HSBK_SCHEMA = vol.All(
         (
             vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
             vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
-            vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+            vol.All(vol.Coerce(float), vol.Clamp(min=0, max=100)),
             vol.All(vol.Coerce(int), vol.Clamp(min=1500, max=9000)),
         )
     ),
@@ -164,7 +164,7 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
         vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
-            vol.In(LIFX_THEMES.keys())
+            vol.In(ThemeLibrary().themes)
         ),
         vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
             cv.ensure_list, [HSBK_SCHEMA]
@@ -293,23 +293,22 @@ class LIFXManager:
 
         elif service == SERVICE_EFFECT_MORPH:
 
-            theme = kwargs.get(ATTR_THEME, "exciting")
-            palette = kwargs.get(ATTR_PALETTE, get_theme_hsbk(theme))
-            palette_colors: list[tuple[int, int, int, int]] = []
+            theme_name = kwargs.get(ATTR_THEME, "exciting")
+            palette = kwargs.get(ATTR_PALETTE, None)
 
-            for hsbk in palette:
-                hue = round(hsbk[0] / 360 * 65535)
-                sat = round(hsbk[1] / 100 * 65535)
-                bri = round(hsbk[2] / 255 * 65535)
-                kel = int(hsbk[3])
-                palette_colors.append((hue, sat, bri, kel))
+            if palette is not None:
+                theme = Theme()
+                for hsbk in palette:
+                    theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
+            else:
+                theme = ThemeLibrary().get_theme(theme_name)
 
             await asyncio.gather(
                 *(
                     coordinator.async_set_matrix_effect(
                         effect=EFFECT_MORPH,
                         speed=kwargs.get(ATTR_SPEED, EFFECT_MORPH_DEFAULT_SPEED),
-                        palette=palette_colors,
+                        palette=theme.colors,
                         power_on=kwargs.get(ATTR_POWER_ON, True),
                     )
                     for coordinator in coordinators

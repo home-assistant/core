@@ -249,9 +249,9 @@ effect_morph:
           unit_of_measurement: seconds
     palette:
       name: Palette
-      description: List of at least 2 and at most 16 HSBK values to use for this effect. Overrides the theme attribute.
+      description: List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-900) values to use for this effect. Overrides the theme attribute.
       example:
-        - "[[0, 100, 255, 3500], [60, 100, 255, 3500]]"
+        - "[[0, 100, 100, 3500], [60, 100, 100, 3500]]"
       selector:
         object:
     theme:

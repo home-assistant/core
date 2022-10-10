@@ -786,7 +786,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
             (21845, 65535, 65535, 3500),
             (32768, 65535, 65535, 3500),
             (43690, 65535, 65535, 3500),
-            (54612, 65535, 65535, 3500),
+            (54613, 65535, 65535, 3500),
         ],
     }
     bulb.get_tile_effect.reset_mock()
