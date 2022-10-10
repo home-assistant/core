@@ -64,6 +64,7 @@ async def async_setup_entry(
 
     entities = []
     for description in SELECT_SETTINGS_DATA:
+        assert description.options is not None
         if description.module_id not in available_settings_data:
             continue
         needed_data_ids = {
