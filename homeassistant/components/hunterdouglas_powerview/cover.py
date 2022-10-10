@@ -103,36 +103,6 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def create_powerview_shade_entity(
-    coordinator: PowerviewShadeUpdateCoordinator,
-    device_info: PowerviewDeviceInfo,
-    room_name: str,
-    shade: BaseShade,
-    name_before_refresh: str,
-) -> Iterable[ShadeEntity]:
-    """Create a PowerViewShade entity."""
-
-    classes: list[BaseShade] = []
-
-    if shade.capability.type == 1:
-        classes.append(PowerViewShadeWithTiltOnClosed)
-    elif shade.capability.type == 2:
-        classes.append(PowerViewShadeWithTiltAnywhere)
-    elif shade.capability.type == 4:
-        classes.append(PowerViewShadeWithTiltAnywhere)
-    elif shade.capability.type == 7:
-        classes.extend([PowerViewShadeTDBUTop, PowerViewShadeTDBUBottom])
-    else:
-        classes.append(PowerViewShade)
-
-    _LOGGER.debug("%s (%s) detected as %a", shade.name, shade.capability.type, classes)
-
-    return [
-        cls(coordinator, device_info, room_name, shade, name_before_refresh)
-        for cls in classes
-    ]
-
-
 def hd_position_to_hass(hd_position: int, max_val: int = MAX_POSITION) -> int:
     """Convert hunter douglas position to hass position."""
     return round((hd_position / max_val) * 100)
@@ -705,3 +675,35 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
             },
             {},
         )
+
+
+TYPE_TO_CLASSES = {
+    1: (PowerViewShadeWithTiltOnClosed,),
+    2: (PowerViewShadeWithTiltAnywhere,),
+    4: (PowerViewShadeWithTiltAnywhere,),
+    7: (PowerViewShadeTDBUTop, PowerViewShadeTDBUBottom),
+}
+
+
+def create_powerview_shade_entity(
+    coordinator: PowerviewShadeUpdateCoordinator,
+    device_info: PowerviewDeviceInfo,
+    room_name: str,
+    shade: BaseShade,
+    name_before_refresh: str,
+) -> Iterable[ShadeEntity]:
+    """Create a PowerViewShade entity."""
+    classes: Iterable[BaseShade] = TYPE_TO_CLASSES.get(
+        shade.capability.type, (PowerViewShade,)
+    )
+    _LOGGER.debug(
+        "%s (%s) detected as %a %s",
+        shade.name,
+        shade.capability.type,
+        classes,
+        shade.raw_data,
+    )
+    return [
+        cls(coordinator, device_info, room_name, shade, name_before_refresh)
+        for cls in classes
+    ]
