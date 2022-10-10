@@ -17,7 +17,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTR_OPTION, ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION
 
@@ -72,7 +72,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SelectEntityDescription(EntityDescription):
     """A class that describes select entities."""
 
-    options: list[str] = UNDEFINED  # type: ignore[assignment]
+    options: list[str] | None = None
 
 
 class SelectEntity(Entity):
@@ -105,7 +105,7 @@ class SelectEntity(Entity):
             return self._attr_options
         if (
             hasattr(self, "entity_description")
-            and self.entity_description.options is not UNDEFINED  # type: ignore[comparison-overlap]
+            and self.entity_description.options is not None
         ):
             return self.entity_description.options
         raise AttributeError()
