@@ -1193,7 +1193,7 @@ async def test_light_backwards_compatibility_color_mode(
 
     entity2 = platform.ENTITIES[2]
     entity2.supported_features = light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR_TEMP
-    entity2.color_temp = 100
+    entity2.color_temp_kelvin = 10000
 
     entity3 = platform.ENTITIES[3]
     entity3.supported_features = light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR
@@ -1204,7 +1204,7 @@ async def test_light_backwards_compatibility_color_mode(
         light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_COLOR_TEMP
     )
     entity4.hs_color = (240, 100)
-    entity4.color_temp = 100
+    entity4.color_temp_kelvin = 10000
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1893,7 +1893,7 @@ async def test_light_service_call_color_temp_conversion(
     assert entity1.min_mireds == 153
     assert entity1.max_mireds == 500
     assert entity1.min_color_temp_kelvin == 2000
-    assert entity1.max_color_temp_kelvin == 6535
+    assert entity1.max_color_temp_kelvin == 6500
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
