@@ -93,8 +93,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _authenticate(self) -> None:
         """Authenticate using Wallbox API."""
         try:
-            # Force authentication if the token is about to expire, necessary due to timegap between authenticate and get_data:
-            self._wallbox.jwtToken = ""
             self._wallbox.authenticate()
 
         except requests.exceptions.HTTPError as wallbox_connection_error:
