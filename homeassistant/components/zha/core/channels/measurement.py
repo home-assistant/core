@@ -13,8 +13,8 @@ from ..const import (
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
 )
-from ..helpers import is_hue_motion_sensor
 from .base import AttrReportConfig, ZigbeeChannel
+from .helpers import is_hue_motion_sensor
 
 if TYPE_CHECKING:
     from . import ChannelPool

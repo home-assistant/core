@@ -27,8 +27,8 @@ from ..const import (
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
 )
-from ..helpers import is_hue_motion_sensor
 from .base import AttrReportConfig, ClientChannel, ZigbeeChannel, parse_and_log_command
+from .helpers import is_hue_motion_sensor
 
 if TYPE_CHECKING:
     from . import ChannelPool
