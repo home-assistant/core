@@ -30,8 +30,6 @@ async def test_button_press(hass: HomeAssistant) -> None:
     """Test a button press."""
     await async_setup_integration(hass, MockBridge)
 
-    # entity_registry = er.async_get(hass)
-
     ra3_button_entity_id = (
         "button.hallway_main_stairs_position_1_keypad_kitchen_pendants"
     )
