@@ -17,6 +17,7 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
+    DATA_HASS_CONFIG,
     DOMAIN,
     PLATFORMS,
 )
@@ -40,6 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """
 
     hass.data[DATA_ECOBEE_CONFIG] = config.get(DOMAIN, {})
+    hass.data[DATA_HASS_CONFIG] = config
 
     if not hass.config_entries.async_entries(DOMAIN) and hass.data[DATA_ECOBEE_CONFIG]:
         # No config entry exists and configuration.yaml config exists, trigger the import flow.
@@ -78,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: entry.title, ATTR_CONFIG_ENTRY_ID: entry.entry_id},
-            hass.data[DATA_ECOBEE_CONFIG],
+            hass.data[DATA_HASS_CONFIG],
         )
     )
 

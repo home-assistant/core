@@ -2,8 +2,6 @@
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 
-from homeassistant.exceptions import RequiredParameterMissing
-
 from .const import DOMAIN
 
 
@@ -28,7 +26,7 @@ class EcobeeNotificationService(BaseNotificationService):
         targets = kwargs.get(ATTR_TARGET, None)
 
         if not targets:
-            raise RequiredParameterMissing(["target"])
+            raise ValueError("Missing required argument: target")
 
         for target in targets:
             thermostat_index = int(target)
