@@ -309,9 +309,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 self._state = False
             elif payload == PAYLOAD_NONE:
                 self._state = None
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -333,9 +331,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 return
             if rendered_target_humidity_payload == self._payload["HUMIDITY_RESET"]:
                 self._target_humidity = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                    msg.topic, self
-                )
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             try:
                 target_humidity = round(float(rendered_target_humidity_payload))
@@ -359,9 +355,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 )
                 return
             self._target_humidity = target_humidity
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_TARGET_HUMIDITY_STATE_TOPIC] is not None:
             topics[CONF_TARGET_HUMIDITY_STATE_TOPIC] = {
@@ -379,9 +373,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             mode = self._value_templates[ATTR_MODE](msg.payload)
             if mode == self._payload["MODE_RESET"]:
                 self._mode = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                    msg.topic, self
-                )
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             if not mode:
                 _LOGGER.debug("Ignoring empty mode from '%s'", msg.topic)
@@ -396,9 +388,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
                 return
 
             self._mode = mode
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_MODE_STATE_TOPIC] is not None:
             topics[CONF_MODE_STATE_TOPIC] = {

@@ -391,9 +391,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self._state = False
             elif payload == PAYLOAD_NONE:
                 self._state = None
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -415,9 +413,7 @@ class MqttFan(MqttEntity, FanEntity):
                 return
             if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
                 self._percentage = None
-                get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                    msg.topic, self
-                )
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             try:
                 percentage = ranged_value_to_percentage(
@@ -440,9 +436,7 @@ class MqttFan(MqttEntity, FanEntity):
                 )
                 return
             self._percentage = percentage
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_PERCENTAGE_STATE_TOPIC] is not None:
             topics[CONF_PERCENTAGE_STATE_TOPIC] = {
@@ -475,9 +469,7 @@ class MqttFan(MqttEntity, FanEntity):
                 return
 
             self._preset_mode = preset_mode
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_PRESET_MODE_STATE_TOPIC] is not None:
             topics[CONF_PRESET_MODE_STATE_TOPIC] = {
@@ -500,9 +492,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self._oscillation = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
                 self._oscillation = False
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
             topics[CONF_OSCILLATION_STATE_TOPIC] = {

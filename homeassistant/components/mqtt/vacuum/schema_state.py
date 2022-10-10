@@ -211,9 +211,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 )
                 del payload[STATE]
             self._state_attrs.update(payload)
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC):
             topics["state_position_topic"] = {

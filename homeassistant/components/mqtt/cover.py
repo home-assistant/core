@@ -405,9 +405,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 )
                 return
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -453,9 +451,7 @@ class MqttCover(MqttEntity, CoverEntity):
                     else STATE_OPEN
                 )
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
             topics["get_position_topic"] = {

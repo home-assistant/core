@@ -170,9 +170,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                 return
 
             self._attr_current_option = payload
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.

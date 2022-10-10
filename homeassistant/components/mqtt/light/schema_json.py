@@ -401,9 +401,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 with suppress(KeyError):
                     self._effect = values["effect"]
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             self._sub_state = subscription.async_prepare_subscribe_topics(

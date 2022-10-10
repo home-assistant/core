@@ -320,9 +320,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 if fan_speed:
                     self._fan_speed = fan_speed
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self
-            )
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics_list = {topic for topic in self._state_topics.values() if topic}
         self._sub_state = subscription.async_prepare_subscribe_topics(

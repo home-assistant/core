@@ -241,27 +241,23 @@ class EntityTopicState:
 
     def __init__(self) -> None:
         """Register topic."""
-        self.subscribe_calls: dict[str, dict[str, Entity]] = {}
+        self.subscribe_calls: dict[str, Entity] = {}
 
     def clear(self) -> None:
         """Clear all subsciptions."""
         self.subscribe_calls.clear()
 
     @callback
-    def process_write_state_requests(self, topic: str) -> None:
+    def process_write_state_requests(self) -> None:
         """Process the write state requests."""
-        if topic not in self.subscribe_calls:
-            return
-        for entity_id in self.subscribe_calls[topic]:
-            entity = self.subscribe_calls[topic][entity_id]
+        while self.subscribe_calls:
+            _, entity = self.subscribe_calls.popitem()
             entity.async_write_ha_state()
-        del self.subscribe_calls[topic]
 
     @callback
-    def write_state_request(self, topic: str, entity: Entity) -> None:
+    def write_state_request(self, entity: Entity) -> None:
         """Register state write request."""
-        topic_state = self.subscribe_calls.setdefault(topic, {})
-        topic_state.setdefault(entity.entity_id, entity)
+        self.subscribe_calls[entity.entity_id] = entity
 
 
 @dataclass
