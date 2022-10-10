@@ -619,6 +619,27 @@ async def test_hvac_mode_vs_hvac_action(hass, utcnow):
     assert state.attributes["hvac_action"] == "heating"
 
 
+async def test_hvac_mode_vs_hvac_action_current_mode_wrong(hass, utcnow):
+    """Check that we cope with buggy HEATING_COOLING_CURRENT."""
+    helper = await setup_test_component(hass, create_thermostat_service)
+
+    await helper.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.TEMPERATURE_CURRENT: 22,
+            CharacteristicsTypes.TEMPERATURE_TARGET: 21,
+            CharacteristicsTypes.HEATING_COOLING_CURRENT: 1,
+            CharacteristicsTypes.HEATING_COOLING_TARGET: 0,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT: 50,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET: 45,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.state == "off"
+    assert state.attributes["hvac_action"] == "idle"
+
+
 def create_heater_cooler_service(accessory):
     """Define thermostat characteristics."""
     service = accessory.add_service(ServicesTypes.HEATER_COOLER)
