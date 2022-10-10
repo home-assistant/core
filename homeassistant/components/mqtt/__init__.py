@@ -13,10 +13,12 @@ from homeassistant import config as conf_util, config_entries
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_CLIENT_ID,
     CONF_DISCOVERY,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PORT,
+    CONF_PROTOCOL,
     CONF_USERNAME,
     SERVICE_RELOAD,
 )
@@ -50,6 +52,7 @@ from .client import (  # noqa: F401
 from .config_integration import (
     CONFIG_SCHEMA_BASE,
     DEFAULT_VALUES,
+    DEPRECATED_CERTIFICATE_CONFIG_KEYS,
     DEPRECATED_CONFIG_KEYS,
 )
 from .const import (  # noqa: F401
@@ -59,10 +62,15 @@ from .const import (  # noqa: F401
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_CERTIFICATE,
+    CONF_CLIENT_CERT,
+    CONF_CLIENT_KEY,
     CONF_COMMAND_TOPIC,
     CONF_DISCOVERY_PREFIX,
+    CONF_KEEPALIVE,
     CONF_QOS,
     CONF_STATE_TOPIC,
+    CONF_TLS_INSECURE,
     CONF_TLS_VERSION,
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
@@ -85,7 +93,9 @@ from .models import (  # noqa: F401
 )
 from .util import (
     _VALID_QOS_SCHEMA,
+    async_create_certificate_temp_files,
     get_mqtt_data,
+    migrate_certificate_file_to_content,
     mqtt_config_entry_enabled,
     valid_publish_topic,
     valid_subscribe_topic,
@@ -96,7 +106,7 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
 
-MANDATORY_DEFAULT_VALUES = (CONF_PORT,)
+MANDATORY_DEFAULT_VALUES = (CONF_PORT, CONF_DISCOVERY_PREFIX)
 
 ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
@@ -110,9 +120,17 @@ CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_CERTIFICATE,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_CERT,
+    CONF_CLIENT_KEY,
     CONF_DISCOVERY,
+    CONF_DISCOVERY_PREFIX,
+    CONF_KEEPALIVE,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_TLS_INSECURE,
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
 ]
@@ -122,9 +140,17 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.All(
             cv.deprecated(CONF_BIRTH_MESSAGE),  # Deprecated in HA Core 2022.3
             cv.deprecated(CONF_BROKER),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_CERTIFICATE),  # Deprecated in HA Core 2022.11
+            cv.deprecated(CONF_CLIENT_ID),  # Deprecated in HA Core 2022.11
+            cv.deprecated(CONF_CLIENT_CERT),  # Deprecated in HA Core 2022.11
+            cv.deprecated(CONF_CLIENT_KEY),  # Deprecated in HA Core 2022.11
             cv.deprecated(CONF_DISCOVERY),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_DISCOVERY_PREFIX),  # Deprecated in HA Core 2022.11
+            cv.deprecated(CONF_KEEPALIVE),  # Deprecated in HA Core 2022.11
             cv.deprecated(CONF_PASSWORD),  # Deprecated in HA Core 2022.3
             cv.deprecated(CONF_PORT),  # Deprecated in HA Core 2022.3
+            cv.deprecated(CONF_PROTOCOL),  # Deprecated in HA Core 2022.11
+            cv.deprecated(CONF_TLS_INSECURE),  # Deprecated in HA Core 2022.11
             cv.deprecated(CONF_TLS_VERSION),  # Deprecated June 2020
             cv.deprecated(CONF_USERNAME),  # Deprecated in HA Core 2022.3
             cv.deprecated(CONF_WILL_MESSAGE),  # Deprecated in HA Core 2022.3
@@ -206,22 +232,31 @@ def _filter_entry_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if entry.data.keys() != filtered_data.keys():
         _LOGGER.warning(
             "The following unsupported configuration options were removed from the "
-            "MQTT config entry: %s. Add them to configuration.yaml if they are needed",
+            "MQTT config entry: %s",
             entry.data.keys() - filtered_data.keys(),
         )
         hass.config_entries.async_update_entry(entry, data=filtered_data)
 
 
-def _merge_basic_config(
+async def _async_merge_basic_config(
     hass: HomeAssistant, entry: ConfigEntry, yaml_config: dict[str, Any]
 ) -> None:
     """Merge basic options in configuration.yaml config with config entry.
 
     This mends incomplete migration from old version of HA Core.
     """
-
     entry_updated = False
     entry_config = {**entry.data}
+    for key in DEPRECATED_CERTIFICATE_CONFIG_KEYS:
+        if key in yaml_config and key not in entry_config:
+            if (
+                content := await hass.async_add_executor_job(
+                    migrate_certificate_file_to_content, yaml_config[key]
+                )
+            ) is not None:
+                entry_config[key] = content
+                entry_updated = True
+
     for key in DEPRECATED_CONFIG_KEYS:
         if key in yaml_config and key not in entry_config:
             entry_config[key] = yaml_config[key]
@@ -262,7 +297,7 @@ async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | 
     _filter_entry_config(hass, entry)
 
     # Merge basic configuration, and add missing defaults for basic options
-    _merge_basic_config(hass, entry, mqtt_data.config or {})
+    await _async_merge_basic_config(hass, entry, mqtt_data.config or {})
     # Bail out if broker setting is missing
     if CONF_BROKER not in entry.data:
         _LOGGER.error("MQTT broker is not configured, please configure it")
@@ -279,6 +314,8 @@ async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | 
         override = {k: entry.data[k] for k in shared_keys if conf[k] != entry.data[k]}
         if CONF_PASSWORD in override:
             override[CONF_PASSWORD] = "********"
+        if CONF_CLIENT_KEY in override:
+            override[CONF_CLIENT_KEY] = "-----PRIVATE KEY-----"
         if override:
             _LOGGER.warning(
                 "Deprecated configuration settings found in configuration.yaml. "
@@ -299,6 +336,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (conf := await async_fetch_config(hass, entry)) is None:
         # Bail out
         return False
+    await async_create_certificate_temp_files(hass, dict(entry.data))
     mqtt_data.client = MQTT(hass, entry, conf)
     # Restore saved subscriptions
     if mqtt_data.subscriptions_to_restore:

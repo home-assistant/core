@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+import tempfile
 from typing import Any
 
 import voluptuous as vol
@@ -9,18 +12,25 @@ import voluptuous as vol
 from homeassistant.const import CONF_PAYLOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
+    CONF_CERTIFICATE,
+    CONF_CLIENT_CERT,
+    CONF_CLIENT_KEY,
     DATA_MQTT,
+    DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
 )
 from .models import MqttData
+
+TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
 
 def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
@@ -120,3 +130,57 @@ def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
     if ensure_exists:
         return hass.data.setdefault(DATA_MQTT, MqttData())
     return hass.data[DATA_MQTT]
+
+
+async def async_create_certificate_temp_files(
+    hass: HomeAssistant, config: ConfigType
+) -> None:
+    """Create certificate temporary files for the MQTT client."""
+
+    def _create_temp_file(temp_file: Path, data: str | None) -> None:
+        if data is None or data == "auto":
+            if temp_file.exists():
+                os.remove(Path(temp_file))
+            return
+        temp_file.write_text(data)
+
+    def _create_temp_dir_and_files() -> None:
+        """Create temporary directory."""
+        temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
+
+        if (
+            config.get(CONF_CERTIFICATE)
+            or config.get(CONF_CLIENT_CERT)
+            or config.get(CONF_CLIENT_KEY)
+        ) and not temp_dir.exists():
+            temp_dir.mkdir(0o700)
+
+        _create_temp_file(temp_dir / CONF_CERTIFICATE, config.get(CONF_CERTIFICATE))
+        _create_temp_file(temp_dir / CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
+        _create_temp_file(temp_dir / CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
+
+    await hass.async_add_executor_job(_create_temp_dir_and_files)
+
+
+def get_file_path(option: str, default: str | None = None) -> Path | str | None:
+    """Get file path of a certificate file."""
+    temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
+    if not temp_dir.exists():
+        return default
+
+    file_path: Path = temp_dir / option
+    if not file_path.exists():
+        return default
+
+    return temp_dir / option
+
+
+def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
+    """Convert certificate file or setting to config entry setting."""
+    if file_name_or_auto == "auto":
+        return "auto"
+    try:
+        with open(file_name_or_auto, encoding=DEFAULT_ENCODING) as certiticate_file:
+            return certiticate_file.read()
+    except OSError:
+        return None
