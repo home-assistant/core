@@ -255,3 +255,19 @@ async def test_can_set_level(hass):
     assert logging.getLogger(CONFIGED_NS).level == logging.WARNING
 
     logging.getLogger("").setLevel(logging.NOTSET)
+
+
+async def test_default_level(hass, caplog):
+    """Test default level is warning."""
+    assert await async_setup_component(hass, "logger", {})
+    await hass.async_block_till_done()
+
+    filter_logger = logging.getLogger("test.filter")
+
+    caplog.clear()
+    filter_logger.debug("should be filtered")
+    filter_logger.info("should be filtered")
+    assert "should be filtered" not in caplog.text
+
+    filter_logger.warning("should not be filtered")
+    assert "should not be filtered" in caplog.text
