@@ -249,7 +249,7 @@ class EntityTopicState:
 
     @callback
     def process_write_state_requests(self, topic: str) -> None:
-        """Process the write state requests and write back the entity state if all callbacks have been processed."""
+        """Process the write state requests."""
         if topic not in self.subscribe_calls:
             return
         for entity_id in self.subscribe_calls[topic]:
