@@ -293,6 +293,9 @@ class MockBridge:
         """Will return all known buttons connected to the bridge/processor."""
         return self.buttons
 
+    def tap_button(self, button_id: str):
+        """Mock a button press and release message for the given button ID."""
+
     async def close(self):
         """Close the mock bridge connection."""
         self.is_currently_connected = False
