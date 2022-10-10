@@ -407,7 +407,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _reload_config(call: ServiceCall) -> None:
             """Reload the platforms."""
-            mqtt_data.state_write_requests.clear()
             # Reload the legacy yaml platform
             await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
 

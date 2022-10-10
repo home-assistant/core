@@ -243,10 +243,6 @@ class EntityTopicState:
         """Register topic."""
         self.subscribe_calls: dict[str, Entity] = {}
 
-    def clear(self) -> None:
-        """Clear all subsciptions."""
-        self.subscribe_calls.clear()
-
     @callback
     def process_write_state_requests(self) -> None:
         """Process the write state requests."""
@@ -256,7 +252,7 @@ class EntityTopicState:
 
     @callback
     def write_state_request(self, entity: Entity) -> None:
-        """Register state write request."""
+        """Register write state request."""
         self.subscribe_calls[entity.entity_id] = entity
 
 
