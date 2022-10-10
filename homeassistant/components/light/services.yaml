@@ -259,6 +259,25 @@ turn_on:
           min: -100
           max: 100
           unit_of_measurement: "%"
+    brightness_min:
+      name: Brightness minimum value
+      description: Number indicating the lowest brightness value the light will
+        go to when stepping in decrements
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 255
+    brightness_min_pct:
+      name: Brightness minimum 
+      description: Number indicating the lowest brightness percentage the light will
+        go to when stepping in decrements
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
     white:
       name: White
       description:

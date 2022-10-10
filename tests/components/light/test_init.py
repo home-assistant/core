@@ -939,11 +939,39 @@ async def test_light_brightness_step(hass, enable_custom_integrations):
         {
             "entity_id": entity0.entity_id,
             "brightness_step": -126,
+            "brightness_min": 10
         },
         blocking=True,
     )
 
-    assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
+    _, data = entity0.last_call("turn_on")
+    assert data["brightness"] == 10  # 116 - 126; minimum brightness of 10 should take effect
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": entity0.entity_id,
+            "brightness_step_pct": -100,
+            "brightness_min_pct": 10,
+        },
+        blocking=True,
+    )
+
+    _, data = entity0.last_call("turn_on")
+    assert data["brightness"] == 26  # 10 - 255; minimum brightness of 10% (255 * 0.10) should take effect
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": entity0.entity_id,
+            "brightness_step": -26,
+        },
+        blocking=True,
+    )
+
+    assert entity0.state == "off"  # 26 - 26; brightness is 0, light should turn off
 
 
 async def test_light_brightness_pct_conversion(hass, enable_custom_integrations):

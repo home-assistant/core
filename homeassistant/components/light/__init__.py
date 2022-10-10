@@ -211,6 +211,8 @@ ATTR_BRIGHTNESS = "brightness"
 ATTR_BRIGHTNESS_PCT = "brightness_pct"
 ATTR_BRIGHTNESS_STEP = "brightness_step"
 ATTR_BRIGHTNESS_STEP_PCT = "brightness_step_pct"
+ATTR_BRIGHTNESS_MIN = "brightness_min"
+ATTR_BRIGHTNESS_MIN_PCT = "brightness_min_pct"
 
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
@@ -239,6 +241,8 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
 VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
+VALID_BRIGHTNESS_MIN = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
+VALID_BRIGHTNESS_MIN_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=100))
 VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
 
 LIGHT_TURN_ON_SCHEMA = {
@@ -248,6 +252,10 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
     vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
     vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
+    vol.Exclusive(ATTR_BRIGHTNESS_MIN, ATTR_BRIGHTNESS_MIN): VALID_BRIGHTNESS_MIN,
+    vol.Exclusive(
+        ATTR_BRIGHTNESS_MIN_PCT, ATTR_BRIGHTNESS_MIN
+    ): VALID_BRIGHTNESS_MIN_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
         vol.Coerce(int), vol.Range(min=1)
@@ -418,6 +426,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
         ):
             brightness = light.brightness if light.is_on and light.brightness else 0
+            min_brightness = 0
 
             if ATTR_BRIGHTNESS_STEP in params:
                 brightness += params.pop(ATTR_BRIGHTNESS_STEP)
@@ -425,7 +434,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             else:
                 brightness += round(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
 
-            params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
+            if ATTR_BRIGHTNESS_MIN in params:
+                min_brightness = params.pop(ATTR_BRIGHTNESS_MIN)
+            elif ATTR_BRIGHTNESS_MIN_PCT in params:
+                min_brightness = round(params.pop(ATTR_BRIGHTNESS_MIN_PCT) / 100 * 255)
+
+            params[ATTR_BRIGHTNESS] = max(min_brightness, min(255, brightness))
 
             preprocess_turn_on_alternatives(hass, params)
 
