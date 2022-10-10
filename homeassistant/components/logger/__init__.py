@@ -68,13 +68,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _set_log_level(logging.getLogger(key), value)
 
     # Set default log severity
-    set_default_log_level(config[DOMAIN].get(LOGGER_DEFAULT, DEFAULT_LOGSEVERITY))
+    logger_config = config.get(DOMAIN, {})
+    set_default_log_level(logger_config.get(LOGGER_DEFAULT, DEFAULT_LOGSEVERITY))
 
-    if LOGGER_LOGS in config[DOMAIN]:
+    if LOGGER_LOGS in logger_config:
         set_log_levels(config[DOMAIN][LOGGER_LOGS])
 
-    if LOGGER_FILTERS in config[DOMAIN]:
-        for key, value in config[DOMAIN][LOGGER_FILTERS].items():
+    if LOGGER_FILTERS in logger_config:
+        for key, value in logger_config[LOGGER_FILTERS].items():
             logger = logging.getLogger(key)
             _add_log_filter(logger, value)
 
