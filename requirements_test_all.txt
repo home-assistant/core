@@ -358,7 +358,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.6.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.3
+bluetooth-auto-recovery==0.3.4
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -426,7 +426,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.33.0
+dbus-fast==1.38.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -705,7 +705,7 @@ iotawattpy==0.1.0
 ismartgate==4.0.4
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.8.1
+jellyfin-apiclient-python==1.9.2
 
 # homeassistant.components.rest
 jsonpath==0.82
