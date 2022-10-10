@@ -13,12 +13,8 @@ import pytest
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
-from .const import (
-    TEST_PASSWORD,
-    TEST_URL,
-    TEST_USERNAME,
-    load_json_fixture,
-)
+from . import load_json_fixture
+from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
