@@ -327,7 +327,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.0.0
+apprise==1.1.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -441,7 +441,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.6.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.3
+bluetooth-auto-recovery==0.3.4
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -543,7 +543,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.33.0
+dbus-fast==1.38.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -949,7 +949,7 @@ iperf3==0.1.11
 ismartgate==4.0.4
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.8.1
+jellyfin-apiclient-python==1.9.2
 
 # homeassistant.components.rest
 jsonpath==0.82
@@ -1589,7 +1589,7 @@ pyfttt==0.3
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.gtfs
-pygtfs==0.1.6
+pygtfs==0.1.7
 
 # homeassistant.components.hvv_departures
 pygti==0.9.3

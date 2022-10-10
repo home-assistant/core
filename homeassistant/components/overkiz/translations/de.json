@@ -12,7 +12,8 @@
             "too_many_attempts": "Zu viele Versuche mit einem ung\u00fcltigen Token, vor\u00fcbergehend gesperrt",
             "too_many_requests": "Zu viele Anfragen, versuche es sp\u00e4ter erneut.",
             "unknown": "Unerwarteter Fehler",
-            "unknown_user": "Unbekannter Benutzer. Somfy Protect-Konten werden von dieser Integration nicht unterst\u00fctzt."
+            "unknown_user": "Unbekannter Benutzer. Somfy Protect-Konten werden von dieser Integration nicht unterst\u00fctzt.",
+            "unsupported_hardware": "Deine {unsupported_device} Hardware wird von dieser Integration nicht unterst\u00fctzt."
         },
         "flow_title": "Gateway: {gateway_id}",
         "step": {
