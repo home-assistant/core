@@ -9,6 +9,8 @@ CLIENT_VERSION: Final = "1.0"
 COLLECTION_TYPE_MOVIES: Final = "movies"
 COLLECTION_TYPE_MUSIC: Final = "music"
 
+CONF_CLIENT_DEVICE_ID: Final = "client_device_id"
+
 DATA_CLIENT: Final = "client"
 
 ITEM_KEY_COLLECTION_TYPE: Final = "CollectionType"
