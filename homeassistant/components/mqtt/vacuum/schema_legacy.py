@@ -248,9 +248,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT message."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             if (
                 msg.topic == self._state_topics[CONF_BATTERY_LEVEL_TOPIC]
                 and self._templates[CONF_BATTERY_LEVEL_TEMPLATE]

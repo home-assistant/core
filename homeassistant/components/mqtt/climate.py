@@ -477,10 +477,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_action_received(msg):
             """Handle receiving action via MQTT."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
-
             payload = render_template(msg, CONF_ACTION_TEMPLATE)
             if not payload or payload == PAYLOAD_NONE:
                 _LOGGER.debug(
@@ -508,9 +504,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @callback
         def handle_temperature_received(msg, template_name, attr):
             """Handle temperature coming via MQTT."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = render_template(msg, template_name)
 
             try:
@@ -570,9 +563,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @callback
         def handle_mode_received(msg, template_name, attr, mode_list):
             """Handle receiving listed mode via MQTT."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = render_template(msg, template_name)
 
             if payload not in self._config[mode_list]:
@@ -624,9 +614,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @callback
         def handle_onoff_mode_received(msg, template_name, attr):
             """Handle receiving on/off mode via MQTT."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = render_template(msg, template_name)
             payload_on = self._config[CONF_PAYLOAD_ON]
             payload_off = self._config[CONF_PAYLOAD_OFF]
@@ -660,9 +647,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_preset_mode_received(msg):
             """Handle receiving preset mode via MQTT."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             preset_mode = render_template(msg, CONF_PRESET_MODE_VALUE_TEMPLATE)
             if preset_mode in [PRESET_NONE, PAYLOAD_NONE]:
                 self._preset_mode = None

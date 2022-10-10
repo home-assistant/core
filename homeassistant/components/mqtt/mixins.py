@@ -424,9 +424,6 @@ class MqttAttributes(Entity):
         @callback
         @log_messages(self.hass, self.entity_id)
         def attributes_message_received(msg: ReceiveMessage) -> None:
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             try:
                 payload = attr_tpl(msg.payload)
                 json_dict = json_loads(payload) if isinstance(payload, str) else None
@@ -554,7 +551,8 @@ class MqttAvailability(Entity):
                 self._available_latest = False
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                topic, self, register_callback=True
+                topic,
+                self,
             )
 
         self._available = {

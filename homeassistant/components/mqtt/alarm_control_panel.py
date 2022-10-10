@@ -212,7 +212,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                 return
             self._state = payload
             get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self, register_callback=True
+                msg.topic, self
             )
 
         self._sub_state = subscription.async_prepare_subscribe_topics(

@@ -341,9 +341,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             values = json_loads(msg.payload)
 
             if values["state"] == "ON":

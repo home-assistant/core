@@ -170,7 +170,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                 self._state = None
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self, register_callback=True
+                msg.topic,
+                self,
             )
 
         if self._config.get(CONF_STATE_TOPIC) is None:

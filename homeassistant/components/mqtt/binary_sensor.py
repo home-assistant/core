@@ -201,9 +201,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle a new received MQTT state message."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             # auto-expire enabled?
             expire_after = self._config.get(CONF_EXPIRE_AFTER)
 

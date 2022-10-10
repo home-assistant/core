@@ -202,9 +202,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle state MQTT message."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = json_loads(msg.payload)
             if STATE in payload and (
                 payload[STATE] in POSSIBLE_STATES or payload[STATE] is None

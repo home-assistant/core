@@ -198,9 +198,6 @@ class MqttNumber(MqttEntity, RestoreNumber):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
             try:
                 if payload == self._config[CONF_PAYLOAD_RESET]:

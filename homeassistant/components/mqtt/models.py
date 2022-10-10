@@ -240,7 +240,6 @@ class TopicSubscriptionCalls(TypedDict):
     """Holds entity related subscriber and callback count to assure we write a state only once."""
 
     subscribe_count: int
-    callback_count: int
     write_state: bool
     entity: Entity
 
@@ -271,7 +270,6 @@ class EntityTopicState:
         subscription = item.setdefault(
             entity.entity_id,
             TopicSubscriptionCalls(
-                callback_count=0,
                 subscribe_count=0,
                 write_state=False,
                 entity=entity,
@@ -296,28 +294,17 @@ class EntityTopicState:
             return
         for entity_id in self.subscribe_calls[topic]:
             item = self.subscribe_calls[topic][entity_id]
-            if item["callback_count"] == item["subscribe_count"]:
-                item["callback_count"] = 0
-                if item["write_state"]:
-                    item["write_state"] = False
-                    item["entity"].async_write_ha_state()
+            if item["write_state"]:
+                item["write_state"] = False
+                item["entity"].async_write_ha_state()
 
     @callback
-    def register_callback(self, topic: str, entity: Entity) -> None:
-        """Register a callback took place."""
-        self.get_item(topic, entity)["callback_count"] += 1
-
-    @callback
-    def write_state_request(
-        self, topic: str, entity: Entity, register_callback: bool = False
-    ) -> None:
+    def write_state_request(self, topic: str, entity: Entity) -> None:
         """Register state write request."""
         if topic not in self.subscribe_calls:
             entity.async_write_ha_state()
             return
         self.get_item(topic, entity)["write_state"] = True
-        if register_callback:
-            self.register_callback(topic, entity)
 
 
 @dataclass

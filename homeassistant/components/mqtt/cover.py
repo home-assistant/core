@@ -373,9 +373,6 @@ class MqttCover(MqttEntity, CoverEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle new MQTT state messages."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_template(msg.payload)
 
             if not payload:
@@ -416,9 +413,6 @@ class MqttCover(MqttEntity, CoverEntity):
         @log_messages(self.hass, self.entity_id)
         def position_message_received(msg):
             """Handle new MQTT position messages."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._get_position_template(msg.payload)
 
             if not payload:

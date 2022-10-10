@@ -237,9 +237,6 @@ class MqttSiren(MqttEntity, SirenEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle new MQTT state messages."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_template(msg.payload)
             if not payload or payload == PAYLOAD_EMPTY_JSON:
                 _LOGGER.debug(

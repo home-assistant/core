@@ -301,7 +301,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
             ):
                 _update_last_reset(msg)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self, register_callback=True
+                msg.topic,
+                self,
             )
 
         topics["state_topic"] = {
@@ -317,7 +318,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
             """Handle new last_reset messages."""
             _update_last_reset(msg)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(
-                msg.topic, self, register_callback=True
+                msg.topic,
+                self,
             )
 
         if (

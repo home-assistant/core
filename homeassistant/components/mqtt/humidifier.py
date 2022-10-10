@@ -299,9 +299,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new received MQTT message."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_templates[CONF_STATE](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
@@ -328,9 +325,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         @log_messages(self.hass, self.entity_id)
         def target_humidity_received(msg):
             """Handle new received MQTT message for the target humidity."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             rendered_target_humidity_payload = self._value_templates[ATTR_HUMIDITY](
                 msg.payload
             )
@@ -382,9 +376,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         @log_messages(self.hass, self.entity_id)
         def mode_received(msg):
             """Handle new received MQTT message for mode."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             mode = self._value_templates[ATTR_MODE](msg.payload)
             if mode == self._payload["MODE_RESET"]:
                 self._mode = None

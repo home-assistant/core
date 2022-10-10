@@ -427,9 +427,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_templates[CONF_STATE_VALUE_TEMPLATE](msg.payload)
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
@@ -457,9 +454,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def brightness_received(msg):
             """Handle new MQTT messages for the brightness."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_templates[CONF_BRIGHTNESS_VALUE_TEMPLATE](
                 msg.payload, None
             )
@@ -497,9 +491,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def rgb_received(msg):
             """Handle new MQTT messages for RGB."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             rgb = _rgbx_received(
                 msg, CONF_RGB_VALUE_TEMPLATE, ColorMode.RGB, lambda *x: x
             )
@@ -516,9 +507,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def rgbw_received(msg):
             """Handle new MQTT messages for RGBW."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             rgbw = _rgbx_received(
                 msg,
                 CONF_RGBW_VALUE_TEMPLATE,
@@ -538,9 +526,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def rgbww_received(msg):
             """Handle new MQTT messages for RGBWW."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             rgbww = _rgbx_received(
                 msg,
                 CONF_RGBWW_VALUE_TEMPLATE,
@@ -560,9 +545,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def color_mode_received(msg):
             """Handle new MQTT messages for color mode."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_templates[CONF_COLOR_MODE_VALUE_TEMPLATE](
                 msg.payload, None
             )
@@ -581,9 +563,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def color_temp_received(msg):
             """Handle new MQTT messages for color temperature."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_templates[CONF_COLOR_TEMP_VALUE_TEMPLATE](
                 msg.payload, None
             )
@@ -604,9 +583,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def effect_received(msg):
             """Handle new MQTT messages for effect."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_templates[CONF_EFFECT_VALUE_TEMPLATE](
                 msg.payload, None
             )
@@ -625,9 +601,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def hs_received(msg):
             """Handle new MQTT messages for hs color."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_templates[CONF_HS_VALUE_TEMPLATE](msg.payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
@@ -649,9 +622,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def xy_received(msg):
             """Handle new MQTT messages for xy color."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             payload = self._value_templates[CONF_XY_VALUE_TEMPLATE](msg.payload, None)
             if not payload:
                 _LOGGER.debug("Ignoring empty xy-color message from '%s'", msg.topic)

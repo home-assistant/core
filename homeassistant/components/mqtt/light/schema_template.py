@@ -192,9 +192,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
-            get_mqtt_data(self.hass).state_write_requests.register_callback(
-                msg.topic, self
-            )
             state = self._templates[
                 CONF_STATE_TEMPLATE
             ].async_render_with_possible_json_value(msg.payload)
