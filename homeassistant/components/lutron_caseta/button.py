@@ -30,11 +30,8 @@ async def async_setup_entry(
         # find and complete missing button names
         button_device = button_devices[button_device_id]
         ha_device = button_device
-        if (
-            "parent_device" in button_device
-            and button_device["parent_device"] is not None
-        ):
-            ha_device = bridge_devices[button_device["parent_device"]]
+        if parent := button_device.get("parent_device"):
+            ha_device = bridge_devices[parent]
 
         if "device_name" in button_device:
             continue
