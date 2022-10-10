@@ -106,7 +106,6 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = sensor_description
-        self._attr_name = f"{name} {sensor_description.name}"
         self._attr_unique_id = f"{unique_id_prefix}_{sensor_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id_prefix)},
@@ -114,6 +113,7 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
             name=name,
             manufacturer="HERE Technologies",
         )
+        self._attr_has_entity_name = True
 
     async def async_added_to_hass(self) -> None:
         """Wait for start so origin and destination entities can be resolved."""
