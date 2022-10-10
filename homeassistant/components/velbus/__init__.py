@@ -148,4 +148,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_remove(DOMAIN, SERVICE_SCAN)
         hass.services.async_remove(DOMAIN, SERVICE_SYNC)
         hass.services.async_remove(DOMAIN, SERVICE_SET_MEMO_TEXT)
+        await hass.async_add_executor_job(
+            shutil.rmtree,
+            hass.config.path(".storage/velbuscache/"),
+        )
     return unload_ok
