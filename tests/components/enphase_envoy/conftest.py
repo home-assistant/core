@@ -56,7 +56,7 @@ def mock_envoy_reader_fixture(
     mock_inverters_production,
     serial_number,
 ):
-    """Define a fixture to return a mocked envoy_reader."""
+    """Define a mocked EnvoyReader fixture."""
     mock_envoy_reader = Mock(
         getData=mock_get_data,
         get_full_serial_number=mock_get_full_serial_number,
@@ -71,19 +71,19 @@ def mock_envoy_reader_fixture(
 
 @pytest.fixture(name="mock_get_full_serial_number")
 def mock_get_full_serial_number_fixture(serial_number):
-    """Define a fixture to return a mocked coroutine function for a serial number."""
+    """Define a mocked EnvoyReader.get_full_serial_number fixture."""
     return AsyncMock(return_value=serial_number)
 
 
 @pytest.fixture(name="mock_get_data")
 def mock_get_data_fixture():
-    """Define a fixture to return a mocked coroutine function for gateway data."""
+    """Define a mocked EnvoyReader.getData fixture."""
     return AsyncMock()
 
 
 @pytest.fixture(name="mock_inverters_production")
 def mock_inverters_production_fixture(inverters_production_data):
-    """Define a fixture to return a mocked coroutine function for inverter data."""
+    """Define a mocked EnvoyReader.inverters_production fixture."""
     return AsyncMock(return_value=inverters_production_data)
 
 
