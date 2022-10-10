@@ -5,7 +5,7 @@ from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .const import MOCK_UNSUCCESFUL_CONNECTION_STATE
+from . import async_load_json_fixture
 
 from tests.common import MockConfigEntry
 
@@ -17,7 +17,9 @@ async def test_config_entry_not_ready(
     mock_client: MagicMock,
 ) -> None:
     """Test the Jellyfin configuration entry not ready."""
-    mock_client.auth.connect_to_address.return_value = MOCK_UNSUCCESFUL_CONNECTION_STATE
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        "auth-connect-address-failure.json",
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
