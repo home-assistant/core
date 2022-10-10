@@ -51,8 +51,6 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "model": "PJ2-3BRL-GXX-X01",
                     "serial": 68551522,
                     "parent_device": "9",
-                    "device_name": "on",
-                    "enabled_default": False,
                 },
                 "1372": {
                     "device_id": "1372",
