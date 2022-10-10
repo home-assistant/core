@@ -422,8 +422,8 @@ class LutronCasetaDevice(Entity):
         attributes = {
             "device_id": self.device_id,
         }
-        if self._device.get("zone"):
-            attributes["zone_id"] = self._device["zone"]
+        if zone := self._device.get("zone"):
+            attributes["zone_id"] = zone
         return attributes
 
 
