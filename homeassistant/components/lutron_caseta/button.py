@@ -36,17 +36,25 @@ async def async_setup_entry(
         ):
             ha_device = bridge_devices[button_device["parent_device"]]
 
-        if "device_name" not in button_device:
-            # device name (button name) is missing, probably a caseta pico
-            # try to get the name using the button number from the triggers
-            button_numbers = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
-                _lutron_model_to_device_type(ha_device["model"], ha_device["type"]),
-                {},
-            )
-            button_device["device_name"] = button_numbers.get(
-                int(button_device["button_number"]),
-                f"button {button_device['button_number']}",
-            )
+        if "device_name" in button_device:
+            continue
+
+        # device name (button name) is missing, probably a caseta pico
+        # try to get the name using the button number from the triggers
+        # disable the button by default
+        button_numbers = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
+            _lutron_model_to_device_type(ha_device["model"], ha_device["type"]),
+            {},
+        )
+        button_device.update(
+            {
+                "device_name": button_numbers.get(
+                    int(button_device["button_number"]),
+                    f"button {button_device['button_number']}",
+                ),
+                "enabled_default": False,
+            }
+        )
 
     async_add_entities(
         LutronCasetaButton(button_devices[button_device_id], data)

@@ -429,6 +429,11 @@ class LutronCasetaDevice(Entity):
         """Return the state attributes."""
         return {"device_id": self.device_id, "zone_id": self._device["zone"]}
 
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return the default enabled status of the entity."""
+        return self._device.get("enabled_default", True)
+
 
 class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
     """A lutron_caseta entity that can update by syncing data from the bridge."""
