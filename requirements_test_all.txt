@@ -1617,7 +1617,7 @@ stookalert==0.1.4
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.6.0
+subarulink==0.6.1
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
