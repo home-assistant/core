@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from unittest.mock import patch
 
 from bleak import BLEDevice
-from pysnooz.commands import SnoozCommandData, turn_off
+from pysnooz.commands import SnoozCommandData
 from pysnooz.testing import MockSnoozDevice
 
 from homeassistant.components.snooz.const import DOMAIN
@@ -75,7 +75,8 @@ async def create_mock_snooz(
     device = MockSnoozDevice(ble_device, initial_state=initial_state)
 
     # execute a command to initiate the connection
-    await device.async_execute_command(turn_off())
+    if connected is True:
+        await device.async_execute_command(initial_state)
 
     return device
 
