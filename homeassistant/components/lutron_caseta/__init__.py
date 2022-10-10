@@ -427,7 +427,7 @@ class LutronCasetaDevice(Entity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return {"device_id": self.device_id, "zone_id": self._device["zone"]}
+        return {"device_id": self.device_id, "zone_id": self._device.get("zone")}
 
     @property
     def entity_registry_enabled_default(self) -> bool:

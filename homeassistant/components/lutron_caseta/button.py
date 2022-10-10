@@ -70,8 +70,3 @@ class LutronCasetaButton(LutronCasetaDevice, ButtonEntity):
     def serial(self):
         """Buttons shouldn't have serial numbers, Return None."""
         return None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {"device_id": self.device_id}
