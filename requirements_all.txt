@@ -232,7 +232,7 @@ aioopenexchangerates==0.4.0
 aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==2.0.2
+aiopvapi==2.0.3
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
