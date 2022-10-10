@@ -821,13 +821,13 @@ async def test_min_max_mireds(hass, enable_custom_integrations):
     entity0.supported_color_modes = {ColorMode.COLOR_TEMP}
     entity0.color_mode = ColorMode.COLOR_TEMP
     entity0.color_temp_kelvin = 2
-    entity0.min_color_temp_kelvin = 2
-    entity0.max_color_temp_kelvin = 5
+    entity0._attr_min_color_temp_kelvin = 2
+    entity0._attr_max_color_temp_kelvin = 5
 
     entity1 = platform.ENTITIES[1]
     entity1.supported_features = SUPPORT_COLOR_TEMP
-    entity1.min_color_temp_kelvin = 1
-    entity1.max_color_temp_kelvin = 1234567890
+    entity1._attr_min_color_temp_kelvin = 1
+    entity1._attr_max_color_temp_kelvin = 1234567890
 
     assert await async_setup_component(
         hass,
