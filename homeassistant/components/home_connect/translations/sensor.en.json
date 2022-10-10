@@ -2,8 +2,8 @@
     "state": {
         "home_connect__operation_state": {
             "aborting": "Aborting",
-            "action_required": "Action required",
-            "delayed_start": "Delayed start",
+            "actionrequired": "Action required",
+            "delayedstart": "Delayed start",
             "error": "Error",
             "finished": "Finished",
             "inactive": "Inactive",

@@ -54,15 +54,3 @@ ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
 OPERATION_STATE_DEVICE_CLASS = "home_connect__operation_state"
-
-OPERATION_STATE_TRANSLATION: dict[str, str] = {
-    "BSH.Common.EnumType.OperationState.Inactive": "inactive",
-    "BSH.Common.EnumType.OperationState.Ready": "ready",
-    "BSH.Common.EnumType.OperationState.DelayedStart": "delayed_start",
-    "BSH.Common.EnumType.OperationState.Run": "run",
-    "BSH.Common.EnumType.OperationState.Pause": "pause",
-    "BSH.Common.EnumType.OperationState.ActionRequired": "action_required",
-    "BSH.Common.EnumType.OperationState.Finished": "finished",
-    "BSH.Common.EnumType.OperationState.Error": "error",
-    "BSH.Common.EnumType.OperationState.Aborting": "aborting",
-}

@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_VALUE, BSH_OPERATION_STATE, DOMAIN, OPERATION_STATE_TRANSLATION
+from .const import ATTR_VALUE, BSH_OPERATION_STATE, DOMAIN
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,10 +80,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
             else:
                 self._state = status[self._key].get(ATTR_VALUE)
                 if self._key == BSH_OPERATION_STATE:
-                    self._state = (
-                        OPERATION_STATE_TRANSLATION.get(self._state)
-                        or self._state.split(".")[-1]
-                    )
+                    self._state = self._state.split(".")[-1].lower()
         _LOGGER.debug("Updated, new state: %s", self._state)
 
     @property

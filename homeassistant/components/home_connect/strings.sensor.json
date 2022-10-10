@@ -1,15 +1,15 @@
 {
   "state": {
     "home_connect__operation_state": {
-      "inactive": "Inactive",
-      "ready": "Ready",
-      "delayed_start": "Delayed start",
-      "run": "Run",
-      "pause": "[%key:common::state::paused%]",
-      "action_required": "Action required",
-      "finished": "Finished",
+      "aborting": "Aborting",
+      "actionrequired": "Action required",
+      "delayedstart": "Delayed start",
       "error": "Error",
-      "aborting": "Aborting"
+      "finished": "Finished",
+      "inactive": "Inactive",
+      "pause": "[%key:common::state::paused%]",
+      "ready": "Ready",
+      "run": "Run"
     }
   }
 }
