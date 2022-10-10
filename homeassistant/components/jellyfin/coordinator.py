@@ -64,7 +64,4 @@ class SessionsDataUpdateCoordinator(
             self.api_client.jellyfin.sessions
         )
 
-        if not sessions:
-            return {}
-
         return {session["Id"]: session for session in sessions}
