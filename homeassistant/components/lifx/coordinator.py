@@ -122,18 +122,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         features = lifx_features(self.device)
         device_data = {
             "firmware": self.device.host_firmware_version,
-            "version": {
-                "vendor": self.device.vendor,
-                "product_id": self.device.product,
-            },
+            "vendor": self.device.vendor,
+            "product_id": self.device.product,
             "features": features,
-            "state": {
-                "hue": round(self.device.color[0] / 65535 * 360, 2),
-                "saturation": round(self.device.color[1] / 65535 * 100, 2),
-                "brightness": round(self.device.color[2] / 65535 * 100, 2),
-                "kelvin": self.device.color[3],
-                "power": "on" if self.device.power_level == 65535 else "off",
-            },
+            "hue": self.device.color[0],
+            "saturation": self.device.color[1],
+            "brightness": self.device.color[2],
+            "kelvin": self.device.color[3],
+            "power": self.device.power_level,
         }
 
         if features["multizone"] is True:
@@ -146,9 +142,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             zones = {"count": self.device.zones_count, "state": {}}
             for index, zone_color in enumerate(self.device.color_zones):
                 zones["state"][index] = {
-                    "hue": round(zone_color[0] / 65535 * 360, 2),
-                    "saturation": round(zone_color[1] / 65535 * 100, 2),
-                    "brightness": round(zone_color[2] / 65535 * 100, 2),
+                    "hue": zone_color[0],
+                    "saturation": zone_color[1],
+                    "brightness": zone_color[2],
                     "kelvin": zone_color[3],
                 }
             device_data["zones"] = zones
@@ -156,7 +152,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         if features["hev"] is True:
             await async_execute_lifx(self.device.get_hev_configuration)
             await async_execute_lifx(self.device.get_last_hev_cycle_result)
-
             device_data["hev"] = {
                 "hev_cycle": self.device.hev_cycle,
                 "hev_config": self.device.hev_cycle_configuration,
@@ -166,7 +161,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         if features["infrared"] is True:
             await async_execute_lifx(self.device.get_infrared)
             device_data["infrared"] = {"brightness": self.device.infrared_brightness}
-
         return device_data
 
     def async_get_entity_id(self, platform: Platform, key: str) -> str | None:

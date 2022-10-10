@@ -40,6 +40,7 @@ async def test_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag == {
         "data": {
+            "brightness": 3,
             "features": {
                 "buttons": False,
                 "chain": False,
@@ -54,14 +55,12 @@ async def test_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
                 "relays": False,
             },
             "firmware": "3.00",
-            "state": {
-                "brightness": 0.0,
-                "hue": 0.01,
-                "kelvin": 4,
-                "power": "off",
-                "saturation": 0.0,
-            },
-            "version": {"product_id": 1, "vendor": None},
+            "hue": 1,
+            "kelvin": 4,
+            "power": 0,
+            "product_id": 1,
+            "saturation": 2,
+            "vendor": None,
         },
         "entry": {"data": {"host": "**REDACTED**"}, "title": "My Bulb"},
     }
@@ -86,6 +85,7 @@ async def test_clean_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag == {
         "data": {
+            "brightness": 3,
             "features": {
                 "buttons": False,
                 "chain": False,
@@ -105,14 +105,12 @@ async def test_clean_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
                 "hev_cycle": {"duration": 7200, "last_power": False, "remaining": 30},
                 "last_result": 0,
             },
-            "state": {
-                "brightness": 0.0,
-                "hue": 0.01,
-                "kelvin": 4,
-                "power": "off",
-                "saturation": 0.0,
-            },
-            "version": {"product_id": 90, "vendor": None},
+            "hue": 1,
+            "kelvin": 4,
+            "power": 0,
+            "product_id": 90,
+            "saturation": 2,
+            "vendor": None,
         },
         "entry": {"data": {"host": "**REDACTED**"}, "title": "My Bulb"},
     }
@@ -137,6 +135,7 @@ async def test_infrared_bulb_diagnostics(hass: HomeAssistant, hass_client) -> No
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag == {
         "data": {
+            "brightness": 3,
             "features": {
                 "buttons": False,
                 "chain": False,
@@ -151,15 +150,13 @@ async def test_infrared_bulb_diagnostics(hass: HomeAssistant, hass_client) -> No
                 "relays": False,
             },
             "firmware": "3.00",
+            "hue": 1,
             "infrared": {"brightness": 65535},
-            "state": {
-                "brightness": 0.0,
-                "hue": 0.01,
-                "kelvin": 4,
-                "power": "off",
-                "saturation": 0.0,
-            },
-            "version": {"product_id": 29, "vendor": None},
+            "kelvin": 4,
+            "power": 0,
+            "product_id": 29,
+            "saturation": 2,
+            "vendor": None,
         },
         "entry": {"data": {"host": "**REDACTED**"}, "title": "My Bulb"},
     }
@@ -197,6 +194,7 @@ async def test_legacy_multizone_bulb_diagnostics(
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag == {
         "data": {
+            "brightness": 3,
             "features": {
                 "buttons": False,
                 "chain": False,
@@ -211,64 +209,62 @@ async def test_legacy_multizone_bulb_diagnostics(
                 "relays": False,
             },
             "firmware": "3.00",
-            "state": {
-                "brightness": 0.0,
-                "hue": 0.01,
-                "kelvin": 4,
-                "power": "off",
-                "saturation": 0.0,
-            },
-            "version": {"product_id": 31, "vendor": None},
+            "hue": 1,
+            "kelvin": 4,
+            "power": 0,
+            "product_id": 31,
+            "saturation": 2,
+            "vendor": None,
             "zones": {
                 "count": 8,
                 "state": {
                     "0": {
-                        "brightness": 100.0,
-                        "hue": 300.0,
+                        "brightness": 65535,
+                        "hue": 54612,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "1": {
-                        "brightness": 100.0,
-                        "hue": 300.0,
+                        "brightness": 65535,
+                        "hue": 54612,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "2": {
-                        "brightness": 100.0,
-                        "hue": 300.0,
+                        "brightness": 65535,
+                        "hue": 54612,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "3": {
-                        "brightness": 100.0,
-                        "hue": 300.0,
+                        "brightness": 65535,
+                        "hue": 54612,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "4": {
-                        "brightness": 100.0,
-                        "hue": 255.0,
+                        "brightness": 65535,
+                        "hue": 46420,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "5": {
-                        "brightness": 100.0,
-                        "hue": 255.0,
+                        "brightness": 65535,
+                        "hue": 46420,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "6": {
-                        "brightness": 100.0,
-                        "hue": 255.0,
+                        "brightness": 65535,
+                        "hue": 46420,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "7": {
-                        "brightness": 100.0,
-                        "hue": 255.0,
+                        "brightness": 65535,
+                        "hue": 46420,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                 },
             },
@@ -308,6 +304,7 @@ async def test_multizone_bulb_diagnostics(hass: HomeAssistant, hass_client) -> N
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag == {
         "data": {
+            "brightness": 3,
             "features": {
                 "buttons": False,
                 "chain": False,
@@ -324,64 +321,62 @@ async def test_multizone_bulb_diagnostics(hass: HomeAssistant, hass_client) -> N
                 "relays": False,
             },
             "firmware": "3.00",
-            "state": {
-                "brightness": 0.0,
-                "hue": 0.01,
-                "kelvin": 4,
-                "power": "off",
-                "saturation": 0.0,
-            },
-            "version": {"product_id": 38, "vendor": None},
+            "hue": 1,
+            "kelvin": 4,
+            "power": 0,
+            "product_id": 38,
+            "saturation": 2,
+            "vendor": None,
             "zones": {
                 "count": 8,
                 "state": {
                     "0": {
-                        "brightness": 100.0,
-                        "hue": 300.0,
+                        "brightness": 65535,
+                        "hue": 54612,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "1": {
-                        "brightness": 100.0,
-                        "hue": 300.0,
+                        "brightness": 65535,
+                        "hue": 54612,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "2": {
-                        "brightness": 100.0,
-                        "hue": 300.0,
+                        "brightness": 65535,
+                        "hue": 54612,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "3": {
-                        "brightness": 100.0,
-                        "hue": 300.0,
+                        "brightness": 65535,
+                        "hue": 54612,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "4": {
-                        "brightness": 100.0,
-                        "hue": 255.0,
+                        "brightness": 65535,
+                        "hue": 46420,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "5": {
-                        "brightness": 100.0,
-                        "hue": 255.0,
+                        "brightness": 65535,
+                        "hue": 46420,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "6": {
-                        "brightness": 100.0,
-                        "hue": 255.0,
+                        "brightness": 65535,
+                        "hue": 46420,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                     "7": {
-                        "brightness": 100.0,
-                        "hue": 255.0,
+                        "brightness": 65535,
+                        "hue": 46420,
                         "kelvin": 3500,
-                        "saturation": 100.0,
+                        "saturation": 65535,
                     },
                 },
             },
