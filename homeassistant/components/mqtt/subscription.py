@@ -7,13 +7,11 @@ from typing import Any
 import attr
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 
 from . import debug_info
 from .. import mqtt
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
-from .util import get_mqtt_data
 
 
 @attr.s(slots=True)
@@ -27,13 +25,11 @@ class EntitySubscription:
     unsubscribe_callback: Callable[[], None] | None = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str = attr.ib(default="utf-8")
-    entity: Entity | None = attr.ib(default=None)
 
     def resubscribe_if_necessary(
         self, hass: HomeAssistant, other: EntitySubscription | None
     ) -> None:
         """Re-subscribe to the new topic if necessary."""
-        mqtt_data = get_mqtt_data(hass)
         if not self._should_resubscribe(other):
             assert other
             self.unsubscribe_callback = other.unsubscribe_callback
@@ -41,8 +37,6 @@ class EntitySubscription:
 
         if other is not None and other.unsubscribe_callback is not None:
             other.unsubscribe_callback()
-            # Clear write state requests
-            mqtt_data.state_write_requests.remove_subscription(other.topic, self.entity)
             # Clear debug data if it exists
             debug_info.remove_subscription(
                 self.hass, other.message_callback, other.topic
@@ -55,7 +49,6 @@ class EntitySubscription:
         # Prepare debug data
         debug_info.add_subscription(self.hass, self.message_callback, self.topic)
 
-        mqtt_data.state_write_requests.add_subscription(self.topic, self.entity)
         self.subscribe_task = mqtt.async_subscribe(
             hass, self.topic, self.message_callback, self.qos, self.encoding
         )
@@ -82,7 +75,6 @@ def async_prepare_subscribe_topics(
     hass: HomeAssistant,
     new_state: dict[str, EntitySubscription] | None,
     topics: dict[str, Any],
-    entity: Entity | None = None,
 ) -> dict[str, EntitySubscription]:
     """Prepare (re)subscribe to a set of MQTT topics.
 
@@ -108,7 +100,6 @@ def async_prepare_subscribe_topics(
             encoding=value.get("encoding", "utf-8"),
             hass=hass,
             subscribe_task=None,
-            entity=entity,
         )
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)

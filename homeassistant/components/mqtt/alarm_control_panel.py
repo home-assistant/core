@@ -226,7 +226,6 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                     "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
-            self,
         )
 
     async def _subscribe_topics(self):

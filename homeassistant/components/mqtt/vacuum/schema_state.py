@@ -223,7 +223,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 "encoding": self._config[CONF_ENCODING] or None,
             }
         self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass, self._sub_state, topics, self
+            self.hass, self._sub_state, topics
         )
 
     async def _subscribe_topics(self):

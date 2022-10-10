@@ -456,7 +456,6 @@ class MqttAttributes(Entity):
                     "encoding": self._attributes_config[CONF_ENCODING] or None,
                 }
             },
-            self,
         )
 
     async def _attributes_subscribe_topics(self):
@@ -573,7 +572,6 @@ class MqttAvailability(Entity):
             self.hass,
             self._availability_sub_state,
             topics,
-            self,
         )
 
     async def _availability_subscribe_topics(self):

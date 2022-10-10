@@ -179,7 +179,6 @@ class MqttLock(MqttEntity, LockEntity):
                         "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
-                self,
             )
 
     async def _subscribe_topics(self):

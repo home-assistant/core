@@ -122,7 +122,6 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     "qos": self._config[CONF_QOS],
                 }
             },
-            self,
         )
 
     async def _subscribe_topics(self):

@@ -337,7 +337,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 }
                 for i, topic in enumerate(topics_list)
             },
-            self,
         )
 
     async def _subscribe_topics(self):

@@ -276,7 +276,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
-            self,
         )
 
     async def _subscribe_topics(self):

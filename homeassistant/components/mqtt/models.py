@@ -236,56 +236,16 @@ class MqttValueTemplate:
         )
 
 
-class TopicSubscriptionCalls(TypedDict):
-    """Holds entity related subscriber and callback count to assure we write a state only once."""
-
-    subscribe_count: int
-    write_state: bool
-    entity: Entity
-
-
 class EntityTopicState:
     """Manage entity state write requests for subscribed topics."""
 
     def __init__(self) -> None:
         """Register topic."""
-        self.subscribe_calls: dict[str, dict[str, TopicSubscriptionCalls]] = {}
+        self.subscribe_calls: dict[str, dict[str, Entity]] = {}
 
     def clear(self) -> None:
         """Clear all subsciptions."""
         self.subscribe_calls.clear()
-
-    def get_item(self, topic: str, entity: Entity) -> TopicSubscriptionCalls:
-        """Get an existing item."""
-        return self.subscribe_calls[topic][entity.entity_id]
-
-    @callback
-    def add_subscription(self, topic: str | None, entity: Entity | None) -> None:
-        """Add subscription."""
-        if topic is None or entity is None:
-            return
-        if topic.endswith("#") or "+" in topic:
-            return
-        item = self.subscribe_calls.setdefault(topic, {})
-        subscription = item.setdefault(
-            entity.entity_id,
-            TopicSubscriptionCalls(
-                subscribe_count=0,
-                write_state=False,
-                entity=entity,
-            ),
-        )
-        subscription["subscribe_count"] += 1
-
-    @callback
-    def remove_subscription(self, topic: str | None, entity: Entity | None) -> None:
-        """Deregister a subscription."""
-        if topic is None or entity is None or topic not in self.subscribe_calls:
-            return
-        item = self.get_item(topic, entity)
-        item["subscribe_count"] -= 1
-        if not item["subscribe_count"]:
-            del self.subscribe_calls[topic][entity.entity_id]
 
     @callback
     def process_write_state_requests(self, topic: str) -> None:
@@ -293,18 +253,15 @@ class EntityTopicState:
         if topic not in self.subscribe_calls:
             return
         for entity_id in self.subscribe_calls[topic]:
-            item = self.subscribe_calls[topic][entity_id]
-            if item["write_state"]:
-                item["write_state"] = False
-                item["entity"].async_write_ha_state()
+            entity = self.subscribe_calls[topic][entity_id]
+            entity.async_write_ha_state()
+        del self.subscribe_calls[topic]
 
     @callback
     def write_state_request(self, topic: str, entity: Entity) -> None:
         """Register state write request."""
-        if topic not in self.subscribe_calls:
-            entity.async_write_ha_state()
-            return
-        self.get_item(topic, entity)["write_state"] = True
+        topic_state = self.subscribe_calls.setdefault(topic, {})
+        topic_state.setdefault(entity.entity_id, entity)
 
 
 @dataclass
