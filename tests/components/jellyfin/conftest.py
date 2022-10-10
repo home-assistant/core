@@ -10,11 +10,34 @@ from jellyfin_apiclient_python.configuration import Config
 from jellyfin_apiclient_python.connection_manager import ConnectionManager
 import pytest
 
+from homeassistant.components.jellyfin.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+
 from .const import (
     MOCK_SUCCESFUL_CONNECTION_STATE,
     MOCK_SUCCESFUL_LOGIN_RESPONSE,
     MOCK_USER_SETTINGS,
+    TEST_PASSWORD,
+    TEST_URL,
+    TEST_USERNAME,
 )
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="Jellyfin",
+        domain=DOMAIN,
+        data={
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+        unique_id="USER-UUID",
+    )
 
 
 @pytest.fixture
