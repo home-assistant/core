@@ -65,15 +65,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 _LOGGER.exception(ex)
             else:
-                entry_title = user_input[CONF_URL]
-
+                entry_title: str = user_input[CONF_URL]
                 server_info: dict[str, Any] = connect_result["Servers"][0]
 
-                if (
-                    server_info
-                    and "Name" in server_info
-                    and len(server_info["Name"]) > 0
-                ):
+                if "Name" in server_info and len(server_info["Name"]) > 0:
                     entry_title = server_info["Name"]
 
                 await self.async_set_unique_id(user_id)
