@@ -13,6 +13,7 @@ from ..const import (
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
 )
+from ..helpers import is_hue_motion_sensor
 from .base import AttrReportConfig, ZigbeeChannel
 
 if TYPE_CHECKING:
@@ -61,15 +62,7 @@ class OccupancySensing(ZigbeeChannel):
     def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Occupancy channel."""
         super().__init__(cluster, ch_pool)
-        if self.cluster.endpoint.manufacturer in (
-            "Philips",
-            "Signify Netherlands B.V.",
-        ) and self.cluster.endpoint.model in (
-            "SML001",
-            "SML002",
-            "SML003",
-            "SML004",
-        ):
+        if is_hue_motion_sensor(self):
             self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
                 self.ZCL_INIT_ATTRS.copy()
             )

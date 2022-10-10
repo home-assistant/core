@@ -29,6 +29,7 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers import device_registry as dr
 
+from .channels.base import ZigbeeChannel
 from .const import (
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
@@ -358,3 +359,16 @@ def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
         return ieee, install_code
 
     raise vol.Invalid(f"couldn't convert qr code: {qr_code}")
+
+
+def is_hue_motion_sensor(channel: ZigbeeChannel) -> bool:
+    """Return true if the manufacturer and model match known Hue motion sensor models."""
+    return channel.cluster.endpoint.manufacturer in (
+        "Philips",
+        "Signify Netherlands B.V.",
+    ) and channel.cluster.endpoint.model in (
+        "SML001",
+        "SML002",
+        "SML003",
+        "SML004",
+    )
