@@ -293,7 +293,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.0.0
+apprise==1.1.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -1129,7 +1129,7 @@ pyhaversion==22.8.0
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.13
+pyhiveapi==0.5.14
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
