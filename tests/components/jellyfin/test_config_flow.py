@@ -6,11 +6,7 @@ from homeassistant.components.jellyfin.const import CONF_CLIENT_DEVICE_ID, DOMAI
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import (
-    MOCK_AUTH_CONNECT_ADDRESS_FAILURE,
-    MOCK_AUTH_LOGIN_FAILURE,
-    MOCK_AUTH_LOGIN_SUCCESS,
-)
+from . import load_json_fixture
 from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
 
 from tests.common import MockConfigEntry
@@ -80,7 +76,9 @@ async def test_form_cannot_connect(
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_client.auth.connect_to_address.return_value = MOCK_AUTH_CONNECT_ADDRESS_FAILURE
+    mock_client.auth.connect_to_address.return_value = load_json_fixture(
+        "auth-connect-address-failure.json"
+    )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -111,7 +109,7 @@ async def test_form_invalid_auth(
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_client.auth.login.return_value = MOCK_AUTH_LOGIN_FAILURE
+    mock_client.auth.login.return_value = load_json_fixture("auth-login-failure.json")
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -172,7 +170,7 @@ async def test_form_persists_device_id_on_error(
     assert result["errors"] == {}
 
     mock_client_device_id.return_value = "TEST-UUID-1"
-    mock_client.auth.login.return_value = MOCK_AUTH_LOGIN_FAILURE
+    mock_client.auth.login.return_value = load_json_fixture("auth-login-failure.json")
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -188,7 +186,7 @@ async def test_form_persists_device_id_on_error(
     assert result2["errors"] == {"base": "invalid_auth"}
 
     mock_client_device_id.return_value = "TEST-UUID-2"
-    mock_client.auth.login.return_value = MOCK_AUTH_LOGIN_SUCCESS
+    mock_client.auth.login.return_value = load_json_fixture("auth-login.json")
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
