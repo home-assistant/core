@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from subarulink.const import COUNTRY_USA
 
+from homeassistant import config_entries
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.subaru.const import (
     CONF_COUNTRY,
@@ -71,6 +72,15 @@ TEST_OPTIONS = {
     CONF_UPDATE_ENABLED: True,
 }
 
+TEST_CONFIG_ENTRY = {
+    "entry_id": "1",
+    "domain": DOMAIN,
+    "title": TEST_CONFIG[CONF_USERNAME],
+    "data": TEST_CONFIG,
+    "options": TEST_OPTIONS,
+    "source": config_entries.SOURCE_USER,
+}
+
 TEST_DEVICE_NAME = "test_vehicle_2"
 TEST_ENTITY_ID = f"sensor.{TEST_DEVICE_NAME}_odometer"
 
@@ -83,6 +93,7 @@ def advance_time_to_next_fetch(hass):
 
 async def setup_subaru_integration(
     hass,
+    mock_config_entry=None,
     vehicle_list=None,
     vehicle_data=None,
     vehicle_status=None,
@@ -90,16 +101,13 @@ async def setup_subaru_integration(
     fetch_effect=None,
 ):
     """Create Subaru entry."""
-    assert await async_setup_component(hass, HA_DOMAIN, {})
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_CONFIG,
-        options=TEST_OPTIONS,
-        entry_id=1,
-    )
-    config_entry.add_to_hass(hass)
+    if mock_config_entry:
+        config_entry = mock_config_entry
+    else:
+        assert await async_setup_component(hass, HA_DOMAIN, {})
+        assert await async_setup_component(hass, DOMAIN, {})
+        config_entry = MockConfigEntry(**TEST_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
 
     with patch(
         MOCK_API_CONNECT,
