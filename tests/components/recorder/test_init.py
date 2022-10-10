@@ -1629,19 +1629,40 @@ async def test_disable_echo(hass, db_url, echo, caplog):
 
 
 @pytest.mark.parametrize(
-    "dburl",
+    "config_url, connect_url",
     (
-        "mysql://user:password@SERVER_IP/DB_NAME",
-        "mysql+pymysql://user:password@SERVER_IP/DB_NAME",
+        (
+            "mysql://user:password@SERVER_IP/DB_NAME",
+            "mysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
+        ),
+        (
+            "mysql+pymysql://user:password@SERVER_IP/DB_NAME",
+            "mysql+pymysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
+        ),
+        (
+            "mysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
+            "mysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
+        ),
+        (
+            "mysql://user:password@SERVER_IP/DB_NAME?blah=bleh&charset=utf8mb4",
+            "mysql://user:password@SERVER_IP/DB_NAME?blah=bleh&charset=utf8mb4",
+        ),
     ),
 )
-async def test_mysql_missing_utf8mb4(hass, dburl, caplog):
+async def test_mysql_missing_utf8mb4(hass, config_url, connect_url, caplog):
     """Test recorder fails to setup if charset=utf8mb4 is missing from db_url."""
     recorder_helper.async_initialize_recorder(hass)
-    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
 
-    assert (
-        "MySQL or MariaDB database connection URL must contain a 'charset=utf8mb4' "
-        "character set specifer. Please update the 'db_url' configuration option in "
-        "configuration.yaml"
-    ) in caplog.text
+    class MockEvent:
+        def listen(self, _, _2, callback):
+            callback(None, None)
+
+    mock_event = MockEvent()
+    with patch(
+        "homeassistant.components.recorder.core.create_engine"
+    ) as create_engine_mock, patch(
+        "homeassistant.components.recorder.core.sqlalchemy_event", mock_event
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
+        create_engine_mock.assert_called_once()
+        assert create_engine_mock.mock_calls[0][1][0] == connect_url
