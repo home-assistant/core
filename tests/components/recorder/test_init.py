@@ -1596,3 +1596,33 @@ async def test_async_block_till_done(hass, async_setup_recorder_instance):
     states = await instance.async_add_executor_job(_fetch_states)
     assert len(states) == 2
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "db_url, echo",
+    (
+        ("sqlite://blabla", None),
+        ("mariadb://blabla", False),
+        ("mysql://blabla", False),
+        ("mariadb+pymysql://blabla", False),
+        ("mysql+pymysql://blabla", False),
+        ("postgresql://blabla", False),
+    ),
+)
+async def test_disable_echo(hass, db_url, echo, caplog):
+    """Test echo is disabled for non sqlite databases."""
+    recorder_helper.async_initialize_recorder(hass)
+
+    class MockEvent:
+        def listen(self, _, _2, callback):
+            callback(None, None)
+
+    mock_event = MockEvent()
+    with patch(
+        "homeassistant.components.recorder.core.create_engine"
+    ) as create_engine_mock, patch(
+        "homeassistant.components.recorder.core.sqlalchemy_event", mock_event
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: db_url}})
+        create_engine_mock.assert_called_once()
+        assert create_engine_mock.mock_calls[0][2].get("echo") == echo
