@@ -52,6 +52,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "serial": 68551522,
                     "parent_device": "9",
                     "device_name": "on",
+                    "enabled_default": False,
                 },
                 "1372": {
                     "device_id": "1372",
