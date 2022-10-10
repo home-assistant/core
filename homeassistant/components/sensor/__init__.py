@@ -182,7 +182,9 @@ class SensorDeviceClass(StrEnum):
     MONETARY = "monetary"
     """Amount of money.
 
-    Unit of measurement: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
+    Unit of measurement: ISO4217 currency code
+
+    See https://en.wikipedia.org/wiki/ISO_4217#Active_codes for active codes
     """
 
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
