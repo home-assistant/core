@@ -71,8 +71,8 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
         """Initialize the FritzboxLight entity."""
         super().__init__(coordinator, ain, None)
 
-        self._attr_max_color_temp_kelvin = max(supported_color_temps)
-        self._attr_min_color_temp_kelvin = min(supported_color_temps)
+        self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
+        self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
 
         # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
         # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
