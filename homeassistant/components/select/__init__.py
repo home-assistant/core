@@ -72,6 +72,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SelectEntityDescription(EntityDescription):
     """A class that describes select entities."""
 
+    current_option: str | None = None
     options: list[str] | None = None
 
 
@@ -113,7 +114,9 @@ class SelectEntity(Entity):
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self._attr_current_option
+        if hasattr(self, "_attr_current_option"):
+            return self._attr_current_option
+        return self.entity_description.current_option
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
