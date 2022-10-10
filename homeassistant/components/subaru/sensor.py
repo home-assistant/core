@@ -293,13 +293,18 @@ async def _async_migrate_entries(
     all_sensors.extend(API_GEN_2_SENSORS)
     all_sensors.extend(SAFETY_SENSORS)
 
-    replacements = {s.name: s.key for s in all_sensors}
+    # Old unique_id is (previously title-cased) sensor name (e.g. "VIN_Avg Fuel Consumption")
+    replacements = {str(s.name).upper(): s.key for s in all_sensors}
 
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, Any] | None:
         id_suffix_match = re.match(r".*?_(.+)", entry.unique_id)
-        if id_suffix_match and (key := id_suffix_match.group(1)) in replacements:
-            new_unique_id = entry.unique_id.replace(key, replacements[key])
+        id_suffix = id_suffix_match.group(1) if id_suffix_match else ""
+
+        if id_suffix.upper() in replacements:
+            new_unique_id = entry.unique_id.replace(
+                id_suffix, replacements[id_suffix.upper()]
+            )
             _LOGGER.debug(
                 "Migrating entity '%s' unique_id from '%s' to '%s'",
                 entry.entity_id,
