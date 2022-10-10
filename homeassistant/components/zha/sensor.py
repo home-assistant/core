@@ -347,7 +347,7 @@ class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_freque
     SENSOR_ATTR = "ac_frequency"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
     _attr_should_poll = False  # Poll indirectly by ElectricalMeasurementSensor
-    _attr_name: str = "AC Frequency"
+    _attr_name: str = "AC frequency"
     _unit = FREQUENCY_HERTZ
     _div_mul_prefix = "ac_frequency"
 
