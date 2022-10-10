@@ -85,7 +85,6 @@ SENSORS = (
     "nextcloud_server_php_upload_max_filesize",
     "nextcloud_database_type",
     "nextcloud_database_version",
-    "nextcloud_database_version",
     "nextcloud_activeUsers_last5minutes",
     "nextcloud_activeUsers_last1hour",
     "nextcloud_activeUsers_last24hours",
