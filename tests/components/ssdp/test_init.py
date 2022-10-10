@@ -34,7 +34,7 @@ async def init_ssdp_component(hass: homeassistant) -> SsdpListener:
     """Initialize ssdp component and get SsdpListener."""
     await async_setup_component(hass, ssdp.DOMAIN, {ssdp.DOMAIN: {}})
     await hass.async_block_till_done()
-    return hass.data[ssdp.DOMAIN]._ssdp_listeners[0]
+    return hass.data[ssdp.DOMAIN][ssdp.SSDP_SCANNER]._ssdp_listeners[0]
 
 
 @patch(
@@ -407,7 +407,7 @@ async def test_discovery_from_advertisement_sets_ssdp_st(
 
 
 @patch(
-    "homeassistant.components.ssdp.Scanner._async_build_source_set",
+    "homeassistant.components.ssdp.async_build_source_set",
     return_value={IPv4Address("192.168.1.1")},
 )
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -668,7 +668,7 @@ async def test_async_detect_interfaces_setting_empty_route(
     """Test without default interface config and the route returns nothing."""
     await init_ssdp_component(hass)
 
-    ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
+    ssdp_listeners = hass.data[ssdp.DOMAIN][ssdp.SSDP_SCANNER]._ssdp_listeners
     sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
     assert sources == {("2001:db8::%1", 0, 0, 1), ("192.168.1.5", 0)}
 
@@ -702,7 +702,7 @@ async def test_bind_failure_skips_adapter(
 
     assert "Failed to setup listener for" in caplog.text
 
-    ssdp_listeners = hass.data[ssdp.DOMAIN]._ssdp_listeners
+    ssdp_listeners = hass.data[ssdp.DOMAIN][ssdp.SSDP_SCANNER]._ssdp_listeners
     sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
     assert sources == {("192.168.1.5", 0)}  # Note no SsdpListener for IPv6 address.
 

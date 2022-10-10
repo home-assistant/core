@@ -649,6 +649,24 @@ class HassUpnpServiceDevice(UpnpServerDevice):
     SERVICES: list[type[UpnpServerService]] = []
 
 
+async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
+    """Get a free TCP port."""
+    family = socket.AF_INET if is_ipv4_address(source) else socket.AF_INET6
+    test_socket = socket.socket(family, socket.SOCK_STREAM)
+    test_socket.setblocking(False)
+    test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    for port in range(SSDP_SERVER_MIN_PORT, SSDP_SERVER_MAX_PORT):
+        try:
+            test_socket.bind(source)
+            return port
+        except OSError:
+            if port == SSDP_SERVER_MAX_PORT:
+                raise
+
+    raise RuntimeError("unreachable")
+
+
 class Server:
     """Class to be visible via SSDP searching and advertisements."""
 
@@ -662,34 +680,13 @@ class Server:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         await self._async_start_ssdp_servers()
 
-    def _get_test_socket(self, source: AddressTupleVXType) -> socket.socket:
-        """Create a socket to test binding ports."""
-        family = socket.AF_INET if is_ipv4_address(source) else socket.AF_INET6
-        test_socket = socket.socket(family, socket.SOCK_STREAM)
-        test_socket.setblocking(False)
-        test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return test_socket
-
-    async def _async_find_next_available_port(self, source: AddressTupleVXType) -> int:
-        """Get a free TCP port."""
-        test_socket = self._get_test_socket(source)
-        for port in range(SSDP_SERVER_MIN_PORT, SSDP_SERVER_MAX_PORT):
-            try:
-                test_socket.bind(source)
-                return port
-            except OSError:
-                if port == SSDP_SERVER_MAX_PORT:
-                    raise
-
-        raise RuntimeError("unreachable")
-
     async def _async_get_instance_udn(self) -> str:
         """Get Unique Device Name for this instance."""
         instance_id = await async_get_instance_id(self.hass)
         return f"uuid:{instance_id[0:8]}-{instance_id[8:12]}-{instance_id[12:16]}-{instance_id[16:20]}-{instance_id[20:32]}".upper()
 
     async def _async_start_ssdp_servers(self) -> None:
-        """Start the SSDP Listeners."""
+        """Start the SSDP servers."""
         # Update UDN with our instance UDN.
         udn = await self._async_get_instance_udn()
         system_info = await async_get_system_info(self.hass)
@@ -713,7 +710,7 @@ class Server:
                 url=new_url
             )
 
-        # Devices are shared between all sources.
+        # Start a server on all source IPs.
         for source_ip in await async_build_source_set(self.hass):
             source_ip_str = str(source_ip)
             if source_ip.version == 6:
@@ -726,7 +723,7 @@ class Server:
             else:
                 source_tuple = (source_ip_str, 0)
             source, target = determine_source_target(source_tuple)
-            http_port = await self._async_find_next_available_port(source)
+            http_port = await _async_find_next_available_port(source)
             _LOGGER.debug("Binding UPnP HTTP server to: %s:%s", source_ip, http_port)
             self._upnp_servers.append(
                 UpnpServer(
@@ -758,4 +755,6 @@ class Server:
             self._upnp_servers.remove(server)
 
     async def async_stop(self, *_: Any) -> None:
-        """Stop the server."""
+        """Stop the servers."""
+        for server in self._upnp_servers:
+            await server.async_stop()
