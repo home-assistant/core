@@ -30,11 +30,8 @@ class JellyfinSensorEntityDescription(
     """Describes Jellyfin sensor entity."""
 
 
-def _count_now_playing(data: JellyfinDataT) -> int | None:
+def _count_now_playing(data: JellyfinDataT) -> int:
     """Count the number of now playing."""
-    if data is None:
-        return None
-
     session_ids = [
         sid for (sid, session) in data.items() if "NowPlayingItem" in session
     ]
@@ -42,7 +39,7 @@ def _count_now_playing(data: JellyfinDataT) -> int | None:
     return len(session_ids)
 
 
-SENSOR_TYPES: dict[str, JellyfinSensorEntityDescription[Any]] = {
+SENSOR_TYPES: dict[str, JellyfinSensorEntityDescription] = {
     "sessions": JellyfinSensorEntityDescription(
         key="watching",
         icon="mdi:television-play",

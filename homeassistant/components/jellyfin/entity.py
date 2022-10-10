@@ -23,7 +23,7 @@ class JellyfinEntity(CoordinatorEntity[JellyfinDataUpdateCoordinator[JellyfinDat
         super().__init__(coordinator)
         self.coordinator = coordinator
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.server_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.server_id}-{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
