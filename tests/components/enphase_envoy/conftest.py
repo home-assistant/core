@@ -2,7 +2,6 @@
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
-from envoy_reader.envoy_reader import ENVOY_MODEL_S
 import pytest
 
 from homeassistant.components.enphase_envoy import DOMAIN
@@ -58,13 +57,14 @@ def mock_envoy_reader_fixture(
     serial_number,
 ):
     """Define a fixture to return a mocked envoy_reader."""
-    mock_envoy_reader = Mock(endpoint_type=ENVOY_MODEL_S)
-    mock_envoy_reader.return_value.getData = mock_get_data
-    mock_envoy_reader.return_value.get_full_serial_number = mock_get_full_serial_number
-    mock_envoy_reader.return_value.inverters_production = mock_inverters_production
+    mock_envoy_reader = Mock(
+        getData=mock_get_data,
+        get_full_serial_number=mock_get_full_serial_number,
+        inverters_production=mock_inverters_production,
+    )
 
     for key, value in gateway_data.items():
-        setattr(mock_envoy_reader.return_value, key, AsyncMock(return_value=value))
+        setattr(mock_envoy_reader, key, AsyncMock(return_value=value))
 
     return mock_envoy_reader
 
@@ -92,10 +92,10 @@ async def setup_enphase_envoy_fixture(hass, config, mock_envoy_reader):
     """Define a fixture to set up Enphase Envoy."""
     with patch(
         "homeassistant.components.enphase_envoy.config_flow.EnvoyReader",
-        mock_envoy_reader,
+        return_value=mock_envoy_reader,
     ), patch(
         "homeassistant.components.enphase_envoy.EnvoyReader",
-        mock_envoy_reader,
+        return_value=mock_envoy_reader,
     ), patch(
         "homeassistant.components.enphase_envoy.PLATFORMS", []
     ):
