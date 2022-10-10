@@ -1903,6 +1903,10 @@ async def test_light_service_call_color_temp_conversion(
         light.ColorMode.COLOR_TEMP,
         light.ColorMode.RGBWW,
     ]
+    assert state.attributes["min_mireds"] == 153
+    assert state.attributes["max_mireds"] == 500
+    assert state.attributes["min_color_temp_kelvin"] == 2000
+    assert state.attributes["max_color_temp_kelvin"] == 6500
 
     state = hass.states.get(entity1.entity_id)
     assert state.attributes["supported_color_modes"] == [light.ColorMode.RGBWW]
@@ -1999,6 +2003,52 @@ async def test_light_service_call_color_temp_conversion(
     assert data == {"brightness": 255, "color_temp": 410, "color_temp_kelvin": 2439}
     _, data = entity1.last_call("turn_on")
     assert data == {"brightness": 255, "rgbww_color": (0, 0, 0, 66, 189)}
+
+
+async def test_light_mired_color_temp_conversion(hass, enable_custom_integrations):
+    """Test color temp conversion from K to legacy mired."""
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    platform.ENTITIES.append(platform.MockLight("Test_rgbww_ct", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_rgbww", STATE_ON))
+
+    entity0 = platform.ENTITIES[0]
+    entity0.supported_color_modes = {
+        light.ColorMode.COLOR_TEMP,
+    }
+    entity0._attr_min_color_temp_kelvin = 1800
+    entity0._attr_max_color_temp_kelvin = 6700
+
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.ColorMode.COLOR_TEMP]
+    assert state.attributes["min_mireds"] == 149
+    assert state.attributes["max_mireds"] == 555
+    assert state.attributes["min_color_temp_kelvin"] == 1800
+    assert state.attributes["max_color_temp_kelvin"] == 6700
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [
+                entity0.entity_id,
+            ],
+            "brightness_pct": 100,
+            "color_temp_kelvin": 3500,
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 255, "color_temp": 285, "color_temp_kelvin": 3500}
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.attributes["color_mode"] == light.ColorMode.COLOR_TEMP
+    assert state.attributes["color_temp"] == 285
+    assert state.attributes["color_temp_kelvin"] == 3500
 
 
 async def test_light_service_call_white_mode(hass, enable_custom_integrations):
