@@ -23,8 +23,6 @@ LOGSEVERITY = {
     "NOTSET": 0,
 }
 
-DEFAULT_LOGSEVERITY = "WARNING"
-
 LOGGER_DEFAULT = "default"
 LOGGER_LOGS = "logs"
 LOGGER_FILTERS = "filters"
@@ -69,7 +67,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Set default log severity
     logger_config = config.get(DOMAIN, {})
-    set_default_log_level(logger_config.get(LOGGER_DEFAULT, DEFAULT_LOGSEVERITY))
+
+    if LOGGER_DEFAULT in logger_config:
+        set_default_log_level(logger_config[LOGGER_DEFAULT])
 
     if LOGGER_LOGS in logger_config:
         set_log_levels(config[DOMAIN][LOGGER_LOGS])
