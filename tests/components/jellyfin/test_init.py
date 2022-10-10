@@ -18,7 +18,8 @@ async def test_config_entry_not_ready(
 ) -> None:
     """Test the Jellyfin configuration entry not ready."""
     mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
-        hass, "auth-connect-address-failure.json",
+        hass,
+        "auth-connect-address-failure.json",
     )
 
     mock_config_entry.add_to_hass(hass)
