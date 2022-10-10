@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie.",
-            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})"
+            "missing_configuration": "Integratie niet geconfigureerd. Raadpleeg de documentatie.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [raadpleeg de documentatie]({docs_url})"
         },
         "create_entry": {
-            "default": "Succesvol geverifieerd"
+            "default": "Authenticatie geslaagd"
         },
         "step": {
             "pick_implementation": {
-                "title": "Kies de verificatiemethode"
+                "title": "Kies een authenticatie methode"
             }
         }
     }

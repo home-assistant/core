@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "insufficient_permissions": "Anv\u00e4ndaren har otillr\u00e4ckliga beh\u00f6righeter f\u00f6r att komma \u00e5t AVM FRITZ!Box-inst\u00e4llningarna och dess telefonb\u00f6cker.",
+            "no_devices_found": "Inga enheter hittades i n\u00e4tverket"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Telefonbok"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "password": "L\u00f6senord",
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Prefix \u00e4r felaktiga, kontrollera deras format."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Prefix (kommaseparerad lista)"
+                },
+                "title": "Konfigurera prefix"
+            }
+        }
+    }
+}

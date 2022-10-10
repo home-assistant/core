@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
         "error": {
             "invalid_zip_code": "Ogiltigt postnummer"
         },
@@ -8,8 +11,7 @@
                 "data": {
                     "zip_code": "Postnummer"
                 },
-                "description": "Fyll i ditt Amerikanska eller Kanadensiska postnummer",
-                "title": "IQVIA"
+                "description": "Fyll i ditt Amerikanska eller Kanadensiska postnummer"
             }
         }
     }

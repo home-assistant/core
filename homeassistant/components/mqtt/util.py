@@ -1,9 +1,13 @@
 """Utility functions for the MQTT integration."""
+
+from __future__ import annotations
+
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
 
 from .const import (
@@ -11,9 +15,19 @@ from .const import (
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
+    DATA_MQTT,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
+    DOMAIN,
 )
+from .models import MqttData
+
+
+def mqtt_config_entry_enabled(hass: HomeAssistant) -> bool | None:
+    """Return true when the MQTT config entry is enabled."""
+    if not bool(hass.config_entries.async_entries(DOMAIN)):
+        return None
+    return not bool(hass.config_entries.async_entries(DOMAIN)[0].disabled_by)
 
 
 def valid_topic(value: Any) -> str:
@@ -31,6 +45,15 @@ def valid_topic(value: Any) -> str:
         )
     if "\0" in value:
         raise vol.Invalid("MQTT topic name/filter must not contain null character.")
+    if any(char <= "\u001F" for char in value):
+        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
+    if any("\u007f" <= char <= "\u009F" for char in value):
+        raise vol.Invalid("MQTT topic name/filter must not contain control characters.")
+    if any("\ufdd0" <= char <= "\ufdef" for char in value):
+        raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
+    if any((ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF) for char in value):
+        raise vol.Invalid("MQTT topic name/filter must not contain noncharacters.")
+
     return value
 
 
@@ -90,3 +113,10 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     },
     required=True,
 )
+
+
+def get_mqtt_data(hass: HomeAssistant, ensure_exists: bool = False) -> MqttData:
+    """Return typed MqttData from hass.data[DATA_MQTT]."""
+    if ensure_exists:
+        return hass.data.setdefault(DATA_MQTT, MqttData())
+    return hass.data[DATA_MQTT]

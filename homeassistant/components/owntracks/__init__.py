@@ -18,7 +18,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_when_setup
 
@@ -100,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     webhook.async_register(hass, DOMAIN, "OwnTracks", webhook_id, handle_webhook)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.data[DOMAIN]["unsub"] = async_dispatcher_connect(
         hass, DOMAIN, async_handle_message
@@ -140,7 +143,7 @@ async def async_connect_mqtt(hass, component):
             return
 
         message["topic"] = msg.topic
-        hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
+        async_dispatcher_send(hass, DOMAIN, hass, context, message)
 
     await mqtt.async_subscribe(hass, context.mqtt_topic, async_handle_mqtt_message, 1)
 
@@ -179,7 +182,7 @@ async def handle_webhook(hass, webhook_id, request):
             # Keep it as a 200 response so the incorrect packet is discarded
             return json_response([])
 
-    hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
+    async_dispatcher_send(hass, DOMAIN, hass, context, message)
 
     response = []
 

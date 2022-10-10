@@ -20,6 +20,13 @@
                 "description": "\u8f38\u5165 Hive \u8a8d\u8b49\u78bc\u3002\n \n \u8acb\u8f38\u5165 0000 \u4ee5\u7372\u53d6\u5176\u4ed6\u8a8d\u8b49\u78bc\u3002",
                 "title": "\u96d9\u91cd\u8a8d\u8b49"
             },
+            "configuration": {
+                "data": {
+                    "device_name": "\u88dd\u7f6e\u540d\u7a31"
+                },
+                "description": "\u8f38\u5165 Hive \u8a2d\u5b9a",
+                "title": "Hive \u8a2d\u5b9a\u3002"
+            },
             "reauth": {
                 "data": {
                     "password": "\u5bc6\u78bc",
@@ -34,7 +41,7 @@
                     "scan_interval": "\u6383\u63cf\u9593\u8ddd\uff08\u79d2\uff09",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u8f38\u5165 Hive \u767b\u5165\u8cc7\u8a0a\u8207\u8a2d\u5b9a\u3002",
+                "description": "\u8f38\u5165 Hive \u767b\u5165\u8cc7\u8a0a\u3002",
                 "title": "Hive \u767b\u5165\u8cc7\u8a0a"
             }
         }

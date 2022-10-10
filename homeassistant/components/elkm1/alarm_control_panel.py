@@ -69,7 +69,7 @@ async def async_setup_entry(
     elk = elk_data["elk"]
     entities: list[ElkEntity] = []
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -205,18 +205,18 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         elk_state_to_hass_state = {
-            ArmedStatus.DISARMED.value: STATE_ALARM_DISARMED,
-            ArmedStatus.ARMED_AWAY.value: STATE_ALARM_ARMED_AWAY,
-            ArmedStatus.ARMED_STAY.value: STATE_ALARM_ARMED_HOME,
-            ArmedStatus.ARMED_STAY_INSTANT.value: STATE_ALARM_ARMED_HOME,
-            ArmedStatus.ARMED_TO_NIGHT.value: STATE_ALARM_ARMED_NIGHT,
-            ArmedStatus.ARMED_TO_NIGHT_INSTANT.value: STATE_ALARM_ARMED_NIGHT,
-            ArmedStatus.ARMED_TO_VACATION.value: STATE_ALARM_ARMED_AWAY,
+            ArmedStatus.DISARMED: STATE_ALARM_DISARMED,
+            ArmedStatus.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
+            ArmedStatus.ARMED_STAY: STATE_ALARM_ARMED_HOME,
+            ArmedStatus.ARMED_STAY_INSTANT: STATE_ALARM_ARMED_HOME,
+            ArmedStatus.ARMED_TO_NIGHT: STATE_ALARM_ARMED_NIGHT,
+            ArmedStatus.ARMED_TO_NIGHT_INSTANT: STATE_ALARM_ARMED_NIGHT,
+            ArmedStatus.ARMED_TO_VACATION: STATE_ALARM_ARMED_AWAY,
         }
 
         if self._element.alarm_state is None:
             self._state = None
-        elif self._element.alarm_state >= AlarmState.FIRE_ALARM.value:
+        elif self._element.in_alarm_state():
             # Area is in alarm state
             self._state = STATE_ALARM_TRIGGERED
         elif self._entry_exit_timer_is_running():
@@ -239,32 +239,32 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if code is not None:
-            self._element.arm(ArmLevel.ARMED_STAY.value, int(code))
+            self._element.arm(ArmLevel.ARMED_STAY, int(code))
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if code is not None:
-            self._element.arm(ArmLevel.ARMED_AWAY.value, int(code))
+            self._element.arm(ArmLevel.ARMED_AWAY, int(code))
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if code is not None:
-            self._element.arm(ArmLevel.ARMED_NIGHT.value, int(code))
+            self._element.arm(ArmLevel.ARMED_NIGHT, int(code))
 
     async def async_alarm_arm_home_instant(self, code: str | None = None) -> None:
         """Send arm stay instant command."""
         if code is not None:
-            self._element.arm(ArmLevel.ARMED_STAY_INSTANT.value, int(code))
+            self._element.arm(ArmLevel.ARMED_STAY_INSTANT, int(code))
 
     async def async_alarm_arm_night_instant(self, code: str | None = None) -> None:
         """Send arm night instant command."""
         if code is not None:
-            self._element.arm(ArmLevel.ARMED_NIGHT_INSTANT.value, int(code))
+            self._element.arm(ArmLevel.ARMED_NIGHT_INSTANT, int(code))
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
         if code is not None:
-            self._element.arm(ArmLevel.ARMED_VACATION.value, int(code))
+            self._element.arm(ArmLevel.ARMED_VACATION, int(code))
 
     async def async_display_message(
         self, clear: int, beep: bool, timeout: int, line1: str, line2: str

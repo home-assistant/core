@@ -21,7 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
@@ -146,7 +146,7 @@ def setup_service_functions(hass: HomeAssistant, broker):
         """Set the system mode."""
         entity_id = call.data[ATTR_ENTITY_ID]
 
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
         registry_entry = registry.async_get(entity_id)
 
         if registry_entry is None or registry_entry.platform != DOMAIN:
@@ -221,6 +221,8 @@ class GeniusBroker:
 class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
 
+    _attr_should_poll = False
+
     def __init__(self) -> None:
         """Initialize the entity."""
         self._unique_id: str | None = None
@@ -237,11 +239,6 @@ class GeniusEntity(Entity):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as geniushub entities should not be polled."""
-        return False
 
 
 class GeniusDevice(GeniusEntity):

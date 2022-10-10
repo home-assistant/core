@@ -1,6 +1,7 @@
 """Config flow for Steam integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import steam
@@ -11,17 +12,16 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DEFAULT_NAME, DOMAIN, LOGGER
+from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
 
 
-def validate_input(user_input: dict[str, str | int]) -> list[dict[str, str | int]]:
+def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
     """Handle common flow input validation."""
     steam.api.key.set(user_input[CONF_API_KEY])
     interface = steam.api.interface("ISteamUser")
     names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNT])
-    return names["response"]["players"]["player"]
+    return names["response"]["players"]["player"][0]
 
 
 class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -49,17 +49,17 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         elif user_input is not None:
             try:
                 res = await self.hass.async_add_executor_job(validate_input, user_input)
-                if res[0] is not None:
-                    name = str(res[0]["personaname"])
+                if res is not None:
+                    name = str(res["personaname"])
                 else:
-                    errors = {"base": "invalid_account"}
+                    errors["base"] = "invalid_account"
             except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
-                errors = {"base": "cannot_connect"}
+                errors["base"] = "cannot_connect"
                 if "403" in str(ex):
-                    errors = {"base": "invalid_auth"}
+                    errors["base"] = "invalid_auth"
             except Exception as ex:  # pylint:disable=broad-except
                 LOGGER.exception("Unknown exception: %s", ex)
-                errors = {"base": "unknown"}
+                errors["base"] = "unknown"
             if not errors:
                 entry = await self.async_set_unique_id(user_input[CONF_ACCOUNT])
                 if entry and self.source == config_entries.SOURCE_REAUTH:
@@ -67,27 +67,10 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.hass.config_entries.async_reload(entry.entry_id)
                     return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured()
-                if self.source == config_entries.SOURCE_IMPORT:
-                    accounts_data = {
-                        CONF_ACCOUNTS: {
-                            acc["steamid"]: {
-                                "name": acc["personaname"],
-                                "enabled": True,
-                            }
-                            for acc in res
-                        }
-                    }
-                    user_input.pop(CONF_ACCOUNTS)
-                else:
-                    accounts_data = {
-                        CONF_ACCOUNTS: {
-                            user_input[CONF_ACCOUNT]: {"name": name, "enabled": True}
-                        }
-                    }
                 return self.async_create_entry(
-                    title=name or DEFAULT_NAME,
+                    title=name,
                     data=user_input,
-                    options=accounts_data,
+                    options={CONF_ACCOUNTS: {user_input[CONF_ACCOUNT]: name}},
                 )
         user_input = user_input or {}
         return self.async_show_form(
@@ -103,21 +86,10 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=PLACEHOLDERS,
         )
 
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
-                return self.async_abort(reason="already_configured")
-        LOGGER.warning(
-            "Steam yaml config in now deprecated and has been imported. "
-            "Please remove it from your config"
-        )
-        import_config[CONF_ACCOUNT] = import_config[CONF_ACCOUNTS][0]
-        return await self.async_step_user(import_config)
-
-    async def async_step_reauth(self, user_input: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
@@ -131,7 +103,9 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
 
         self._set_confirm_only()
-        return self.async_show_form(step_id="reauth_confirm")
+        return self.async_show_form(
+            step_id="reauth_confirm", description_placeholders=PLACEHOLDERS
+        )
 
 
 class SteamOptionsFlowHandler(config_entries.OptionsFlow):
@@ -148,64 +122,53 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage Steam options."""
         if user_input is not None:
             await self.hass.config_entries.async_unload(self.entry.entry_id)
-            for k in self.options[CONF_ACCOUNTS]:
-                if (
-                    self.options[CONF_ACCOUNTS][k]["enabled"]
-                    and k not in user_input[CONF_ACCOUNTS]
-                    and (
-                        entity_id := er.async_get(self.hass).async_get_entity_id(
-                            Platform.SENSOR, DOMAIN, f"sensor.steam_{k}"
-                        )
+            for _id in self.options[CONF_ACCOUNTS]:
+                if _id not in user_input[CONF_ACCOUNTS] and (
+                    entity_id := er.async_get(self.hass).async_get_entity_id(
+                        Platform.SENSOR, DOMAIN, f"sensor.steam_{_id}"
                     )
                 ):
                     er.async_get(self.hass).async_remove(entity_id)
             channel_data = {
                 CONF_ACCOUNTS: {
-                    k: {
-                        "name": v["name"],
-                        "enabled": k in user_input[CONF_ACCOUNTS],
-                    }
-                    for k, v in self.options[CONF_ACCOUNTS].items()
-                    if k in user_input[CONF_ACCOUNTS]
+                    _id: name
+                    for _id, name in self.options[CONF_ACCOUNTS].items()
+                    if _id in user_input[CONF_ACCOUNTS]
                 }
             }
             await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_create_entry(title="", data=channel_data)
+        error = None
         try:
             users = {
-                name["steamid"]: {"name": name["personaname"], "enabled": False}
+                name["steamid"]: name["personaname"]
                 for name in await self.hass.async_add_executor_job(self.get_accounts)
             }
+            if not users:
+                error = {"base": "unauthorized"}
 
         except steam.api.HTTPTimeoutError:
             users = self.options[CONF_ACCOUNTS]
-        _users = users | self.options[CONF_ACCOUNTS]
-        self.options[CONF_ACCOUNTS] = {
-            k: v
-            for k, v in _users.items()
-            if k in users or self.options[CONF_ACCOUNTS][k]["enabled"]
-        }
 
         options = {
             vol.Required(
                 CONF_ACCOUNTS,
-                default={
-                    k
-                    for k in self.options[CONF_ACCOUNTS]
-                    if self.options[CONF_ACCOUNTS][k]["enabled"]
-                },
-            ): cv.multi_select(
-                {k: v["name"] for k, v in self.options[CONF_ACCOUNTS].items()}
-            ),
+                default=set(self.options[CONF_ACCOUNTS]),
+            ): cv.multi_select(users | self.options[CONF_ACCOUNTS]),
         }
+        self.options[CONF_ACCOUNTS] = users | self.options[CONF_ACCOUNTS]
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=vol.Schema(options), errors=error
+        )
 
     def get_accounts(self) -> list[dict[str, str | int]]:
         """Get accounts."""
         interface = steam.api.interface("ISteamUser")
-        friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
-        friends = friends["friendslist"]["friends"]
-        _users_str = [user["steamid"] for user in friends]
+        try:
+            friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
+            _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
+        except steam.api.HTTPError:
+            return []
         names = interface.GetPlayerSummaries(steamids=_users_str)
         return names["response"]["players"]["player"]

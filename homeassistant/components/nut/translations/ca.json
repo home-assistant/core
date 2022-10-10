@@ -8,16 +8,9 @@
             "unknown": "Error inesperat"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Recursos"
-                },
-                "title": "Selecciona els recursos a monitoritzar"
-            },
             "ups": {
                 "data": {
-                    "alias": "\u00c0lies",
-                    "resources": "Recursos"
+                    "alias": "\u00c0lies"
                 },
                 "title": "Selecciona el SAI (UPS) a monitoritzar"
             },
@@ -33,17 +26,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "unknown": "Error inesperat"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Recursos",
                     "scan_interval": "Interval d'escaneig (segons)"
-                },
-                "description": "Selecciona els recursos del sensor."
+                }
             }
         }
     }

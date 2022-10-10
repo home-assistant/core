@@ -20,10 +20,8 @@
                 "title": "Autorizar HomeAssistant no Roon"
             },
             "user": {
-                "data": {
-                    "host": "Nome do host"
-                },
-                "description": "Por favor, digite seu hostname ou IP do servidor Roon."
+                "one": "",
+                "other": ""
             }
         }
     }

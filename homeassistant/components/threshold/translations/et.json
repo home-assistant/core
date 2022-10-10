@@ -9,7 +9,6 @@
                     "entity_id": "Sisendandur",
                     "hysteresis": "H\u00fcsterees",
                     "lower": "Alampiir",
-                    "mode": "L\u00e4vendi kasutamine",
                     "name": "Nimi",
                     "upper": "\u00dclempiir"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Sisendandur",
                     "hysteresis": "H\u00fcsterees",
                     "lower": "Alampiir",
-                    "mode": "L\u00e4vendi kasutamine",
                     "name": "Nimi",
                     "upper": "\u00dclempiir"
                 },

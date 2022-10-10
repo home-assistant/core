@@ -9,7 +9,6 @@
                     "entity_id": "\u8f93\u5165\u4f20\u611f\u5668",
                     "hysteresis": "\u9632\u6296\u8303\u56f4",
                     "lower": "\u4e0b\u9650",
-                    "mode": "\u9608\u503c\u6a21\u5f0f",
                     "name": "\u540d\u79f0",
                     "upper": "\u4e0a\u9650"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "\u8f93\u5165\u4f20\u611f\u5668",
                     "hysteresis": "\u9632\u6296\u8303\u56f4",
                     "lower": "\u4e0b\u9650",
-                    "mode": "\u9608\u503c\u6a21\u5f0f",
                     "name": "\u540d\u79f0",
                     "upper": "\u4e0a\u9650"
                 },

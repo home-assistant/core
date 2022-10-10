@@ -5,10 +5,10 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "no_bridges": "DeCONZ l\u00fc\u00fcse ei leitud",
             "no_hardware_available": "DeCONZi raadio riistvara puudub",
-            "not_deconz_bridge": "See pole deCONZ-i sild",
             "updated_instance": "DeCONZ-i eksemplarile omistati uus hostiaadress"
         },
         "error": {
+            "linking_not_possible": "\u00dchendus l\u00fc\u00fcsiga nurjus",
             "no_key": "API v\u00f5tit ei leitud"
         },
         "flow_title": "{host}",

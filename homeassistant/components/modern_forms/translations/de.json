@@ -9,9 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "confirm": {
-                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?"
-            },
             "user": {
                 "data": {
                     "host": "Host"
@@ -23,6 +20,5 @@
                 "title": "Erkannter Modern Forms Ventilator"
             }
         }
-    },
-    "title": "Modern Forms"
+    }
 }

@@ -71,7 +71,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_APPARENT_POWERUSAGE: {
-        ICON: "mdi:flash",
+        DEVICE_CLASS: SensorDeviceClass.APPARENT_POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_BATTERY: {
@@ -162,7 +162,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_REACTIVE_ENERGYEXPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_ENERGYIMPORT: {STATE_CLASS: SensorStateClass.TOTAL},
     hc.SENSOR_REACTIVE_POWERUSAGE: {
-        ICON: "mdi:flash",
+        DEVICE_CLASS: SensorDeviceClass.REACTIVE_POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_STATUS_LAST_RESTART_TIME: {DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
@@ -180,7 +180,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_TODAY: {DEVICE_CLASS: SensorDeviceClass.ENERGY},
+    hc.SENSOR_TODAY: {
+        DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    },
     hc.SENSOR_TOTAL: {
         DEVICE_CLASS: SensorDeviceClass.ENERGY,
         STATE_CLASS: SensorStateClass.TOTAL,
@@ -253,6 +256,7 @@ async def async_setup_entry(
 class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
+    _attr_force_update = True
     _tasmota_entity: tasmota_sensor.TasmotaSensor
 
     def __init__(self, **kwds: Any) -> None:
@@ -328,11 +332,6 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         if self._state_timestamp and self.device_class == SensorDeviceClass.TIMESTAMP:
             return self._state_timestamp
         return self._state
-
-    @property
-    def force_update(self) -> bool:
-        """Force update."""
-        return True
 
     @property
     def native_unit_of_measurement(self) -> str | None:

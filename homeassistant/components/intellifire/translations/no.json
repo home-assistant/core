@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Innlogging feilet",
             "cannot_connect": "Tilkobling mislyktes",
-            "iftapi_connect": "Feil ved tilkobling til iftapi.net",
-            "unknown": "Uventet feil"
+            "iftapi_connect": "Feil ved tilkobling til iftapi.net"
         },
         "flow_title": "{serial} ( {host} )",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "F\u00f8lgende IntelliFire-enheter ble oppdaget. Velg hvilken du \u00f8nsker \u00e5 konfigurere.",
                 "title": "Enhetsvalg"
-            },
-            "user": {
-                "data": {
-                    "host": "Vert"
-                }
             }
         }
     }

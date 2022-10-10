@@ -8,8 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Toetatud on j\u00e4rgmised komponendid: {components}",
-                "title": ""
+                "description": "Toetatud on j\u00e4rgmised komponendid: {components}"
             }
         }
     }

@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Steuert die Anzahl der Dezimalstellen in der Ausgabe."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Genauigkeit"
-                },
-                "description": "Die Genauigkeit steuert die Anzahl der Dezimalstellen in der Ausgabe."
             }
         }
     },

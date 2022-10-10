@@ -1,7 +1,6 @@
 """Test HomeKit initialization."""
 from unittest.mock import patch
 
-from homeassistant.components import logbook
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_VALUE,
@@ -11,7 +10,7 @@ from homeassistant.components.homekit.const import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SERVICE
 from homeassistant.setup import async_setup_component
 
-from tests.components.logbook.test_init import MockLazyEventPartialState
+from tests.components.logbook.common import MockRow, mock_humanify
 
 
 async def test_humanify_homekit_changed_event(hass, hk_driver, mock_get_source_ip):
@@ -20,33 +19,28 @@ async def test_humanify_homekit_changed_event(hass, hk_driver, mock_get_source_i
     with patch("homeassistant.components.homekit.HomeKit"):
         assert await async_setup_component(hass, "homekit", {"homekit": {}})
     assert await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                MockLazyEventPartialState(
-                    EVENT_HOMEKIT_CHANGED,
-                    {
-                        ATTR_ENTITY_ID: "lock.front_door",
-                        ATTR_DISPLAY_NAME: "Front Door",
-                        ATTR_SERVICE: "lock",
-                    },
-                ),
-                MockLazyEventPartialState(
-                    EVENT_HOMEKIT_CHANGED,
-                    {
-                        ATTR_ENTITY_ID: "cover.window",
-                        ATTR_DISPLAY_NAME: "Window",
-                        ATTR_SERVICE: "set_cover_position",
-                        ATTR_VALUE: 75,
-                    },
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    event1, event2 = mock_humanify(
+        hass,
+        [
+            MockRow(
+                EVENT_HOMEKIT_CHANGED,
+                {
+                    ATTR_ENTITY_ID: "lock.front_door",
+                    ATTR_DISPLAY_NAME: "Front Door",
+                    ATTR_SERVICE: "lock",
+                },
+            ),
+            MockRow(
+                EVENT_HOMEKIT_CHANGED,
+                {
+                    ATTR_ENTITY_ID: "cover.window",
+                    ATTR_DISPLAY_NAME: "Window",
+                    ATTR_SERVICE: "set_cover_position",
+                    ATTR_VALUE: 75,
+                },
+            ),
+        ],
     )
 
     assert event1["name"] == "HomeKit"

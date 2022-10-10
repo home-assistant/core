@@ -21,8 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "\u9009\u62e9\u8fde\u63a5\u7c7b\u578b",
-                    "password": "\u5bc6\u7801"
+                    "connection_type": "\u9009\u62e9\u8fde\u63a5\u7c7b\u578b"
                 }
             }
         }

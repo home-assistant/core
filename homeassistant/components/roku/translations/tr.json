@@ -15,16 +15,13 @@
                     "one": "Bo\u015f",
                     "other": "Bo\u015f"
                 },
-                "description": "{name} kurmak istiyor musunuz?",
-                "title": "Roku"
+                "description": "{name} kurmak istiyor musunuz?"
             },
             "ssdp_confirm": {
                 "data": {
                     "one": "Bo\u015f",
                     "other": "Bo\u015f"
-                },
-                "description": "{name} kurmak istiyor musunuz?",
-                "title": "Roku"
+                }
             },
             "user": {
                 "data": {

@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Sisselogimine nurjus",
             "cannot_connect": "\u00dchendamine nurjus",
-            "iftapi_connect": "\u00dchendumine iftapi.net'iga nurjus",
-            "unknown": "Ootamatu t\u00f5rge"
+            "iftapi_connect": "\u00dchendumine iftapi.net'iga nurjus"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "Avastati j\u00e4rgmised IntelliFire seadmed. Palun vali millist soovid seadistada.",
                 "title": "Seadme valik"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                }
             }
         }
     }

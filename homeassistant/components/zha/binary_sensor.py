@@ -1,4 +1,6 @@
 """Binary sensors on Zigbee Home Automation networks."""
+from __future__ import annotations
+
 import functools
 
 from homeassistant.components.binary_sensor import (
@@ -60,14 +62,14 @@ async def async_setup_entry(
 class BinarySensor(ZhaEntity, BinarySensorEntity):
     """ZHA BinarySensor."""
 
-    SENSOR_ATTR = None
+    SENSOR_ATTR: str | None = None
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA binary sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel = channels[0]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -95,7 +97,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         self._state = bool(value)
         self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
         attribute = getattr(self._channel, "value_attribute", "on_off")
@@ -161,13 +163,34 @@ class IASZone(BinarySensor):
     SENSOR_ATTR = "zone_status"
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return device class from component DEVICE_CLASSES."""
         return CLASS_MAPPING.get(self._channel.cluster.get("zone_type"))
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
         value = await self._channel.get_attribute_value("zone_status")
         if value is not None:
             self._state = value & 3
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+)
+class FrostLock(BinarySensor, id_suffix="frost_lock"):
+    """ZHA BinarySensor."""
+
+    SENSOR_ATTR = "frost_lock"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK
+
+
+@MULTI_MATCH(channel_names="ikea_airpurifier")
+class ReplaceFilter(BinarySensor, id_suffix="replace_filter"):
+    """ZHA BinarySensor."""
+
+    SENSOR_ATTR = "replace_filter"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM

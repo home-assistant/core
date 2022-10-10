@@ -6,6 +6,8 @@ from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 
 from async_upnp_client.exceptions import (
     UpnpActionResponseError,
+    UpnpCommunicationError,
+    UpnpConnectionError,
     UpnpError,
     UpnpResponseError,
 )
@@ -21,20 +23,18 @@ from samsungtvws.exceptions import ConnectionFailure, HttpApiError, Unauthorized
 from samsungtvws.remote import ChannelEmitCommand, SendRemoteKey
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_URL,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_TURN_ON,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
@@ -749,7 +749,8 @@ async def test_supported_features_with_turnon(hass: HomeAssistant) -> None:
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
     assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_SAMSUNGTV | MediaPlayerEntityFeature.TURN_ON
     )
 
 
@@ -1118,7 +1119,7 @@ async def test_play_media(hass: HomeAssistant, remote: Mock) -> None:
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
                 ATTR_MEDIA_CONTENT_ID: "576",
             },
             True,
@@ -1147,7 +1148,7 @@ async def test_play_media_invalid_type(hass: HomeAssistant) -> None:
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.URL,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             True,
@@ -1169,7 +1170,7 @@ async def test_play_media_channel_as_string(hass: HomeAssistant) -> None:
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
                 ATTR_MEDIA_CONTENT_ID: url,
             },
             True,
@@ -1190,7 +1191,7 @@ async def test_play_media_channel_as_non_positive(hass: HomeAssistant) -> None:
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
                 ATTR_MEDIA_CONTENT_ID: "-4",
             },
             True,
@@ -1245,7 +1246,7 @@ async def test_play_media_app(hass: HomeAssistant, remotews: Mock) -> None:
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_APP,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.APP,
             ATTR_MEDIA_CONTENT_ID: "3201608010191",
         },
         True,
@@ -1368,6 +1369,7 @@ async def test_upnp_not_available(
 ) -> None:
     """Test for volume control when Upnp is not available."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert "Unable to create Upnp DMR device" in caplog.text
 
     # Upnp action fails
     assert await hass.services.async_call(
@@ -1385,6 +1387,7 @@ async def test_upnp_missing_service(
 ) -> None:
     """Test for volume control when Upnp is not available."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert "Unable to create Upnp DMR device" in caplog.text
 
     # Upnp action fails
     assert await hass.services.async_call(
@@ -1505,3 +1508,49 @@ async def test_upnp_re_subscribe_events(
     assert state.state == STATE_ON
     assert dmr_device.async_subscribe_services.call_count == 2
     assert dmr_device.async_unsubscribe_services.call_count == 1
+
+
+@pytest.mark.usefixtures("rest_api", "upnp_notify_server")
+@pytest.mark.parametrize(
+    "error",
+    {UpnpConnectionError(), UpnpCommunicationError(), UpnpResponseError(status=400)},
+)
+async def test_upnp_failed_re_subscribe_events(
+    hass: HomeAssistant,
+    remotews: Mock,
+    dmr_device: Mock,
+    mock_now: datetime,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Test for Upnp event feedback."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert dmr_device.async_subscribe_services.call_count == 1
+    assert dmr_device.async_unsubscribe_services.call_count == 0
+
+    with patch.object(
+        remotews, "start_listening", side_effect=WebSocketException("Boom")
+    ), patch.object(remotews, "is_alive", return_value=False):
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert dmr_device.async_subscribe_services.call_count == 1
+    assert dmr_device.async_unsubscribe_services.call_count == 1
+
+    next_update = mock_now + timedelta(minutes=10)
+    with patch("homeassistant.util.dt.utcnow", return_value=next_update), patch.object(
+        dmr_device, "async_subscribe_services", side_effect=error
+    ):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+    assert "Device rejected re-subscription" in caplog.text

@@ -15,8 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Umeldungsinformatioun sinn n\u00e9ideg. Dr\u00e9ckt op 'Ofsch\u00e9cken' , dann an der PS4 App, 2ten Ecran, erneiert Apparater an wielt den Home-Assistant Apparat aus fir weider ze fueren.",
-                "title": "PlayStation 4"
+                "description": "Umeldungsinformatioun sinn n\u00e9ideg. Dr\u00e9ckt op 'Ofsch\u00e9cken' , dann an der PS4 App, 2ten Ecran, erneiert Apparater an wielt den Home-Assistant Apparat aus fir weider ze fueren."
             },
             "link": {
                 "data": {
@@ -24,17 +23,13 @@
                     "ip_address": "IP Adresse",
                     "name": "Numm",
                     "region": "Regioun"
-                },
-                "description": "G\u00ebff deng Playstation 4 Informatiounen an. Fir 'PIN Code', g\u00e9i an d'Astellunge vun der Playstation 4 Konsole. Dann op 'Mobile App Verbindungs Astellungen' a wiel \"Apparat dob\u00e4isetzen' aus. G\u00ebff de PIN  Code an deen ugewise g\u00ebtt. Lies [Dokumentatioun](https://www.home-assistant.io/components/ps4/) fir w\u00e9ider Informatiounen.",
-                "title": "PlayStation 4"
+                }
             },
             "mode": {
                 "data": {
                     "ip_address": "IP Address (Eidel loossen falls Auto Discovery benotzt g\u00ebtt)",
                     "mode": "Konfiguratioun's Modus"
-                },
-                "description": "Konfiguratioun's Modus auswielen. D'Feld IP Adress kann eidel bl\u00e9iwen wann Auto Discovery benotzt g\u00ebtt, well d'Apparaten automatesch entdeckt ginn.",
-                "title": "PlayStation 4"
+                }
             }
         }
     }

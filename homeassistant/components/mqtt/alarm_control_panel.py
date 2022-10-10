@@ -30,8 +30,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -46,7 +46,10 @@ from .mixins import (
     MqttEntity,
     async_setup_entry_helper,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +85,7 @@ DEFAULT_NAME = "MQTT Alarm"
 REMOTE_CODE = "REMOTE_CODE"
 REMOTE_CODE_TEXT = "REMOTE_CODE_TEXT"
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_CODE): cv.string,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
@@ -91,7 +94,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_COMMAND_TEMPLATE, default=DEFAULT_COMMAND_TEMPLATE
         ): cv.template,
-        vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
         vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
@@ -104,13 +107,19 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         ): cv.string,
         vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
         vol.Optional(CONF_PAYLOAD_TRIGGER, default=DEFAULT_TRIGGER): cv.string,
-        vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
-        vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+# Configuring MQTT alarm control panels under the alarm_control_panel platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
+    warn_for_legacy_schema(alarm.DOMAIN),
+)
+
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_platform(
@@ -119,9 +128,14 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT alarm control panel through configuration.yaml."""
+    """Set up MQTT alarm control panel configured under the alarm_control_panel key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, alarm.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        alarm.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -130,7 +144,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT alarm control panel dynamically through MQTT discovery."""
+    """Set up MQTT alarm control panel through configuration.yaml and dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -138,8 +152,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT Alarm Control Panel platform."""
     async_add_entities([MqttAlarm(hass, config, config_entry, discovery_data)])
 
@@ -152,7 +170,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Alarm Control Panel."""
-        self._state = None
+        self._state: str | None = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -213,7 +231,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self._state
 
@@ -230,7 +248,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         )
 
     @property
-    def code_format(self):
+    def code_format(self) -> alarm.CodeFormat | None:
         """Return one or more digits/characters."""
         if (code := self._config.get(CONF_CODE)) is None:
             return None
@@ -239,12 +257,11 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         return alarm.CodeFormat.TEXT
 
     @property
-    def code_arm_required(self):
+    def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
-        return code_required
+        return self._config[CONF_CODE_ARM_REQUIRED]
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command.
 
         This method is a coroutine.
@@ -255,7 +272,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         payload = self._config[CONF_PAYLOAD_DISARM]
         await self._publish(code, payload)
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command.
 
         This method is a coroutine.
@@ -266,7 +283,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_HOME]
         await self._publish(code, action)
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command.
 
         This method is a coroutine.
@@ -277,7 +294,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_AWAY]
         await self._publish(code, action)
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command.
 
         This method is a coroutine.
@@ -288,7 +305,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_NIGHT]
         await self._publish(code, action)
 
-    async def async_alarm_arm_vacation(self, code=None):
+    async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command.
 
         This method is a coroutine.
@@ -299,7 +316,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_VACATION]
         await self._publish(code, action)
 
-    async def async_alarm_arm_custom_bypass(self, code=None):
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command.
 
         This method is a coroutine.
@@ -310,7 +327,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
         await self._publish(code, action)
 
-    async def async_alarm_trigger(self, code=None):
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send trigger command.
 
         This method is a coroutine.

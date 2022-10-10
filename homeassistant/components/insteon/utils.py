@@ -28,6 +28,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
 )
 from homeassistant.core import ServiceCall, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -195,9 +196,8 @@ def async_register_services(hass):
         for address in devices:
             device = devices[address]
             if device != devices.modem and device.cat != 0x03:
-                await device.aldb.async_load(
-                    refresh=reload, callback=async_srv_save_devices
-                )
+                await device.aldb.async_load(refresh=reload)
+                await async_srv_save_devices()
 
     async def async_srv_save_devices():
         """Write the Insteon device configuration to file."""
@@ -294,7 +294,7 @@ def async_register_services(hass):
         """Remove the device and all entities from hass."""
         signal = f"{address.id}_{SIGNAL_REMOVE_ENTITY}"
         async_dispatcher_send(hass, signal)
-        dev_registry = await hass.helpers.device_registry.async_get_registry()
+        dev_registry = dr.async_get(hass)
         device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
         if device:
             dev_registry.async_remove_device(device.id)

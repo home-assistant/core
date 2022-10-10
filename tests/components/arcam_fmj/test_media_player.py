@@ -1,16 +1,16 @@
 """Tests for arcam fmj receivers."""
 from math import isclose
-from unittest.mock import ANY, MagicMock, PropertyMock, patch
+from unittest.mock import ANY, PropertyMock, patch
 
 from arcam.fmj import DecodeMode2CH, DecodeModeMCH, SourceCodes
 import pytest
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
-    MEDIA_TYPE_MUSIC,
     SERVICE_SELECT_SOURCE,
+    MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -226,8 +226,8 @@ async def test_set_volume_level(player, state, volume, call):
 @pytest.mark.parametrize(
     "source, media_content_type",
     [
-        (SourceCodes.DAB, MEDIA_TYPE_MUSIC),
-        (SourceCodes.FM, MEDIA_TYPE_MUSIC),
+        (SourceCodes.DAB, MediaType.MUSIC),
+        (SourceCodes.FM, MediaType.MUSIC),
         (SourceCodes.PVR, None),
         (None, None),
     ],
@@ -303,22 +303,12 @@ async def test_added_to_hass(player, state):
         SIGNAL_CLIENT_STOPPED,
     )
 
-    connectors = {}
+    with patch(
+        "homeassistant.components.arcam_fmj.media_player.async_dispatcher_connect"
+    ) as connect:
+        await player.async_added_to_hass()
 
-    def _connect(signal, fun):
-        connectors[signal] = fun
-
-    player.hass = MagicMock()
-    player.hass.helpers.dispatcher.async_dispatcher_connect.side_effects = _connect
-
-    await player.async_added_to_hass()
     state.start.assert_called_with()
-    player.hass.helpers.dispatcher.async_dispatcher_connect.assert_any_call(
-        SIGNAL_CLIENT_DATA, ANY
-    )
-    player.hass.helpers.dispatcher.async_dispatcher_connect.assert_any_call(
-        SIGNAL_CLIENT_STARTED, ANY
-    )
-    player.hass.helpers.dispatcher.async_dispatcher_connect.assert_any_call(
-        SIGNAL_CLIENT_STOPPED, ANY
-    )
+    connect.assert_any_call(player.hass, SIGNAL_CLIENT_DATA, ANY)
+    connect.assert_any_call(player.hass, SIGNAL_CLIENT_STARTED, ANY)
+    connect.assert_any_call(player.hass, SIGNAL_CLIENT_STOPPED, ANY)

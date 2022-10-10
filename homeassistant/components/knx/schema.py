@@ -16,7 +16,7 @@ from xknx.telegram.address import IndividualAddress, parse_device_group_address
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -489,6 +489,7 @@ class CoverSchema(KNXPlatformSchema):
     CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
     CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
     CONF_TRAVELLING_TIME_UP = "travelling_time_up"
+    CONF_INVERT_UPDOWN = "invert_updown"
     CONF_INVERT_POSITION = "invert_position"
     CONF_INVERT_ANGLE = "invert_angle"
 
@@ -521,6 +522,7 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(
                     CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
                 ): cv.positive_float,
+                vol.Optional(CONF_INVERT_UPDOWN, default=False): cv.boolean,
                 vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
                 vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,

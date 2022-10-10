@@ -101,7 +101,7 @@
           "multicast_group": "Used for routing and discovery. Default: `224.0.23.12`",
           "multicast_port": "Used for routing and discovery. Default: `3671`",
           "local_ip": "Use `0.0.0.0` for auto-discovery.",
-          "state_updater": "Globally enable or disable reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve states from the KNX Bus, `sync_state` entity options will have no effect.",
+          "state_updater": "Set default for reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve entity states from the KNX Bus. Can be overridden by `sync_state` entity options.",
           "rate_limit": "Maximum outgoing telegrams per second.\nRecommended: 20 to 40"
         }
       },

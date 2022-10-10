@@ -45,8 +45,8 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Media player devices."""
-    registry = await entity_registry.async_get_registry(hass)
-    conditions = []
+    registry = entity_registry.async_get(hass)
+    conditions: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):

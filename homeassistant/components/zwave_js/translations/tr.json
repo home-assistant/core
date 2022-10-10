@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "A\u011f Anahtar\u0131",
                     "s0_legacy_key": "S0 Anahtar\u0131 (Eski)",
                     "s2_access_control_key": "S2 Eri\u015fim Kontrol Anahtar\u0131",
                     "s2_authenticated_key": "S2 Kimli\u011fi Do\u011frulanm\u0131\u015f Anahtar",
@@ -92,6 +91,12 @@
             "zwave_js.value_updated.value": "Z-Wave JS De\u011ferinde de\u011fer de\u011fi\u015fikli\u011fi"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "\u015eu anda \u00e7al\u0131\u015ft\u0131rd\u0131\u011f\u0131n\u0131z Z-Wave JS Server s\u00fcr\u00fcm\u00fc, Home Assistant'\u0131n bu s\u00fcr\u00fcm\u00fc i\u00e7in \u00e7ok eski. Bu sorunu gidermek i\u00e7in l\u00fctfen Z-Wave JS Sunucusunu en son s\u00fcr\u00fcme g\u00fcncelleyin.",
+            "title": "Z-Wave JS Sunucusunun daha yeni s\u00fcr\u00fcm\u00fc gerekli"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Z-Wave JS eklenti ke\u015fif bilgileri al\u0131namad\u0131.",
@@ -117,7 +122,6 @@
                 "data": {
                     "emulate_hardware": "Donan\u0131m\u0131 Taklit Et",
                     "log_level": "G\u00fcnl\u00fck d\u00fczeyi",
-                    "network_key": "A\u011f Anahtar\u0131",
                     "s0_legacy_key": "S0 Anahtar\u0131 (Eski)",
                     "s2_access_control_key": "S2 Eri\u015fim Kontrol Anahtar\u0131",
                     "s2_authenticated_key": "S2 Kimli\u011fi Do\u011frulanm\u0131\u015f Anahtar",
@@ -146,6 +150,5 @@
                 "title": "Z-Wave JS eklentisi ba\u015fl\u0131yor."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

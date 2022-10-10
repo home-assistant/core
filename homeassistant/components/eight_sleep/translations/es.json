@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se puede conectar a la nube de Eight Sleep: {error}"
+        },
+        "error": {
+            "cannot_connect": "No se puede conectar a la nube de Eight Sleep: {error}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                }
+            }
+        }
+    }
+}

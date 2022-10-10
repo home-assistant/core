@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Login fehlgeschlagen",
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "iftapi_connect": "Fehler beim Verbinden mit iftapi.net",
-            "unknown": "Unerwarteter Fehler"
+            "iftapi_connect": "Fehler beim Verbinden mit iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "Die folgenden IntelliFire-Ger\u00e4te wurden gefunden. Bitte w\u00e4hle aus, welche du konfigurieren m\u00f6chtest.",
                 "title": "Ger\u00e4teauswahl"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                }
             }
         }
     }

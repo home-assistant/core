@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Sauber",
             "dirty": "Schmutzig"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Geschlossen",
+            "open": "Offen",
+            "tilt": "Kippen"
         }
     }
 }

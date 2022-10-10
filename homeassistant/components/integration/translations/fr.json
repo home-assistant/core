@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Contr\u00f4le le nombre de chiffres d\u00e9cimaux dans la sortie."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Pr\u00e9cision"
-                },
-                "description": "La pr\u00e9cision contr\u00f4le le nombre de chiffres d\u00e9cimaux dans la sortie."
             }
         }
     },

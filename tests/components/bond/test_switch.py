@@ -1,7 +1,7 @@
 """Tests for the Bond switch device."""
 from datetime import timedelta
 
-from bond_api import Action, DeviceType
+from bond_async import Action, DeviceType
 import pytest
 
 from homeassistant import core

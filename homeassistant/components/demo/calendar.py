@@ -1,15 +1,9 @@
 """Demo platform that has two fake binary sensors."""
 from __future__ import annotations
 
-import copy
 import datetime
 
-from homeassistant.components.calendar import (
-    CalendarEntity,
-    CalendarEvent,
-    CalendarEventDevice,
-    get_date,
-)
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -27,7 +21,6 @@ def setup_platform(
         [
             DemoCalendar(calendar_data_future(), "Calendar 1"),
             DemoCalendar(calendar_data_current(), "Calendar 2"),
-            LegacyDemoCalendar("Calendar 3"),
         ]
     )
 
@@ -39,6 +32,8 @@ def calendar_data_future() -> CalendarEvent:
         start=one_hour_from_now,
         end=one_hour_from_now + datetime.timedelta(minutes=60),
         summary="Future Event",
+        description="Future Description",
+        location="Future Location",
     )
 
 
@@ -58,54 +53,18 @@ class DemoCalendar(CalendarEntity):
     def __init__(self, event: CalendarEvent, name: str) -> None:
         """Initialize demo calendar."""
         self._event = event
-        self._name = name
+        self._attr_name = name
 
     @property
     def event(self) -> CalendarEvent:
         """Return the next upcoming event."""
         return self._event
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    async def async_get_events(self, hass, start_date, end_date) -> list[CalendarEvent]:
+    async def async_get_events(
+        self,
+        hass: HomeAssistant,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+    ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         return [self._event]
-
-
-class LegacyDemoCalendar(CalendarEventDevice):
-    """Calendar for exercising shim API."""
-
-    def __init__(self, name):
-        """Initialize demo calendar."""
-        self._name = name
-        one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=30)
-        self._event = {
-            "start": {"dateTime": one_hour_from_now.isoformat()},
-            "end": {
-                "dateTime": (
-                    one_hour_from_now + dt_util.dt.timedelta(minutes=60)
-                ).isoformat()
-            },
-            "summary": "Future Event",
-        }
-
-    @property
-    def event(self):
-        """Return the next upcoming event."""
-        return self._event
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    async def async_get_events(self, hass, start_date, end_date):
-        """Get all events in a specific time frame."""
-        event = copy.copy(self.event)
-        event["title"] = event["summary"]
-        event["start"] = get_date(event["start"]).isoformat()
-        event["end"] = get_date(event["end"]).isoformat()
-        return [event]

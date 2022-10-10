@@ -1,0 +1,133 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Inaktiverad",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Automatisk",
+            "1": "Av",
+            "2": "P\u00e5"
+        },
+        "tuya__countdown": {
+            "1h": "1 timme",
+            "2h": "2 timmar",
+            "3h": "3 timmar",
+            "4h": "4 timmar",
+            "5h": "5 timmar",
+            "6h": "6 timmar",
+            "cancel": "Avbryt"
+        },
+        "tuya__curtain_mode": {
+            "morning": "Morgon",
+            "night": "Natt"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "Tillbaka",
+            "forward": "Fram\u00e5t"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "L\u00e5g k\u00e4nslighet",
+            "1": "H\u00f6g k\u00e4nslighet"
+        },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
+        "tuya__fingerbot_mode": {
+            "click": "Tryck",
+            "switch": "Knapp"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "Niv\u00e5 1",
+            "level_10": "Niv\u00e5 10",
+            "level_2": "Niv\u00e5 2",
+            "level_3": "Niv\u00e5 3",
+            "level_4": "Niv\u00e5 4",
+            "level_5": "Niv\u00e5 5",
+            "level_6": "Niv\u00e5 6",
+            "level_7": "Niv\u00e5 7",
+            "level_8": "Niv\u00e5 8",
+            "level_9": "Niv\u00e5 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "Hum\u00f6r 1",
+            "2": "Hum\u00f6r 2",
+            "3": "Hum\u00f6r 3",
+            "4": "Hum\u00f6r 4",
+            "5": "Hum\u00f6r 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "Automatisk",
+            "health": "H\u00e4lsa",
+            "humidity": "Luftfuktighet",
+            "sleep": "S\u00f6mnl\u00e4ge",
+            "work": "Arbetsl\u00e4ge"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "L\u00e5geffektl\u00e4ge",
+            "1": "Kontinuerligt arbetsl\u00e4ge"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Gl\u00f6dlampa",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Av",
+            "pos": "Ange omkopplarens plats",
+            "relay": "Indikera p\u00e5/av-l\u00e4ge"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "L\u00e5g k\u00e4nslighet",
+            "1": "Medium k\u00e4nslighet",
+            "2": "H\u00f6g k\u00e4nslighet"
+        },
+        "tuya__record_mode": {
+            "1": "Spela bara in h\u00e4ndelser",
+            "2": "Kontinuerlig inspelning"
+        },
+        "tuya__relay_status": {
+            "last": "Kom ih\u00e5g senaste tillst\u00e5ndet",
+            "memory": "Kom ih\u00e5g senaste tillst\u00e5ndet",
+            "off": "Av",
+            "on": "P\u00e5",
+            "power_off": "Av",
+            "power_on": "P\u00e5"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "St\u00e4ngd",
+            "high": "H\u00f6gt",
+            "low": "L\u00e5gt",
+            "middle": "Mitten"
+        },
+        "tuya__vacuum_collection": {
+            "large": "Stor",
+            "middle": "Mitten",
+            "small": "Liten"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "B\u00e5ge",
+            "chargego": "\u00c5terg\u00e5 till dockan",
+            "left_bow": "B\u00e5ge v\u00e4nster",
+            "left_spiral": "Spiral v\u00e4nster",
+            "mop": "Moppa",
+            "part": "Del",
+            "partial_bow": "B\u00e5ge delvis",
+            "pick_zone": "V\u00e4lj zon",
+            "point": "Punkt",
+            "pose": "Pose",
+            "random": "Slumpm\u00e4ssig",
+            "right_bow": "B\u00e5ge \u00e5t h\u00f6ger",
+            "right_spiral": "Spiral h\u00f6ger",
+            "single": "Enkel",
+            "smart": "Smart",
+            "spiral": "Spiral",
+            "standby": "Standby",
+            "wall_follow": "F\u00f6lj v\u00e4ggen",
+            "zone": "Zon"
+        }
+    }
+}

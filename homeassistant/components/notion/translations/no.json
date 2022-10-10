@@ -6,7 +6,6 @@
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
-            "no_devices": "Ingen enheter funnet i kontoen",
             "unknown": "Uventet feil"
         },
         "step": {

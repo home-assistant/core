@@ -1,8 +1,11 @@
 """Test selectors."""
+from enum import Enum
+
 import pytest
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
+from homeassistant.util import yaml
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -48,10 +51,14 @@ def _test_selector(
         converter = default_converter
 
     # Validate selector configuration
-    selector.validate_selector({selector_type: schema})
+    config = {selector_type: schema}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
+    # We do not allow enums in the config, as they cannot serialize
+    assert not any(isinstance(val, Enum) for val in selector_instance.config.values())
 
     # Use selector in schema and validate
-    vol_schema = vol.Schema({"selection": selector.selector({selector_type: schema})})
+    vol_schema = vol.Schema({"selection": selector_instance})
     for selection in valid_selections:
         assert vol_schema({"selection": selection}) == {
             "selection": converter(selection)
@@ -62,9 +69,12 @@ def _test_selector(
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
-    assert cv.custom_serializer(selector_instance) == {
-        "selector": {selector_type: selector_instance.config}
-    }
+    assert (
+        selector.selector(selector_instance.serialize()["selector"]).config
+        == selector_instance.config
+    )
+    # Test serialized selector can be dumped to YAML
+    yaml.dump(selector_instance.serialize())
 
 
 @pytest.mark.parametrize(
@@ -231,6 +241,7 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections):
         ),
         ({"min": 10, "max": 1000, "mode": "slider", "step": 0.5}, (), ()),
         ({"mode": "box"}, (10,), ()),
+        ({"mode": "box", "step": "any"}, (), ()),
     ),
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections):
@@ -243,6 +254,12 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections):
     (
         {},  # Must have mandatory fields
         {"mode": "slider"},  # Must have min+max in slider mode
+        {
+            "mode": "slider",
+            "min": 0,
+            "max": 1,
+            "step": "any",  # Can't combine slider with step any
+        },
     ),
 )
 def test_number_selector_schema_error(schema):
@@ -277,11 +294,46 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections):
 
 @pytest.mark.parametrize(
     "schema,valid_selections,invalid_selections",
+    (
+        (
+            {},
+            ("6b68b250388cbe0d620c92dd3acc93ec", "76f2e8f9a6491a1b580b3a8967c27ddd"),
+            (None, True, 1),
+        ),
+        (
+            {"integration": "adguard"},
+            ("6b68b250388cbe0d620c92dd3acc93ec", "76f2e8f9a6491a1b580b3a8967c27ddd"),
+            (None, True, 1),
+        ),
+    ),
+)
+def test_config_entry_selector_schema(schema, valid_selections, invalid_selections):
+    """Test boolean selector."""
+    _test_selector("config_entry", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
     (({}, ("00:00:00",), ("blah", None)),),
 )
 def test_time_selector_schema(schema, valid_selections, invalid_selections):
     """Test time selector."""
     _test_selector("time", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {"entity_id": "sensor.abc"},
+            ("on", "armed"),
+            (None, True, 1),
+        ),
+    ),
+)
+def test_state_selector_schema(schema, valid_selections, invalid_selections):
+    """Test state selector."""
+    _test_selector("state", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
@@ -341,7 +393,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections):
     (
         ({}, ("abc123",), (None,)),
         ({"multiline": True}, (), ()),
-        ({"multiline": False}, (), ()),
+        ({"multiline": False, "type": "email"}, (), ()),
     ),
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections):
@@ -392,7 +444,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections):
             (0, None, ["red"]),
         ),
         (
-            {"options": [], "custom_value": True, "multiple": True},
+            {"options": [], "custom_value": True, "multiple": True, "mode": "list"},
             (["red"], ["green", "blue"], []),
             (0, None, "red"),
         ),
@@ -426,6 +478,11 @@ def test_select_selector_schema_error(schema):
         (
             {"entity_id": "sensor.abc"},
             ("friendly_name", "device_class"),
+            (None,),
+        ),
+        (
+            {"entity_id": "sensor.abc", "hide_attributes": ["friendly_name"]},
+            ("device_class", "state_class"),
             (None,),
         ),
     ),
@@ -636,3 +693,19 @@ def test_datetime_selector_schema(schema, valid_selections, invalid_selections):
 def test_template_selector_schema(schema, valid_selections, invalid_selections):
     """Test template selector."""
     _test_selector("template", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema,valid_selections,invalid_selections",
+    (
+        (
+            {"accept": "image/*"},
+            ("0182a1b99dbc5ae24aecd90c346605fa",),
+            (None, "not-a-uuid", "abcd", 1),
+        ),
+    ),
+)
+def test_file_selector_schema(schema, valid_selections, invalid_selections):
+    """Test file selector."""
+
+    _test_selector("file", schema, valid_selections, invalid_selections)

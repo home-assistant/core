@@ -35,14 +35,12 @@
                 "title": "Plex sunucusunu se\u00e7in"
             },
             "user": {
-                "description": "Bir Plex sunucusunu ba\u011flamak i\u00e7in [plex.tv](https://plex.tv) ile devam edin.",
-                "title": "Plex Medya Sunucusu"
+                "description": "Bir Plex sunucusunu ba\u011flamak i\u00e7in [plex.tv](https://plex.tv) ile devam edin."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Kurulum y\u00f6ntemi"
-                },
-                "title": "Plex Medya Sunucusu"
+                }
             }
         }
     },

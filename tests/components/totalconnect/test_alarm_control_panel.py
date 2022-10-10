@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from .common import (
@@ -76,7 +77,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
         mock_request.assert_called_once()
         assert state.attributes.get(ATTR_FRIENDLY_NAME) == "test"
 
-        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(hass)
         entry = entity_registry.async_get(ENTITY_ID)
         # TotalConnect partition #1 alarm device unique_id is the location_id
         assert entry.unique_id == LOCATION_ID

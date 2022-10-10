@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -287,7 +287,7 @@ class ConfiguredDoorBird:
         self.device.change_favorite("http", f"Home Assistant ({event})", url)
         if not self.webhook_is_registered(url):
             _LOGGER.warning(
-                'Unable to set favorite URL "%s". ' 'Event "%s" will not fire',
+                'Unable to set favorite URL "%s". Event "%s" will not fire',
                 url,
                 event,
             )

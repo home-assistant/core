@@ -3,9 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "after": "Aan na",
                     "after_time": "Op tijd",
-                    "before": "Uit na",
                     "before_time": "Uit tijd",
                     "name": "Naam\n"
                 },
@@ -18,12 +16,9 @@
         "step": {
             "init": {
                 "data": {
-                    "after": "Aan na",
                     "after_time": "Op tijd",
-                    "before": "Uit na",
                     "before_time": "Uit tijd"
-                },
-                "description": "Maak een binaire sensor die afhankelijk van de tijd in- of uitgeschakeld wordt."
+                }
             }
         }
     },

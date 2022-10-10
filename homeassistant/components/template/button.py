@@ -78,6 +78,8 @@ async def async_setup_platform(
 class TemplateButtonEntity(TemplateEntity, ButtonEntity):
     """Representation of a template button."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -93,4 +95,4 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self._command_press.async_run(context=self._context)
+        await self.async_run_script(self._command_press, context=self._context)

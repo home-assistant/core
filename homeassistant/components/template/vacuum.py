@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -126,6 +127,8 @@ async def async_setup_platform(
 class TemplateVacuum(TemplateEntity, StateVacuumEntity):
     """A template vacuum component."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -198,67 +201,70 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         return self._state
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Start or resume the cleaning task."""
-        await self._start_script.async_run(context=self._context)
+        await self.async_run_script(self._start_script, context=self._context)
 
-    async def async_pause(self):
+    async def async_pause(self) -> None:
         """Pause the cleaning task."""
         if self._pause_script is None:
             return
 
-        await self._pause_script.async_run(context=self._context)
+        await self.async_run_script(self._pause_script, context=self._context)
 
-    async def async_stop(self, **kwargs):
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
         if self._stop_script is None:
             return
 
-        await self._stop_script.async_run(context=self._context)
+        await self.async_run_script(self._stop_script, context=self._context)
 
-    async def async_return_to_base(self, **kwargs):
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         if self._return_to_base_script is None:
             return
 
-        await self._return_to_base_script.async_run(context=self._context)
+        await self.async_run_script(self._return_to_base_script, context=self._context)
 
-    async def async_clean_spot(self, **kwargs):
+    async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         if self._clean_spot_script is None:
             return
 
-        await self._clean_spot_script.async_run(context=self._context)
+        await self.async_run_script(self._clean_spot_script, context=self._context)
 
-    async def async_locate(self, **kwargs):
+    async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         if self._locate_script is None:
             return
 
-        await self._locate_script.async_run(context=self._context)
+        await self.async_run_script(self._locate_script, context=self._context)
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if self._set_fan_speed_script is None:
             return
 
         if fan_speed in self._attr_fan_speed_list:
             self._attr_fan_speed = fan_speed
-            await self._set_fan_speed_script.async_run(
-                {ATTR_FAN_SPEED: fan_speed}, context=self._context
+            await self.async_run_script(
+                self._set_fan_speed_script,
+                run_variables={ATTR_FAN_SPEED: fan_speed},
+                context=self._context,
             )
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s",
+                "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
+                self.entity_id,
                 self._attr_fan_speed_list,
             )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._template is not None:
             self.add_template_attribute(
@@ -298,8 +304,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             self._state = None
         else:
             _LOGGER.error(
-                "Received invalid vacuum state: %s. Expected: %s",
+                "Received invalid vacuum state: %s for entity %s. Expected: %s",
                 result,
+                self.entity_id,
                 ", ".join(_VALID_STATES),
             )
             self._state = None
@@ -312,7 +319,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 raise ValueError
         except ValueError:
             _LOGGER.error(
-                "Received invalid battery level: %s. Expected: 0-100", battery_level
+                "Received invalid battery level: %s for entity %s. Expected: 0-100",
+                battery_level,
+                self.entity_id,
             )
             self._attr_battery_level = None
             return
@@ -333,8 +342,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             self._attr_fan_speed = None
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s",
+                "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
+                self.entity_id,
                 self._attr_fan_speed_list,
             )
             self._attr_fan_speed = None

@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
-            "not_huawei_lte": "Kein Huawei LTE-Ger\u00e4t"
+            "not_huawei_lte": "Kein Huawei LTE-Ger\u00e4t",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "connection_timeout": "Verbindungszeit\u00fcberschreitung",
@@ -17,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Gib die Zugangsdaten f\u00fcr das Ger\u00e4t ein.",
+                "title": "Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "password": "Passwort",
@@ -34,7 +41,6 @@
                 "data": {
                     "name": "Name des Benachrichtigungsdienstes (\u00c4nderung erfordert Neustart)",
                     "recipient": "SMS-Benachrichtigungsempf\u00e4nger",
-                    "track_new_devices": "Neue Ger\u00e4te verfolgen",
                     "track_wired_clients": "Kabelgebundene Netzwerk-Clients verfolgen",
                     "unauthenticated_mode": "Nicht authentifizierter Modus (\u00c4nderung erfordert erneutes Laden)"
                 }

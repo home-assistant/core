@@ -11,13 +11,6 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Passwort",
-                    "username": "Benutzername"
-                },
-                "title": "Konfiguriere die Authentifizierung"
-            },
             "configure": {
                 "data": {
                     "host": "Host",
@@ -41,19 +34,11 @@
                 },
                 "title": "W\u00e4hle ein ONVIF-Ger\u00e4t"
             },
-            "manual_input": {
-                "data": {
-                    "host": "Host",
-                    "name": "Name",
-                    "port": "Port"
-                },
-                "title": "Konfiguriere das ONVIF-Ger\u00e4t"
-            },
             "user": {
                 "data": {
                     "auto": "Automatisch suchen"
                 },
-                "description": "Wenn du auf Senden klickst, durchsuchen wir dein Netzwerk nach ONVIF-Ger\u00e4ten, die Profil S unterst\u00fctzen. \n\nEinige Hersteller haben begonnen, ONVIF standardm\u00e4\u00dfig zu deaktivieren. Stelle sicher, dass ONVIF in der Konfiguration deiner Kamera aktiviert ist.",
+                "description": "Wenn du auf Senden dr\u00fcckst, durchsuchen wir dein Netzwerk nach ONVIF-Ger\u00e4ten, die Profil S unterst\u00fctzen. \n\nEinige Hersteller haben begonnen, ONVIF standardm\u00e4\u00dfig zu deaktivieren. Stelle sicher, dass ONVIF in der Konfiguration deiner Kamera aktiviert ist.",
                 "title": "ONVIF-Ger\u00e4tekonfiguration"
             }
         }

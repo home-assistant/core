@@ -18,6 +18,19 @@
             }
         }
     },
+    "issues": {
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Modifiez tout script ou automatisation utilisant cette entit\u00e9 afin qu'ils utilisent `{replacement_entity_id}` \u00e0 la place.",
+                        "title": "L'entit\u00e9 {old_entity_id} sera supprim\u00e9e"
+                    }
+                }
+            },
+            "title": "L'entit\u00e9 {old_entity_id} sera supprim\u00e9e"
+        }
+    },
     "options": {
         "step": {
             "init": {

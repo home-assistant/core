@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "Attribute",
+                    "authentication": "Authentication",
+                    "device_class": "Device Class",
+                    "headers": "Headers",
+                    "index": "Index",
+                    "name": "Name",
+                    "password": "Password",
+                    "resource": "Resource",
+                    "select": "Select",
+                    "state_class": "State Class",
+                    "unit_of_measurement": "Unit of Measurement",
+                    "username": "Username",
+                    "value_template": "Value Template",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "attribute": "Get value of an attribute on the selected tag",
+                    "authentication": "Type of the HTTP authentication. Either basic or digest",
+                    "device_class": "The type/class of the sensor to set the icon in the frontend",
+                    "headers": "Headers to use for the web request",
+                    "index": "Defines which of the elements returned by the CSS selector to use",
+                    "resource": "The URL to the website that contains the value",
+                    "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
+                    "state_class": "The state_class of the sensor",
+                    "value_template": "Defines a template to get the state of the sensor",
+                    "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Attribute",
+                    "authentication": "Authentication",
+                    "device_class": "Device Class",
+                    "headers": "Headers",
+                    "index": "Index",
+                    "name": "Name",
+                    "password": "Password",
+                    "resource": "Resource",
+                    "select": "Select",
+                    "state_class": "State Class",
+                    "unit_of_measurement": "Unit of Measurement",
+                    "username": "Username",
+                    "value_template": "Value Template",
+                    "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "attribute": "Get value of an attribute on the selected tag",
+                    "authentication": "Type of the HTTP authentication. Either basic or digest",
+                    "device_class": "The type/class of the sensor to set the icon in the frontend",
+                    "headers": "Headers to use for the web request",
+                    "index": "Defines which of the elements returned by the CSS selector to use",
+                    "resource": "The URL to the website that contains the value",
+                    "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
+                    "state_class": "The state_class of the sensor",
+                    "value_template": "Defines a template to get the state of the sensor",
+                    "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed"
+                }
+            }
+        }
+    }
+}

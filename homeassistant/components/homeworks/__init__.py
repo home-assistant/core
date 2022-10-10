@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
@@ -95,29 +96,17 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-class HomeworksDevice:
+class HomeworksDevice(Entity):
     """Base class of a Homeworks device."""
+
+    _attr_should_poll = False
 
     def __init__(self, controller, addr, name):
         """Initialize Homeworks device."""
         self._addr = addr
-        self._name = name
+        self._attr_name = name
+        self._attr_unique_id = f"homeworks.{self._addr}"
         self._controller = controller
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier."""
-        return f"homeworks.{self._addr}"
-
-    @property
-    def name(self):
-        """Device name."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """No need to poll."""
-        return False
 
 
 class HomeworksKeypadEvent:

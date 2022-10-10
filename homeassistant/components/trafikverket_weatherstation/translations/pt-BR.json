@@ -13,8 +13,6 @@
             "user": {
                 "data": {
                     "api_key": "Chave da API",
-                    "conditions": "Condi\u00e7\u00f5es monitoradas",
-                    "name": "Usu\u00e1rio",
                     "station": "Esta\u00e7\u00e3o"
                 }
             }

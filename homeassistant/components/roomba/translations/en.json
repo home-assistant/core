@@ -11,27 +11,19 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "init": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "Select a Roomba or Braava.",
-                "title": "Automatically connect to the device"
-            },
             "link": {
-                "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds.",
+                "description": "Make sure that the iRobot app is not running on any device. Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds.",
                 "title": "Retrieve Password"
             },
             "link_manual": {
                 "data": {
                     "password": "Password"
                 },
-                "description": "The password could not be retrieved from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
+                "description": "The password could not be retrieved from the device automatically. Please make sure that the iRobot app is not open on any device while trying to retrieve the password. Please follow the steps outlined in the documentation at: {auth_help_url}",
                 "title": "Enter Password"
             },
             "manual": {
                 "data": {
-                    "blid": "BLID",
                     "host": "Host"
                 },
                 "description": "No Roomba or Braava have been discovered on your network.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "Continuous",
-                    "delay": "Delay",
-                    "host": "Host",
-                    "password": "Password"
+                    "host": "Host"
                 },
                 "description": "Select a Roomba or Braava.",
                 "title": "Automatically connect to the device"

@@ -15,56 +15,25 @@
                 "data": {
                     "entities": "Medlemmer",
                     "hide_members": "Skjul medlemmer",
-                    "name": "Navn",
-                    "title": "Legg til gruppe"
+                    "name": "Navn"
                 },
-                "description": "Velg gruppealternativer",
                 "title": "Legg til gruppe"
-            },
-            "cover_options": {
-                "data": {
-                    "entities": "Gruppemedlemmer"
-                },
-                "description": "Velg gruppealternativer"
             },
             "fan": {
                 "data": {
                     "entities": "Medlemmer",
                     "hide_members": "Skjul medlemmer",
-                    "name": "Navn",
-                    "title": "Legg til gruppe"
+                    "name": "Navn"
                 },
-                "description": "Velg gruppealternativer",
                 "title": "Legg til gruppe"
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "Gruppemedlemmer"
-                },
-                "description": "Velg gruppealternativer"
-            },
-            "init": {
-                "data": {
-                    "group_type": "Gruppetype"
-                },
-                "description": "Velg gruppetype"
             },
             "light": {
                 "data": {
-                    "all": "Alle enheter",
                     "entities": "Medlemmer",
                     "hide_members": "Skjul medlemmer",
-                    "name": "Navn",
-                    "title": "Legg til gruppe"
+                    "name": "Navn"
                 },
-                "description": "Hvis \"alle enheter\" er aktivert, er gruppens tilstand p\u00e5 bare hvis alle medlemmene er p\u00e5. Hvis \"alle enheter\" er deaktivert, er gruppens tilstand p\u00e5 hvis et medlem er p\u00e5.",
                 "title": "Legg til gruppe"
-            },
-            "light_options": {
-                "data": {
-                    "entities": "Gruppemedlemmer"
-                },
-                "description": "Velg gruppealternativer"
             },
             "lock": {
                 "data": {
@@ -78,17 +47,9 @@
                 "data": {
                     "entities": "Medlemmer",
                     "hide_members": "Skjul medlemmer",
-                    "name": "Navn",
-                    "title": "Legg til gruppe"
+                    "name": "Navn"
                 },
-                "description": "Velg gruppealternativer",
                 "title": "Legg til gruppe"
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "Gruppemedlemmer"
-                },
-                "description": "Velg gruppealternativer"
             },
             "switch": {
                 "data": {
@@ -99,9 +60,6 @@
                 "title": "Legg til gruppe"
             },
             "user": {
-                "data": {
-                    "group_type": "Gruppetype"
-                },
                 "description": "Grupper lar deg opprette en ny enhet som representerer flere enheter av samme type.",
                 "menu_options": {
                     "binary_sensor": "Bin\u00e6r sensorgruppe",
@@ -126,32 +84,16 @@
                 },
                 "description": "Hvis \"alle enheter\" er aktivert, er gruppens tilstand p\u00e5 bare hvis alle medlemmene er p\u00e5. Hvis \"alle enheter\" er deaktivert, er gruppens tilstand p\u00e5 hvis et medlem er p\u00e5."
             },
-            "binary_sensor_options": {
-                "data": {
-                    "all": "Alle enheter",
-                    "entities": "Medlemmer"
-                }
-            },
             "cover": {
                 "data": {
                     "entities": "Medlemmer",
                     "hide_members": "Skjul medlemmer"
                 }
             },
-            "cover_options": {
-                "data": {
-                    "entities": "Medlemmer"
-                }
-            },
             "fan": {
                 "data": {
                     "entities": "Medlemmer",
                     "hide_members": "Skjul medlemmer"
-                }
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "Medlemmer"
                 }
             },
             "light": {
@@ -161,12 +103,6 @@
                     "hide_members": "Skjul medlemmer"
                 },
                 "description": "Hvis \"alle enheter\" er aktivert, er gruppens tilstand p\u00e5 bare hvis alle medlemmene er p\u00e5. Hvis \"alle enheter\" er deaktivert, er gruppens tilstand p\u00e5 hvis et medlem er p\u00e5."
-            },
-            "light_options": {
-                "data": {
-                    "all": "Alle enheter",
-                    "entities": "Medlemmer"
-                }
             },
             "lock": {
                 "data": {
@@ -178,11 +114,6 @@
                 "data": {
                     "entities": "Medlemmer",
                     "hide_members": "Skjul medlemmer"
-                }
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "Medlemmer"
                 }
             },
             "switch": {

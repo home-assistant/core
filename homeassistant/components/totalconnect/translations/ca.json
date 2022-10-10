@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Ubicaci\u00f3",
                     "usercode": "Codi d'usuari"
                 },
                 "description": "Introdueix el codi de l'usuari en la ubicaci\u00f3 {location_id}",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Bypass autom\u00e0tic de bateria baixa"
                 },
-                "title": "Total Connect"
+                "description": "Bypass autom\u00e0tic de les zones que informin de bateria baixa.",
+                "title": "Opcions de TotalConnect"
             }
         }
     }

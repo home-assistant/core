@@ -1,9 +1,18 @@
 {
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u05e9\u05dd"
+                }
+            }
+        }
+    },
     "options": {
         "step": {
-            "options": {
-                "data_description": {
-                    "unit_prefix": "."
+            "init": {
+                "data": {
+                    "name": "\u05e9\u05dd"
                 }
             }
         }

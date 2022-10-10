@@ -1,7 +1,7 @@
 """Tests for the Canary integration."""
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from canary.api import SensorType
+from canary.model import SensorType
 
 from homeassistant.components.canary.const import (
     CONF_FFMPEG_ARGUMENTS,

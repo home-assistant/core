@@ -79,7 +79,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     ),
     WhoisSensorEntityDescription(
         key="days_until_expiration",
-        name="Days Until Expiration",
+        name="Days until expiration",
         icon="mdi:calendar-clock",
         native_unit_of_measurement=TIME_DAYS,
         value_fn=_days_until_expiration,
@@ -93,7 +93,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     ),
     WhoisSensorEntityDescription(
         key="last_updated",
-        name="Last Updated",
+        name="Last updated",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda domain: _ensure_timezone(domain.last_updated),
@@ -156,6 +156,7 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
     """Implementation of a WHOIS sensor."""
 
     entity_description: WhoisSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -166,10 +167,10 @@ class WhoisSensorEntity(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self._attr_name = f"{domain} {description.name}"
         self._attr_unique_id = f"{domain}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, domain)},
+            name=domain,
             entry_type=DeviceEntryType.SERVICE,
         )
         self._domain = domain

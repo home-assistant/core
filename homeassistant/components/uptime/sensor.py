@@ -12,7 +12,10 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -36,6 +39,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the uptime sensor platform."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "removed_yaml",
+        breaks_in_ha_version="2022.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="removed_yaml",
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -58,10 +70,15 @@ class UptimeSensor(SensorEntity):
     """Representation of an uptime sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the uptime sensor."""
-        self._attr_name = entry.title
         self._attr_native_value = dt_util.utcnow()
         self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            name=entry.title,
+            identifiers={(DOMAIN, entry.entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )

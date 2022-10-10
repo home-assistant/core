@@ -2,13 +2,10 @@
     "config": {
         "abort": {
             "latitude_longitude_not_defined": "Breedte- en lengtegraad zijn niet gedefinieerd in Home Assistant.",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "step": {
             "user": {
-                "data": {
-                    "show_on_map": "Op kaart tonen?"
-                },
                 "description": "Wilt u International Space Station configureren?"
             }
         }

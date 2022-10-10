@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Vennligst oppdater passordet ditt for {email}",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "user": {
+                "data": {
+                    "email": "E-post",
+                    "password": "Passord"
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfigurering av Skybell med YAML er fjernet. \n\n Din eksisterende YAML-konfigurasjon brukes ikke av Home Assistant. \n\n Fjern YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "title": "Skybell YAML-konfigurasjonen er fjernet"
+        }
+    }
+}

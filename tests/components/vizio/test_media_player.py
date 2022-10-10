@@ -21,6 +21,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -37,7 +38,6 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
     MediaPlayerDeviceClass,
 )
-from homeassistant.components.media_player.const import ATTR_INPUT_SOURCE_LIST
 from homeassistant.components.vizio import validate_apps
 from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,

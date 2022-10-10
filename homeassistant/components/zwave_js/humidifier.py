@@ -11,17 +11,16 @@ from zwave_js_server.const.command_class.humidity_control import (
     HumidityControlMode,
     HumidityControlSetpointType,
 )
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.humidifier import (
-    HumidifierDeviceClass,
-    HumidifierEntity,
-    HumidifierEntityDescription,
-)
-from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
+    HumidifierDeviceClass,
+    HumidifierEntity,
+    HumidifierEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -31,6 +30,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass
@@ -83,6 +84,8 @@ async def async_setup_entry(
     @callback
     def async_add_humidifier(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Humidifier."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
 
         if (
@@ -91,7 +94,7 @@ async def async_setup_entry(
         ):
             entities.append(
                 ZWaveHumidifier(
-                    config_entry, client, info, HUMIDIFIER_ENTITY_DESCRIPTION
+                    config_entry, driver, info, HUMIDIFIER_ENTITY_DESCRIPTION
                 )
             )
 
@@ -101,7 +104,7 @@ async def async_setup_entry(
         ):
             entities.append(
                 ZWaveHumidifier(
-                    config_entry, client, info, DEHUMIDIFIER_ENTITY_DESCRIPTION
+                    config_entry, driver, info, DEHUMIDIFIER_ENTITY_DESCRIPTION
                 )
             )
 
@@ -126,12 +129,12 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
         description: ZwaveHumidifierEntityDescription,
     ) -> None:
         """Initialize humidifier."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
 
         self.entity_description = description
 

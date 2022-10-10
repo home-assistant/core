@@ -9,12 +9,11 @@
                     "entity_id": "Invoer sensor",
                     "hysteresis": "Hyseterise",
                     "lower": "Ondergrens",
-                    "mode": "Drempelmodus",
                     "name": "Naam",
                     "upper": "Bovengrens"
                 },
                 "description": "Maak een binaire sensor die aan en uit gaat afhankelijk van de waarde van een sensor\n\nAlleen ondergrens geconfigureerd - Schakelt in wanneer de waarde van de ingangssensor kleiner is dan de ondergrens.\nAlleen bovengrens geconfigureerd - Schakelt in wanneer de waarde van de ingangssensor groter is dan de bovengrens.\nZowel ondergrens als bovengrens ingesteld - Schakelt in wanneer de waarde van de ingangssensor binnen het bereik [ondergrens ... bovengrens] ligt.",
-                "title": "Drempelsensor toevoegen"
+                "title": "Drempelwaardesensor toevoegen"
             }
         }
     },
@@ -28,7 +27,6 @@
                     "entity_id": "Invoer sensor",
                     "hysteresis": "Hyseterise",
                     "lower": "Ondergrens",
-                    "mode": "Drempelmodus",
                     "name": "Naam",
                     "upper": "Bovengrens"
                 },
@@ -36,5 +34,5 @@
             }
         }
     },
-    "title": "Drempelsensor"
+    "title": "Drempelwaardesensor"
 }

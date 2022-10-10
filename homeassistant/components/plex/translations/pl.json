@@ -35,14 +35,12 @@
                 "title": "Wybierz serwer Plex"
             },
             "user": {
-                "description": "Przejd\u017a do [plex.tv](https://plex.tv), aby po\u0142\u0105czy\u0107 serwer Plex.",
-                "title": "Serwer medi\u00f3w Plex"
+                "description": "Przejd\u017a do [plex.tv](https://plex.tv), aby po\u0142\u0105czy\u0107 serwer Plex."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Metoda konfiguracji"
-                },
-                "title": "Serwer medi\u00f3w Plex"
+                }
             }
         }
     },

@@ -41,7 +41,7 @@
             "dts_neo6_cinema": "DTS Neo:6 Cin\u00e9ma",
             "dts_neo6_music": "DTS Neo:6 Musique",
             "dts_neural_x": "DTS Neural:X",
-            "toggle": "Permuter"
+            "toggle": "Basculer"
         },
         "yamaha_musiccast__zone_tone_control_mode": {
             "auto": "Auto",

@@ -23,11 +23,11 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    CONF_API_KEY,
     CONF_NAME,
     IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_KILOMETERS,
-    LENGTH_METERS,
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_HPA,
@@ -38,7 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
-from homeassistant.util.distance import convert as distance_convert
+from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
@@ -112,14 +112,14 @@ SENSOR_TYPES = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    # Data comes in as inHg
+    # Data comes in as hPa
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRESSURE_SURFACE_LEVEL,
         name="Pressure (Surface Level)",
         native_unit_of_measurement=PRESSURE_HPA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
-    # Data comes in as BTUs/(hr * ft^2)
+    # Data comes in as W/m^2, convert to BTUs/(hr * ft^2) for imperial
     # https://www.theunitconverter.com/watt-square-meter-to-btu-hour-square-foot-conversion/
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_SOLAR_GHI,
@@ -128,23 +128,23 @@ SENSOR_TYPES = (
         unit_metric=IRRADIATION_WATTS_PER_SQUARE_METER,
         imperial_conversion=(1 / 3.15459),
     ),
-    # Data comes in as miles
+    # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_BASE,
         name="Cloud Base",
         unit_imperial=LENGTH_MILES,
         unit_metric=LENGTH_KILOMETERS,
-        imperial_conversion=lambda val: distance_convert(
+        imperial_conversion=lambda val: DistanceConverter.convert(
             val, LENGTH_KILOMETERS, LENGTH_MILES
         ),
     ),
-    # Data comes in as miles
+    # Data comes in as km, convert to miles for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CLOUD_CEILING,
         name="Cloud Ceiling",
         unit_imperial=LENGTH_MILES,
         unit_metric=LENGTH_KILOMETERS,
-        imperial_conversion=lambda val: distance_convert(
+        imperial_conversion=lambda val: DistanceConverter.convert(
             val, LENGTH_KILOMETERS, LENGTH_MILES
         ),
     ),
@@ -153,16 +153,15 @@ SENSOR_TYPES = (
         name="Cloud Cover",
         native_unit_of_measurement=PERCENTAGE,
     ),
-    # Data comes in as MPH
+    # Data comes in as m/s, convert to mi/h for imperial
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_WIND_GUST,
         name="Wind Gust",
         unit_imperial=SPEED_MILES_PER_HOUR,
         unit_metric=SPEED_METERS_PER_SECOND,
-        imperial_conversion=lambda val: distance_convert(
-            val, LENGTH_METERS, LENGTH_MILES
-        )
-        * 3600,
+        imperial_conversion=lambda val: SpeedConverter.convert(
+            val, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR
+        ),
     ),
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_PRECIPITATION_TYPE,
@@ -171,7 +170,7 @@ SENSOR_TYPES = (
         device_class="tomorrowio__precipitation_type",
         icon="mdi:weather-snowy-rainy",
     ),
-    # Data comes in as ppb
+    # Data comes in as ppb, convert to µg/m^3
     # Molecular weight of Ozone is 48
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_OZONE,
@@ -192,7 +191,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
     ),
-    # Data comes in as ppb
+    # Data comes in as ppb, convert to µg/m^3
     # Molecular weight of Nitrogen Dioxide is 46.01
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_NITROGEN_DIOXIDE,
@@ -201,7 +200,7 @@ SENSOR_TYPES = (
         multiplication_factor=convert_ppb_to_ugm3(46.01),
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
     ),
-    # Data comes in as ppb
+    # Data comes in as ppb, convert to ppm
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_CARBON_MONOXIDE,
         name="Carbon Monoxide",
@@ -209,6 +208,7 @@ SENSOR_TYPES = (
         multiplication_factor=1 / 1000,
         device_class=SensorDeviceClass.CO,
     ),
+    # Data comes in as ppb, convert to µg/m^3
     # Molecular weight of Sulphur Dioxide is 64.07
     TomorrowioSensorEntityDescription(
         key=TMRW_ATTR_SULPHUR_DIOXIDE,
@@ -286,7 +286,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
     entities = [
         TomorrowioSensorEntity(hass, config_entry, coordinator, 4, description)
         for description in SENSOR_TYPES

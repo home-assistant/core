@@ -19,6 +19,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -431,3 +433,40 @@ async def test_setup_query_params(hass):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all("binary_sensor")) == 1
+
+
+@respx.mock
+async def test_entity_config(hass: HomeAssistant) -> None:
+    """Test entity configuration."""
+
+    config = {
+        Platform.BINARY_SENSOR: {
+            # REST configuration
+            "platform": "rest",
+            "method": "GET",
+            "resource": "http://localhost",
+            # Entity configuration
+            "icon": "{{'mdi:one_two_three'}}",
+            "picture": "{{'blabla.png'}}",
+            "name": "{{'REST' + ' ' + 'Binary Sensor'}}",
+            "unique_id": "very_unique",
+        },
+    }
+
+    respx.get("http://localhost") % HTTPStatus.OK
+    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    assert (
+        entity_registry.async_get("binary_sensor.rest_binary_sensor").unique_id
+        == "very_unique"
+    )
+
+    state = hass.states.get("binary_sensor.rest_binary_sensor")
+    assert state.state == "off"
+    assert state.attributes == {
+        "entity_picture": "blabla.png",
+        "friendly_name": "REST Binary Sensor",
+        "icon": "mdi:one_two_three",
+    }

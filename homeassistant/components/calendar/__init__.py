@@ -14,6 +14,7 @@ from homeassistant.components import frontend, http
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -31,10 +32,12 @@ DOMAIN = "calendar"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[CalendarEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -51,13 +54,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -130,32 +133,6 @@ def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
     return {"date": dt_or_d.isoformat()}
 
 
-def normalize_event(event: dict[str, Any]) -> dict[str, Any]:
-    """Normalize a calendar event."""
-    normalized_event: dict[str, Any] = {}
-
-    start = event.get("start")
-    end = event.get("end")
-    start = get_date(start) if start is not None else None
-    end = get_date(end) if end is not None else None
-    normalized_event["dt_start"] = start
-    normalized_event["dt_end"] = end
-
-    start = start.strftime(DATE_STR_FORMAT) if start is not None else None
-    end = end.strftime(DATE_STR_FORMAT) if end is not None else None
-    normalized_event["start"] = start
-    normalized_event["end"] = end
-
-    # cleanup the string so we don't have a bunch of double+ spaces
-    summary = event.get("summary", "")
-    normalized_event["message"] = re.sub("  +", "", summary).strip()
-    normalized_event["location"] = event.get("location", "")
-    normalized_event["description"] = event.get("description", "")
-    normalized_event["all_day"] = "date" in event["start"]
-
-    return normalized_event
-
-
 def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.timedelta]:
     """Extract the offset from the event summary.
 
@@ -188,70 +165,6 @@ def is_offset_reached(
     return start + offset_time <= dt.now(start.tzinfo)
 
 
-class CalendarEventDevice(Entity):
-    """Legacy API for calendar event entities."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "CalendarEventDevice is deprecated, modify %s to extend CalendarEntity",
-            cls.__name__,
-        )
-
-    @property
-    def event(self) -> dict[str, Any] | None:
-        """Return the next upcoming event."""
-        raise NotImplementedError()
-
-    @final
-    @property
-    def state_attributes(self) -> dict[str, Any] | None:
-        """Return the entity state attributes."""
-
-        if (event := self.event) is None:
-            return None
-
-        event = normalize_event(event)
-        return {
-            "message": event["message"],
-            "all_day": event["all_day"],
-            "start_time": event["start"],
-            "end_time": event["end"],
-            "location": event["location"],
-            "description": event["description"],
-        }
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the calendar event."""
-        if (event := self.event) is None:
-            return STATE_OFF
-
-        event = normalize_event(event)
-        start = event["dt_start"]
-        end = event["dt_end"]
-
-        if start is None or end is None:
-            return STATE_OFF
-
-        now = dt.now()
-
-        if start <= now < end:
-            return STATE_ON
-
-        return STATE_OFF
-
-    async def async_get_events(
-        self,
-        hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
-    ) -> list[dict[str, Any]]:
-        """Return calendar events within a datetime range."""
-        raise NotImplementedError()
-
-
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
@@ -276,8 +189,9 @@ class CalendarEntity(Entity):
             "description": event.description if event.description else "",
         }
 
+    @final
     @property
-    def state(self) -> str | None:
+    def state(self) -> str:
         """Return the state of the calendar event."""
         if (event := self.event) is None:
             return STATE_OFF
@@ -305,16 +219,20 @@ class CalendarEventView(http.HomeAssistantView):
     url = "/api/calendars/{entity_id}"
     name = "api:calendars:calendar"
 
-    def __init__(self, component: EntityComponent) -> None:
+    def __init__(self, component: EntityComponent[CalendarEntity]) -> None:
         """Initialize calendar view."""
         self.component = component
 
     async def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Return calendar events."""
-        entity = self.component.get_entity(entity_id)
+        if not (entity := self.component.get_entity(entity_id)) or not isinstance(
+            entity, CalendarEntity
+        ):
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
+
         start = request.query.get("start")
         end = request.query.get("end")
-        if start is None or end is None or entity is None:
+        if start is None or end is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
         try:
             start_date = dt.parse_datetime(start)
@@ -324,23 +242,20 @@ class CalendarEventView(http.HomeAssistantView):
         if start_date is None or end_date is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        # Compatibility shim for old API
-        if isinstance(entity, CalendarEventDevice):
-            event_list = await entity.async_get_events(
+        try:
+            calendar_event_list = await entity.async_get_events(
                 request.app["hass"], start_date, end_date
             )
-            return self.json(event_list)
-
-        if not isinstance(entity, CalendarEntity):
-            return web.Response(status=HTTPStatus.BAD_REQUEST)
-
-        calendar_event_list = await entity.async_get_events(
-            request.app["hass"], start_date, end_date
-        )
+        except HomeAssistantError as err:
+            return self.json_message(
+                f"Error reading events: {err}", HTTPStatus.INTERNAL_SERVER_ERROR
+            )
         return self.json(
             [
                 {
                     "summary": event.summary,
+                    "description": event.description,
+                    "location": event.location,
                     "start": _get_api_date(event.start),
                     "end": _get_api_date(event.end),
                 }
@@ -355,7 +270,7 @@ class CalendarListView(http.HomeAssistantView):
     url = "/api/calendars"
     name = "api:calendars"
 
-    def __init__(self, component: EntityComponent) -> None:
+    def __init__(self, component: EntityComponent[CalendarEntity]) -> None:
         """Initialize calendar view."""
         self.component = component
 

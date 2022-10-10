@@ -51,7 +51,7 @@ async def test_remaining_filter_returns_timestamp(
     """Test that the remaining time for filter sensor returns a timestamp."""
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=dt.now().date(),
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -68,7 +68,7 @@ async def test_remaining_time_for_filter_none_returned_from_vallox(
     """Test that the remaining time for filter sensor returns 'unknown' when Vallox returns None."""
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=None,
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -98,7 +98,7 @@ async def test_remaining_time_for_filter_in_the_future(
 
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=mocked_filter_end_date,
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -122,7 +122,7 @@ async def test_remaining_time_for_filter_today(
 
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=mocked_filter_end_date,
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -146,7 +146,7 @@ async def test_remaining_time_for_filter_in_the_past(
 
     # Act
     with patch(
-        "homeassistant.components.vallox.calculate_next_filter_change_date",
+        "homeassistant.components.vallox._api_get_next_filter_change_date",
         return_value=mocked_filter_end_date,
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)

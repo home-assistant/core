@@ -27,14 +27,6 @@
                 "data_description": {
                     "round_digits": "M\u00e4\u00e4rab k\u00fcmnendkohtade arvu v\u00e4ljundis kui statistika tunnus on keskmine v\u00f5i mediaan."
                 }
-            },
-            "options": {
-                "data": {
-                    "entity_ids": "Sisendolemid",
-                    "round_digits": "T\u00e4psus",
-                    "type": "Statistiline tunnus"
-                },
-                "description": "T\u00e4psus kontrollib k\u00fcmnendnumbrite arvu kui statistika tunnus on keskmine v\u00f5i mediaan."
             }
         }
     },

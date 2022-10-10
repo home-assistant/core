@@ -8,7 +8,6 @@ import ipaddress
 import logging
 import os
 from typing import Any, cast
-from uuid import UUID
 
 from aiohttp import web
 from pyhap.const import STANDALONE_AID
@@ -24,7 +23,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.network.const import MDNS_TARGET_IP
+from homeassistant.components.network import MDNS_TARGET_IP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -46,7 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry, entity_registry, instance_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
@@ -54,7 +53,10 @@ from homeassistant.helpers.entityfilter import (
     EntityFilter,
 )
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.service import (
+    async_extract_referenced_entity_ids,
+    async_register_admin_service,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -191,14 +193,21 @@ def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
     ]
 
 
-def _async_get_entries_by_name(
+def _async_get_imported_entries_indices(
     current_entries: list[ConfigEntry],
-) -> dict[str, ConfigEntry]:
-    """Return a dict of the entries by name."""
+) -> tuple[dict[str, ConfigEntry], dict[int, ConfigEntry]]:
+    """Return a dicts of the entries by name and port."""
 
     # For backwards compat, its possible the first bridge is using the default
     # name.
-    return {entry.data.get(CONF_NAME, BRIDGE_NAME): entry for entry in current_entries}
+    entries_by_name: dict[str, ConfigEntry] = {}
+    entries_by_port: dict[int, ConfigEntry] = {}
+    for entry in current_entries:
+        if entry.source != SOURCE_IMPORT:
+            continue
+        entries_by_name[entry.data.get(CONF_NAME, BRIDGE_NAME)] = entry
+        entries_by_port[entry.data.get(CONF_PORT, DEFAULT_PORT)] = entry
+    return entries_by_name, entries_by_port
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -216,10 +225,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     current_entries = hass.config_entries.async_entries(DOMAIN)
-    entries_by_name = _async_get_entries_by_name(current_entries)
+    entries_by_name, entries_by_port = _async_get_imported_entries_indices(
+        current_entries
+    )
 
     for index, conf in enumerate(config[DOMAIN]):
-        if _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf):
+        if _async_update_config_entry_from_yaml(
+            hass, entries_by_name, entries_by_port, conf
+        ):
             continue
 
         conf[CONF_ENTRY_INDEX] = index
@@ -235,8 +248,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def _async_update_config_entry_if_from_yaml(
-    hass: HomeAssistant, entries_by_name: dict[str, ConfigEntry], conf: ConfigType
+def _async_update_config_entry_from_yaml(
+    hass: HomeAssistant,
+    entries_by_name: dict[str, ConfigEntry],
+    entries_by_port: dict[int, ConfigEntry],
+    conf: ConfigType,
 ) -> bool:
     """Update a config entry with the latest yaml.
 
@@ -244,27 +260,24 @@ def _async_update_config_entry_if_from_yaml(
 
     Returns False if there is no matching config entry
     """
-    bridge_name = conf[CONF_NAME]
-
-    if (
-        bridge_name in entries_by_name
-        and entries_by_name[bridge_name].source == SOURCE_IMPORT
+    if not (
+        matching_entry := entries_by_name.get(conf.get(CONF_NAME, BRIDGE_NAME))
+        or entries_by_port.get(conf.get(CONF_PORT, DEFAULT_PORT))
     ):
-        entry = entries_by_name[bridge_name]
-        # If they alter the yaml config we import the changes
-        # since there currently is no practical way to support
-        # all the options in the UI at this time.
-        data = conf.copy()
-        options = {}
-        for key in CONFIG_OPTIONS:
-            if key in data:
-                options[key] = data[key]
-                del data[key]
+        return False
 
-        hass.config_entries.async_update_entry(entry, data=data, options=options)
-        return True
+    # If they alter the yaml config we import the changes
+    # since there currently is no practical way to support
+    # all the options in the UI at this time.
+    data = conf.copy()
+    options = {}
+    for key in CONFIG_OPTIONS:
+        if key in data:
+            options[key] = data[key]
+            del data[key]
 
-    return False
+    hass.config_entries.async_update_entry(matching_entry, data=data, options=options)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -449,10 +462,14 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
             return
 
         current_entries = hass.config_entries.async_entries(DOMAIN)
-        entries_by_name = _async_get_entries_by_name(current_entries)
+        entries_by_name, entries_by_port = _async_get_imported_entries_indices(
+            current_entries
+        )
 
         for conf in config[DOMAIN]:
-            _async_update_config_entry_if_from_yaml(hass, entries_by_name, conf)
+            _async_update_config_entry_from_yaml(
+                hass, entries_by_name, entries_by_port, conf
+            )
 
         reload_tasks = [
             hass.config_entries.async_reload(entry.entry_id)
@@ -461,7 +478,8 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
 
         await asyncio.gather(*reload_tasks)
 
-    hass.helpers.service.async_register_admin_service(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RELOAD,
         _handle_homekit_reload,
@@ -486,7 +504,7 @@ class HomeKit:
         advertise_ip: str | None,
         entry_id: str,
         entry_title: str,
-        devices: Iterable[str] | None = None,
+        devices: list[str] | None = None,
     ) -> None:
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -506,7 +524,7 @@ class HomeKit:
 
         self.bridge: HomeBridge | None = None
 
-    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: UUID) -> None:
+    def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> None:
         """Set up bridge and accessory driver."""
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
@@ -722,7 +740,7 @@ class HomeKit:
             return
         self.status = STATUS_WAIT
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
-        uuid = await self.hass.helpers.instance_id.async_get()
+        uuid = await instance_id.async_get(self.hass)
         await self.hass.async_add_executor_job(self.setup, async_zc_instance, uuid)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()

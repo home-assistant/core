@@ -140,7 +140,7 @@ class TwinklyLight(LightEntity):
 
         return attributes
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(int(kwargs[ATTR_BRIGHTNESS]) / 2.55)
@@ -183,7 +183,7 @@ class TwinklyLight(LightEntity):
         if not self._is_on:
             await self._client.turn_on()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self._client.turn_off()
 

@@ -5,7 +5,7 @@
             "no_devices_found": "Geen apparaten gevonden op het netwerk"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "{model} {id} ({host})",
         "step": {
@@ -34,8 +34,7 @@
                     "save_on_change": "Bewaar status bij wijziging",
                     "transition": "Overgangstijd (ms)",
                     "use_music_mode": "Schakel de muziekmodus in"
-                },
-                "description": "Als u model leeg laat, wordt het automatisch gedetecteerd."
+                }
             }
         }
     }

@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "no_stations": "Nem tal\u00e1lhat\u00f3 \u00e1llom\u00e1s a hat\u00f3t\u00e1vols\u00e1gon bel\u00fcl."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API kulcs"
+                }
+            },
             "select_station": {
                 "data": {
                     "stations": "\u00c1llom\u00e1sok"
@@ -32,7 +38,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Friss\u00edt\u00e9si id\u0151k\u00f6z",
-                    "show_on_map": "\u00c1llom\u00e1sok megjelen\u00edt\u00e9se a t\u00e9rk\u00e9pen"
+                    "show_on_map": "\u00c1llom\u00e1sok megjelen\u00edt\u00e9se a t\u00e9rk\u00e9pen",
+                    "stations": "\u00c1llom\u00e1sok"
                 },
                 "title": "Tankerkoenig be\u00e1ll\u00edt\u00e1sok"
             }

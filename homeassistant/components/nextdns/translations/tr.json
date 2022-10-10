@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bu NextDNS profili zaten yap\u0131land\u0131r\u0131lm\u0131\u015f."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "profiles": {
+                "data": {
+                    "profile": "Profil"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                }
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Eri\u015fim sunucusu"
+        }
+    }
+}

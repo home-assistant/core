@@ -128,6 +128,17 @@ async def test_bad_command(hass: HomeAssistant) -> None:
     assert entity_state.state == "unknown"
 
 
+async def test_return_code(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+    """Test that an error return code is logged."""
+    await setup_test_entities(
+        hass,
+        {
+            "command": "exit 33",
+        },
+    )
+    assert "return code 33" in caplog.text
+
+
 async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     """Test attributes get extracted from a JSON result."""
     await setup_test_entities(

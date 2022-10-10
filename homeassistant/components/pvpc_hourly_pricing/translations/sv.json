@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Sensornamn",
+                    "power": "Kontrakterad effekt (kW)",
+                    "power_p3": "Kontrakterad effekt f\u00f6r dalperiod P3 (kW)",
+                    "tariff": "Till\u00e4mplig taxa per geografisk zon"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "power": "Kontrakterad effekt (kW)",
+                    "power_p3": "Kontrakterad effekt f\u00f6r dalperiod P3 (kW)",
+                    "tariff": "Till\u00e4mplig taxa per geografisk zon"
+                }
+            }
+        }
+    }
+}

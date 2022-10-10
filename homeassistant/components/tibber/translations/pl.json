@@ -13,8 +13,7 @@
                 "data": {
                     "access_token": "Token dost\u0119pu"
                 },
-                "description": "Wprowad\u017a token dost\u0119pu z https://developer.tibber.com/settings/accesstoken",
-                "title": "Tibber"
+                "description": "Wprowad\u017a token dost\u0119pu z https://developer.tibber.com/settings/accesstoken"
             }
         }
     }

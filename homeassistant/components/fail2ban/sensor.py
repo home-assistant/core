@@ -84,7 +84,7 @@ class BanSensor(SensorEntity):
         """Return the most recently banned IP Address."""
         return self.last_ban
 
-    def update(self):
+    def update(self) -> None:
         """Update the list of banned ips."""
         self.log_parser.read_log(self.jail)
 

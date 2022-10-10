@@ -17,8 +17,7 @@
                 "data": {
                     "host": "Sunucu",
                     "port": "Port"
-                },
-                "title": "Freebox"
+                }
             }
         }
     }

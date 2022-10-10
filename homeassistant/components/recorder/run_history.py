@@ -9,7 +9,8 @@ from sqlalchemy.orm.session import Session
 
 import homeassistant.util.dt as dt_util
 
-from .models import RecorderRuns, process_timestamp
+from .db_schema import RecorderRuns
+from .models import process_timestamp
 
 
 def _find_recorder_run_for_start_time(
@@ -52,6 +53,13 @@ class RunHistory:
     def recording_start(self) -> datetime:
         """Return the time the recorder started recording states."""
         return self._recording_start
+
+    @property
+    def first(self) -> RecorderRuns:
+        """Get the first run."""
+        if runs_by_timestamp := self._run_history.runs_by_timestamp:
+            return next(iter(runs_by_timestamp.values()))
+        return self.current
 
     @property
     def current(self) -> RecorderRuns:

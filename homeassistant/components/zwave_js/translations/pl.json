@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Klucz sieci",
                     "s0_legacy_key": "Klucz S0 (Legacy)",
                     "s2_access_control_key": "Klucz kontroli dost\u0119pu S2",
                     "s2_authenticated_key": "Klucz uwierzytelniony S2",
@@ -92,6 +91,12 @@
             "zwave_js.value_updated.value": "zmieni si\u0119 warto\u015b\u0107 na Z-Wave JS"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "Aktualnie uruchomiona wersja serwera Z-Wave JS jest za stara dla tej wersji Home Assistanta. Zaktualizuj serwer Z-Wave JS do najnowszej wersji, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Wymagana nowsza wersja serwera Z-Wave JS"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Nie uda\u0142o si\u0119 uzyska\u0107 informacji wykrywania dodatku Z-Wave JS",
@@ -117,7 +122,6 @@
                 "data": {
                     "emulate_hardware": "Emulacja sprz\u0119tu",
                     "log_level": "Poziom loga",
-                    "network_key": "Klucz sieci",
                     "s0_legacy_key": "Klucz S0 (Legacy)",
                     "s2_access_control_key": "Klucz kontroli dost\u0119pu S2",
                     "s2_authenticated_key": "Klucz uwierzytelniony S2",
@@ -146,6 +150,5 @@
                 "title": "Dodatek Z-Wave JS uruchamia si\u0119..."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

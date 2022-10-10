@@ -4,6 +4,7 @@
       "transmitter": "transmitter code received",
       "transponder": "transponder code received",
       "fingerprint": "fingerprint code received",
+      "codelock": "code lock code received",
       "send_keys": "send keys received"
     }
   }

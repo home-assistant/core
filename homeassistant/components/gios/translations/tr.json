@@ -14,7 +14,6 @@
                     "name": "Ad",
                     "station_id": "\u00d6l\u00e7\u00fcm istasyonunun kimli\u011fi"
                 },
-                "description": "GIO\u015a (Polonya \u00c7evre Koruma Ba\u015f M\u00fcfetti\u015fli\u011fi) hava kalitesi entegrasyonunu kurun. Yap\u0131land\u0131rmayla ilgili yard\u0131ma ihtiyac\u0131n\u0131z varsa buraya bak\u0131n: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Polonya \u00c7evre Koruma Ba\u015f M\u00fcfetti\u015fli\u011fi)"
             }
         }

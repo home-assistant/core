@@ -5,13 +5,15 @@ from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const.command_class.sound_switch import ToneID
+from zwave_js_server.model.driver import Driver
 
 from homeassistant.components.siren import (
+    ATTR_TONE,
+    ATTR_VOLUME_LEVEL,
     DOMAIN as SIREN_DOMAIN,
     SirenEntity,
     SirenEntityFeature,
 )
-from homeassistant.components.siren.const import ATTR_TONE, ATTR_VOLUME_LEVEL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,6 +22,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -33,8 +37,10 @@ async def async_setup_entry(
     @callback
     def async_add_siren(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave siren entity."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
-        entities.append(ZwaveSirenEntity(config_entry, client, info))
+        entities.append(ZwaveSirenEntity(config_entry, driver, info))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -50,10 +56,10 @@ class ZwaveSirenEntity(ZWaveBaseEntity, SirenEntity):
     """Representation of a Z-Wave siren entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveSirenEntity entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         # Entity class attributes
         self._attr_available_tones = {
             int(id): val for id, val in self.info.primary_value.metadata.states.items()

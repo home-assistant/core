@@ -6,10 +6,19 @@
             "unknown_auth_error": "Errore imprevisto"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Conferma la password per l'account Meater Cloud {username}."
+            },
             "user": {
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"
+                },
+                "data_description": {
+                    "username": "Nome utente di Meater Cloud, tipicamente un indirizzo email"
                 },
                 "description": "Configura il tuo account Meater Cloud."
             }

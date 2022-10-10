@@ -21,18 +21,25 @@ import pytest
 
 from homeassistant import const as ha_const
 from homeassistant.components import ssdp
-from homeassistant.components.dlna_dmr import media_player
 from homeassistant.components.dlna_dmr.const import (
+    CONF_BROWSE_UNFILTERED,
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
     DOMAIN as DLNA_DOMAIN,
 )
 from homeassistant.components.dlna_dmr.data import EventListenAddr
-from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_const
-from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_source.const import DOMAIN as MS_DOMAIN
-from homeassistant.components.media_source.models import PlayMedia
+from homeassistant.components.dlna_dmr.media_player import DlnaDmrEntity
+from homeassistant.components.media_player import (
+    ATTR_TO_PROPERTY,
+    DOMAIN as MP_DOMAIN,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+    const as mp_const,
+)
+from homeassistant.components.media_source import DOMAIN as MS_DOMAIN, PlayMedia
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import async_get as async_get_dr
@@ -222,7 +229,7 @@ async def test_setup_entry_no_options(
         ANY, {"_udn": MOCK_DEVICE_UDN, "NTS": "ssdp:byebye"}
     )
     # Quick check of the state to verify the entity has a connected DmrDevice
-    assert mock_state.state == media_player.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
     # Check the name matches that supplied
     assert mock_state.name == MOCK_DEVICE_NAME
 
@@ -291,7 +298,7 @@ async def test_setup_entry_with_options(
         ANY, {"_udn": MOCK_DEVICE_UDN, "NTS": "ssdp:byebye"}
     )
     # Quick check of the state to verify the entity has a connected DmrDevice
-    assert mock_state.state == media_player.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
     # Check the name matches that supplied
     assert mock_state.name == MOCK_DEVICE_NAME
 
@@ -358,7 +365,7 @@ async def test_event_subscribe_rejected(
     assert mock_state is not None
 
     # Device should be connected
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     # Device should not be unsubscribed
     dmr_device_mock.async_unsubscribe_services.assert_not_awaited()
@@ -384,14 +391,14 @@ async def test_available_device(
 
     # Check entity state gets updated when device changes state
     for (dev_state, ent_state) in [
-        (None, ha_const.STATE_ON),
-        (TransportState.STOPPED, ha_const.STATE_IDLE),
-        (TransportState.PLAYING, ha_const.STATE_PLAYING),
-        (TransportState.TRANSITIONING, ha_const.STATE_PLAYING),
-        (TransportState.PAUSED_PLAYBACK, ha_const.STATE_PAUSED),
-        (TransportState.PAUSED_RECORDING, ha_const.STATE_PAUSED),
-        (TransportState.RECORDING, ha_const.STATE_IDLE),
-        (TransportState.NO_MEDIA_PRESENT, ha_const.STATE_IDLE),
+        (None, MediaPlayerState.ON),
+        (TransportState.STOPPED, MediaPlayerState.IDLE),
+        (TransportState.PLAYING, MediaPlayerState.PLAYING),
+        (TransportState.TRANSITIONING, MediaPlayerState.PLAYING),
+        (TransportState.PAUSED_PLAYBACK, MediaPlayerState.PAUSED),
+        (TransportState.PAUSED_RECORDING, MediaPlayerState.PAUSED),
+        (TransportState.RECORDING, MediaPlayerState.IDLE),
+        (TransportState.NO_MEDIA_PRESENT, MediaPlayerState.IDLE),
         (TransportState.VENDOR_DEFINED, ha_const.STATE_UNKNOWN),
     ]:
         dmr_device_mock.profile_device.available = True
@@ -415,16 +422,19 @@ async def test_feature_flags(
     """Test feature flags of a connected DlnaDmrEntity."""
     # Check supported feature flags, one at a time.
     FEATURE_FLAGS: list[tuple[str, int]] = [
-        ("has_volume_level", mp_const.SUPPORT_VOLUME_SET),
-        ("has_volume_mute", mp_const.SUPPORT_VOLUME_MUTE),
-        ("can_play", mp_const.SUPPORT_PLAY),
-        ("can_pause", mp_const.SUPPORT_PAUSE),
-        ("can_stop", mp_const.SUPPORT_STOP),
-        ("can_previous", mp_const.SUPPORT_PREVIOUS_TRACK),
-        ("can_next", mp_const.SUPPORT_NEXT_TRACK),
-        ("has_play_media", mp_const.SUPPORT_PLAY_MEDIA | mp_const.SUPPORT_BROWSE_MEDIA),
-        ("can_seek_rel_time", mp_const.SUPPORT_SEEK),
-        ("has_presets", mp_const.SUPPORT_SELECT_SOUND_MODE),
+        ("has_volume_level", MediaPlayerEntityFeature.VOLUME_SET),
+        ("has_volume_mute", MediaPlayerEntityFeature.VOLUME_MUTE),
+        ("can_play", MediaPlayerEntityFeature.PLAY),
+        ("can_pause", MediaPlayerEntityFeature.PAUSE),
+        ("can_stop", MediaPlayerEntityFeature.STOP),
+        ("can_previous", MediaPlayerEntityFeature.PREVIOUS_TRACK),
+        ("can_next", MediaPlayerEntityFeature.NEXT_TRACK),
+        (
+            "has_play_media",
+            MediaPlayerEntityFeature.PLAY_MEDIA | MediaPlayerEntityFeature.BROWSE_MEDIA,
+        ),
+        ("can_seek_rel_time", MediaPlayerEntityFeature.SEEK),
+        ("has_presets", MediaPlayerEntityFeature.SELECT_SOUND_MODE),
     ]
 
     # Clear all feature properties
@@ -445,10 +455,10 @@ async def test_feature_flags(
     # shuffle and repeat features depend on the available play modes
     PLAY_MODE_FEATURE_FLAGS: list[tuple[PlayMode, int]] = [
         (PlayMode.NORMAL, 0),
-        (PlayMode.SHUFFLE, mp_const.SUPPORT_SHUFFLE_SET),
-        (PlayMode.REPEAT_ONE, mp_const.SUPPORT_REPEAT_SET),
-        (PlayMode.REPEAT_ALL, mp_const.SUPPORT_REPEAT_SET),
-        (PlayMode.RANDOM, mp_const.SUPPORT_SHUFFLE_SET),
+        (PlayMode.SHUFFLE, MediaPlayerEntityFeature.SHUFFLE_SET),
+        (PlayMode.REPEAT_ONE, MediaPlayerEntityFeature.REPEAT_SET),
+        (PlayMode.REPEAT_ALL, MediaPlayerEntityFeature.REPEAT_SET),
+        (PlayMode.RANDOM, MediaPlayerEntityFeature.SHUFFLE_SET),
         (PlayMode.DIRECT_1, 0),
         (PlayMode.INTRO, 0),
         (PlayMode.VENDOR_DEFINED, 0),
@@ -496,13 +506,13 @@ async def test_attributes(
     # media_content_type is mapped from UPnP class to MediaPlayer type
     dmr_device_mock.media_class = "object.item.audioItem.musicTrack"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_MUSIC
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
     dmr_device_mock.media_class = "object.item.videoItem.movie"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_MOVIE
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == MediaType.MOVIE
     dmr_device_mock.media_class = "object.item.videoItem.videoBroadcast"
     attrs = await get_attrs(hass, mock_entity_id)
-    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == mp_const.MEDIA_TYPE_TVSHOW
+    assert attrs[mp_const.ATTR_MEDIA_CONTENT_TYPE] == MediaType.TVSHOW
 
     # media_season & media_episode have a special case
     dmr_device_mock.media_season_number = "0"
@@ -518,13 +528,13 @@ async def test_attributes(
 
     # shuffle and repeat is based on device's play mode
     for play_mode, shuffle, repeat in [
-        (PlayMode.NORMAL, False, mp_const.REPEAT_MODE_OFF),
-        (PlayMode.SHUFFLE, True, mp_const.REPEAT_MODE_OFF),
-        (PlayMode.REPEAT_ONE, False, mp_const.REPEAT_MODE_ONE),
-        (PlayMode.REPEAT_ALL, False, mp_const.REPEAT_MODE_ALL),
-        (PlayMode.RANDOM, True, mp_const.REPEAT_MODE_ALL),
-        (PlayMode.DIRECT_1, False, mp_const.REPEAT_MODE_OFF),
-        (PlayMode.INTRO, False, mp_const.REPEAT_MODE_OFF),
+        (PlayMode.NORMAL, False, RepeatMode.OFF),
+        (PlayMode.SHUFFLE, True, RepeatMode.OFF),
+        (PlayMode.REPEAT_ONE, False, RepeatMode.ONE),
+        (PlayMode.REPEAT_ALL, False, RepeatMode.ALL),
+        (PlayMode.RANDOM, True, RepeatMode.ALL),
+        (PlayMode.DIRECT_1, False, RepeatMode.OFF),
+        (PlayMode.INTRO, False, RepeatMode.OFF),
     ]:
         dmr_device_mock.play_mode = play_mode
         attrs = await get_attrs(hass, mock_entity_id)
@@ -619,7 +629,7 @@ async def test_play_media_stopped(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
@@ -651,7 +661,7 @@ async def test_play_media_playing(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
         },
@@ -684,7 +694,7 @@ async def test_play_media_no_autoplay(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {"autoplay": False},
@@ -715,7 +725,7 @@ async def test_play_media_metadata(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
@@ -745,7 +755,7 @@ async def test_play_media_metadata(
         mp_const.SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_TVSHOW,
+            mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.TVSHOW,
             mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/123.mkv",
             mp_const.ATTR_MEDIA_ENQUEUE: False,
             mp_const.ATTR_MEDIA_EXTRA: {
@@ -877,21 +887,21 @@ async def test_shuffle_repeat_modes(
 
     # Test repeat with all variations of existing play mode
     for init_mode, repeat_set, expect_mode in [
-        (PlayMode.NORMAL, mp_const.REPEAT_MODE_OFF, PlayMode.NORMAL),
-        (PlayMode.SHUFFLE, mp_const.REPEAT_MODE_OFF, PlayMode.SHUFFLE),
-        (PlayMode.REPEAT_ONE, mp_const.REPEAT_MODE_OFF, PlayMode.NORMAL),
-        (PlayMode.REPEAT_ALL, mp_const.REPEAT_MODE_OFF, PlayMode.NORMAL),
-        (PlayMode.RANDOM, mp_const.REPEAT_MODE_OFF, PlayMode.SHUFFLE),
-        (PlayMode.NORMAL, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.SHUFFLE, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.REPEAT_ONE, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.REPEAT_ALL, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.RANDOM, mp_const.REPEAT_MODE_ONE, PlayMode.REPEAT_ONE),
-        (PlayMode.NORMAL, mp_const.REPEAT_MODE_ALL, PlayMode.REPEAT_ALL),
-        (PlayMode.SHUFFLE, mp_const.REPEAT_MODE_ALL, PlayMode.RANDOM),
-        (PlayMode.REPEAT_ONE, mp_const.REPEAT_MODE_ALL, PlayMode.REPEAT_ALL),
-        (PlayMode.REPEAT_ALL, mp_const.REPEAT_MODE_ALL, PlayMode.REPEAT_ALL),
-        (PlayMode.RANDOM, mp_const.REPEAT_MODE_ALL, PlayMode.RANDOM),
+        (PlayMode.NORMAL, RepeatMode.OFF, PlayMode.NORMAL),
+        (PlayMode.SHUFFLE, RepeatMode.OFF, PlayMode.SHUFFLE),
+        (PlayMode.REPEAT_ONE, RepeatMode.OFF, PlayMode.NORMAL),
+        (PlayMode.REPEAT_ALL, RepeatMode.OFF, PlayMode.NORMAL),
+        (PlayMode.RANDOM, RepeatMode.OFF, PlayMode.SHUFFLE),
+        (PlayMode.NORMAL, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.SHUFFLE, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.REPEAT_ONE, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.REPEAT_ALL, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.RANDOM, RepeatMode.ONE, PlayMode.REPEAT_ONE),
+        (PlayMode.NORMAL, RepeatMode.ALL, PlayMode.REPEAT_ALL),
+        (PlayMode.SHUFFLE, RepeatMode.ALL, PlayMode.RANDOM),
+        (PlayMode.REPEAT_ONE, RepeatMode.ALL, PlayMode.REPEAT_ALL),
+        (PlayMode.REPEAT_ALL, RepeatMode.ALL, PlayMode.REPEAT_ALL),
+        (PlayMode.RANDOM, RepeatMode.ALL, PlayMode.RANDOM),
     ]:
         dmr_device_mock.play_mode = init_mode
         await hass.services.async_call(
@@ -925,7 +935,7 @@ async def test_shuffle_repeat_modes(
         ha_const.SERVICE_REPEAT_SET,
         {
             ATTR_ENTITY_ID: mock_entity_id,
-            mp_const.ATTR_MEDIA_REPEAT: mp_const.REPEAT_MODE_OFF,
+            mp_const.ATTR_MEDIA_REPEAT: RepeatMode.OFF,
         },
         blocking=True,
     )
@@ -997,8 +1007,109 @@ async def test_browse_media(
     # Audio file should appear
     assert expected_child_audio in response["result"]["children"]
 
+    # Device specifies extra parameters in MIME type, uses non-standard "x-"
+    # prefix, and capitilizes things, all of which should be ignored
+    dmr_device_mock.sink_protocol_info = [
+        "http-get:*:audio/X-MPEG;codecs=mp3:*",
+    ]
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": mock_entity_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    # Video file should not be shown
+    assert expected_child_video not in response["result"]["children"]
+    # Audio file should appear
+    assert expected_child_audio in response["result"]["children"]
+
     # Device does not specify what it can play
     dmr_device_mock.sink_protocol_info = []
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": mock_entity_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    # All files should be returned
+    assert expected_child_video in response["result"]["children"]
+    assert expected_child_audio in response["result"]["children"]
+
+
+async def test_browse_media_unfiltered(
+    hass: HomeAssistant,
+    hass_ws_client,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+    mock_entity_id: str,
+) -> None:
+    """Test the async_browse_media method with filtering turned off and on."""
+    # Based on cast's test_entity_browse_media
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    expected_child_video = {
+        "title": "Epic Sax Guy 10 Hours.mp4",
+        "media_class": "video",
+        "media_content_type": "video/mp4",
+        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+        "can_play": True,
+        "can_expand": False,
+        "thumbnail": None,
+        "children_media_class": None,
+    }
+    expected_child_audio = {
+        "title": "test.mp3",
+        "media_class": "music",
+        "media_content_type": "audio/mpeg",
+        "media_content_id": "media-source://media_source/local/test.mp3",
+        "can_play": True,
+        "can_expand": False,
+        "thumbnail": None,
+        "children_media_class": None,
+    }
+
+    # Device can only play MIME type audio/mpeg and audio/vorbis
+    dmr_device_mock.sink_protocol_info = [
+        "http-get:*:audio/mpeg:*",
+        "http-get:*:audio/vorbis:*",
+    ]
+
+    # Filtering turned on by default
+    assert CONF_BROWSE_UNFILTERED not in config_entry_mock.options
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": mock_entity_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    # Video file should not be shown
+    assert expected_child_video not in response["result"]["children"]
+    # Audio file should appear
+    assert expected_child_audio in response["result"]["children"]
+
+    # Filtering turned off via config entry
+    hass.config_entries.async_update_entry(
+        config_entry_mock,
+        options={
+            CONF_BROWSE_UNFILTERED: True,
+        },
+    )
+    await hass.async_block_till_done()
+
     client = await hass_ws_client()
     await client.send_json(
         {
@@ -1124,7 +1235,7 @@ async def test_unavailable_device(
         (
             mp_const.SERVICE_PLAY_MEDIA,
             {
-                mp_const.ATTR_MEDIA_CONTENT_TYPE: mp_const.MEDIA_TYPE_MUSIC,
+                mp_const.ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 mp_const.ATTR_MEDIA_CONTENT_ID: "http://192.88.99.20:8200/MediaItems/17621.mp3",
                 mp_const.ATTR_MEDIA_ENQUEUE: False,
             },
@@ -1216,7 +1327,7 @@ async def test_become_available(
     # Quick check of the state to verify the entity has a connected DmrDevice
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
     # Check hass device information is now filled in
     dev_reg = async_get_dr(hass)
     device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
@@ -1394,7 +1505,7 @@ async def test_multiple_ssdp_alive(
     # Device should be available
     mock_state = hass.states.get(mock_disconnected_entity_id)
     assert mock_state is not None
-    assert mock_state.state == media_player.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
 
 async def test_ssdp_byebye(
@@ -1490,7 +1601,7 @@ async def test_ssdp_update_seen_bootid(
     # Device was not reconnected, even with a new boot ID
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1515,7 +1626,7 @@ async def test_ssdp_update_seen_bootid(
     # Nothing should change
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1540,7 +1651,7 @@ async def test_ssdp_update_seen_bootid(
     # Nothing should change
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1560,7 +1671,7 @@ async def test_ssdp_update_seen_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1617,7 +1728,7 @@ async def test_ssdp_update_missed_bootid(
     # Device should not reconnect yet
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 0
     assert dmr_device_mock.async_subscribe_services.await_count == 1
@@ -1637,7 +1748,7 @@ async def test_ssdp_update_missed_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_unsubscribe_services.await_count == 1
     assert dmr_device_mock.async_subscribe_services.await_count == 2
@@ -1676,7 +1787,7 @@ async def test_ssdp_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_subscribe_services.call_count == 1
     assert dmr_device_mock.async_unsubscribe_services.call_count == 0
@@ -1696,7 +1807,7 @@ async def test_ssdp_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_subscribe_services.call_count == 1
     assert dmr_device_mock.async_unsubscribe_services.call_count == 0
@@ -1716,7 +1827,7 @@ async def test_ssdp_bootid(
 
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     assert dmr_device_mock.async_subscribe_services.call_count == 2
     assert dmr_device_mock.async_unsubscribe_services.call_count == 1
@@ -1747,14 +1858,14 @@ async def test_become_unavailable(
 
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     # With a working connection, the state should be restored
     await async_update_entity(hass, mock_entity_id)
     dmr_device_mock.async_update.assert_any_call(do_ping=True)
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     # Break the service again, and the connection too. An update will cause the
     # device to be disconnected
@@ -1816,7 +1927,7 @@ async def test_poll_availability(
 
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
     # Clean up
     assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
@@ -1836,9 +1947,7 @@ async def test_disappearing_device(
     directly to skip the availability check.
     """
     # Retrieve entity directly.
-    entity: media_player.DlnaDmrEntity = hass.data[MP_DOMAIN].get_entity(
-        mock_disconnected_entity_id
-    )
+    entity: DlnaDmrEntity = hass.data[MP_DOMAIN].get_entity(mock_disconnected_entity_id)
 
     # Test attribute access
     for attr in ATTR_TO_PROPERTY:
@@ -1862,7 +1971,7 @@ async def test_disappearing_device(
     await entity.async_media_previous_track()
     await entity.async_media_next_track()
     await entity.async_set_shuffle(True)
-    await entity.async_set_repeat(mp_const.REPEAT_MODE_ALL)
+    await entity.async_set_repeat(RepeatMode.ALL)
     await entity.async_select_sound_mode("Default")
 
 
@@ -1921,7 +2030,7 @@ async def test_config_update_listen_port(
     # Check that its still connected
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
 
 async def test_config_update_connect_failure(
@@ -1995,7 +2104,7 @@ async def test_config_update_callback_url(
     # Check that its still connected
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE
 
 
 async def test_config_update_poll_availability(
@@ -2036,4 +2145,4 @@ async def test_config_update_poll_availability(
     # Check that its still connected
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
-    assert mock_state.state == ha_const.STATE_IDLE
+    assert mock_state.state == MediaPlayerState.IDLE

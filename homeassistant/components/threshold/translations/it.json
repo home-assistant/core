@@ -9,7 +9,6 @@
                     "entity_id": "Sensore di ingresso",
                     "hysteresis": "Isteresi",
                     "lower": "Limite inferiore",
-                    "mode": "Modalit\u00e0 soglia",
                     "name": "Nome",
                     "upper": "Limite superiore"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Sensore di ingresso",
                     "hysteresis": "Isteresi",
                     "lower": "Limite inferiore",
-                    "mode": "Modalit\u00e0 soglia",
                     "name": "Nome",
                     "upper": "Limite superiore"
                 },

@@ -1,0 +1,11 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Mevcut \u00c7al\u0131\u015ft\u0131rma Ba\u015flang\u0131\u00e7 Zaman\u0131",
+            "database_engine": "Veritaban\u0131 Altyap\u0131s\u0131",
+            "database_version": "Veritaban\u0131 S\u00fcr\u00fcm\u00fc",
+            "estimated_db_size": "Tahmini Veritaban\u0131 Boyutu (MB)",
+            "oldest_recorder_run": "En Eski \u00c7al\u0131\u015ft\u0131rma Ba\u015flang\u0131\u00e7 Zaman\u0131"
+        }
+    }
+}

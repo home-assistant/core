@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API Key",
-                    "latitude": "Latitude",
                     "location": "Location",
-                    "longitude": "Longitude",
                     "name": "Name"
                 },
                 "description": "To get an API key, sign up at [Tomorrow.io](https://app.tomorrow.io/signup)."

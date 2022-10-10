@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
@@ -25,6 +26,8 @@ MEAN = round(sum(VALUES) / COUNT, 2)
 MEAN_1_DIGIT = round(sum(VALUES) / COUNT, 1)
 MEAN_4_DIGITS = round(sum(VALUES) / COUNT, 4)
 MEDIAN = round(statistics.median(VALUES), 2)
+RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
+RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
 
 
 async def test_default_name_sensor(hass):
@@ -76,6 +79,7 @@ async def test_min_sensor(hass):
 
     assert str(float(MIN_VALUE)) == state.state
     assert entity_ids[2] == state.attributes.get("min_entity_id")
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_max_sensor(hass):
@@ -102,6 +106,7 @@ async def test_max_sensor(hass):
 
     assert str(float(MAX_VALUE)) == state.state
     assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_mean_sensor(hass):
@@ -127,6 +132,7 @@ async def test_mean_sensor(hass):
     state = hass.states.get("sensor.test_mean")
 
     assert str(float(MEAN)) == state.state
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_mean_1_digit_sensor(hass):
@@ -156,7 +162,7 @@ async def test_mean_1_digit_sensor(hass):
 
 
 async def test_mean_4_digit_sensor(hass):
-    """Test the mean with 1-digit precision sensor."""
+    """Test the mean with 4-digit precision sensor."""
     config = {
         "sensor": {
             "platform": "min_max",
@@ -204,6 +210,59 @@ async def test_median_sensor(hass):
     state = hass.states.get("sensor.test_median")
 
     assert str(float(MEDIAN)) == state.state
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+
+async def test_range_4_digit_sensor(hass):
+    """Test the range with 4-digit precision sensor."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_range",
+            "type": "range",
+            "round_digits": 4,
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_range")
+
+    assert str(float(RANGE_4_DIGITS)) == state.state
+
+
+async def test_range_1_digit_sensor(hass):
+    """Test the range with 1-digit precision sensor."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_range",
+            "type": "range",
+            "round_digits": 1,
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_range")
+
+    assert str(float(RANGE_1_DIGIT)) == state.state
 
 
 async def test_not_enough_sensor_value(hass):
@@ -327,6 +386,7 @@ async def test_last_sensor(hass):
         state = hass.states.get("sensor.test_last")
         assert str(float(value)) == state.state
         assert entity_id == state.attributes.get("last_entity_id")
+        assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
 async def test_reload(hass):

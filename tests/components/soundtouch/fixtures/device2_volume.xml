@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<volume deviceID="020000000002">
+    <targetvolume>10</targetvolume>
+    <actualvolume>10</actualvolume>
+    <muteenabled>false</muteenabled>
+</volume>

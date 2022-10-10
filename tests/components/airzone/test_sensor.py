@@ -1,15 +1,24 @@
 """The sensor tests for the Airzone platform."""
 
+from unittest.mock import AsyncMock
+
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
+async def test_airzone_create_sensors(
+    hass: HomeAssistant, entity_registry_enabled_by_default: AsyncMock
+) -> None:
     """Test creation of sensors."""
 
     await async_init_integration(hass)
 
+    # WebServer
+    state = hass.states.get("sensor.webserver_rssi")
+    assert state.state == "-42"
+
+    # Zones
     state = hass.states.get("sensor.despacho_temperature")
     assert state.state == "21.2"
 

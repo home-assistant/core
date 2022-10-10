@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "\u00dchendust ei saa luua, palun kontrolli jadaporti, aadressi, elektri\u00fchendust ja et inverter on sisse l\u00fclitatud (p\u00e4evavalguses)",
             "cannot_open_serial_port": "Jadaporti ei saa avada, kontrolli ja proovi uuesti",
-            "invalid_serial_port": "Jadaport pole sobiv seade v\u00f5i seda ei saa avada",
-            "unknown": "Ootamatu t\u00f5rge"
+            "invalid_serial_port": "Jadaport pole sobiv seade v\u00f5i seda ei saa avada"
         },
         "step": {
             "user": {

@@ -6,6 +6,15 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "username": "Meater Cloud username, typically an email address."
+        }
+      },
+      "reauth_confirm": {
+        "description": "Confirm the password for Meater Cloud account {username}.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

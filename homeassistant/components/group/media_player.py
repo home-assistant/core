@@ -18,6 +18,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -37,8 +38,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -102,6 +101,9 @@ async def async_setup_entry(
 
 class MediaPlayerGroup(MediaPlayerEntity):
     """Representation of a Media Group."""
+
+    _attr_available: bool = False
+    _attr_should_poll = False
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a Media Group entity."""
@@ -216,11 +218,6 @@ class MediaPlayerGroup(MediaPlayerEntity):
         return self._supported_features
 
     @property
-    def should_poll(self) -> bool:
-        """No polling needed for a media group."""
-        return False
-
-    @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
@@ -275,7 +272,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
-    async def async_media_seek(self, position: int) -> None:
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         data = {
             ATTR_ENTITY_ID: self._features[KEY_SEEK],
@@ -390,19 +387,29 @@ class MediaPlayerGroup(MediaPlayerEntity):
     @callback
     def async_update_state(self) -> None:
         """Query all members and determine the media group state."""
-        states = [self.hass.states.get(entity) for entity in self._entities]
-        states_values = [state.state for state in states if state is not None]
-        off_values = STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN
+        states = [
+            state.state
+            for entity_id in self._entities
+            if (state := self.hass.states.get(entity_id)) is not None
+        ]
 
-        if states_values:
-            if states_values.count(states_values[0]) == len(states_values):
-                self._state = states_values[0]
-            elif any(state for state in states_values if state not in off_values):
-                self._state = STATE_ON
-            else:
-                self._state = STATE_OFF
-        else:
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = any(state != STATE_UNAVAILABLE for state in states)
+
+        valid_state = any(
+            state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
+        )
+        if not valid_state:
+            # Set as unknown if all members are unknown or unavailable
             self._state = None
+        else:
+            off_values = {MediaPlayerState.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN}
+            if states.count(states[0]) == len(states):
+                self._state = states[0]
+            elif any(state for state in states if state not in off_values):
+                self._state = MediaPlayerState.ON
+            else:
+                self._state = MediaPlayerState.OFF
 
         supported_features = 0
         if self._features[KEY_CLEAR_PLAYLIST]:

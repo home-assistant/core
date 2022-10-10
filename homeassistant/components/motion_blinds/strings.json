@@ -26,7 +26,7 @@
       "discovery_error": "Failed to discover a Motion Gateway"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%], connection settings are updated",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
     }

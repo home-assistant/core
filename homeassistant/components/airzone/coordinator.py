@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aioairzone.exceptions import AirzoneError
 from aioairzone.localapi import AirzoneLocalApi
@@ -18,7 +19,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-class AirzoneUpdateCoordinator(DataUpdateCoordinator):
+class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Airzone device."""
 
     def __init__(self, hass: HomeAssistant, airzone: AirzoneLocalApi) -> None:
@@ -32,7 +33,7 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         async with async_timeout.timeout(AIOAIRZONE_DEVICE_TIMEOUT_SEC):
             try:

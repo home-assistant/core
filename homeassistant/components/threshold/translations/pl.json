@@ -9,7 +9,6 @@
                     "entity_id": "Sensor wej\u015bciowy",
                     "hysteresis": "Op\u00f3\u017anienie",
                     "lower": "Dolny limit",
-                    "mode": "Tryb progowy",
                     "name": "Nazwa",
                     "upper": "G\u00f3rny limit"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Sensor wej\u015bciowy",
                     "hysteresis": "Op\u00f3\u017anienie",
                     "lower": "Dolny limit",
-                    "mode": "Tryb progowy",
                     "name": "Nazwa",
                     "upper": "G\u00f3rny limit"
                 },

@@ -52,7 +52,6 @@ async def test_entry_diagnostics(
             "data": {
                 "host": REDACTED,
                 "port": 1234,
-                "type": "OWServer",
             },
             "options": {
                 "device_options": {

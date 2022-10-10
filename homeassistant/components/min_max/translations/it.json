@@ -27,14 +27,6 @@
                 "data_description": {
                     "round_digits": "Controlla il numero di cifre decimali nell'output quando la caratteristica statistica \u00e8 media o mediana."
                 }
-            },
-            "options": {
-                "data": {
-                    "entity_ids": "Entit\u00e0 di ingresso",
-                    "round_digits": "Precisione",
-                    "type": "Caratteristica statistica"
-                },
-                "description": "Crea un sensore che calcoli un valore minimo, massimo, medio o mediano da un elenco di sensori di input."
             }
         }
     },

@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
+from homeassistant.components.stream import CONF_USE_WALLCLOCK_AS_TIMESTAMPS
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_INTEGRATION_DISCOVERY,
@@ -16,7 +17,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    entity_platform,
+)
 
 from .const import (
     ATTR_DIRECTION,
@@ -52,7 +57,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
-    """Set up Ezviz cameras based on a config entry."""
+    """Set up EZVIZ cameras based on a config entry."""
 
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
@@ -68,7 +73,7 @@ async def async_setup_entry(
             if item.unique_id == camera and item.source != SOURCE_IGNORE
         ]
 
-        # There seem to be a bug related to localRtspPort in Ezviz API.
+        # There seem to be a bug related to localRtspPort in EZVIZ API.
         local_rtsp_port = (
             value["local_rtsp_port"]
             if value["local_rtsp_port"] != 0
@@ -92,15 +97,14 @@ async def async_setup_entry(
 
         else:
 
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_INTEGRATION_DISCOVERY},
-                    data={
-                        ATTR_SERIAL: camera,
-                        CONF_IP_ADDRESS: value["local_ip"],
-                    },
-                )
+            discovery_flow.async_create_flow(
+                hass,
+                DOMAIN,
+                context={"source": SOURCE_INTEGRATION_DISCOVERY},
+                data={
+                    ATTR_SERIAL: camera,
+                    CONF_IP_ADDRESS: value["local_ip"],
+                },
             )
 
             _LOGGER.warning(
@@ -170,7 +174,7 @@ async def async_setup_entry(
 
 
 class EzvizCamera(EzvizEntity, Camera):
-    """An implementation of a Ezviz security camera."""
+    """An implementation of a EZVIZ security camera."""
 
     def __init__(
         self,
@@ -183,9 +187,10 @@ class EzvizCamera(EzvizEntity, Camera):
         local_rtsp_port: int,
         ffmpeg_arguments: str | None,
     ) -> None:
-        """Initialize a Ezviz security camera."""
+        """Initialize a EZVIZ security camera."""
         super().__init__(coordinator, serial)
         Camera.__init__(self)
+        self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
         self._username = camera_username
         self._password = camera_password
         self._rtsp_stream = camera_rtsp_stream

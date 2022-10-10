@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 import math
+from typing import Any
 
 from pysmartthings import Capability
 
@@ -52,8 +53,11 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
 
-    async def async_set_percentage(self, percentage: int | None) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
+        await self._async_set_percentage(percentage)
+
+    async def _async_set_percentage(self, percentage: int | None) -> None:
         if percentage is None:
             await self._device.switch_on(set_status=True)
         elif percentage == 0:
@@ -69,12 +73,12 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn the fan on."""
-        await self.async_set_percentage(percentage)
+        await self._async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._device.switch_off(set_status=True)
         # State is set optimistically in the command above, therefore update

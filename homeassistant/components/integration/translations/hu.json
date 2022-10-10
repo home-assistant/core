@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Az eredm\u00e9ny tizedesjegyeinek sz\u00e1ma."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Pontoss\u00e1g"
-                },
-                "description": "A pontoss\u00e1g hat\u00e1rozza meg az eredm\u00e9ny tizedesjegyeinek sz\u00e1m\u00e1t."
             }
         }
     },

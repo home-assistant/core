@@ -169,7 +169,16 @@ def wifi_entities_list(
             }
     for i, network in networks.copy().items():
         networks[i]["switch_name"] = network["ssid"]
-        if len([j for j, n in networks.items() if n["ssid"] == network["ssid"]]) > 1:
+        if (
+            len(
+                [
+                    j
+                    for j, n in networks.items()
+                    if slugify(n["ssid"]) == slugify(network["ssid"])
+                ]
+            )
+            > 1
+        ):
             networks[i]["switch_name"] += f" ({WIFI_STANDARD[i]})"
 
     _LOGGER.debug("WiFi networks list: %s", networks)

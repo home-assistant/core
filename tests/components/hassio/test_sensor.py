@@ -11,7 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
+MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
@@ -68,6 +68,7 @@ def mock_all(aioclient_mock, request):
                 "result": "ok",
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
+                "auto_update": True,
                 "addons": [
                     {
                         "name": "test",

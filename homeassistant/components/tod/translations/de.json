@@ -3,9 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "after": "Angeschaltet nach",
                     "after_time": "Einschaltzeit",
-                    "before": "Ausgeschaltet nach",
                     "before_time": "Ausschaltzeit",
                     "name": "Name"
                 },
@@ -18,12 +16,9 @@
         "step": {
             "init": {
                 "data": {
-                    "after": "Angeschaltet nach",
                     "after_time": "Einschaltzeit",
-                    "before": "Ausgeschaltet nach",
                     "before_time": "Ausschaltzeit"
-                },
-                "description": "Erstelle einen bin\u00e4ren Sensor, der sich je nach Uhrzeit ein- oder ausschaltet."
+                }
             }
         }
     },

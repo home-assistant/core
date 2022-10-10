@@ -1,13 +1,13 @@
 {
     "state": {
         "_": {
-            "clear-night": "Limpo, Noite",
+            "clear-night": "C\u00e9u limpo, Noite",
             "cloudy": "Nublado",
             "exceptional": "Excecional",
             "fog": "Nevoeiro",
             "hail": "Granizo",
             "lightning": "Rel\u00e2mpago",
-            "lightning-rainy": "Rel\u00e2mpagos, chuva",
+            "lightning-rainy": "Trovoada, chuva",
             "partlycloudy": "Parcialmente nublado",
             "pouring": "Chuva forte",
             "rainy": "Chuva",

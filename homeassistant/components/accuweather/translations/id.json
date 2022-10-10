@@ -18,9 +18,7 @@
                     "latitude": "Lintang",
                     "longitude": "Bujur",
                     "name": "Nama"
-                },
-                "description": "Jika Anda memerlukan bantuan tentang konfigurasi, baca di sini: https://www.home-assistant.io/integrations/accuweather/\n\nBeberapa sensor tidak diaktifkan secara default. Anda dapat mengaktifkannya di registri entitas setelah konfigurasi integrasi.\nPrakiraan cuaca tidak diaktifkan secara default. Anda dapat mengaktifkannya di opsi integrasi.",
-                "title": "AccuWeather"
+                }
             }
         }
     },
@@ -30,8 +28,7 @@
                 "data": {
                     "forecast": "Prakiraan cuaca"
                 },
-                "description": "Karena keterbatasan versi gratis kunci API AccuWeather, ketika Anda mengaktifkan prakiraan cuaca, pembaruan data akan dilakukan setiap 80 menit, bukan setiap 40 menit.",
-                "title": "Opsi AccuWeather"
+                "description": "Karena keterbatasan versi gratis kunci API AccuWeather, ketika Anda mengaktifkan prakiraan cuaca, pembaruan data akan dilakukan setiap 80 menit, bukan setiap 40 menit."
             }
         }
     },

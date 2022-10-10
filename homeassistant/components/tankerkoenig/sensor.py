@@ -7,17 +7,14 @@ from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CURRENCY_EURO,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TankerkoenigDataUpdateCoordinator
+from . import TankerkoenigCoordinatorEntity, TankerkoenigDataUpdateCoordinator
 from .const import (
     ATTR_BRAND,
     ATTR_CITY,
@@ -39,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the tankerkoenig sensors."""
 
-    coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id]
+    coordinator: TankerkoenigDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     stations = coordinator.stations.values()
     entities = []
@@ -62,7 +59,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class FuelPriceSensor(CoordinatorEntity, SensorEntity):
+class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
     """Contains prices for fuel in a given station."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -70,19 +67,12 @@ class FuelPriceSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, fuel_type, station, coordinator, show_on_map):
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, station)
         self._station_id = station["id"]
         self._fuel_type = fuel_type
         self._attr_name = f"{station['brand']} {station['street']} {station['houseNumber']} {FUEL_TYPES[fuel_type]}"
         self._attr_native_unit_of_measurement = CURRENCY_EURO
         self._attr_unique_id = f"{station['id']}_{fuel_type}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(ATTR_ID, station["id"])},
-            name=f"{station['brand']} {station['street']} {station['houseNumber']}",
-            model=station["brand"],
-            configuration_url="https://www.tankerkoenig.de",
-        )
-
         attrs = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_BRAND: station["brand"],

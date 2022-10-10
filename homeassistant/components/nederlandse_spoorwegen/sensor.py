@@ -219,7 +219,7 @@ class NSDepartureSensor(SensorEntity):
         return attributes
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the trip information."""
 
         # If looking for a specific trip time, update around that trip time only.

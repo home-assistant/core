@@ -20,10 +20,6 @@
                 "title": "Autorizza HomeAssistant in Roon"
             },
             "user": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "Impossibile individuare il server Roon, inserire l'hostname o l'IP.",
                 "one": "Vuoto",
                 "other": "Vuoti"
             }

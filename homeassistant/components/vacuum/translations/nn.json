@@ -1,4 +1,12 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_cleaning": "k\u00f8yrer"
+        },
+        "trigger_type": {
+            "cleaning": "starta reingjering"
+        }
+    },
     "state": {
         "_": {
             "cleaning": "Reingjer",

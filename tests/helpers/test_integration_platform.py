@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
+    async_process_integration_platforms,
 )
 from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
 
@@ -24,8 +25,8 @@ async def test_process_integration_platforms(hass):
         """Process platform."""
         processed.append((domain, platform))
 
-    await hass.helpers.integration_platform.async_process_integration_platforms(
-        "platform_to_check", _process_platform
+    await async_process_integration_platforms(
+        hass, "platform_to_check", _process_platform
     )
 
     assert len(processed) == 1
@@ -40,9 +41,7 @@ async def test_process_integration_platforms(hass):
     assert processed[1][1] == event_platform
 
     # Verify we only process the platform once if we call it manually
-    await hass.helpers.integration_platform.async_process_integration_platform_for_component(
-        hass, "event"
-    )
+    await async_process_integration_platform_for_component(hass, "event")
     assert len(processed) == 2
 
 

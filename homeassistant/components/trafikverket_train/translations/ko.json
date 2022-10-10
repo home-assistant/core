@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \ud0a4"
+                }
+            }
+        }
+    }
+}

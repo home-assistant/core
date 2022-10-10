@@ -18,7 +18,7 @@ async def test_duplicate_error(hass, config, config_entry):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -31,7 +31,7 @@ async def test_invalid_place_or_service_id(hass, config):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=config
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_place_or_service_id"}
 
 
@@ -42,13 +42,13 @@ async def test_options_flow(hass, config, config_entry):
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_FRIENDLY_NAME: True}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_FRIENDLY_NAME: True}
 
 
@@ -57,7 +57,7 @@ async def test_show_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -67,6 +67,6 @@ async def test_step_user(hass, config, setup_recollect_waste):
         DOMAIN, context={"source": SOURCE_USER}, data=config
     )
     await hass.async_block_till_done()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "12345, 12345"
     assert result["data"] == {CONF_PLACE_ID: "12345", CONF_SERVICE_ID: "12345"}

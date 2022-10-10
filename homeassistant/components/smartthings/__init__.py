@@ -183,7 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         return False
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -405,6 +405,8 @@ class DeviceBroker:
 class SmartThingsEntity(Entity):
     """Defines a SmartThings entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device: DeviceEntity) -> None:
         """Initialize the instance."""
         self._device = device
@@ -442,11 +444,6 @@ class SmartThingsEntity(Entity):
     def name(self) -> str:
         """Return the name of the device."""
         return self._device.label
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed for this device."""
-        return False
 
     @property
     def unique_id(self) -> str:

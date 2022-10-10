@@ -8,8 +8,7 @@
         "error": {
             "api_error": "Accesso non riuscito",
             "cannot_connect": "Impossibile connettersi",
-            "iftapi_connect": "Errore durante la connessione a iftapi.net",
-            "unknown": "Errore imprevisto"
+            "iftapi_connect": "Errore durante la connessione a iftapi.net"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "Sono stati rilevati i seguenti dispositivi IntelliFire. Seleziona quello che desideri configurare.",
                 "title": "Selezione del dispositivo"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                }
             }
         }
     }

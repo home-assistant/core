@@ -25,10 +25,13 @@ from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
 from .common import (
+    PROJECT_ID,
+    SUBSCRIBER_ID,
+    TEST_CONFIG_APP_CREDS,
     TEST_CONFIG_HYBRID,
     TEST_CONFIG_YAML_ONLY,
+    TEST_CONFIGFLOW_APP_CREDS,
     FakeSubscriber,
-    NestTestConfig,
     YieldFixture,
 )
 
@@ -100,18 +103,18 @@ async def test_setup_configuration_failure(
 
 @pytest.mark.parametrize("subscriber_side_effect", [SubscriberException()])
 async def test_setup_susbcriber_failure(
-    hass, error_caplog, failing_subscriber, setup_base_platform
+    hass, warning_caplog, failing_subscriber, setup_base_platform
 ):
     """Test configuration error."""
     await setup_base_platform()
-    assert "Subscriber error:" in error_caplog.text
+    assert "Subscriber error:" in warning_caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_device_manager_failure(hass, error_caplog, setup_base_platform):
+async def test_setup_device_manager_failure(hass, warning_caplog, setup_base_platform):
     """Test device manager api failure."""
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.start_async"
@@ -121,8 +124,7 @@ async def test_setup_device_manager_failure(hass, error_caplog, setup_base_platf
     ):
         await setup_base_platform()
 
-    assert len(error_caplog.messages) == 1
-    assert "Device manager error:" in error_caplog.text
+    assert "Device manager error:" in warning_caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -170,7 +172,8 @@ async def test_subscriber_configuration_failure(
 
 
 @pytest.mark.parametrize(
-    "nest_test_config", [NestTestConfig(config={}, config_entry_data=None)]
+    "nest_test_config",
+    [TEST_CONFIGFLOW_APP_CREDS],
 )
 async def test_empty_config(hass, error_caplog, config, setup_platform):
     """Test setup is a no-op with not config."""
@@ -205,8 +208,12 @@ async def test_unload_entry(hass, setup_platform):
             TEST_CONFIG_HYBRID,
             True,
         ),  # Integration created subscriber, garbage collect on remove
+        (
+            TEST_CONFIG_APP_CREDS,
+            True,
+        ),  # Integration created subscriber, garbage collect on remove
     ],
-    ids=["yaml-config-only", "hybrid-config"],
+    ids=["yaml-config-only", "hybrid-config", "config-entry"],
 )
 async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_called):
     """Test successful unload of a ConfigEntry."""
@@ -220,6 +227,9 @@ async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
+    # Assert entry was imported if from configuration.yaml
+    assert entry.data.get("subscriber_id") == SUBSCRIBER_ID
+    assert entry.data.get("project_id") == PROJECT_ID
 
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.subscriber_id"
@@ -234,7 +244,9 @@ async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_
 
 
 @pytest.mark.parametrize(
-    "nest_test_config", [TEST_CONFIG_HYBRID], ids=["hyrbid-config"]
+    "nest_test_config",
+    [TEST_CONFIG_HYBRID, TEST_CONFIG_APP_CREDS],
+    ids=["hyrbid-config", "app-creds"],
 )
 async def test_remove_entry_delete_subscriber_failure(
     hass, nest_test_config, setup_base_platform
@@ -260,3 +272,18 @@ async def test_remove_entry_delete_subscriber_failure(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert not entries
+
+
+@pytest.mark.parametrize("config_entry_unique_id", [DOMAIN, None])
+async def test_migrate_unique_id(
+    hass, error_caplog, setup_platform, config_entry, config_entry_unique_id
+):
+    """Test successful setup."""
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert config_entry.unique_id == config_entry_unique_id
+
+    await setup_platform()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == PROJECT_ID

@@ -46,15 +46,18 @@ _LOGGER = logging.getLogger(__name__)
 VERA_ID_LIST_SCHEMA = vol.Schema([int])
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CONTROLLER): cv.url,
-                vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
-                vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_CONTROLLER): cv.url,
+                    vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
+                    vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -139,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     set_controller_data(hass, entry, controller_data)
 
     # Forward the config data to the necessary platforms.
-    hass.config_entries.async_setup_platforms(
+    await hass.config_entries.async_forward_entry_setups(
         entry, platforms=get_configured_platforms(controller_data)
     )
 

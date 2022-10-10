@@ -1,0 +1,11 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Aktuell starttid",
+            "database_engine": "Databasmotor",
+            "database_version": "Databasversion",
+            "estimated_db_size": "Ber\u00e4knad databasstorlek (MiB)",
+            "oldest_recorder_run": "\u00c4ldsta starttid"
+        }
+    }
+}

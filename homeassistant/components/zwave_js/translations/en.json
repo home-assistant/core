@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Network Key",
                     "s0_legacy_key": "S0 Key (Legacy)",
                     "s2_access_control_key": "S2 Access Control Key",
                     "s2_authenticated_key": "S2 Authenticated Key",
@@ -92,6 +91,12 @@
             "zwave_js.value_updated.value": "Value change on a Z-Wave JS Value"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "The version of Z-Wave JS Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave JS Server to the latest version to fix this issue.",
+            "title": "Newer version of Z-Wave JS Server needed"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
@@ -117,7 +122,6 @@
                 "data": {
                     "emulate_hardware": "Emulate Hardware",
                     "log_level": "Log level",
-                    "network_key": "Network Key",
                     "s0_legacy_key": "S0 Key (Legacy)",
                     "s2_access_control_key": "S2 Access Control Key",
                     "s2_authenticated_key": "S2 Authenticated Key",
@@ -146,6 +150,5 @@
                 "title": "The Z-Wave JS add-on is starting."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

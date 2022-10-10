@@ -11,9 +11,7 @@
                 "data": {
                     "email": "Email",
                     "password": "Password"
-                },
-                "description": "Do you want to start set up?",
-                "title": "PoolSense"
+                }
             }
         }
     }

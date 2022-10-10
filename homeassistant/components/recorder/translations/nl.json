@@ -1,0 +1,11 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Starttijd huidige run",
+            "database_engine": "Database-engine",
+            "database_version": "Databaseversie",
+            "estimated_db_size": "Geschatte databasegrootte (MiB)",
+            "oldest_recorder_run": "Starttijd oudste run"
+        }
+    }
+}

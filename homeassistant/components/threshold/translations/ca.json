@@ -9,7 +9,6 @@
                     "entity_id": "Sensor d'entrada",
                     "hysteresis": "Hist\u00e8resi",
                     "lower": "L\u00edmit inferior",
-                    "mode": "Mode llindar",
                     "name": "Nom",
                     "upper": "L\u00edmit superior"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Sensor d'entrada",
                     "hysteresis": "Hist\u00e8resi",
                     "lower": "L\u00edmit inferior",
-                    "mode": "Mode llindar",
                     "name": "Nom",
                     "upper": "L\u00edmit superior"
                 },

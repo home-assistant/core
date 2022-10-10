@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine, Sequence
-import contextlib
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -12,9 +11,11 @@ from async_upnp_client.client import UpnpDevice, UpnpService, UpnpStateVariable
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import (
     UpnpActionResponseError,
+    UpnpCommunicationError,
     UpnpConnectionError,
     UpnpError,
     UpnpResponseError,
+    UpnpXmlContentError,
 )
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.utils import async_get_local_ip
@@ -25,20 +26,11 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_CHANNEL,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_MODEL,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_component
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -124,7 +116,6 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._playing: bool = True
 
         self._attr_name: str | None = config_entry.data.get(CONF_NAME)
-        self._attr_state: str | None = None
         self._attr_unique_id = config_entry.unique_id
         self._attr_is_volume_muted: bool = False
         self._attr_device_class = MediaPlayerDeviceClass.TV
@@ -196,14 +187,19 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Update state of device."""
         if self._auth_failed or self.hass.is_stopping:
             return
+        old_state = self._attr_state
         if self._power_off_in_progress():
-            self._attr_state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
         else:
             self._attr_state = (
-                STATE_ON if await self._bridge.async_is_on() else STATE_OFF
+                MediaPlayerState.ON
+                if await self._bridge.async_is_on()
+                else MediaPlayerState.OFF
             )
+        if self._attr_state != old_state:
+            LOGGER.debug("TV %s state updated to %s", self._host, self.state)
 
-        if self._attr_state != STATE_ON:
+        if self._attr_state != MediaPlayerState.ON:
             if self._dmr_device and self._dmr_device.is_subscribed:
                 await self._dmr_device.async_unsubscribe_services()
             return
@@ -270,11 +266,12 @@ class SamsungTVDevice(MediaPlayerEntity):
             # NETWORK,NONE
             upnp_factory = UpnpFactory(upnp_requester, non_strict=True)
             upnp_device: UpnpDevice | None = None
-            with contextlib.suppress(UpnpConnectionError, UpnpResponseError):
+            try:
                 upnp_device = await upnp_factory.async_create_device(
                     self._ssdp_rendering_control_location
                 )
-            if not upnp_device:
+            except (UpnpConnectionError, UpnpResponseError, UpnpXmlContentError) as err:
+                LOGGER.debug("Unable to create Upnp DMR device: %r", err, exc_info=True)
                 return
             _, event_ip = await async_get_local_ip(
                 self._ssdp_rendering_control_location, self.hass.loop
@@ -307,8 +304,10 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def _async_resubscribe_dmr(self) -> None:
         assert self._dmr_device
-        with contextlib.suppress(UpnpConnectionError):
+        try:
             await self._dmr_device.async_subscribe_services(auto_resubscribe=True)
+        except UpnpCommunicationError as err:
+            LOGGER.debug("Device rejected re-subscription: %r", err, exc_info=True)
 
     async def _async_shutdown_dmr(self) -> None:
         """Handle removal."""
@@ -357,7 +356,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._auth_failed:
             return False
         return (
-            self._attr_state == STATE_ON
+            self.state == MediaPlayerState.ON
             or self._on_script is not None
             or self._mac is not None
             or self._power_off_in_progress()
@@ -419,11 +418,11 @@ class SamsungTVDevice(MediaPlayerEntity):
         self, media_type: str, media_id: str, **kwargs: Any
     ) -> None:
         """Support changing a channel."""
-        if media_type == MEDIA_TYPE_APP:
+        if media_type == MediaType.APP:
             await self._async_launch_app(media_id)
             return
 
-        if media_type != MEDIA_TYPE_CHANNEL:
+        if media_type != MediaType.CHANNEL:
             LOGGER.error("Unsupported media type")
             return
 

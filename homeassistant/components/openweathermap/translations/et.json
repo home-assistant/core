@@ -17,8 +17,7 @@
                     "mode": "Re\u017eiim",
                     "name": "Nimi"
                 },
-                "description": "API-v\u00f5tme loomiseks mine aadressile https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "API-v\u00f5tme loomiseks mine aadressile https://openweathermap.org/appid"
             }
         }
     },

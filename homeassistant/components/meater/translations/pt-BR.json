@@ -6,10 +6,19 @@
             "unknown_auth_error": "Erro inesperado"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Senha"
+                },
+                "description": "Confirme a senha da conta do Meeater Cloud {username}."
+            },
             "user": {
                 "data": {
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
+                },
+                "data_description": {
+                    "username": "Nome de usu\u00e1rio do Meeater Cloud, normalmente um endere\u00e7o de e-mail."
                 },
                 "description": "Configure sua conta Meeater Cloud."
             }

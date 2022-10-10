@@ -17,8 +17,7 @@
                     "mode": "Modus",
                     "name": "Navn"
                 },
-                "description": "For \u00e5 generere API-n\u00f8kkel, g\u00e5 til https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "For \u00e5 generere API-n\u00f8kkel, g\u00e5 til https://openweathermap.org/appid"
             }
         }
     },

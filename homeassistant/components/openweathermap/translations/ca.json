@@ -17,8 +17,7 @@
                     "mode": "Mode",
                     "name": "Nom"
                 },
-                "description": "Per generar la clau API, v\u00e9s a https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "Per generar la clau API, v\u00e9s a https://openweathermap.org/appid"
             }
         }
     },

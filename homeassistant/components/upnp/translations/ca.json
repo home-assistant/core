@@ -16,9 +16,7 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "Interval d'actualitzaci\u00f3 (en segons, m\u00ednim 30)",
-                    "unique_id": "Dispositiu",
-                    "usn": "Dispositiu"
+                    "unique_id": "Dispositiu"
                 }
             }
         }

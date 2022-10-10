@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
@@ -190,6 +190,8 @@ UOM_FAN_MODES = "99"
 UOM_INDEX = "25"
 UOM_ON_OFF = "2"
 UOM_PERCENTAGE = "51"
+
+SENSOR_AUX = "sensor_aux"
 
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states

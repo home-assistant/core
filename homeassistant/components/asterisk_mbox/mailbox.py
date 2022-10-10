@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import Any
 
 from asterisk_mbox import ServerError
 
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as ASTERISK_DOMAIN
+from . import DOMAIN as ASTERISK_DOMAIN, AsteriskData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ async def async_get_handler(
 class AsteriskMailbox(Mailbox):
     """Asterisk VM Sensor."""
 
-    def __init__(self, hass, name):
+    def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize Asterisk mailbox."""
         super().__init__(hass, name)
         async_dispatcher_connect(
@@ -39,29 +40,30 @@ class AsteriskMailbox(Mailbox):
         )
 
     @callback
-    def _update_callback(self, msg):
+    def _update_callback(self, msg: str) -> None:
         """Update the message count in HA, if needed."""
         self.async_update()
 
     @property
-    def media_type(self):
+    def media_type(self) -> str:
         """Return the supported media type."""
         return CONTENT_TYPE_MPEG
 
     @property
-    def can_delete(self):
+    def can_delete(self) -> bool:
         """Return if messages can be deleted."""
         return True
 
     @property
-    def has_media(self):
+    def has_media(self) -> bool:
         """Return if messages have attached media files."""
         return True
 
-    async def async_get_media(self, msgid):
+    async def async_get_media(self, msgid: str) -> bytes:
         """Return the media blob for the msgid."""
 
-        client = self.hass.data[ASTERISK_DOMAIN].client
+        data: AsteriskData = self.hass.data[ASTERISK_DOMAIN]
+        client = data.client
         try:
             return await self.hass.async_add_executor_job(
                 partial(client.mp3, msgid, sync=True)
@@ -69,13 +71,15 @@ class AsteriskMailbox(Mailbox):
         except ServerError as err:
             raise StreamError(err) from err
 
-    async def async_get_messages(self):
+    async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""
-        return self.hass.data[ASTERISK_DOMAIN].messages
+        data: AsteriskData = self.hass.data[ASTERISK_DOMAIN]
+        return data.messages
 
-    async def async_delete(self, msgid):
+    async def async_delete(self, msgid: str) -> bool:
         """Delete the specified messages."""
-        client = self.hass.data[ASTERISK_DOMAIN].client
+        data: AsteriskData = self.hass.data[ASTERISK_DOMAIN]
+        client = data.client
         _LOGGER.info("Deleting: %s", msgid)
         await self.hass.async_add_executor_job(client.delete, msgid)
         return True

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "service_unavailable_error": "API\ub294 \ud604\uc7ac \uc0ac\uc6a9\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \ub098\uc911\uc5d0 \ub2e4\uc2dc \uc2dc\ub3c4\ud574 \uc8fc\uc138\uc694.",
+            "unknown_auth_error": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638"
+                },
+                "description": "Meater Cloud \uacc4\uc815 {\uc0ac\uc6a9\uc790 \uc774\ub984}\uc5d0 \ub300\ud55c \uc554\ud638\ub97c \ud655\uc778\ud569\ub2c8\ub2e4."
+            },
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "data_description": {
+                    "username": "Meater Cloud \uc0ac\uc6a9\uc790 \uc774\ub984, \uc77c\ubc18\uc801\uc73c\ub85c \uc774\uba54\uc77c \uc8fc\uc18c\uc785\ub2c8\ub2e4."
+                },
+                "description": "Meater Cloud \uacc4\uc815\uc744 \uc124\uc815\ud569\ub2c8\ub2e4."
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 """Support for VeSync switches."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -8,19 +9,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_SWITCHES
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
-
-DEV_TYPE_TO_HA = {
-    "wifi-switch-1.3": "outlet",
-    "ESW03-USA": "outlet",
-    "ESW01-EU": "outlet",
-    "ESW15-USA": "outlet",
-    "ESWL01": "switch",
-    "ESWL03": "switch",
-    "ESO15-TB": "outlet",
-}
 
 
 async def async_setup_entry(
@@ -63,7 +54,7 @@ def _setup_entities(devices, async_add_entities):
 class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
     """Base class for VeSync switch Device Representations."""
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self.device.turn_on()
 
@@ -76,19 +67,7 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
         super().__init__(plug)
         self.smartplug = plug
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        if not hasattr(self.smartplug, "weekly_energy_total"):
-            return {}
-        return {
-            "voltage": self.smartplug.voltage,
-            "weekly_energy_total": self.smartplug.weekly_energy_total,
-            "monthly_energy_total": self.smartplug.monthly_energy_total,
-            "yearly_energy_total": self.smartplug.yearly_energy_total,
-        }
-
-    def update(self):
+    def update(self) -> None:
         """Update outlet details and energy usage."""
         self.smartplug.update()
         self.smartplug.update_energy()
