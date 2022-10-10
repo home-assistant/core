@@ -33,12 +33,8 @@ async def async_setup_entry(
 class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
     """Representation of a Nuki Lock Doorsensor."""
 
+    _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.DOOR
-
-    @property
-    def name(self):
-        """Return the name of the lock."""
-        return self._nuki_device.name
 
     @property
     def unique_id(self) -> str:
