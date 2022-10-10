@@ -10,8 +10,8 @@
     "zha-quirks==0.0.82",
     "zigpy-deconz==0.19.0",
     "zigpy==0.51.3",
-    "zigpy-xbee==0.16.1",
-    "zigpy-zigate==0.10.1",
+    "zigpy-xbee==0.16.2",
+    "zigpy-zigate==0.10.2",
     "zigpy-znp==0.9.1"
   ],
   "usb": [
