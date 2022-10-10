@@ -13,7 +13,9 @@ HAS_SUPPORTED_BRANDS = [
     "renault",
     "switchbee",
     "thermobeacon",
+    "upb",
     "wemo",
     "whirlpool",
+    "xiaomi_miio",
     "yalexs_ble",
 ]

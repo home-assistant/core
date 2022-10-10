@@ -1,6 +1,6 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
-from datetime import timedelta
+from datetime import datetime, timedelta
 import math
 from statistics import mean
 from unittest.mock import patch
@@ -9,10 +9,15 @@ import pytest
 from pytest import approx
 
 from homeassistant import loader
-from homeassistant.components.recorder import history
+from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, history
 from homeassistant.components.recorder.db_schema import StatisticsMeta
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMetaData,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.statistics import (
+    async_import_statistics,
     get_metadata,
     list_statistic_ids,
     statistics_during_period,
@@ -1900,12 +1905,13 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, display_unit, statistics_unit, unit_class, mean, min, max",
+    "device_class, state_unit, state_unit2, unit_class, mean, min, max",
     [
-        (None, None, None, None, None, 13.050847, -10, 30),
-        (None, "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", "%", "%", "%", None, 13.050847, -10, 30),
-        ("battery", None, None, None, None, 13.050847, -10, 30),
+        (None, None, "cats", None, 13.050847, -10, 30),
+        (None, "%", "cats", None, 13.050847, -10, 30),
+        ("battery", "%", "cats", None, 13.050847, -10, 30),
+        ("battery", None, "cats", None, 13.050847, -10, 30),
+        (None, "kW", "Wh", "power", 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_1(
@@ -1913,8 +1919,7 @@ def test_compile_hourly_statistics_changing_units_1(
     caplog,
     device_class,
     state_unit,
-    display_unit,
-    statistics_unit,
+    state_unit2,
     unit_class,
     mean,
     min,
@@ -1931,7 +1936,7 @@ def test_compile_hourly_statistics_changing_units_1(
         "unit_of_measurement": state_unit,
     }
     four, states = record_states(hass, zero, "sensor.test1", attributes)
-    attributes["unit_of_measurement"] = "cats"
+    attributes["unit_of_measurement"] = state_unit2
     four, _states = record_states(
         hass, zero + timedelta(minutes=5), "sensor.test1", attributes
     )
@@ -1954,7 +1959,7 @@ def test_compile_hourly_statistics_changing_units_1(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": statistics_unit,
+            "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
         },
     ]
@@ -1978,8 +1983,8 @@ def test_compile_hourly_statistics_changing_units_1(
     do_adhoc_statistics(hass, start=zero + timedelta(minutes=10))
     wait_recording_done(hass)
     assert (
-        "The unit of sensor.test1 (cats) can not be converted to the unit of "
-        f"previously compiled statistics ({display_unit})" in caplog.text
+        f"The unit of sensor.test1 ({state_unit2}) can not be converted to the unit of "
+        f"previously compiled statistics ({state_unit})" in caplog.text
     )
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
@@ -1989,7 +1994,7 @@ def test_compile_hourly_statistics_changing_units_1(
             "has_sum": False,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": statistics_unit,
+            "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
         },
     ]
@@ -3754,6 +3759,52 @@ async def test_validate_statistics_unit_change_no_conversion(
         ],
     }
     await assert_validation_result(client, expected)
+
+
+async def test_validate_statistics_other_domain(hass, hass_ws_client, recorder_mock):
+    """Test sensor does not raise issues for statistics for other domains."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    # Create statistics for another domain
+    metadata: StatisticMetaData = {
+        "has_mean": True,
+        "has_sum": True,
+        "name": None,
+        "source": RECORDER_DOMAIN,
+        "statistic_id": "number.test",
+        "unit_of_measurement": None,
+    }
+    statistics: StatisticData = {
+        "last_reset": None,
+        "max": None,
+        "mean": None,
+        "min": None,
+        "start": datetime(2020, 10, 6, tzinfo=dt_util.UTC),
+        "state": None,
+        "sum": None,
+    }
+    async_import_statistics(hass, metadata, (statistics,))
+    await async_recorder_block_till_done(hass)
+
+    # We should not get complains about the missing number entity
+    await assert_validation_result(client, {})
 
 
 def record_meter_states(hass, zero, entity_id, _attributes, seq):

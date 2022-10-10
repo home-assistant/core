@@ -210,6 +210,14 @@
                 "description": "ZHA akan dihentikan.  Ingin melanjutkan?",
                 "title": "Konfigurasi Ulang ZHA"
             },
+            "instruct_unplug": {
+                "description": "Radio lama Anda telah disetel ulang. Jika perangkat keras tidak lagi diperlukan, Anda dapat mencabutnya sekarang.",
+                "title": "Cabut radio lama Anda"
+            },
+            "intent_migrate": {
+                "description": "Radio lama Anda akan disetel ulang ke setelan pabrikan.  Jika Anda menggunakan adaptor gabungan Z-Wave dan Zigbee seperti HUSBZB-1, ini hanya akan mengatur ulang bagian Zigbee.\n\nApakah Anda ingin melanjutkan?",
+                "title": "Migrasikan ke radio baru"
+            },
             "manual_pick_radio_type": {
                 "data": {
                     "radio_type": "Jenis Radio"
@@ -232,6 +240,14 @@
                 },
                 "description": "Cadangan Anda memiliki alamat IEEE yang berbeda dari radio Anda.  Agar jaringan berfungsi dengan baik, alamat IEEE radio Anda juga harus diubah.\n\nOperasi ini bersifat permanen.",
                 "title": "Timpa Alamat IEEE Radio"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "Apakah Anda memigrasikan ke radio baru atau mengkonfigurasi ulang radio yang sekarang?",
+                "menu_options": {
+                    "intent_migrate": "Migrasikan ke radio baru",
+                    "intent_reconfigure": "Mengkonfigurasi ulang radio yang sekarang"
+                },
+                "title": "Migrasi atau konfigurasi ulang"
             },
             "upload_manual_backup": {
                 "data": {

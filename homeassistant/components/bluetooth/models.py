@@ -53,6 +53,25 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
     connectable: bool
     time: float
 
+    def as_dict(self) -> dict[str, Any]:
+        """Return as dict.
+
+        The dataclass asdict method is not used because
+        it will try to deepcopy pyobjc data which will fail.
+        """
+        return {
+            "name": self.name,
+            "address": self.address,
+            "rssi": self.rssi,
+            "manufacturer_data": self.manufacturer_data,
+            "service_data": self.service_data,
+            "service_uuids": self.service_uuids,
+            "source": self.source,
+            "advertisement": self.advertisement,
+            "connectable": self.connectable,
+            "time": self.time,
+        }
+
 
 class BluetoothScanningMode(Enum):
     """The mode of scanning for bluetooth devices."""

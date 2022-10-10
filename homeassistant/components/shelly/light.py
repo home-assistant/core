@@ -7,7 +7,7 @@ from aioshelly.block_device import Block
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
@@ -20,15 +20,8 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
 
 from .const import (
-    BLOCK,
-    DATA_CONFIG_ENTRY,
-    DOMAIN,
     DUAL_MODE_LIGHT_MODELS,
     FIRMWARE_PATTERN,
     KELVIN_MAX_VALUE,
@@ -39,11 +32,10 @@ from .const import (
     MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
     RGBW_MODELS,
-    RPC,
     SHBLB_1_RGB_EFFECTS,
     STANDARD_RGB_EFFECTS,
 )
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import (
     async_remove_shelly_entity,
@@ -52,10 +44,6 @@ from .utils import (
     is_block_channel_type_light,
     is_rpc_channel_type_light,
 )
-
-MIRED_MAX_VALUE_WHITE = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_WHITE)
-MIRED_MIN_VALUE = color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
-MIRED_MAX_VALUE_COLOR = color_temperature_kelvin_to_mired(KELVIN_MIN_VALUE_COLOR)
 
 
 async def async_setup_entry(
@@ -77,8 +65,8 @@ def async_setup_block_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for block device."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
-
+    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    assert coordinator
     blocks = []
     assert coordinator.device.blocks
     for block in coordinator.device.blocks:
@@ -108,7 +96,8 @@ def async_setup_rpc_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
-    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][RPC]
+    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    assert coordinator
     switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
 
     switch_ids = []
@@ -136,14 +125,11 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         super().__init__(coordinator, block)
         self.control_result: dict[str, Any] | None = None
         self._attr_supported_color_modes = set()
-        self._attr_min_mireds = MIRED_MIN_VALUE
-        self._min_kelvin: int = KELVIN_MIN_VALUE_WHITE
-        self._attr_max_mireds = MIRED_MAX_VALUE_WHITE
-        self._max_kelvin: int = KELVIN_MAX_VALUE
+        self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
+        self._attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
 
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
-            self._attr_max_mireds = MIRED_MAX_VALUE_COLOR
-            self._min_kelvin = KELVIN_MIN_VALUE_COLOR
+            self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_COLOR
             if coordinator.model in RGBW_MODELS:
                 self._attr_supported_color_modes.add(ColorMode.RGBW)
             else:
@@ -251,23 +237,20 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         return (*self.rgb_color, white)
 
     @property
-    def color_temp(self) -> int:
-        """Return the CT color value in mireds."""
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in kelvin."""
+        color_temp = cast(int, self.block.colorTemp)
         if self.control_result:
             color_temp = self.control_result["temp"]
-        else:
-            color_temp = self.block.colorTemp
 
-        color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))
-
-        return int(color_temperature_kelvin_to_mired(color_temp))
+        return min(
+            self.max_color_temp_kelvin,
+            max(self.min_color_temp_kelvin, color_temp),
+        )
 
     @property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
-        if not self.supported_features & LightEntityFeature.EFFECT:
-            return None
-
         if self.coordinator.model == "SHBLB-1":
             return list(SHBLB_1_RGB_EFFECTS.values())
 
@@ -276,9 +259,6 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if not self.supported_features & LightEntityFeature.EFFECT:
-            return None
-
         if self.control_result:
             effect_index = self.control_result["effect"]
         else:
@@ -312,12 +292,19 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             if hasattr(self.block, "brightness"):
                 params["brightness"] = brightness_pct
 
-        if ATTR_COLOR_TEMP in kwargs and ColorMode.COLOR_TEMP in supported_color_modes:
-            color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-            color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))
+        if (
+            ATTR_COLOR_TEMP_KELVIN in kwargs
+            and ColorMode.COLOR_TEMP in supported_color_modes
+        ):
             # Color temperature change - used only in white mode, switch device mode to white
+            color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
             set_mode = "white"
-            params["temp"] = int(color_temp)
+            params["temp"] = int(
+                min(
+                    self.max_color_temp_kelvin,
+                    max(self.min_color_temp_kelvin, color_temp),
+                )
+            )
 
         if ATTR_RGB_COLOR in kwargs and ColorMode.RGB in supported_color_modes:
             # Color channels change - used only in color mode, switch device mode to color
@@ -331,7 +318,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                 ATTR_RGBW_COLOR
             ]
 
-        if ATTR_EFFECT in kwargs and ATTR_COLOR_TEMP not in kwargs:
+        if ATTR_EFFECT in kwargs and ATTR_COLOR_TEMP_KELVIN not in kwargs:
             # Color effect change - used only in color mode, switch device mode to color
             set_mode = "color"
             if self.coordinator.model == "SHBLB-1":

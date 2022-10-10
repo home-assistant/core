@@ -22,7 +22,6 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import get_block_device_coordinator, get_rpc_device_coordinator
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -33,6 +32,10 @@ from .const import (
     INPUTS_EVENTS_SUBTYPES,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
+)
+from .coordinator import (
+    get_block_coordinator_by_device_id,
+    get_rpc_coordinator_by_device_id,
 )
 from .utils import (
     get_block_input_triggers,
@@ -78,7 +81,7 @@ async def async_validate_trigger_config(
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
     if config[CONF_TYPE] in RPC_INPUTS_EVENTS_TYPES:
-        rpc_coordinator = get_rpc_device_coordinator(hass, config[CONF_DEVICE_ID])
+        rpc_coordinator = get_rpc_coordinator_by_device_id(hass, config[CONF_DEVICE_ID])
         if not rpc_coordinator or not rpc_coordinator.device.initialized:
             return config
 
@@ -87,7 +90,9 @@ async def async_validate_trigger_config(
             return config
 
     elif config[CONF_TYPE] in BLOCK_INPUTS_EVENTS_TYPES:
-        block_coordinator = get_block_device_coordinator(hass, config[CONF_DEVICE_ID])
+        block_coordinator = get_block_coordinator_by_device_id(
+            hass, config[CONF_DEVICE_ID]
+        )
         if not block_coordinator or not block_coordinator.device.initialized:
             return config
 
@@ -109,12 +114,12 @@ async def async_get_triggers(
     """List device triggers for Shelly devices."""
     triggers: list[dict[str, str]] = []
 
-    if rpc_coordinator := get_rpc_device_coordinator(hass, device_id):
+    if rpc_coordinator := get_rpc_coordinator_by_device_id(hass, device_id):
         input_triggers = get_rpc_input_triggers(rpc_coordinator.device)
         append_input_triggers(triggers, input_triggers, device_id)
         return triggers
 
-    if block_coordinator := get_block_device_coordinator(hass, device_id):
+    if block_coordinator := get_block_coordinator_by_device_id(hass, device_id):
         if block_coordinator.model in SHBTN_MODELS:
             input_triggers = get_shbtn_input_triggers()
             append_input_triggers(triggers, input_triggers, device_id)
