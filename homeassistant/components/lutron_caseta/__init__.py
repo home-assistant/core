@@ -373,16 +373,8 @@ class LutronCasetaDevice(Entity):
         if "serial" not in self._device:
             return
 
-        if "parent_device" in device and (
-            parent_device_info := data.device_info_by_device_id.get(
-                device["parent_device"]
-            )
-        ):
-            # Append the child device name to the end of the parent keypad name to create the entity name
-            self._attr_name = f'{parent_device_info["name"]} {device["device_name"]}'
-            # Set the device_info to the same as the Parent Keypad
-            # The entities will be nested inside the keypad device
-            self._attr_device_info = parent_device_info
+        if "parent_device" in device:
+            # This is a child entity, handle the naming in button.py and switch.py
             return
 
         area, name = _area_and_name_from_name(device["name"])
@@ -428,11 +420,6 @@ class LutronCasetaDevice(Entity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id, "zone_id": self._device.get("zone")}
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return the default enabled status of the entity."""
-        return self._device.get("enabled_default", True)
 
 
 class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
