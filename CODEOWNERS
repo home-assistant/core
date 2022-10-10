@@ -1200,8 +1200,8 @@ build.json @home-assistant/supervisor
 /tests/components/upcloud/ @scop
 /homeassistant/components/update/ @home-assistant/core
 /tests/components/update/ @home-assistant/core
-/homeassistant/components/upnp/ @StevenLooman @ehendrix23
-/tests/components/upnp/ @StevenLooman @ehendrix23
+/homeassistant/components/upnp/ @StevenLooman
+/tests/components/upnp/ @StevenLooman
 /homeassistant/components/uptime/ @frenck
 /tests/components/uptime/ @frenck
 /homeassistant/components/uptimerobot/ @ludeeus @chemelli74
