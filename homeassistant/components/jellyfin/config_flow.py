@@ -70,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 server_info: dict[str, Any] = connect_result["Servers"][0]
 
                 if server_name := server_info.get("Name"):
-                    entry_title = server_info["Name"]
+                    entry_title = server_name
 
                 await self.async_set_unique_id(user_id)
                 self._abort_if_unique_id_configured()
