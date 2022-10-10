@@ -1,6 +1,6 @@
 """Tests for AVM Fritz!Box light component."""
 from datetime import timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 from requests.exceptions import HTTPError
 
@@ -102,6 +102,8 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock):
     assert device.set_state_on.call_count == 1
     assert device.set_level.call_count == 1
     assert device.set_color_temp.call_count == 1
+    assert device.set_color_temp.call_args_list == [call(3000)]
+    assert device.set_level.call_args_list == [call(100)]
 
 
 async def test_turn_on_color(hass: HomeAssistant, fritz: Mock):
@@ -123,6 +125,10 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock):
     assert device.set_state_on.call_count == 1
     assert device.set_level.call_count == 1
     assert device.set_unmapped_color.call_count == 1
+    assert device.set_level.call_args_list == [call(100)]
+    assert device.set_unmapped_color.call_args_list == [
+        call((100, round(70 * 255.0 / 100.0)))
+    ]
 
 
 async def test_turn_on_color_unsupported_api_method(hass: HomeAssistant, fritz: Mock):
@@ -151,6 +157,8 @@ async def test_turn_on_color_unsupported_api_method(hass: HomeAssistant, fritz: 
     assert device.set_state_on.call_count == 1
     assert device.set_level.call_count == 1
     assert device.set_color.call_count == 1
+    assert device.set_level.call_args_list == [call(100)]
+    assert device.set_color.call_args_list == [call((100, 70))]
 
 
 async def test_turn_off(hass: HomeAssistant, fritz: Mock):
