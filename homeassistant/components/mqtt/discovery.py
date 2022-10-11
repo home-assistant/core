@@ -139,6 +139,14 @@ async def async_start(  # noqa: C901
                 key = DEVICE_ABBREVIATIONS.get(key, key)
                 device[key] = device.pop(abbreviated_key)
 
+        if CONF_AVAILABILITY in payload:
+            for availability_conf in cv.ensure_list(payload[CONF_AVAILABILITY]):
+                if isinstance(availability_conf, dict):
+                    for key in list(availability_conf):
+                        abbreviated_key = key
+                        key = ABBREVIATIONS.get(key, key)
+                        availability_conf[key] = availability_conf.pop(abbreviated_key)
+
         if TOPIC_BASE in payload:
             base = payload.pop(TOPIC_BASE)
             for key, value in payload.items():

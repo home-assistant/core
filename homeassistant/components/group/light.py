@@ -12,13 +12,13 @@ from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_FLASH,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -114,7 +114,7 @@ async def async_setup_entry(
 FORWARDED_ATTRIBUTES = frozenset(
     {
         ATTR_BRIGHTNESS,
-        ATTR_COLOR_TEMP,
+        ATTR_COLOR_TEMP_KELVIN,
         ATTR_EFFECT,
         ATTR_FLASH,
         ATTR_HS_COLOR,
@@ -133,8 +133,8 @@ class LightGroup(GroupEntity, LightEntity):
 
     _attr_available = False
     _attr_icon = "mdi:lightbulb-group"
-    _attr_max_mireds = 500
-    _attr_min_mireds = 154
+    _attr_max_color_temp_kelvin = 6500
+    _attr_min_color_temp_kelvin = 2000
     _attr_should_poll = False
 
     def __init__(
@@ -239,12 +239,14 @@ class LightGroup(GroupEntity, LightEntity):
             on_states, ATTR_XY_COLOR, reduce=mean_tuple
         )
 
-        self._attr_color_temp = reduce_attribute(on_states, ATTR_COLOR_TEMP)
-        self._attr_min_mireds = reduce_attribute(
-            states, ATTR_MIN_MIREDS, default=154, reduce=min
+        self._attr_color_temp_kelvin = reduce_attribute(
+            on_states, ATTR_COLOR_TEMP_KELVIN
         )
-        self._attr_max_mireds = reduce_attribute(
-            states, ATTR_MAX_MIREDS, default=500, reduce=max
+        self._attr_min_color_temp_kelvin = reduce_attribute(
+            states, ATTR_MIN_COLOR_TEMP_KELVIN, default=2000, reduce=min
+        )
+        self._attr_max_color_temp_kelvin = reduce_attribute(
+            states, ATTR_MAX_COLOR_TEMP_KELVIN, default=6500, reduce=max
         )
 
         self._attr_effect_list = None

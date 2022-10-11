@@ -46,7 +46,10 @@ from .const import (
     DB_WORKER_PREFIX,
     DOMAIN,
     KEEPALIVE_TIME,
+    MARIADB_PYMYSQL_URL_PREFIX,
+    MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG,
+    MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
     SupportedDialect,
@@ -1114,15 +1117,26 @@ class Recorder(threading.Thread):
             kwargs["pool_reset_on_return"] = None
         elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
-        elif self.db_url.startswith(MYSQLDB_URL_PREFIX):
-            # If they have configured MySQLDB but don't have
-            # the MySQLDB module installed this will throw
-            # an ImportError which we suppress here since
-            # sqlalchemy will give them a better error when
-            # it tried to import it below.
-            with contextlib.suppress(ImportError):
-                kwargs["connect_args"] = {"conv": build_mysqldb_conv()}
-        else:
+        elif self.db_url.startswith(
+            (
+                MARIADB_URL_PREFIX,
+                MARIADB_PYMYSQL_URL_PREFIX,
+                MYSQLDB_URL_PREFIX,
+                MYSQLDB_PYMYSQL_URL_PREFIX,
+            )
+        ):
+            kwargs["connect_args"] = {"charset": "utf8mb4"}
+            if self.db_url.startswith((MARIADB_URL_PREFIX, MYSQLDB_URL_PREFIX)):
+                # If they have configured MySQLDB but don't have
+                # the MySQLDB module installed this will throw
+                # an ImportError which we suppress here since
+                # sqlalchemy will give them a better error when
+                # it tried to import it below.
+                with contextlib.suppress(ImportError):
+                    kwargs["connect_args"]["conv"] = build_mysqldb_conv()
+
+        # Disable extended logging for non SQLite databases
+        if not self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["echo"] = False
 
         if self._using_file_sqlite:

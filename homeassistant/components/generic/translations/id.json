@@ -45,6 +45,13 @@
                     "verify_ssl": "Verifikasi sertifikat SSL"
                 },
                 "description": "Masukkan pengaturan untuk terhubung ke kamera."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Gambar ini terlihat bagus."
+                },
+                "description": "![Pratinjau Gambar Diam Kamera]({preview_url})",
+                "title": "Pratinjau"
             }
         }
     },
