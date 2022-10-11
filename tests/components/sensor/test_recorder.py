@@ -1912,6 +1912,9 @@ def test_list_statistic_ids_unsupported(hass_recorder, caplog, _attributes):
         ("battery", "%", "cats", None, 13.050847, -10, 30),
         ("battery", None, "cats", None, 13.050847, -10, 30),
         (None, "kW", "Wh", "power", 13.050847, -10, 30),
+        # Can't downgrade from ft³ to ft3 or from m³ to m3
+        (None, "ft³", "ft3", "volume", 13.050847, -10, 30),
+        (None, "m³", "m3", "volume", 13.050847, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_changing_units_1(
@@ -2193,10 +2196,12 @@ def test_compile_hourly_statistics_changing_units_3(
 
 
 @pytest.mark.parametrize(
-    "device_class, state_unit, state_unit2, unit_class, mean, mean2, min, max",
+    "device_class, state_unit, state_unit2, unit_class, unit_class2, mean, mean2, min, max",
     [
-        (None, "RPM", "rpm", None, 13.050847, 13.333333, -10, 30),
-        (None, "rpm", "RPM", None, 13.050847, 13.333333, -10, 30),
+        (None, "RPM", "rpm", None, None, 13.050847, 13.333333, -10, 30),
+        (None, "rpm", "RPM", None, None, 13.050847, 13.333333, -10, 30),
+        (None, "ft3", "ft³", None, "volume", 13.050847, 13.333333, -10, 30),
+        (None, "m3", "m³", None, "volume", 13.050847, 13.333333, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_equivalent_units_1(
@@ -2206,6 +2211,7 @@ def test_compile_hourly_statistics_equivalent_units_1(
     state_unit,
     state_unit2,
     unit_class,
+    unit_class2,
     mean,
     mean2,
     min,
@@ -2277,7 +2283,7 @@ def test_compile_hourly_statistics_equivalent_units_1(
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit2,
-            "unit_class": unit_class,
+            "unit_class": unit_class2,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2317,6 +2323,8 @@ def test_compile_hourly_statistics_equivalent_units_1(
     [
         (None, "RPM", "rpm", None, 13.333333, -10, 30),
         (None, "rpm", "RPM", None, 13.333333, -10, 30),
+        (None, "ft3", "ft³", None, 13.333333, -10, 30),
+        (None, "m3", "m³", None, 13.333333, -10, 30),
     ],
 )
 def test_compile_hourly_statistics_equivalent_units_2(
