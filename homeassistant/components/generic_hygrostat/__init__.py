@@ -7,25 +7,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "generic_hygrostat"
-
-CONF_HUMIDIFIER = "humidifier"
-CONF_SENSOR = "target_sensor"
-CONF_MIN_HUMIDITY = "min_humidity"
-CONF_MAX_HUMIDITY = "max_humidity"
-CONF_TARGET_HUMIDITY = "target_humidity"
-CONF_DEVICE_CLASS = "device_class"
-CONF_MIN_DUR = "min_cycle_duration"
-CONF_DRY_TOLERANCE = "dry_tolerance"
-CONF_WET_TOLERANCE = "wet_tolerance"
-CONF_KEEP_ALIVE = "keep_alive"
-CONF_INITIAL_STATE = "initial_state"
-CONF_AWAY_HUMIDITY = "away_humidity"
-CONF_AWAY_FIXED = "away_fixed"
-CONF_STALE_DURATION = "sensor_stale_duration"
-
-DEFAULT_TOLERANCE = 3
-DEFAULT_NAME = "Generic Hygrostat"
+from .const import (
+    CONF_AWAY_FIXED,
+    CONF_AWAY_HUMIDITY,
+    CONF_DEVICE_CLASS,
+    CONF_DRY_TOLERANCE,
+    CONF_HUMIDIFIER,
+    CONF_INITIAL_STATE,
+    CONF_KEEP_ALIVE,
+    CONF_MAX_HUMIDITY,
+    CONF_MIN_DUR,
+    CONF_MIN_HUMIDITY,
+    CONF_SENSOR,
+    CONF_STALE_DURATION,
+    CONF_TARGET_HUMIDITY,
+    CONF_WET_TOLERANCE,
+    DEFAULT_NAME,
+    DEFAULT_TOLERANCE,
+    DOMAIN,
+)
 
 HYGROSTAT_SCHEMA = vol.Schema(
     {
