@@ -20,27 +20,17 @@ def mock_device():
 
 
 @pytest.fixture()
-def mock_repeater_device():
+def mock_repeater_device(mock_device: MockDevice):
     """Mock connecting to a devolo home network repeater device."""
-    device = MockDevice(ip=IP)
-    with patch(
-        "homeassistant.components.devolo_home_network.Device",
-        side_effect=cycle([device]),
-    ):
-        device.plcnet = None
-        yield device
+    mock_device.plcnet = None
+    yield mock_device
 
 
 @pytest.fixture()
-def mock_nonwifi_device():
+def mock_nonwifi_device(mock_device: MockDevice):
     """Mock connecting to a devolo home network device without wifi."""
-    device = MockDevice(ip=IP)
-    with patch(
-        "homeassistant.components.devolo_home_network.Device",
-        side_effect=cycle([device]),
-    ):
-        device.device.features = ["reset", "update", "led", "intmtg"]
-        yield device
+    mock_device.device.features = ["reset", "update", "led", "intmtg"]
+    yield mock_device
 
 
 @pytest.fixture(name="info")
