@@ -21,8 +21,8 @@ def create_service_with_ecobee_mode(accessory: Accessory):
     return service
 
 
-async def test_read_current_mode(hass, utcnow):
-    """Test that Ecobee mode can be correctly read and show as human readable text."""
+async def test_migrate_unique_id(hass, utcnow):
+    """Test we can migrate a select unique id."""
     entity_registry = er.async_get(hass)
     aid = get_next_aid()
     select = entity_registry.async_get_or_create(
@@ -32,12 +32,17 @@ async def test_read_current_mode(hass, utcnow):
         suggested_object_id="testdevice_current_mode",
     )
 
-    helper = await setup_test_component(hass, create_service_with_ecobee_mode)
+    await setup_test_component(hass, create_service_with_ecobee_mode)
 
     assert (
         entity_registry.async_get(select.entity_id).unique_id
         == f"00:00:00:00:00:00_{aid}_8_14"
     )
+
+
+async def test_read_current_mode(hass, utcnow):
+    """Test that Ecobee mode can be correctly read and show as human readable text."""
+    helper = await setup_test_component(hass, create_service_with_ecobee_mode)
 
     # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
     ecobee_mode = Helper(

@@ -28,8 +28,8 @@ def create_switch_with_spray_level(accessory):
     return service
 
 
-async def test_read_number(hass, utcnow):
-    """Test a switch service that has a sensor characteristic is correctly handled."""
+async def test_migrate_unique_id(hass, utcnow):
+    """Test a we can migrate a number unique id."""
     entity_registry = er.async_get(hass)
     aid = get_next_aid()
     number = entity_registry.async_get_or_create(
@@ -38,12 +38,17 @@ async def test_read_number(hass, utcnow):
         f"homekit-0001-aid:{aid}-sid:8-cid:9",
         suggested_object_id="testdevice_spray_quantity",
     )
-    helper = await setup_test_component(hass, create_switch_with_spray_level)
+    await setup_test_component(hass, create_switch_with_spray_level)
 
     assert (
         entity_registry.async_get(number.entity_id).unique_id
         == f"00:00:00:00:00:00_{aid}_8_9"
     )
+
+
+async def test_read_number(hass, utcnow):
+    """Test a switch service that has a sensor characteristic is correctly handled."""
+    helper = await setup_test_component(hass, create_switch_with_spray_level)
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     spray_level = Helper(

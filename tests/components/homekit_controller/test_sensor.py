@@ -362,6 +362,28 @@ async def test_rssi_sensor(
     hass, utcnow, entity_registry_enabled_by_default, enable_bluetooth
 ):
     """Test an rssi sensor."""
+    inject_bluetooth_service_info(hass, TEST_DEVICE_SERVICE_INFO)
+
+    class FakeBLEPairing(FakePairing):
+        """Fake BLE pairing."""
+
+        @property
+        def transport(self):
+            return Transport.BLE
+
+    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
+        # Any accessory will do for this test, but we need at least
+        # one or the rssi sensor will not be created
+        await setup_test_component(
+            hass, create_battery_level_sensor, suffix="battery", connection="BLE"
+        )
+        assert hass.states.get("sensor.testdevice_signal_strength").state == "-56"
+
+
+async def test_migrate_rssi_sensor_unique_id(
+    hass, utcnow, entity_registry_enabled_by_default, enable_bluetooth
+):
+    """Test an rssi sensor unique id migration."""
     entity_registry = er.async_get(hass)
     rssi_sensor = entity_registry.async_get_or_create(
         "sensor",

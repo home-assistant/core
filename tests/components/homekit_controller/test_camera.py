@@ -15,8 +15,8 @@ def create_camera(accessory):
     accessory.add_service(ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT)
 
 
-async def test_migrate_entity_ids(hass, utcnow):
-    """Test migrating entity ids."""
+async def test_migrate_unique_ids(hass, utcnow):
+    """Test migrating entity unique ids."""
     entity_registry = er.async_get(hass)
     aid = get_next_aid()
     camera = entity_registry.async_get_or_create(
