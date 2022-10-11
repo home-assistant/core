@@ -974,6 +974,83 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
         )
 
 
+class PowerViewShadeDualOverlappedCombinedTilt(PowerViewShadeDualOverlappedCombined):
+    """Represent a shade that has a front sheer and rear blackout panel.
+
+    This equates to two shades being controlled by one motor.
+    The front shade must be completely down before the rear shade will move.
+    Tilting this shade will also force positional change of the main roller.
+
+    Sibling Class: PowerViewShadeDualOverlappedFront, PowerViewShadeDualOverlappedRear
+    API Class: ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
+
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear blackout (non-tilting) shade)
+    Type 10 - Duolite with 180° Tilt
+    """
+
+    # type
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_supported_features |= (
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.SET_TILT_POSITION
+        )
+        if self._device_info.model != LEGACY_DEVICE_MODEL:
+            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
+        self._max_tilt = self._shade.shade_limits.tilt_max
+
+    @property
+    def transition_steps(self) -> int:
+        """Return the steps to make a move."""
+        # poskind 1 represents the second half of the shade in hass
+        # front must be fully closed before rear can move
+        # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
+        primary = (hd_position_to_hass(self.positions.primary, MAX_POSITION) / 2) + 50
+        # poskind 2 represents the shade first half of the shade in hass
+        # rear (blackout) must be fully open before front can move
+        # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
+        secondary = hd_position_to_hass(self.positions.secondary, MAX_POSITION) / 2
+        vane = hd_position_to_hass(self.positions.vane, self._max_tilt)
+        return ceil(primary + secondary + vane)
+
+    @callback
+    def _get_shade_tilt(self, target_hass_tilt_position: int) -> PowerviewShadeMove:
+        """Return a PowerviewShadeMove."""
+        position_vane = hass_position_to_hd(target_hass_tilt_position, self._max_tilt)
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: position_vane,
+                ATTR_POSKIND1: POS_KIND_VANE,
+            },
+            {POS_KIND_PRIMARY: MIN_POSITION, POS_KIND_SECONDARY: MAX_POSITION},
+        )
+
+    @property
+    def open_tilt_position(self) -> PowerviewShadeMove:
+        """Return the open tilt position and required additional positions."""
+        return PowerviewShadeMove(
+            self._shade.open_position_tilt,
+            {POS_KIND_PRIMARY: MIN_POSITION, POS_KIND_SECONDARY: MAX_POSITION},
+        )
+
+    @property
+    def close_tilt_position(self) -> PowerviewShadeMove:
+        """Return the open tilt position and required additional positions."""
+        return PowerviewShadeMove(
+            self._shade.open_position_tilt,
+            {POS_KIND_PRIMARY: MIN_POSITION, POS_KIND_SECONDARY: MAX_POSITION},
+        )
+
+
 TYPE_TO_CLASSES = {
     0: (PowerViewShade,),
     1: (PowerViewShadeWithTiltOnClosed,),
@@ -988,6 +1065,16 @@ TYPE_TO_CLASSES = {
     ),
     8: (
         PowerViewShadeDualOverlappedCombined,
+        PowerViewShadeDualOverlappedFront,
+        PowerViewShadeDualOverlappedRear,
+    ),
+    9: (
+        PowerViewShadeDualOverlappedCombinedTilt,
+        PowerViewShadeDualOverlappedFront,
+        PowerViewShadeDualOverlappedRear,
+    ),
+    10: (
+        PowerViewShadeDualOverlappedCombinedTilt,
         PowerViewShadeDualOverlappedFront,
         PowerViewShadeDualOverlappedRear,
     ),
