@@ -2821,6 +2821,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "livisi": {
+      "config_flow": true,
+      "iot_class": "local_polling",
+      "name": "LIVISI Smart Home"
+    },
     "llamalab_automate": {
       "name": "LlamaLab Automate",
       "integration_type": "hub",
