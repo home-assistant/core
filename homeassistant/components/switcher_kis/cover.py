@@ -53,6 +53,12 @@ class SwitcherCoverEntity(
     """Representation of a Switcher cover entity."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
+    )
 
     def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Initialize the entity."""
@@ -64,13 +70,6 @@ class SwitcherCoverEntity(
             connections={
                 (device_registry.CONNECTION_NETWORK_MAC, coordinator.mac_address)
             }
-        )
-
-        self._attr_supported_features: int = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.SET_POSITION
-            | CoverEntityFeature.STOP
         )
 
         self._update_data()
