@@ -74,4 +74,4 @@ class IntellifireFlameControlEntity(IntellifireEntity, NumberEntity):
             value_to_send,
         )
         await self.coordinator.control_api.set_flame_height(height=value_to_send)
-        await self.async_update_ha_state(force_refresh=True)
+        await self.coordinator.async_refresh()
