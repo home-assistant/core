@@ -70,6 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             await self.async_set_unique_id(info[SERIAL_NUMBER], raise_on_progress=False)
             self._abort_if_unique_id_configured()
+            user_input[CONF_PASSWORD] = ""
             return self.async_create_entry(title=info[TITLE], data=user_input)
 
         return self.async_show_form(
@@ -140,9 +141,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.hass.config_entries.async_update_entry(
             reauth_entry,
             data=data,
-            unique_id=self.hass.data[DOMAIN][self.context["entry_id"]][
-                "device"
-            ].serial_number,
         )
         self.hass.async_create_task(
             self.hass.config_entries.async_reload(reauth_entry.entry_id)

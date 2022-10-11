@@ -48,6 +48,7 @@ async def test_form(hass: HomeAssistant, info: dict[str, Any]):
     assert result2["title"] == info["title"]
     assert result2["data"] == {
         CONF_IP_ADDRESS: IP,
+        CONF_PASSWORD: "",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
