@@ -33,6 +33,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import (
     async_integration_yaml_config,
     async_reload_integration_platforms,
@@ -322,6 +323,20 @@ async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | 
                 "These settings from your configuration entry will override: %s",
                 override,
             )
+        # Register a repair issue
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_broker_settings",
+            breaks_in_ha_version="2023.4.0",  # Warning first added in 2022.11.0
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_broker_settings",
+            translation_placeholders={
+                "more_info_url": "https://www.home-assistant.io/integrations/mqtt/",
+                "deprecated_settings": str(shared_keys)[1:-1],
+            },
+        )
 
     # Merge advanced configuration values from configuration.yaml
     conf = _merge_extended_config(entry, conf)

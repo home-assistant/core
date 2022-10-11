@@ -70,6 +70,10 @@
         "deprecated_yaml": {
             "description": "Manually configured MQTT {platform}(s) found under platform key `{platform}`.\n\nPlease move the configuration to the `mqtt` integration key and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information.",
             "title": "Your manually configured MQTT {platform}(s) needs attention"
+        },
+        "deprecated_yaml_broker_settings": {
+            "title": "Deprecated MQTT settings found in `configuration.yaml`",
+            "description": "The following settings found in `configuration.yaml` were migrated to MQTT config entry and will now override the settings in `configuration.yaml`:\n`{deprecated_settings}`\n\nPlease remove these settings from `configuration.yaml` and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information."
         }
     },
     "options": {
