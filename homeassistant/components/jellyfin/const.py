@@ -2,9 +2,11 @@
 
 from typing import Final
 
+from homeassistant.const import __version__ as hass_version
+
 DOMAIN: Final = "jellyfin"
 
-CLIENT_VERSION: Final = "1.0"
+CLIENT_VERSION: Final = hass_version
 
 COLLECTION_TYPE_MOVIES: Final = "movies"
 COLLECTION_TYPE_MUSIC: Final = "music"
