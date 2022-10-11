@@ -237,7 +237,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
                 "host": "mock-mosquitto",
                 "port": "1883",
                 "protocol": "3.1.1",
-            }
+            },
+            name="Mosquitto",
+            slug="mosquitto",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -261,7 +263,9 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
                 "password": "mock-pass",
                 "protocol": "3.1.1",  # Set by the addon's discovery, ignored by HA
                 "ssl": False,  # Set by the addon's discovery, ignored by HA
-            }
+            },
+            name="Mock Addon",
+            slug="mosquitto",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -305,7 +309,9 @@ async def test_hassio_cannot_connect(
                 "password": "mock-pass",
                 "protocol": "3.1.1",  # Set by the addon's discovery, ignored by HA
                 "ssl": False,  # Set by the addon's discovery, ignored by HA
-            }
+            },
+            name="Mock Addon",
+            slug="mosquitto",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
