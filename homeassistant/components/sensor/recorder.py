@@ -671,7 +671,7 @@ def validate_statistics(
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
-                if state_unit != metadata_unit:
+                if not _equivalent_units({state_unit, metadata_unit}):
                     # The unit has changed, and it's not possible to convert
                     validation_result[entity_id].append(
                         statistics.ValidationIssue(
