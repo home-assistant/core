@@ -50,16 +50,16 @@ async def async_get_config_entry_diagnostics(
         LOGGER.warning("Unable to download controller-specific diagnostics")
         controller_diagnostics = None
 
-    return {
-        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "data": {
-            "coordinator": async_redact_data(
-                {
+    return async_redact_data(
+        {
+            "entry": entry.as_dict(),
+            "data": {
+                "coordinator": {
                     api_category: controller.data
                     for api_category, controller in data.coordinators.items()
                 },
-                TO_REDACT,
-            ),
-            "controller_diagnostics": controller_diagnostics,
+                "controller_diagnostics": controller_diagnostics,
+            },
         },
-    }
+        TO_REDACT,
+    )
