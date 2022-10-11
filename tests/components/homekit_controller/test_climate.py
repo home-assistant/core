@@ -17,8 +17,9 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.helpers import entity_registry as er
 
-from .common import setup_test_component
+from .common import get_next_aid, setup_test_component
 
 # Test thermostat devices
 
@@ -943,3 +944,19 @@ async def test_heater_cooler_turn_off(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "off"
     assert state.attributes["hvac_action"] == "off"
+
+
+async def test_migrate_unique_id(hass, utcnow):
+    """Test a we can migrate a switch unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    climate_entry = entity_registry.async_get_or_create(
+        "climate",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_heater_cooler_service)
+    assert (
+        entity_registry.async_get(climate_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )
