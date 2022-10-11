@@ -353,3 +353,30 @@ async def test_migrate_unique_id(hass, utcnow):
         entity_registry.async_get(light_entry.entity_id).unique_id
         == f"00:00:00:00:00:00_{aid}_8"
     )
+
+
+async def test_only_migrate_once(hass, utcnow):
+    """Test a we handle migration happening after an upgrade and than a downgrade and then an upgrade."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    old_light_entry = entity_registry.async_get_or_create(
+        "light",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    new_light_entry = entity_registry.async_get_or_create(
+        "light",
+        "homekit_controller",
+        f"00:00:00:00:00:00_{aid}_8",
+    )
+    await setup_test_component(hass, create_lightbulb_service_with_color_temp)
+
+    assert (
+        entity_registry.async_get(old_light_entry.entity_id).unique_id
+        == f"homekit-00:00:00:00:00:00-{aid}-8"
+    )
+
+    assert (
+        entity_registry.async_get(new_light_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )
