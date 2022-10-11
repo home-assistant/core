@@ -11,3 +11,5 @@ DEFAULT_NAME: Final = "TCP Sensor"
 DEFAULT_TIMEOUT: Final = 10
 DEFAULT_SSL: Final = False
 DEFAULT_VERIFY_SSL: Final = True
+CONF_PAYLOAD_IS_HEX: Final = "payload_is_hex"
+DEFAULT_PAYLOAD_HEX: Final = False

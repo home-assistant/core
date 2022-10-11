@@ -14,6 +14,7 @@ class TcpSensorConfig(TypedDict):
     port: str
     timeout: int
     payload: str
+    payload_is_hex: bool
     unit_of_measurement: str | None
     value_template: Template | None
     value_on: str | None

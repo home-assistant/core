@@ -29,9 +29,11 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BUFFER_SIZE,
+    CONF_PAYLOAD_IS_HEX,
     CONF_VALUE_ON,
     DEFAULT_BUFFER_SIZE,
     DEFAULT_NAME,
+    DEFAULT_PAYLOAD_HEX,
     DEFAULT_SSL,
     DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
@@ -45,6 +47,7 @@ TCP_PLATFORM_SCHEMA: Final[dict[vol.Marker, Any]] = {
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.port,
     vol.Required(CONF_PAYLOAD): cv.string,
+    vol.Optional(CONF_PAYLOAD_IS_HEX, default=DEFAULT_PAYLOAD_HEX): cv.boolean,
     vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -73,6 +76,7 @@ class TcpEntity(Entity):
             CONF_PORT: config[CONF_PORT],
             CONF_TIMEOUT: config[CONF_TIMEOUT],
             CONF_PAYLOAD: config[CONF_PAYLOAD],
+            CONF_PAYLOAD_IS_HEX: config[CONF_PAYLOAD_IS_HEX],
             CONF_UNIT_OF_MEASUREMENT: config.get(CONF_UNIT_OF_MEASUREMENT),
             CONF_VALUE_TEMPLATE: value_template,
             CONF_VALUE_ON: config.get(CONF_VALUE_ON),
@@ -117,7 +121,10 @@ class TcpEntity(Entity):
                 )
 
             try:
-                sock.send(self._config[CONF_PAYLOAD].encode())
+                if self._config[CONF_PAYLOAD_IS_HEX]:
+                    sock.sendall(bytearray.fromhex(self._config[CONF_PAYLOAD]))
+                else:
+                    sock.sendall((self._config[CONF_PAYLOAD]).encode())
             except OSError as err:
                 _LOGGER.error(
                     "Unable to send payload %r to %s on port %s: %s",
@@ -140,7 +147,11 @@ class TcpEntity(Entity):
                 )
                 return
 
-            value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
+            value = (
+                " ".join("%02x" % b for b in sock.recv(self._config[CONF_BUFFER_SIZE]))
+                if self._config[CONF_PAYLOAD_IS_HEX]
+                else sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
+            )
 
         value_template = self._config[CONF_VALUE_TEMPLATE]
         if value_template is not None:
