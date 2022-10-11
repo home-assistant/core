@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-import urllib.parse as urlparse
 
 import voluptuous as vol
 
@@ -27,8 +26,6 @@ from .const import (
     DATA_INSTANCE,
     DOMAIN,
     EXCLUDE_ATTRIBUTES,
-    MYSQLDB_PYMYSQL_URL_PREFIX,
-    MYSQLDB_URL_PREFIX,
     SQLITE_URL_PREFIX,
 )
 from .core import Recorder
@@ -77,22 +74,6 @@ def validate_db_url(db_url: str) -> Any:
         or (db_url.startswith(SQLITE_URL_PREFIX) and ":memory:" in db_url)
     ) and not ALLOW_IN_MEMORY_DB:
         raise vol.Invalid("In-memory SQLite database is not supported")
-
-    # Add query parameter "charset": "utf8mb4" to MariaDB / MySQL connection URL
-    if db_url.startswith(MYSQLDB_URL_PREFIX) or db_url.startswith(
-        MYSQLDB_PYMYSQL_URL_PREFIX
-    ):
-        try:
-            parsed_url = urlparse.urlparse(db_url)
-        except Exception as exc:
-            raise vol.Invalid("Invalid database URL") from exc
-        parsed_url = parsed_url._replace(
-            query=urlparse.urlencode(
-                urlparse.parse_qs(parsed_url.query) | {"charset": ["utf8mb4"]},
-                doseq=True,
-            )
-        )
-        db_url = urlparse.urlunparse(parsed_url)
 
     return db_url
 
