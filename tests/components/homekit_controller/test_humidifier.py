@@ -3,6 +3,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.humidifier import DOMAIN, MODE_AUTO, MODE_NORMAL
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_test_component
 
@@ -436,3 +437,19 @@ async def test_dehumidifier_target_humidity_modes(hass, utcnow):
     )
     assert state.attributes["mode"] == "normal"
     assert state.attributes["humidity"] == 73
+
+
+async def test_migrate_entity_ids(hass, utcnow):
+    """Test that we can migrate humidifier entity ids."""
+
+    entity_registry = er.async_get(hass)
+    humidifier_entry = entity_registry.async_get_or_create(
+        "humidifier",
+        "homekit_controller",
+        "homekit-00:00:00:00:00:00-13-8",
+    )
+    await setup_test_component(hass, create_humidifier_service)
+    assert (
+        entity_registry.async_get(humidifier_entry.entity_id).unique_id
+        == "00:00:00:00:00:00_13_8"
+    )
