@@ -199,6 +199,63 @@ effect_move:
           options:
             - right
             - left
+    theme:
+      name: Theme
+      description: (Optional) set one of the predefined themes onto the device before starting the effect.
+      example: Exciting
+      default: exciting
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - label: Autumn
+              value: autumn
+            - label: Blissful
+              value: blissful
+            - label: Cheerful
+              value: cheerful
+            - label: Dream
+              value: dream
+            - label: Energizing
+              value: energizing
+            - label: Epic
+              value: epic
+            - label: Exciting
+              value: exciting
+            - label: Focusing
+              value: focusing
+            - label: Halloween
+              value: halloween
+            - label: Hanukkah
+              value: hanukkah
+            - label: Holly
+              value: holly
+            - label: Independence Day
+              value: independence_day
+            - label: Intense
+              value: intense
+            - label: Mellow
+              value: mellow
+            - label: Peaceful
+              value: peaceful
+            - label: Powerful
+              value: powerful
+            - label: Relaxing
+              value: relaxing
+            - label: Santa
+              value: santa
+            - label: Serene
+              value: serene
+            - label: Soothing
+              value: soothing
+            - label: Sports
+              value: sports
+            - label: Spring
+              value: spring
+            - label: Tranquil
+              value: tranquil
+            - label: Warming
+              value: warming
     power_on:
       name: Power on
       description: Powered off lights will be turned on before starting the effect.
@@ -260,30 +317,54 @@ effect_morph:
       selector:
         select:
           options:
-            - "autumn"
-            - "blissful"
-            - "cheerful"
-            - "dream"
-            - "energizing"
-            - "epic"
-            - "exciting"
-            - "focusing"
-            - "halloween"
-            - "hanukkah"
-            - "holly"
-            - "independence day"
-            - "intense"
-            - "mellow"
-            - "peaceful"
-            - "powerful"
-            - "relaxing"
-            - "santa"
-            - "serene"
-            - "soothing"
-            - "sports"
-            - "spring"
-            - "tranquil"
-            - "warming"
+            - label: Autumn
+              value: autumn
+            - label: Blissful
+              value: blissful
+            - label: Cheerful
+              value: cheerful
+            - label: Dream
+              value: dream
+            - label: Energizing
+              value: energizing
+            - label: Epic
+              value: epic
+            - label: Exciting
+              value: exciting
+            - label: Focusing
+              value: focusing
+            - label: Halloween
+              value: halloween
+            - label: Hanukkah
+              value: hanukkah
+            - label: Holly
+              value: holly
+            - label: Independence Day
+              value: independence_day
+            - label: Intense
+              value: intense
+            - label: Mellow
+              value: mellow
+            - label: Peaceful
+              value: peaceful
+            - label: Powerful
+              value: powerful
+            - label: Relaxing
+              value: relaxing
+            - label: Santa
+              value: santa
+            - label: Serene
+              value: serene
+            - label: Soothing
+              value: soothing
+            - label: Sports
+              value: sports
+            - label: Spring
+              value: spring
+            - label: Tranquil
+              value: tranquil
+            - label: Warming
+              value: warming
     power_on:
       name: Power on
       description: Powered off lights will be turned on before starting the effect.
