@@ -192,8 +192,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
         lock_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id,
-            {ActivityType.LOCK_OPERATION, ActivityType.LOCK_OPERATION_WITHOUT_OPERATOR},
+            self._device_id, {ActivityType.LOCK_OPERATION}
         )
 
         self._attr_available = True
