@@ -554,6 +554,7 @@ class AtomePeriodServerEndPoint(AtomeGenericServerEndPoint):
                 _LOGGER.debug(
                     "%s : DETAILED value %s: %s", period_type, i, values["data"][-i]
                 )
+
             except IndexError, KeyError:
                 _LOGGER.debug("days %s does not exist ", -i)
 
