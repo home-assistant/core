@@ -541,6 +541,34 @@ class PowerViewShadeWithTiltAnywhere(PowerViewShadeWithTiltBase):
         )
 
 
+class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
+    """Representation of a shade with tilt only capability, no move.
+
+    API Class: ShadeTiltOnly
+
+    Type 5 - Tilt Only 180°
+    """
+
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.SET_TILT_POSITION
+        )
+        if self._device_info.model != LEGACY_DEVICE_MODEL:
+            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
+        self._max_tilt = self._shade.shade_limits.tilt_max
+
+
 class PowerViewShadeDualRailBase(PowerViewShade):
     """Representation of a shade with top/down bottom/up capabilities.
 
@@ -682,6 +710,7 @@ TYPE_TO_CLASSES = {
     2: (PowerViewShadeWithTiltAnywhere,),
     3: (PowerViewShade,),
     4: (PowerViewShadeWithTiltAnywhere,),
+    5: (PowerViewShadeTiltOnly,),
     7: (PowerViewShadeTDBUTop, PowerViewShadeTDBUBottom),
 }
 
