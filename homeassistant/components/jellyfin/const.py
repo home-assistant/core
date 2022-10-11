@@ -2,10 +2,7 @@
 import logging
 from typing import Final
 
-from homeassistant.const import (
-    Platform,
-    __version__ as hass_version,
-)
+from homeassistant.const import Platform, __version__ as hass_version
 
 DOMAIN: Final = "jellyfin"
 
