@@ -11,10 +11,10 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_enphase_
             "entry_id": config_entry.entry_id,
             "version": 1,
             "domain": "enphase_envoy",
-            "title": "Envoy 1234",
+            "title": REDACTED,
             "data": {
                 "host": "1.1.1.1",
-                "name": "Envoy 1234",
+                "name": REDACTED,
                 "username": REDACTED,
                 "password": REDACTED,
             },
@@ -22,7 +22,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_enphase_
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
-            "unique_id": "1234",
+            "unique_id": REDACTED,
             "disabled_by": None,
         },
         "data": {
