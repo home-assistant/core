@@ -23,7 +23,7 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
     StatisticResult,
 )
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, REVOLUTIONS_PER_MINUTE
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
@@ -45,6 +45,10 @@ DEFAULT_STATISTICS = {
     STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
     STATE_CLASS_TOTAL: {"sum"},
     STATE_CLASS_TOTAL_INCREASING: {"sum"},
+}
+
+EQUIVALENT_UNITS = {
+    "RPM": REVOLUTIONS_PER_MINUTE,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -113,8 +117,18 @@ def _time_weighted_average(
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
-    """Return True if all states have the same unit."""
+    """Return a set of all units."""
     return {item[1].attributes.get(ATTR_UNIT_OF_MEASUREMENT) for item in fstates}
+
+
+def _equivalent_units(units: set[str | None]) -> bool:
+    """Return True if the units are equivalent."""
+    if len(units) == 1:
+        return True
+    units = {
+        EQUIVALENT_UNITS[unit] if unit in EQUIVALENT_UNITS else unit for unit in units
+    }
+    return len(units) == 1
 
 
 def _parse_float(state: str) -> float:
@@ -165,7 +179,7 @@ def _normalize_states(
         # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
-        if len(all_units) > 1:
+        if not _equivalent_units(all_units):
             if WARN_UNSTABLE_UNIT not in hass.data:
                 hass.data[WARN_UNSTABLE_UNIT] = set()
             if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
@@ -442,7 +456,9 @@ def _compile_statistics(  # noqa: C901
     ) in to_process:
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
-            if old_metadata[1]["unit_of_measurement"] != statistics_unit:
+            if not _equivalent_units(
+                {old_metadata[1]["unit_of_measurement"], statistics_unit}
+            ):
                 if WARN_UNSTABLE_UNIT not in hass.data:
                     hass.data[WARN_UNSTABLE_UNIT] = set()
                 if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
