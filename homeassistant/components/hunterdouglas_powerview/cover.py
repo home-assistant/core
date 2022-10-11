@@ -730,13 +730,17 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
 
 
 TYPE_TO_CLASSES = {
+    0: (PowerViewShade,),
     1: (PowerViewShadeWithTiltOnClosed,),
     2: (PowerViewShadeWithTiltAnywhere,),
     3: (PowerViewShade,),
     4: (PowerViewShadeWithTiltAnywhere,),
     5: (PowerViewShadeTiltOnly,),
     6: (PowerViewShadeTopDown,),
-    7: (PowerViewShadeTDBUTop, PowerViewShadeTDBUBottom),
+    7: (
+        PowerViewShadeTDBUTop,
+        PowerViewShadeTDBUBottom,
+    ),
 }
 
 
