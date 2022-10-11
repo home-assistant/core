@@ -505,6 +505,28 @@ async def test_abort_hassio_discovery_with_existing_flow(
     assert result2["reason"] == "already_in_progress"
 
 
+async def test_abort_hassio_discovery_for_other_addon(
+    hass, supervisor, addon_installed, addon_options
+):
+    """Test hassio discovery flow is aborted for a non official add-on discovery."""
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config={
+                "addon": "Other Z-Wave JS",
+                "host": "host1",
+                "port": 3001,
+            },
+            name="Other Z-Wave JS",
+            slug="other_addon",
+        ),
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "not_zwave_js_addon"
+
+
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_usb_discovery(
     hass,
