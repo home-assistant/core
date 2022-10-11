@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_PASSWORD,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant
 
@@ -32,6 +33,8 @@ TO_REDACT = {
     CONF_STATION_NAME,
     CONF_STATION_SOURCE,
     CONF_TIMEZONE,
+    # Config entry unique ID may contain sensitive data:
+    CONF_UNIQUE_ID,
 }
 
 
@@ -48,11 +51,7 @@ async def async_get_config_entry_diagnostics(
         controller_diagnostics = None
 
     return {
-        "entry": {
-            "title": entry.title,
-            "data": async_redact_data(entry.data, TO_REDACT),
-            "options": dict(entry.options),
-        },
+        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "data": {
             "coordinator": async_redact_data(
                 {
