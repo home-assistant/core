@@ -9,8 +9,9 @@ from homeassistant.components.light import (
     ColorMode,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_UNAVAILABLE
+from homeassistant.helpers import entity_registry as er
 
-from .common import setup_test_component
+from .common import get_next_aid, setup_test_component
 
 LIGHT_BULB_NAME = "TestDevice"
 LIGHT_BULB_ENTITY_ID = "light.testdevice"
@@ -335,3 +336,20 @@ async def test_light_unloaded_removed(hass, utcnow):
 
     # Make sure entity is removed
     assert hass.states.get(helper.entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_migrate_unique_id(hass, utcnow):
+    """Test a we can migrate a light unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    light_entry = entity_registry.async_get_or_create(
+        "light",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_lightbulb_service_with_color_temp)
+
+    assert (
+        entity_registry.async_get(light_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

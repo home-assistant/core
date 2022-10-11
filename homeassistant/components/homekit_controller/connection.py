@@ -345,9 +345,21 @@ class HKDevice:
         # in the platform field and the actual platform in the domain
         # field for historical reasons since everything used to be
         # PLATFORM.INTEGRATION instead of INTEGRATION.PLATFORM
-        entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, old_unique_id)
-        if not entity_id:
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, old_unique_id
+            )
+        ) is None:
             _LOGGER.debug("Unique ID %s does not need to be migrated", old_unique_id)
+            return
+        if new_entity_id := entity_registry.async_get_entity_id(
+            platform, DOMAIN, new_unique_id
+        ):
+            _LOGGER.debug(
+                "Unique ID %s is already in use by %s (system may have been downgraded)",
+                new_unique_id,
+                new_entity_id,
+            )
             return
         _LOGGER.debug(
             "Migrating unique ID for entity %s (%s -> %s)",
