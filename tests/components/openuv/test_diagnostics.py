@@ -1,14 +1,19 @@
 """Test OpenUV diagnostics."""
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.openuv import CONF_ENTRY_ID
+from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.setup import async_setup_component
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_entry_diagnostics(hass, config_entry, hass_client, setup_openuv):
     """Test config entry diagnostics."""
+    await async_setup_component(hass, "homeassistant", {})
     await hass.services.async_call(
-        "openuv", "update_data", service_data={CONF_ENTRY_ID: "test_entry_id"}
+        "homeassistant",
+        "update_entity",
+        {CONF_ENTITY_ID: ["sensor.current_uv_index"]},
+        blocking=True,
     )
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
