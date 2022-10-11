@@ -426,7 +426,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.38.0
+dbus-fast==1.41.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -807,7 +807,7 @@ motioneye-client==0.3.12
 mullvad-api==1.0.0
 
 # homeassistant.components.tts
-mutagen==1.45.1
+mutagen==1.46.0
 
 # homeassistant.components.mutesync
 mutesync==0.0.1
