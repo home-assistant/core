@@ -54,7 +54,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             client = create_client(device_id=self.client_device_id)
             try:
-                userid = await validate_input(self.hass, user_input, client)
+                user_id, connect_result = await validate_input(
+                    self.hass, user_input, client
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -63,11 +65,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 _LOGGER.exception(ex)
             else:
-                await self.async_set_unique_id(userid)
+                entry_title = user_input[CONF_URL]
+
+                server_info: dict[str, Any] = connect_result["Servers"][0]
+
+                if server_name := server_info.get("Name"):
+                    entry_title = server_name
+
+                await self.async_set_unique_id(user_id)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_URL],
+                    title=entry_title,
                     data={CONF_CLIENT_DEVICE_ID: self.client_device_id, **user_input},
                 )
 

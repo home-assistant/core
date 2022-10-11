@@ -10,11 +10,11 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_TVSHOW,
 )
-from homeassistant.const import Platform
+from homeassistant.const import Platform, __version__ as hass_version
 
 DOMAIN: Final = "jellyfin"
 
-CLIENT_VERSION: Final = "1.0"
+CLIENT_VERSION: Final = hass_version
 
 COLLECTION_TYPE_MOVIES: Final = "movies"
 COLLECTION_TYPE_MUSIC: Final = "music"
