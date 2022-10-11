@@ -8,6 +8,9 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_enphase_
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
+            "entry_id": config_entry.entry_id,
+            "version": 1,
+            "domain": "enphase_envoy",
             "title": "Envoy 1234",
             "data": {
                 "host": "1.1.1.1",
@@ -15,6 +18,12 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_enphase_
                 "username": REDACTED,
                 "password": REDACTED,
             },
+            "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": "1234",
+            "disabled_by": None,
         },
         "data": {
             "production": 1840,
