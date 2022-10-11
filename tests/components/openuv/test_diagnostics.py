@@ -12,18 +12,30 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_openuv):
     )
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
+            "entry_id": config_entry.entry_id,
+            "version": 2,
+            "domain": "openuv",
+            "title": REDACTED,
             "data": {
                 "api_key": REDACTED,
                 "elevation": 0,
                 "latitude": REDACTED,
                 "longitude": REDACTED,
             },
-            "options": {
-                "from_window": 3.5,
-                "to_window": 3.5,
-            },
+            "options": {"from_window": 3.5, "to_window": 3.5},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
         },
         "data": {
+            "protection_window": {
+                "from_time": "2018-07-30T15:17:49.750Z",
+                "from_uv": 3.2509,
+                "to_time": "2018-07-30T22:47:49.750Z",
+                "to_uv": 3.6483,
+            },
             "uv": {
                 "uv": 8.2342,
                 "uv_time": "2018-07-30T20:53:06.302Z",
@@ -61,12 +73,6 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_openuv):
                         "altitude": 1.0235714275875594,
                     },
                 },
-            },
-            "protection_window": {
-                "from_time": "2018-07-30T15:17:49.750Z",
-                "from_uv": 3.2509,
-                "to_time": "2018-07-30T22:47:49.750Z",
-                "to_uv": 3.6483,
             },
         },
     }
