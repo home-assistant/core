@@ -1,0 +1,3 @@
+I am dhruba singha roy
+
+this is  a python project personal voice assistant which actually takes the voice commands and reply you in voice .
