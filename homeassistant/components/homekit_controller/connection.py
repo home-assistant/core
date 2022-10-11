@@ -337,6 +337,10 @@ class HKDevice:
         """Migrate legacy unique IDs to new format."""
         _LOGGER.debug("Migrating unique ID %s", old_unique_id)
         entity_registry = er.async_get(self.hass)
+        # async_get_entity_id wants the "homekit_controller" domain
+        # in the platform field and the actual platform in the domain
+        # field for historical reasons since everything used to be
+        # PLATFORM.INTEGRATION instead of INTEGRATION.PLATFORM
         entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, old_unique_id)
         if not entity_id:
             return
