@@ -103,7 +103,7 @@ async def async_setup_entry(
         info = {"aid": service.accessory.aid, "iid": service.iid}
         entity: HomeKitEntity = entity_class(conn, info)
         conn.async_migrate_unique_id(
-            entity.old_unique_id, entity.unique_id, Platform.CAMERA
+            entity.old_unique_id, entity.unique_id, Platform.CLIMATE
         )
         async_add_entities([entity])
         return True
