@@ -44,14 +44,14 @@ async def async_setup_entry(
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode")
     else:
-        if OPERATION_MODE.options and 0 <= active_mode < len(OPERATION_MODE.options):
+        if (options := OPERATION_MODE.options) and 0 <= active_mode < len(options):
             async_add_entities(
                 [
                     InverterOperationModeEntity(
                         device_info,
                         OPERATION_MODE,
                         inverter,
-                        OPERATION_MODE.options[active_mode],
+                        options[active_mode],
                     )
                 ]
             )
