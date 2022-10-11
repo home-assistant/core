@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -11,9 +10,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DATA_COORDINATORS, DOMAIN
-from .coordinator import JellyfinDataT, JellyfinDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import JellyfinDataT
 from .entity import JellyfinEntity
+from .models import JellyfinData
 
 
 @dataclass
@@ -55,12 +55,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Jellyfin sensor based on a config entry."""
-    coordinators: dict[str, JellyfinDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ][DATA_COORDINATORS]
+    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        JellyfinSensor(coordinators[coordinator_type], description)
+        JellyfinSensor(jellyfin_data.coordinators[coordinator_type], description)
         for coordinator_type, description in SENSOR_TYPES.items()
     )
 

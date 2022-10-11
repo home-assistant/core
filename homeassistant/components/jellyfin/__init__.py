@@ -6,15 +6,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
-from .const import (
-    CONF_CLIENT_DEVICE_ID,
-    DATA_CLIENT,
-    DATA_COORDINATORS,
-    DOMAIN,
-    LOGGER,
-    PLATFORMS,
-)
+from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import JellyfinDataUpdateCoordinator, SessionsDataUpdateCoordinator
+from .models import JellyfinData
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -48,10 +42,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: client,
-        DATA_COORDINATORS: coordinators,
-    }
+    hass.data[DOMAIN][entry.entry_id] = JellyfinData(
+        jellyfin_client=client,
+        coordinators=coordinators,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

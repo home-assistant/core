@@ -19,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
-    DATA_CLIENT,
     DOMAIN,
     ITEM_KEY_COLLECTION_TYPE,
     ITEM_KEY_ID,
@@ -40,17 +39,16 @@ from .const import (
     MEDIA_TYPE_VIDEO,
     SUPPORTED_COLLECTION_TYPES,
 )
+from .models import JellyfinData
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
     # Currently only a single Jellyfin server is supported
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
 
-    data = hass.data[DOMAIN][entry.entry_id]
-    client: JellyfinClient = data[DATA_CLIENT]
-
-    return JellyfinSource(hass, client)
+    return JellyfinSource(hass, jellyfin_data.jellyfin_client)
 
 
 class JellyfinSource(MediaSource):
