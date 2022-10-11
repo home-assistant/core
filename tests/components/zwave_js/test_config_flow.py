@@ -15,7 +15,7 @@ from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
-from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -326,7 +326,11 @@ async def test_supervisor_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     with patch(
@@ -366,7 +370,11 @@ async def test_supervisor_discovery_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["type"] == "abort"
@@ -388,7 +396,11 @@ async def test_clean_discovery_on_user_create(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["type"] == "form"
@@ -454,7 +466,11 @@ async def test_abort_discovery_with_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["type"] == "abort"
@@ -478,7 +494,11 @@ async def test_abort_hassio_discovery_with_existing_flow(
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result2["type"] == "abort"
@@ -673,7 +693,11 @@ async def test_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -753,7 +777,11 @@ async def test_discovery_addon_not_installed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -834,7 +862,11 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+        ),
     )
 
     assert result["type"] == "form"
