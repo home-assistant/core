@@ -172,7 +172,7 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
@@ -210,7 +210,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -259,7 +259,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -311,7 +311,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -352,7 +352,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -475,7 +475,7 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Generate partial pip restore key
@@ -538,7 +538,7 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
@@ -570,7 +570,7 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
@@ -603,7 +603,7 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
@@ -647,7 +647,7 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
@@ -695,7 +695,7 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
@@ -749,7 +749,7 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
