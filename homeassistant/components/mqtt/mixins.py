@@ -435,7 +435,9 @@ class MqttAttributes(Entity):
                         and k not in self._attributes_extra_blocked
                     }
                     self._attributes = filtered_dict
-                    self.async_write_ha_state()
+                    get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                        self
+                    )
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
                     self._attributes = None
@@ -547,7 +549,7 @@ class MqttAvailability(Entity):
                 self._available[topic] = False
                 self._available_latest = False
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._available = {
             topic: (self._available[topic] if topic in self._available else False)
