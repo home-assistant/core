@@ -555,7 +555,7 @@ class AtomePeriodServerEndPoint(AtomeGenericServerEndPoint):
                     "%s : DETAILED value %s: %s", period_type, i, values["data"][-i]
                 )
 
-            except IndexError, KeyError:
+            except IndexError:
                 _LOGGER.debug("days %s does not exist ", -i)
 
         self._periods_data.all_period[period_type].usage = current_period_consumption
