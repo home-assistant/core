@@ -8,12 +8,22 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airnow):
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
+            "entry_id": config_entry.entry_id,
+            "version": 1,
+            "domain": "airnow",
+            "title": REDACTED,
             "data": {
                 "api_key": REDACTED,
                 "latitude": REDACTED,
                 "longitude": REDACTED,
                 "radius": 75,
             },
+            "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
         },
         "data": {
             "O3": 0.048,

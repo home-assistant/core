@@ -5,7 +5,12 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import HomeAssistant
 
 from . import AirNowDataUpdateCoordinator
@@ -16,6 +21,8 @@ ATTR_LONGITUDE_CAP = "Longitude"
 ATTR_REPORTING_AREA = "ReportingArea"
 ATTR_STATE_CODE = "StateCode"
 
+CONF_TITLE = "title"
+
 TO_REDACT = {
     ATTR_LATITUDE_CAP,
     ATTR_LONGITUDE_CAP,
@@ -24,6 +31,10 @@ TO_REDACT = {
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    # The config entry title has latitude/longitude:
+    CONF_TITLE,
+    # The config entry unique ID has latitude/longitude:
+    CONF_UNIQUE_ID,
 }
 
 
@@ -34,8 +45,6 @@ async def async_get_config_entry_diagnostics(
     coordinator: AirNowDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     return {
-        "entry": {
-            "data": async_redact_data(entry.data, TO_REDACT),
-        },
+        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "data": async_redact_data(coordinator.data, TO_REDACT),
     }
