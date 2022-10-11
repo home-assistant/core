@@ -253,7 +253,7 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
-        return f"{self._accessory.unique_id}-{self._iid}-{self.device_class}"
+        return f"{self._accessory.unique_id}_{self._iid}_{self.device_class}"
 
 
 async def async_setup_entry(

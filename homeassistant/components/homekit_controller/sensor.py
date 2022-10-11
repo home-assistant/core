@@ -565,7 +565,7 @@ class RSSISensor(HomeKitEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
-        return f"{self._accessory.unique_id}-rssi"
+        return f"{self._accessory.unique_id}_rssi"
 
     @property
     def native_value(self) -> int | None:

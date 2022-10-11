@@ -33,13 +33,13 @@ async def test_vocolinc_vp3_setup(hass):
                 EntityTestInfo(
                     entity_id="switch.vocolinc_vp3_123456_outlet",
                     friendly_name="VOCOlinc-VP3-123456 Outlet",
-                    unique_id="homekit-EU0121203xxxxx07-48",
+                    unique_id="00:00:00:00:00:00_1_48",
                     state="on",
                 ),
                 EntityTestInfo(
                     entity_id="sensor.vocolinc_vp3_123456_power",
                     friendly_name="VOCOlinc-VP3-123456 Power",
-                    unique_id="homekit-EU0121203xxxxx07-aid:1-sid:48-cid:97",
+                    unique_id="00:00:00:00:00:00_1_48_97",
                     unit_of_measurement=POWER_WATT,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     state="0",

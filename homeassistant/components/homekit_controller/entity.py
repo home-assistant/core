@@ -133,7 +133,7 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
-        return f"{self._accessory.unique_id}-{self._aid}-{self._iid}"
+        return f"{self._accessory.unique_id}_{self._aid}_{self._iid}"
 
     @property
     def default_name(self) -> str | None:
@@ -188,7 +188,7 @@ class AccessoryEntity(HomeKitEntity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
-        return f"{self._accessory.unique_id}-{self._aid}"
+        return f"{self._accessory.unique_id}_{self._aid}"
 
 
 class CharacteristicEntity(HomeKitEntity):
@@ -215,4 +215,4 @@ class CharacteristicEntity(HomeKitEntity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
-        return f"{self._accessory.unique_id}-{self._aid}-{self._char.service.iid}-{self._char.iid}"
+        return f"{self._accessory.unique_id}_{self._aid}_{self._char.service.iid}_{self._char.iid}"
