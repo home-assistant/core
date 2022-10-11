@@ -24,11 +24,7 @@ class JellyfinEntity(CoordinatorEntity[JellyfinDataUpdateCoordinator[JellyfinDat
         self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.server_id}-{description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about the application."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.coordinator.server_id)},
             manufacturer=DEFAULT_NAME,
