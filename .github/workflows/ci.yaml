@@ -67,7 +67,7 @@ jobs:
       - name: Generate partial pre-commit restore key
         id: generate_pre-commit_cache_key
         run: >-
-          echo "::set-output name=key::${{ env.CACHE_VERSION }}-${{ env.DEFAULT_PYTHON }}-${{
+          echo "::set-output name=key::pre-commit-${{ env.CACHE_VERSION }}-${{
             hashFiles('.pre-commit-config.yaml') }}"
       - name: Filter for core changes
         uses: dorny/paths-filter@v2.10.2
@@ -179,7 +179,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -192,7 +194,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Install pre-commit dependencies
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -219,7 +223,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -230,7 +236,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -269,7 +277,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -280,7 +290,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -322,7 +334,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -333,7 +347,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -364,7 +380,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -375,7 +393,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
