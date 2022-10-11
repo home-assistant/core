@@ -22,3 +22,7 @@ MEDIA_SUPPORT_FULLYKIOSK = (
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.BROWSE_MEDIA
 )
+
+SERVICE_LOAD_URL = "load_url"
+
+ATTR_URL = "url"

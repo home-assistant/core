@@ -12,16 +12,12 @@ from aiopvapi.helpers.constants import (
     ATTR_POSITION1,
     ATTR_POSITION2,
     ATTR_POSITION_DATA,
-)
-from aiopvapi.resources.shade import (
     ATTR_POSKIND1,
     ATTR_POSKIND2,
     MAX_POSITION,
     MIN_POSITION,
-    BaseShade,
-    ShadeTopDownBottomUp,
-    factory as PvShade,
 )
+from aiopvapi.resources.shade import BaseShade, factory as PvShade
 import async_timeout
 
 from homeassistant.components.cover import (
@@ -105,32 +101,6 @@ async def async_setup_entry(
             )
         )
     async_add_entities(entities)
-
-
-def create_powerview_shade_entity(
-    coordinator: PowerviewShadeUpdateCoordinator,
-    device_info: PowerviewDeviceInfo,
-    room_name: str,
-    shade: BaseShade,
-    name_before_refresh: str,
-) -> Iterable[ShadeEntity]:
-    """Create a PowerViewShade entity."""
-
-    classes: list[BaseShade] = []
-    if isinstance(shade, ShadeTopDownBottomUp):
-        classes.extend([PowerViewShadeTDBUTop, PowerViewShadeTDBUBottom])
-    elif (  # this will be extended further in next release for more defined control
-        shade.capability.capabilities.tiltOnClosed
-        or shade.capability.capabilities.tiltAnywhere
-    ):
-        classes.append(PowerViewShadeWithTilt)
-    else:
-        classes.append(PowerViewShade)
-    _LOGGER.debug("%s (%s) detected as %a", shade.name, shade.capability.type, classes)
-    return [
-        cls(coordinator, device_info, room_name, shade, name_before_refresh)
-        for cls in classes
-    ]
 
 
 def hd_position_to_hass(hd_position: int, max_val: int = MAX_POSITION) -> int:
@@ -392,6 +362,185 @@ class PowerViewShade(PowerViewShadeBase):
         )
 
 
+class PowerViewShadeWithTiltBase(PowerViewShade):
+    """Representation for PowerView shades with tilt capabilities."""
+
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_supported_features |= (
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.SET_TILT_POSITION
+        )
+        if self._device_info.model != LEGACY_DEVICE_MODEL:
+            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
+        self._max_tilt = self._shade.shade_limits.tilt_max
+
+    @property
+    def current_cover_tilt_position(self) -> int:
+        """Return the current cover tile position."""
+        return hd_position_to_hass(self.positions.vane, self._max_tilt)
+
+    @property
+    def transition_steps(self):
+        """Return the steps to make a move."""
+        return hd_position_to_hass(
+            self.positions.primary, MAX_POSITION
+        ) + hd_position_to_hass(self.positions.vane, self._max_tilt)
+
+    @property
+    def open_tilt_position(self) -> PowerviewShadeMove:
+        """Return the open tilt position and required additional positions."""
+        return PowerviewShadeMove(self._shade.open_position_tilt, {})
+
+    @property
+    def close_tilt_position(self) -> PowerviewShadeMove:
+        """Return the close tilt position and required additional positions."""
+        return PowerviewShadeMove(self._shade.close_position_tilt, {})
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        self._async_schedule_update_for_transition(self.transition_steps)
+        await self._async_execute_move(self.close_tilt_position)
+        self.async_write_ha_state()
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        self._async_schedule_update_for_transition(100 - self.transition_steps)
+        await self._async_execute_move(self.open_tilt_position)
+        self.async_write_ha_state()
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the vane to a specific position."""
+        await self._async_set_cover_tilt_position(kwargs[ATTR_TILT_POSITION])
+
+    async def _async_set_cover_tilt_position(
+        self, target_hass_tilt_position: int
+    ) -> None:
+        """Move the vane to a specific position."""
+        final_position = self.current_cover_position + target_hass_tilt_position
+        self._async_schedule_update_for_transition(
+            abs(self.transition_steps - final_position)
+        )
+        await self._async_execute_move(self._get_shade_tilt(target_hass_tilt_position))
+        self.async_write_ha_state()
+
+    @callback
+    def _get_shade_tilt(self, target_hass_tilt_position: int) -> PowerviewShadeMove:
+        """Return a PowerviewShadeMove."""
+        position_vane = hass_position_to_hd(target_hass_tilt_position, self._max_tilt)
+        return PowerviewShadeMove(
+            {ATTR_POSITION1: position_vane, ATTR_POSKIND1: POS_KIND_VANE}, {}
+        )
+
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilting."""
+        await self.async_stop_cover()
+
+
+class PowerViewShadeWithTiltOnClosed(PowerViewShadeWithTiltBase):
+    """Representation of a PowerView shade with tilt when closed capabilities.
+
+    API Class: ShadeBottomUpTiltOnClosed + ShadeBottomUpTiltOnClosed90
+
+    Type 1 - Bottom Up w/ 90° Tilt
+    Shade 44 - a shade thought to have been a firmware issue (type 0 usually dont tilt)
+    """
+
+    @property
+    def open_position(self) -> PowerviewShadeMove:
+        """Return the open position and required additional positions."""
+        return PowerviewShadeMove(
+            self._shade.open_position, {POS_KIND_VANE: MIN_POSITION}
+        )
+
+    @property
+    def close_position(self) -> PowerviewShadeMove:
+        """Return the close position and required additional positions."""
+        return PowerviewShadeMove(
+            self._shade.close_position, {POS_KIND_VANE: MIN_POSITION}
+        )
+
+    @property
+    def open_tilt_position(self) -> PowerviewShadeMove:
+        """Return the open tilt position and required additional positions."""
+        return PowerviewShadeMove(
+            self._shade.open_position_tilt, {POS_KIND_PRIMARY: MIN_POSITION}
+        )
+
+    @property
+    def close_tilt_position(self) -> PowerviewShadeMove:
+        """Return the close tilt position and required additional positions."""
+        return PowerviewShadeMove(
+            self._shade.close_position_tilt, {POS_KIND_PRIMARY: MIN_POSITION}
+        )
+
+    @callback
+    def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
+        """Return a PowerviewShadeMove."""
+        position_shade = hass_position_to_hd(target_hass_position)
+        return PowerviewShadeMove(
+            {ATTR_POSITION1: position_shade, ATTR_POSKIND1: POS_KIND_PRIMARY},
+            {POS_KIND_VANE: MIN_POSITION},
+        )
+
+    @callback
+    def _get_shade_tilt(self, target_hass_tilt_position: int) -> PowerviewShadeMove:
+        """Return a PowerviewShadeMove."""
+        position_vane = hass_position_to_hd(target_hass_tilt_position, self._max_tilt)
+        return PowerviewShadeMove(
+            {ATTR_POSITION1: position_vane, ATTR_POSKIND1: POS_KIND_VANE},
+            {POS_KIND_PRIMARY: MIN_POSITION},
+        )
+
+
+class PowerViewShadeWithTiltAnywhere(PowerViewShadeWithTiltBase):
+    """Representation of a PowerView shade with tilt anywhere capabilities.
+
+    API Class: ShadeBottomUpTiltAnywhere, ShadeVerticalTiltAnywhere
+
+    Type 2 - Bottom Up w/ 180° Tilt
+    Type 4 - Vertical (Traversing) w/ 180° Tilt
+    """
+
+    @callback
+    def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
+        position_shade = hass_position_to_hd(target_hass_position, MAX_POSITION)
+        position_vane = self.positions.vane
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: position_shade,
+                ATTR_POSITION2: position_vane,
+                ATTR_POSKIND1: POS_KIND_PRIMARY,
+                ATTR_POSKIND2: POS_KIND_VANE,
+            },
+            {},
+        )
+
+    @callback
+    def _get_shade_tilt(self, target_hass_tilt_position: int) -> PowerviewShadeMove:
+        """Return a PowerviewShadeMove."""
+        position_shade = self.positions.primary
+        position_vane = hass_position_to_hd(target_hass_tilt_position, self._max_tilt)
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: position_shade,
+                ATTR_POSITION2: position_vane,
+                ATTR_POSKIND1: POS_KIND_PRIMARY,
+                ATTR_POSKIND2: POS_KIND_VANE,
+            },
+            {},
+        )
+
+
 class PowerViewShadeDualRailBase(PowerViewShade):
     """Representation of a shade with top/down bottom/up capabilities.
 
@@ -528,117 +677,33 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
         )
 
 
-class PowerViewShadeWithTilt(PowerViewShade):
-    """Representation of a PowerView shade with tilt capabilities."""
+TYPE_TO_CLASSES = {
+    1: (PowerViewShadeWithTiltOnClosed,),
+    2: (PowerViewShadeWithTiltAnywhere,),
+    4: (PowerViewShadeWithTiltAnywhere,),
+    7: (PowerViewShadeTDBUTop, PowerViewShadeTDBUBottom),
+}
 
-    def __init__(
-        self,
-        coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: PowerviewDeviceInfo,
-        room_name: str,
-        shade: BaseShade,
-        name: str,
-    ) -> None:
-        """Initialize the shade."""
-        super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_supported_features |= (
-            CoverEntityFeature.OPEN_TILT
-            | CoverEntityFeature.CLOSE_TILT
-            | CoverEntityFeature.SET_TILT_POSITION
-        )
-        if self._device_info.model != LEGACY_DEVICE_MODEL:
-            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
-        self._max_tilt = self._shade.shade_limits.tilt_max
 
-    @property
-    def current_cover_tilt_position(self) -> int:
-        """Return the current cover tile position."""
-        return hd_position_to_hass(self.positions.vane, self._max_tilt)
-
-    @property
-    def transition_steps(self):
-        """Return the steps to make a move."""
-        return hd_position_to_hass(
-            self.positions.primary, MAX_POSITION
-        ) + hd_position_to_hass(self.positions.vane, self._max_tilt)
-
-    @property
-    def open_position(self) -> PowerviewShadeMove:
-        """Return the open position and required additional positions."""
-        return PowerviewShadeMove(
-            self._shade.open_position, {POS_KIND_VANE: MIN_POSITION}
-        )
-
-    @property
-    def close_position(self) -> PowerviewShadeMove:
-        """Return the close position and required additional positions."""
-        return PowerviewShadeMove(
-            self._shade.close_position, {POS_KIND_VANE: MIN_POSITION}
-        )
-
-    @property
-    def open_tilt_position(self) -> PowerviewShadeMove:
-        """Return the open tilt position and required additional positions."""
-        # next upstream api release to include self._shade.open_tilt_position
-        return PowerviewShadeMove(
-            {ATTR_POSKIND1: POS_KIND_VANE, ATTR_POSITION1: self._max_tilt},
-            {POS_KIND_PRIMARY: MIN_POSITION},
-        )
-
-    @property
-    def close_tilt_position(self) -> PowerviewShadeMove:
-        """Return the close tilt position and required additional positions."""
-        # next upstream api release to include self._shade.close_tilt_position
-        return PowerviewShadeMove(
-            {ATTR_POSKIND1: POS_KIND_VANE, ATTR_POSITION1: MIN_POSITION},
-            {POS_KIND_PRIMARY: MIN_POSITION},
-        )
-
-    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
-        """Close the cover tilt."""
-        self._async_schedule_update_for_transition(self.transition_steps)
-        await self._async_execute_move(self.close_tilt_position)
-        self.async_write_ha_state()
-
-    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
-        """Open the cover tilt."""
-        self._async_schedule_update_for_transition(100 - self.transition_steps)
-        await self._async_execute_move(self.open_tilt_position)
-        self.async_write_ha_state()
-
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
-        """Move the vane to a specific position."""
-        await self._async_set_cover_tilt_position(kwargs[ATTR_TILT_POSITION])
-
-    async def _async_set_cover_tilt_position(
-        self, target_hass_tilt_position: int
-    ) -> None:
-        """Move the vane to a specific position."""
-        final_position = self.current_cover_position + target_hass_tilt_position
-        self._async_schedule_update_for_transition(
-            abs(self.transition_steps - final_position)
-        )
-        await self._async_execute_move(self._get_shade_tilt(target_hass_tilt_position))
-        self.async_write_ha_state()
-
-    @callback
-    def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
-        """Return a PowerviewShadeMove."""
-        position_shade = hass_position_to_hd(target_hass_position)
-        return PowerviewShadeMove(
-            {ATTR_POSITION1: position_shade, ATTR_POSKIND1: POS_KIND_PRIMARY},
-            {POS_KIND_VANE: MIN_POSITION},
-        )
-
-    @callback
-    def _get_shade_tilt(self, target_hass_tilt_position: int) -> PowerviewShadeMove:
-        """Return a PowerviewShadeMove."""
-        position_vane = hass_position_to_hd(target_hass_tilt_position, self._max_tilt)
-        return PowerviewShadeMove(
-            {ATTR_POSITION1: position_vane, ATTR_POSKIND1: POS_KIND_VANE},
-            {POS_KIND_PRIMARY: MIN_POSITION},
-        )
-
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
-        """Stop the cover tilting."""
-        await self.async_stop_cover()
+def create_powerview_shade_entity(
+    coordinator: PowerviewShadeUpdateCoordinator,
+    device_info: PowerviewDeviceInfo,
+    room_name: str,
+    shade: BaseShade,
+    name_before_refresh: str,
+) -> Iterable[ShadeEntity]:
+    """Create a PowerViewShade entity."""
+    classes: Iterable[BaseShade] = TYPE_TO_CLASSES.get(
+        shade.capability.type, (PowerViewShade,)
+    )
+    _LOGGER.debug(
+        "%s (%s) detected as %a %s",
+        shade.name,
+        shade.capability.type,
+        classes,
+        shade.raw_data,
+    )
+    return [
+        cls(coordinator, device_info, room_name, shade, name_before_refresh)
+        for cls in classes
+    ]
