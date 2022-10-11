@@ -29,6 +29,12 @@ def _mock_skybell(hass: HomeAssistant) -> None:
     )
 
 
+def _patch_setup_entry() -> None:
+    return patch(
+        "homeassistant.components.skybell.async_setup_entry", return_value=True
+    )
+
+
 async def test_flow_user(hass: HomeAssistant, connection) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
@@ -38,7 +44,7 @@ async def test_flow_user(hass: HomeAssistant, connection) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with mock_skybell(hass), _mock_skybell(hass):
+    with _mock_skybell(hass), _patch_setup_entry():
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
