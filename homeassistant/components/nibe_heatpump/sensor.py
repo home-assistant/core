@@ -97,6 +97,7 @@ UNIT_DESCRIPTIONS = {
         key="h",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=TIME_HOURS,
     ),
 }
@@ -133,6 +134,7 @@ class Sensor(CoilEntity, SensorEntity):
             self.entity_description = entity_description
         else:
             self._attr_native_unit_of_measurement = coil.unit
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def _async_read_coil(self, coil: Coil):
         self._attr_native_value = coil.value
