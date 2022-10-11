@@ -145,7 +145,7 @@ def _normalize_states(
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
     entity_history: Iterable[State],
     entity_id: str,
-) -> tuple[str | None, str | None, list[tuple[float, State]]]:
+) -> tuple[str | None, list[tuple[float, State]]]:
     """Normalize units."""
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     state_unit: str | None = None
@@ -159,7 +159,7 @@ def _normalize_states(
         fstates.append((fstate, state))
 
     if not fstates:
-        return None, None, fstates
+        return None, fstates
 
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
@@ -199,9 +199,9 @@ def _normalize_states(
                     extra,
                     LINK_DEV_STATISTICS,
                 )
-            return None, None, []
+            return None, []
         state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        return state_unit, state_unit, fstates
+        return state_unit, fstates
 
     converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
@@ -237,7 +237,7 @@ def _normalize_states(
             )
         )
 
-    return statistics_unit, state_unit, valid_fstates
+    return statistics_unit, valid_fstates
 
 
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
@@ -425,7 +425,7 @@ def _compile_statistics(  # noqa: C901
             continue
 
         entity_history = history_list[entity_id]
-        statistics_unit, state_unit, fstates = _normalize_states(
+        statistics_unit, fstates = _normalize_states(
             hass,
             session,
             old_metadatas,
@@ -438,9 +438,7 @@ def _compile_statistics(  # noqa: C901
 
         state_class = _state.attributes[ATTR_STATE_CLASS]
 
-        to_process.append(
-            (entity_id, statistics_unit, state_unit, state_class, fstates)
-        )
+        to_process.append((entity_id, statistics_unit, state_class, fstates))
         if "sum" in wanted_statistics[entity_id]:
             to_query.append(entity_id)
 
@@ -450,7 +448,6 @@ def _compile_statistics(  # noqa: C901
     for (  # pylint: disable=too-many-nested-blocks
         entity_id,
         statistics_unit,
-        state_unit,
         state_class,
         fstates,
     ) in to_process:
