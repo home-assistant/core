@@ -35,7 +35,7 @@ from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
 CONF_SENDER_ID = "sender_id"
 
-DEFAULT_NAME = "EnOcean Light"
+DEFAULT_NAME = ""
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

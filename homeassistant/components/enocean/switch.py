@@ -28,7 +28,7 @@ from .device import EnOceanEntity
 from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
 CONF_CHANNEL = "channel"
-DEFAULT_NAME = "EnOcean Switch"
+DEFAULT_NAME = ""
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

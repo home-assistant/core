@@ -30,7 +30,7 @@ from .config_flow import (
 from .device import EnOceanEntity
 from .enocean_supported_device_type import EnOceanSupportedDeviceType
 
-DEFAULT_NAME = "EnOcean binary sensor"
+DEFAULT_NAME = ""
 DEPENDENCIES = ["enocean"]
 EVENT_BUTTON_PRESSED = "button_pressed"
 

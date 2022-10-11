@@ -48,7 +48,7 @@ CONF_MIN_TEMP = "min_temp"
 CONF_RANGE_FROM = "range_from"
 CONF_RANGE_TO = "range_to"
 
-DEFAULT_NAME = "EnOcean sensor"
+DEFAULT_NAME = ""
 
 SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_POWER = "powersensor"
