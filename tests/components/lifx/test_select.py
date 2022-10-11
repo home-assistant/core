@@ -55,7 +55,7 @@ async def test_theme_select(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SELECT_DOMAIN,
         "select_option",
-        {ATTR_ENTITY_ID: entity_id, "option": "Intense"},
+        {ATTR_ENTITY_ID: entity_id, "option": "intense"},
         blocking=True,
     )
 

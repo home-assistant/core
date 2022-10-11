@@ -19,6 +19,8 @@ from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .util import lifx_features
 
+THEME_NAMES = [theme_name.lower() for theme_name in ThemeLibrary().themes]
+
 INFRARED_BRIGHTNESS_ENTITY = SelectEntityDescription(
     key=INFRARED_BRIGHTNESS,
     name="Infrared brightness",
@@ -30,7 +32,7 @@ THEME_ENTITY = SelectEntityDescription(
     key=ATTR_THEME,
     name="Theme",
     entity_category=EntityCategory.CONFIG,
-    options=[theme.title() for theme in ThemeLibrary().themes],
+    options=THEME_NAMES,
 )
 
 
@@ -101,7 +103,6 @@ class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
         self.entity_description = description
         self._attr_name = description.name
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
-        self._attr_options = coordinator.async_get_available_themes()
         self._attr_current_option = None
 
     @callback

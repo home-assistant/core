@@ -288,7 +288,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     async def async_set_multizone_effect(
         self,
         effect: str,
-        speed: float = 3,
+        speed: float = 3.0,
         direction: str = "RIGHT",
         theme_name: str | None = None,
         power_on: bool = True,
@@ -300,7 +300,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
 
             if theme_name is not None:
                 theme = ThemeLibrary().get_theme(theme_name)
-                await ThemePainter(self.hass.loop).paint(theme, [self.device], speed)
+                await ThemePainter(self.hass.loop).paint(
+                    theme, [self.device], round(speed)
+                )
 
             await async_execute_lifx(
                 partial(
@@ -352,10 +354,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         """Set infrared brightness."""
         infrared_brightness = infrared_brightness_option_to_value(option)
         await async_execute_lifx(partial(self.device.set_infrared, infrared_brightness))
-
-    def async_get_available_themes(self) -> list[str]:
-        """Return a list of available themes."""
-        return [theme.title() for theme in ThemeLibrary().themes]
 
     async def async_apply_theme(self, theme_name: str) -> None:
         """Apply the selected theme to the device."""
