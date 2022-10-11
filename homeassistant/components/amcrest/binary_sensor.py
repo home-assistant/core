@@ -219,10 +219,8 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
         try:
             self._attr_is_on = any(
-                [
-                    len(await self._api.async_event_channels_happened(event_code)) > 0
-                    for event_code in event_codes
-                ]
+                len(await self._api.async_event_channels_happened(event_code)) > 0
+                for event_code in event_codes
             )
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
