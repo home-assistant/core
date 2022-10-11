@@ -1,13 +1,16 @@
 """The tests for shared code of the MQTT platform."""
 
+from unittest.mock import patch
+
 from homeassistant.components import mqtt, sensor
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, Platform
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
 async def test_availability_with_shared_state_topic(
     hass,
     mqtt_mock_entry_with_yaml_config,
