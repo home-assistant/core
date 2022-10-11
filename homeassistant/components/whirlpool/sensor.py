@@ -193,10 +193,6 @@ class WasherDryerClass(SensorEntity):
             manufacturer="Whirlpool",
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Connect WasherDryer to the cloud."""
-        # await self._wd.connect()
-
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
