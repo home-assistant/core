@@ -3327,10 +3327,17 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
         ),
     ],
 )
-async def test_validate_statistics_unit_change_device_class(
+async def test_validate_unit_change_convertible(
     hass, hass_ws_client, recorder_mock, units, attributes, unit, unit2, supported_unit
 ):
-    """Test validate_statistics."""
+    """Test validate_statistics.
+
+    This tests what happens if a sensor is first recorded in a unit which supports unit
+    conversion, and the unit is then changed to a unit which can and can not be
+    converted to the original unit.
+
+    The test also asserts that the sensor's device class is ignored.
+    """
     id = 1
 
     def next_id():
@@ -3400,7 +3407,7 @@ async def test_validate_statistics_unit_change_device_class(
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
-    do_adhoc_statistics(hass, start=now)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
@@ -3412,11 +3419,11 @@ async def test_validate_statistics_unit_change_device_class(
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
-    do_adhoc_statistics(hass, start=now)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=2))
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
-    # Remove the state - empty response
+    # Remove the state - expect error about missing state
     hass.states.async_remove("sensor.test")
     expected = {
         "sensor.test": [
@@ -3430,15 +3437,18 @@ async def test_validate_statistics_unit_change_device_class(
 
 
 @pytest.mark.parametrize(
-    "units, attributes, valid_units",
+    "units, attributes",
     [
-        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W, kW"),
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES),
     ],
 )
-async def test_validate_statistics_unit_change_device_class_2(
-    hass, hass_ws_client, recorder_mock, units, attributes, valid_units
+async def test_validate_statistics_unit_ignore_device_class(
+    hass, hass_ws_client, recorder_mock, units, attributes
 ):
-    """Test validate_statistics."""
+    """Test validate_statistics.
+
+    The test asserts that the sensor's device class is ignored.
+    """
     id = 1
 
     def next_id():
@@ -3506,7 +3516,12 @@ async def test_validate_statistics_unit_change_device_class_2(
 async def test_validate_statistics_unit_change_no_device_class(
     hass, hass_ws_client, recorder_mock, units, attributes, unit, unit2, supported_unit
 ):
-    """Test validate_statistics."""
+    """Test validate_statistics.
+
+    This tests what happens if a sensor is first recorded in a unit which supports unit
+    conversion, and the unit is then changed to a unit which can and can not be
+    converted to the original unit.
+    """
     id = 1
     attributes = dict(attributes)
     attributes.pop("device_class")
@@ -3534,14 +3549,14 @@ async def test_validate_statistics_unit_change_no_device_class(
     # No statistics, no state - empty response
     await assert_validation_result(client, {})
 
-    # No statistics, unit in state matching device class - empty response
+    # No statistics, sensor state set - empty response
     hass.states.async_set(
         "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit}}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
-    # No statistics, unit in state not matching device class - empty response
+    # No statistics, sensor state set to an incompatible unit - empty response
     hass.states.async_set(
         "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
     )
@@ -3578,7 +3593,7 @@ async def test_validate_statistics_unit_change_no_device_class(
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
-    do_adhoc_statistics(hass, start=now)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
@@ -3590,11 +3605,11 @@ async def test_validate_statistics_unit_change_no_device_class(
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
-    do_adhoc_statistics(hass, start=now)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=2))
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
-    # Remove the state - empty response
+    # Remove the state - expect error about missing state
     hass.states.async_remove("sensor.test")
     expected = {
         "sensor.test": [
@@ -3849,11 +3864,14 @@ async def test_validate_statistics_sensor_removed(
 
 
 @pytest.mark.parametrize(
-    "attributes",
-    [BATTERY_SENSOR_ATTRIBUTES, NONE_SENSOR_ATTRIBUTES],
+    "attributes, unit1, unit2",
+    [
+        (BATTERY_SENSOR_ATTRIBUTES, "%", "dogs"),
+        (NONE_SENSOR_ATTRIBUTES, None, "dogs"),
+    ],
 )
 async def test_validate_statistics_unit_change_no_conversion(
-    hass, recorder_mock, hass_ws_client, attributes
+    hass, recorder_mock, hass_ws_client, attributes, unit1, unit2
 ):
     """Test validate_statistics."""
     id = 1
@@ -3892,12 +3910,14 @@ async def test_validate_statistics_unit_change_no_conversion(
     await assert_validation_result(client, {})
 
     # No statistics, original unit - empty response
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit1}}
+    )
     await assert_validation_result(client, {})
 
     # No statistics, changed unit - empty response
     hass.states.async_set(
-        "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+        "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": unit2}}
     )
     await assert_validation_result(client, {})
 
@@ -3907,32 +3927,34 @@ async def test_validate_statistics_unit_change_no_conversion(
     await async_recorder_block_till_done(hass)
     await assert_statistic_ids([])
 
-    # No statistics, changed unit - empty response
+    # No statistics, original unit - empty response
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": unit1}}
     )
     await assert_validation_result(client, {})
 
-    # Run statistics one hour later, only the "dogs" state will be considered
+    # Run statistics one hour later, only the state with unit1 will be considered
     await async_recorder_block_till_done(hass)
     do_adhoc_statistics(hass, start=now + timedelta(hours=1))
     await async_recorder_block_till_done(hass)
     await assert_statistic_ids(
-        [{"statistic_id": "sensor.test", "unit_of_measurement": "dogs"}]
+        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
     )
     await assert_validation_result(client, {})
 
-    # Change back to original unit - expect error
-    hass.states.async_set("sensor.test", 13, attributes=attributes)
+    # Change unit - expect error
+    hass.states.async_set(
+        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit2}}
+    )
     await async_recorder_block_till_done(hass)
     expected = {
         "sensor.test": [
             {
                 "data": {
-                    "metadata_unit": "dogs",
-                    "state_unit": attributes.get("unit_of_measurement"),
+                    "metadata_unit": unit1,
+                    "state_unit": unit2,
                     "statistic_id": "sensor.test",
-                    "supported_unit": "dogs",
+                    "supported_unit": unit1,
                 },
                 "type": "units_changed",
             }
@@ -3940,16 +3962,16 @@ async def test_validate_statistics_unit_change_no_conversion(
     }
     await assert_validation_result(client, expected)
 
-    # Changed unit - empty response
+    # Original unit - empty response
     hass.states.async_set(
-        "sensor.test", 14, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+        "sensor.test", 14, attributes={**attributes, **{"unit_of_measurement": unit1}}
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # Valid state, statistic runs again - empty response
     await async_recorder_block_till_done(hass)
-    do_adhoc_statistics(hass, start=now)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=2))
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
