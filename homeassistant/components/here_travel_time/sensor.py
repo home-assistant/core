@@ -57,7 +57,7 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             native_unit_of_measurement=TIME_MINUTES,
         ),
         SensorEntityDescription(
-            name="Duration in Traffic",
+            name="Duration in traffic",
             icon=ICONS.get(travel_mode, ICON_CAR),
             key=ATTR_DURATION_IN_TRAFFIC,
             state_class=SensorStateClass.MEASUREMENT,
