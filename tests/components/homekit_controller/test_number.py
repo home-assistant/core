@@ -2,6 +2,8 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.helpers import entity_registry as er
+
 from .common import Helper, setup_test_component
 
 
@@ -28,7 +30,19 @@ def create_switch_with_spray_level(accessory):
 
 async def test_read_number(hass, utcnow):
     """Test a switch service that has a sensor characteristic is correctly handled."""
+    entity_registry = er.async_get(hass)
+    number = entity_registry.async_get_or_create(
+        "number",
+        "homekit_controller",
+        "homekit-0001-aid:1-sid:8-cid:9",
+        suggested_object_id="testdevice_spray_quantity",
+    )
     helper = await setup_test_component(hass, create_switch_with_spray_level)
+
+    assert (
+        entity_registry.async_get(number.entity_id).unique_id
+        == "00:00:00:00:00:00_1_8_9"
+    )
 
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     spray_level = Helper(
