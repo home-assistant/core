@@ -1,0 +1,158 @@
+"""Config flow for Rainforest RAVEn devices."""
+from __future__ import annotations
+
+import asyncio
+from typing import Any
+from xml.etree.ElementTree import ParseError
+
+from aioraven.serial import RAVEnSerialDevice
+import async_timeout
+from serial.serialutil import SerialException
+import serial.tools.list_ports
+from serial.tools.list_ports_common import ListPortInfo
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.components import usb
+from homeassistant.const import CONF_DEVICE, CONF_MAC, CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
+
+from .const import DEFAULT_NAME, DOMAIN
+
+
+def _generate_unique_id(port: ListPortInfo) -> str:
+    """Generate unique id from usb attributes."""
+    return f"{port.vid:04X}:{port.pid:04X}_{port.serial_number}_{port.manufacturer}_{port.description}"
+
+
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Rainforest RAVEn devices."""
+
+    def __init__(self) -> None:
+        """Set up flow instance."""
+        self._dev_path: str | None = None
+        self._meter_macs: dict[bytes, str] = {}
+
+    async def _validate_device(self, dev_path: str) -> None:
+        self._abort_if_unique_id_configured(updates={CONF_DEVICE: dev_path})
+        async with async_timeout.timeout(5):
+            async with RAVEnSerialDevice(dev_path) as raven_device:
+                await asyncio.sleep(0.05)
+                for _try in range(3, -1, -1):
+                    try:
+                        # Try a few times to communicate with the device,
+                        # allowing any data already in the buffer to flush.
+                        meters = await raven_device.get_meter_list()
+                    except ParseError:
+                        if not _try:
+                            raise
+                    else:
+                        break
+                for meter in meters.meter_mac_ids:
+                    meter_info = await raven_device.get_meter_info(meter=meter)
+                    self._meter_macs[meter] = (
+                        "unknown"
+                        if meter_info.meter_type is None
+                        else str(meter_info.meter_type)
+                    )
+        self._dev_path = dev_path
+
+    async def async_step_meters(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Connect to device and discover meters."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            meter_macs = []
+            for raw_mac in user_input.get(CONF_MAC, "").split(","):
+                try:
+                    mac = bytes.fromhex(raw_mac)
+                except ValueError:
+                    errors[CONF_MAC] = "invalid_mac"
+                    break
+                if len(mac) != 8:
+                    errors[CONF_MAC] = "invalid_mac"
+                    break
+                if self._meter_macs.get(mac) not in ("unknown", "electric"):
+                    errors[CONF_MAC] = "no_meters_found"
+                    break
+                if mac not in meter_macs:
+                    meter_macs.append(mac)
+            if meter_macs and not errors:
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                    data={
+                        CONF_DEVICE: self._dev_path,
+                        CONF_MAC: [m.hex() for m in meter_macs],
+                    },
+                )
+
+        discovered_macs = [m.hex() for m in self._meter_macs]
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_MAC, description={"suggested_value": ",".join(discovered_macs)}
+                ): str
+            }
+        )
+        return self.async_show_form(step_id="meters", data_schema=schema, errors=errors)
+
+    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+        """Handle USB Discovery."""
+        device = discovery_info.device
+        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        unique_id = f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
+        await self.async_set_unique_id(unique_id)
+        try:
+            await self._validate_device(dev_path)
+        except asyncio.TimeoutError:
+            return self.async_abort(reason="timeout_connect")
+        except (ParseError, SerialException):
+            return self.async_abort(reason="cannot_connect")
+        else:
+            return await self.async_step_meters()
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow initiated by the user."""
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
+        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        existing_devices = [
+            entry.data[CONF_DEVICE] for entry in self._async_current_entries()
+        ]
+        unused_ports = [
+            usb.human_readable_device_name(
+                port.device,
+                port.serial_number,
+                port.manufacturer,
+                port.description,
+                port.vid,
+                port.pid,
+            )
+            for port in ports
+            if port.device not in existing_devices
+        ]
+        if not unused_ports:
+            return self.async_abort(reason="no_devices_found")
+
+        errors = {}
+        if user_input is not None and user_input.get(CONF_DEVICE, "").strip():
+            port = ports[unused_ports.index(str(user_input[CONF_DEVICE]))]
+            dev_path = await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, port.device
+            )
+            unique_id = _generate_unique_id(port)
+            await self.async_set_unique_id(unique_id)
+            try:
+                await self._validate_device(dev_path)
+            except asyncio.TimeoutError:
+                errors[CONF_DEVICE] = "timeout_connect"
+            except (ParseError, SerialException):
+                errors[CONF_DEVICE] = "cannot_connect"
+            else:
+                return await self.async_step_meters()
+
+        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(unused_ports)})
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

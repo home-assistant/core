@@ -245,6 +245,9 @@ aiopyarr==22.9.0
 # homeassistant.components.qnap_qsw
 aioqsw==0.2.2
 
+# homeassistant.components.rainforest_raven
+aioraven==0.2.0
+
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
 

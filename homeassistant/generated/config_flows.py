@@ -312,6 +312,7 @@ FLOWS = {
         "radio_browser",
         "radiotherm",
         "rainforest_eagle",
+        "rainforest_raven",
         "rainmachine",
         "rdw",
         "recollect_waste",

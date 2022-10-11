@@ -904,6 +904,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
+/homeassistant/components/rainforest_raven/ @cottsay
+/tests/components/rainforest_raven/ @cottsay
 /homeassistant/components/rainmachine/ @bachya
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff

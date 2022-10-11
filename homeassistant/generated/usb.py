@@ -14,6 +14,20 @@ USB = [
         "pid": "1340",
     },
     {
+        "domain": "rainforest_raven",
+        "vid": "0403",
+        "pid": "8A28",
+        "manufacturer": "*rainforest*",
+        "description": "*raven*",
+    },
+    {
+        "domain": "rainforest_raven",
+        "vid": "04B4",
+        "pid": "0003",
+        "manufacturer": "*rainforest*",
+        "description": "*emu-2*",
+    },
+    {
         "domain": "velbus",
         "vid": "10CF",
         "pid": "0B1B",

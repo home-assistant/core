@@ -211,6 +211,7 @@ homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
+homeassistant.components.rainforest_raven.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.radarr.*

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No compatible devices found"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_mac": "Invalid meter MAC address",
+            "no_meters_found": "No compatible meters are connected to the device",
+            "timeout_connect": "Timeout establishing connection"
+        },
+        "step": {
+            "meters": {
+                "data": {
+                    "mac": "Meter MAC Addresses"
+                }
+            },
+            "user": {
+                "data": {
+                    "device": "Device"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,161 @@
+"""Data update coordination for Rainforest RAVEn devices."""
+from __future__ import annotations
+
+import asyncio
+from dataclasses import asdict
+from datetime import timedelta
+import logging
+from typing import Any
+from xml.etree.ElementTree import ParseError
+
+from aioraven.data import DeviceInfo
+from aioraven.serial import RAVEnSerialDevice
+from serial.serialutil import SerialException
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE, CONF_MAC
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def _get_meter_data(
+    device: RAVEnSerialDevice, meter: bytes
+) -> dict[str, dict[str, Any]]:
+    data = {}
+
+    sum_info = await device.get_current_summation_delivered(meter=meter)
+    demand_info = await device.get_instantaneous_demand(meter=meter)
+    price_info = await device.get_current_price(meter=meter)
+
+    if sum_info and sum_info.meter_mac_id == meter:
+        data["CurrentSummationDelivered"] = asdict(sum_info)
+
+    if demand_info and demand_info.meter_mac_id == meter:
+        data["InstantaneousDemand"] = asdict(demand_info)
+
+    if price_info and price_info.meter_mac_id == meter:
+        data["PriceCluster"] = asdict(price_info)
+
+    return data
+
+
+async def _get_all_data(
+    device: RAVEnSerialDevice, meter_macs: list[str]
+) -> dict[str, dict[str, Any]]:
+    data: dict[str, dict[str, Any]] = {"Meters": {}}
+
+    for meter_mac in meter_macs:
+        data["Meters"][meter_mac] = await _get_meter_data(
+            device, bytes.fromhex(meter_mac)
+        )
+
+    network_info = await device.get_network_info()
+
+    if network_info and network_info.link_strength:
+        data["NetworkInfo"] = asdict(network_info)
+
+    return data
+
+
+class RAVEnDataCoordinator(DataUpdateCoordinator):
+    """Communication coordinator for a Rainforest RAVEn device."""
+
+    _raven_device: RAVEnSerialDevice | None = None
+    _device_info: DeviceInfo | None = None
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize the data object."""
+        self.entry = entry
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=30),
+        )
+
+    @property
+    def device_fw_version(self) -> str | None:
+        """Return the firmware version of the device."""
+        if self._device_info:
+            return self._device_info.fw_version
+        return None
+
+    @property
+    def device_hw_version(self) -> str | None:
+        """Return the hardware version of the device."""
+        if self._device_info:
+            return self._device_info.hw_version
+        return None
+
+    @property
+    def device_mac_address(self) -> str | None:
+        """Return the MAC address of the device."""
+        if self._device_info and self._device_info.device_mac_id:
+            return self._device_info.device_mac_id.hex()
+        return None
+
+    @property
+    def device_manufacturer(self) -> str | None:
+        """Return the manufacturer of the device."""
+        if self._device_info:
+            return self._device_info.manufacturer
+        return None
+
+    @property
+    def device_model(self) -> str | None:
+        """Return the model of the device."""
+        if self._device_info:
+            return self._device_info.model_id
+        return None
+
+    @property
+    def device_name(self) -> str:
+        """Return the product name of the device."""
+        return "RAVEn Device"
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        try:
+            device = await self._get_device()
+            return await _get_all_data(device, self.entry.data[CONF_MAC])
+        except ParseError as err:
+            raise UpdateFailed(f"ParseError: {err}") from err
+        except SerialException as err:
+            if self._raven_device:
+                await self._raven_device.close()
+                self._raven_device = None
+            raise UpdateFailed(f"SerialException: {err}") from err
+
+    async def _get_device(self) -> RAVEnSerialDevice:
+        if self._raven_device is not None:
+            return self._raven_device
+
+        device = RAVEnSerialDevice(self.entry.data[CONF_DEVICE])
+
+        await device.open()
+
+        # Yield for a bit to let any data already in the buffer flush
+        await asyncio.sleep(0.05)
+
+        try:
+            for _try in range(3, -1, -1):
+                try:
+                    self._device_info = await device.get_device_info()
+                except ParseError:
+                    # Parsing errors are common when performing the initial
+                    # connection to the device because there is often data sitting
+                    # in the serial buffer that is incomplete.
+                    if not _try:
+                        raise
+                else:
+                    break
+        except Exception:
+            await device.close()
+            raise
+
+        self._raven_device = device
+        return device
