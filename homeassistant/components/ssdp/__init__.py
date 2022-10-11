@@ -678,15 +678,15 @@ class Server:
     async def async_start(self) -> None:
         """Start the server."""
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
-        await self._async_start_ssdp_servers()
+        await self._async_start_upnp_servers()
 
     async def _async_get_instance_udn(self) -> str:
         """Get Unique Device Name for this instance."""
         instance_id = await async_get_instance_id(self.hass)
         return f"uuid:{instance_id[0:8]}-{instance_id[8:12]}-{instance_id[12:16]}-{instance_id[16:20]}-{instance_id[20:32]}".upper()
 
-    async def _async_start_ssdp_servers(self) -> None:
-        """Start the SSDP servers."""
+    async def _async_start_upnp_servers(self) -> None:
+        """Start the UPnP/SSDP servers."""
         # Update UDN with our instance UDN.
         udn = await self._async_get_instance_udn()
         system_info = await async_get_system_info(self.hass)
@@ -755,6 +755,10 @@ class Server:
             self._upnp_servers.remove(server)
 
     async def async_stop(self, *_: Any) -> None:
-        """Stop the servers."""
+        """Stop the server."""
+        await self._async_stop_upnp_servers()
+
+    async def _async_stop_upnp_servers(self) -> None:
+        """Stop UPnP/SSDP servers."""
         for server in self._upnp_servers:
             await server.async_stop()
