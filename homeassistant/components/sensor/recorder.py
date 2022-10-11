@@ -23,7 +23,12 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
     StatisticResult,
 )
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, REVOLUTIONS_PER_MINUTE
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    REVOLUTIONS_PER_MINUTE,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
@@ -49,6 +54,8 @@ DEFAULT_STATISTICS = {
 
 EQUIVALENT_UNITS = {
     "RPM": REVOLUTIONS_PER_MINUTE,
+    "ft3": VOLUME_CUBIC_FEET,
+    "m3": VOLUME_CUBIC_METERS,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
