@@ -1,6 +1,5 @@
 """Switch tests for the Skybell integration."""
 from datetime import timedelta
-from unittest.mock import patch
 
 from aioskybell.helpers.const import BASE_URL
 
@@ -15,28 +14,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .conftest import (
-    DEVICE_ID,
-    async_init_integration,
-    patch_cache,
-    set_aioclient_responses,
-)
+from .conftest import DEVICE_ID, async_init_integration, set_aioclient_responses
 
 from tests.common import async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_switch_states(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, connection
 ) -> None:
     """Test we get switch data."""
-    await set_aioclient_responses(aioclient_mock)
-    entry = await async_init_integration(hass, skip_setup=True)
-    with patch_cache(), patch(
-        "homeassistant.core.Config.path",
-        return_value="tests/components/skybell/fixtures/cache.pickle",
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
+    await async_init_integration(hass)
 
     state = hass.states.get("switch.front_door_do_not_disturb")
     assert state.state == STATE_OFF

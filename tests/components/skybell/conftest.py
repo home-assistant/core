@@ -3,12 +3,14 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 from aiohttp.client import ClientError
+from aioskybell import Skybell
 from aioskybell.helpers.const import BASE_URL, USERS_ME_URL
 import pytest
 
 from homeassistant.components.skybell.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -106,11 +108,6 @@ def patch_skybell() -> None:
     )
 
 
-def patch_cache() -> None:
-    """Patch Skybell cache."""
-    return patch("aioskybell.utils.async_save_cache")
-
-
 async def set_aioclient_responses(aioclient_mock: AiohttpClientMocker) -> None:
     """Set AioClient responses."""
     aioclient_mock.get(
@@ -159,19 +156,21 @@ async def connection(aioclient_mock: AiohttpClientMocker) -> None:
     await set_aioclient_responses(aioclient_mock)
 
 
-async def async_init_integration(
-    hass: HomeAssistant,
-    skip_setup: bool = False,
-) -> MockConfigEntry:
+async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Skybell integration in Home Assistant."""
     config_entry = create_entry(hass)
+    email = config_entry.data[CONF_EMAIL]
+    password = config_entry.data[CONF_PASSWORD]
 
-    if not skip_setup:
-        with patch_cache(), patch(
-            "homeassistant.core.Config.path",
-            return_value="tests/components/skybell/fixtures/cache.pickle",
-        ):
-            await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    api = Skybell(
+        username=email,
+        password=password,
+        get_devices=True,
+        cache_path="tests/components/skybell/fixtures/cache.pickle",
+        session=async_get_clientsession(hass),
+    )
+    with patch("homeassistant.components.skybell.Skybell", return_value=api):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     return config_entry
