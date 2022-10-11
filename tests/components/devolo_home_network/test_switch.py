@@ -1,6 +1,6 @@
 """Tests for the devolo Home Network switch."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 import pytest
@@ -246,7 +246,7 @@ async def test_auth_failed(
     state = hass.states.get(state_key)
     assert state is not None
 
-    setattr(mock_device.device, set_method, MagicMock())
+    setattr(mock_device.device, set_method, AsyncMock())
     api = getattr(mock_device.device, set_method)
     api.side_effect = DevicePasswordProtected
 
