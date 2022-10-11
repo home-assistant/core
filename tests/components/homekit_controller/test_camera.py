@@ -15,6 +15,20 @@ def create_camera(accessory):
     accessory.add_service(ServicesTypes.CAMERA_RTP_STREAM_MANAGEMENT)
 
 
+async def test_migrate_entity_ids(hass, utcnow):
+    """Test migrating entity ids."""
+    entity_registry = er.async_get(hass)
+    camera = entity_registry.async_get_or_create(
+        "camera",
+        "homekit_controller",
+        "homekit-0001-aid:1",
+    )
+    await setup_test_component(hass, create_camera)
+    assert (
+        entity_registry.async_get(camera.entity_id).unique_id == "00:00:00:00:00:00_1"
+    )
+
+
 async def test_read_state(hass, utcnow):
     """Test reading the state of a HomeKit camera."""
     helper = await setup_test_component(hass, create_camera)
@@ -28,17 +42,3 @@ async def test_get_image(hass, utcnow):
     helper = await setup_test_component(hass, create_camera)
     image = await camera.async_get_image(hass, helper.entity_id)
     assert image.content == base64.b64decode(FAKE_CAMERA_IMAGE)
-
-
-async def test_migrate_entity_ids(hass, utcnow):
-    """Test migrating entity ids."""
-    entity_registry = er.async_get(hass)
-    camera = entity_registry.async_get_or_create(
-        "camera",
-        "homekit_controller",
-        "homekit-0001-aid:3",
-    )
-    await setup_test_component(hass, create_camera)
-    assert (
-        entity_registry.async_get(camera.entity_id).unique_id == "00:00:00:00:00:00_3"
-    )
