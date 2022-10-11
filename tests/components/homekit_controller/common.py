@@ -9,7 +9,12 @@ import os
 from typing import Any, Final
 from unittest import mock
 
-from aiohomekit.model import Accessories, AccessoriesState, Accessory
+from aiohomekit.model import (
+    Accessories,
+    AccessoriesState,
+    Accessory,
+    mixin as model_mixin,
+)
 from aiohomekit.testing import FakeController, FakePairing
 from aiohomekit.zeroconf import HomeKitService
 
@@ -402,3 +407,8 @@ async def remove_device(ws_client, device_id, config_entry_id):
     )
     response = await ws_client.receive_json()
     return response["success"]
+
+
+def get_next_aid():
+    """Get next aid."""
+    return model_mixin.id_counter + 1

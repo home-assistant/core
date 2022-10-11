@@ -5,7 +5,7 @@ from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.helpers import entity_registry as er
 
-from .common import Helper, setup_test_component
+from .common import Helper, get_next_aid, setup_test_component
 
 
 def create_service_with_ecobee_mode(accessory: Accessory):
@@ -24,10 +24,11 @@ def create_service_with_ecobee_mode(accessory: Accessory):
 async def test_read_current_mode(hass, utcnow):
     """Test that Ecobee mode can be correctly read and show as human readable text."""
     entity_registry = er.async_get(hass)
+    aid = get_next_aid()
     select = entity_registry.async_get_or_create(
         "select",
         "homekit_controller",
-        "homekit-0001-aid:1-sid:8-cid:14",
+        f"homekit-0001-aid:{aid}-sid:8-cid:14",
         suggested_object_id="testdevice_current_mode",
     )
 
@@ -35,7 +36,7 @@ async def test_read_current_mode(hass, utcnow):
 
     assert (
         entity_registry.async_get(select.entity_id).unique_id
-        == "00:00:00:00:00:00_1_8_14"
+        == f"00:00:00:00:00:00_{aid}_8_14"
     )
 
     # Helper will be for the primary entity, which is the service. Make a helper for the sensor.
