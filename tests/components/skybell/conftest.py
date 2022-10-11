@@ -1,6 +1,6 @@
 """Configure pytest for Skybell tests."""
 from http import HTTPStatus
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from aiohttp.client import ClientError
 from aioskybell import Skybell
@@ -90,24 +90,6 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return create_entry(hass)
 
 
-def patch_skybell_devices() -> None:
-    """Patch Skybell devices."""
-    mocked_skybell = AsyncMock()
-    mocked_skybell.user_id = USER_ID
-    return patch(
-        "homeassistant.components.skybell.config_flow.Skybell.async_get_devices",
-        return_value=[mocked_skybell],
-    )
-
-
-def patch_skybell() -> None:
-    """Patch Skybell."""
-    return patch(
-        "homeassistant.components.skybell.config_flow.Skybell.async_send_request",
-        return_value={"id": USER_ID},
-    )
-
-
 async def set_aioclient_responses(aioclient_mock: AiohttpClientMocker) -> None:
     """Set AioClient responses."""
     aioclient_mock.get(
@@ -156,20 +138,29 @@ async def connection(aioclient_mock: AiohttpClientMocker) -> None:
     await set_aioclient_responses(aioclient_mock)
 
 
-async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up the Skybell integration in Home Assistant."""
-    config_entry = create_entry(hass)
-    email = config_entry.data[CONF_EMAIL]
-    password = config_entry.data[CONF_PASSWORD]
-
-    api = Skybell(
-        username=email,
-        password=password,
+def create_skybell(hass: HomeAssistant) -> Skybell:
+    """Create Skybell object."""
+    return Skybell(
+        username=USERNAME,
+        password=PASSWORD,
         get_devices=True,
         cache_path="tests/components/skybell/fixtures/cache.pickle",
         session=async_get_clientsession(hass),
     )
-    with patch("homeassistant.components.skybell.Skybell", return_value=api):
+
+
+def mock_skybell(hass: HomeAssistant) -> None:
+    """Mock Skybell object."""
+    return patch(
+        "homeassistant.components.skybell.Skybell", return_value=create_skybell(hass)
+    )
+
+
+async def async_init_integration(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the Skybell integration in Home Assistant."""
+    config_entry = create_entry(hass)
+
+    with mock_skybell(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
