@@ -1,0 +1,24 @@
+{
+  "title": "Key Atome",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure KeyAtome",
+        "description": "Define the KeyAtome account",
+        "data": {
+           "username": "the username",
+           "password" : "the password",
+           "atome_linky_number" : "your atome key number 1, 2, 3 or ...",
+           "name" : "the root sensor name"
+        }
+      }
+    },
+    "error": {
+      "general_error": "unknown error",
+      "invalid_credentials": "invalid credentials"
+    },
+    "abort": {
+      "already_configured": "Already configured"
+    }
+  }
+}
