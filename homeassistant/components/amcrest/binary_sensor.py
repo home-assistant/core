@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 class AmcrestSensorEntityDescription(BinarySensorEntityDescription):
     """Describe Amcrest sensor entity."""
 
-    event_codes: list[str] | None = None
+    event_codes: set[str] | None = None
     should_poll: bool = False
 
 
@@ -51,7 +51,7 @@ _ONLINE_SCAN_INTERVAL = timedelta(seconds=60 - BINARY_SENSOR_SCAN_INTERVAL_SECS)
 _AUDIO_DETECTED_KEY = "audio_detected"
 _AUDIO_DETECTED_POLLED_KEY = "audio_detected_polled"
 _AUDIO_DETECTED_NAME = "Audio Detected"
-_AUDIO_DETECTED_EVENT_CODES = ["AudioMutation", "AudioIntensity"]
+_AUDIO_DETECTED_EVENT_CODES = {"AudioMutation", "AudioIntensity"}
 
 _CROSSLINE_DETECTED_KEY = "crossline_detected"
 _CROSSLINE_DETECTED_POLLED_KEY = "crossline_detected_polled"
@@ -83,26 +83,26 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
         key=_CROSSLINE_DETECTED_KEY,
         name=_CROSSLINE_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.MOTION,
-        event_codes=[_CROSSLINE_DETECTED_EVENT_CODE],
+        event_codes={_CROSSLINE_DETECTED_EVENT_CODE},
     ),
     AmcrestSensorEntityDescription(
         key=_CROSSLINE_DETECTED_POLLED_KEY,
         name=_CROSSLINE_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.MOTION,
-        event_codes=[_CROSSLINE_DETECTED_EVENT_CODE],
+        event_codes={_CROSSLINE_DETECTED_EVENT_CODE},
         should_poll=True,
     ),
     AmcrestSensorEntityDescription(
         key=_MOTION_DETECTED_KEY,
         name=_MOTION_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.MOTION,
-        event_codes=[_MOTION_DETECTED_EVENT_CODE],
+        event_codes={_MOTION_DETECTED_EVENT_CODE},
     ),
     AmcrestSensorEntityDescription(
         key=_MOTION_DETECTED_POLLED_KEY,
         name=_MOTION_DETECTED_NAME,
         device_class=BinarySensorDeviceClass.MOTION,
-        event_codes=[_MOTION_DETECTED_EVENT_CODE],
+        event_codes={_MOTION_DETECTED_EVENT_CODE},
         should_poll=True,
     ),
     AmcrestSensorEntityDescription(
@@ -211,11 +211,8 @@ class AmcrestBinarySensor(BinarySensorEntity):
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
 
-        if (event_codes := self.entity_description.event_codes) is None or len(
-            event_codes
-        ) == 0:
-            _LOGGER.error("Binary sensor %s event code not set", self.name)
-            return
+        if not (event_codes := self.entity_description.event_codes):
+            raise ValueError(f"Binary sensor {self.name} event codes not set")
 
         try:
             self._attr_is_on = any(  # type: ignore[arg-type]
