@@ -8,11 +8,17 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_airvisua
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
+            "entry_id": config_entry.entry_id,
+            "version": 1,
+            "domain": "airvisual_pro",
             "title": "Mock Title",
-            "data": {
-                "ip_address": "192.168.1.101",
-                "password": REDACTED,
-            },
+            "data": {"ip_address": "192.168.1.101", "password": REDACTED},
+            "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": "192.168.1.101",
+            "disabled_by": None,
         },
         "data": {
             "date_and_time": {
