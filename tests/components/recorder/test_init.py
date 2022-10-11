@@ -1629,27 +1629,43 @@ async def test_disable_echo(hass, db_url, echo, caplog):
 
 
 @pytest.mark.parametrize(
-    "config_url, connect_url",
+    "config_url, connect_args",
     (
         (
+            "mariadb://user:password@SERVER_IP/DB_NAME",
+            {"charset": "utf8mb4"},
+        ),
+        (
+            "mariadb+pymysql://user:password@SERVER_IP/DB_NAME",
+            {"charset": "utf8mb4"},
+        ),
+        (
             "mysql://user:password@SERVER_IP/DB_NAME",
-            "mysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
+            {"charset": "utf8mb4"},
         ),
         (
             "mysql+pymysql://user:password@SERVER_IP/DB_NAME",
-            "mysql+pymysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
+            {"charset": "utf8mb4"},
         ),
         (
             "mysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
-            "mysql://user:password@SERVER_IP/DB_NAME?charset=utf8mb4",
+            {"charset": "utf8mb4"},
         ),
         (
-            "mysql://user:password@SERVER_IP/DB_NAME?blah=bleh&charset=utf8mb4",
-            "mysql://user:password@SERVER_IP/DB_NAME?blah=bleh&charset=utf8mb4",
+            "mysql://user:password@SERVER_IP/DB_NAME?blah=bleh&charset=other",
+            {"charset": "utf8mb4"},
+        ),
+        (
+            "postgresql://blabla",
+            None,
+        ),
+        (
+            "sqlite://blabla",
+            None,
         ),
     ),
 )
-async def test_mysql_missing_utf8mb4(hass, config_url, connect_url, caplog):
+async def test_mysql_missing_utf8mb4(hass, config_url, connect_args):
     """Test recorder fails to setup if charset=utf8mb4 is missing from db_url."""
     recorder_helper.async_initialize_recorder(hass)
 
@@ -1665,4 +1681,4 @@ async def test_mysql_missing_utf8mb4(hass, config_url, connect_url, caplog):
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
         create_engine_mock.assert_called_once()
-        assert create_engine_mock.mock_calls[0][1][0] == connect_url
+        assert create_engine_mock.mock_calls[0][2].get("connect_args") == connect_args
