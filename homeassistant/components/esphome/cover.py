@@ -41,9 +41,10 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     @property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        flags = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
+        flags = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+
+        if self._static_info.supports_stop:
+            flags |= CoverEntityFeature.STOP
         if self._static_info.supports_position:
             flags |= CoverEntityFeature.SET_POSITION
         if self._static_info.supports_tilt:
