@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from contextlib import suppress
 from datetime import timedelta
 import logging
+from math import ceil
 from typing import Any
 
 from aiopvapi.helpers.constants import (
@@ -729,6 +730,250 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
         )
 
 
+class PowerViewShadeDualOverlappedBase(PowerViewShade):
+    """Represent a shade that has a front sheer and rear blackout panel.
+
+    This equates to two shades being controlled by one motor
+    """
+
+    @property
+    def transition_steps(self) -> int:
+        """Return the steps to make a move."""
+        # poskind 1 represents the second half of the shade in hass
+        # front must be fully closed before rear can move
+        # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
+        primary = (hd_position_to_hass(self.positions.primary, MAX_POSITION) / 2) + 50
+        # poskind 2 represents the shade first half of the shade in hass
+        # rear (blackout) must be fully open before front can move
+        # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
+        secondary = hd_position_to_hass(self.positions.secondary, MAX_POSITION) / 2
+        return ceil(primary + secondary)
+
+    @property
+    def open_position(self) -> PowerviewShadeMove:
+        """Return the open position and required additional positions."""
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: MAX_POSITION,
+                ATTR_POSKIND1: POS_KIND_PRIMARY,
+            },
+            {POS_KIND_SECONDARY: MIN_POSITION, POS_KIND_VANE: MIN_POSITION},
+        )
+
+    @property
+    def close_position(self) -> PowerviewShadeMove:
+        """Return the open position and required additional positions."""
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: MIN_POSITION,
+                ATTR_POSKIND1: POS_KIND_SECONDARY,
+            },
+            {POS_KIND_PRIMARY: MIN_POSITION, POS_KIND_VANE: MIN_POSITION},
+        )
+
+
+class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
+    """Represent a shade that has a front sheer and rear blackout panel.
+
+    This equates to two shades being controlled by one motor.
+    The front shade must be completely down before the rear shade will move.
+    Sibling Class: PowerViewShadeDualOverlappedFront, PowerViewShadeDualOverlappedRear
+    API Class: ShadeDualOverlapped
+
+    Type 8 - Duolite (front and rear shades)
+    """
+
+    # type
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_unique_id = f"{self._shade.id}_combined"
+        self._attr_name = f"{self._shade_name} Combined"
+
+    @property
+    def is_closed(self) -> bool:
+        """Return if the cover is closed."""
+        # if rear shade is down it is closed
+        return self.positions.secondary <= CLOSED_POSITION
+
+    @property
+    def current_cover_position(self) -> int:
+        """Return the current position of cover."""
+        # if front is open return that (other positions are impossible)
+        # if front shade is closed get position of rear
+        position = (hd_position_to_hass(self.positions.primary, MAX_POSITION) / 2) + 50
+        if self.positions.primary == MIN_POSITION:
+            position = hd_position_to_hass(self.positions.secondary, MAX_POSITION) / 2
+
+        return ceil(position)
+
+    @callback
+    def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
+        position_shade = hass_position_to_hd(target_hass_position, MAX_POSITION)
+        # note we set POS_KIND_VANE: MIN_POSITION here even with shades without tilt so no additional
+        # override is required for differences between type 8/9/10
+        # this just stores the value in the coordinator for future reference
+        if target_hass_position <= 50:
+            target_hass_position = target_hass_position * 2
+            return PowerviewShadeMove(
+                {
+                    ATTR_POSITION1: position_shade,
+                    ATTR_POSKIND1: POS_KIND_SECONDARY,
+                },
+                {POS_KIND_PRIMARY: MIN_POSITION, POS_KIND_VANE: MIN_POSITION},
+            )
+
+        # 51 <= target_hass_position <= 100 (51-100 represents front sheer shade)
+        target_hass_position = (target_hass_position - 50) * 2
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: position_shade,
+                ATTR_POSKIND1: POS_KIND_PRIMARY,
+            },
+            {POS_KIND_SECONDARY: MAX_POSITION, POS_KIND_VANE: MIN_POSITION},
+        )
+
+
+class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
+    """Represent the shade front panel - These have a blackout panel too.
+
+    This equates to two shades being controlled by one motor.
+    The front shade must be completely down before the rear shade will move.
+    Sibling Class: PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedRear
+    API Class: ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
+
+    Type 8 - Duolite (front and rear shades)
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear blackout (non-tilting) shade)
+    Type 10 - Duolite with 180° Tilt
+    """
+
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_unique_id = f"{self._shade.id}_front"
+        self._attr_name = f"{self._shade_name} Front"
+
+    @property
+    def should_poll(self) -> bool:
+        """Certain shades create multiple entities.
+
+        Do not poll shade multiple times. Combined shade will return data
+        and multiple polling will cause timeouts.
+        """
+        return False
+
+    @callback
+    def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
+        position_shade = hass_position_to_hd(target_hass_position, MAX_POSITION)
+        # note we set POS_KIND_VANE: MIN_POSITION here even with shades without tilt so no additional
+        # override is required for differences between type 8/9/10
+        # this just stores the value in the coordinator for future reference
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: position_shade,
+                ATTR_POSKIND1: POS_KIND_PRIMARY,
+            },
+            {POS_KIND_SECONDARY: MAX_POSITION, POS_KIND_VANE: MIN_POSITION},
+        )
+
+    @property
+    def close_position(self) -> PowerviewShadeMove:
+        """Return the close position and required additional positions."""
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: MIN_POSITION,
+                ATTR_POSKIND1: POS_KIND_PRIMARY,
+            },
+            {POS_KIND_SECONDARY: MAX_POSITION, POS_KIND_VANE: MIN_POSITION},
+        )
+
+
+class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
+    """Represent the shade front panel - These have a blackout panel too.
+
+    This equates to two shades being controlled by one motor.
+    The front shade must be completely down before the rear shade will move.
+    Sibling Class: PowerViewShadeDualOverlappedCombined, PowerViewShadeDualOverlappedFront
+    API Class: ShadeDualOverlapped + ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
+
+    Type 8 - Duolite (front and rear shades)
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear blackout (non-tilting) shade)
+    Type 10 - Duolite with 180° Tilt
+    """
+
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+    ) -> None:
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_unique_id = f"{self._shade.id}_rear"
+        self._attr_name = f"{self._shade_name} Rear"
+
+    @property
+    def should_poll(self) -> bool:
+        """Certain shades create multiple entities.
+
+        Do not poll shade multiple times. Combined shade will return data
+        and multiple polling will cause timeouts.
+        """
+        return False
+
+    @property
+    def is_closed(self) -> bool:
+        """Return if the cover is closed."""
+        # if rear shade is down it is closed
+        return self.positions.secondary <= CLOSED_POSITION
+
+    @property
+    def current_cover_position(self) -> int:
+        """Return the current position of cover."""
+        return hd_position_to_hass(self.positions.secondary, MAX_POSITION)
+
+    @callback
+    def _get_shade_move(self, target_hass_position: int) -> PowerviewShadeMove:
+        position_shade = hass_position_to_hd(target_hass_position, MAX_POSITION)
+        # note we set POS_KIND_VANE: MIN_POSITION here even with shades without tilt so no additional
+        # override is required for differences between type 8/9/10
+        # this just stores the value in the coordinator for future reference
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: position_shade,
+                ATTR_POSKIND1: POS_KIND_SECONDARY,
+            },
+            {POS_KIND_PRIMARY: MIN_POSITION, POS_KIND_VANE: MIN_POSITION},
+        )
+
+    @property
+    def open_position(self) -> PowerviewShadeMove:
+        """Return the open position and required additional positions."""
+        return PowerviewShadeMove(
+            {
+                ATTR_POSITION1: MAX_POSITION,
+                ATTR_POSKIND1: POS_KIND_SECONDARY,
+            },
+            {POS_KIND_PRIMARY: MIN_POSITION, POS_KIND_VANE: MIN_POSITION},
+        )
+
+
 TYPE_TO_CLASSES = {
     0: (PowerViewShade,),
     1: (PowerViewShadeWithTiltOnClosed,),
@@ -740,6 +985,11 @@ TYPE_TO_CLASSES = {
     7: (
         PowerViewShadeTDBUTop,
         PowerViewShadeTDBUBottom,
+    ),
+    8: (
+        PowerViewShadeDualOverlappedCombined,
+        PowerViewShadeDualOverlappedFront,
+        PowerViewShadeDualOverlappedRear,
     ),
 }
 
