@@ -569,6 +569,30 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         self._max_tilt = self._shade.shade_limits.tilt_max
 
 
+class PowerViewShadeTopDown(PowerViewShade):
+    """Representation of a shade that lowers from the roof to the floor.
+
+    These shades are inverted where MAX_POSITION equates to closed and MIN_POSITION is open
+    API Class: ShadeTopDown
+
+    Type 6 - Top Down
+    """
+
+    @property
+    def current_cover_position(self) -> int:
+        """Return the current position of cover."""
+        return hd_position_to_hass(MAX_POSITION - self.positions.primary, MAX_POSITION)
+
+    @property
+    def is_closed(self) -> bool:
+        """Return if the cover is closed."""
+        return (MAX_POSITION - self.positions.primary) <= CLOSED_POSITION
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the shade to a specific position."""
+        await self._async_set_cover_position(100 - kwargs[ATTR_POSITION])
+
+
 class PowerViewShadeDualRailBase(PowerViewShade):
     """Representation of a shade with top/down bottom/up capabilities.
 
@@ -711,6 +735,7 @@ TYPE_TO_CLASSES = {
     3: (PowerViewShade,),
     4: (PowerViewShadeWithTiltAnywhere,),
     5: (PowerViewShadeTiltOnly,),
+    6: (PowerViewShadeTopDown,),
     7: (PowerViewShadeTDBUTop, PowerViewShadeTDBUBottom),
 }
 
