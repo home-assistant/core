@@ -18,7 +18,10 @@ from .const import CONF_P_GIVEN_F, CONF_P_GIVEN_T, CONF_TO_STATE
 
 @dataclass
 class Observation:
-    """Representation of a sensor or template observation."""
+    """Representation of a sensor or template observation.
+
+    Either entity_id or value_template should be non-None.
+    """
 
     entity_id: str | None
     platform: str
@@ -29,7 +32,7 @@ class Observation:
     below: float | None
     value_template: Template | None
     observed: bool | None = None
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    id: uuid.UUID = field(default_factory=uuid.uuid4)
 
     def to_dict(self) -> dict[str, str | float | bool | None]:
         """Represent Class as a Dict for easier serialization."""
