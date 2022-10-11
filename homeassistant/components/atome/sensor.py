@@ -42,7 +42,6 @@ from .const import (
     CONF_ATOME_LINKY_NUMBER,
     DAILY_NAME_SUFFIX,
     DAILY_PERIOD_TYPE,
-    DATA_COORDINATOR,
     DEBUG_FLAG,
     DEFAULT_ATOME_LINKY_NUMBER,
     DEFAULT_NAME,
@@ -418,7 +417,7 @@ class AtomeLoginStatServerEndPoint(AtomeGenericServerEndPoint):
                 self._login_stat_data.user_id,
                 self._login_stat_data.user_ref,
             )
-        except:
+        except KeyError:
             _LOGGER.error("Login Stat Data : Missing values in values: %s", values)
             error_flag = True
         if error_flag:
@@ -555,7 +554,7 @@ class AtomePeriodServerEndPoint(AtomeGenericServerEndPoint):
                 _LOGGER.debug(
                     "%s : DETAILED value %s: %s", period_type, i, values["data"][-i]
                 )
-            except:
+            except IndexError, KeyError:
                 _LOGGER.debug("days %s does not exist ", -i)
 
         self._periods_data.all_period[period_type].usage = current_period_consumption
@@ -579,7 +578,7 @@ class AtomePeriodServerEndPoint(AtomeGenericServerEndPoint):
             "%s : DUMP retrieve value: %s", self._period_type, retrieve_values
         )
 
-        ####### MAKE ROBUSTNESS
+        # MAKE ROBUSTNESS
         # make value robust
         if retrieve_values is None:
             # set to None
@@ -625,7 +624,7 @@ class AtomePeriodServerEndPoint(AtomeGenericServerEndPoint):
                             self._robust_values["data"][
                                 -i - shift_ref_day
                             ] = self._former_values["data"][-i]
-                except:
+                except IndexError, KeyError:
                     Error_In_Data = True
                     # do as if nothing done
                     perform_patch = False
@@ -635,11 +634,13 @@ class AtomePeriodServerEndPoint(AtomeGenericServerEndPoint):
                 if not perform_day_patch:
                     # show error only for day
                     self._error_counter.reset_handled_non_increasing_value()
+                if perform_patch:
+                    _LOGGER.debug("One patch performed")
             # patch also former value
             values = self._robust_values
             self._former_values = self._robust_values
 
-        ##### IF ERROR END Computation
+        # IF ERROR END Computation
         if Error_In_Data:
             # even if warning count for 1
             self._error_counter.increase_error(1)
@@ -653,14 +654,14 @@ class AtomePeriodServerEndPoint(AtomeGenericServerEndPoint):
                 )
             return False
 
-        ###### PERFORM NORMAL COMPUTATION
+        # PERFORM NORMAL COMPUTATION
         # dump
         _LOGGER.debug("%s : DUMP value: %s", self._period_type, values)
         if values is not None:
 
             try:
                 current_date = datetime.fromisoformat(values["data"][-1]["time"])
-            except:
+            except IndexError, KeyError:
                 Error_In_Data2 = True
 
             if not Error_In_Data2:
