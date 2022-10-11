@@ -236,6 +236,26 @@ class MqttValueTemplate:
         )
 
 
+class EntityTopicState:
+    """Manage entity state write requests for subscribed topics."""
+
+    def __init__(self) -> None:
+        """Register topic."""
+        self.subscribe_calls: dict[str, Entity] = {}
+
+    @callback
+    def process_write_state_requests(self) -> None:
+        """Process the write state requests."""
+        while self.subscribe_calls:
+            _, entity = self.subscribe_calls.popitem()
+            entity.async_write_ha_state()
+
+    @callback
+    def write_state_request(self, entity: Entity) -> None:
+        """Register write state request."""
+        self.subscribe_calls[entity.entity_id] = entity
+
+
 @dataclass
 class MqttData:
     """Keep the MQTT entry data."""
@@ -264,6 +284,7 @@ class MqttData:
         default_factory=dict
     )
     reload_needed: bool = False
+    state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
     updated_config: ConfigType = field(default_factory=dict)

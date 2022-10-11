@@ -304,26 +304,26 @@ def _write_default_config(config_dir: str) -> bool:
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
     try:
-        with open(config_path, "wt", encoding="utf8") as config_file:
+        with open(config_path, "w", encoding="utf8") as config_file:
             config_file.write(DEFAULT_CONFIG)
 
         if not os.path.isfile(secret_path):
-            with open(secret_path, "wt", encoding="utf8") as secret_file:
+            with open(secret_path, "w", encoding="utf8") as secret_file:
                 secret_file.write(DEFAULT_SECRETS)
 
-        with open(version_path, "wt", encoding="utf8") as version_file:
+        with open(version_path, "w", encoding="utf8") as version_file:
             version_file.write(__version__)
 
         if not os.path.isfile(automation_yaml_path):
-            with open(automation_yaml_path, "wt", encoding="utf8") as automation_file:
+            with open(automation_yaml_path, "w", encoding="utf8") as automation_file:
                 automation_file.write("[]")
 
         if not os.path.isfile(script_yaml_path):
-            with open(script_yaml_path, "wt", encoding="utf8"):
+            with open(script_yaml_path, "w", encoding="utf8"):
                 pass
 
         if not os.path.isfile(scene_yaml_path):
-            with open(scene_yaml_path, "wt", encoding="utf8"):
+            with open(scene_yaml_path, "w", encoding="utf8"):
                 pass
 
         return True
@@ -421,7 +421,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
             _LOGGER.info("Migrating google tts to google_translate tts")
             config_raw = config_raw.replace(TTS_PRE_92, TTS_92)
             try:
-                with open(config_path, "wt", encoding="utf-8") as config_file:
+                with open(config_path, "w", encoding="utf-8") as config_file:
                     config_file.write(config_raw)
             except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
@@ -433,7 +433,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
-    with open(version_path, "wt", encoding="utf8") as outp:
+    with open(version_path, "w", encoding="utf8") as outp:
         outp.write(__version__)
 
 
