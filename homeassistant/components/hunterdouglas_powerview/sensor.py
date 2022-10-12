@@ -50,13 +50,30 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
+class PowerViewSensor(ShadeEntity, SensorEntity):
     """Representation of an shade battery charge sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._async_update_shade_from_group)
+        )
+
+    @callback
+    def _async_update_shade_from_group(self) -> None:
+        """Update with new data from the coordinator."""
+        self._shade.raw_data = self.data.get_raw_data(self._shade.id)
+        self.async_write_ha_state()
+
+
+class PowerViewShadeBatterySensor(PowerViewSensor):
+    """Representation of an shade battery charge sensor."""
+
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator, device_info, room_name, shade, name):
         """Initialize the shade."""
@@ -71,18 +88,6 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
             self._shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100
         )
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_update_shade_from_group)
-        )
-
-    @callback
-    def _async_update_shade_from_group(self) -> None:
-        """Update with new data from the coordinator."""
-        self._shade.raw_data = self.data.get_raw_data(self._shade.id)
-        self.async_write_ha_state()
-
     async def async_update(self) -> None:
         """Refresh shade battery."""
-        await self._shade.refreshBattery()
+        await self._shade.refresh_battery()
