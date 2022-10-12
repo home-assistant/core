@@ -152,7 +152,7 @@ class GdacsEvent(GeolocationEvent):
             event_name = f"{feed_entry.country} ({feed_entry.event_id})"
         self._attr_name = f"{feed_entry.event_type}: {event_name}"
         # Convert distance if not metric system.
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self.hass.config.units.is_us_customary:
             self._attr_distance = IMPERIAL_SYSTEM.length(
                 feed_entry.distance_to_home, LENGTH_KILOMETERS
             )
