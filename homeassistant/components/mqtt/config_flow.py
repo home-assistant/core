@@ -69,6 +69,8 @@ from .const import (
     DEFAULT_PROTOCOL,
     DEFAULT_WILL,
     DOMAIN,
+    SET_CA_CERT,
+    SET_CLIENT_CERT,
     SUPPORTED_PROTOCOLS,
 )
 from .util import (
@@ -83,8 +85,6 @@ from .util import (
 MQTT_TIMEOUT = 5
 
 ADVANCED_OPTIONS = "advanced_options"
-SET_CA_CERT = "set_ca_cert"
-SET_CLIENT_CERT = "set_client_cert"
 
 BOOLEAN_SELECTOR = BooleanSelector()
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))

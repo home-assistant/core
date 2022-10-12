@@ -73,6 +73,9 @@ MQTT_DISCONNECTED = "mqtt_disconnected"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
+SET_CA_CERT = "set_ca_cert"
+SET_CLIENT_CERT = "set_client_cert"
+
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,

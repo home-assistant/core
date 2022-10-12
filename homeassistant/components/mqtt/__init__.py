@@ -52,6 +52,7 @@ from .client import (  # noqa: F401
 )
 from .config_integration import (
     CONFIG_SCHEMA_BASE,
+    CONFIG_SCHEMA_ENTRY,
     DEFAULT_VALUES,
     DEPRECATED_CERTIFICATE_CONFIG_KEYS,
     DEPRECATED_CONFIG_KEYS,
@@ -84,6 +85,8 @@ from .const import (  # noqa: F401
     MQTT_DISCONNECTED,
     PLATFORMS,
     RELOADABLE_PLATFORMS,
+    SET_CA_CERT,
+    SET_CLIENT_CERT,
 )
 from .models import (  # noqa: F401
     MqttCommandTemplate,
@@ -134,6 +137,8 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_TLS_INSECURE,
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
+    SET_CA_CERT,
+    SET_CLIENT_CERT,
 ]
 
 CONFIG_SCHEMA = vol.Schema(
@@ -307,7 +312,7 @@ async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | 
     # If user doesn't have configuration.yaml config, generate default values
     # for options not in config entry data
     if (conf := mqtt_data.config) is None:
-        conf = CONFIG_SCHEMA_BASE(dict(entry.data))
+        conf = CONFIG_SCHEMA_ENTRY(dict(entry.data))
 
     # User has configuration.yaml config, warn about config entry overrides
     elif any(key in conf for key in entry.data):
