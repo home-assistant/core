@@ -17,8 +17,8 @@ from homeassistant.helpers.storage import Store
 
 from .util import get_iid_storage_filename_for_entry_id
 
-AID_MANAGER_STORAGE_VERSION = 1
-AID_MANAGER_SAVE_DELAY = 2
+IID_MANAGER_STORAGE_VERSION = 1
+IID_MANAGER_SAVE_DELAY = 2
 
 ALLOCATIONS_KEY = "allocations"
 
@@ -36,24 +36,24 @@ class AccessoryIIDStorage:
 
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
         """Create a new iid store."""
-        self._hass = hass
-        self._allocations: dict[str, int] = {}
-        self._allocated_iids: list[int] = []
-        self._entry_id = entry_id
-        self._store: Store | None = None
+        self.hass = hass
+        self.allocations: dict[str, int] = {}
+        self.allocated_iids: list[int] = []
+        self.entry_id = entry_id
+        self.store: Store | None = None
 
     async def async_initialize(self) -> None:
         """Load the latest IID data."""
-        iid_store = get_iid_storage_filename_for_entry_id(self._entry_id)
-        self._store = Store(self._hass, AID_MANAGER_STORAGE_VERSION, iid_store)
+        iid_store = get_iid_storage_filename_for_entry_id(self.entry_id)
+        self.store = Store(self.hass, IID_MANAGER_STORAGE_VERSION, iid_store)
 
-        if not (raw_storage := await self._store.async_load()):
+        if not (raw_storage := await self.store.async_load()):
             # There is no data about iid allocations yet
             return
 
         assert isinstance(raw_storage, dict)
-        self._allocations = raw_storage.get(ALLOCATIONS_KEY, {})
-        self._allocated_iids = sorted(self._allocations.values())
+        self.allocations = raw_storage.get(ALLOCATIONS_KEY, {})
+        self.allocated_iids = sorted(self.allocations.values())
 
     def get_or_allocate_iid(
         self,
@@ -68,26 +68,26 @@ class AccessoryIIDStorage:
         char_hap_type: str | None = uuid_to_hap_type(char_uuid) if char_uuid else None
         # Allocation key must be a string since we are saving it to JSON
         allocation_key = f'{aid}_{service_hap_type}_{service_unique_id or ""}_{char_hap_type or ""}_{char_unique_id or ""}'
-        if allocation_key in self._allocations:
-            return self._allocations[allocation_key]
-        next_iid = self._allocated_iids[-1] + 1 if self._allocated_iids else 1
-        self._allocations[allocation_key] = next_iid
-        self._allocated_iids.append(next_iid)
+        if allocation_key in self.allocations:
+            return self.allocations[allocation_key]
+        next_iid = self.allocated_iids[-1] + 1 if self.allocated_iids else 1
+        self.allocations[allocation_key] = next_iid
+        self.allocated_iids.append(next_iid)
         self._async_schedule_save()
         return next_iid
 
     @callback
     def _async_schedule_save(self) -> None:
         """Schedule saving the iid allocations."""
-        assert self._store is not None
-        self._store.async_delay_save(self._data_to_save, AID_MANAGER_SAVE_DELAY)
+        assert self.store is not None
+        self.store.async_delay_save(self._data_to_save, IID_MANAGER_SAVE_DELAY)
 
     async def async_save(self) -> None:
         """Save the iid allocations."""
-        assert self._store is not None
-        return await self._store.async_save(self._data_to_save())
+        assert self.store is not None
+        return await self.store.async_save(self._data_to_save())
 
     @callback
-    def _data_to_save(self) -> dict:
+    def _data_to_save(self) -> dict[str, dict[str, int]]:
         """Return data of entity map to store in a file."""
-        return {ALLOCATIONS_KEY: self._allocations}
+        return {ALLOCATIONS_KEY: self.allocations}
