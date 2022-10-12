@@ -7,7 +7,7 @@
             "cannot_connect": "Tilkobling mislyktes",
             "id_missing": "Denne Samsung-enheten har ikke serienummer.",
             "not_supported": "Denne Samsung-enheten st\u00f8ttes forel\u00f8pig ikke.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_successful": "Re-autentisering var vellykket",
             "unknown": "Uventet feil"
         },
         "error": {

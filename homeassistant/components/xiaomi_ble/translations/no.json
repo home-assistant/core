@@ -7,7 +7,7 @@
             "expected_24_characters": "Forventet en heksadesimal bindingsn\u00f8kkel p\u00e5 24 tegn.",
             "expected_32_characters": "Forventet en heksadesimal bindingsn\u00f8kkel p\u00e5 32 tegn.",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "decryption_failed": "Den oppgitte bindingsn\u00f8kkelen fungerte ikke, sensordata kunne ikke dekrypteres. Vennligst sjekk det og pr\u00f8v igjen.",
