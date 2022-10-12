@@ -322,6 +322,7 @@ class VolvoEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self.vehicle.vin)},
             name=self._vehicle_name,
             model=self.vehicle.vehicle_type,
+            manufacturer="Volvo",
         )
 
     @property
