@@ -78,9 +78,6 @@ def _is_valid_unit(unit: str, unit_type: str) -> bool:
 class UnitSystem:
     """A container for units of measure."""
 
-    is_metric: bool
-    is_us_customary: bool
-
     def __init__(
         self,
         name: str,
@@ -91,9 +88,6 @@ class UnitSystem:
         mass: str,
         pressure: str,
         accumulated_precipitation: str,
-        *,
-        is_metric: bool = False,
-        is_us_customary: bool = False,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
@@ -122,8 +116,15 @@ class UnitSystem:
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
 
-        self.is_metric = is_metric
-        self.is_us_customary = is_us_customary
+    @property
+    def is_metric(self) -> bool:
+        """Determine if this is the metric unit system."""
+        return False
+
+    @property
+    def is_us_customary(self) -> bool:
+        """Determine if this is the US customary unit system."""
+        return False
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
@@ -193,7 +194,19 @@ class UnitSystem:
         }
 
 
-METRIC_SYSTEM = UnitSystem(
+class _MetricUnitSystem(UnitSystem):
+    @property
+    def is_metric(self) -> bool:
+        return True
+
+
+class _USCustomaryUnitSystem(UnitSystem):
+    @property
+    def is_us_customary(self) -> bool:
+        return True
+
+
+METRIC_SYSTEM = _MetricUnitSystem(
     CONF_UNIT_SYSTEM_METRIC,
     TEMP_CELSIUS,
     LENGTH_KILOMETERS,
@@ -202,10 +215,9 @@ METRIC_SYSTEM = UnitSystem(
     MASS_GRAMS,
     PRESSURE_PA,
     LENGTH_MILLIMETERS,
-    is_metric=True,
 )
 
-IMPERIAL_SYSTEM = UnitSystem(
+IMPERIAL_SYSTEM = _USCustomaryUnitSystem(
     CONF_UNIT_SYSTEM_IMPERIAL,
     TEMP_FAHRENHEIT,
     LENGTH_MILES,
@@ -214,5 +226,4 @@ IMPERIAL_SYSTEM = UnitSystem(
     MASS_POUNDS,
     PRESSURE_PSI,
     LENGTH_INCHES,
-    is_us_customary=True,
 )
