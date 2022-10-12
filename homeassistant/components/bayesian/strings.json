@@ -12,7 +12,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "New NEW_NAME Sensor",
+        "description": "New Bayesian Sensor",
         "data": {
           "entity": "Input sensor",
           "name": "Name"
@@ -24,7 +24,7 @@
     "step": {
       "init": {
         "data": {
-          "entity": "[%key:component::NEW_DOMAIN::config::step::user::description%]"
+          "entity": "[%key:component::bayesian::config::step::user::description%]"
         }
       }
     }
