@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 from pyhap.accessory import Accessory
@@ -60,7 +59,6 @@ from homeassistant.helpers.entityfilter import (
     convert_filter,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util import json as json_util
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
@@ -1490,12 +1488,6 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_async_zeroconf
         )
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-
-
-def _write_data(path: str, data: dict) -> None:
-    """Write the data."""
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    json_util.save_json(path, data)
 
 
 async def test_homekit_ignored_missing_devices(
