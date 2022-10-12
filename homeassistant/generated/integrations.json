@@ -1829,9 +1829,9 @@
       "iot_class": "local_push"
     },
     "generic_hygrostat": {
-      "name": "Generic hygrostat",
+      "name": "Generic Hygrostat",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "generic_thermostat": {

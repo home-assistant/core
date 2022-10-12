@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "TODO",
+        "data": {
+          "humidifier": "Humidifier/dehumidifier switch",
+          "target_sensor": "Humidity sensor",
+          "device_class": "Device class",
+          "min_humidity": "Minimum humidity",
+          "max_humidity": "Maximum humidity",
+          "min_cycle_duration": "Minimum running time (seconds)",
+          "name": "Name of hygrostat",
+          "dry_tolerance": "Dry tolerance",
+          "wet_tolerance": "Wet tolerance",
+          "target_humidity": "Target humidity",
+          "keep_alive": "Keep alive (seconds)",
+          "initial_state": "Initial state",
+          "away_humidity": "Away humidity",
+          "away_fixed": "Away fixed",
+          "stale_duration": "Stale duration (seconds)"
+        }
+      }
+    }
+  }
+}
