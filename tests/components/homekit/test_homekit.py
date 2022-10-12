@@ -395,7 +395,6 @@ async def test_homekit_remove_accessory(hass, mock_async_zeroconf):
 
     acc = await homekit.async_remove_bridge_accessory(6)
     assert acc is acc_mock
-    assert acc_mock.stop.called
     assert len(homekit.bridge.accessories) == 0
 
 
@@ -746,20 +745,15 @@ async def test_homekit_reset_accessories(hass, mock_async_zeroconf, mock_hap):
         "pyhap.accessory.Bridge.add_accessory"
     ) as mock_add_accessory, patch(
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
-    ) as hk_driver_config_changed, patch(
+    ), patch(
         "pyhap.accessory_driver.AccessoryDriver.async_start"
     ), patch(
         f"{PATH_HOMEKIT}.accessories.HomeAccessory.run"
-    ) as mock_run, patch.object(
+    ), patch.object(
         homekit_base, "_HOMEKIT_CONFIG_UPDATE_TIME", 0
     ):
         await async_init_entry(hass, entry)
 
-        acc_mock = MagicMock()
-        acc_mock.entity_id = entity_id
-        acc_mock.stop = AsyncMock()
-        aid = homekit.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
-        homekit.bridge.accessories = {aid: acc_mock}
         homekit.status = STATUS_RUNNING
         homekit.driver.aio_stop_event = MagicMock()
 
@@ -771,9 +765,7 @@ async def test_homekit_reset_accessories(hass, mock_async_zeroconf, mock_hap):
         )
         await hass.async_block_till_done()
 
-        assert hk_driver_config_changed.call_count == 2
         assert mock_add_accessory.called
-        assert mock_run.called
         homekit.status = STATUS_READY
         await homekit.async_stop()
 
@@ -1057,13 +1049,7 @@ async def test_homekit_reset_single_accessory(hass, mock_hap, mock_async_zerocon
         f"{PATH_HOMEKIT}.accessories.HomeAccessory.run"
     ) as mock_run:
         await async_init_entry(hass, entry)
-
         homekit.status = STATUS_RUNNING
-        acc_mock = MagicMock()
-        acc_mock.entity_id = entity_id
-        acc_mock.stop = AsyncMock()
-
-        homekit.driver.accessory = acc_mock
         homekit.driver.aio_stop_event = MagicMock()
 
         await hass.services.async_call(

@@ -565,14 +565,24 @@ class HomeKit:
             return
         await self.async_reset_accessories_in_bridge_mode(entity_ids)
 
+    async def _async_shutdown_accessory(self, accessory: HomeAccessory) -> None:
+        """Shutdown an accessory."""
+        await accessory.stop()
+        # Deallocate the IIDs for the accessory
+        iid_manager = self.driver.iid_manager
+        for service in accessory.services:
+            iid_manager.remove_iid(iid_manager.remove_obj(service))
+            for char in service.characteristics:
+                iid_manager.remove_iid(iid_manager.remove_obj(char))
+
     async def async_reset_accessories_in_accessory_mode(
         self, entity_ids: Iterable[str]
     ) -> None:
         """Reset accessories in accessory mode."""
         acc = cast(HomeAccessory, self.driver.accessory)
+        await self._async_shutdown_accessory(acc)
         if acc.entity_id not in entity_ids:
             return
-        await acc.stop()
         if not (state := self.hass.states.get(acc.entity_id)):
             _LOGGER.warning(
                 "The underlying entity %s disappeared during reset", acc.entity_id
@@ -600,9 +610,10 @@ class HomeKit:
                 self._name,
                 entity_id,
             )
-            if (acc := await self.async_remove_bridge_accessory(aid)) and (
-                state := self.hass.states.get(acc.entity_id)
-            ):
+            acc = await self.async_remove_bridge_accessory(aid)
+            if acc:
+                await self._async_shutdown_accessory(acc)
+            if acc and (state := self.hass.states.get(acc.entity_id)):
                 new.append(state)
             else:
                 _LOGGER.warning(
@@ -704,7 +715,6 @@ class HomeKit:
         """Try adding accessory to bridge if configured beforehand."""
         assert self.bridge is not None
         if acc := self.bridge.accessories.pop(aid, None):
-            await acc.stop()
             return cast(HomeAccessory, acc)
         return None
 
