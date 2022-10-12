@@ -205,7 +205,7 @@ METRIC_SYSTEM = UnitSystem(
     is_metric=True,
 )
 
-IMPERIAL_SYSTEM = UnitSystem(
+US_CUSTOMARY_SYSTEM = UnitSystem(
     CONF_UNIT_SYSTEM_IMPERIAL,
     TEMP_FAHRENHEIT,
     LENGTH_MILES,
@@ -216,3 +216,6 @@ IMPERIAL_SYSTEM = UnitSystem(
     LENGTH_INCHES,
     is_us_customary=True,
 )
+
+IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM
+"""Warning: IMPERIAL_SYSTEM is deprecated. Please use US_CUSTOMARY_SYSTEM instead."""
