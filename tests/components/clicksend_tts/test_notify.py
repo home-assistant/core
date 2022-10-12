@@ -117,6 +117,6 @@ async def test_send_simple_message(hass):
         ).decode()
         expected_auth = f"Basic {encoded_auth}"
         assert (
-            "Authorization" in mock.last_request.headers.keys()
+            "Authorization" in mock.last_request.headers
             and mock.last_request.headers["Authorization"] == expected_auth
         )
