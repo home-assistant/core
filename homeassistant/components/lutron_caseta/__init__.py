@@ -177,7 +177,7 @@ async def async_setup_entry(
         )
 
     buttons = bridge.buttons
-    _async_register_bridge_device(hass, entry_id, bridge_device)
+    _async_register_bridge_device(hass, entry_id, bridge_device, bridge)
     button_devices, device_info_by_device_id = _async_register_button_devices(
         hass, entry_id, bridge, bridge_device, buttons
     )
@@ -196,18 +196,25 @@ async def async_setup_entry(
 
 @callback
 def _async_register_bridge_device(
-    hass: HomeAssistant, config_entry_id: str, bridge_device: dict
+    hass: HomeAssistant, config_entry_id: str, bridge_device: dict, bridge: Smartbridge
 ) -> None:
     """Register the bridge device in the device registry."""
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        name=bridge_device["name"],
-        manufacturer=MANUFACTURER,
-        config_entry_id=config_entry_id,
-        identifiers={(DOMAIN, bridge_device["serial"])},
-        model=f"{bridge_device['model']} ({bridge_device['type']})",
-        configuration_url="https://device-login.lutron.com",
-    )
+
+    device_args: DeviceInfo = {
+        "name": bridge_device["name"],
+        "manufacturer": MANUFACTURER,
+        "identifiers": {(DOMAIN, bridge_device["serial"])},
+        "model": f"{bridge_device['model']} ({bridge_device['type']})",
+        "via_device": (DOMAIN, bridge_device["serial"]),
+        "configuration_url": "https://device-login.lutron.com",
+    }
+
+    area = _area_name_from_id(bridge.areas, bridge_device["area"])
+    if area != UNASSIGNED_AREA:
+        device_args["suggested_area"] = area
+
+    device_registry.async_get_or_create(**device_args, config_entry_id=config_entry_id)
 
 
 @callback
@@ -241,7 +248,10 @@ def _async_register_button_devices(
             continue
         seen.add(ha_device_serial)
 
-        area, name = _area_and_name_from_name(ha_device["name"])
+        area = _area_name_from_id(bridge.areas, ha_device["area"])
+        # name field is still a combination of area and name from pylytron-caseta
+        # extract the name portion only.
+        name = ha_device["name"].split("_")[-1]
         device_args: DeviceInfo = {
             "name": f"{area} {name}",
             "manufacturer": MANUFACTURER,
@@ -265,12 +275,20 @@ def _handle_none_keypad_serial(keypad_device: dict, bridge_serial: int) -> str:
     return keypad_device["serial"] or f"{bridge_serial}_{keypad_device['device_id']}"
 
 
-def _area_and_name_from_name(device_name: str) -> tuple[str, str]:
-    """Return the area and name from the devices internal name."""
-    if "_" in device_name:
-        area_device_name = device_name.split("_", 1)
-        return area_device_name[0], area_device_name[1]
-    return UNASSIGNED_AREA, device_name
+def _area_name_from_id(areas: dict[str, dict], area_id: str) -> str:
+    """Return the full area name including parent(s)."""
+
+    if area_id is None:
+        return UNASSIGNED_AREA
+
+    if "parent_id" in areas[area_id]:
+        parent_area = areas[area_id]["parent_id"]
+        if parent_area is not None:
+            return " ".join(
+                (_area_name_from_id(areas, parent_area), areas[area_id]["name"])
+            )
+
+    return areas[area_id]["name"]
 
 
 @callback
@@ -316,7 +334,8 @@ def _async_subscribe_pico_remote_events(
         )
 
         type_ = _lutron_model_to_device_type(ha_device["model"], ha_device["type"])
-        area, name = _area_and_name_from_name(ha_device["name"])
+        area = _area_name_from_id(bridge_device.areas, ha_device["area"])
+        name = ha_device["name"].split("_")[-1]
         leap_button_number = device["button_number"]
         lip_button_number = async_get_lip_button(type_, leap_button_number)
         hass_device = dev_reg.async_get_device({(DOMAIN, ha_device_serial)})
@@ -377,8 +396,8 @@ class LutronCasetaDevice(Entity):
         if "parent_device" in device:
             # This is a child entity, handle the naming in button.py and switch.py
             return
-
-        area, name = _area_and_name_from_name(device["name"])
+        area = _area_name_from_id(self._smartbridge.areas, device["area"])
+        name = device["name"].split("_")[-1]
         self._attr_name = full_name = f"{area} {name}"
         info = DeviceInfo(
             # Historically we used the device serial number for the identifier
