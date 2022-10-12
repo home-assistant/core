@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "not_huawei_lte": "Ikke en Huawei LTE-enhet",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "connection_timeout": "Tilkoblingsavbrudd",

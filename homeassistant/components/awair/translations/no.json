@@ -5,7 +5,7 @@
             "already_configured_account": "Kontoen er allerede konfigurert",
             "already_configured_device": "Enheten er allerede konfigurert",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_successful": "Re-autentisering var vellykket",
             "unreachable": "Tilkobling mislyktes"
         },
         "error": {
