@@ -1,9 +1,11 @@
 """Schema migration helpers."""
+from __future__ import annotations
+
 from collections.abc import Callable, Iterable
 import contextlib
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, cast
 
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text
@@ -39,6 +41,9 @@ from .statistics import (
     get_start_time,
 )
 from .util import session_scope
+
+if TYPE_CHECKING:
+    from . import Recorder
 
 LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
 
@@ -86,7 +91,7 @@ def live_migration(current_version: int) -> bool:
 
 
 def migrate_schema(
-    instance: Any,
+    instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
