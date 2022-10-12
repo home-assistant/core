@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from . import GdacsFeedEntityManager
 from .const import DEFAULT_ICON, DOMAIN, FEED
@@ -153,8 +153,8 @@ class GdacsEvent(GeolocationEvent):
         self._attr_name = f"{feed_entry.event_type}: {event_name}"
         # Convert distance if not metric system.
         if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            self._attr_distance = IMPERIAL_SYSTEM.length(
-                feed_entry.distance_to_home, LENGTH_KILOMETERS
+            self._attr_distance = DistanceConverter.convert(
+                feed_entry.distance_to_home, LENGTH_KILOMETERS, LENGTH_MILES
             )
         else:
             self._attr_distance = feed_entry.distance_to_home

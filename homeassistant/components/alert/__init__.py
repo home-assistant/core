@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any, final
+from typing import Any
 
 import voluptuous as vol
 
@@ -29,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -56,15 +56,15 @@ ALERT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_STATE, default=STATE_ON): cv.string,
+        vol.Optional(CONF_STATE, default=STATE_ON): cv.string,
         vol.Required(CONF_REPEAT): vol.All(
             cv.ensure_list,
             [vol.Coerce(float)],
             # Minimum delay is 1 second = 0.016 minutes
             [vol.Range(min=0.016)],
         ),
-        vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
-        vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
+        vol.Optional(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
+        vol.Optional(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
         vol.Optional(CONF_ALERT_MESSAGE): cv.template,
         vol.Optional(CONF_DONE_MESSAGE): cv.template,
         vol.Optional(CONF_TITLE): cv.template,
@@ -78,11 +78,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 ALERT_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
-
-
-def is_on(hass: HomeAssistant, entity_id: str) -> bool:
-    """Return if the alert is firing and not acknowledged."""
-    return hass.states.is_state(entity_id, STATE_ON)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -169,7 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Alert(ToggleEntity):
+class Alert(Entity):
     """Representation of an alert."""
 
     _attr_should_poll = False
@@ -225,10 +220,8 @@ class Alert(ToggleEntity):
             hass, [watched_entity_id], self.watched_entity_change
         )
 
-    @final  # type: ignore[misc]
     @property
-    # pylint: disable=overridden-final-method
-    def state(self) -> str:  # type: ignore[override]
+    def state(self) -> str:
         """Return the alert status."""
         if self._firing:
             if self._ack:

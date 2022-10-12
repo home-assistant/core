@@ -116,16 +116,6 @@ def mock_notifier(hass):
     return events
 
 
-async def test_is_on(hass):
-    """Test is_on method."""
-    hass.states.async_set(ENTITY_ID, STATE_ON)
-    await hass.async_block_till_done()
-    assert alert.is_on(hass, ENTITY_ID)
-    hass.states.async_set(ENTITY_ID, STATE_OFF)
-    await hass.async_block_till_done()
-    assert not alert.is_on(hass, ENTITY_ID)
-
-
 async def test_setup(hass):
     """Test setup method."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)

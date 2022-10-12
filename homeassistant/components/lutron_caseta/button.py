@@ -48,9 +48,13 @@ async def async_setup_entry(
                 ),
                 {},
             )
-            device_name = button_numbers.get(
-                int(device["button_number"]),
-                f"button {device['button_number']}",
+            device_name = (
+                button_numbers.get(
+                    int(device["button_number"]),
+                    f"button {device['button_number']}",
+                )
+                .replace("_", " ")
+                .title()
             )
 
         # Append the child device name to the end of the parent keypad name to create the entity name
