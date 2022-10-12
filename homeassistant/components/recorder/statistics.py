@@ -582,9 +582,7 @@ def _compile_hourly_statistics_summary_mean_stmt(
     )
 
 
-def compile_hourly_statistics(
-    instance: Recorder, session: Session, start: datetime
-) -> None:
+def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     """Compile hourly statistics.
 
     This will summarize 5-minute statistics for one hour:
@@ -700,7 +698,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
         if start.minute == 55:
             # A full hour is ready, summarize it
-            compile_hourly_statistics(instance, session, start)
+            _compile_hourly_statistics(session, start)
 
         session.add(StatisticsRuns(start=start))
 
@@ -776,7 +774,7 @@ def _update_statistics(
 
 
 def _generate_get_metadata_stmt(
-    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> StatementLambdaElement:
@@ -794,10 +792,9 @@ def _generate_get_metadata_stmt(
 
 
 def get_metadata_with_session(
-    hass: HomeAssistant,
     session: Session,
     *,
-    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -834,14 +831,13 @@ def get_metadata_with_session(
 def get_metadata(
     hass: HomeAssistant,
     *,
-    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
     with session_scope(hass=hass) as session:
         return get_metadata_with_session(
-            hass,
             session,
             statistic_ids=statistic_ids,
             statistic_type=statistic_type,
@@ -882,7 +878,7 @@ def update_statistics_metadata(
 
 def list_statistic_ids(
     hass: HomeAssistant,
-    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
@@ -896,7 +892,7 @@ def list_statistic_ids(
     # Query the database
     with session_scope(hass=hass) as session:
         metadata = get_metadata_with_session(
-            hass, session, statistic_type=statistic_type, statistic_ids=statistic_ids
+            session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
 
         result = {
@@ -1105,7 +1101,7 @@ def statistics_during_period(
     metadata = None
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given (or all) statistic_ids
-        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
+        metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
 
@@ -1196,7 +1192,7 @@ def _get_last_statistics(
     statistic_ids = [statistic_id]
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_id
-        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
+        metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
         metadata_id = metadata[statistic_id][0]
@@ -1280,9 +1276,7 @@ def get_latest_short_term_statistics(
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_ids
         if not metadata:
-            metadata = get_metadata_with_session(
-                hass, session, statistic_ids=statistic_ids
-            )
+            metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
         metadata_ids = [
@@ -1565,7 +1559,7 @@ def import_statistics(
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         old_metadata_dict = get_metadata_with_session(
-            instance.hass, session, statistic_ids=[metadata["statistic_id"]]
+            session, statistic_ids=[metadata["statistic_id"]]
         )
         metadata_id = _update_or_add_metadata(session, metadata, old_metadata_dict)
         for stat in statistics:
@@ -1590,9 +1584,7 @@ def adjust_statistics(
     """Process an add_statistics job."""
 
     with session_scope(session=instance.get_session()) as session:
-        metadata = get_metadata_with_session(
-            instance.hass, session, statistic_ids=(statistic_id,)
-        )
+        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
         if statistic_id not in metadata:
             return True
 
@@ -1652,9 +1644,9 @@ def change_statistics_unit(
 ) -> None:
     """Change statistics unit for a statistic_id."""
     with session_scope(session=instance.get_session()) as session:
-        metadata = get_metadata_with_session(
-            instance.hass, session, statistic_ids=(statistic_id,)
-        ).get(statistic_id)
+        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id]).get(
+            statistic_id
+        )
 
         # Guard against the statistics being removed or updated before the
         # change_statistics_unit job executes
