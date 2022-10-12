@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -46,7 +47,7 @@ async def test_brightness(
     assert state.attributes.get(ATTR_MAX) == 100
     assert state.attributes.get(ATTR_MIN) == 0
     assert state.attributes.get(ATTR_STEP) == 1
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "100"
 
     entry = entity_registry.async_get(state.entity_id)
