@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_successful": "Re-autentisering var vellykket",
             "reauth_unsuccessful": "Re-autentisering mislyktes. Fjern integrasjonen og konfigurer den p\u00e5 nytt.",
             "unsupported_firmware": "Enheten bruker en ikke-st\u00f8ttet firmwareversjon."
         },

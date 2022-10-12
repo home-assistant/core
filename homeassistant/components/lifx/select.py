@@ -16,9 +16,8 @@ INFRARED_BRIGHTNESS_ENTITY = SelectEntityDescription(
     key=INFRARED_BRIGHTNESS,
     name="Infrared brightness",
     entity_category=EntityCategory.CONFIG,
+    options=list(INFRARED_BRIGHTNESS_VALUES_MAP.values()),
 )
-
-INFRARED_BRIGHTNESS_OPTIONS = list(INFRARED_BRIGHTNESS_VALUES_MAP.values())
 
 
 async def async_setup_entry(
@@ -41,7 +40,6 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
     """LIFX Nightvision infrared brightness configuration entity."""
 
     _attr_has_entity_name = True
-    _attr_options = INFRARED_BRIGHTNESS_OPTIONS
 
     def __init__(
         self, coordinator: LIFXUpdateCoordinator, description: SelectEntityDescription

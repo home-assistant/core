@@ -121,14 +121,19 @@ class HomeKitEntity(Entity):
             self._char_name = char.service.value(CharacteristicsTypes.NAME)
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
+    def old_unique_id(self) -> str:
+        """Return the OLD ID of this device."""
         info = self.accessory_info
         serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
         if valid_serial_number(serial):
             return f"homekit-{serial}-{self._iid}"
         # Some accessories do not have a serial number
         return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        return f"{self._accessory.unique_id}_{self._aid}_{self._iid}"
 
     @property
     def default_name(self) -> str | None:
@@ -175,10 +180,15 @@ class AccessoryEntity(HomeKitEntity):
     """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
+    def old_unique_id(self) -> str:
+        """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-aid:{self._aid}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        return f"{self._accessory.unique_id}_{self._aid}"
 
 
 class CharacteristicEntity(HomeKitEntity):
@@ -197,7 +207,12 @@ class CharacteristicEntity(HomeKitEntity):
         super().__init__(accessory, devinfo)
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
+    def old_unique_id(self) -> str:
+        """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-aid:{self._aid}-sid:{self._char.service.iid}-cid:{self._char.iid}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        return f"{self._accessory.unique_id}_{self._aid}_{self._char.service.iid}_{self._char.iid}"
