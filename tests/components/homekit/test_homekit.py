@@ -122,6 +122,7 @@ def _mock_homekit(hass, entry, homekit_mode, entity_filter=None, devices=None):
 def _mock_homekit_bridge(hass, entry):
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
     homekit.driver = MagicMock()
+    homekit.iid_storage = MagicMock()
     return homekit
 
 
@@ -203,6 +204,7 @@ async def test_homekit_setup(hass, hk_driver, mock_async_zeroconf):
     zeroconf_mock = MagicMock()
     uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
+        homekit.iid_storage = MagicMock()
         await hass.async_add_executor_job(homekit.setup, zeroconf_mock, uuid)
 
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
@@ -219,6 +221,7 @@ async def test_homekit_setup(hass, hk_driver, mock_async_zeroconf):
         async_zeroconf_instance=zeroconf_mock,
         zeroconf_server=f"{uuid}-hap.local.",
         loader=ANY,
+        iid_manager=ANY,
     )
     assert homekit.driver.safe_mode is False
 
@@ -247,6 +250,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_async_zeroconf):
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
+        homekit.iid_storage = MagicMock()
         await hass.async_add_executor_job(homekit.setup, mock_async_zeroconf, uuid)
     mock_driver.assert_called_with(
         hass,
@@ -261,6 +265,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_async_zeroconf):
         async_zeroconf_instance=mock_async_zeroconf,
         zeroconf_server=f"{uuid}-hap.local.",
         loader=ANY,
+        iid_manager=ANY,
     )
 
 
@@ -289,6 +294,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_async_zeroconf):
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
+        homekit.iid_storage = MagicMock()
         await hass.async_add_executor_job(homekit.setup, async_zeroconf_instance, uuid)
     mock_driver.assert_called_with(
         hass,
@@ -303,10 +309,11 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_async_zeroconf):
         async_zeroconf_instance=async_zeroconf_instance,
         zeroconf_server=f"{uuid}-hap.local.",
         loader=ANY,
+        iid_manager=ANY,
     )
 
 
-async def test_homekit_add_accessory(hass, mock_async_zeroconf):
+async def test_homekit_add_accessory(hass, mock_async_zeroconf, mock_hap):
     """Add accessory if config exists and get_acc returns an accessory."""
 
     entry = MockConfigEntry(
@@ -340,10 +347,12 @@ async def test_homekit_add_accessory(hass, mock_async_zeroconf):
         mock_get_acc.assert_called_with(hass, ANY, ANY, 1467253281, {})
         assert homekit.bridge.add_accessory.called
 
+        await homekit.async_stop()
+
 
 @pytest.mark.parametrize("acc_category", [CATEGORY_TELEVISION, CATEGORY_CAMERA])
 async def test_homekit_warn_add_accessory_bridge(
-    hass, acc_category, mock_async_zeroconf, caplog
+    hass, acc_category, mock_async_zeroconf, mock_hap, caplog
 ):
     """Test we warn when adding cameras or tvs to a bridge."""
 
@@ -367,6 +376,7 @@ async def test_homekit_warn_add_accessory_bridge(
         homekit.add_bridge_accessory(state)
         mock_get_acc.assert_called_with(hass, ANY, ANY, 1508819236, {})
         assert not homekit.bridge.add_accessory.called
+        await homekit.async_stop()
 
     assert "accessory mode" in caplog.text
 
@@ -722,7 +732,7 @@ async def test_homekit_stop(hass):
     assert homekit.driver.async_stop.called is True
 
 
-async def test_homekit_reset_accessories(hass, mock_async_zeroconf):
+async def test_homekit_reset_accessories(hass, mock_async_zeroconf, mock_hap):
     """Test resetting HomeKit accessories."""
 
     entry = MockConfigEntry(
@@ -765,6 +775,7 @@ async def test_homekit_reset_accessories(hass, mock_async_zeroconf):
         assert mock_add_accessory.called
         assert mock_run.called
         homekit.status = STATUS_READY
+        await homekit.async_stop()
 
 
 async def test_homekit_unpair(hass, device_reg, mock_async_zeroconf):
@@ -1028,7 +1039,7 @@ async def test_homekit_reset_accessories_not_bridged(hass, mock_async_zeroconf):
         homekit.status = STATUS_STOPPED
 
 
-async def test_homekit_reset_single_accessory(hass, mock_async_zeroconf):
+async def test_homekit_reset_single_accessory(hass, mock_hap, mock_async_zeroconf):
     """Test resetting HomeKit single accessory."""
 
     entry = MockConfigEntry(
@@ -1065,6 +1076,7 @@ async def test_homekit_reset_single_accessory(hass, mock_async_zeroconf):
         assert mock_run.called
         assert hk_driver_config_changed.call_count == 1
         homekit.status = STATUS_READY
+        await homekit.async_stop()
 
 
 async def test_homekit_reset_single_accessory_unsupported(hass, mock_async_zeroconf):
