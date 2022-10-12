@@ -8,8 +8,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, INFRARED_BRIGHTNESS, INFRARED_BRIGHTNESS_VALUES_MAP
-from .coordinator import LIFXUpdateCoordinator
-from .entity import LIFXEntity
+from .coordinator import LIFXSensorUpdateCoordinator, LIFXUpdateCoordinator
+from .entity import LIFXSensorEntity
 from .util import lifx_features
 
 INFRARED_BRIGHTNESS_ENTITY = SelectEntityDescription(
@@ -30,25 +30,28 @@ async def async_setup_entry(
         async_add_entities(
             [
                 LIFXInfraredBrightnessSelectEntity(
-                    coordinator, description=INFRARED_BRIGHTNESS_ENTITY
+                    coordinator.sensor_coordinator,
+                    description=INFRARED_BRIGHTNESS_ENTITY,
                 )
             ]
         )
 
 
-class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
+class LIFXInfraredBrightnessSelectEntity(LIFXSensorEntity, SelectEntity):
     """LIFX Nightvision infrared brightness configuration entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: LIFXUpdateCoordinator, description: SelectEntityDescription
+        self,
+        coordinator: LIFXSensorUpdateCoordinator,
+        description: SelectEntityDescription,
     ) -> None:
         """Initialise the IR brightness config entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
         self._attr_current_option = coordinator.current_infrared_brightness
 
     @callback

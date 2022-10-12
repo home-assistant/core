@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from collections.abc import Callable
+from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 from math import floor, log10
@@ -46,6 +47,8 @@ from .util import (
     lifx_features,
 )
 
+LIGHT_UPDATE_INTERVAL = 10
+SENSOR_UPDATE_INTERVAL = 30
 REQUEST_REFRESH_DELAY = 0.35
 LIFX_IDENTIFY_DELAY = 3.0
 RSSI_DBM_FW = AwesomeVersion("2.77")
@@ -75,14 +78,13 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.device: Light = connection.device
         self.lock = asyncio.Lock()
         self.active_effect = FirmwareEffect.OFF
-        self.rssi: int = 0
-        update_interval = timedelta(seconds=10)
+        self.sensor_coordinator = LIFXSensorUpdateCoordinator(hass, self, title)
 
         super().__init__(
             hass,
             _LOGGER,
             name=f"{title} ({self.device.ip_addr})",
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=LIGHT_UPDATE_INTERVAL),
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
             request_refresh_debouncer=Debouncer(
@@ -118,38 +120,12 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         """Return the label of the bulb."""
         return cast(str, self.device.label)
 
-    @property
-    def rssi_uom(self) -> str:
-        """Return the RSSI unit of measurement."""
-        if AwesomeVersion(self.device.host_firmware_version) <= RSSI_DBM_FW:
-            return SIGNAL_STRENGTH_DECIBELS
-
-        return SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-
-    @property
-    def current_infrared_brightness(self) -> str | None:
-        """Return the current infrared brightness as a string."""
-        return infrared_brightness_value_to_option(self.device.infrared_brightness)
-
     def async_get_entity_id(self, platform: Platform, key: str) -> str | None:
         """Return the entity_id from the platform and key provided."""
         ent_reg = er.async_get(self.hass)
         return ent_reg.async_get_entity_id(
             platform, DOMAIN, f"{self.serial_number}_{key}"
         )
-
-    async def async_identify_bulb(self) -> None:
-        """Identify the device by flashing it three times."""
-        bulb: Light = self.device
-        if bulb.power_level:
-            # just flash the bulb for three seconds
-            await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
-            return
-        # Turn the bulb on first, flash for 3 seconds, then turn off
-        await self.async_set_power(state=True, duration=1)
-        await self.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
-        await asyncio.sleep(LIFX_IDENTIFY_DELAY)
-        await self.async_set_power(state=False, duration=1)
 
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
@@ -179,17 +155,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 await self.async_get_color_zones()
                 await self.async_get_multizone_effect()
 
-            if lifx_features(self.device)["hev"]:
-                await self.async_get_hev_cycle()
-
-            if lifx_features(self.device)["infrared"]:
-                response = await async_execute_lifx(self.device.get_infrared)
-
-    async def async_update_rssi(self, now: datetime) -> None:
-        """Update RSSI value."""
-        resp = await async_execute_lifx(self.device.get_wifiinfo)
-        self.rssi = int(floor(10 * log10(resp.signal) + 0.5))
-
     async def async_get_color_zones(self) -> None:
         """Get updated color information for each zone."""
         zone = 0
@@ -214,17 +179,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             raise HomeAssistantError(
                 f"Timeout getting color zones from {self.name}"
             ) from ex
-
-    def async_get_hev_cycle_state(self) -> bool | None:
-        """Return the current HEV cycle state."""
-        if self.device.hev_cycle is None:
-            return None
-        return bool(self.device.hev_cycle.get(ATTR_REMAINING, 0) > 0)
-
-    async def async_get_hev_cycle(self) -> None:
-        """Update the HEV cycle status from a LIFX Clean bulb."""
-        if lifx_features(self.device)["hev"]:
-            await async_execute_lifx(self.device.get_hev_cycle)
 
     async def async_set_waveform_optional(
         self, value: dict[str, Any], rapid: bool = False
@@ -355,14 +309,120 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         """Return the enum value of the currently active firmware effect."""
         return self.active_effect.value
 
-    async def async_set_hev_cycle_state(self, enable: bool, duration: int = 0) -> None:
-        """Start or stop an HEV cycle on a LIFX Clean bulb."""
-        if lifx_features(self.device)["hev"]:
-            await async_execute_lifx(
-                partial(self.device.set_hev_cycle, enable=enable, duration=duration)
-            )
+
+class LIFXSensorUpdateCoordinator(DataUpdateCoordinator):
+    """DataUpdateCoordinator to gather data for a specific lifx device."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        parent: LIFXUpdateCoordinator,
+        title: str,
+    ) -> None:
+        """Initialize DataUpdateCoordinator."""
+        self.parent: LIFXUpdateCoordinator = parent
+        self.lock = asyncio.Lock()
+        self._update_rssi: bool = False
+        self._rssi: int = 0
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{title} Sensors ({self.parent.device.ip_addr})",
+            update_interval=timedelta(seconds=SENSOR_UPDATE_INTERVAL),
+            # We don't want an immediate refresh since the device
+            # takes a moment to reflect the state change
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=0, immediate=True
+            ),
+        )
+
+    @property
+    def rssi(self) -> int:
+        """Return stored RSSI value."""
+        return self._rssi
+
+    @property
+    def rssi_uom(self) -> str:
+        """Return the RSSI unit of measurement."""
+        if AwesomeVersion(self.parent.device.host_firmware_version) <= RSSI_DBM_FW:
+            return SIGNAL_STRENGTH_DECIBELS
+
+        return SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+
+    @property
+    def current_infrared_brightness(self) -> str | None:
+        """Return the current infrared brightness as a string."""
+        return infrared_brightness_value_to_option(
+            self.parent.device.infrared_brightness
+        )
+
+    async def _async_update_data(self) -> None:
+        """Fetch all device data from the api."""
+
+        async with self.lock:
+
+            if self._update_rssi is True:
+                await self.async_update_rssi()
+
+            if lifx_features(self.parent.device)["hev"]:
+                await self.async_get_hev_cycle()
+
+            if lifx_features(self.parent.device)["infrared"]:
+                await async_execute_lifx(self.parent.device.get_infrared)
 
     async def async_set_infrared_brightness(self, option: str) -> None:
         """Set infrared brightness."""
         infrared_brightness = infrared_brightness_option_to_value(option)
-        await async_execute_lifx(partial(self.device.set_infrared, infrared_brightness))
+        await async_execute_lifx(
+            partial(self.parent.device.set_infrared, infrared_brightness)
+        )
+
+    async def async_identify_bulb(self) -> None:
+        """Identify the device by flashing it three times."""
+        bulb: Light = self.parent.device
+        if bulb.power_level:
+            # just flash the bulb for three seconds
+            await self.parent.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
+            return
+        # Turn the bulb on first, flash for 3 seconds, then turn off
+        await self.parent.async_set_power(state=True, duration=1)
+        await self.parent.async_set_waveform_optional(value=IDENTIFY_WAVEFORM)
+        await asyncio.sleep(LIFX_IDENTIFY_DELAY)
+        await self.parent.async_set_power(state=False, duration=1)
+
+    def async_enable_rssi_updates(self) -> Callable[[], None]:
+        """Enable RSSI signal strength updates."""
+
+        @callback
+        def _async_disable_rssi_updates() -> None:
+            """Disable RSSI updates when sensor removed."""
+            self._update_rssi = False
+
+        self._update_rssi = True
+        return _async_disable_rssi_updates
+
+    async def async_update_rssi(self) -> None:
+        """Update RSSI value."""
+        resp = await async_execute_lifx(self.parent.device.get_wifiinfo)
+        self._rssi = int(floor(10 * log10(resp.signal) + 0.5))
+
+    def async_get_hev_cycle_state(self) -> bool | None:
+        """Return the current HEV cycle state."""
+        if self.parent.device.hev_cycle is None:
+            return None
+        return bool(self.parent.device.hev_cycle.get(ATTR_REMAINING, 0) > 0)
+
+    async def async_get_hev_cycle(self) -> None:
+        """Update the HEV cycle status from a LIFX Clean bulb."""
+        if lifx_features(self.parent.device)["hev"]:
+            await async_execute_lifx(self.parent.device.get_hev_cycle)
+
+    async def async_set_hev_cycle_state(self, enable: bool, duration: int = 0) -> None:
+        """Start or stop an HEV cycle on a LIFX Clean bulb."""
+        if lifx_features(self.parent.device)["hev"]:
+            await async_execute_lifx(
+                partial(
+                    self.parent.device.set_hev_cycle, enable=enable, duration=duration
+                )
+            )
