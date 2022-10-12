@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "home_control": "Die devolo Home Control-Zentraleinheit funktioniert nicht mit dieser Integration."
+            "home_control": "Die devolo Home Control-Zentraleinheit funktioniert nicht mit dieser Integration.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -10,6 +11,11 @@
         },
         "flow_title": "{product} ({name})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "IP-Adresse"

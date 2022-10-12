@@ -66,6 +66,7 @@ homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.blockchain.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
@@ -240,6 +241,7 @@ homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
+homeassistant.components.snooz.*
 homeassistant.components.sonarr.*
 homeassistant.components.ssdp.*
 homeassistant.components.statistics.*

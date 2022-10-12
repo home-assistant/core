@@ -156,6 +156,15 @@ def _mocked_light_strip() -> Light:
     return bulb
 
 
+def _mocked_tile() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 55  # LIFX Tile
+    bulb.effect = {"effect": "OFF"}
+    bulb.get_tile_effect = MockLifxCommand(bulb)
+    bulb.set_tile_effect = MockLifxCommand(bulb)
+    return bulb
+
+
 def _mocked_bulb_new_firmware() -> Light:
     bulb = _mocked_bulb()
     bulb.host_firmware_version = "3.90"

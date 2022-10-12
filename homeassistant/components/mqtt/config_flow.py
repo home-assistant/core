@@ -21,6 +21,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .client import MqttClientSetup
@@ -41,6 +50,19 @@ from .const import (
 from .util import MQTT_WILL_BIRTH_SCHEMA, get_mqtt_data
 
 MQTT_TIMEOUT = 5
+
+BOOLEAN_SELECTOR = BooleanSelector()
+TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
+PUBLISH_TOPIC_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
+PORT_SELECTOR = vol.All(
+    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)),
+    vol.Coerce(int),
+)
+PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+QOS_SELECTOR = vol.All(
+    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)),
+    vol.Coerce(int),
+)
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -282,7 +304,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
-        fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = bool
+        fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = BOOLEAN_SELECTOR
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
@@ -291,19 +313,21 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 default=CONF_BIRTH_MESSAGE not in current_config
                 or current_config[CONF_BIRTH_MESSAGE] != {},
             )
-        ] = bool
+        ] = BOOLEAN_SELECTOR
         fields[
             vol.Optional(
                 "birth_topic", description={"suggested_value": birth[ATTR_TOPIC]}
             )
-        ] = str
+        ] = PUBLISH_TOPIC_SELECTOR
         fields[
             vol.Optional(
                 "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
-        ] = str
-        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = vol.In([0, 1, 2])
-        fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = bool
+        ] = TEXT_SELECTOR
+        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
+        fields[
+            vol.Optional("birth_retain", default=birth[ATTR_RETAIN])
+        ] = BOOLEAN_SELECTOR
 
         # Will message is disabled if CONF_WILL_MESSAGE = {}
         fields[
@@ -312,19 +336,21 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 default=CONF_WILL_MESSAGE not in current_config
                 or current_config[CONF_WILL_MESSAGE] != {},
             )
-        ] = bool
+        ] = BOOLEAN_SELECTOR
         fields[
             vol.Optional(
                 "will_topic", description={"suggested_value": will[ATTR_TOPIC]}
             )
-        ] = str
+        ] = PUBLISH_TOPIC_SELECTOR
         fields[
             vol.Optional(
                 "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
             )
-        ] = str
-        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = vol.In([0, 1, 2])
-        fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = bool
+        ] = TEXT_SELECTOR
+        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
+        fields[
+            vol.Optional("will_retain", default=will[ATTR_RETAIN])
+        ] = BOOLEAN_SELECTOR
 
         return self.async_show_form(
             step_id="options",
@@ -366,20 +392,20 @@ async def async_get_broker_settings(
     current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
 
     # Build form
-    fields[vol.Required(CONF_BROKER, default=current_broker)] = str
-    fields[vol.Required(CONF_PORT, default=current_port)] = vol.Coerce(int)
+    fields[vol.Required(CONF_BROKER, default=current_broker)] = TEXT_SELECTOR
+    fields[vol.Required(CONF_PORT, default=current_port)] = PORT_SELECTOR
     fields[
         vol.Optional(
             CONF_USERNAME,
             description={"suggested_value": current_user},
         )
-    ] = str
+    ] = TEXT_SELECTOR
     fields[
         vol.Optional(
             CONF_PASSWORD,
             description={"suggested_value": current_pass},
         )
-    ] = str
+    ] = PASSWORD_SELECTOR
 
     # Show form
     return False

@@ -49,7 +49,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -211,7 +211,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
             self._state = payload
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
