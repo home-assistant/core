@@ -4,13 +4,13 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from aiohttp import ClientConnectorError
 from aiolivisi import AioLivisi, LivisiEvent, Websocket
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     AVATAR_PORT,
@@ -41,7 +41,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.hass = hass
         self.aiolivisi = aiolivisi
         self.websocket = Websocket(aiolivisi)
-        self.devices: list[str] = []
+        self.devices: set[str] = set()
         self.rooms: dict[str, Any] = {}
         self.serial_number: str = ""
         self.controller_type: str = ""
@@ -53,8 +53,8 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Get device configuration from LIVISI."""
         try:
             return await self.async_get_devices()
-        except Exception as exc:
-            raise HomeAssistantError("Failed to get LIVISI the devices") from exc
+        except ClientConnectorError as exc:
+            raise UpdateFailed("Failed to get LIVISI the devices") from exc
 
     async def async_setup(self) -> None:
         """Set up the Livisi Smart Home Controller."""

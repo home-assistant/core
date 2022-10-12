@@ -41,7 +41,7 @@ async def async_setup_entry(
                         config_entry, device, coordinator
                     )
                     LOGGER.debug("Include device type: %s", device.get("type"))
-                    coordinator.devices.append(device["id"])
+                    coordinator.devices.add(device["id"])
                     async_add_entities([livisi_switch])
 
     config_entry.async_on_unload(
@@ -177,3 +177,4 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
             self._attr_available = False
         else:
             self._attr_available = True
+        self.async_write_ha_state()
