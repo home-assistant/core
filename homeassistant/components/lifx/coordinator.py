@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-
 from collections.abc import Callable
-from datetime import datetime, timedelta
-
+from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 from math import floor, log10
@@ -18,7 +16,6 @@ from aiolifx.aiolifx import (
     TileEffectType,
 )
 from aiolifx.connection import LIFXConnection
-from awesomeversion import AwesomeVersion
 from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 from awesomeversion import AwesomeVersion
 
@@ -380,7 +377,7 @@ class LIFXSensorUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"{title} Sensors ({self.parent.device.ip_addr})",
             update_interval=timedelta(seconds=SENSOR_UPDATE_INTERVAL),
-            # Refresh immmediately because the changes are not visible
+            # Refresh immediately because the changes are not visible
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=0, immediate=True
             ),
