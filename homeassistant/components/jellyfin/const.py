@@ -1,5 +1,5 @@
 """Constants for the Jellyfin integration."""
-
+import logging
 from typing import Final
 
 from homeassistant.components.media_player.const import (
@@ -21,7 +21,7 @@ COLLECTION_TYPE_MUSIC: Final = "music"
 
 CONF_CLIENT_DEVICE_ID: Final = "client_device_id"
 
-DATA_CLIENT: Final = "client"
+DEFAULT_NAME: Final = "Jellyfin"
 
 ITEM_KEY_COLLECTION_TYPE: Final = "CollectionType"
 ITEM_KEY_ID: Final = "Id"
@@ -52,8 +52,6 @@ SUPPORTED_COLLECTION_TYPES: Final = [COLLECTION_TYPE_MUSIC, COLLECTION_TYPE_MOVI
 USER_APP_NAME: Final = "Home Assistant"
 USER_AGENT: Final = f"Home-Assistant/{CLIENT_VERSION}"
 
-PLATFORMS = frozenset([Platform.MEDIA_PLAYER])
-
 CONTENT_TYPE_MAP = {
     "Series": MEDIA_TYPE_TVSHOW,
     "Movie": MEDIA_TYPE_MOVIE,
@@ -72,3 +70,6 @@ MEDIA_CLASS_MAP = {
 }
 EXPANDABLE_TYPES = ["Movie", "Episode"]
 SUPPORTED_LIBRARY_TYPES = ["movies", "tvshows"]
+
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR]
+LOGGER = logging.getLogger(__package__)
