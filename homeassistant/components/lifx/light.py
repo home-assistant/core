@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-import math
 from typing import Any
 
 import aiolifx_effects as aiolifx_effects_module
@@ -26,7 +25,6 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-import homeassistant.util.color as color_util
 
 from .const import (
     _LOGGER,
@@ -42,6 +40,8 @@ from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_FLAME,
+    SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_STOP,
@@ -95,8 +95,10 @@ async def async_setup_entry(
         LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
         "set_hev_cycle_state",
     )
-    if lifx_features(device)["extended_multizone"]:
-        entity: LIFXLight = LIFXExtendedMultiZone(coordinator, manager, entry)
+    if lifx_features(device)["matrix"]:
+        entity: LIFXLight = LIFXMatrix(coordinator, manager, entry)
+    elif lifx_features(device)["extended_multizone"]:
+        entity = LIFXExtendedMultiZone(coordinator, manager, entry)
     elif lifx_features(device)["multizone"]:
         entity = LIFXMultiZone(coordinator, manager, entry)
     elif lifx_features(device)["color"]:
@@ -130,16 +132,13 @@ class LIFXLight(LIFXEntity, LightEntity):
         self.entry = entry
         self._attr_unique_id = self.coordinator.serial_number
         self._attr_name = self.bulb.label
-        self._attr_min_mireds = math.floor(
-            color_util.color_temperature_kelvin_to_mired(bulb_features["max_kelvin"])
-        )
-        self._attr_max_mireds = math.ceil(
-            color_util.color_temperature_kelvin_to_mired(bulb_features["min_kelvin"])
-        )
+        self._attr_min_color_temp_kelvin = bulb_features["min_kelvin"]
+        self._attr_max_color_temp_kelvin = bulb_features["max_kelvin"]
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
             color_mode = ColorMode.COLOR_TEMP
         else:
             color_mode = ColorMode.BRIGHTNESS
+
         self._attr_color_mode = color_mode
         self._attr_supported_color_modes = {color_mode}
         self._attr_effect = None
@@ -151,11 +150,9 @@ class LIFXLight(LIFXEntity, LightEntity):
         return convert_16_to_8(int(fade * self.bulb.color[HSBK_BRIGHTNESS]))
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the color temperature."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self.bulb.color[HSBK_KELVIN]
-        )
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature of this light in kelvin."""
+        return int(self.bulb.color[HSBK_KELVIN])
 
     @property
     def is_on(self) -> bool:
@@ -478,3 +475,15 @@ class LIFXExtendedMultiZone(LIFXMultiZone):
         # set_extended_color_zones does not update the
         # state of the device, so we need to do that
         await self.get_color()
+
+
+class LIFXMatrix(LIFXColor):
+    """Representation of a LIFX matrix device."""
+
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_FLAME,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_MORPH,
+        SERVICE_EFFECT_STOP,
+    ]
