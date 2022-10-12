@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
@@ -55,43 +56,41 @@ async def test_button_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED buttons."""
     mock_wled.reset.side_effect = WLEDError
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("button.wled_rgb_light_restart")
     assert state
     assert state.state == "2021-11-04T16:37:00+00:00"
-    assert "Invalid response from API" in caplog.text
 
 
 async def test_button_connection_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_wled: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the WLED buttons."""
     mock_wled.reset.side_effect = WLEDConnectionError
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("button.wled_rgb_light_restart")
     assert state
     assert state.state == STATE_UNAVAILABLE
-    assert "Error communicating with API" in caplog.text

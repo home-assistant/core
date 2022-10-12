@@ -102,7 +102,7 @@
                     "multicast_group": "Utilis\u00e9 pour le routage et la d\u00e9couverte. Valeur par d\u00e9faut\u00a0: `224.0.23.12`",
                     "multicast_port": "Utilis\u00e9 pour le routage et la d\u00e9couverte. Valeur par d\u00e9faut\u00a0: `3671`",
                     "rate_limit": "Nombre maximal de t\u00e9l\u00e9grammes sortants par seconde.\nValeur recommand\u00e9e\u00a0: entre 20 et 40",
-                    "state_updater": "Active ou d\u00e9sactive globalement la lecture des \u00e9tats depuis le bus KNX. Lorsqu'elle est d\u00e9sactiv\u00e9e, Home Assistant ne r\u00e9cup\u00e8re pas activement les \u00e9tats depuis le bus KNX et les options d'entit\u00e9 `sync_state` n'ont aucun effet."
+                    "state_updater": "Active ou d\u00e9sactive globalement la lecture des \u00e9tats depuis le bus KNX. Lorsqu'elle est d\u00e9sactiv\u00e9e, Home Assistant ne r\u00e9cup\u00e8re pas activement les \u00e9tats depuis le bus KNX. Peut \u00eatre remplac\u00e9 par les options d'entit\u00e9 `sync_state`."
                 }
             },
             "tunnel": {

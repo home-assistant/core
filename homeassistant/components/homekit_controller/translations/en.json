@@ -18,7 +18,7 @@
             "unable_to_pair": "Unable to pair, please try again.",
             "unknown_error": "Device reported an unknown error. Pairing failed."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({category})",
         "step": {
             "busy_error": {
                 "description": "Abort pairing on all controllers, or try restarting the device, then continue to resume pairing.",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "Allow pairing with insecure setup codes.",
                     "pairing_code": "Pairing Code"
                 },
-                "description": "HomeKit Controller communicates with {name} over the local area network using a secure encrypted connection without a separate HomeKit controller or iCloud. Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging.",
+                "description": "HomeKit Controller communicates with {name} ({category}) over the local area network using a secure encrypted connection without a separate HomeKit controller or iCloud. Enter your HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging.",
                 "title": "Pair with a device via HomeKit Accessory Protocol"
             },
             "protocol_error": {

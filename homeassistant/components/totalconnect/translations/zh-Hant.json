@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "\u81ea\u52d5\u5ffd\u7565\u4f4e\u96fb\u91cf"
+                },
+                "description": "\u7576\u56de\u5831\u4f4e\u96fb\u91cf\u6642\u81ea\u52d5\u5ffd\u7565\u5340\u57df\u3002",
+                "title": "TotalConnect \u9078\u9805"
+            }
+        }
     }
 }

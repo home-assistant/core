@@ -4,7 +4,9 @@ from __future__ import annotations
 from enum import Enum
 import functools
 import logging
+from typing import TYPE_CHECKING, Any, TypeVar
 
+from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
 
@@ -19,14 +21,23 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CHANNEL_IAS_WD,
+    CHANNEL_INOVELLI,
     CHANNEL_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     Strobe,
 )
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
+
+
+_ZCLEnumSelectEntitySelfT = TypeVar(
+    "_ZCLEnumSelectEntitySelfT", bound="ZCLEnumSelectEntity"
+)
 
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.SELECT
@@ -58,39 +69,40 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     """Representation of a ZHA select entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _enum: Enum = None
+    _attribute: str
+    _enum: type[Enum]
 
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
-        **kwargs,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
     ) -> None:
         """Init this select entity."""
-        self._attr_name = self._enum.__name__
+        self._attribute = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
-        self._channel: ChannelType = channels[0]
+        self._channel: ZigbeeChannel = channels[0]
         super().__init__(unique_id, zha_device, channels, **kwargs)
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        option = self._channel.data_cache.get(self._attr_name)
+        option = self._channel.data_cache.get(self._attribute)
         if option is None:
             return None
         return option.name.replace("_", " ")
 
-    async def async_select_option(self, option: str | int) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._channel.data_cache[self._attr_name] = self._enum[option.replace(" ", "_")]
+        self._channel.data_cache[self._attribute] = self._enum[option.replace(" ", "_")]
         self.async_write_ha_state()
 
     @callback
     def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
         if last_state.state and last_state.state != STATE_UNKNOWN:
-            self._channel.data_cache[self._attr_name] = self._enum[
+            self._channel.data_cache[self._attribute] = self._enum[
                 last_state.state.replace(" ", "_")
             ]
 
@@ -110,7 +122,8 @@ class ZHADefaultToneSelectEntity(
 ):
     """Representation of a ZHA default siren tone select entity."""
 
-    _enum: Enum = IasWd.Warning.WarningMode
+    _enum = IasWd.Warning.WarningMode
+    _attr_name = "Default siren tone"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -119,7 +132,8 @@ class ZHADefaultSirenLevelSelectEntity(
 ):
     """Representation of a ZHA default siren level select entity."""
 
-    _enum: Enum = IasWd.Warning.SirenLevel
+    _enum = IasWd.Warning.SirenLevel
+    _attr_name = "Default siren level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -128,14 +142,16 @@ class ZHADefaultStrobeLevelSelectEntity(
 ):
     """Representation of a ZHA default siren strobe level select entity."""
 
-    _enum: Enum = IasWd.StrobeLevel
+    _enum = IasWd.StrobeLevel
+    _attr_name = "Default strobe level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
 class ZHADefaultStrobeSelectEntity(ZHANonZCLSelectEntity, id_suffix=Strobe.__name__):
     """Representation of a ZHA default siren strobe select entity."""
 
-    _enum: Enum = Strobe
+    _enum = Strobe
+    _attr_name = "Default strobe"
 
 
 class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
@@ -143,16 +159,16 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
 
     _select_attr: str
     _attr_entity_category = EntityCategory.CONFIG
-    _enum: Enum
+    _enum: type[Enum]
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZCLEnumSelectEntitySelfT],
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> _ZCLEnumSelectEntitySelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -174,13 +190,13 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
-        **kwargs,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
     ) -> None:
         """Init this select entity."""
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
-        self._channel: ChannelType = channels[0]
+        self._channel: ZigbeeChannel = channels[0]
         super().__init__(unique_id, zha_device, channels, **kwargs)
 
     @property
@@ -192,7 +208,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         option = self._enum(option)
         return option.name.replace("_", " ")
 
-    async def async_select_option(self, option: str | int) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._channel.cluster.write_attributes(
             {self._select_attr: self._enum[option.replace(" ", "_")]}
@@ -207,4 +223,112 @@ class ZHAStartupOnOffSelectEntity(
     """Representation of a ZHA startup onoff select entity."""
 
     _select_attr = "start_up_on_off"
-    _enum: Enum = OnOff.StartUpOnOff
+    _enum = OnOff.StartUpOnOff
+    _attr_name = "Start-up behavior"
+
+
+class AqaraMotionSensitivities(types.enum8):
+    """Aqara motion sensitivities."""
+
+    Low = 0x01
+    Medium = 0x02
+    High = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
+)
+class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
+    """Representation of a ZHA on off transition time configuration entity."""
+
+    _select_attr = "motion_sensitivity"
+    _enum = AqaraMotionSensitivities
+    _attr_name = "Motion sensitivity"
+
+
+class AqaraMonitoringModess(types.enum8):
+    """Aqara monitoring modes."""
+
+    Undirected = 0x00
+    Left_Right = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac01"})
+class AqaraMonitoringMode(ZCLEnumSelectEntity, id_suffix="monitoring_mode"):
+    """Representation of a ZHA monitoring mode configuration entity."""
+
+    _select_attr = "monitoring_mode"
+    _enum = AqaraMonitoringModess
+    _attr_name = "Monitoring mode"
+
+
+class AqaraApproachDistances(types.enum8):
+    """Aqara approach distances."""
+
+    Far = 0x00
+    Medium = 0x01
+    Near = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac01"})
+class AqaraApproachDistance(ZCLEnumSelectEntity, id_suffix="approach_distance"):
+    """Representation of a ZHA approach distance configuration entity."""
+
+    _select_attr = "approach_distance"
+    _enum = AqaraApproachDistances
+    _attr_name = "Approach distance"
+
+
+class AqaraE1ReverseDirection(types.enum8):
+    """Aqara curtain reversal."""
+
+    Normal = 0x00
+    Inverted = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="window_covering", models={"lumi.curtain.agl001"}
+)
+class AqaraCurtainMode(ZCLEnumSelectEntity, id_suffix="window_covering_mode"):
+    """Representation of a ZHA curtain mode configuration entity."""
+
+    _select_attr = "window_covering_mode"
+    _enum = AqaraE1ReverseDirection
+    _attr_name = "Curtain mode"
+
+
+class InovelliOutputMode(types.enum1):
+    """Inovelli output mode."""
+
+    Dimmer = 0x00
+    OnOff = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliOutputModeEntity(ZCLEnumSelectEntity, id_suffix="output_mode"):
+    """Inovelli output mode control."""
+
+    _select_attr = "output_mode"
+    _enum = InovelliOutputMode
+    _attr_name: str = "Output mode"
+
+
+class InovelliSwitchType(types.enum8):
+    """Inovelli output mode."""
+
+    Load_Only = 0x00
+    Three_Way_Dumb = 0x01
+    Three_Way_AUX = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliSwitchTypeEntity(ZCLEnumSelectEntity, id_suffix="switch_type"):
+    """Inovelli switch type control."""
+
+    _select_attr = "switch_type"
+    _enum = InovelliSwitchType
+    _attr_name: str = "Switch type"

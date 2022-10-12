@@ -44,6 +44,8 @@
             "button_2": "Tombol kedua",
             "button_3": "Tombol ketiga",
             "button_4": "Tombol keempat",
+            "clock_wise": "Rotasi searah jarum jam",
+            "counter_clock_wise": "Rotasi berlawanan arah jarum jam",
             "dim_down": "Redupkan",
             "dim_up": "Terangkan",
             "double_buttons_1_3": "Tombol Pertama dan Ketiga",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "Kedua \"{subtype}\" dilepaskan",
-            "initial_press": "Tombol \"{subtype}\" awalnya ditekan",
-            "long_release": "Tombol \"{subtype}\" dilepaskan setelah ditekan lama",
-            "remote_button_long_release": "Tombol \"{subtype}\" dilepaskan setelah ditekan lama",
-            "remote_button_short_press": "Tombol \"{subtype}\" ditekan",
-            "remote_button_short_release": "Tombol \"{subtype}\" dilepaskan",
+            "initial_press": "\"{subtype}\" awalnya ditekan",
+            "long_release": "\"{subtype}\" dilepaskan setelah ditekan lama",
+            "remote_button_long_release": "\"{subtype}\" dilepaskan setelah ditekan lama",
+            "remote_button_short_press": "\"{subtype}\" ditekan",
+            "remote_button_short_release": "\"{subtype}\" dilepaskan",
             "remote_double_button_long_press": "Kedua \"{subtype}\" dilepaskan setelah ditekan lama",
             "remote_double_button_short_press": "Kedua \"{subtype}\" dilepas",
-            "repeat": "Tombol \"{subtype}\" ditekan terus",
-            "short_release": "Tombol \"{subtype}\" dilepaskan setelah ditekan sebentar"
+            "repeat": "\"{subtype}\" ditekan terus",
+            "short_release": "\"{subtype}\" dilepaskan setelah ditekan sebentar",
+            "start": "\"{subtype}\" awalnya ditekan"
         }
     },
     "options": {

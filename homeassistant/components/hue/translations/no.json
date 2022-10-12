@@ -5,7 +5,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "cannot_connect": "Tilkobling mislyktes",
-            "discover_timeout": "Kunne ikke oppdage Hue Bridger",
+            "discover_timeout": "Fant ingen Hue Bridger",
             "invalid_host": "Ugyldig vert",
             "no_bridges": "Ingen Philips Hue Bridger oppdaget",
             "not_hue_bridge": "Ikke en Hue bro",
@@ -44,6 +44,8 @@
             "button_2": "Andre knapp",
             "button_3": "Tredje knapp",
             "button_4": "Fjerde knapp",
+            "clock_wise": "Rotasjon med klokken",
+            "counter_clock_wise": "Rotasjon mot klokken",
             "dim_down": "Dimm ned",
             "dim_up": "Dimm opp",
             "double_buttons_1_3": "F\u00f8rste og tredje knapper",
@@ -53,15 +55,16 @@
         },
         "trigger_type": {
             "double_short_release": "Begge \"{subtype}\" er utgitt",
-            "initial_press": "Knappen \"{subtype}\" ble f\u00f8rst trykket",
-            "long_release": "Knapp \"{subtype}\" slippes etter lang trykk",
-            "remote_button_long_release": "\"{subtype}\"-knappen sluppet etter langt trykk",
-            "remote_button_short_press": "\"{subtype}\" -knappen ble trykket",
-            "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
+            "initial_press": "\" {subtype} \" trykket f\u00f8rst",
+            "long_release": "\" {subtype} \" utgitt etter langt trykk",
+            "remote_button_long_release": "\" {subtype} \" utgitt etter langt trykk",
+            "remote_button_short_press": "\" {subtype} \" trykket",
+            "remote_button_short_release": "\" {subtype} \" utgitt",
             "remote_double_button_long_press": "Begge \"{subtype}\" utgitt etter lang trykk",
             "remote_double_button_short_press": "Begge \"{subtype}\" utgitt",
-            "repeat": "Knappen \" {subtype} \" holdt nede",
-            "short_release": "Knapp \"{subtype}\" slippes etter kort trykk"
+            "repeat": "\" {subtype} \" holdt nede",
+            "short_release": "\" {subtype} \" utgitt etter kort trykk",
+            "start": "\" {subtype} \" trykket f\u00f8rst"
         }
     },
     "options": {

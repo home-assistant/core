@@ -9,6 +9,9 @@
             },
             "manual": {
                 "description": "\uc7a5\uce58 \uc124\uba85 XML \ud30c\uc77c\uc758 URL"
+            },
+            "user": {
+                "title": "DLNA DMR \uc7a5\uce58 \ubc1c\uacac"
             }
         }
     },

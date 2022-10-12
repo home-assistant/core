@@ -2,6 +2,7 @@
     "system_health": {
         "info": {
             "arch": "Arquitectura de la CPU",
+            "config_dir": "Directori de configuraci\u00f3",
             "dev": "Desenvolupador",
             "docker": "Docker",
             "hassio": "Supervisor",

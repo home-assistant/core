@@ -562,7 +562,7 @@ async def test_options_flow(hass):
     with patch(
         "homeassistant.components.dsmr.async_setup_entry", return_value=True
     ), patch("homeassistant.components.dsmr.async_unload_entry", return_value=True):
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 

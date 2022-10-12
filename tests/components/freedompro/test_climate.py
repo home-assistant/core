@@ -14,14 +14,15 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACMode,
 )
-from homeassistant.components.climate.const import HVACMode
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
+from .conftest import get_states_response_for_uid
+
 from tests.common import async_fire_time_changed
-from tests.components.freedompro.conftest import get_states_response_for_uid
 
 uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*TWMYQKL3UVED4HSIIB9GXJWJZBQCXG-9VE-N2IUAIWI"
 

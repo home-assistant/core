@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_STATE,
     ATTR_VIA_DEVICE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -90,7 +91,7 @@ def check_entities(
 
 
 def setup_owproxy_mock_devices(
-    owproxy: MagicMock, platform: str, device_ids: list[str]
+    owproxy: MagicMock, platform: Platform, device_ids: list[str]
 ) -> None:
     """Set up mock for owproxy."""
     main_dir_return_value = []
@@ -125,7 +126,7 @@ def _setup_owproxy_mock_device(
     main_read_side_effect: list,
     sub_read_side_effect: list,
     device_id: str,
-    platform: str,
+    platform: Platform,
 ) -> None:
     """Set up mock for owproxy."""
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
@@ -167,7 +168,7 @@ def _setup_owproxy_mock_device_reads(
     sub_read_side_effect: list,
     mock_device: Any,
     device_id: str,
-    platform: str,
+    platform: Platform,
 ) -> None:
     """Set up mock for owproxy."""
     # Setup device reads

@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Automatikus kiiktat\u00e1s alacsony akkumul\u00e1torral"
+                },
+                "description": "Automatikusan kiiktatja a z\u00f3n\u00e1kat abban a pillanatban, amikor lemer\u00fclt akkumul\u00e1tort jelentenek.",
+                "title": "TotalConnect be\u00e1ll\u00edt\u00e1sok"
+            }
+        }
     }
 }

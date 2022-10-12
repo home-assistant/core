@@ -10,7 +10,8 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
             "discovery_requires_supervisor": "Fitur penemuan membutuhkan supervisor.",
-            "not_zwave_device": "Perangkat yang ditemukan bukan perangkat Z-Wave."
+            "not_zwave_device": "Perangkat yang ditemukan bukan perangkat Z-Wave.",
+            "not_zwave_js_addon": "Add-on yang ditemukan bukanlah add-on Z-Wave JS resmi."
         },
         "error": {
             "addon_start_failed": "Gagal memulai add-on Z-Wave JS. Periksa konfigurasi.",
@@ -89,6 +90,12 @@
             "state.node_status": "Status node berubah",
             "zwave_js.value_updated.config_parameter": "Perubahan nilai pada parameter konfigurasi {subtype}",
             "zwave_js.value_updated.value": "Perubahan nilai pada Nilai Z-Wave JS"
+        }
+    },
+    "issues": {
+        "invalid_server_version": {
+            "description": "Versi Z-Wave JS Server yang dijalankan saat ini terlalu lama untuk versi Home Assistant ini. Harap perbarui Z-Wave JS Server ke versi terbaru untuk memperbaiki masalah ini.",
+            "title": "Diperlukan versi terbaru dari Z-Wave JS Server"
         }
     },
     "options": {

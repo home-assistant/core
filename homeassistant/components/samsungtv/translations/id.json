@@ -12,7 +12,7 @@
         },
         "error": {
             "auth_missing": "Home Assistant tidak diizinkan untuk tersambung ke TV Samsung ini. Periksa Manajer Perangkat Eksternal TV Anda untuk mengotorisasi Home Assistant.",
-            "invalid_pin": "PIN tidak valid, silakan coba lagi."
+            "invalid_pin": "PIN tidak valid, coba lagi."
         },
         "flow_title": "{device}",
         "step": {

@@ -12,25 +12,22 @@ from sqlalchemy import text
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     Events,
-    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
-    process_timestamp,
 )
+from homeassistant.components.recorder.models import LazyState, process_timestamp
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
+from .common import async_wait_recording_done, wait_recording_done
+
 from tests.common import SetupRecorderInstanceT, mock_state_change_event
-from tests.components.recorder.common import (
-    async_wait_recording_done,
-    wait_recording_done,
-)
 
 
 async def _async_get_states(
@@ -388,23 +385,30 @@ def test_get_significant_states_minimal_response(hass_recorder):
     hass = hass_recorder()
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four, minimal_response=True)
+    entites_with_reducable_states = [
+        "media_player.test",
+        "media_player.test3",
+    ]
 
-    # The second media_player.test state is reduced
+    # All states for media_player.test state are reduced
     # down to last_changed and state when minimal_response
+    # is set except for the first state.
     # is set.  We use JSONEncoder to make sure that are
     # pre-encoded last_changed is always the same as what
     # will happen with encoding a native state
-    input_state = states["media_player.test"][1]
-    orig_last_changed = json.dumps(
-        process_timestamp(input_state.last_changed),
-        cls=JSONEncoder,
-    ).replace('"', "")
-    orig_state = input_state.state
-    states["media_player.test"][1] = {
-        "last_changed": orig_last_changed,
-        "state": orig_state,
-    }
-
+    for entity_id in entites_with_reducable_states:
+        entity_states = states[entity_id]
+        for state_idx in range(1, len(entity_states)):
+            input_state = entity_states[state_idx]
+            orig_last_changed = orig_last_changed = json.dumps(
+                process_timestamp(input_state.last_changed),
+                cls=JSONEncoder,
+            ).replace('"', "")
+            orig_state = input_state.state
+            entity_states[state_idx] = {
+                "last_changed": orig_last_changed,
+                "state": orig_state,
+            }
     assert states == hist
 
 
@@ -565,7 +569,7 @@ def test_get_significant_states_only(hass_recorder):
     assert states == hist[entity_id]
 
 
-def record_states(hass):
+def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     """Record some test states.
 
     We inject a bunch of state updates from media player, zone and
@@ -871,3 +875,32 @@ async def test_get_full_significant_states_handles_empty_last_changed(
     assert db_sensor_one_states[0].last_updated is not None
     assert db_sensor_one_states[1].last_updated is not None
     assert db_sensor_one_states[0].last_updated != db_sensor_one_states[1].last_updated
+
+
+def test_state_changes_during_period_multiple_entities_single_test(hass_recorder):
+    """Test state change during period with multiple entities in the same test.
+
+    This test ensures the sqlalchemy query cache does not
+    generate incorrect results.
+    """
+    hass = hass_recorder()
+    start = dt_util.utcnow()
+    test_entites = {f"sensor.{i}": str(i) for i in range(30)}
+    for entity_id, value in test_entites.items():
+        hass.states.set(entity_id, value)
+
+    wait_recording_done(hass)
+    end = dt_util.utcnow()
+
+    hist = history.state_changes_during_period(hass, start, end, None)
+    for entity_id, value in test_entites.items():
+        hist[entity_id][0].state == value
+
+    for entity_id, value in test_entites.items():
+        hist = history.state_changes_during_period(hass, start, end, entity_id)
+        assert len(hist) == 1
+        hist[entity_id][0].state == value
+
+    hist = history.state_changes_during_period(hass, start, end, None)
+    for entity_id, value in test_entites.items():
+        hist[entity_id][0].state == value

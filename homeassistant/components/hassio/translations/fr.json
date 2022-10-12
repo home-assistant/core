@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "Version de l'agent",
             "board": "Tableau de bord",
             "disk_total": "Taille total du disque",
             "disk_used": "Taille du disque utilis\u00e9",

@@ -27,6 +27,7 @@ ATTR_EMBED_FIELDS = "fields"
 ATTR_EMBED_FOOTER = "footer"
 ATTR_EMBED_TITLE = "title"
 ATTR_EMBED_THUMBNAIL = "thumbnail"
+ATTR_EMBED_IMAGE = "image"
 ATTR_EMBED_URL = "url"
 ATTR_IMAGES = "images"
 
@@ -94,6 +95,8 @@ class DiscordNotificationService(BaseNotificationService):
                     embed.set_author(**embedding[ATTR_EMBED_AUTHOR])
                 if ATTR_EMBED_THUMBNAIL in embedding:
                     embed.set_thumbnail(**embedding[ATTR_EMBED_THUMBNAIL])
+                if ATTR_EMBED_IMAGE in embedding:
+                    embed.set_image(**embedding[ATTR_EMBED_IMAGE])
                 embeds.append(embed)
 
         if ATTR_IMAGES in data:

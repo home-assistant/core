@@ -14,7 +14,7 @@ from aioairzone.exceptions import AirzoneError
 import pytest
 
 from homeassistant.components.airzone.const import API_TEMPERATURE_STEP
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,

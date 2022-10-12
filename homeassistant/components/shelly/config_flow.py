@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any, Final
 
@@ -58,10 +59,12 @@ async def validate_input(
                 options,
             )
             await rpc_device.shutdown()
+            assert rpc_device.shelly
+
             return {
                 "title": get_rpc_device_name(rpc_device),
                 CONF_SLEEP_PERIOD: 0,
-                "model": rpc_device.model,
+                "model": rpc_device.shelly.get("model"),
                 "gen": 2,
             }
 
@@ -89,6 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     host: str = ""
     info: dict[str, Any] = {}
     device_info: dict[str, Any] = {}
+    entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -119,21 +123,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 except HTTP_CONNECT_ERRORS:
                     errors["base"] = "cannot_connect"
-                except KeyError:
-                    errors["base"] = "firmware_not_fully_provisioned"
                 except Exception:  # pylint: disable=broad-except
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
-                    return self.async_create_entry(
-                        title=device_info["title"],
-                        data={
-                            **user_input,
-                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                            "model": device_info["model"],
-                            "gen": device_info["gen"],
-                        },
-                    )
+                    if device_info["model"]:
+                        return self.async_create_entry(
+                            title=device_info["title"],
+                            data={
+                                **user_input,
+                                CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                                "model": device_info["model"],
+                                "gen": device_info["gen"],
+                            },
+                        )
+                    errors["base"] = "firmware_not_fully_provisioned"
 
         return self.async_show_form(
             step_id="user", data_schema=HOST_SCHEMA, errors=errors
@@ -162,22 +166,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except aioshelly.exceptions.JSONRPCError:
                 errors["base"] = "cannot_connect"
-            except KeyError:
-                errors["base"] = "firmware_not_fully_provisioned"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title=device_info["title"],
-                    data={
-                        **user_input,
-                        CONF_HOST: self.host,
-                        CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
-                        "model": device_info["model"],
-                        "gen": device_info["gen"],
-                    },
-                )
+                if device_info["model"]:
+                    return self.async_create_entry(
+                        title=device_info["title"],
+                        data={
+                            **user_input,
+                            CONF_HOST: self.host,
+                            CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                            "model": device_info["model"],
+                            "gen": device_info["gen"],
+                        },
+                    )
+                errors["base"] = "firmware_not_fully_provisioned"
         else:
             user_input = {}
 
@@ -223,8 +227,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             self.device_info = await validate_input(self.hass, self.host, self.info, {})
-        except KeyError:
-            LOGGER.debug("Shelly host %s firmware not fully provisioned", self.host)
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
 
@@ -235,7 +237,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle discovery confirm."""
         errors: dict[str, str] = {}
-        try:
+
+        if not self.device_info["model"]:
+            errors["base"] = "firmware_not_fully_provisioned"
+            model = "Shelly"
+        else:
+            model = get_model_name(self.info)
             if user_input is not None:
                 return self.async_create_entry(
                     title=self.device_info["title"],
@@ -246,17 +253,69 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "gen": self.device_info["gen"],
                     },
                 )
-        except KeyError:
-            errors["base"] = "firmware_not_fully_provisioned"
-        else:
             self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                "model": get_model_name(self.info),
+                "model": model,
                 "host": self.host,
             },
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Handle configuration by re-auth."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+        assert self.entry is not None
+        host = self.entry.data[CONF_HOST]
+
+        if user_input is not None:
+            try:
+                info = await self._async_get_info(host)
+            except (
+                asyncio.TimeoutError,
+                aiohttp.ClientError,
+                aioshelly.exceptions.FirmwareUnsupported,
+            ):
+                return self.async_abort(reason="reauth_unsuccessful")
+
+            if self.entry.data.get("gen", 1) != 1:
+                user_input[CONF_USERNAME] = "admin"
+            try:
+                await validate_input(self.hass, host, info, user_input)
+            except (
+                aiohttp.ClientResponseError,
+                aioshelly.exceptions.InvalidAuthError,
+                asyncio.TimeoutError,
+                aiohttp.ClientError,
+            ):
+                return self.async_abort(reason="reauth_unsuccessful")
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.entry, data={**self.entry.data, **user_input}
+                )
+                await self.hass.config_entries.async_reload(self.entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        if self.entry.data.get("gen", 1) == 1:
+            schema = {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        else:
+            schema = {vol.Required(CONF_PASSWORD): str}
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(schema),
             errors=errors,
         )
 

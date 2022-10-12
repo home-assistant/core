@@ -21,6 +21,7 @@ from homeassistant.const import (
     TIME_HOURS,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -101,6 +102,9 @@ async def async_setup_platform(
 
     history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, name)
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise PlatformNotReady from coordinator.last_exception
     async_add_entities([HistoryStatsSensor(coordinator, sensor_type, name)])
 
 
@@ -139,7 +143,6 @@ class HistoryStatsSensorBase(
 class HistoryStatsSensor(HistoryStatsSensorBase):
     """A HistoryStats sensor."""
 
-    _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
@@ -152,6 +155,9 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         super().__init__(coordinator, name)
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
+        self._process_update()
+        if self._type == CONF_TYPE_TIME:
+            self._attr_device_class = SensorDeviceClass.DURATION
 
     @callback
     def _process_update(self) -> None:

@@ -18,6 +18,12 @@
                 "description": "Va\u0161e zadan\u00e9 heslo pro {username} ji\u017e nefunguje. Chcete-li tuto d\u00e1le integraci pou\u017e\u00edvat, aktualizujte sv\u00e9 heslo.",
                 "title": "Znovu ov\u011b\u0159it integraci"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Heslo"
+                },
+                "title": "Znovu ov\u011b\u0159it integraci"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "D\u016fv\u011bryhodn\u00e9 za\u0159\u00edzen\u00ed"

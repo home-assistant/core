@@ -20,6 +20,13 @@
                 "description": "Masukkan kode autentikasi Hive Anda. \n \nMasukkan kode 0000 untuk meminta kode lain.",
                 "title": "Autentikasi Dua Faktor Hive."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Nama Perangkat"
+                },
+                "description": "Masukkan konfigurasi Hive Anda",
+                "title": "Konfigurasi Hive"
+            },
             "reauth": {
                 "data": {
                     "password": "Kata Sandi",
@@ -34,7 +41,7 @@
                     "scan_interval": "Interval Pindai (detik)",
                     "username": "Nama Pengguna"
                 },
-                "description": "Masukkan informasi masuk dan konfigurasi Hive Anda.",
+                "description": "Masukkan informasi masuk Hive Anda.",
                 "title": "Info Masuk Hive"
             }
         }

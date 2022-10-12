@@ -19,7 +19,7 @@
                 }
             },
             "discovery_confirm": {
-                "description": "Voulez-vous configurer {name} ( {host} )?"
+                "description": "Voulez-vous configurer {name} ({host})\u00a0?"
             },
             "user": {
                 "data": {

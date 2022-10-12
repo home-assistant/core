@@ -11,13 +11,13 @@
         "flow_title": "{device}",
         "step": {
             "confirm_discovery": {
-                "description": "\u00bfQuieres agregar {device} a Home Assistant?"
+                "description": "\u00bfQuieres a\u00f1adir {device} a Home Assistant?"
             },
             "user": {
                 "data": {
                     "host": "Host"
                 },
-                "description": "Configure la direcci\u00f3n IP o el nombre de host local de su dispositivo Fronius.",
+                "description": "Configura la direcci\u00f3n IP o el nombre de host local de tu dispositivo Fronius.",
                 "title": "Fronius SolarNet"
             }
         }

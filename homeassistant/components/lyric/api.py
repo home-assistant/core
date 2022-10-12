@@ -4,6 +4,7 @@ from typing import cast
 from aiohttp import BasicAuth, ClientSession
 from aiolyric.client import LyricClient
 
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -41,7 +42,7 @@ class ConfigEntryLyricClient(LyricClient):
 
 
 class LyricLocalOAuth2Implementation(
-    config_entry_oauth2_flow.LocalOAuth2Implementation
+    AuthImplementation,
 ):
     """Lyric Local OAuth2 implementation."""
 

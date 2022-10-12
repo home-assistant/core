@@ -10,6 +10,7 @@ import threading
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import Event
+from homeassistant.helpers.typing import UndefinedType
 
 from . import purge, statistics
 from .const import DOMAIN, EXCLUDE_ATTRIBUTES
@@ -31,6 +32,24 @@ class RecorderTask(abc.ABC):
 
 
 @dataclass
+class ChangeStatisticsUnitTask(RecorderTask):
+    """Object to store statistics_id and unit to convert unit of statistics."""
+
+    statistic_id: str
+    new_unit_of_measurement: str
+    old_unit_of_measurement: str
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        statistics.change_statistics_unit(
+            instance,
+            self.statistic_id,
+            self.new_unit_of_measurement,
+            self.old_unit_of_measurement,
+        )
+
+
+@dataclass
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
@@ -46,12 +65,16 @@ class UpdateStatisticsMetadataTask(RecorderTask):
     """Object to store statistics_id and unit for update of statistics metadata."""
 
     statistic_id: str
-    unit_of_measurement: str | None
+    new_statistic_id: str | None | UndefinedType
+    new_unit_of_measurement: str | None | UndefinedType
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.update_statistics_metadata(
-            instance, self.statistic_id, self.unit_of_measurement
+            instance,
+            self.statistic_id,
+            self.new_statistic_id,
+            self.new_unit_of_measurement,
         )
 
 
@@ -119,18 +142,18 @@ class StatisticsTask(RecorderTask):
 
 
 @dataclass
-class ExternalStatisticsTask(RecorderTask):
-    """An object to insert into the recorder queue to run an external statistics task."""
+class ImportStatisticsTask(RecorderTask):
+    """An object to insert into the recorder queue to run an import statistics task."""
 
     metadata: StatisticMetaData
     statistics: Iterable[StatisticData]
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
-        if statistics.add_external_statistics(instance, self.metadata, self.statistics):
+        if statistics.import_statistics(instance, self.metadata, self.statistics):
             return
         # Schedule a new statistics task if this one didn't finish
-        instance.queue_task(ExternalStatisticsTask(self.metadata, self.statistics))
+        instance.queue_task(ImportStatisticsTask(self.metadata, self.statistics))
 
 
 @dataclass
@@ -140,6 +163,7 @@ class AdjustStatisticsTask(RecorderTask):
     statistic_id: str
     start_time: datetime
     sum_adjustment: float
+    adjustment_unit: str
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
@@ -148,12 +172,16 @@ class AdjustStatisticsTask(RecorderTask):
             self.statistic_id,
             self.start_time,
             self.sum_adjustment,
+            self.adjustment_unit,
         ):
             return
         # Schedule a new adjust statistics task if this one didn't finish
         instance.queue_task(
             AdjustStatisticsTask(
-                self.statistic_id, self.start_time, self.sum_adjustment
+                self.statistic_id,
+                self.start_time,
+                self.sum_adjustment,
+                self.adjustment_unit,
             )
         )
 
@@ -244,7 +272,21 @@ class AddRecorderPlatformTask(RecorderTask):
         domain = self.domain
         platform = self.platform
 
-        platforms: dict[str, Any] = hass.data[DOMAIN]
+        platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
         platforms[domain] = platform
         if hasattr(self.platform, "exclude_attributes"):
             hass.data[EXCLUDE_ATTRIBUTES][domain] = platform.exclude_attributes(hass)
+
+
+@dataclass
+class SynchronizeTask(RecorderTask):
+    """Ensure all pending data has been committed."""
+
+    # commit_before is the default
+    event: asyncio.Event
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        # Does not use a tracked task to avoid
+        # blocking shutdown if the recorder is broken
+        instance.hass.loop.call_soon_threadsafe(self.event.set)

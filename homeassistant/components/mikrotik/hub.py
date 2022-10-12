@@ -1,21 +1,23 @@
 """The Mikrotik router class."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import socket
 import ssl
+from typing import Any
 
 import librouteros
 from librouteros.login import plain as login_plain, token as login_token
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ARP,
-    ATTR_DEVICE_TRACKER,
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
@@ -25,95 +27,44 @@ from .const import (
     CONF_FORCE_DHCP,
     DEFAULT_DETECTION_TIME,
     DHCP,
+    DOMAIN,
     IDENTITY,
     INFO,
     IS_CAPSMAN,
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
-    PLATFORMS,
     WIRELESS,
 )
+from .device import Device
 from .errors import CannotConnect, LoginError
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class Device:
-    """Represents a network device."""
-
-    def __init__(self, mac, params):
-        """Initialize the network device."""
-        self._mac = mac
-        self._params = params
-        self._last_seen = None
-        self._attrs = {}
-        self._wireless_params = None
-
-    @property
-    def name(self):
-        """Return device name."""
-        return self._params.get("host-name", self.mac)
-
-    @property
-    def ip_address(self):
-        """Return device primary ip address."""
-        return self._params.get("address")
-
-    @property
-    def mac(self):
-        """Return device mac."""
-        return self._mac
-
-    @property
-    def last_seen(self):
-        """Return device last seen."""
-        return self._last_seen
-
-    @property
-    def attrs(self):
-        """Return device attributes."""
-        attr_data = self._wireless_params if self._wireless_params else self._params
-        for attr in ATTR_DEVICE_TRACKER:
-            if attr in attr_data:
-                self._attrs[slugify(attr)] = attr_data[attr]
-        self._attrs["ip_address"] = self._params.get("active-address")
-        return self._attrs
-
-    def update(self, wireless_params=None, params=None, active=False):
-        """Update Device params."""
-        if wireless_params:
-            self._wireless_params = wireless_params
-        if params:
-            self._params = params
-        if active:
-            self._last_seen = dt_util.utcnow()
-
-
 class MikrotikData:
     """Handle all communication with the Mikrotik API."""
 
-    def __init__(self, hass, config_entry, api):
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: librouteros.Api
+    ) -> None:
         """Initialize the Mikrotik Client."""
         self.hass = hass
         self.config_entry = config_entry
         self.api = api
-        self._host = self.config_entry.data[CONF_HOST]
-        self.all_devices = {}
-        self.devices = {}
-        self.available = True
-        self.support_capsman = False
-        self.support_wireless = False
-        self.hostname = None
-        self.model = None
-        self.firmware = None
-        self.serial_number = None
+        self._host: str = self.config_entry.data[CONF_HOST]
+        self.all_devices: dict[str, dict[str, Any]] = {}
+        self.devices: dict[str, Device] = {}
+        self.support_capsman: bool = False
+        self.support_wireless: bool = False
+        self.hostname: str = ""
+        self.model: str = ""
+        self.firmware: str = ""
+        self.serial_number: str = ""
 
     @staticmethod
-    def load_mac(devices=None):
+    def load_mac(devices: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         """Load dictionary using MAC address as key."""
-        if not devices:
-            return None
         mac_devices = {}
         for device in devices:
             if "mac-address" in device:
@@ -122,26 +73,23 @@ class MikrotikData:
         return mac_devices
 
     @property
-    def arp_enabled(self):
+    def arp_enabled(self) -> bool:
         """Return arp_ping option setting."""
-        return self.config_entry.options[CONF_ARP_PING]
+        return self.config_entry.options.get(CONF_ARP_PING, False)
 
     @property
-    def force_dhcp(self):
+    def force_dhcp(self) -> bool:
         """Return force_dhcp option setting."""
-        return self.config_entry.options[CONF_FORCE_DHCP]
+        return self.config_entry.options.get(CONF_FORCE_DHCP, False)
 
-    def get_info(self, param):
+    def get_info(self, param: str) -> str:
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
-        data = self.command(MIKROTIK_SERVICES[cmd])
-        return (
-            data[0].get(param)  # pylint: disable=unsubscriptable-object
-            if data
-            else None
-        )
+        if data := self.command(MIKROTIK_SERVICES[cmd]):
+            return str(data[0].get(param))
+        return ""
 
-    def get_hub_details(self):
+    def get_hub_details(self) -> None:
         """Get Hub info."""
         self.hostname = self.get_info(NAME)
         self.model = self.get_info(ATTR_MODEL)
@@ -150,26 +98,17 @@ class MikrotikData:
         self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
         self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
 
-    def connect_to_hub(self):
-        """Connect to hub."""
-        try:
-            self.api = get_api(self.hass, self.config_entry.data)
-            self.available = True
-            return True
-        except (LoginError, CannotConnect):
-            self.available = False
-            return False
-
-    def get_list_from_interface(self, interface):
+    def get_list_from_interface(self, interface: str) -> dict[str, dict[str, Any]]:
         """Get devices from interface."""
-        result = self.command(MIKROTIK_SERVICES[interface])
-        return self.load_mac(result) if result else {}
+        if result := self.command(MIKROTIK_SERVICES[interface]):
+            return self.load_mac(result)
+        return {}
 
-    def restore_device(self, mac):
+    def restore_device(self, mac: str) -> None:
         """Restore a missing device after restart."""
         self.devices[mac] = Device(mac, self.all_devices[mac])
 
-    def update_devices(self):
+    def update_devices(self) -> None:
         """Get list of devices with latest status."""
         arp_devices = {}
         device_list = {}
@@ -194,9 +133,10 @@ class MikrotikData:
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
 
-        except (CannotConnect, socket.timeout, OSError):
-            self.available = False
-            return
+        except CannotConnect as err:
+            raise UpdateFailed from err
+        except LoginError as err:
+            raise ConfigEntryAuthFailed from err
 
         if not device_list:
             return
@@ -221,11 +161,12 @@ class MikrotikData:
             active = True
             if self.arp_enabled and mac in arp_devices:
                 active = self.do_arp_ping(
-                    params.get("active-address"), arp_devices[mac].get("interface")
+                    str(params.get("active-address")),
+                    str(arp_devices[mac].get("interface")),
                 )
             self.devices[mac].update(active=active)
 
-    def do_arp_ping(self, ip_address, interface):
+    def do_arp_ping(self, ip_address: str, interface: str) -> bool:
         """Attempt to arp ping MAC address via interface."""
         _LOGGER.debug("pinging - %s", ip_address)
         params = {
@@ -237,9 +178,9 @@ class MikrotikData:
         }
         cmd = "/ping"
         data = self.command(cmd, params)
-        if data is not None:
+        if data:
             status = 0
-            for result in data:  # pylint: disable=not-an-iterable
+            for result in data:
                 if "status" in result:
                     status += 1
             if status == len(data):
@@ -249,20 +190,24 @@ class MikrotikData:
                 return False
         return True
 
-    def command(self, cmd, params=None):
+    def command(
+        self, cmd: str, params: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
+        _LOGGER.debug("Running command %s", cmd)
         try:
-            _LOGGER.info("Running command %s", cmd)
             if params:
-                response = list(self.api(cmd=cmd, **params))
-            else:
-                response = list(self.api(cmd=cmd))
+                return list(self.api(cmd=cmd, **params))
+            return list(self.api(cmd=cmd))
         except (
             librouteros.exceptions.ConnectionClosed,
             OSError,
             socket.timeout,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
+            # try to reconnect
+            self.api = get_api(dict(self.config_entry.data))
+            # we still have to raise CannotConnect to fail the update.
             raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
             _LOGGER.warning(
@@ -271,126 +216,71 @@ class MikrotikData:
                 cmd,
                 api_error,
             )
-            return None
-
-        return response if response else None
-
-    def update(self):
-        """Update device_tracker from Mikrotik API."""
-        if (not self.available or not self.api) and not self.connect_to_hub():
-            return
-        _LOGGER.debug("updating network devices for host: %s", self._host)
-        self.update_devices()
+            return []
 
 
-class MikrotikHub:
+class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Mikrotik Hub Object."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: librouteros.Api
+    ) -> None:
         """Initialize the Mikrotik Client."""
         self.hass = hass
-        self.config_entry = config_entry
-        self._mk_data = None
-        self.progress = None
+        self.config_entry: ConfigEntry = config_entry
+        self._mk_data = MikrotikData(self.hass, self.config_entry, api)
+        super().__init__(
+            self.hass,
+            _LOGGER,
+            name=f"{DOMAIN} - {self.host}",
+            update_interval=timedelta(seconds=10),
+        )
 
     @property
-    def host(self):
+    def host(self) -> str:
         """Return the host of this hub."""
-        return self.config_entry.data[CONF_HOST]
+        return str(self.config_entry.data[CONF_HOST])
 
     @property
-    def hostname(self):
+    def hostname(self) -> str:
         """Return the hostname of the hub."""
         return self._mk_data.hostname
 
     @property
-    def model(self):
+    def model(self) -> str:
         """Return the model of the hub."""
         return self._mk_data.model
 
     @property
-    def firmware(self):
+    def firmware(self) -> str:
         """Return the firmware of the hub."""
         return self._mk_data.firmware
 
     @property
-    def serial_num(self):
+    def serial_num(self) -> str:
         """Return the serial number of the hub."""
         return self._mk_data.serial_number
 
     @property
-    def available(self):
-        """Return if the hub is connected."""
-        return self._mk_data.available
-
-    @property
-    def option_detection_time(self):
+    def option_detection_time(self) -> timedelta:
         """Config entry option defining number of seconds from last seen to away."""
-        return timedelta(seconds=self.config_entry.options[CONF_DETECTION_TIME])
+        return timedelta(
+            seconds=self.config_entry.options.get(
+                CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
+            )
+        )
 
     @property
-    def signal_update(self):
-        """Event specific per Mikrotik entry to signal updates."""
-        return f"mikrotik-update-{self.host}"
-
-    @property
-    def api(self):
+    def api(self) -> MikrotikData:
         """Represent Mikrotik data object."""
         return self._mk_data
 
-    async def async_add_options(self):
-        """Populate default options for Mikrotik."""
-        if not self.config_entry.options:
-            data = dict(self.config_entry.data)
-            options = {
-                CONF_ARP_PING: data.pop(CONF_ARP_PING, False),
-                CONF_FORCE_DHCP: data.pop(CONF_FORCE_DHCP, False),
-                CONF_DETECTION_TIME: data.pop(
-                    CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
-                ),
-            }
-
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=data, options=options
-            )
-
-    async def request_update(self):
-        """Request an update."""
-        if self.progress is not None:
-            await self.progress
-            return
-
-        self.progress = self.hass.async_create_task(self.async_update())
-        await self.progress
-
-        self.progress = None
-
-    async def async_update(self):
+    async def _async_update_data(self) -> None:
         """Update Mikrotik devices information."""
-        await self.hass.async_add_executor_job(self._mk_data.update)
-        async_dispatcher_send(self.hass, self.signal_update)
-
-    async def async_setup(self):
-        """Set up the Mikrotik hub."""
-        try:
-            api = await self.hass.async_add_executor_job(
-                get_api, self.hass, self.config_entry.data
-            )
-        except CannotConnect as api_error:
-            raise ConfigEntryNotReady from api_error
-        except LoginError:
-            return False
-
-        self._mk_data = MikrotikData(self.hass, self.config_entry, api)
-        await self.async_add_options()
-        await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
-        await self.hass.async_add_executor_job(self._mk_data.update)
-
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
-        return True
+        await self.hass.async_add_executor_job(self._mk_data.update_devices)
 
 
-def get_api(hass, entry):
+def get_api(entry: dict[str, Any]) -> librouteros.Api:
     """Connect to Mikrotik hub."""
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 

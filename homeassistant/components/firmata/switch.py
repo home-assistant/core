@@ -1,5 +1,6 @@
 """Support for Firmata switch output."""
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -57,12 +58,12 @@ class FirmataSwitch(FirmataPinEntity, SwitchEntity):
         """Return true if switch is on."""
         return self._api.is_on
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._api.turn_on()
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self._api.turn_off()
         self.async_write_ha_state()

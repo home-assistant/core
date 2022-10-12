@@ -10,7 +10,7 @@
         "flow_title": "{name} {model} ( {host} )",
         "step": {
             "discovery_confirm": {
-                "description": "Voulez-vous configurer {name} {model} ( {host} )\u00a0?"
+                "description": "Voulez-vous configurer {name} {model} ({host})\u00a0?"
             },
             "pick_device": {
                 "data": {

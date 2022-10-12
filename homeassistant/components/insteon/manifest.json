@@ -4,8 +4,8 @@
   "documentation": "https://www.home-assistant.io/integrations/insteon",
   "dependencies": ["http", "websocket_api"],
   "requirements": [
-    "pyinsteon==1.1.0",
-    "insteon-frontend-home-assistant==0.1.0"
+    "pyinsteon==1.2.0",
+    "insteon-frontend-home-assistant==0.2.0"
   ],
   "codeowners": ["@teharris1"],
   "dhcp": [

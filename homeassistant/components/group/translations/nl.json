@@ -63,7 +63,7 @@
                 "description": "Met groepen kunt u een nieuwe entiteit cre\u00ebren die meerdere entiteiten van hetzelfde type vertegenwoordigt.",
                 "menu_options": {
                     "binary_sensor": "Binaire-sensorgroep",
-                    "cover": "Rolluikgroep",
+                    "cover": "Afdekkingengroep",
                     "fan": "Ventilatorgroep",
                     "light": "Lichtgroep",
                     "lock": "Slotgroep",

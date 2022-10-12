@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "\u0627\u0633\u062a\u062e\u062f\u0645 \u0645\u0648\u0642\u0639 \u0627\u0644\u062e\u0631\u064a\u0637\u0629",
+                    "origin_entity": "\u0627\u0633\u062a\u062e\u062f\u0645 \u0643\u064a\u0627\u0646"
+                }
+            }
+        }
+    }
+}

@@ -21,23 +21,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load Roku remote based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
-    async_add_entities([RokuRemote(unique_id, coordinator)], True)
+    async_add_entities(
+        [
+            RokuRemote(
+                device_id=unique_id,
+                coordinator=coordinator,
+            )
+        ],
+        True,
+    )
 
 
 class RokuRemote(RokuEntity, RemoteEntity):
     """Device that sends commands to an Roku."""
-
-    def __init__(self, unique_id: str, coordinator: RokuDataUpdateCoordinator) -> None:
-        """Initialize the Roku device."""
-        super().__init__(
-            device_id=unique_id,
-            coordinator=coordinator,
-        )
-
-        self._attr_name = coordinator.data.info.name
-        self._attr_unique_id = unique_id
 
     @property
     def is_on(self) -> bool:

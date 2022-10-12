@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API-nyckel"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "host": "V\u00e4rd",
+                    "location": "Plats",
+                    "name": "Namn",
+                    "port": "Port",
+                    "ssl": "Anv\u00e4nd ett SSL certifikat",
+                    "statistics_only": "Endast statistik",
+                    "verify_ssl": "Verifiera SSL-certifikat"
+                }
+            }
+        }
+    }
+}

@@ -97,6 +97,10 @@
             "vibration": "{entity_name} za\u010dalo detekovat vibrace"
         }
     },
+    "device_class": {
+        "gas": "plyn",
+        "sound": "zvuk"
+    },
     "state": {
         "_": {
             "off": "Neaktivn\u00ed",

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Dienst is al geconfigureerd",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
@@ -53,7 +53,7 @@
         "error": {
             "bad_birth": "Ongeldig birth topic",
             "bad_will": "Ongeldig will topic",
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "broker": {

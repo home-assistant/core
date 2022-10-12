@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -33,8 +34,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RO_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .debug_info import log_messages
 from .mixins import (
@@ -43,7 +44,10 @@ from .mixins import (
     MqttEntity,
     async_setup_entry_helper,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
+from .models import MqttValueTemplate
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +58,7 @@ DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
 CONF_EXPIRE_AFTER = "expire_after"
 
-PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
@@ -66,7 +70,13 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+# Configuring MQTT Binary sensors under the binary_sensor platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
+    warn_for_legacy_schema(binary_sensor.DOMAIN),
+)
+
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_platform(
@@ -75,9 +85,14 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT binary sensor through configuration.yaml."""
+    """Set up MQTT binary sensor configured under the fan platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, binary_sensor.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        binary_sensor.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -86,7 +101,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT binary sensor dynamically through MQTT discovery."""
+    """Set up MQTT binary sensor through configuration.yaml and dynamically through MQTT discovery."""
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -94,8 +109,12 @@ async def async_setup_entry(
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT binary sensor."""
     async_add_entities([MqttBinarySensor(hass, config, config_entry, discovery_data)])
 
@@ -162,6 +181,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
+        self._attr_force_update = config[CONF_FORCE_UPDATE]
         self._value_template = MqttValueTemplate(
             self._config.get(CONF_VALUE_TEMPLATE),
             entity=self,
@@ -241,7 +261,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                     self.hass, off_delay, off_delay_listener
                 )
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
@@ -274,14 +294,9 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         return self._state
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._config[CONF_FORCE_UPDATE]
 
     @property
     def available(self) -> bool:

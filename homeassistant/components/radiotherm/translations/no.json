@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name} {model} ( {host} )",
+        "step": {
+            "confirm": {
+                "description": "Vil du konfigurere {name} {model} ( {host} )?"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfigurering av radiotermostatklimaplattformen ved hjelp av YAML blir fjernet i Home Assistant 2022.9. \n\n Din eksisterende konfigurasjon har blitt importert til brukergrensesnittet automatisk. Fjern YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 fikse dette problemet.",
+            "title": "Radiotermostat YAML-konfigurasjonen blir fjernet"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Still inn et permanent hold n\u00e5r du justerer temperaturen."
+                }
+            }
+        }
+    }
+}

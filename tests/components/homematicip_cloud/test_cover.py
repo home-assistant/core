@@ -109,7 +109,7 @@ async def test_hmip_cover_slats(hass, default_mock_hap_factory):
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 1
     assert hmip_device.mock_calls[-1][0] == "set_slats_level"
-    assert hmip_device.mock_calls[-1][1] == (0, 1)
+    assert hmip_device.mock_calls[-1][2] == {"channelIndex": 1, "slatsLevel": 0}
     await async_manipulate_test_data(hass, hmip_device, "shutterLevel", 0)
     await async_manipulate_test_data(hass, hmip_device, "slatsLevel", 0)
     ha_state = hass.states.get(entity_id)
@@ -125,7 +125,7 @@ async def test_hmip_cover_slats(hass, default_mock_hap_factory):
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 4
     assert hmip_device.mock_calls[-1][0] == "set_slats_level"
-    assert hmip_device.mock_calls[-1][1] == (0.5, 1)
+    assert hmip_device.mock_calls[-1][2] == {"channelIndex": 1, "slatsLevel": 0.5}
     await async_manipulate_test_data(hass, hmip_device, "slatsLevel", 0.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OPEN
@@ -137,7 +137,7 @@ async def test_hmip_cover_slats(hass, default_mock_hap_factory):
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 6
     assert hmip_device.mock_calls[-1][0] == "set_slats_level"
-    assert hmip_device.mock_calls[-1][1] == (1, 1)
+    assert hmip_device.mock_calls[-1][2] == {"channelIndex": 1, "slatsLevel": 1}
     await async_manipulate_test_data(hass, hmip_device, "slatsLevel", 1)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OPEN
@@ -187,7 +187,7 @@ async def test_hmip_multi_cover_slats(hass, default_mock_hap_factory):
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 1
     assert hmip_device.mock_calls[-1][0] == "set_slats_level"
-    assert hmip_device.mock_calls[-1][1] == (0, 4)
+    assert hmip_device.mock_calls[-1][2] == {"channelIndex": 4, "slatsLevel": 0}
     await async_manipulate_test_data(hass, hmip_device, "shutterLevel", 0, channel=4)
     await async_manipulate_test_data(hass, hmip_device, "slatsLevel", 0, channel=4)
     ha_state = hass.states.get(entity_id)
@@ -203,7 +203,7 @@ async def test_hmip_multi_cover_slats(hass, default_mock_hap_factory):
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 4
     assert hmip_device.mock_calls[-1][0] == "set_slats_level"
-    assert hmip_device.mock_calls[-1][1] == (0.5, 4)
+    assert hmip_device.mock_calls[-1][2] == {"channelIndex": 4, "slatsLevel": 0.5}
     await async_manipulate_test_data(hass, hmip_device, "slatsLevel", 0.5, channel=4)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OPEN
@@ -215,7 +215,7 @@ async def test_hmip_multi_cover_slats(hass, default_mock_hap_factory):
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 6
     assert hmip_device.mock_calls[-1][0] == "set_slats_level"
-    assert hmip_device.mock_calls[-1][1] == (1, 4)
+    assert hmip_device.mock_calls[-1][2] == {"channelIndex": 4, "slatsLevel": 1}
     await async_manipulate_test_data(hass, hmip_device, "slatsLevel", 1, channel=4)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OPEN

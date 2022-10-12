@@ -14,7 +14,7 @@ from sqlalchemy.sql.expression import distinct
 from homeassistant.const import EVENT_STATE_CHANGED
 
 from .const import MAX_ROWS_TO_PURGE, SupportedDialect
-from .models import Events, StateAttributes, States
+from .db_schema import Events, StateAttributes, States
 from .queries import (
     attributes_ids_exist_in_states,
     attributes_ids_exist_in_states_sqlite,
@@ -315,7 +315,7 @@ def _select_unused_attributes_ids(
             seen_ids |= {
                 attrs_id[0]
                 for attrs_id in session.execute(
-                    attributes_ids_exist_in_states(*attr_ids)
+                    attributes_ids_exist_in_states(*attr_ids)  # type: ignore[arg-type]
                 ).all()
                 if attrs_id[0] is not None
             }
@@ -362,7 +362,7 @@ def _select_unused_event_data_ids(
             seen_ids |= {
                 data_id[0]
                 for data_id in session.execute(
-                    data_ids_exist_in_events(*data_ids_group)
+                    data_ids_exist_in_events(*data_ids_group)  # type: ignore[arg-type]
                 ).all()
                 if data_id[0] is not None
             }

@@ -13,7 +13,6 @@ class HERERoutingData(TypedDict):
     ATTR_DURATION: float
     ATTR_DURATION_IN_TRAFFIC: float
     ATTR_DISTANCE: float
-    ATTR_ROUTE: str
     ATTR_ORIGIN: str
     ATTR_DESTINATION: str
     ATTR_ORIGIN_NAME: str
@@ -24,10 +23,12 @@ class HERERoutingData(TypedDict):
 class HERETravelTimeConfig:
     """Configuration for HereTravelTimeDataUpdateCoordinator."""
 
-    origin: str | None
-    destination: str | None
-    origin_entity_id: str | None
+    destination_latitude: float | None
+    destination_longitude: float | None
     destination_entity_id: str | None
+    origin_latitude: float | None
+    origin_longitude: float | None
+    origin_entity_id: str | None
     travel_mode: str
     route_mode: str
     units: str

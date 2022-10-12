@@ -226,7 +226,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
 
         return attributes
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
         await super().async_added_to_hass()
 
@@ -234,7 +234,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
         if not last_state or last_state.state == STATE_UNAVAILABLE:
             return
 
-        self._attr_state = last_state.state
+        self._attr_native_value = last_state.state
         if ATTR_ENTITY_PICTURE in last_state.attributes:
             self._entity_picture = last_state.attributes[ATTR_ENTITY_PICTURE]
         if ATTR_OPERATION_REMOTE in last_state.attributes:

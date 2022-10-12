@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
@@ -41,6 +41,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_MBAR,
+    REVOLUTIONS_PER_MINUTE,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     SOUND_PRESSURE_DB,
@@ -396,7 +397,7 @@ UOM_FRIENDLY_NAME = {
     "86": "kΩ",
     "87": f"{VOLUME_CUBIC_METERS}/{VOLUME_CUBIC_METERS}",
     "88": "Water activity",
-    "89": "RPM",
+    "89": REVOLUTIONS_PER_MINUTE,
     "90": FREQUENCY_HERTZ,
     "91": DEGREE,
     "92": f"{DEGREE} South",

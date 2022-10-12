@@ -1,16 +1,19 @@
 """Constants for the Jellyfin integration."""
-
+import logging
 from typing import Final
+
+from homeassistant.const import Platform, __version__ as hass_version
 
 DOMAIN: Final = "jellyfin"
 
-CLIENT_VERSION: Final = "1.0"
+CLIENT_VERSION: Final = hass_version
 
 COLLECTION_TYPE_MOVIES: Final = "movies"
-COLLECTION_TYPE_TVSHOWS: Final = "tvshows"
 COLLECTION_TYPE_MUSIC: Final = "music"
 
-DATA_CLIENT: Final = "client"
+CONF_CLIENT_DEVICE_ID: Final = "client_device_id"
+
+DEFAULT_NAME: Final = "Jellyfin"
 
 ITEM_KEY_COLLECTION_TYPE: Final = "CollectionType"
 ITEM_KEY_ID: Final = "Id"
@@ -24,6 +27,7 @@ ITEM_TYPE_ALBUM: Final = "MusicAlbum"
 ITEM_TYPE_ARTIST: Final = "MusicArtist"
 ITEM_TYPE_AUDIO: Final = "Audio"
 ITEM_TYPE_LIBRARY: Final = "CollectionFolder"
+ITEM_TYPE_MOVIE: Final = "Movie"
 
 MAX_IMAGE_WIDTH: Final = 500
 MAX_STREAMING_BITRATE: Final = "140000000"
@@ -33,8 +37,12 @@ MEDIA_SOURCE_KEY_PATH: Final = "Path"
 
 MEDIA_TYPE_AUDIO: Final = "Audio"
 MEDIA_TYPE_NONE: Final = ""
+MEDIA_TYPE_VIDEO: Final = "Video"
 
-SUPPORTED_COLLECTION_TYPES: Final = [COLLECTION_TYPE_MUSIC]
+SUPPORTED_COLLECTION_TYPES: Final = [COLLECTION_TYPE_MUSIC, COLLECTION_TYPE_MOVIES]
 
 USER_APP_NAME: Final = "Home Assistant"
 USER_AGENT: Final = f"Home-Assistant/{CLIENT_VERSION}"
+
+PLATFORMS = [Platform.SENSOR]
+LOGGER = logging.getLogger(__package__)

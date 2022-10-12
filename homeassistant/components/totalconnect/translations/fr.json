@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Contournement automatique en cas de batterie faible"
+                },
+                "description": "Contourner automatiquement les zones d\u00e8s qu'elles signalent une batterie faible.",
+                "title": "Options TotalConnect"
+            }
+        }
     }
 }

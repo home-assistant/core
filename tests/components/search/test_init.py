@@ -183,6 +183,22 @@ async def test_search(hass):
                         },
                     ]
                 },
+                "script_with_templated_services": {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "target": "{{ {'entity_id':'test.test1'} }}",
+                        },
+                        {
+                            "service": "test.script",
+                            "data": "{{ {'entity_id':'test.test2'} }}",
+                        },
+                        {
+                            "service": "test.script",
+                            "data_template": "{{ {'entity_id':'test.test3'} }}",
+                        },
+                    ]
+                },
             }
         },
     )
@@ -304,6 +320,18 @@ async def test_search(hass):
         searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
         assert searcher.async_search(search_type, search_id) == {}
 
+    # Test search of templated script. We can't find referenced areas, devices or
+    # entities within templated services, but searching them should not raise or
+    # otherwise fail.
+    assert hass.states.get("script.script_with_templated_services")
+    for search_type, search_id in (
+        ("area", "script.script_with_templated_services"),
+        ("device", "script.script_with_templated_services"),
+        ("entity", "script.script_with_templated_services"),
+    ):
+        searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
+        assert searcher.async_search(search_type, search_id) == {}
+
     searcher = search.Searcher(hass, device_reg, entity_reg, entity_sources)
     assert searcher.async_search("entity", "light.wled_config_entry_source") == {
         "config_entry": {wled_config_entry.entry_id},
@@ -365,6 +393,36 @@ async def test_area_lookup(hass):
     searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
     assert searcher.async_search("automation", "automation.area_turn_on") == {
         "area": {living_room_area.id},
+    }
+
+
+async def test_person_lookup(hass):
+    """Test searching persons."""
+    assert await async_setup_component(
+        hass,
+        "person",
+        {
+            "person": [
+                {
+                    "id": "abcd",
+                    "name": "Paulus",
+                    "device_trackers": ["device_tracker.paulus_iphone"],
+                }
+            ]
+        },
+    )
+
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("entity", "device_tracker.paulus_iphone") == {
+        "person": {"person.paulus"},
+    }
+
+    searcher = search.Searcher(hass, device_reg, entity_reg, MOCK_ENTITY_SOURCES)
+    assert searcher.async_search("entity", "person.paulus") == {
+        "entity": {"device_tracker.paulus_iphone"},
     }
 
 

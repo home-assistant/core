@@ -120,6 +120,7 @@ async def test_pairing(hass, mock_tv_pairable, mock_setup_entry):
     )
 
     assert result == {
+        "context": {"source": "user", "unique_id": "ABCDEFGHIJKLF"},
         "flow_id": ANY,
         "type": "create_entry",
         "description": None,
@@ -219,12 +220,12 @@ async def test_options_flow(hass):
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_ALLOW_NOTIFY: True}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {CONF_ALLOW_NOTIFY: True}

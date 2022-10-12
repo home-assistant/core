@@ -3,7 +3,7 @@
   "name": "Android TV",
   "documentation": "https://www.home-assistant.io/integrations/androidtv",
   "requirements": [
-    "adb-shell[async]==0.4.2",
+    "adb-shell[async]==0.4.3",
     "androidtv[async]==0.0.67",
     "pure-python-adb[async]==0.3.0.dev0"
   ],

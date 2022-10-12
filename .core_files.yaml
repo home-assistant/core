@@ -48,9 +48,11 @@ base_platforms: &base_platforms
 components: &components
   - homeassistant/components/alert/**
   - homeassistant/components/alexa/**
+  - homeassistant/components/application_credentials/**
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
   - homeassistant/components/backup/**
+  - homeassistant/components/bluetooth/**
   - homeassistant/components/cloud/**
   - homeassistant/components/config/**
   - homeassistant/components/configurator/**
@@ -86,6 +88,7 @@ components: &components
   - homeassistant/components/persistent_notification/**
   - homeassistant/components/person/**
   - homeassistant/components/recorder/**
+  - homeassistant/components/repairs/**
   - homeassistant/components/safe_mode/**
   - homeassistant/components/script/**
   - homeassistant/components/shopping_list/**
@@ -131,7 +134,7 @@ requirements: &requirements
   - homeassistant/package_constraints.txt
   - script/pip_check
   - requirements*.txt
-  - setup.cfg
+  - pyproject.toml
 
 any:
   - *base_platforms

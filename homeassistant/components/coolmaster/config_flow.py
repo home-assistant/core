@@ -6,7 +6,7 @@ from typing import Any
 from pycoolmasternet_async import CoolMasterNet
 import voluptuous as vol
 
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback

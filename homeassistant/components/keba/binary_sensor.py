@@ -1,6 +1,8 @@
 """Support for KEBA charging station binary sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -9,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from . import DOMAIN, KebaHandler
 
 
 async def async_setup_platform(
@@ -22,7 +24,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    keba = hass.data[DOMAIN]
+    keba: KebaHandler = hass.data[DOMAIN]
 
     sensors = [
         KebaBinarySensor(
@@ -60,53 +62,37 @@ async def async_setup_platform(
 class KebaBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor of a KEBA charging station."""
 
-    def __init__(self, keba, key, name, entity_type, device_class):
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        keba: KebaHandler,
+        key: str,
+        name: str,
+        entity_type: str,
+        device_class: BinarySensorDeviceClass,
+    ) -> None:
         """Initialize the KEBA Sensor."""
         self._key = key
         self._keba = keba
-        self._name = name
-        self._entity_type = entity_type
-        self._device_class = device_class
-        self._is_on = None
-        self._attributes = {}
+        self._attributes: dict[str, Any] = {}
+
+        self._attr_device_class = device_class
+        self._attr_name = f"{keba.device_name} {name}"
+        self._attr_unique_id = f"{keba.device_id}_{entity_type}"
 
     @property
-    def should_poll(self):
-        """Deactivate polling. Data updated by KebaHandler."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the binary sensor."""
-        return f"{self._keba.device_id}_{self._entity_type}"
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"{self._keba.device_name} {self._name}"
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._is_on
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the binary sensor."""
         return self._attributes
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get latest cached states from the device."""
         if self._key == "Online":
-            self._is_on = self._keba.get_value(self._key)
+            self._attr_is_on = self._keba.get_value(self._key)
 
         elif self._key == "Plug":
-            self._is_on = self._keba.get_value("Plug_plugged")
+            self._attr_is_on = self._keba.get_value("Plug_plugged")
             self._attributes["plugged_on_wallbox"] = self._keba.get_value(
                 "Plug_wallbox"
             )
@@ -114,23 +100,23 @@ class KebaBinarySensor(BinarySensorEntity):
             self._attributes["plugged_on_EV"] = self._keba.get_value("Plug_EV")
 
         elif self._key == "State":
-            self._is_on = self._keba.get_value("State_on")
+            self._attr_is_on = self._keba.get_value("State_on")
             self._attributes["status"] = self._keba.get_value("State_details")
             self._attributes["max_charging_rate"] = str(
                 self._keba.get_value("Max curr")
             )
 
         elif self._key == "Tmo FS":
-            self._is_on = not self._keba.get_value("FS_on")
+            self._attr_is_on = not self._keba.get_value("FS_on")
             self._attributes["failsafe_timeout"] = str(self._keba.get_value("Tmo FS"))
             self._attributes["fallback_current"] = str(self._keba.get_value("Curr FS"))
         elif self._key == "Authreq":
-            self._is_on = self._keba.get_value(self._key) == 0
+            self._attr_is_on = self._keba.get_value(self._key) == 0
 
-    def update_callback(self):
+    def update_callback(self) -> None:
         """Schedule a state update."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add update callback after being added to hass."""
         self._keba.add_update_listener(self.update_callback)

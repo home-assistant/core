@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from io import BufferedIOBase
 
 
 def find_box(
@@ -135,3 +139,57 @@ def get_codec_string(mp4_bytes: bytes) -> str:
         codecs.append(codec)
 
     return ",".join(codecs)
+
+
+def read_init(bytes_io: BufferedIOBase) -> bytes:
+    """Read the init from a mp4 file."""
+    bytes_io.seek(24)
+    moov_len = int.from_bytes(bytes_io.read(4), byteorder="big")
+    bytes_io.seek(0)
+    return bytes_io.read(24 + moov_len)
+
+
+ZERO32 = b"\x00\x00\x00\x00"
+ONE32 = b"\x00\x01\x00\x00"
+NEGONE32 = b"\xFF\xFF\x00\x00"
+XYW_ROW = ZERO32 + ZERO32 + b"\x40\x00\x00\x00"
+ROTATE_RIGHT = (ZERO32 + ONE32 + ZERO32) + (NEGONE32 + ZERO32 + ZERO32)
+ROTATE_LEFT = (ZERO32 + NEGONE32 + ZERO32) + (ONE32 + ZERO32 + ZERO32)
+ROTATE_180 = (NEGONE32 + ZERO32 + ZERO32) + (ZERO32 + NEGONE32 + ZERO32)
+MIRROR = (NEGONE32 + ZERO32 + ZERO32) + (ZERO32 + ONE32 + ZERO32)
+FLIP = (ONE32 + ZERO32 + ZERO32) + (ZERO32 + NEGONE32 + ZERO32)
+# The two below do not seem to get applied properly
+ROTATE_LEFT_FLIP = (ZERO32 + NEGONE32 + ZERO32) + (NEGONE32 + ZERO32 + ZERO32)
+ROTATE_RIGHT_FLIP = (ZERO32 + ONE32 + ZERO32) + (ONE32 + ZERO32 + ZERO32)
+
+TRANSFORM_MATRIX_TOP = (
+    # The first two entries are just to align the indices with the EXIF orientation tags
+    b"",
+    b"",
+    MIRROR,
+    ROTATE_180,
+    FLIP,
+    ROTATE_LEFT_FLIP,
+    ROTATE_LEFT,
+    ROTATE_RIGHT_FLIP,
+    ROTATE_RIGHT,
+)
+
+
+def transform_init(init: bytes, orientation: int) -> bytes:
+    """Change the transformation matrix in the header."""
+    if orientation == 1:
+        return init
+    # Find moov
+    moov_location = next(find_box(init, b"moov"))
+    mvhd_location = next(find_box(init, b"trak", moov_location))
+    tkhd_location = next(find_box(init, b"tkhd", mvhd_location))
+    tkhd_length = int.from_bytes(
+        init[tkhd_location : tkhd_location + 4], byteorder="big"
+    )
+    return (
+        init[: tkhd_location + tkhd_length - 44]
+        + TRANSFORM_MATRIX_TOP[orientation]
+        + XYW_ROW
+        + init[tkhd_location + tkhd_length - 8 :]
+    )

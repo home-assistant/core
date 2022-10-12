@@ -42,23 +42,21 @@ from aemet_opendata.helpers import (
 )
 import async_timeout
 
-from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
-)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_API_CONDITION,
+    ATTR_API_FORECAST_CONDITION,
     ATTR_API_FORECAST_DAILY,
     ATTR_API_FORECAST_HOURLY,
+    ATTR_API_FORECAST_PRECIPITATION,
+    ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_TEMP,
+    ATTR_API_FORECAST_TEMP_LOW,
+    ATTR_API_FORECAST_TIME,
+    ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -402,15 +400,15 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return None
 
         return {
-            ATTR_FORECAST_CONDITION: condition,
-            ATTR_FORECAST_PRECIPITATION_PROBABILITY: self._get_precipitation_prob_day(
+            ATTR_API_FORECAST_CONDITION: condition,
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: self._get_precipitation_prob_day(
                 day
             ),
-            ATTR_FORECAST_TEMP: self._get_temperature_day(day),
-            ATTR_FORECAST_TEMP_LOW: self._get_temperature_low_day(day),
-            ATTR_FORECAST_TIME: dt_util.as_utc(date).isoformat(),
-            ATTR_FORECAST_WIND_SPEED: self._get_wind_speed_day(day),
-            ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing_day(day),
+            ATTR_API_FORECAST_TEMP: self._get_temperature_day(day),
+            ATTR_API_FORECAST_TEMP_LOW: self._get_temperature_low_day(day),
+            ATTR_API_FORECAST_TIME: dt_util.as_utc(date).isoformat(),
+            ATTR_API_FORECAST_WIND_SPEED: self._get_wind_speed_day(day),
+            ATTR_API_FORECAST_WIND_BEARING: self._get_wind_bearing_day(day),
         }
 
     def _convert_forecast_hour(self, date, day, hour):
@@ -420,15 +418,15 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         forecast_dt = date.replace(hour=hour, minute=0, second=0)
 
         return {
-            ATTR_FORECAST_CONDITION: condition,
-            ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(day, hour),
-            ATTR_FORECAST_PRECIPITATION_PROBABILITY: self._calc_precipitation_prob(
+            ATTR_API_FORECAST_CONDITION: condition,
+            ATTR_API_FORECAST_PRECIPITATION: self._calc_precipitation(day, hour),
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: self._calc_precipitation_prob(
                 day, hour
             ),
-            ATTR_FORECAST_TEMP: self._get_temperature(day, hour),
-            ATTR_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
-            ATTR_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
-            ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
+            ATTR_API_FORECAST_TEMP: self._get_temperature(day, hour),
+            ATTR_API_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
+            ATTR_API_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
+            ATTR_API_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
         }
 
     def _calc_precipitation(self, day, hour):

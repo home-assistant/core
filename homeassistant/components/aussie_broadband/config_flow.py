@@ -1,6 +1,7 @@
 """Config flow for Aussie Broadband integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from aiohttp import ClientError
@@ -76,9 +77,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth on credential failure."""
-        self._reauth_username = user_input[CONF_USERNAME]
+        self._reauth_username = entry_data[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 
