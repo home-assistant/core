@@ -1,7 +1,7 @@
 """Support for monitoring OctoPrint binary sensors."""
 from __future__ import annotations
 
-from pyoctoprintapi import OctoprintClient
+from pyoctoprintapi import OctoprintClient, WebcamSettings
 
 from homeassistant.components.mjpeg.camera import MjpegCamera
 from homeassistant.config_entries import ConfigEntry
@@ -32,16 +32,15 @@ async def async_setup_entry(
     if not camera_info or not camera_info.enabled:
         return
 
-    entities: list[OctoprintCamera] = [
-        OctoprintCamera(
-            camera_info.stream_url,
-            camera_info.external_snapshot_url,
-            coordinator.device_info,
-            device_id,
-        )
-    ]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            OctoprintCamera(
+                camera_info,
+                coordinator.device_info,
+                device_id,
+            )
+        ]
+    )
 
 
 class OctoprintCamera(MjpegCamera):
@@ -50,14 +49,13 @@ class OctoprintCamera(MjpegCamera):
     entity_registry_enabled_default = False
 
     def __init__(
-        self, camera_url: str, image_url: str, device_info: DeviceInfo, device_id: str
+        self, camera_settings: WebcamSettings, device_info: DeviceInfo, device_id: str
     ) -> None:
         """Initialize as a subclass of MjpegCamera."""
         super().__init__(
             device_info=device_info,
-            mjpeg_url=camera_url,
+            mjpeg_url=camera_settings.stream_url,
             name="OctoPrint Camera",
-            still_image_url=image_url,
+            still_image_url=camera_settings.external_snapshot_url,
             unique_id=f"camera-{device_id}",
         )
-        self._removed = False
