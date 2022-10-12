@@ -34,7 +34,7 @@ def test_invalid_units():
     """Test errors are raised when invalid units are passed in."""
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.SI,
+            BaseUnitSystem.METRIC,
             SYSTEM_NAME,
             INVALID_UNIT,
             LENGTH_METERS,
@@ -47,7 +47,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.SI,
+            BaseUnitSystem.METRIC,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             INVALID_UNIT,
@@ -60,7 +60,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.SI,
+            BaseUnitSystem.METRIC,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -73,7 +73,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.SI,
+            BaseUnitSystem.METRIC,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -86,7 +86,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.SI,
+            BaseUnitSystem.METRIC,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -99,7 +99,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.SI,
+            BaseUnitSystem.METRIC,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -112,7 +112,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.SI,
+            BaseUnitSystem.METRIC,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -321,7 +321,7 @@ def test_is_metric(system: UnitSystem, expected: bool):
 @pytest.mark.parametrize(
     "system, expected",
     [
-        (METRIC_SYSTEM, BaseUnitSystem.SI),
+        (METRIC_SYSTEM, BaseUnitSystem.METRIC),
         (IMPERIAL_SYSTEM, BaseUnitSystem.US_CUSTOMARY),
     ],
 )
