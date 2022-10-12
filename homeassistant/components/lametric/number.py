@@ -35,6 +35,18 @@ class LaMetricNumberEntityDescription(
 
 NUMBERS = [
     LaMetricNumberEntityDescription(
+        key="brightness",
+        name="Brightness",
+        icon="mdi:brightness-6",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        native_unit_of_measurement="%",
+        value_fn=lambda device: device.display.brightness,
+        set_value_fn=lambda device, bri: device.display(brightness=int(bri)),
+    ),
+    LaMetricNumberEntityDescription(
         key="volume",
         name="Volume",
         icon="mdi:volume-high",
