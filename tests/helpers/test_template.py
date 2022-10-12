@@ -42,7 +42,7 @@ from tests.common import (
 def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem(
-        BaseUnitSystem.METRIC,
+        BaseUnitSystem.SI,
         "custom",
         TEMP_CELSIUS,
         LENGTH_METERS,

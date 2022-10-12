@@ -45,7 +45,7 @@ from .unit_conversion import (
 class BaseUnitSystem(StrEnum):
     """Base unit system."""
 
-    METRIC = "metric"
+    SI = "si"
     US_CUSTOMARY = "us_customary"
 
 
@@ -136,7 +136,7 @@ class UnitSystem:
     @property
     def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
-        return self.base_unit_system == BaseUnitSystem.METRIC
+        return self.base_unit_system == BaseUnitSystem.SI
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
@@ -207,7 +207,7 @@ class UnitSystem:
 
 
 METRIC_SYSTEM = UnitSystem(
-    BaseUnitSystem.METRIC,
+    BaseUnitSystem.SI,
     CONF_UNIT_SYSTEM_METRIC,
     TEMP_CELSIUS,
     LENGTH_KILOMETERS,
