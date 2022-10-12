@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from numbers import Number
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     CONF_UNIT_SYSTEM_IMPERIAL,
@@ -39,6 +40,14 @@ from .unit_conversion import (
     TemperatureConverter,
     VolumeConverter,
 )
+
+
+class BaseUnitSystem(StrEnum):
+    """What was changed in a config entry."""
+
+    INTERNATIONAL = "international"
+    US_CUSTOMARY = "us_customary"
+
 
 LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
@@ -80,6 +89,7 @@ class UnitSystem:
 
     def __init__(
         self,
+        base_unit_system: BaseUnitSystem,
         name: str,
         temperature: str,
         length: str,
@@ -116,15 +126,12 @@ class UnitSystem:
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
 
+        self.base_unit_system = base_unit_system
+
     @property
     def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
-        return False
-
-    @property
-    def is_us_customary(self) -> bool:
-        """Determine if this is the US customary unit system."""
-        return False
+        return self.base_unit_system == BaseUnitSystem.INTERNATIONAL
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
@@ -194,42 +201,27 @@ class UnitSystem:
         }
 
 
-class _MetricUnitSystem(UnitSystem):
-    def __init__(self, name: str) -> None:
-        super().__init__(
-            name,
-            TEMP_CELSIUS,
-            LENGTH_KILOMETERS,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
-        )
-
-    @property
-    def is_metric(self) -> bool:
-        return True
+METRIC_SYSTEM = UnitSystem(
+    BaseUnitSystem.INTERNATIONAL,
+    CONF_UNIT_SYSTEM_METRIC,
+    TEMP_CELSIUS,
+    LENGTH_KILOMETERS,
+    SPEED_METERS_PER_SECOND,
+    VOLUME_LITERS,
+    MASS_GRAMS,
+    PRESSURE_PA,
+    LENGTH_MILLIMETERS,
+)
 
 
-class _USCustomaryUnitSystem(UnitSystem):
-    def __init__(self, name: str) -> None:
-        super().__init__(
-            name,
-            TEMP_FAHRENHEIT,
-            LENGTH_MILES,
-            SPEED_MILES_PER_HOUR,
-            VOLUME_GALLONS,
-            MASS_POUNDS,
-            PRESSURE_PSI,
-            LENGTH_INCHES,
-        )
-
-    @property
-    def is_us_customary(self) -> bool:
-        return True
-
-
-METRIC_SYSTEM = _MetricUnitSystem(CONF_UNIT_SYSTEM_METRIC)
-
-IMPERIAL_SYSTEM = _USCustomaryUnitSystem(CONF_UNIT_SYSTEM_IMPERIAL)
+IMPERIAL_SYSTEM = UnitSystem(
+    BaseUnitSystem.US_CUSTOMARY,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    TEMP_FAHRENHEIT,
+    LENGTH_MILES,
+    SPEED_MILES_PER_HOUR,
+    VOLUME_GALLONS,
+    MASS_POUNDS,
+    PRESSURE_PSI,
+    LENGTH_INCHES,
+)
