@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_METERS,
+    LENGTH_MILES,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -23,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     ATTR_DESTINATION,
@@ -179,7 +180,9 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
                 traffic_time = summary["trafficTime"]
             if self.config.units == CONF_UNIT_SYSTEM_IMPERIAL:
                 # Convert to miles.
-                distance = IMPERIAL_SYSTEM.length(distance, LENGTH_METERS)
+                distance = DistanceConverter.convert(
+                    distance, LENGTH_METERS, LENGTH_MILES
+                )
             else:
                 # Convert to kilometers
                 distance = distance / 1000

@@ -610,8 +610,12 @@ class Recorder(threading.Thread):
             # wait for startup to complete. If its not live, we need to continue
             # on.
             self.hass.add_job(self.async_set_db_ready)
-            # If shutdown happened before Home Assistant finished starting
+
+            # We wait to start a live migration until startup has finished
+            # since it can be cpu intensive and we do not want it to compete
+            # with startup which is also cpu intensive
             if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
+                # Shutdown happened before Home Assistant finished starting
                 self.migration_in_progress = False
                 # Make sure we cleanly close the run if
                 # we restart before startup finishes
@@ -619,9 +623,6 @@ class Recorder(threading.Thread):
                 self.hass.add_job(self.async_set_db_ready)
                 return
 
-        # We wait to start the migration until startup has finished
-        # since it can be cpu intensive and we do not want it to compete
-        # with startup which is also cpu intensive
         if not schema_is_current:
             if self._migrate_schema_and_setup_run(current_version):
                 self.schema_version = SCHEMA_VERSION
