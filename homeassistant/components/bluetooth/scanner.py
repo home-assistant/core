@@ -50,8 +50,6 @@ PASSIVE_SCANNER_ARGS = BlueZScannerArgs(
 _LOGGER = logging.getLogger(__name__)
 
 
-MONOTONIC_TIME = time.monotonic
-
 # If the adapter is in a stuck state the following errors are raised:
 NEED_RESET_ERRORS = [
     "org.bluez.Error.Failed",
