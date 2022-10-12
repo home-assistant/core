@@ -105,11 +105,11 @@ class MockBridge:
         """Initialize MockBridge instance with configured mock connectivity."""
         self.can_connect = can_connect
         self.is_currently_connected = False
-        self.buttons = {}
         self.areas = {}
         self.occupancy_groups = {}
         self.scenes = self.get_scenes()
         self.devices = self.load_devices()
+        self.buttons = self.load_buttons()
 
     async def connect(self):
         """Connect the mock bridge."""
@@ -118,6 +118,9 @@ class MockBridge:
 
     def add_subscriber(self, device_id: str, callback_):
         """Mock a listener to be notified of state changes."""
+
+    def add_button_subscriber(self, button_id: str, callback_):
+        """Mock a listener for button presses."""
 
     def is_connected(self):
         """Return whether the mock bridge is connected."""
@@ -187,6 +190,64 @@ class MockBridge:
                 "serial": 5442321,
                 "tilt": None,
             },
+            "9": {
+                "device_id": "9",
+                "current_state": -1,
+                "fan_speed": None,
+                "tilt": None,
+                "zone": None,
+                "name": "Dining Room_Pico",
+                "button_groups": ["4"],
+                "occupancy_sensors": None,
+                "type": "Pico3ButtonRaiseLower",
+                "model": "PJ2-3BRL-GXX-X01",
+                "serial": 68551522,
+                "device_name": "Pico",
+                "area": "6",
+            },
+            "1355": {
+                "device_id": "1355",
+                "current_state": -1,
+                "fan_speed": None,
+                "zone": None,
+                "name": "Hallway_Main Stairs Position 1 Keypad",
+                "button_groups": ["1363"],
+                "type": "SunnataKeypad",
+                "model": "RRST-W3RL-XX",
+                "serial": 66286451,
+                "control_station_name": "Main Stairs",
+                "device_name": "Position 1",
+                "area": "1205",
+            },
+        }
+
+    def load_buttons(self):
+        """Load mock buttons into self.buttons."""
+        return {
+            "111": {
+                "device_id": "111",
+                "current_state": "Release",
+                "button_number": 0,
+                "name": "Dining Room_Pico",
+                "type": "Pico3ButtonRaiseLower",
+                "model": "PJ2-3BRL-GXX-X01",
+                "serial": 68551522,
+                "parent_device": "9",
+            },
+            "1372": {
+                "device_id": "1372",
+                "current_state": "Release",
+                "button_number": 3,
+                "button_group": "1363",
+                "name": "Hallway_Main Stairs Position 1 Keypad",
+                "type": "SunnataKeypad",
+                "model": "RRST-W3RL-XX",
+                "serial": 66286451,
+                "button_name": "Kitchen Pendants",
+                "button_led": "1362",
+                "device_name": "Kitchen Pendants",
+                "parent_device": "1355",
+            },
         }
 
     def get_devices(self) -> dict[str, dict]:
@@ -227,6 +288,13 @@ class MockBridge:
     def get_scenes(self):
         """Return scenes on the bridge."""
         return {}
+
+    def get_buttons(self):
+        """Will return all known buttons connected to the bridge/processor."""
+        return self.buttons
+
+    def tap_button(self, button_id: str):
+        """Mock a button press and release message for the given button ID."""
 
     async def close(self):
         """Close the mock bridge connection."""
