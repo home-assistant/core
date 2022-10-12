@@ -752,3 +752,22 @@ def test_home_driver(iid_storage):
 
     mock_unpair.assert_called_with("client_uuid")
     mock_show_msg.assert_called_with("hass", "entry_id", "title (any)", pin, "X-HM://0")
+
+
+async def test_iid_collision_raises(hass, hk_driver):
+    """Test iid collision raises.
+
+    If we try to allocate the same IID to the an accessory twice, we should
+    raise an exception.
+    """
+
+    entity_id = "light.accessory"
+    entity_id2 = "light.accessory2"
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(entity_id2, STATE_OFF)
+
+    HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, {})
+
+    with pytest.raises(RuntimeError):
+        HomeAccessory(hass, hk_driver, "Home Accessory", entity_id2, 2, {})
