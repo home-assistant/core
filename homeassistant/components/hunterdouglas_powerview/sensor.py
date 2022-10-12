@@ -13,6 +13,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    ATTR_SIGNAL_STRENGTH,
+    ATTR_SIGNAL_STRENGTH_MAX,
     DOMAIN,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
@@ -30,23 +32,32 @@ async def async_setup_entry(
 
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
+    entities: list[PowerViewSensor] = []
     for raw_shade in pv_entry.shade_data.values():
         shade: BaseShade = PvShade(raw_shade, pv_entry.api)
-        if SHADE_BATTERY_LEVEL not in shade.raw_data:
-            continue
         name_before_refresh = shade.name
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
         room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
-        entities.append(
-            PowerViewShadeBatterySensor(
-                pv_entry.coordinator,
-                pv_entry.device_info,
-                room_name,
-                shade,
-                name_before_refresh,
+        if SHADE_BATTERY_LEVEL in shade.raw_data:
+            entities.append(
+                PowerViewShadeBatterySensor(
+                    pv_entry.coordinator,
+                    pv_entry.device_info,
+                    room_name,
+                    shade,
+                    name_before_refresh,
+                )
             )
-        )
+        if ATTR_SIGNAL_STRENGTH in shade.raw_data:
+            entities.append(
+                PowerViewShadeSignalSensor(
+                    pv_entry.coordinator,
+                    pv_entry.device_info,
+                    room_name,
+                    shade,
+                    name_before_refresh,
+                )
+            )
     async_add_entities(entities)
 
 
@@ -91,3 +102,27 @@ class PowerViewShadeBatterySensor(PowerViewSensor):
     async def async_update(self) -> None:
         """Refresh shade battery."""
         await self._shade.refresh_battery()
+
+
+class PowerViewShadeSignalSensor(PowerViewSensor):
+    """Representation of an shade signal sensor."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator, device_info, room_name, shade, name):
+        """Initialize the shade."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self._attr_unique_id = f"{self._attr_unique_id}_signal"
+        self._attr_name = f"{self._shade_name} Signal"
+
+    @property
+    def native_value(self) -> int:
+        """Get the current value in percentage."""
+        return round(
+            self._shade.raw_data[ATTR_SIGNAL_STRENGTH] / ATTR_SIGNAL_STRENGTH_MAX * 100
+        )
+
+    async def async_update(self) -> None:
+        """Refresh signal strength."""
+        await self._shade.refresh()
