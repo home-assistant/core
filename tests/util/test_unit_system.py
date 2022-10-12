@@ -306,7 +306,25 @@ def test_properties():
     assert METRIC_SYSTEM.accumulated_precipitation_unit == LENGTH_MILLIMETERS
 
 
-def test_is_metric():
+@pytest.mark.parametrize(
+    "system, expected",
+    [
+        (METRIC_SYSTEM, True),
+        (IMPERIAL_SYSTEM, False),
+    ],
+)
+def test_is_metric(system: UnitSystem, expected: bool):
     """Test the is metric flag."""
-    assert METRIC_SYSTEM.is_metric
-    assert not IMPERIAL_SYSTEM.is_metric
+    assert system.is_metric == expected
+
+
+@pytest.mark.parametrize(
+    "system, expected",
+    [
+        (METRIC_SYSTEM, BaseUnitSystem.INTERNATIONAL),
+        (IMPERIAL_SYSTEM, BaseUnitSystem.US_CUSTOMARY),
+    ],
+)
+def test_base_unit_system(system: UnitSystem, expected: BaseUnitSystem) -> None:
+    """Test the is metric flag."""
+    assert system.base_unit_system == expected
