@@ -20,6 +20,31 @@ def iid_storage(hass):
         yield AccessoryIIDStorage(hass, "")
 
 
+@pytest.fixture()
+def run_driver(hass, loop, iid_storage):
+    """Return a custom AccessoryDriver instance for HomeKit accessory init.
+
+    This mock does not mock async_stop, so the driver will not be stopped
+    """
+    with patch("pyhap.accessory_driver.AsyncZeroconf"), patch(
+        "pyhap.accessory_driver.AccessoryEncoder"
+    ), patch("pyhap.accessory_driver.HAPServer"), patch(
+        "pyhap.accessory_driver.AccessoryDriver.publish"
+    ), patch(
+        "pyhap.accessory_driver.AccessoryDriver.persist"
+    ):
+        yield HomeDriver(
+            hass,
+            pincode=b"123-45-678",
+            entry_id="",
+            entry_title="mock entry",
+            bridge_name=BRIDGE_NAME,
+            iid_manager=HomeIIDManager(iid_storage),
+            address="127.0.0.1",
+            loop=loop,
+        )
+
+
 @pytest.fixture
 def hk_driver(hass, loop, iid_storage):
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
