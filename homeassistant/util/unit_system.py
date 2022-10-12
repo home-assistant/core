@@ -121,6 +121,11 @@ class UnitSystem:
         """Determine if this is the metric unit system."""
         return self.name == CONF_UNIT_SYSTEM_METRIC
 
+    @property
+    def is_us_customary(self) -> bool:
+        """Determine if this is the US Customary unit system."""
+        return self.name == CONF_UNIT_SYSTEM_IMPERIAL
+
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
