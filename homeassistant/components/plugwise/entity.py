@@ -37,7 +37,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         connections = set()
         if mac := data.get("mac_address"):
             connections.add((CONNECTION_NETWORK_MAC, mac))
-        if mac := self.data.get("zigbee_mac_address"):
+        if mac := data.get("zigbee_mac_address"):
             connections.add((CONNECTION_ZIGBEE, mac))
 
         self._attr_device_info = DeviceInfo(
