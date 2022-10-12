@@ -9,6 +9,7 @@ from demetriek import Device, LaMetricDevice
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,7 +44,7 @@ NUMBERS = [
         native_step=1,
         native_min_value=0,
         native_max_value=100,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.display.brightness,
         set_value_fn=lambda device, bri: device.display(brightness=int(bri)),
     ),
