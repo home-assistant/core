@@ -19,7 +19,12 @@ from homeassistant.const import (
     WIND_SPEED,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    IMPERIAL_SYSTEM,
+    METRIC_SYSTEM,
+    BaseUnitSystem,
+    UnitSystem,
+)
 
 SYSTEM_NAME = "TEST"
 INVALID_UNIT = "INVALID"
@@ -29,6 +34,7 @@ def test_invalid_units():
     """Test errors are raised when invalid units are passed in."""
     with pytest.raises(ValueError):
         UnitSystem(
+            BaseUnitSystem.INTERNATIONAL,
             SYSTEM_NAME,
             INVALID_UNIT,
             LENGTH_METERS,
@@ -41,6 +47,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
+            BaseUnitSystem.INTERNATIONAL,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             INVALID_UNIT,
@@ -53,6 +60,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
+            BaseUnitSystem.INTERNATIONAL,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -65,6 +73,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
+            BaseUnitSystem.INTERNATIONAL,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -77,6 +86,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
+            BaseUnitSystem.INTERNATIONAL,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -89,6 +99,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
+            BaseUnitSystem.INTERNATIONAL,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -101,6 +112,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
+            BaseUnitSystem.INTERNATIONAL,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,

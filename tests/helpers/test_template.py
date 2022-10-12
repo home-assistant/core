@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import UnitSystem
+from homeassistant.util.unit_system import BaseUnitSystem, UnitSystem
 
 from tests.common import (
     MockConfigEntry,
@@ -42,6 +42,7 @@ from tests.common import (
 def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem(
+        BaseUnitSystem.CUSTOM,
         "custom",
         TEMP_CELSIUS,
         LENGTH_METERS,
