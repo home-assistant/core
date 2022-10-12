@@ -13,6 +13,7 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -68,6 +69,51 @@ async def async_setup_platform(
     """Set up the generic hygrostat platform."""
     if discovery_info:
         config = discovery_info
+    name = config[CONF_NAME]
+    switch_entity_id = config[CONF_HUMIDIFIER]
+    sensor_entity_id = config[CONF_SENSOR]
+    min_humidity = config.get(CONF_MIN_HUMIDITY)
+    max_humidity = config.get(CONF_MAX_HUMIDITY)
+    target_humidity = config.get(CONF_TARGET_HUMIDITY)
+    device_class = config.get(CONF_DEVICE_CLASS)
+    min_cycle_duration = config.get(CONF_MIN_DUR)
+    sensor_stale_duration = config.get(CONF_STALE_DURATION)
+    dry_tolerance = config[CONF_DRY_TOLERANCE]
+    wet_tolerance = config[CONF_WET_TOLERANCE]
+    keep_alive = config.get(CONF_KEEP_ALIVE)
+    initial_state = config.get(CONF_INITIAL_STATE)
+    away_humidity = config.get(CONF_AWAY_HUMIDITY)
+    away_fixed = config.get(CONF_AWAY_FIXED)
+
+    async_add_entities(
+        [
+            GenericHygrostat(
+                name,
+                switch_entity_id,
+                sensor_entity_id,
+                min_humidity,
+                max_humidity,
+                target_humidity,
+                device_class,
+                min_cycle_duration,
+                dry_tolerance,
+                wet_tolerance,
+                keep_alive,
+                initial_state,
+                away_humidity,
+                away_fixed,
+                sensor_stale_duration,
+            )
+        ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the generic hygrostat entry."""
+    config = entry.options
+
     name = config[CONF_NAME]
     switch_entity_id = config[CONF_HUMIDIFIER]
     sensor_entity_id = config[CONF_SENSOR]
