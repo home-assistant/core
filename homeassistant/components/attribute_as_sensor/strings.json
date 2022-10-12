@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Add Attribute as Sensor",
-        "description": "Create a sensor that derive it's value from an attribute of another entity.",
+        "description": "Create a sensor that derives its value from an attribute of another entity.",
         "data": {
           "entity_id": "Input entities",
           "name": "Name",

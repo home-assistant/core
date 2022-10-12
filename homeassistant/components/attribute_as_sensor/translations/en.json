@@ -19,7 +19,7 @@
                     "icon": "Icon",
                     "name": "Name"
                 },
-                "description": "Create a sensor that derive it's value from an attribute of another entity.",
+                "description": "Create a sensor that derives its value from an attribute of another entity.",
                 "title": "Add Attribute as Sensor"
             }
         }
