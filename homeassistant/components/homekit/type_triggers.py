@@ -62,7 +62,9 @@ class DeviceTriggerAccessory(HomeAccessory):
             serv_stateless_switch.configure_char(
                 CHAR_SERVICE_LABEL_INDEX, value=idx + 1
             )
-            serv_service_label = self.add_preload_service(SERV_SERVICE_LABEL)
+            serv_service_label = self.add_preload_service(
+                SERV_SERVICE_LABEL, unique_id=unique_id
+            )
             serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
             serv_stateless_switch.add_linked_service(serv_service_label)
 
