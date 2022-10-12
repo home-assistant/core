@@ -44,10 +44,11 @@ async def async_setup_entry(
 class BroadlinkLight(BroadlinkEntity, LightEntity):
     """Representation of a Broadlink light."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device):
         """Initialize the light."""
         super().__init__(device)
-        self._attr_name = f"{device.name} Light"
         self._attr_unique_id = device.unique_id
         self._attr_supported_color_modes = set()
 

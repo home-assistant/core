@@ -145,7 +145,6 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         super().__init__(device)
         self._command_on = command_on
         self._command_off = command_off
-        self._attr_name = f"{device.name} Switch"
 
     async def async_added_to_hass(self) -> None:
         """Call when the switch is added to hass."""
@@ -198,6 +197,8 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
 class BroadlinkSP1Switch(BroadlinkSwitch):
     """Representation of a Broadlink SP1 switch."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
@@ -219,6 +220,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     """Representation of a Broadlink SP2 switch."""
 
     _attr_assumed_state = False
+    _attr_has_entity_name = True
 
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
@@ -234,13 +236,14 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
     """Representation of a Broadlink MP1 slot."""
 
     _attr_assumed_state = False
+    _attr_has_entity_name = True
 
     def __init__(self, device, slot):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
         self._slot = slot
         self._attr_is_on = self._coordinator.data[f"s{slot}"]
-        self._attr_name = f"{device.name} S{slot}"
+        self._attr_name = f"S{slot}"
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
     def _update_state(self, data):
@@ -263,6 +266,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
     """Representation of a Broadlink BG1 slot."""
 
     _attr_assumed_state = False
+    _attr_has_entity_name = True
 
     def __init__(self, device, slot):
         """Initialize the switch."""
@@ -270,7 +274,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._slot = slot
         self._attr_is_on = self._coordinator.data[f"pwr{slot}"]
 
-        self._attr_name = f"{device.name} S{slot}"
+        self._attr_name = f"S{slot}"
         self._attr_device_class = SwitchDeviceClass.OUTLET
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
