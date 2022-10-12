@@ -38,6 +38,7 @@ from .const import (
     ATTR_ATTRIBUTE,
     ATTR_AVAILABLE,
     ATTR_CLUSTER_ID,
+    ATTR_CLUSTER_TYPE,
     ATTR_COMMAND_TYPE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
@@ -52,6 +53,7 @@ from .const import (
     ATTR_NEIGHBORS,
     ATTR_NODE_DESCRIPTOR,
     ATTR_NWK,
+    ATTR_PARAMS,
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
@@ -669,7 +671,8 @@ class ZHADevice(LogMixin):
         cluster_id: int,
         command: int,
         command_type: str,
-        args: dict[str, Any],
+        args: list | None,
+        params: dict[str, Any] | None,
         cluster_type: str = CLUSTER_TYPE_IN,
         manufacturer: int | None = None,
     ) -> None:
@@ -687,20 +690,30 @@ class ZHADevice(LogMixin):
             if command_type == CLUSTER_COMMAND_SERVER
             else cluster.client_commands
         )
-        response = await (
-            getattr(cluster, commands[command].name)(
-                **convert_to_zcl_values(args, commands[command].schema)
+        if args is not None:
+            self.warning(
+                "args [%s] are deprecated and should be passed with the params key. The parameter names are: %s",
+                args,
+                [field.name for field in commands[command].schema.fields],
             )
-        )
+            response = await getattr(cluster, commands[command].name)(*args)
+        else:
+            assert params is not None
+            response = await (
+                getattr(cluster, commands[command].name)(
+                    **convert_to_zcl_values(params, commands[command].schema)
+                )
+            )
         self.debug(
-            "Issued cluster command: %s %s %s %s %s %s %s",
-            f"{ATTR_CLUSTER_ID}: {cluster_id}",
-            f"{ATTR_COMMAND}: {command}",
-            f"{ATTR_COMMAND_TYPE}: {command_type}",
-            f"{ATTR_ARGS}: {args}",
-            f"{ATTR_CLUSTER_ID}: {cluster_type}",
-            f"{ATTR_MANUFACTURER}: {manufacturer}",
-            f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
+            "Issued cluster command: %s %s %s %s %s %s %s %s",
+            f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
+            f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
+            f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
+            f"{ATTR_COMMAND}: [{command}]",
+            f"{ATTR_COMMAND_TYPE}: [{command_type}]",
+            f"{ATTR_ARGS}: [{args}]",
+            f"{ATTR_PARAMS}: [{params}]",
+            f"{ATTR_MANUFACTURER}: [{manufacturer}]",
         )
         if response is None:
             return  # client commands don't return a response

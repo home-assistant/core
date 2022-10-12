@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeVar, cast
 
 import voluptuous as vol
 import zigpy.backups
@@ -31,6 +31,7 @@ from .core.const import (
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_MEMBERS,
+    ATTR_PARAMS,
     ATTR_TYPE,
     ATTR_VALUE,
     ATTR_WARNING_DEVICE_DURATION,
@@ -111,6 +112,17 @@ IEEE_SERVICE = "ieee_based_service"
 
 IEEE_SCHEMA = vol.All(cv.string, EUI64.convert)
 
+# typing typevar
+_T = TypeVar("_T")
+
+
+def _ensure_list_if_present(value: _T | None) -> list[_T] | list[Any] | None:
+    """Wrap value in list if it is provided and not one."""
+    if value is None:
+        return None
+    return cast("list[_T]", value) if isinstance(value, list) else [value]
+
+
 SERVICE_PERMIT_PARAMS = {
     vol.Optional(ATTR_IEEE): IEEE_SCHEMA,
     vol.Optional(ATTR_DURATION, default=60): vol.All(
@@ -182,17 +194,22 @@ SERVICE_SCHEMAS = {
             ): cv.positive_int,
         }
     ),
-    SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.Schema(
-        {
-            vol.Required(ATTR_IEEE): IEEE_SCHEMA,
-            vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
-            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
-            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            vol.Required(ATTR_COMMAND): cv.positive_int,
-            vol.Required(ATTR_COMMAND_TYPE): cv.string,
-            vol.Optional(ATTR_ARGS): dict,
-            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
-        }
+    SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.All(
+        vol.Schema(
+            {
+                vol.Required(ATTR_IEEE): IEEE_SCHEMA,
+                vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
+                vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
+                vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+                vol.Required(ATTR_COMMAND): cv.positive_int,
+                vol.Required(ATTR_COMMAND_TYPE): cv.string,
+                vol.Exclusive(ATTR_ARGS, "attrs_params"): _ensure_list_if_present,
+                vol.Exclusive(ATTR_PARAMS, "attrs_params"): dict,
+                vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+            }
+        ),
+        cv.deprecated(ATTR_ARGS),
+        cv.has_at_least_one_key(ATTR_ARGS, ATTR_PARAMS),
     ),
     SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: vol.Schema(
         {
@@ -1296,7 +1313,8 @@ def async_load_api(hass: HomeAssistant) -> None:
         cluster_type: str = service.data[ATTR_CLUSTER_TYPE]
         command: int = service.data[ATTR_COMMAND]
         command_type: str = service.data[ATTR_COMMAND_TYPE]
-        args: dict = service.data[ATTR_ARGS]
+        args: list | None = service.data.get(ATTR_ARGS)
+        params: dict | None = service.data.get(ATTR_PARAMS)
         manufacturer: int | None = service.data.get(ATTR_MANUFACTURER)
         zha_device = zha_gateway.get_device(ieee)
         if zha_device is not None:
@@ -1309,11 +1327,12 @@ def async_load_api(hass: HomeAssistant) -> None:
                 command,
                 command_type,
                 args,
+                params,
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
             _LOGGER.debug(
-                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: %s %s: [%s]",
+                "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
                 ATTR_CLUSTER_ID,
                 cluster_id,
                 ATTR_CLUSTER_TYPE,
@@ -1326,6 +1345,8 @@ def async_load_api(hass: HomeAssistant) -> None:
                 command_type,
                 ATTR_ARGS,
                 args,
+                ATTR_PARAMS,
+                params,
                 ATTR_MANUFACTURER,
                 manufacturer,
             )
