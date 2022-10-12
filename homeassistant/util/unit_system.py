@@ -45,7 +45,6 @@ from .unit_conversion import (
 class BaseUnitSystem(StrEnum):
     """Base unit system."""
 
-    CUSTOM = "custom"
     INTERNATIONAL = "international"
     US_CUSTOMARY = "us_customary"
 
