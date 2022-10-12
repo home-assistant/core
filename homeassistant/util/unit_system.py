@@ -43,7 +43,7 @@ from .unit_conversion import (
 
 
 class BaseUnitSystem(StrEnum):
-    """What was changed in a config entry."""
+    """Base unit system."""
 
     CUSTOM = "custom"
     INTERNATIONAL = "international"
