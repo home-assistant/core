@@ -62,11 +62,7 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
         """Initialize the shade."""
         super().__init__(coordinator, device_info, room_name, shade, name)
         self._attr_unique_id = f"{self._attr_unique_id}_charge"
-
-    @property
-    def name(self):
-        """Name of the shade battery."""
-        return f"{self._shade_name} Battery"
+        self._attr_name = f"{self._shade_name} Battery"
 
     @property
     def native_value(self) -> int:
