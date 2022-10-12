@@ -387,8 +387,9 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
     }
 
 
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
 async def test_options_flow_devices(
-    mock_hap,
+    port_mock,
     hass,
     demo_cleanup,
     device_reg,
@@ -473,9 +474,13 @@ async def test_options_flow_devices(
         },
     }
 
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
+
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
 async def test_options_flow_devices_preserved_when_advanced_off(
-    mock_hap, hass, mock_get_source_ip, mock_async_zeroconf
+    port_mock, hass, mock_get_source_ip, mock_async_zeroconf
 ):
     """Test devices are preserved if they were added in advanced mode but it was turned off."""
     config_entry = MockConfigEntry(
@@ -542,6 +547,8 @@ async def test_options_flow_devices_preserved_when_advanced_off(
             "include_entities": [],
         },
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_options_flow_include_mode_with_non_existant_entity(
@@ -600,6 +607,8 @@ async def test_options_flow_include_mode_with_non_existant_entity(
             "include_entities": ["climate.new", "climate.front_gate"],
         },
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_options_flow_exclude_mode_with_non_existant_entity(
@@ -659,6 +668,8 @@ async def test_options_flow_exclude_mode_with_non_existant_entity(
             "include_entities": [],
         },
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_options_flow_include_mode_basic(hass, mock_get_source_ip):
@@ -704,6 +715,7 @@ async def test_options_flow_include_mode_basic(hass, mock_get_source_ip):
             "include_entities": ["climate.new"],
         },
     }
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_options_flow_exclude_mode_with_cameras(hass, mock_get_source_ip):
@@ -809,6 +821,8 @@ async def test_options_flow_exclude_mode_with_cameras(hass, mock_get_source_ip):
         },
         "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_options_flow_include_mode_with_cameras(hass, mock_get_source_ip):
@@ -941,6 +955,8 @@ async def test_options_flow_include_mode_with_cameras(hass, mock_get_source_ip):
         },
         "mode": "bridge",
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_options_flow_with_camera_audio(hass, mock_get_source_ip):
@@ -1073,6 +1089,8 @@ async def test_options_flow_with_camera_audio(hass, mock_get_source_ip):
         },
         "mode": "bridge",
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_options_flow_blocked_when_from_yaml(hass, mock_get_source_ip):
@@ -1112,6 +1130,7 @@ async def test_options_flow_blocked_when_from_yaml(hass, mock_get_source_ip):
             user_input={},
         )
         assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
@@ -1211,6 +1230,8 @@ async def test_options_flow_include_mode_basic_accessory(
             "include_entities": ["media_player.tv"],
         },
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_converting_bridge_to_accessory_mode(hass, hk_driver, mock_get_source_ip):
@@ -1317,6 +1338,8 @@ async def test_converting_bridge_to_accessory_mode(hass, hk_driver, mock_get_sou
         },
     }
     assert len(mock_setup_entry.mock_calls) == 1
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 def _get_schema_default(schema, key_name):
@@ -1423,6 +1446,8 @@ async def test_options_flow_exclude_mode_skips_category_entities(
             "include_entities": [],
         },
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
@@ -1501,6 +1526,8 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
             "include_entities": [],
         },
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
@@ -1583,3 +1610,5 @@ async def test_options_flow_include_mode_allows_hidden_entities(
             ],
         },
     }
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
