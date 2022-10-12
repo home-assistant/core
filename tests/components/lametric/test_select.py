@@ -1,7 +1,8 @@
 """Tests for the LaMetric select platform."""
 from unittest.mock import MagicMock
 
-from demetriek import BrightnessMode
+from demetriek import BrightnessMode, LaMetricConnectionError, LaMetricError
+import pytest
 
 from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.components.select import (
@@ -14,8 +15,10 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_OPTION,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
@@ -69,3 +72,65 @@ async def test_brightness_mode(
 
     assert len(mock_lametric.display.mock_calls) == 1
     mock_lametric.display.assert_called_once_with(brightness_mode=BrightnessMode.MANUAL)
+
+
+async def test_select_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test error handling of the LaMetric selects."""
+    mock_lametric.display.side_effect = LaMetricError
+
+    state = hass.states.get("select.frenck_s_lametric_brightness_mode")
+    assert state
+    assert state.state == BrightnessMode.AUTO
+
+    with pytest.raises(
+        HomeAssistantError, match="Invalid response from the LaMetric device"
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
+                ATTR_OPTION: "manual",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("select.frenck_s_lametric_brightness_mode")
+    assert state
+    assert state.state == BrightnessMode.AUTO
+
+
+async def test_select_connection_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test connection error handling of the LaMetric selects."""
+    mock_lametric.display.side_effect = LaMetricConnectionError
+
+    state = hass.states.get("select.frenck_s_lametric_brightness_mode")
+    assert state
+    assert state.state == BrightnessMode.AUTO
+
+    with pytest.raises(
+        HomeAssistantError, match="Error communicating with the LaMetric device"
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
+                ATTR_OPTION: "manual",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("select.frenck_s_lametric_brightness_mode")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
