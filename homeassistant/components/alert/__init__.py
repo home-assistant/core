@@ -80,11 +80,6 @@ CONFIG_SCHEMA = vol.Schema(
 ALERT_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
 
 
-def is_on(hass: HomeAssistant, entity_id: str) -> bool:
-    """Return if the alert is firing and not acknowledged."""
-    return hass.states.is_state(entity_id, STATE_ON)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component."""
     entities: list[Alert] = []
