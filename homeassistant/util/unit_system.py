@@ -195,35 +195,41 @@ class UnitSystem:
 
 
 class _MetricUnitSystem(UnitSystem):
+    def __init__(self, name: str) -> None:
+        super().__init__(
+            name,
+            TEMP_CELSIUS,
+            LENGTH_KILOMETERS,
+            SPEED_METERS_PER_SECOND,
+            VOLUME_LITERS,
+            MASS_GRAMS,
+            PRESSURE_PA,
+            LENGTH_MILLIMETERS,
+        )
+
     @property
     def is_metric(self) -> bool:
         return True
 
 
 class _USCustomaryUnitSystem(UnitSystem):
+    def __init__(self, name: str) -> None:
+        super().__init__(
+            name,
+            TEMP_FAHRENHEIT,
+            LENGTH_MILES,
+            SPEED_MILES_PER_HOUR,
+            VOLUME_GALLONS,
+            MASS_POUNDS,
+            PRESSURE_PSI,
+            LENGTH_INCHES,
+        )
+
     @property
     def is_us_customary(self) -> bool:
         return True
 
 
-METRIC_SYSTEM = _MetricUnitSystem(
-    CONF_UNIT_SYSTEM_METRIC,
-    TEMP_CELSIUS,
-    LENGTH_KILOMETERS,
-    SPEED_METERS_PER_SECOND,
-    VOLUME_LITERS,
-    MASS_GRAMS,
-    PRESSURE_PA,
-    LENGTH_MILLIMETERS,
-)
+METRIC_SYSTEM = _MetricUnitSystem(CONF_UNIT_SYSTEM_METRIC)
 
-IMPERIAL_SYSTEM = _USCustomaryUnitSystem(
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    TEMP_FAHRENHEIT,
-    LENGTH_MILES,
-    SPEED_MILES_PER_HOUR,
-    VOLUME_GALLONS,
-    MASS_POUNDS,
-    PRESSURE_PSI,
-    LENGTH_INCHES,
-)
+IMPERIAL_SYSTEM = _USCustomaryUnitSystem(CONF_UNIT_SYSTEM_IMPERIAL)
