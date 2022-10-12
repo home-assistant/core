@@ -774,7 +774,7 @@ def _update_statistics(
 
 
 def _generate_get_metadata_stmt(
-    statistic_ids: list[str] | tuple[str, ...] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> StatementLambdaElement:
@@ -794,7 +794,7 @@ def _generate_get_metadata_stmt(
 def get_metadata_with_session(
     session: Session,
     *,
-    statistic_ids: list[str] | tuple[str, ...] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -831,7 +831,7 @@ def get_metadata_with_session(
 def get_metadata(
     hass: HomeAssistant,
     *,
-    statistic_ids: list[str] | tuple[str, ...] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -845,9 +845,7 @@ def get_metadata(
         )
 
 
-def clear_statistics(
-    instance: Recorder, statistic_ids: list[str] | tuple[str, ...]
-) -> None:
+def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
     """Clear statistics for a list of statistic_ids."""
     with session_scope(session=instance.get_session()) as session:
         session.query(StatisticsMeta).filter(
@@ -880,7 +878,7 @@ def update_statistics_metadata(
 
 def list_statistic_ids(
     hass: HomeAssistant,
-    statistic_ids: list[str] | tuple[str, ...] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
@@ -1090,7 +1088,7 @@ def statistics_during_period(
     hass: HomeAssistant,
     start_time: datetime,
     end_time: datetime | None = None,
-    statistic_ids: list[str] | tuple[str, ...] | None = None,
+    statistic_ids: list[str] | None = None,
     period: Literal["5minute", "day", "hour", "month"] = "hour",
     start_time_as_datetime: bool = False,
     units: dict[str, str] | None = None,
@@ -1342,7 +1340,7 @@ def _sorted_statistics_to_dict(
     hass: HomeAssistant,
     session: Session,
     stats: Iterable[Row],
-    statistic_ids: list[str] | tuple[str, ...] | None,
+    statistic_ids: list[str] | None,
     _metadata: dict[str, tuple[int, StatisticMetaData]],
     convert_units: bool,
     table: type[Statistics | StatisticsShortTerm],
@@ -1586,7 +1584,7 @@ def adjust_statistics(
     """Process an add_statistics job."""
 
     with session_scope(session=instance.get_session()) as session:
-        metadata = get_metadata_with_session(session, statistic_ids=(statistic_id,))
+        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
         if statistic_id not in metadata:
             return True
 
@@ -1646,9 +1644,9 @@ def change_statistics_unit(
 ) -> None:
     """Change statistics unit for a statistic_id."""
     with session_scope(session=instance.get_session()) as session:
-        metadata = get_metadata_with_session(
-            session, statistic_ids=(statistic_id,)
-        ).get(statistic_id)
+        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id]).get(
+            statistic_id
+        )
 
         # Guard against the statistics being removed or updated before the
         # change_statistics_unit job executes
