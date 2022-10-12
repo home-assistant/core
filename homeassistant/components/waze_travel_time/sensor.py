@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_STARTED,
     LENGTH_KILOMETERS,
+    LENGTH_MILES,
     TIME_MINUTES,
 )
 from homeassistant.core import CoreState, HomeAssistant
@@ -26,7 +27,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     CONF_AVOID_FERRIES,
@@ -245,7 +246,9 @@ class WazeTravelTimeData:
 
                 if units == CONF_UNIT_SYSTEM_IMPERIAL:
                     # Convert to miles.
-                    self.distance = IMPERIAL_SYSTEM.length(distance, LENGTH_KILOMETERS)
+                    self.distance = DistanceConverter.convert(
+                        distance, LENGTH_KILOMETERS, LENGTH_MILES
+                    )
                 else:
                     self.distance = distance
 
