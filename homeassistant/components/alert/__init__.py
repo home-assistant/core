@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any, final
+from typing import Any
 
 import voluptuous as vol
 
@@ -29,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -169,7 +169,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Alert(ToggleEntity):
+class Alert(Entity):
     """Representation of an alert."""
 
     _attr_should_poll = False
@@ -225,10 +225,8 @@ class Alert(ToggleEntity):
             hass, [watched_entity_id], self.watched_entity_change
         )
 
-    @final  # type: ignore[misc]
     @property
-    # pylint: disable=overridden-final-method
-    def state(self) -> str:  # type: ignore[override]
+    def state(self) -> str:
         """Return the alert status."""
         if self._firing:
             if self._ack:
