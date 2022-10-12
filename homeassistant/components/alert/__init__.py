@@ -97,7 +97,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         skip_first = cfg[CONF_SKIP_FIRST]
         message_template = cfg.get(CONF_ALERT_MESSAGE)
         done_message_template = cfg.get(CONF_DONE_MESSAGE)
-        notifiers = cfg.get(CONF_NOTIFIERS)
+        notifiers = cfg[CONF_NOTIFIERS]
         can_ack = cfg[CONF_CAN_ACK]
         title_template = cfg.get(CONF_TITLE)
         data = cfg.get(CONF_DATA)
