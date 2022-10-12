@@ -126,7 +126,12 @@ class UnitSystem:
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
 
-        self.base_unit_system = base_unit_system
+        self._base_unit_system = base_unit_system
+
+    @property
+    def base_unit_system(self) -> BaseUnitSystem:
+        """Return base unit system."""
+        return self._base_unit_system
 
     @property
     def is_metric(self) -> bool:
