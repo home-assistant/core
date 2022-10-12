@@ -30,7 +30,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
-from homeassistant.util.unit_system import LENGTH_UNITS, PRESSURE_UNITS
+from homeassistant.util.unit_system import BaseUnitSystem, LENGTH_UNITS, PRESSURE_UNITS
 
 from . import get_device_info
 from .const import (
@@ -223,7 +223,10 @@ class SubaruSensor(
         if unit in LENGTH_UNITS:
             return round(unit_system.length(current_value, unit), 1)
 
-        if unit in PRESSURE_UNITS and unit_system.is_us_customary:
+        if (
+            unit in PRESSURE_UNITS
+            and unit_system.base_unit_system == BaseUnitSystem.US_CUSTOMARY
+        ):
             return round(
                 unit_system.pressure(current_value, unit),
                 1,
@@ -235,7 +238,7 @@ class SubaruSensor(
                 FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
                 FUEL_CONSUMPTION_MILES_PER_GALLON,
             ]
-            and unit_system.is_us_customary
+            and unit_system.base_unit_system == BaseUnitSystem.US_CUSTOMARY
         ):
             return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)
 
@@ -250,14 +253,14 @@ class SubaruSensor(
             return self.hass.config.units.length_unit
 
         if unit in PRESSURE_UNITS:
-            if self.hass.config.units.is_us_customary:
+            if self.hass.config.units.base_unit_system == BaseUnitSystem.US_CUSTOMARY:
                 return self.hass.config.units.pressure_unit
 
         if unit in [
             FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
             FUEL_CONSUMPTION_MILES_PER_GALLON,
         ]:
-            if self.hass.config.units.is_us_customary:
+            if self.hass.config.units.base_unit_system == BaseUnitSystem.US_CUSTOMARY:
                 return FUEL_CONSUMPTION_MILES_PER_GALLON
 
         return unit

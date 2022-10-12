@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import BaseUnitSystem, IMPERIAL_SYSTEM
 
 from . import GeonetnzQuakesFeedEntityManager
 from .const import DOMAIN, FEED
@@ -140,7 +140,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         """Update the internal state from the provided feed entry."""
         self._attr_name = feed_entry.title
         # Convert distance if not metric system.
-        if self.hass.config.units.is_us_customary:
+        if self.hass.config.units.base_unit_system == BaseUnitSystem.US_CUSTOMARY:
             self._attr_distance = IMPERIAL_SYSTEM.length(
                 feed_entry.distance_to_home, LENGTH_KILOMETERS
             )
