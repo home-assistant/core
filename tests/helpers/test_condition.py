@@ -2899,7 +2899,7 @@ async def test_if_action_before_or_after_during(hass, hass_ws_client, calls):
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert len(calls) == 1
+        assert len(calls) == 2
     await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
