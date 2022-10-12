@@ -34,7 +34,7 @@ def test_invalid_units():
     """Test errors are raised when invalid units are passed in."""
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.INTERNATIONAL,
+            BaseUnitSystem.SI,
             SYSTEM_NAME,
             INVALID_UNIT,
             LENGTH_METERS,
@@ -47,7 +47,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.INTERNATIONAL,
+            BaseUnitSystem.SI,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             INVALID_UNIT,
@@ -60,7 +60,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.INTERNATIONAL,
+            BaseUnitSystem.SI,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -73,7 +73,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.INTERNATIONAL,
+            BaseUnitSystem.SI,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -86,7 +86,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.INTERNATIONAL,
+            BaseUnitSystem.SI,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -99,7 +99,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.INTERNATIONAL,
+            BaseUnitSystem.SI,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -112,7 +112,7 @@ def test_invalid_units():
 
     with pytest.raises(ValueError):
         UnitSystem(
-            BaseUnitSystem.INTERNATIONAL,
+            BaseUnitSystem.SI,
             SYSTEM_NAME,
             TEMP_CELSIUS,
             LENGTH_METERS,
@@ -314,17 +314,17 @@ def test_properties():
     ],
 )
 def test_is_metric(system: UnitSystem, expected: bool):
-    """Test the is metric flag."""
+    """Test the is_metric property."""
     assert system.is_metric == expected
 
 
 @pytest.mark.parametrize(
     "system, expected",
     [
-        (METRIC_SYSTEM, BaseUnitSystem.INTERNATIONAL),
+        (METRIC_SYSTEM, BaseUnitSystem.SI),
         (IMPERIAL_SYSTEM, BaseUnitSystem.US_CUSTOMARY),
     ],
 )
 def test_base_unit_system(system: UnitSystem, expected: BaseUnitSystem) -> None:
-    """Test the is metric flag."""
+    """Test the base_unit_system property."""
     assert system.base_unit_system == expected
