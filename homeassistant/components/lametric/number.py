@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
+from .helpers import lametric_exception_handler
 
 
 @dataclass
@@ -96,6 +97,7 @@ class LaMetricNumberEntity(LaMetricEntity, NumberEntity):
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @lametric_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(self.coordinator.lametric, value)
