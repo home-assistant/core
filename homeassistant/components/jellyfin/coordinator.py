@@ -65,4 +65,6 @@ class SessionsDataUpdateCoordinator(
             self.api_client.jellyfin.sessions
         )
 
-        return {session["Id"]: session for session in sessions}
+        sessions_by_id: dict[str, Any] = {session["Id"]: session for session in sessions}
+
+        return sessions_by_id
