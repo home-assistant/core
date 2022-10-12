@@ -32,10 +32,8 @@ async def async_setup_entry(
     entities: list[LutronCasetaButton] = []
 
     for device in button_devices.values():
-        if not (
-            parent_device_info := device_info_by_device_id.get(device["parent_device"])
-        ):
-            continue
+
+        parent_device_info = device_info_by_device_id[device["parent_device"]]
 
         enabled_default = True
         if not (device_name := device.get("device_name")):
@@ -56,7 +54,7 @@ async def async_setup_entry(
             )
 
         # Append the child device name to the end of the parent keypad name to create the entity name
-        full_name = f'{parent_device_info["name"]} {device_name}'
+        full_name = f'{parent_device_info.get("name")} {device_name}'
         # Set the device_info to the same as the Parent Keypad
         # The entities will be nested inside the keypad device
         entities.append(
