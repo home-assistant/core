@@ -397,6 +397,7 @@ ATTR_UNIT_OF_MEASUREMENT: Final = "unit_of_measurement"
 
 CONF_UNIT_SYSTEM_METRIC: Final = "metric"
 CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
+CONF_UNIT_SYSTEM_US: Final = "us_customary"
 
 # Electrical attributes
 ATTR_VOLTAGE: Final = "voltage"
