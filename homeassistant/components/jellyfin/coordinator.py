@@ -1,6 +1,7 @@
 """Data update coordinator for the Jellyfin integration."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from datetime import timedelta
 from typing import Any, TypeVar, Union
 
@@ -48,6 +49,7 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[JellyfinDataT]):
         """Get the latest data from Jellyfin."""
         return await self._fetch_data()
 
+    @abstractmethod
     async def _fetch_data(self) -> JellyfinDataT:
         """Fetch the actual data."""
         raise NotImplementedError
