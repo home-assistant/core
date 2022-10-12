@@ -189,7 +189,7 @@ async def test_notification_no_done_message(hass):
     """Test notifications."""
     events = []
     config = deepcopy(TEST_CONFIG)
-    del config[alert.DOMAIN][NAME][CONF_DONE_MESSAGE]
+    del config[DOMAIN][NAME][CONF_DONE_MESSAGE]
 
     @callback
     def record_event(event):
