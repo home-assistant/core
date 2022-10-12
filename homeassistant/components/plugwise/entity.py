@@ -47,8 +47,8 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             manufacturer=data.get("vendor"),
             model=data.get("model"),
             name=coordinator.data.gateway["smile_name"],
-            sw_version=self.data.get("firmware"),
-            hw_version=self.data.get("hardware"),
+            sw_version=data.get("firmware"),
+            hw_version=data.get("hardware"),
         )
 
         if device_id != coordinator.data.gateway["gateway_id"]:
