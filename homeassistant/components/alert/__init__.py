@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
-import logging
-from typing import Any, final
+from typing import Any
 
 import voluptuous as vol
 
@@ -30,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -39,34 +38,33 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
 
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "alert"
-
-CONF_CAN_ACK = "can_acknowledge"
-CONF_NOTIFIERS = "notifiers"
-CONF_SKIP_FIRST = "skip_first"
-CONF_ALERT_MESSAGE = "message"
-CONF_DONE_MESSAGE = "done_message"
-CONF_TITLE = "title"
-CONF_DATA = "data"
-
-DEFAULT_CAN_ACK = True
-DEFAULT_SKIP_FIRST = False
+from .const import (
+    CONF_ALERT_MESSAGE,
+    CONF_CAN_ACK,
+    CONF_DATA,
+    CONF_DONE_MESSAGE,
+    CONF_NOTIFIERS,
+    CONF_SKIP_FIRST,
+    CONF_TITLE,
+    DEFAULT_CAN_ACK,
+    DEFAULT_SKIP_FIRST,
+    DOMAIN,
+    LOGGER,
+)
 
 ALERT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_STATE, default=STATE_ON): cv.string,
+        vol.Optional(CONF_STATE, default=STATE_ON): cv.string,
         vol.Required(CONF_REPEAT): vol.All(
             cv.ensure_list,
             [vol.Coerce(float)],
             # Minimum delay is 1 second = 0.016 minutes
             [vol.Range(min=0.016)],
         ),
-        vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
-        vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
+        vol.Optional(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
+        vol.Optional(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
         vol.Optional(CONF_ALERT_MESSAGE): cv.template,
         vol.Optional(CONF_DONE_MESSAGE): cv.template,
         vol.Optional(CONF_TITLE): cv.template,
@@ -80,11 +78,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 ALERT_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
-
-
-def is_on(hass: HomeAssistant, entity_id: str) -> bool:
-    """Return if the alert is firing and not acknowledged."""
-    return hass.states.is_state(entity_id, STATE_ON)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -171,7 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Alert(ToggleEntity):
+class Alert(Entity):
     """Representation of an alert."""
 
     _attr_should_poll = False
@@ -227,10 +220,8 @@ class Alert(ToggleEntity):
             hass, [watched_entity_id], self.watched_entity_change
         )
 
-    @final  # type: ignore[misc]
     @property
-    # pylint: disable=overridden-final-method
-    def state(self) -> str:  # type: ignore[override]
+    def state(self) -> str:
         """Return the alert status."""
         if self._firing:
             if self._ack:
@@ -242,7 +233,7 @@ class Alert(ToggleEntity):
         """Determine if the alert should start or stop."""
         if (to_state := event.data.get("new_state")) is None:
             return
-        _LOGGER.debug("Watched entity (%s) has changed", event.data.get("entity_id"))
+        LOGGER.debug("Watched entity (%s) has changed", event.data.get("entity_id"))
         if to_state.state == self._alert_state and not self._firing:
             await self.begin_alerting()
         if to_state.state != self._alert_state and self._firing:
@@ -250,7 +241,7 @@ class Alert(ToggleEntity):
 
     async def begin_alerting(self) -> None:
         """Begin the alert procedures."""
-        _LOGGER.debug("Beginning Alert: %s", self._attr_name)
+        LOGGER.debug("Beginning Alert: %s", self._attr_name)
         self._ack = False
         self._firing = True
         self._next_delay = 0
@@ -264,7 +255,7 @@ class Alert(ToggleEntity):
 
     async def end_alerting(self) -> None:
         """End the alert procedures."""
-        _LOGGER.debug("Ending Alert: %s", self._attr_name)
+        LOGGER.debug("Ending Alert: %s", self._attr_name)
         if self._cancel is not None:
             self._cancel()
             self._cancel = None
@@ -288,7 +279,7 @@ class Alert(ToggleEntity):
             return
 
         if not self._ack:
-            _LOGGER.info("Alerting: %s", self._attr_name)
+            LOGGER.info("Alerting: %s", self._attr_name)
             self._send_done_message = True
 
             if self._message_template is not None:
@@ -301,7 +292,7 @@ class Alert(ToggleEntity):
 
     async def _notify_done_message(self) -> None:
         """Send notification of complete alert."""
-        _LOGGER.info("Alerting: %s", self._done_message_template)
+        LOGGER.info("Alerting: %s", self._done_message_template)
         self._send_done_message = False
 
         if self._done_message_template is None:
@@ -321,7 +312,7 @@ class Alert(ToggleEntity):
         if self._data:
             msg_payload[ATTR_DATA] = self._data
 
-        _LOGGER.debug(msg_payload)
+        LOGGER.debug(msg_payload)
 
         for target in self._notifiers:
             await self.hass.services.async_call(
@@ -330,13 +321,13 @@ class Alert(ToggleEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async Unacknowledge alert."""
-        _LOGGER.debug("Reset Alert: %s", self._attr_name)
+        LOGGER.debug("Reset Alert: %s", self._attr_name)
         self._ack = False
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async Acknowledge alert."""
-        _LOGGER.debug("Acknowledged Alert: %s", self._attr_name)
+        LOGGER.debug("Acknowledged Alert: %s", self._attr_name)
         self._ack = True
         self.async_write_ha_state()
 

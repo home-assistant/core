@@ -546,7 +546,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.41.0
+dbus-fast==1.44.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -904,7 +904,7 @@ iammeter==0.1.7
 iaqualink==0.4.1
 
 # homeassistant.components.ibeacon
-ibeacon_ble==0.7.3
+ibeacon_ble==0.7.4
 
 # homeassistant.components.watson_tts
 ibm-watson==5.2.2
@@ -1312,7 +1312,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.21.4
+plugwise==0.25.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2577,7 +2577,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==1.9.2
 
 # homeassistant.components.august
-yalexs==1.2.4
+yalexs==1.2.6
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
