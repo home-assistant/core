@@ -56,15 +56,15 @@ ALERT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_STATE, default=STATE_ON): cv.string,
+        vol.Optional(CONF_STATE, default=STATE_ON): cv.string,
         vol.Required(CONF_REPEAT): vol.All(
             cv.ensure_list,
             [vol.Coerce(float)],
             # Minimum delay is 1 second = 0.016 minutes
             [vol.Range(min=0.016)],
         ),
-        vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
-        vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
+        vol.Optional(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
+        vol.Optional(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
         vol.Optional(CONF_ALERT_MESSAGE): cv.template,
         vol.Optional(CONF_DONE_MESSAGE): cv.template,
         vol.Optional(CONF_TITLE): cv.template,
