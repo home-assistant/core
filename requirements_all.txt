@@ -202,7 +202,7 @@ aiolifx_effects==0.3.0
 aiolifx_themes==0.2.0
 
 # homeassistant.components.livisi
-aiolivisi==0.0.12
+aiolivisi==0.0.13
 
 # homeassistant.components.lookin
 aiolookin==0.1.1
