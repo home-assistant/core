@@ -1,5 +1,7 @@
 """Consts for using in modules."""
 
+DOMAIN = "bayesian"
+
 ATTR_OBSERVATIONS = "observations"
 ATTR_OCCURRED_OBSERVATION_ENTITIES = "occurred_observation_entities"
 ATTR_PROBABILITY = "probability"
