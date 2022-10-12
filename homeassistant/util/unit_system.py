@@ -7,7 +7,6 @@ from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
-    CONF_UNIT_SYSTEM_US,
     LENGTH,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
@@ -125,10 +124,7 @@ class UnitSystem:
     @property
     def is_us_customary(self) -> bool:
         """Determine if this is the US customary unit system."""
-        return self.name in {
-            CONF_UNIT_SYSTEM_US,
-            CONF_UNIT_SYSTEM_IMPERIAL,  # Deprecated, but kept for compatibility
-        }
+        return self.name == CONF_UNIT_SYSTEM_IMPERIAL
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
