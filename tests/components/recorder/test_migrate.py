@@ -134,16 +134,14 @@ async def test_database_migration_encounters_corruption(hass):
     sqlite3_exception.__cause__ = sqlite3.DatabaseError()
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration._schema_is_current",
-        side_effect=[False],
+        "homeassistant.components.recorder.migration.schema_is_current",
+        side_effect=[False, True],
     ), patch(
         "homeassistant.components.recorder.migration.migrate_schema",
         side_effect=sqlite3_exception,
     ), patch(
         "homeassistant.components.recorder.core.move_away_broken_database"
-    ) as move_away, patch(
-        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
-    ):
+    ) as move_away:
         recorder_helper.async_initialize_recorder(hass)
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
@@ -161,8 +159,8 @@ async def test_database_migration_encounters_corruption_not_sqlite(hass):
     assert recorder.util.async_migration_in_progress(hass) is False
 
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration._schema_is_current",
-        side_effect=[False],
+        "homeassistant.components.recorder.migration.schema_is_current",
+        side_effect=[False, True],
     ), patch(
         "homeassistant.components.recorder.migration.migrate_schema",
         side_effect=DatabaseError("statement", {}, []),
