@@ -281,14 +281,13 @@ def _area_name_from_id(areas: dict[str, dict], area_id: str) -> str:
     if area_id is None:
         return UNASSIGNED_AREA
 
-    if "parent_id" in areas[area_id]:
-        parent_area = areas[area_id]["parent_id"]
+    area = areas[area_id]
+    if "parent_id" in area:
+        parent_area = area["parent_id"]
         if parent_area is not None:
-            return " ".join(
-                (_area_name_from_id(areas, parent_area), areas[area_id]["name"])
-            )
+            return f"{_area_name_from_id(areas, parent_area)} {area['name']}"
 
-    return areas[area_id]["name"]
+    return area["name"]
 
 
 @callback
