@@ -20,8 +20,8 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 1
-  PIP_CACHE_VERSION: 1
+  CACHE_VERSION: 2
+  PIP_CACHE_VERSION: 2
   HA_SHORT_VERSION: 2022.11
   DEFAULT_PYTHON: 3.9
   ALL_PYTHON_VERSIONS: "['3.9', '3.10']"
@@ -70,7 +70,7 @@ jobs:
           echo "::set-output name=key::pre-commit-${{ env.CACHE_VERSION }}-${{
             hashFiles('.pre-commit-config.yaml') }}"
       - name: Filter for core changes
-        uses: dorny/paths-filter@v2.11.0
+        uses: dorny/paths-filter@v2.11.1
         id: core
         with:
           filters: .core_files.yaml
@@ -85,7 +85,7 @@ jobs:
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
-        uses: dorny/paths-filter@v2.11.0
+        uses: dorny/paths-filter@v2.11.1
         id: integrations
         with:
           filters: .integration_paths.yaml

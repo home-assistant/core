@@ -549,7 +549,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.44.0
+dbus-fast==1.45.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1075,7 +1075,7 @@ messagebird==1.2.0
 meteoalertapi==0.3.0
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.0.2
+meteofrance-api==1.1.0
 
 # homeassistant.components.mfi
 mficlient==0.3.0
