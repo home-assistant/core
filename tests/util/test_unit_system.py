@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    CONF_UNIT_SYSTEM_METRIC,
     LENGTH,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
@@ -298,3 +299,9 @@ def test_is_metric():
     """Test the is metric flag."""
     assert METRIC_SYSTEM.is_metric
     assert not IMPERIAL_SYSTEM.is_metric
+
+
+def test_deprecated_name(caplog: pytest.LogCaptureFixture) -> None:
+    """Test the name is deprecated."""
+    assert METRIC_SYSTEM.name == CONF_UNIT_SYSTEM_METRIC
+    assert "Detected code that accesses the name of the unit system." in caplog.text

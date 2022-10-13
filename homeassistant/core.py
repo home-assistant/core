@@ -2015,7 +2015,7 @@ class Config:
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
-            "unit_system": self.units.name,
+            "unit_system": self.units._name,  # pylint: disable=protected-access
             "location_name": self.location_name,
             "time_zone": self.time_zone,
             "external_url": self.external_url,
