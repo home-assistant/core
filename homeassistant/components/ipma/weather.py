@@ -44,6 +44,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
@@ -154,6 +156,21 @@ class IPMAWeather(WeatherEntity):
                 self._location.station,
                 self._observation,
             )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{self._location.station_latitude}, {self._location.station_longitude}",
+                )
+            },
+            manufacturer=DOMAIN,
+            name=self._location.name,
+        )
 
     @property
     def unique_id(self) -> str:
