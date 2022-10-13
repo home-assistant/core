@@ -10,11 +10,7 @@ from aio_georss_gdacs.feed_entry import GdacsFeedEntry
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-)
+from homeassistant.const import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -110,7 +106,7 @@ class GdacsEvent(GeolocationEvent):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self.hass.config.units.length_unit == LENGTH_MILES:
             self._attr_unit_of_measurement = LENGTH_MILES
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass, f"gdacs_delete_{self._external_id}", self._delete_callback
@@ -152,7 +148,7 @@ class GdacsEvent(GeolocationEvent):
             event_name = f"{feed_entry.country} ({feed_entry.event_id})"
         self._attr_name = f"{feed_entry.event_type}: {event_name}"
         # Convert distance if not metric system.
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self.hass.config.units.length_unit == LENGTH_MILES:
             self._attr_distance = DistanceConverter.convert(
                 feed_entry.distance_to_home, LENGTH_KILOMETERS, LENGTH_MILES
             )
