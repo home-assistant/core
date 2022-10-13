@@ -45,7 +45,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import ConfigType
 
 from .client import MqttClientSetup
-from .config_integration import DEPRECATED_CERTIFICATE_CONFIG_KEYS
+from .config_integration import CONFIG_SCHEMA_ENTRY, DEPRECATED_CERTIFICATE_CONFIG_KEYS
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -69,8 +69,6 @@ from .const import (
     DEFAULT_PROTOCOL,
     DEFAULT_WILL,
     DOMAIN,
-    SET_CA_CERT,
-    SET_CLIENT_CERT,
     SUPPORTED_PROTOCOLS,
 )
 from .util import (
@@ -85,6 +83,8 @@ from .util import (
 MQTT_TIMEOUT = 5
 
 ADVANCED_OPTIONS = "advanced_options"
+SET_CA_CERT = "set_ca_cert"
+SET_CLIENT_CERT = "set_client_cert"
 
 BOOLEAN_SELECTOR = BooleanSelector()
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
@@ -350,6 +350,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 updated_config = {}
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
+                CONFIG_SCHEMA_ENTRY(updated_config)
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=updated_config,
@@ -555,15 +556,15 @@ async def async_get_broker_settings(
             errors["base"] = error
             return False
 
+        if SET_CA_CERT in validated_user_input:
+            del validated_user_input[SET_CA_CERT]
+        if SET_CLIENT_CERT in validated_user_input:
+            del validated_user_input[SET_CLIENT_CERT]
         return True
 
     if user_input:
         user_input_basic = user_input.copy()
         advanced_broker_options = user_input_basic.get(ADVANCED_OPTIONS, False)
-        if ADVANCED_OPTIONS in user_input and advanced_broker_options is False:
-            # remove ADVANCED_OPTIONS flag from user input
-            del user_input[ADVANCED_OPTIONS]
-
         if ADVANCED_OPTIONS not in user_input or advanced_broker_options is False:
             if await _async_validate_broker_settings(
                 current_config,
@@ -573,17 +574,27 @@ async def async_get_broker_settings(
                 errors,
             ):
                 return True
+        # Get defaults settings from previous post
+        current_broker = user_input_basic.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
+        current_port = user_input_basic.get(
+            CONF_PORT, yaml_config.get(CONF_PORT, DEFAULT_PORT)
+        )
+        current_user = user_input_basic.get(
+            CONF_USERNAME, yaml_config.get(CONF_USERNAME)
+        )
+        current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
+    else:
+        # Get default settings from entry or yaml (if any)
+        current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
+        current_port = current_config.get(
+            CONF_PORT, yaml_config.get(CONF_PORT, DEFAULT_PORT)
+        )
+        current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
+        current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
 
-    # Update the current settings the the new posted data to fill the defaults
+    # Treat the previous post as an update of the current settings (if there was a basic broker setup step)
     current_config.update(user_input_basic)
 
-    # Get default settings (if any)
-    current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
-    current_port = current_config.get(
-        CONF_PORT, yaml_config.get(CONF_PORT, DEFAULT_PORT)
-    )
-    current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
-    current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
     # Get default settings for advanced broker options
     current_client_id = current_config.get(
         CONF_CLIENT_ID, yaml_config.get(CONF_CLIENT_ID)

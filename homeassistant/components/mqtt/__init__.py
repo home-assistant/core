@@ -85,8 +85,6 @@ from .const import (  # noqa: F401
     MQTT_DISCONNECTED,
     PLATFORMS,
     RELOADABLE_PLATFORMS,
-    SET_CA_CERT,
-    SET_CLIENT_CERT,
 )
 from .models import (  # noqa: F401
     MqttCommandTemplate,
@@ -137,8 +135,6 @@ CONFIG_ENTRY_CONFIG_KEYS = [
     CONF_TLS_INSECURE,
     CONF_USERNAME,
     CONF_WILL_MESSAGE,
-    SET_CA_CERT,
-    SET_CLIENT_CERT,
 ]
 
 CONFIG_SCHEMA = vol.Schema(

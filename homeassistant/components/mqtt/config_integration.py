@@ -58,8 +58,6 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DEFAULT_WILL,
-    SET_CA_CERT,
-    SET_CLIENT_CERT,
     SUPPORTED_PROTOCOLS,
 )
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic
@@ -160,9 +158,7 @@ CONFIG_SCHEMA_ENTRY = vol.Schema(
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(SET_CA_CERT): vol.Any("off", "auto", "custom"),
         vol.Optional(CONF_CERTIFICATE): str,
-        vol.Optional(SET_CLIENT_CERT): bool,
         vol.Inclusive(CONF_CLIENT_KEY, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG): str,
         vol.Inclusive(
             CONF_CLIENT_CERT, "client_key_auth", msg=CLIENT_KEY_AUTH_MSG
