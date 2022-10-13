@@ -28,7 +28,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 NAME = "alert_test"
@@ -221,6 +221,42 @@ async def test_notification(hass):
     hass.states.async_set("sensor.test", STATE_OFF)
     await hass.async_block_till_done()
     assert len(events) == 2
+
+
+async def test_no_notifiers(hass: HomeAssistant) -> None:
+    """Test we send no notifications when there are not no."""
+    events = []
+
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
+
+    hass.services.async_register(notify.DOMAIN, NOTIFIER, record_event)
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                NAME: {
+                    CONF_NAME: NAME,
+                    CONF_ENTITY_ID: TEST_ENTITY,
+                    CONF_STATE: STATE_ON,
+                    CONF_REPEAT: 30,
+                }
+            }
+        },
+    )
+    assert len(events) == 0
+
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert len(events) == 0
+
+    hass.states.async_set("sensor.test", STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(events) == 0
 
 
 async def test_sending_non_templated_notification(hass, mock_notifier):

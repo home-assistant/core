@@ -68,7 +68,9 @@ ALERT_SCHEMA = vol.Schema(
         vol.Optional(CONF_DONE_MESSAGE): cv.template,
         vol.Optional(CONF_TITLE): cv.template,
         vol.Optional(CONF_DATA): dict,
-        vol.Required(CONF_NOTIFIERS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_NOTIFIERS, default=list): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -268,6 +270,9 @@ class Alert(Entity):
         await self._send_notification_message(message)
 
     async def _send_notification_message(self, message: Any) -> None:
+
+        if not self._notifiers:
+            return
 
         msg_payload = {ATTR_MESSAGE: message}
 
