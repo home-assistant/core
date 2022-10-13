@@ -20,30 +20,6 @@ DEFAULT_NAME = "ipma"
 
 PLATFORMS = [Platform.WEATHER]
 
-
-async def async_get_api(hass):
-    """Get the pyipma api object."""
-    websession = async_get_clientsession(hass)
-    return IPMA_API(websession)
-
-
-async def async_get_location(hass, api, latitude, longitude):
-    """Retrieve pyipma location, location name to be used as the entity name."""
-    async with async_timeout.timeout(30):
-        location = await Location.get(api, float(latitude), float(longitude))
-
-    _LOGGER.debug(
-        "Initializing for coordinates %s, %s -> station %s (%d, %d)",
-        latitude,
-        longitude,
-        location.station,
-        location.id_station,
-        location.global_id_local,
-    )
-
-    return location
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
