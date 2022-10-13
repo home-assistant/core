@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
+    LENGTH_MILES,
     TIME_MINUTES,
 )
 from homeassistant.core import CoreState, HomeAssistant
@@ -32,8 +33,11 @@ from .const import (
     CONF_OPTIONS,
     CONF_ORIGIN,
     CONF_TRAVEL_MODE,
+    CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
+    UNITS_IMPERIAL,
+    UNITS_METRIC,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +64,12 @@ async def async_setup_entry(
     if not config_entry.options:
         new_data = config_entry.data.copy()
         options = new_data.pop(CONF_OPTIONS, {})
+
+        if CONF_UNITS not in options:
+            if hass.config.units.length_unit == LENGTH_MILES:
+                options[CONF_UNITS] = UNITS_IMPERIAL
+            else:
+                options[CONF_UNITS] = UNITS_METRIC
 
         if CONF_TRAVEL_MODE in new_data:
             wstr = (
