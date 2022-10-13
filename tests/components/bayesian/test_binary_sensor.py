@@ -541,8 +541,9 @@ async def test_multiple_numeric_observations(hass):
         abs(state.attributes.get("probability") - 0.19672131) < 0.01
     )
 
-    assert abs(state.attributes.get("probability") - 0.58823529) < 0.01
     assert abs(state.attributes.get("probability") - 0.19672131) < 0.01
+    # Where there are multi numeric ranges when on the threshold, use below
+    # Calculated using P(A) = 0.3, P(B|A) = 0.2, P(B|~A) = 0.35 -> 0.19672131
 
     assert state.state == "off"
 

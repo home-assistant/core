@@ -336,7 +336,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             observation.observed = self.observation_handlers[platform](
                 observation, observation.multi
             )
-
             local_observations[observation.id] = observation
 
         return local_observations
@@ -431,7 +430,12 @@ class BayesianBinarySensor(BinarySensorEntity):
         self, entity_observation: Observation, multi: bool = False
     ) -> bool | None:
         """Return True if numeric condition is met, return False if not, return None otherwise."""
-        entity = entity_observation.entity_id
+        entity_id = entity_observation.entity_id
+        if entity_id is None:
+            return None
+        entity = self.hass.states.get(entity_id)
+        if entity is None:
+            return None
 
         try:
             if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
@@ -444,10 +448,20 @@ class BayesianBinarySensor(BinarySensorEntity):
                 None,
                 entity_observation.to_dict(),
             )
-            if multi and not result:
+            if result:
+                return True
+            if multi:
+                state = float(entity.state)
+                if (
+                    entity_observation.below is not None
+                    and state == entity_observation.below
+                ):
+                    return True
                 return None
-            return result
+            return False
         except ConditionError:
+            return None
+        except ValueError:
             return None
 
     def _process_state(
