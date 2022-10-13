@@ -4,13 +4,14 @@ from __future__ import annotations
 from typing import Any
 import uuid
 
+from homeassistant.components.automation import SERVICE_RELOAD_AUTOMATION
 from homeassistant.components.automation.config import (
     DOMAIN,
     PLATFORM_SCHEMA,
     async_validate_config_item,
 )
 from homeassistant.config import AUTOMATION_CONFIG_PATH
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
@@ -25,7 +26,9 @@ def async_setup(hass: HomeAssistant) -> bool:
     async def hook(action: str, config_key: str) -> None:
         """post_write_hook for Config View that reloads automations."""
         if action != ACTION_DELETE:
-            await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+            await hass.services.async_call(
+                DOMAIN, SERVICE_RELOAD_AUTOMATION, {CONF_ID: config_key}
+            )
             return
 
         ent_reg = er.async_get(hass)
