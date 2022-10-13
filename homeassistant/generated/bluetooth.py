@@ -228,6 +228,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
     },
     {
+        "domain": "oralb",
+        "service_uuid": "0000fe0d-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "domain": "qingping",
         "local_name": "Qingping*",
         "connectable": False,

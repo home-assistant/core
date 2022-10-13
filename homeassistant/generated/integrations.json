@@ -3123,6 +3123,11 @@
       "iot_class": "local_polling",
       "name": "Opple"
     },
+    "oralb": {
+      "config_flow": true,
+      "iot_class": "local_push",
+      "name": "OralB"
+    },
     "oru": {
       "config_flow": false,
       "iot_class": "cloud_polling",
