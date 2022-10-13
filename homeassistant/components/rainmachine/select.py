@@ -7,12 +7,11 @@ from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.unit_system import UnitSystem
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, UnitSystem
 
 from . import RainMachineData, RainMachineEntity
 from .const import DATA_RESTRICTIONS_UNIVERSAL, DOMAIN
@@ -131,7 +130,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
         self._label_to_api_value_map = {}
 
         for option in description.extended_options:
-            if unit_system.temperature_unit == TEMP_FAHRENHEIT:
+            if unit_system == IMPERIAL_SYSTEM:
                 label = option.imperial_label
             else:
                 label = option.metric_label
