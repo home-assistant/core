@@ -82,6 +82,13 @@ PLATFORMS = [
     Platform.BUTTON,
 ]
 
+KEYPAD_SIMPLE_NAMES = {
+    "Pico": "Pico",
+    "Keypad": "Keypad",
+    "SeeTouch": "Keypad",
+    "4GroupRemote": "Remote",
+}
+
 
 async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Lutron component."""
@@ -249,23 +256,7 @@ def _async_register_button_devices(
         seen.add(ha_device_serial)
 
         area = _area_name_from_id(bridge.areas, ha_device["area"])
-
-        # Build the name of the Keypad/Pico
-        ha_device_name_prefix = ""
-        ha_device_name_suffix = ""
-        if "control_station_name" in ha_device:
-            # RA3/HWQSX Control Pico or Keypad, Assemble the Device Name
-            ha_device_name_prefix = ha_device["control_station_name"]
-            if "Pico" in ha_device["type"]:
-                ha_device_name_suffix = "Pico"
-            elif "Keypad" in ha_device["type"]:
-                ha_device_name_suffix = "Keypad"
-        ha_device_name_parts = [
-            ha_device_name_prefix,
-            ha_device["device_name"],
-            ha_device_name_suffix,
-        ]
-        name = " ".join(filter(None, ha_device_name_parts))
+        name = _keypad_name_from_device(ha_device)
 
         device_args: DeviceInfo = {
             "name": f"{area} {name}",
@@ -286,7 +277,28 @@ def _async_register_button_devices(
     return button_devices_by_dr_id, device_info_by_device_id
 
 
+def _keypad_name_from_device(keypad_device: dict) -> str:
+    """Return the assembled keypad name."""
+    # Build the name of the Keypad/Pico
+    keypad_name_prefix = ""
+    keypad_name_suffix = ""
+    if "control_station_name" in keypad_device:
+        # RA3/HWQSX Control Pico or Keypad, Assemble the Device Name
+        keypad_name_prefix = keypad_device["control_station_name"]
+        for namesub, simplename in KEYPAD_SIMPLE_NAMES.items():
+            if namesub in keypad_device["type"]:
+                keypad_name_suffix = simplename
+                break
+    ha_device_name_parts = [
+        keypad_name_prefix,
+        keypad_device["device_name"],
+        keypad_name_suffix,
+    ]
+    return " ".join(filter(None, ha_device_name_parts))
+
+
 def _handle_none_keypad_serial(keypad_device: dict, bridge_serial: int) -> str:
+    """Return keypad serial number or substitute if None."""
     return keypad_device["serial"] or f"{bridge_serial}_{keypad_device['device_id']}"
 
 
