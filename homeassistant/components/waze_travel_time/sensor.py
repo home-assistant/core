@@ -70,7 +70,7 @@ async def async_setup_entry(
         CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
         CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
     }
-    if hass.config.units == IMPERIAL_SYSTEM:
+    if hass.config.units is IMPERIAL_SYSTEM:
         defaults[CONF_UNITS] = CONF_UNIT_SYSTEM_IMPERIAL
 
     if not config_entry.options:
