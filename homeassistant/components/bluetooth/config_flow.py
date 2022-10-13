@@ -6,10 +6,19 @@ from typing import TYPE_CHECKING, Any, cast
 import voluptuous as vol
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import ADAPTER_ADDRESS, CONF_ADAPTER, CONF_DETAILS, DOMAIN, AdapterDetails
+from . import models
+from .const import (
+    ADAPTER_ADDRESS,
+    CONF_ADAPTER,
+    CONF_DETAILS,
+    CONF_PASSIVE,
+    DOMAIN,
+    AdapterDetails,
+)
 from .util import adapter_human_name, adapter_unique_name, async_get_bluetooth_adapters
 
 if TYPE_CHECKING:
@@ -112,3 +121,42 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_multiple_adapters()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+    @classmethod
+    @callback
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+        """Return options flow support for this handler."""
+        return bool(models.MANAGER and models.MANAGER.supports_passive_scan)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle the option flow for bluetooth."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_PASSIVE,
+                    default=self.config_entry.options.get(CONF_PASSIVE, False),
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
             "no_unconfigured_devices": "Nie znaleziono nieskonfigurowanych urz\u0105dze\u0144."
         },
@@ -23,7 +24,7 @@
                     "key": "Klucz offline (32-bajtowy ci\u0105g szesnastkowy)",
                     "slot": "Slot klucza offline (liczba ca\u0142kowita od 0 do 255)"
                 },
-                "description": "Sprawd\u017a dokumentacj\u0119 na {docs_url}, aby dowiedzie\u0107 si\u0119, jak znale\u017a\u0107 klucz offline."
+                "description": "Sprawd\u017a dokumentacj\u0119, aby dowiedzie\u0107 si\u0119, jak znale\u017a\u0107 klucz offline."
             }
         }
     }

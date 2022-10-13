@@ -9,6 +9,15 @@
         },
         "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Vill du konfigurera {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "description": "{name} -enheten kr\u00e4ver ett l\u00f6senord"
+            },
             "user": {
                 "data": {
                     "address": "Enhetsadress",

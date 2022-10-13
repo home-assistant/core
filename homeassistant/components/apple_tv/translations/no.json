@@ -9,7 +9,7 @@
             "inconsistent_device": "Forventede protokoller ble ikke funnet under oppdagelsen. Dette indikerer vanligvis et problem med multicast DNS (Zeroconf). Pr\u00f8v \u00e5 legge til enheten p\u00e5 nytt.",
             "ipv6_not_supported": "IPv6 st\u00f8ttes ikke.",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_successful": "Re-autentisering var vellykket",
             "setup_failed": "Kunne ikke konfigurere enheten.",
             "unknown": "Uventet feil"
         },

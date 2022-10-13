@@ -10,6 +10,13 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "V\u00e4rskenda oma salas\u00f5na {email} jaoks",
+                "title": "Taastuvasta sidumine"
+            },
             "user": {
                 "data": {
                     "email": "E-posti aadress",

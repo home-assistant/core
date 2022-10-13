@@ -61,7 +61,6 @@ async def test_invalid_username_password(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": CLIENT_REDIRECT_URI,
                 "username": "wrong-user",
                 "password": "test-pass",
             },
@@ -82,7 +81,6 @@ async def test_invalid_username_password(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": CLIENT_REDIRECT_URI,
                 "username": "test-user",
                 "password": "wrong-pass",
             },
@@ -103,7 +101,6 @@ async def test_invalid_username_password(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": "http://some-other-domain.com",
                 "username": "wrong-user",
                 "password": "test-pass",
             },
@@ -116,7 +113,21 @@ async def test_invalid_username_password(hass, aiohttp_client):
     assert step["step_id"] == "init"
     assert step["errors"]["base"] == "invalid_auth"
 
-    # Incorrect redirect URI
+
+async def test_invalid_redirect_uri(hass, aiohttp_client):
+    """Test invalid redirect URI."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": "https://some-other-domain.com",
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    step = await resp.json()
+
     with patch(
         "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
     ), patch(
@@ -126,7 +137,6 @@ async def test_invalid_username_password(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": "http://some-other-domain.com",
                 "username": "test-user",
                 "password": "test-pass",
             },
@@ -165,7 +175,6 @@ async def test_login_exist_user(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": CLIENT_REDIRECT_URI,
                 "username": "test-user",
                 "password": "test-pass",
             },
@@ -206,14 +215,13 @@ async def test_login_local_only_user(hass, aiohttp_client):
             f"/auth/login_flow/{step['flow_id']}",
             json={
                 "client_id": CLIENT_ID,
-                "redirect_uri": CLIENT_REDIRECT_URI,
                 "username": "test-user",
                 "password": "test-pass",
             },
         )
 
-    assert len(mock_not_allowed_do_auth.mock_calls) == 1
     assert resp.status == HTTPStatus.FORBIDDEN
+    assert len(mock_not_allowed_do_auth.mock_calls) == 1
     assert await resp.json() == {"message": "Login blocked: User is local only"}
 
 

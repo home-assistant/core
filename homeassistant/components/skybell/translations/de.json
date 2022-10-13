@@ -10,6 +10,13 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Bitte aktualisiere dein Passwort f\u00fcr {email}",
+                "title": "Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "email": "E-Mail",

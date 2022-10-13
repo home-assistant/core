@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from iaqualink.const import (
     AQUALINK_TEMP_CELSIUS_HIGH,
@@ -11,9 +12,9 @@ from iaqualink.const import (
 )
 from iaqualink.device import AqualinkHeater, AqualinkPump, AqualinkSensor, AqualinkState
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -105,7 +106,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         return float(self.dev.state)
 
     @refresh_system
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await await_or_reraise(self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE])))
 

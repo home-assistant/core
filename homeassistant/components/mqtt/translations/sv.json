@@ -49,6 +49,12 @@
             "button_triple_press": "\" {subtype}\" trippelklickad"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Manuellt konfigurerad MQTT {platform} (s) finns under plattformsnyckel ` {platform} `. \n\n Flytta konfigurationen till \"mqtt\"-integreringsnyckeln och starta om Home Assistant f\u00f6r att \u00e5tg\u00e4rda problemet. Se [dokumentationen]( {more_info_url} ), f\u00f6r mer information.",
+            "title": "Din manuellt konfigurerade MQTT {platform} (s) beh\u00f6ver \u00e5tg\u00e4rdas"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Ogiltigt f\u00f6delse\u00e4mne.",

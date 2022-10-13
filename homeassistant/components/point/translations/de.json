@@ -11,7 +11,7 @@
             "default": "Erfolgreich authentifiziert"
         },
         "error": {
-            "follow_link": "Bitte folgen dem Link und authentifiziere dich, bevor du auf Senden klickst",
+            "follow_link": "Bitte folge dem Link und authentifiziere dich, bevor du auf Senden dr\u00fcckst",
             "no_token": "Ung\u00fcltiger Zugriffs-Token"
         },
         "step": {

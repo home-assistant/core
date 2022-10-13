@@ -57,7 +57,7 @@ CONFIG_SCHEMA = vol.All(
 )
 
 
-PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT, Platform.SELECT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 
@@ -193,10 +193,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await connection.async_setup()
     except socket.gaierror as ex:
+        connection.async_stop()
         raise ConfigEntryNotReady(f"Could not resolve {host}: {ex}") from ex
     coordinator = LIFXUpdateCoordinator(hass, connection, entry.title)
     coordinator.async_setup()
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        connection.async_stop()
+        raise
 
     domain_data[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

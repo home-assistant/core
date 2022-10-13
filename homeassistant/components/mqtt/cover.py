@@ -46,13 +46,12 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,9 +241,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT cover through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    await async_discover_yaml_entities(hass, cover.DOMAIN)
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -409,7 +405,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 )
                 return
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -455,7 +451,7 @@ class MqttCover(MqttEntity, CoverEntity):
                     else STATE_OPEN
                 )
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
             topics["get_position_topic"] = {

@@ -17,28 +17,27 @@ from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 
 from homeassistant.components.climate import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    ClimateEntity,
-)
-from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     FAN_AUTO,
     FAN_ON,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES
+from .connection import HKDevice
 from .entity import HomeKitEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,15 +93,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Homekit climate."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    hkid: str = config_entry.data["AccessoryPairingID"]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([entity_class(conn, info)], True)
+        entity: HomeKitEntity = entity_class(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.CLIMATE
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)
@@ -567,6 +570,14 @@ class HomeKitClimateEntity(HomeKitBaseClimateEntity):
         # This characteristic describes the current mode of a device,
         # e.g. a thermostat is "heating" a room to 75 degrees Fahrenheit.
         # Can be 0 - 2 (Off, Heat, Cool)
+
+        # If the HVAC is switched off, it must be idle
+        # This works around a bug in some devices (like Eve radiator valves) that
+        # return they are heating when they are not.
+        target = self.service.value(CharacteristicsTypes.HEATING_COOLING_TARGET)
+        if target == HeatingCoolingTargetValues.OFF:
+            return HVACAction.IDLE
+
         value = self.service.value(CharacteristicsTypes.HEATING_COOLING_CURRENT)
         return CURRENT_MODE_HOMEKIT_TO_HASS.get(value)
 

@@ -98,7 +98,7 @@ class GitterSensor(SensorEntity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
 
         try:

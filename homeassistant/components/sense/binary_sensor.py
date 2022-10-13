@@ -73,6 +73,8 @@ def sense_to_mdi(sense_icon):
 class SenseDevice(BinarySensorEntity):
     """Implementation of a Sense energy device binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, sense_devices_data, device, sense_monitor_id):
         """Initialize the Sense binary sensor."""
         self._name = device["name"]
@@ -124,12 +126,7 @@ class SenseDevice(BinarySensorEntity):
         """Return the device class of the binary sensor."""
         return BinarySensorDeviceClass.POWER
 
-    @property
-    def should_poll(self):
-        """Return the deviceshould not poll for updates."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

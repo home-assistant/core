@@ -55,6 +55,8 @@ def add_entities(
 class FreeboxDevice(ScannerEntity):
     """Representation of a Freebox device."""
 
+    _attr_should_poll = False
+
     def __init__(self, router: FreeboxRouter, device: dict[str, Any]) -> None:
         """Initialize a Freebox device."""
         self._router = router
@@ -111,11 +113,6 @@ class FreeboxDevice(ScannerEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         return self._attrs
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @callback
     def async_on_demand_update(self):

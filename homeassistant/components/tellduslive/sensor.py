@@ -1,7 +1,7 @@
 """Support for Tellstick Net/Telstick Live sensors."""
 from __future__ import annotations
 
-from homeassistant.components import sensor, tellduslive
+from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .. import tellduslive
 from .entry import TelldusLiveEntity
 
 SENSOR_TYPE_TEMPERATURE = "temp"
@@ -75,12 +76,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=SENSOR_TYPE_WINDAVERAGE,
         name="Wind average",
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_WINDGUST: SensorEntityDescription(
         key=SENSOR_TYPE_WINDGUST,
         name="Wind gust",
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_TYPE_UV: SensorEntityDescription(

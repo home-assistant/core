@@ -51,21 +51,27 @@ class DemoWaterHeater(WaterHeaterEntity):
     _attr_supported_features = SUPPORT_FLAGS_HEATER
 
     def __init__(
-        self, name, target_temperature, unit_of_measurement, away, current_operation
-    ):
+        self,
+        name: str,
+        target_temperature: int,
+        unit_of_measurement: str,
+        away: bool,
+        current_operation: str,
+    ) -> None:
         """Initialize the water_heater device."""
         self._attr_name = name
         if target_temperature is not None:
             self._attr_supported_features = (
-                self.supported_features | WaterHeaterEntityFeature.TARGET_TEMPERATURE
+                self._attr_supported_features
+                | WaterHeaterEntityFeature.TARGET_TEMPERATURE
             )
         if away is not None:
             self._attr_supported_features = (
-                self.supported_features | WaterHeaterEntityFeature.AWAY_MODE
+                self._attr_supported_features | WaterHeaterEntityFeature.AWAY_MODE
             )
         if current_operation is not None:
             self._attr_supported_features = (
-                self.supported_features | WaterHeaterEntityFeature.OPERATION_MODE
+                self._attr_supported_features | WaterHeaterEntityFeature.OPERATION_MODE
             )
         self._attr_target_temperature = target_temperature
         self._attr_temperature_unit = unit_of_measurement

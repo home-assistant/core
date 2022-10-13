@@ -7,26 +7,26 @@ from datetime import datetime
 import logging
 import platform
 import time
+from typing import Any
 
 import async_timeout
 import bleak
 from bleak import BleakError
+from bleak.assigned_numbers import AdvertisementDataType
+from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
+from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
-from dbus_next import InvalidMessageError
+from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
+from bleak_retry_connector import get_device_by_adapter
+from dbus_fast import InvalidMessageError
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HomeAssistant,
-    callback as hass_callback,
-)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.package import is_docker_env
 
 from .const import (
+    DEFAULT_ADDRESS,
     SCANNER_WATCHDOG_INTERVAL,
     SCANNER_WATCHDOG_TIMEOUT,
     SOURCE_LOCAL,
@@ -38,7 +38,15 @@ from .util import adapter_human_name, async_reset_adapter
 OriginalBleakScanner = bleak.BleakScanner
 MONOTONIC_TIME = time.monotonic
 
-
+# or_patterns is a workaround for the fact that passive scanning
+# needs at least one matcher to be set. The below matcher
+# will match all devices.
+PASSIVE_SCANNER_ARGS = BlueZScannerArgs(
+    or_patterns=[
+        OrPattern(0, AdvertisementDataType.FLAGS, b"\x06"),
+        OrPattern(0, AdvertisementDataType.FLAGS, b"\x1a"),
+    ]
+)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -78,16 +86,25 @@ class ScannerStartError(HomeAssistantError):
 
 
 def create_bleak_scanner(
-    scanning_mode: BluetoothScanningMode, adapter: str | None
+    detection_callback: AdvertisementDataCallback,
+    scanning_mode: BluetoothScanningMode,
+    adapter: str | None,
 ) -> bleak.BleakScanner:
     """Create a Bleak scanner."""
-    scanner_kwargs = {"scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode]}
-    # Only Linux supports multiple adapters
-    if adapter and platform.system() == "Linux":
-        scanner_kwargs["adapter"] = adapter
+    scanner_kwargs: dict[str, Any] = {
+        "detection_callback": detection_callback,
+        "scanning_mode": SCANNING_MODE_TO_BLEAK[scanning_mode],
+    }
+    if platform.system() == "Linux":
+        # Only Linux supports multiple adapters
+        if adapter:
+            scanner_kwargs["adapter"] = adapter
+        if scanning_mode == BluetoothScanningMode.PASSIVE:
+            scanner_kwargs["bluez"] = PASSIVE_SCANNER_ARGS
     _LOGGER.debug("Initializing bluetooth scanner with %s", scanner_kwargs)
+
     try:
-        return OriginalBleakScanner(**scanner_kwargs)  # type: ignore[arg-type]
+        return OriginalBleakScanner(**scanner_kwargs)
     except (FileNotFoundError, BleakError) as ex:
         raise RuntimeError(f"Failed to initialize Bluetooth: {ex}") from ex
 
@@ -103,30 +120,59 @@ class HaScanner(BaseHaScanner):
     over ethernet, usb over ethernet, etc.
     """
 
+    scanner: bleak.BleakScanner
+
     def __init__(
         self,
         hass: HomeAssistant,
-        scanner: bleak.BleakScanner,
+        mode: BluetoothScanningMode,
         adapter: str,
         address: str,
     ) -> None:
         """Init bluetooth discovery."""
         self.hass = hass
-        self.scanner = scanner
+        self.mode = mode
         self.adapter = adapter
         self._start_stop_lock = asyncio.Lock()
-        self._cancel_stop: CALLBACK_TYPE | None = None
         self._cancel_watchdog: CALLBACK_TYPE | None = None
         self._last_detection = 0.0
         self._start_time = 0.0
         self._callbacks: list[Callable[[BluetoothServiceInfoBleak], None]] = []
         self.name = adapter_human_name(adapter, address)
-        self.source = self.adapter or SOURCE_LOCAL
+        self.source = address if address != DEFAULT_ADDRESS else adapter or SOURCE_LOCAL
 
     @property
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         return self.scanner.discovered_devices
+
+    @hass_callback
+    def async_setup(self) -> None:
+        """Set up the scanner."""
+        self.scanner = create_bleak_scanner(
+            self._async_detection_callback, self.mode, self.adapter
+        )
+
+    async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
+        """Get a device by address."""
+        if platform.system() == "Linux":
+            return await get_device_by_adapter(address, self.adapter)
+        # We don't have a fast version of this for MacOS yet
+        return next(
+            (device for device in self.discovered_devices if device.address == address),
+            None,
+        )
+
+    async def async_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostic information about the scanner."""
+        base_diag = await super().async_diagnostics()
+        return base_diag | {
+            "adapter": self.adapter,
+            "source": self.source,
+            "name": self.name,
+            "last_detection": self._last_detection,
+            "start_time": self._start_time,
+        }
 
     @hass_callback
     def async_register_callback(
@@ -184,8 +230,6 @@ class HaScanner(BaseHaScanner):
 
     async def async_start(self) -> None:
         """Start bluetooth scanner."""
-        self.scanner.register_detection_callback(self._async_detection_callback)
-
         async with self._start_stop_lock:
             await self._async_start()
 
@@ -289,9 +333,6 @@ class HaScanner(BaseHaScanner):
             break
 
         self._async_setup_scanner_watchdog()
-        self._cancel_stop = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._async_hass_stopping
-        )
 
     @hass_callback
     def _async_setup_scanner_watchdog(self) -> None:
@@ -339,11 +380,6 @@ class HaScanner(BaseHaScanner):
                     exc_info=True,
                 )
 
-    async def _async_hass_stopping(self, event: Event) -> None:
-        """Stop the Bluetooth integration at shutdown."""
-        self._cancel_stop = None
-        await self.async_stop()
-
     async def _async_reset_adapter(self) -> None:
         """Reset the adapter."""
         # There is currently nothing the user can do to fix this
@@ -367,9 +403,6 @@ class HaScanner(BaseHaScanner):
 
     async def _async_stop_scanner(self) -> None:
         """Stop bluetooth discovery under the lock."""
-        if self._cancel_stop:
-            self._cancel_stop()
-            self._cancel_stop = None
         _LOGGER.debug("%s: Stopping bluetooth discovery", self.name)
         try:
             await self.scanner.stop()  # type: ignore[no-untyped-call]

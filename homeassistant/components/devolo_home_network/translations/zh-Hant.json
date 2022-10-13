@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "home_control": "Devolo \u667a\u80fd\u5bb6\u5ead\u7db2\u8def\u88dd\u7f6e\u8207\u6b64\u6574\u5408\u4e0d\u76f8\u5bb9\u3002"
+            "home_control": "Devolo \u667a\u80fd\u5bb6\u5ead\u7db2\u8def\u88dd\u7f6e\u8207\u6b64\u6574\u5408\u4e0d\u76f8\u5bb9\u3002",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -10,6 +11,11 @@
         },
         "flow_title": "{product} ({name})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "IP \u4f4d\u5740"

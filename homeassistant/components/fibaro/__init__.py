@@ -27,7 +27,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -497,8 +501,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not connect to controller at {entry.data[CONF_URL]}"
         ) from connect_ex
-    except FibaroAuthFailed:
-        return False
+    except FibaroAuthFailed as auth_ex:
+        raise ConfigEntryAuthFailed from auth_ex
 
     data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
@@ -539,6 +543,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class FibaroDevice(Entity):
     """Representation of a Fibaro device entity."""
+
+    _attr_should_poll = False
 
     def __init__(self, fibaro_device):
         """Initialize the device."""
@@ -635,11 +641,6 @@ class FibaroDevice(Entity):
         return False
 
     @property
-    def should_poll(self):
-        """Get polling requirement from fibaro device."""
-        return False
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {"fibaro_id": self.fibaro_device.id}
@@ -649,8 +650,8 @@ class FibaroDevice(Entity):
                 attr[ATTR_BATTERY_LEVEL] = int(
                     self.fibaro_device.properties.batteryLevel
                 )
-            if "fibaroAlarmArm" in self.fibaro_device.interfaces:
-                attr[ATTR_ARMED] = bool(self.fibaro_device.properties.armed)
+            if "armed" in self.fibaro_device.properties:
+                attr[ATTR_ARMED] = self.fibaro_device.properties.armed.lower() == "true"
         except (ValueError, KeyError):
             pass
 

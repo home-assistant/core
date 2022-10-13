@@ -88,7 +88,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
         await self.hive.hotwater.setMode(self.device, "OFF")
 
     @refresh_system
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set operation mode."""
         new_mode = HASS_TO_HIVE_STATE[operation_mode]
         await self.hive.hotwater.setMode(self.device, new_mode)
@@ -101,7 +101,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
         elif on_off == "off":
             await self.hive.hotwater.setBoostOff(self.device)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.hotwater.getWaterHeater(self.device)

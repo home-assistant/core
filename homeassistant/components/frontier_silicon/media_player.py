@@ -15,20 +15,11 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_OPENING,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -63,7 +54,7 @@ async def async_setup_entry(
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
-    _attr_media_content_type: str = MEDIA_TYPE_MUSIC
+    _attr_media_content_type: str = MediaType.MUSIC
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -99,21 +90,21 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         self._supports_sound_mode: bool = True
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest date and update device state."""
         afsapi = self.fs_device
         try:
             if await afsapi.get_power():
                 status = await afsapi.get_play_status()
                 self._attr_state = {
-                    PlayState.PLAYING: STATE_PLAYING,
-                    PlayState.PAUSED: STATE_PAUSED,
-                    PlayState.STOPPED: STATE_IDLE,
-                    PlayState.LOADING: STATE_OPENING,
-                    None: STATE_IDLE,
+                    PlayState.PLAYING: MediaPlayerState.PLAYING,
+                    PlayState.PAUSED: MediaPlayerState.PAUSED,
+                    PlayState.STOPPED: MediaPlayerState.IDLE,
+                    PlayState.LOADING: MediaPlayerState.BUFFERING,
+                    None: MediaPlayerState.IDLE,
                 }.get(status)
             else:
-                self._attr_state = STATE_OFF
+                self._attr_state = MediaPlayerState.OFF
         except FSConnectionError:
             if self._attr_available:
                 _LOGGER.warning(
@@ -160,7 +151,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         if not self._max_volume:
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
 
-        if self._attr_state != STATE_OFF:
+        if self._attr_state != MediaPlayerState.OFF:
             info_name = await afsapi.get_play_name()
             info_text = await afsapi.get_play_text()
 
@@ -225,7 +216,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        if self._attr_state == STATE_PLAYING:
+        if self._attr_state == MediaPlayerState.PLAYING:
             await self.fs_device.pause()
         else:
             await self.fs_device.play()
@@ -265,11 +256,19 @@ class AFSAPIDevice(MediaPlayerEntity):
             volume = int(volume * self._max_volume)
             await self.fs_device.set_volume(volume)
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self.fs_device.set_power(True)
-        await self.fs_device.set_mode(self.__modes_by_label.get(source))
+        if (
+            self.__modes_by_label
+            and (mode := self.__modes_by_label.get(source)) is not None
+        ):
+            await self.fs_device.set_mode(mode)
 
-    async def async_select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select EQ Preset."""
-        await self.fs_device.set_eq_preset(self.__sound_modes_by_label[sound_mode])
+        if (
+            self.__sound_modes_by_label
+            and (mode := self.__sound_modes_by_label.get(sound_mode)) is not None
+        ):
+            await self.fs_device.set_eq_preset(mode)

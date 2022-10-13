@@ -27,6 +27,8 @@ async def async_setup_entry(
 class ResponseSwitch(SwitchEntity):
     """Representation of an FireServiceRota switch."""
 
+    _attr_should_poll = False
+
     def __init__(self, coordinator, client, entry):
         """Initialize."""
         self._coordinator = coordinator
@@ -62,11 +64,6 @@ class ResponseSwitch(SwitchEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this switch."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def available(self) -> bool:
