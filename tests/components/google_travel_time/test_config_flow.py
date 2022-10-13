@@ -15,17 +15,11 @@ from homeassistant.components.google_travel_time.const import (
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
-    CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
 
 from .const import MOCK_CONFIG
 
@@ -79,7 +73,6 @@ async def test_invalid_config_entry(hass):
             {
                 CONF_MODE: "driving",
                 CONF_ARRIVAL_TIME: "test",
-                CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
             },
         )
     ],
@@ -100,7 +93,6 @@ async def test_options_flow(hass, mock_config):
             CONF_MODE: "driving",
             CONF_LANGUAGE: "en",
             CONF_AVOID: "tolls",
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
             CONF_TIME_TYPE: ARRIVAL_TIME,
             CONF_TIME: "test",
             CONF_TRAFFIC_MODEL: "best_guess",
@@ -114,7 +106,6 @@ async def test_options_flow(hass, mock_config):
         CONF_MODE: "driving",
         CONF_LANGUAGE: "en",
         CONF_AVOID: "tolls",
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         CONF_ARRIVAL_TIME: "test",
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
@@ -125,7 +116,6 @@ async def test_options_flow(hass, mock_config):
         CONF_MODE: "driving",
         CONF_LANGUAGE: "en",
         CONF_AVOID: "tolls",
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         CONF_ARRIVAL_TIME: "test",
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
@@ -153,7 +143,6 @@ async def test_options_flow_departure_time(hass, mock_config):
             CONF_MODE: "driving",
             CONF_LANGUAGE: "en",
             CONF_AVOID: "tolls",
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
             CONF_TIME_TYPE: DEPARTURE_TIME,
             CONF_TIME: "test",
             CONF_TRAFFIC_MODEL: "best_guess",
@@ -167,7 +156,6 @@ async def test_options_flow_departure_time(hass, mock_config):
         CONF_MODE: "driving",
         CONF_LANGUAGE: "en",
         CONF_AVOID: "tolls",
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         CONF_DEPARTURE_TIME: "test",
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
@@ -178,7 +166,6 @@ async def test_options_flow_departure_time(hass, mock_config):
         CONF_MODE: "driving",
         CONF_LANGUAGE: "en",
         CONF_AVOID: "tolls",
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
         CONF_DEPARTURE_TIME: "test",
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
