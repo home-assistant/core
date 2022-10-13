@@ -1002,7 +1002,7 @@ def test_statistics_runs_initiated(hass_recorder):
             ) - timedelta(minutes=5)
 
 
-@pytest.mark.freeze_time("2022-10-13 09:00:00+02:00")
+@pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
 def test_compile_missing_statistics(tmpdir, freezer):
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
