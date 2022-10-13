@@ -7,5 +7,8 @@
   "codeowners": ["@rytilahti", "@syssi", "@starkillerOG", "@bieniu"],
   "zeroconf": ["_miio._udp.local."],
   "iot_class": "local_polling",
-  "loggers": ["micloud", "miio"]
+  "loggers": ["micloud", "miio"],
+  "supported_brands": {
+    "roborock": "Roborock"
+  }
 }

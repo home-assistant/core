@@ -31,8 +31,8 @@ PLATFORMS_GATEWAY: Final[list[str]] = [
     Platform.SWITCH,
 ]
 ZEROCONF_MAP: Final[dict[str, str]] = {
-    "smile": "P1",
-    "smile_thermo": "Anna",
+    "smile": "Smile P1",
+    "smile_thermo": "Smile Anna",
     "smile_open_therm": "Adam",
     "stretch": "Stretch",
 }

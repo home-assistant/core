@@ -1,4 +1,4 @@
-"""The scene tests for the myq platform."""
+"""Tests for Shelly diagnostics platform."""
 from aiohttp import ClientSession
 
 from homeassistant.components.diagnostics import REDACTED
