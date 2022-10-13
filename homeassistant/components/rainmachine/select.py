@@ -130,7 +130,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
         self._label_to_api_value_map = {}
 
         for option in description.extended_options:
-            if unit_system == IMPERIAL_SYSTEM:
+            if unit_system is IMPERIAL_SYSTEM:
                 label = option.imperial_label
             else:
                 label = option.metric_label
