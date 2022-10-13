@@ -98,7 +98,7 @@ def default_options(hass: HomeAssistant) -> dict[str, str | None]:
         CONF_DEPARTURE_TIME: None,
         CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
     }
-    if hass.config.units == IMPERIAL_SYSTEM:
+    if hass.config.units is IMPERIAL_SYSTEM:
         default[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
     return default
 
