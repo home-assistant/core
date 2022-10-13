@@ -42,6 +42,7 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
         port = user_input[CONF_PORT]
         errors = {}
+        client = None
 
         # Attempt to create the server - make sure it's going to work
         try:
@@ -53,8 +54,7 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
         except ConnectionRefusedError:
             errors["base"] = "cannot_connect"
         finally:
-            if "client" in locals():
-                del client
+            del client
 
         await self.async_set_unique_id("Snapcast")
         self._abort_if_unique_id_configured()
