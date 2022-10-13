@@ -188,6 +188,132 @@ async def test_sensor_numeric_state(hass):
     assert len(async_get(hass).issues) == 0
 
 
+async def test_sensor_multi_numeric_state(hass):
+    """Test sensor on numeric state platform observations with more than one range."""
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "nice_day",
+            "observations": [
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_temp",
+                    "below": 0,
+                    "prob_given_true": 0.05,
+                    "prob_given_false": 0.2,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_temp",
+                    "below": 10,
+                    "above": 0,
+                    "prob_given_true": 0.1,
+                    "prob_given_false": 0.25,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_temp",
+                    "below": 15,
+                    "above": 10,
+                    "prob_given_true": 0.2,
+                    "prob_given_false": 0.35,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_temp",
+                    "below": 25,
+                    "above": 15,
+                    "prob_given_true": 0.5,
+                    "prob_given_false": 0.15,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_temp",
+                    "above": 25,
+                    "prob_given_true": 0.15,
+                    "prob_given_false": 0.05,
+                },
+            ],
+            "prior": 0.3,
+        }
+    }
+
+    assert await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_temp", -5)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
+    assert abs(state.attributes.get("probability") - 0.09677) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range [5, 10]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / P(B|A)*P(A) + P(B|~A)*P(~A).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
+    # Calculated using P(A) = 0.3, P(B|A) = 0.05, P(B|~A) = 0.2 -> 0.09677
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_temp", 5)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
+    assert abs(state.attributes.get("probability") - 0.14634146) < 0.01
+    # Calculated using P(A) = 0.3, P(B|A) = 0.1, P(B|~A) = 0.25 -> 0.14634146
+
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_temp", 12)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+    assert abs(state.attributes.get("probability") - 0.19672131) < 0.01
+    # Calculated using P(A) = 0.3, P(B|A) = 0.2, P(B|~A) = 0.35 -> 0.19672131
+
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_temp", 22)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+    assert abs(state.attributes.get("probability") - 0.58823529) < 0.01
+    # Calculated using P(A) = 0.3, P(B|A) = 0.5, P(B|~A) = 0.15 -> 0.58823529
+
+    assert state.state == "on"
+
+    hass.states.async_set("sensor.test_temp", 30)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+    assert abs(state.attributes.get("probability") - 0.562500) < 0.01
+    # Calculated using P(A) = 0.3, P(B|A) = 0.15, P(B|~A) = 0.05 -> 0.562500
+
+    assert state.state == "on"
+
+    # Edge cases
+    # if on a threshold only one observation should be included and not both
+    hass.states.async_set("sensor.test_temp", 15)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
+
+    assert (abs(state.attributes.get("probability") - 0.58823529) < 0.01) or (
+        abs(state.attributes.get("probability") - 0.19672131) < 0.01
+    )
+
+    assert abs(state.attributes.get("probability") - 0.58823529) < 0.01
+    assert abs(state.attributes.get("probability") - 0.19672131) < 0.01
+
+    assert state.state == "off"
+
+    assert len(async_get(hass).issues) == 0
+
+
 async def test_sensor_state(hass):
     """Test sensor on state platform observations."""
     prior = 0.2
