@@ -60,15 +60,15 @@ jobs:
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: >-
-          echo "::set-output name=key::venv-${{ env.CACHE_VERSION }}-${{
+          echo "key=venv-${{ env.CACHE_VERSION }}-${{
             hashFiles('requirements_test.txt') }}-${{
             hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}"
+            hashFiles('homeassistant/package_constraints.txt') }}" >> $GITHUB_OUTPUT
       - name: Generate partial pre-commit restore key
         id: generate_pre-commit_cache_key
         run: >-
-          echo "::set-output name=key::pre-commit-${{ env.CACHE_VERSION }}-${{
-            hashFiles('.pre-commit-config.yaml') }}"
+          echo "key=pre-commit-${{ env.CACHE_VERSION }}-${{
+            hashFiles('.pre-commit-config.yaml') }}"  >> $GITHUB_OUTPUT
       - name: Filter for core changes
         uses: dorny/paths-filter@v2.11.1
         id: core
@@ -146,19 +146,19 @@ jobs:
 
           # Output & sent to GitHub Actions
           echo "python_versions: ${ALL_PYTHON_VERSIONS}"
-          echo "::set-output name=python_versions::${ALL_PYTHON_VERSIONS}"
+          echo "python_versions=${ALL_PYTHON_VERSIONS}" >> $GITHUB_OUTPUT
           echo "test_full_suite: ${test_full_suite}"
-          echo "::set-output name=test_full_suite::${test_full_suite}"
+          echo "test_full_suite=${test_full_suite}" >> $GITHUB_OUTPUT
           echo "integrations_glob: ${integrations_glob}"
-          echo "::set-output name=integrations_glob::${integrations_glob}"
+          echo "integrations_glob=${integrations_glob}" >> $GITHUB_OUTPUT
           echo "test_group_count: ${test_group_count}"
-          echo "::set-output name=test_group_count::${test_group_count}"
+          echo "test_group_count=${test_group_count}" >> $GITHUB_OUTPUT
           echo "test_groups: ${test_groups}"
-          echo "::set-output name=test_groups::${test_groups}"
+          echo "test_groups=${test_groups}" >> $GITHUB_OUTPUT
           echo "tests: ${tests}"
-          echo "::set-output name=tests::${tests}"
+          echo "tests=${tests}" >> $GITHUB_OUTPUT
           echo "tests_glob: ${tests_glob}"
-          echo "::set-output name=tests_glob::${tests_glob}"
+          echo "tests_glob=${tests_glob}" >> $GITHUB_OUTPUT
 
   pre-commit:
     name: Prepare pre-commit base
@@ -505,8 +505,8 @@ jobs:
       - name: Generate partial pip restore key
         id: generate-pip-key
         run: >-
-          echo "::set-output name=key::pip-${{ env.PIP_CACHE_VERSION }}-${{
-            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
+          echo "key=pip-${{ env.PIP_CACHE_VERSION }}-${{
+            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.11
