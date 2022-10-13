@@ -40,7 +40,15 @@ async def test_diagnostics(hass, hass_client) -> None:
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag == {
         "data": {
-            "areas": {},
+            "areas": {
+                "898": {"id": "898", "name": "Basement", "parent_id": None},
+                "822": {"id": "822", "name": "Bedroom", "parent_id": "898"},
+                "910": {"id": "910", "name": "Bathroom", "parent_id": "898"},
+                "1024": {"id": "1024", "name": "Master Bedroom", "parent_id": None},
+                "1025": {"id": "1025", "name": "Kitchen", "parent_id": None},
+                "1026": {"id": "1026", "name": "Dining Room", "parent_id": None},
+                "1205": {"id": "1205", "name": "Hallway", "parent_id": None},
+            },
             "buttons": {
                 "111": {
                     "device_id": "111",
@@ -73,6 +81,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "name": "bridge",
                     "serial": 1234,
                     "type": "type",
+                    "area": "1205",
                 },
                 "801": {
                     "device_id": "801",
@@ -85,6 +94,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "model": None,
                     "serial": None,
                     "tilt": None,
+                    "area": "822",
                 },
                 "802": {
                     "device_id": "802",
@@ -97,6 +107,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "model": None,
                     "serial": None,
                     "tilt": None,
+                    "area": "822",
                 },
                 "803": {
                     "device_id": "803",
@@ -109,6 +120,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "model": None,
                     "serial": None,
                     "tilt": None,
+                    "area": "910",
                 },
                 "804": {
                     "device_id": "804",
@@ -121,6 +133,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "model": None,
                     "serial": None,
                     "tilt": None,
+                    "area": "1024",
                 },
                 "901": {
                     "device_id": "901",
@@ -133,6 +146,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "model": None,
                     "serial": 5442321,
                     "tilt": None,
+                    "area": "1025",
                 },
                 "9": {
                     "device_id": "9",
@@ -147,7 +161,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "model": "PJ2-3BRL-GXX-X01",
                     "serial": 68551522,
                     "device_name": "Pico",
-                    "area": "6",
+                    "area": "1026",
                 },
                 "1355": {
                     "device_id": "1355",

@@ -105,7 +105,7 @@ class MockBridge:
         """Initialize MockBridge instance with configured mock connectivity."""
         self.can_connect = can_connect
         self.is_currently_connected = False
-        self.areas = {}
+        self.areas = self.load_areas()
         self.occupancy_groups = {}
         self.scenes = self.get_scenes()
         self.devices = self.load_devices()
@@ -126,10 +126,28 @@ class MockBridge:
         """Return whether the mock bridge is connected."""
         return self.is_currently_connected
 
+    def load_areas(self):
+        """Loak mock areas into self.areas."""
+        return {
+            "898": {"id": "898", "name": "Basement", "parent_id": None},
+            "822": {"id": "822", "name": "Bedroom", "parent_id": "898"},
+            "910": {"id": "910", "name": "Bathroom", "parent_id": "898"},
+            "1024": {"id": "1024", "name": "Master Bedroom", "parent_id": None},
+            "1025": {"id": "1025", "name": "Kitchen", "parent_id": None},
+            "1026": {"id": "1026", "name": "Dining Room", "parent_id": None},
+            "1205": {"id": "1205", "name": "Hallway", "parent_id": None},
+        }
+
     def load_devices(self):
         """Load mock devices into self.devices."""
         return {
-            "1": {"serial": 1234, "name": "bridge", "model": "model", "type": "type"},
+            "1": {
+                "serial": 1234,
+                "name": "bridge",
+                "model": "model",
+                "type": "type",
+                "area": "1205",
+            },
             "801": {
                 "device_id": "801",
                 "current_state": 100,
@@ -141,6 +159,7 @@ class MockBridge:
                 "model": None,
                 "serial": None,
                 "tilt": None,
+                "area": "822",
             },
             "802": {
                 "device_id": "802",
@@ -153,6 +172,7 @@ class MockBridge:
                 "model": None,
                 "serial": None,
                 "tilt": None,
+                "area": "822",
             },
             "803": {
                 "device_id": "803",
@@ -165,6 +185,7 @@ class MockBridge:
                 "model": None,
                 "serial": None,
                 "tilt": None,
+                "area": "910",
             },
             "804": {
                 "device_id": "804",
@@ -177,6 +198,7 @@ class MockBridge:
                 "model": None,
                 "serial": None,
                 "tilt": None,
+                "area": "1024",
             },
             "901": {
                 "device_id": "901",
@@ -189,6 +211,7 @@ class MockBridge:
                 "model": None,
                 "serial": 5442321,
                 "tilt": None,
+                "area": "1025",
             },
             "9": {
                 "device_id": "9",
@@ -203,7 +226,7 @@ class MockBridge:
                 "model": "PJ2-3BRL-GXX-X01",
                 "serial": 68551522,
                 "device_name": "Pico",
-                "area": "6",
+                "area": "1026",
             },
             "1355": {
                 "device_id": "1355",
