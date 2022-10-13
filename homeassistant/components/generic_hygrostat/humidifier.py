@@ -282,7 +282,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             return
 
         self._target_humidity = humidity
-        await self._async_operate(force=True)
+        await self._async_operate()
         await self.async_update_ha_state()
 
     @property
