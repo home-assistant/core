@@ -21,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, UnitSystem
 
 from . import MazdaEntity
@@ -109,19 +108,15 @@ def _ev_remaining_range_supported(data):
 
 def _fuel_distance_remaining_value(data, unit_system):
     """Get the fuel distance remaining value."""
-    distance = data["status"]["fuelDistanceRemainingKm"]
-    if unit_system is IMPERIAL_SYSTEM:
-        distance = DistanceConverter.convert(distance, LENGTH_KILOMETERS, LENGTH_MILES)
-    return round(distance)
+    return round(
+        unit_system.length(data["status"]["fuelDistanceRemainingKm"], LENGTH_KILOMETERS)
+    )
 
 
 def _odometer_value(data, unit_system):
     """Get the odometer value."""
     # In order to match the behavior of the Mazda mobile app, we always round down
-    distance = data["status"]["odometerKm"]
-    if unit_system is IMPERIAL_SYSTEM:
-        distance = DistanceConverter.convert(distance, LENGTH_KILOMETERS, LENGTH_MILES)
-    return int(distance)
+    return int(unit_system.length(data["status"]["odometerKm"], LENGTH_KILOMETERS))
 
 
 def _front_left_tire_pressure_value(data, unit_system):
@@ -151,10 +146,11 @@ def _ev_charge_level_value(data, unit_system):
 
 def _ev_remaining_range_value(data, unit_system):
     """Get the remaining range value."""
-    distance = data["evStatus"]["chargeInfo"]["drivingRangeKm"]
-    if unit_system is IMPERIAL_SYSTEM:
-        distance = DistanceConverter.convert(distance, LENGTH_KILOMETERS, LENGTH_MILES)
-    return round(distance)
+    return round(
+        unit_system.length(
+            data["evStatus"]["chargeInfo"]["drivingRangeKm"], LENGTH_KILOMETERS
+        )
+    )
 
 
 SENSOR_ENTITIES = [
