@@ -99,9 +99,11 @@
     },
     "issues": {
         "deprecated_yaml": {
+            "description": "La configuraci\u00f3 de Nest mitjan\u00e7ant YAML s'eliminar\u00e0 de Home Assistant a la versi\u00f3 2022.10. \n\nLa configuraci\u00f3 existent de credencials d'aplicaci\u00f3 OAuth i d'acc\u00e9s s'ha importat autom\u00e0ticament a la interf\u00edcie d'usuari. Elimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
             "title": "La configuraci\u00f3 YAML de Nest est\u00e0 sent eliminada"
         },
         "removed_app_auth": {
+            "description": "Per millorar la seguretat i reduir riscos, Google ha fet obsolet el m\u00e8tode d'autenticaci\u00f3 que utilitza Home Assistant. \n\n **Per resoldre-ho, has de dur a terme una acci\u00f3** ([m\u00e9s informaci\u00f3]({more_info_url})) \n\n 1. Visita la p\u00e0gina d'integracions.\n 2. Fes clic a Reconfigura a la integraci\u00f3 Nest.\n 3. Home Assistant et guiar\u00e0 a trav\u00e9s dels passos per actualitzar a l'autenticaci\u00f3 web. \n\nConsulta les [instruccions de la integraci\u00f3] Nest ({documentation_url}) per m\u00e9s informaci\u00f3 sobre resoluci\u00f3 de problemes.",
             "title": "Les credencials d'autenticaci\u00f3 de Nest s'han d'actualitzar"
         }
     }

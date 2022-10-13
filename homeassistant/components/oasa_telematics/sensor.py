@@ -127,7 +127,7 @@ class OASATelematicsSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from OASA API and update the states."""
         self.data.update()
         self._times = self.data.info

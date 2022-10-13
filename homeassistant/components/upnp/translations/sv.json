@@ -13,6 +13,20 @@
         "step": {
             "ssdp_confirm": {
                 "description": "Vill du konfigurera denna UPnP/IGD enhet?"
+            },
+            "user": {
+                "data": {
+                    "unique_id": "Enhet"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Uppdateringsintervall (sekunder, minst 30)"
+                }
             }
         }
     }

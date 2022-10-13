@@ -2,15 +2,26 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager
 import functools
+from json import JSONDecoder, loads
 import logging
+import sqlite3
 import ssl
 import threading
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp.test_utils import make_mocked_request
+from aiohttp import client
+from aiohttp.pytest_plugin import AiohttpClient
+from aiohttp.test_utils import (
+    BaseTestServer,
+    TestClient,
+    TestServer,
+    make_mocked_request,
+)
+from aiohttp.web import Application
 import freezegun
 import multidict
 import pytest
@@ -57,6 +68,7 @@ from tests.components.recorder.common import (  # noqa: E402, isort:skip
     async_recorder_block_till_done,
 )
 
+
 _LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
@@ -92,6 +104,11 @@ def pytest_runtest_setup():
 
     freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime
     freezegun.api.FakeDatetime = HAFakeDatetime
+
+    def adapt_datetime(val):
+        return val.isoformat(" ")
+
+    sqlite3.register_adapter(HAFakeDatetime, adapt_datetime)
 
 
 def ha_datetime_to_fakedatetime(datetime):
@@ -203,6 +220,97 @@ def load_registries():
     return True
 
 
+class CoalescingResponse(client.ClientWebSocketResponse):
+    """ClientWebSocketResponse client that mimics the websocket js code."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Init the ClientWebSocketResponse."""
+        super().__init__(*args, **kwargs)
+        self._recv_buffer: list[Any] = []
+
+    async def receive_json(
+        self,
+        *,
+        loads: JSONDecoder = loads,
+        timeout: float | None = None,
+    ) -> Any:
+        """receive_json or from buffer."""
+        if self._recv_buffer:
+            return self._recv_buffer.pop(0)
+        data = await self.receive_str(timeout=timeout)
+        decoded = loads(data)
+        if isinstance(decoded, list):
+            self._recv_buffer = decoded
+            return self._recv_buffer.pop(0)
+        return decoded
+
+
+class CoalescingClient(TestClient):
+    """Client that mimics the websocket js code."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Init TestClient."""
+        super().__init__(*args, ws_response_class=CoalescingResponse, **kwargs)
+
+
+@pytest.fixture
+def aiohttp_client_cls():
+    """Override the test class for aiohttp."""
+    return CoalescingClient
+
+
+@pytest.fixture
+def aiohttp_client(
+    loop: asyncio.AbstractEventLoop,
+) -> Generator[AiohttpClient, None, None]:
+    """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
+
+    Remove this when upgrading to 4.x as aiohttp_client_cls
+    will do the same thing
+
+    aiohttp_client(app, **kwargs)
+    aiohttp_client(server, **kwargs)
+    aiohttp_client(raw_server, **kwargs)
+    """
+    clients = []
+
+    async def go(
+        __param: Application | BaseTestServer,
+        *args: Any,
+        server_kwargs: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> TestClient:
+
+        if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
+            __param, (Application, BaseTestServer)
+        ):
+            __param = __param(loop, *args, **kwargs)
+            kwargs = {}
+        else:
+            assert not args, "args should be empty"
+
+        if isinstance(__param, Application):
+            server_kwargs = server_kwargs or {}
+            server = TestServer(__param, loop=loop, **server_kwargs)
+            client = CoalescingClient(server, loop=loop, **kwargs)
+        elif isinstance(__param, BaseTestServer):
+            client = TestClient(__param, loop=loop, **kwargs)
+        else:
+            raise ValueError("Unknown argument type: %r" % type(__param))
+
+        await client.start_server()
+        clients.append(client)
+        return client
+
+    yield go
+
+    async def finalize() -> None:
+        while clients:
+            await clients.pop().close()
+
+    loop.run_until_complete(finalize())
+
+
 @pytest.fixture
 def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
@@ -227,6 +335,8 @@ def hass(loop, load_registries, hass_storage, request):
 
     exceptions = []
     hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
+    ha._cv_hass.set(hass)
+
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
@@ -808,25 +918,22 @@ async def async_setup_recorder_instance(
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
 
-    async def async_setup_recorder(
-        hass: HomeAssistant, config: ConfigType | None = None
-    ) -> recorder.Recorder:
-        """Setup and return recorder instance."""  # noqa: D401
-        nightly = (
-            recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
-        )
-        stats = (
-            recorder.Recorder.async_periodic_statistics if enable_statistics else None
-        )
-        with patch(
-            "homeassistant.components.recorder.Recorder.async_nightly_tasks",
-            side_effect=nightly,
-            autospec=True,
-        ), patch(
-            "homeassistant.components.recorder.Recorder.async_periodic_statistics",
-            side_effect=stats,
-            autospec=True,
-        ):
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
+    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
+        autospec=True,
+    ), patch(
+        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+        side_effect=stats,
+        autospec=True,
+    ):
+
+        async def async_setup_recorder(
+            hass: HomeAssistant, config: ConfigType | None = None
+        ) -> recorder.Recorder:
+            """Setup and return recorder instance."""  # noqa: D401
             await _async_init_recorder_component(hass, config)
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
@@ -835,13 +942,13 @@ async def async_setup_recorder_instance(
                 await async_recorder_block_till_done(hass)
             return instance
 
-    return async_setup_recorder
+        yield async_setup_recorder
 
 
 @pytest.fixture
 async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
     """Fixture with in-memory recorder."""
-    await async_setup_recorder_instance(hass, recorder_config)
+    yield await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture
@@ -876,7 +983,7 @@ async def mock_enable_bluetooth(
     hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Fixture to mock starting the bleak scanner."""
-    entry = MockConfigEntry(domain="bluetooth")
+    entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -885,7 +992,22 @@ async def mock_enable_bluetooth(
 @pytest.fixture(name="mock_bluetooth_adapters")
 def mock_bluetooth_adapters():
     """Fixture to mock bluetooth adapters."""
-    with patch("bluetooth_adapters.get_bluetooth_adapters", return_value=[]):
+    with patch(
+        "homeassistant.components.bluetooth.util.platform.system", return_value="Linux"
+    ), patch(
+        "bluetooth_adapters.BlueZDBusObjects", return_value=MagicMock(load=AsyncMock())
+    ), patch(
+        "bluetooth_adapters.get_bluetooth_adapter_details",
+        return_value={
+            "hci0": {
+                "org.bluez.Adapter1": {
+                    "Address": "00:00:00:00:00:01",
+                    "Name": "BlueZ 4.63",
+                    "Modalias": "usbid:1234",
+                }
+            },
+        },
+    ):
         yield
 
 
@@ -895,26 +1017,18 @@ def mock_bleak_scanner_start():
 
     # Late imports to avoid loading bleak unless we need it
 
-    import bleak  # pylint: disable=import-outside-toplevel
-
     from homeassistant.components.bluetooth import (  # pylint: disable=import-outside-toplevel
-        models as bluetooth_models,
+        scanner as bluetooth_scanner,
     )
-
-    scanner = bleak.BleakScanner
-    bluetooth_models.HA_BLEAK_SCANNER = None
-
-    with patch("homeassistant.components.bluetooth.HaBleakScanner.stop"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
-    ) as mock_bleak_scanner_start:
-        yield mock_bleak_scanner_start
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    if bluetooth_models.HA_BLEAK_SCANNER:
-        bluetooth_models.HA_BLEAK_SCANNER.stop = AsyncMock()
-    bleak.BleakScanner = scanner
+    bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()
+    with patch(
+        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
+    ) as mock_bleak_scanner_start:
+        yield mock_bleak_scanner_start
 
 
 @pytest.fixture(name="mock_bluetooth")

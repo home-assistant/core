@@ -23,6 +23,7 @@
                 "description": "Konfigurera auktorisering till din Hyperion Ambilight-server"
             },
             "confirm": {
+                "description": "Vill du l\u00e4gga till denna Hyperion Ambilight till Home Assistant? \n\n **V\u00e4rd:** {host}\n **Port:** {port}\n **ID**: {id}",
                 "title": "Bekr\u00e4fta till\u00e4gg av Hyperion Ambilight-tj\u00e4nst"
             },
             "create_token": {

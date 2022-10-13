@@ -35,9 +35,7 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    MODE_3HOURLY_LABEL,
     MODE_DAILY,
-    MODE_DAILY_LABEL,
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
@@ -52,7 +50,7 @@ ATTR_SITE_NAME = "site_name"
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="name",
-        name="Station Name",
+        name="Station name",
         device_class=None,
         native_unit_of_measurement=None,
         icon="mdi:label-outline",
@@ -76,7 +74,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="feels_like_temperature",
-        name="Feels Like Temperature",
+        name="Feels like temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         icon=None,
@@ -84,25 +82,24 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="wind_speed",
-        name="Wind Speed",
-        device_class=None,
+        name="Wind speed",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
         entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
         key="wind_direction",
-        name="Wind Direction",
-        device_class=None,
+        name="Wind direction",
         native_unit_of_measurement=None,
         icon="mdi:compass-outline",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="wind_gust",
-        name="Wind Gust",
-        device_class=None,
+        name="Wind gust",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
         entity_registry_enabled_default=False,
     ),
@@ -116,15 +113,15 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="visibility_distance",
-        name="Visibility Distance",
-        device_class=None,
+        name="Visibility distance",
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:eye",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="uv",
-        name="UV Index",
+        name="UV index",
         device_class=None,
         native_unit_of_measurement=UV_INDEX,
         icon="mdi:weather-sunny-alert",
@@ -132,7 +129,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="precipitation",
-        name="Probability of Precipitation",
+        name="Probability of precipitation",
         device_class=None,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-rainy",
@@ -183,6 +180,8 @@ class MetOfficeCurrentSensor(
 ):
     """Implementation of a Met Office current weather condition sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[MetOfficeData],
@@ -194,13 +193,13 @@ class MetOfficeCurrentSensor(
         super().__init__(coordinator)
 
         self.entity_description = description
-        mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
+        mode_label = "3-hourly" if use_3hourly else "daily"
 
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
-        self._attr_name = f"{hass_data[METOFFICE_NAME]} {description.name} {mode_label}"
-        self._attr_unique_id = f"{description.name}_{hass_data[METOFFICE_COORDINATES]}"
+        self._attr_name = f"{description.name} {mode_label}"
+        self._attr_unique_id = f"{description.key}_{hass_data[METOFFICE_COORDINATES]}"
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
         self._attr_entity_registry_enabled_default = (

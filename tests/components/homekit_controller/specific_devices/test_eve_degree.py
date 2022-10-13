@@ -5,7 +5,7 @@ from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import PERCENTAGE, PRESSURE_HPA, TEMP_CELSIUS
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -34,7 +34,7 @@ async def test_eve_degree_setup(hass):
             entities=[
                 EntityTestInfo(
                     entity_id="sensor.eve_degree_aa11_temperature",
-                    unique_id="homekit-AA00A0A00000-22",
+                    unique_id="00:00:00:00:00:00_1_22",
                     friendly_name="Eve Degree AA11 Temperature",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=TEMP_CELSIUS,
@@ -42,7 +42,7 @@ async def test_eve_degree_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.eve_degree_aa11_humidity",
-                    unique_id="homekit-AA00A0A00000-27",
+                    unique_id="00:00:00:00:00:00_1_27",
                     friendly_name="Eve Degree AA11 Humidity",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=PERCENTAGE,
@@ -50,7 +50,7 @@ async def test_eve_degree_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.eve_degree_aa11_air_pressure",
-                    unique_id="homekit-AA00A0A00000-aid:1-sid:30-cid:32",
+                    unique_id="00:00:00:00:00:00_1_30_32",
                     friendly_name="Eve Degree AA11 Air Pressure",
                     unit_of_measurement=PRESSURE_HPA,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
@@ -58,15 +58,16 @@ async def test_eve_degree_setup(hass):
                 ),
                 EntityTestInfo(
                     entity_id="sensor.eve_degree_aa11_battery",
-                    unique_id="homekit-AA00A0A00000-17",
+                    unique_id="00:00:00:00:00:00_1_17",
                     friendly_name="Eve Degree AA11 Battery",
+                    entity_category=EntityCategory.DIAGNOSTIC,
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=PERCENTAGE,
                     state="65",
                 ),
                 EntityTestInfo(
                     entity_id="number.eve_degree_aa11_elevation",
-                    unique_id="homekit-AA00A0A00000-aid:1-sid:30-cid:33",
+                    unique_id="00:00:00:00:00:00_1_30_33",
                     friendly_name="Eve Degree AA11 Elevation",
                     capabilities={
                         "max": 9000,

@@ -12,7 +12,8 @@
             "cloud_credentials_incomplete": "Cloud-uppgifterna \u00e4r ofullst\u00e4ndiga, v\u00e4nligen fyll i anv\u00e4ndarnamn, l\u00f6senord och land",
             "cloud_login_error": "Kunde inte logga in p\u00e5 Xiaomi Miio Cloud, kontrollera anv\u00e4ndaruppgifterna.",
             "cloud_no_devices": "Inga enheter hittades i detta Xiaomi Miio molnkonto.",
-            "unknown_device": "Enhetsmodellen \u00e4r inte k\u00e4nd, kan inte st\u00e4lla in enheten med hj\u00e4lp av konfigurationsfl\u00f6de."
+            "unknown_device": "Enhetsmodellen \u00e4r inte k\u00e4nd, kan inte st\u00e4lla in enheten med hj\u00e4lp av konfigurationsfl\u00f6de.",
+            "wrong_token": "Kontrollsummafel, fel token"
         },
         "flow_title": "{name}",
         "step": {
@@ -32,8 +33,10 @@
             },
             "manual": {
                 "data": {
-                    "host": "IP-adress"
-                }
+                    "host": "IP-adress",
+                    "token": "API  Token"
+                },
+                "description": "Du beh\u00f6ver de 32 tecknen API  Token , se https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token f\u00f6r instruktioner. Observera att denna API  Token skiljer sig fr\u00e5n nyckeln som anv\u00e4nds av Xiaomi Aqara-integrationen."
             },
             "reauth_confirm": {
                 "description": "Xiaomi Miio-integrationen m\u00e5ste autentisera ditt konto igen f\u00f6r att uppdatera tokens eller l\u00e4gga till saknade molnuppgifter.",
@@ -44,6 +47,18 @@
                     "select_device": "Miio-enhet"
                 },
                 "description": "V\u00e4lj Xiaomi Miio-enheten f\u00f6r att st\u00e4lla in."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Molnuppgifter \u00e4r ofullst\u00e4ndiga, v\u00e4nligen fyll i anv\u00e4ndarnamn, l\u00f6senord och land"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Anv\u00e4nd moln f\u00f6r att f\u00e5 anslutna underenheter"
+                }
             }
         }
     }

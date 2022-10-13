@@ -25,10 +25,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file, run_information_with_session
+from .common import corrupt_db_file, run_information_with_session, wait_recording_done
 
 from tests.common import SetupRecorderInstanceT, async_test_home_assistant
-from tests.components.recorder.common import wait_recording_done
 
 
 def test_session_scope_not_setup(hass_recorder):

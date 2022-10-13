@@ -4,6 +4,7 @@
             "already_configured": "Bryggan \u00e4r redan konfigurerad",
             "already_in_progress": "Konfigurations fl\u00f6det f\u00f6r bryggan p\u00e5g\u00e5r redan.",
             "no_bridges": "Inga deCONZ-bryggor uppt\u00e4cktes",
+            "no_hardware_available": "Ingen radioh\u00e5rdvara ansluten till deCONZ",
             "updated_instance": "Uppdaterad deCONZ-instans med ny v\u00e4rdadress"
         },
         "error": {
@@ -97,7 +98,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Till\u00e5t deCONZ CLIP-sensorer",
-                    "allow_deconz_groups": "Till\u00e5t deCONZ ljusgrupper"
+                    "allow_deconz_groups": "Till\u00e5t deCONZ ljusgrupper",
+                    "allow_new_devices": "Till\u00e5t automatiskt till\u00e4gg av nya enheter"
                 },
                 "description": "Konfigurera synlighet f\u00f6r deCONZ-enhetstyper",
                 "title": "deCONZ-inst\u00e4llningar"

@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.components.network import async_get_ipv4_broadcast_addresses
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -32,7 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_scan_update(_=None):
-        await gree_discovery.discovery.scan()
+        bcast_addr = list(await async_get_ipv4_broadcast_addresses(hass))
+        await gree_discovery.discovery.scan(0, bcast_ifaces=bcast_addr)
 
     _LOGGER.debug("Scanning network for Gree devices")
     await _async_scan_update()

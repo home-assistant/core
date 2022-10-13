@@ -50,13 +50,12 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
@@ -186,6 +185,16 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN = vol.All(
+    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
+    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
+    # are no longer supported, support was removed in release 2021.12
+    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
+    cv.removed(CONF_PAYLOAD_LOW_SPEED),
+    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
+    cv.removed(CONF_SPEED_COMMAND_TOPIC),
+    cv.removed(CONF_SPEED_LIST),
+    cv.removed(CONF_SPEED_STATE_TOPIC),
+    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
@@ -231,9 +240,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    await async_discover_yaml_entities(hass, fan.DOMAIN)
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -385,7 +391,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self._state = False
             elif payload == PAYLOAD_NONE:
                 self._state = None
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -407,7 +413,7 @@ class MqttFan(MqttEntity, FanEntity):
                 return
             if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
                 self._percentage = None
-                self.async_write_ha_state()
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
                 return
             try:
                 percentage = ranged_value_to_percentage(
@@ -430,7 +436,7 @@ class MqttFan(MqttEntity, FanEntity):
                 )
                 return
             self._percentage = percentage
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_PERCENTAGE_STATE_TOPIC] is not None:
             topics[CONF_PERCENTAGE_STATE_TOPIC] = {
@@ -463,7 +469,7 @@ class MqttFan(MqttEntity, FanEntity):
                 return
 
             self._preset_mode = preset_mode
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_PRESET_MODE_STATE_TOPIC] is not None:
             topics[CONF_PRESET_MODE_STATE_TOPIC] = {
@@ -486,7 +492,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self._oscillation = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
                 self._oscillation = False
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
             topics[CONF_OSCILLATION_STATE_TOPIC] = {

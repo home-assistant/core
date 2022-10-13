@@ -341,7 +341,7 @@ async def test_video_bad_params(
     url = async_generate_event_video_url(event)
     from_value = event_start if start is not None else fixed_now
     to_value = start if start is not None else end
-    url = url.replace(from_value.isoformat(), to_value)
+    url = url.replace(from_value.replace(microsecond=0).isoformat(), to_value)
 
     http_client = await hass_client()
     response = cast(ClientResponse, await http_client.get(url))

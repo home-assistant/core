@@ -4,13 +4,14 @@ from __future__ import annotations
 from collections.abc import Callable
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.const import (
     CommandClass,
+    ExclusionStrategy,
     InclusionStrategy,
     LogLevel,
     Protocols,
@@ -26,7 +27,7 @@ from zwave_js_server.exceptions import (
     NotFoundError,
     SetValueFailed,
 )
-from zwave_js_server.firmware import begin_firmware_update
+from zwave_js_server.firmware import update_firmware
 from zwave_js_server.model.controller import (
     ControllerStatistics,
     InclusionGrant,
@@ -35,8 +36,9 @@ from zwave_js_server.model.controller import (
 )
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.firmware import (
-    FirmwareUpdateFinished,
+    FirmwareUpdateData,
     FirmwareUpdateProgress,
+    FirmwareUpdateResult,
 )
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
@@ -46,12 +48,12 @@ from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.const import (
+from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
+    ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
@@ -67,6 +69,7 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    USER_AGENT,
 )
 from .helpers import (
     async_enable_statistics,
@@ -153,7 +156,7 @@ STATUS = "status"
 REQUESTED_SECURITY_CLASSES = "requested_security_classes"
 
 FEATURE = "feature"
-UNPROVISION = "unprovision"
+STRATEGY = "strategy"
 
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
@@ -465,7 +468,7 @@ async def websocket_network_status(
         )
         return
     controller = driver.controller
-    await controller.async_get_state()
+    controller.update(await controller.async_get_state())
     client_version_info = client.version
     assert client_version_info  # When client is connected version info is set.
     data = {
@@ -480,12 +483,12 @@ async def websocket_network_status(
             "sdk_version": controller.sdk_version,
             "type": controller.controller_type,
             "own_node_id": controller.own_node_id,
-            "is_secondary": controller.is_secondary,
+            "is_primary": controller.is_primary,
             "is_using_home_id_from_other_network": controller.is_using_home_id_from_other_network,
             "is_sis_present": controller.is_SIS_present,
             "was_real_primary": controller.was_real_primary,
-            "is_static_update_controller": controller.is_static_update_controller,
-            "is_slave": controller.is_slave,
+            "is_suc": controller.is_suc,
+            "node_type": controller.node_type,
             "firmware_version": controller.firmware_version,
             "manufacturer_id": controller.manufacturer_id,
             "product_id": controller.product_id,
@@ -1056,7 +1059,7 @@ async def websocket_stop_exclusion(
     {
         vol.Required(TYPE): "zwave_js/remove_node",
         vol.Required(ENTRY_ID): str,
-        vol.Optional(UNPROVISION): bool,
+        vol.Optional(STRATEGY): vol.Coerce(ExclusionStrategy),
     }
 )
 @websocket_api.async_response
@@ -1106,7 +1109,7 @@ async def websocket_remove_node(
         controller.on("node removed", node_removed),
     ]
 
-    result = await controller.async_begin_exclusion(msg.get(UNPROVISION))
+    result = await controller.async_begin_exclusion(msg.get(STRATEGY))
     connection.send_result(
         msg[ID],
         result,
@@ -1895,11 +1898,14 @@ async def websocket_is_node_firmware_update_in_progress(
 
 def _get_firmware_update_progress_dict(
     progress: FirmwareUpdateProgress,
-) -> dict[str, int]:
+) -> dict[str, int | float]:
     """Get a dictionary of firmware update progress."""
     return {
+        "current_file": progress.current_file,
+        "total_files": progress.total_files,
         "sent_fragments": progress.sent_fragments,
         "total_fragments": progress.total_fragments,
+        "progress": progress.progress,
     }
 
 
@@ -1941,14 +1947,16 @@ async def websocket_subscribe_firmware_update_status(
 
     @callback
     def forward_finished(event: dict) -> None:
-        finished: FirmwareUpdateFinished = event["firmware_update_finished"]
+        finished: FirmwareUpdateResult = event["firmware_update_finished"]
         connection.send_message(
             websocket_api.event_message(
                 msg[ID],
                 {
                     "event": event["event"],
                     "status": finished.status,
+                    "success": finished.success,
                     "wait_time": finished.wait_time,
+                    "reinterview": finished.reinterview,
                 },
             )
         )
@@ -2050,20 +2058,20 @@ class FirmwareUploadView(HomeAssistantView):
         if "file" not in data or not isinstance(data["file"], web_request.FileField):
             raise web_exceptions.HTTPBadRequest
 
-        target = None
-        if "target" in data:
-            target = int(cast(str, data["target"]))
-
         uploaded_file: web_request.FileField = data["file"]
 
         try:
-            await begin_firmware_update(
+            await update_firmware(
                 node.client.ws_server_url,
                 node,
-                uploaded_file.filename,
-                await hass.async_add_executor_job(uploaded_file.file.read),
+                [
+                    FirmwareUpdateData(
+                        uploaded_file.filename,
+                        await hass.async_add_executor_job(uploaded_file.file.read),
+                    )
+                ],
                 async_get_clientsession(hass),
-                target=target,
+                additional_user_agent_components=USER_AGENT,
             )
         except BaseZwaveJSServerError as err:
             raise web_exceptions.HTTPBadRequest(reason=str(err)) from err

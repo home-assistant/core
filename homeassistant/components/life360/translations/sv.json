@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Konto har redan konfigurerats",
             "invalid_auth": "Ogiltig autentisering",
-            "reauth_successful": "\u00c5terautentisering lyckades"
+            "reauth_successful": "\u00c5terautentisering lyckades",
+            "unknown": "Ov\u00e4ntat fel"
         },
         "create_entry": {
             "default": "F\u00f6r att st\u00e4lla in avancerade alternativ, se [Life360 documentation]({docs_url})."
@@ -11,6 +12,7 @@
         "error": {
             "already_configured": "Konto har redan konfigurerats",
             "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
             "invalid_username": "Ogiltigt anv\u00e4ndarnmn",
             "unknown": "Ov\u00e4ntat fel"
         },

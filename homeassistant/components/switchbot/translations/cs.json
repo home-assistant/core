@@ -7,6 +7,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Chcete nastavit {name}?"
+            },
+            "password": {
+                "data": {
+                    "password": "Heslo"
+                }
+            },
             "user": {
                 "data": {
                     "name": "Jm\u00e9no",

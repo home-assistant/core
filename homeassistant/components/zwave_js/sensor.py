@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -63,7 +63,7 @@ from .discovery_data_template import (
     NumericSensorDataTemplateData,
 )
 from .entity import ZWaveBaseEntity
-from .helpers import get_device_id, get_valueless_base_unique_id
+from .helpers import get_device_info, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
 
@@ -386,13 +386,8 @@ class ZWaveListSensor(ZwaveSensorBase):
             config_entry, driver, info, entity_description, unit_of_measurement
         )
 
-        property_key_name = self.info.primary_value.property_key_name
         # Entity class attributes
-        self._attr_name = self.generate_name(
-            include_value_name=True,
-            alternate_value_name=self.info.primary_value.property_name,
-            additional_info=[property_key_name] if property_key_name else None,
-        )
+        self._attr_name = self.generate_name(include_value_name=True)
 
     @property
     def native_value(self) -> str | None:
@@ -437,10 +432,9 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
         property_key_name = self.info.primary_value.property_key_name
         # Entity class attributes
         self._attr_name = self.generate_name(
-            include_value_name=True,
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[property_key_name] if property_key_name else None,
-            name_suffix="Config Parameter",
+            name_prefix="Config parameter",
         )
 
     @property
@@ -477,6 +471,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
 
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, node: ZwaveNode
@@ -484,20 +479,13 @@ class ZWaveNodeStatusSensor(SensorEntity):
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
         self.node = node
-        name: str = (
-            self.node.name
-            or self.node.device_config.description
-            or f"Node {self.node.node_id}"
-        )
+
         # Entity class attributes
-        self._attr_name = f"{name}: Node Status"
+        self._attr_name = "Node status"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.node_status"
-        # device is precreated in main handler
-        self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(driver, self.node)},
-        )
-        self._attr_native_value: str = node.status.name.lower()
+        # device may not be precreated in main handler yet
+        self._attr_device_info = get_device_info(driver, node)
 
     async def async_poll_value(self, _: bool) -> None:
         """Poll a value."""
@@ -536,4 +524,5 @@ class ZWaveNodeStatusSensor(SensorEntity):
                 self.async_remove,
             )
         )
+        self._attr_native_value: str = self.node.status.name.lower()
         self.async_write_ha_state()

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El servicio ya est\u00e1 configurado",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -12,15 +12,15 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "\u00bfQuieres configurar Home Assistant para que se conecte al servicio motionEye proporcionado por el complemento: {addon}?",
+                "description": "\u00bfQuieres configurar Home Assistant para conectarse al servicio motionEye proporcionado por el complemento: {addon}?",
                 "title": "motionEye a trav\u00e9s del complemento Home Assistant"
             },
             "user": {
                 "data": {
-                    "admin_password": "Contrase\u00f1a administrador",
-                    "admin_username": "Usuario administrador",
-                    "surveillance_password": "Contrase\u00f1a vigilancia",
-                    "surveillance_username": "Usuario vigilancia",
+                    "admin_password": "Contrase\u00f1a de administrador",
+                    "admin_username": "Nombre de usuario administrador",
+                    "surveillance_password": "Contrase\u00f1a de vigilancia",
+                    "surveillance_username": "Nombre de usuario de vigilancia",
                     "url": "URL"
                 }
             }
@@ -31,7 +31,7 @@
             "init": {
                 "data": {
                     "stream_url_template": "Plantilla de URL de transmisi\u00f3n",
-                    "webhook_set": "Configure los webhooks de motionEye para informar eventos a Home Assistant",
+                    "webhook_set": "Configura los webhooks de motionEye para informar eventos a Home Assistant",
                     "webhook_set_overwrite": "Sobrescribir webhooks no reconocidos"
                 }
             }

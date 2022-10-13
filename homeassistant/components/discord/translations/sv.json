@@ -8,6 +8,20 @@
             "cannot_connect": "Det gick inte att ansluta.",
             "invalid_auth": "Ogiltig autentisering",
             "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API  Token"
+                },
+                "description": "Se dokumentationen om hur du skaffar din Discord-botnyckel. \n\n {url}"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API  Token"
+                },
+                "description": "Se dokumentationen om hur du skaffar din Discord-botnyckel. \n\n {url}"
+            }
         }
     }
 }

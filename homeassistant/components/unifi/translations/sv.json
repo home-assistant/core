@@ -2,13 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Controller-platsen \u00e4r redan konfigurerad",
-            "configuration_updated": "Konfigurationen uppdaterad"
+            "configuration_updated": "Konfigurationen uppdaterad",
+            "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
             "faulty_credentials": "Felaktiga anv\u00e4ndaruppgifter",
             "service_unavailable": "Ingen tj\u00e4nst tillg\u00e4nglig",
             "unknown_client_mac": "Ingen klient tillg\u00e4nglig p\u00e5 den MAC-adressen"
         },
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -65,7 +67,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Skapa bandbreddsanv\u00e4ndningssensorer f\u00f6r n\u00e4tverksklienter"
+                    "allow_bandwidth_sensors": "Skapa bandbreddsanv\u00e4ndningssensorer f\u00f6r n\u00e4tverksklienter",
+                    "allow_uptime_sensors": "Upptidssensorer f\u00f6r n\u00e4tverksklienter"
                 },
                 "description": "Konfigurera statistiksensorer",
                 "title": "UniFi-inst\u00e4llningar 2/3"

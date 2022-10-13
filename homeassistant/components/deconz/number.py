@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from pydeconz.models.event import EventType
-from pydeconz.models.sensor.presence import PRESENCE_DELAY, Presence
+from pydeconz.models.sensor.presence import Presence
 
 from homeassistant.components.number import (
     DOMAIN,
@@ -42,7 +42,7 @@ ENTITY_DESCRIPTIONS = {
             key="delay",
             value_fn=lambda device: device.delay,
             suffix="Delay",
-            update_key=PRESENCE_DELAY,
+            update_key="delay",
             native_max_value=65535,
             native_min_value=0,
             native_step=1,
@@ -94,16 +94,9 @@ class DeconzNumber(DeconzDevice[Presence], NumberEntity):
     ) -> None:
         """Initialize deCONZ number entity."""
         self.entity_description: DeconzNumberDescription = description
+        self._update_key = self.entity_description.update_key
+        self._name_suffix = description.suffix
         super().__init__(device, gateway)
-
-        self._attr_name = f"{device.name} {description.suffix}"
-        self._update_keys = {self.entity_description.update_key, "reachable"}
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the number value."""
-        if self._device.changed_keys.intersection(self._update_keys):
-            super().async_update_callback()
 
     @property
     def native_value(self) -> float | None:

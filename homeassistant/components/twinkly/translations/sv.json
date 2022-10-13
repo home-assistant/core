@@ -7,6 +7,9 @@
             "cannot_connect": "Det gick inte att ansluta."
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Vill du konfigurera {name} - {model} ({host})?"
+            },
             "user": {
                 "data": {
                     "host": "V\u00e4rd"

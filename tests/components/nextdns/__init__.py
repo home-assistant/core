@@ -7,6 +7,7 @@ from nextdns import (
     AnalyticsIpVersions,
     AnalyticsProtocols,
     AnalyticsStatus,
+    ConnectionStatus,
     Settings,
 )
 
@@ -16,6 +17,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+CONNECTION_STATUS = ConnectionStatus(connected=True, profile_id="abcdef")
 PROFILES = [{"id": "xyz12", "fingerprint": "aabbccdd123", "name": "Fake Profile"}]
 STATUS = AnalyticsStatus(
     default_queries=40, allowed_queries=30, blocked_queries=20, relayed_queries=10
@@ -25,6 +27,7 @@ ENCRYPTION = AnalyticsEncryption(encrypted_queries=60, unencrypted_queries=40)
 IP_VERSIONS = AnalyticsIpVersions(ipv4_queries=90, ipv6_queries=10)
 PROTOCOLS = AnalyticsProtocols(
     doh_queries=20,
+    doh3_queries=15,
     doq_queries=10,
     dot_queries=30,
     tcp_queries=0,
@@ -54,6 +57,48 @@ SETTINGS = Settings(
     typosquatting_protection=True,
     web3=True,
     youtube_restricted_mode=False,
+    block_9gag=True,
+    block_amazon=True,
+    block_blizzard=True,
+    block_dailymotion=True,
+    block_discord=True,
+    block_disneyplus=True,
+    block_ebay=True,
+    block_facebook=True,
+    block_fortnite=True,
+    block_hulu=True,
+    block_imgur=True,
+    block_instagram=True,
+    block_leagueoflegends=True,
+    block_messenger=True,
+    block_minecraft=True,
+    block_netflix=True,
+    block_pinterest=True,
+    block_primevideo=True,
+    block_reddit=True,
+    block_roblox=True,
+    block_signal=True,
+    block_skype=True,
+    block_snapchat=True,
+    block_spotify=True,
+    block_steam=True,
+    block_telegram=True,
+    block_tiktok=True,
+    block_tinder=True,
+    block_tumblr=True,
+    block_twitch=True,
+    block_twitter=True,
+    block_vimeo=True,
+    block_vk=True,
+    block_whatsapp=True,
+    block_xboxlive=True,
+    block_youtube=True,
+    block_zoom=True,
+    block_dating=True,
+    block_gambling=True,
+    block_piracy=True,
+    block_porn=True,
+    block_social_networks=True,
 )
 
 
@@ -86,6 +131,9 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     ), patch(
         "homeassistant.components.nextdns.NextDns.get_settings",
         return_value=SETTINGS,
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.connection_status",
+        return_value=CONNECTION_STATUS,
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

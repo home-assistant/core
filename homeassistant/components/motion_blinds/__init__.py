@@ -121,8 +121,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     multicast_interface = entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
     wait_for_push = entry.options.get(CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     # Create multicast Listener
     async with setup_lock:
         if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
@@ -212,6 +210,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 

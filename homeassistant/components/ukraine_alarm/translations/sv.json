@@ -5,6 +5,7 @@
             "cannot_connect": "Det gick inte att ansluta.",
             "max_regions": "Max 5 regioner kan konfigureras",
             "rate_limit": "F\u00f6r mycket f\u00f6rfr\u00e5gningar",
+            "timeout": "Timeout uppr\u00e4ttar anslutning",
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {

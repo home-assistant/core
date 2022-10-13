@@ -32,6 +32,24 @@ class RecorderTask(abc.ABC):
 
 
 @dataclass
+class ChangeStatisticsUnitTask(RecorderTask):
+    """Object to store statistics_id and unit to convert unit of statistics."""
+
+    statistic_id: str
+    new_unit_of_measurement: str
+    old_unit_of_measurement: str
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        statistics.change_statistics_unit(
+            instance,
+            self.statistic_id,
+            self.new_unit_of_measurement,
+            self.old_unit_of_measurement,
+        )
+
+
+@dataclass
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
@@ -145,6 +163,7 @@ class AdjustStatisticsTask(RecorderTask):
     statistic_id: str
     start_time: datetime
     sum_adjustment: float
+    adjustment_unit: str
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
@@ -153,12 +172,16 @@ class AdjustStatisticsTask(RecorderTask):
             self.statistic_id,
             self.start_time,
             self.sum_adjustment,
+            self.adjustment_unit,
         ):
             return
         # Schedule a new adjust statistics task if this one didn't finish
         instance.queue_task(
             AdjustStatisticsTask(
-                self.statistic_id, self.start_time, self.sum_adjustment
+                self.statistic_id,
+                self.start_time,
+                self.sum_adjustment,
+                self.adjustment_unit,
             )
         )
 

@@ -16,5 +16,15 @@
                 "description": "M\u00f6chtest du Tasmota einrichten?"
             }
         }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "Mehrere Tasmota-Ger\u00e4te teilen das Topic {topic} . \n\nTasmota-Ger\u00e4te mit diesem Problem: {offenders} .",
+            "title": "Mehrere Tasmota-Ger\u00e4te teilen das gleiche Topic"
+        },
+        "topic_no_prefix": {
+            "description": "Tasmota-Ger\u00e4t {name} mit IP {ip} enth\u00e4lt `%prefix%` nicht in seinem vollst\u00e4ndigen Topic. \n\nEntit\u00e4ten f\u00fcr diese Ger\u00e4te sind deaktiviert, bis die Konfiguration korrigiert wurde.",
+            "title": "Tasmota-Ger\u00e4t {name} hat ein ung\u00fcltiges MQTT-Topic"
+        }
     }
 }

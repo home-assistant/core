@@ -2,7 +2,9 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
-from tests.components.homekit_controller.common import setup_test_component
+from homeassistant.helpers import entity_registry as er
+
+from .common import get_next_aid, setup_test_component
 
 
 def create_window_covering_service(accessory):
@@ -277,3 +279,20 @@ async def test_read_door_state(hass, utcnow):
     )
     state = await helper.poll_and_get_state()
     assert state.attributes["obstruction-detected"] is True
+
+
+async def test_migrate_unique_id(hass, utcnow):
+    """Test a we can migrate a cover unique id."""
+    entity_registry = er.async_get(hass)
+    aid = get_next_aid()
+    cover_entry = entity_registry.async_get_or_create(
+        "cover",
+        "homekit_controller",
+        f"homekit-00:00:00:00:00:00-{aid}-8",
+    )
+    await setup_test_component(hass, create_garage_door_opener_service)
+
+    assert (
+        entity_registry.async_get(cover_entry.entity_id).unique_id
+        == f"00:00:00:00:00:00_{aid}_8"
+    )

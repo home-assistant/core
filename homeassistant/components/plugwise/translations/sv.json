@@ -7,8 +7,10 @@
         "error": {
             "cannot_connect": "Det gick inte att ansluta.",
             "invalid_auth": "Ogiltig autentisering",
+            "invalid_setup": "L\u00e4gg till din Adam ist\u00e4llet f\u00f6r din Anna, se Home Assistant Plugwise integrationsdokumentation f\u00f6r mer information",
             "unknown": "Ov\u00e4ntat fel"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

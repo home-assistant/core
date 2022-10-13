@@ -42,11 +42,16 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_mac_list": "Muss eine durch Kommas getrennte Liste von MAC-Adressen sein"
+        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Echtzeitmetriken (WARNUNG: Erh\u00f6ht die CPU-Auslastung erheblich)",
                     "disable_rtsp": "RTSP-Stream deaktivieren",
+                    "ignored_devices": "Kommagetrennte Liste von MAC-Adressen von Ger\u00e4ten, die ignoriert werden sollen",
+                    "max_media": "Maximale Anzahl von Ereignissen, die f\u00fcr den Medienbrowser geladen werden (erh\u00f6ht die RAM-Nutzung)",
                     "override_connection_host": "Verbindungshost \u00fcberschreiben"
                 },
                 "description": "Die Option Echtzeit-Metriken sollte nur aktiviert werden, wenn du die Diagnosesensoren aktiviert hast und diese in Echtzeit aktualisiert werden sollen. Wenn sie nicht aktiviert ist, werden sie nur einmal alle 15 Minuten aktualisiert.",

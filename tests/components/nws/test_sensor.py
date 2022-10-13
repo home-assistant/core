@@ -8,8 +8,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import MockConfigEntry
-from tests.components.nws.const import (
+from .const import (
     EXPECTED_FORECAST_IMPERIAL,
     EXPECTED_FORECAST_METRIC,
     NONE_OBSERVATION,
@@ -17,6 +16,8 @@ from tests.components.nws.const import (
     SENSOR_EXPECTED_OBSERVATION_IMPERIAL,
     SENSOR_EXPECTED_OBSERVATION_METRIC,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
