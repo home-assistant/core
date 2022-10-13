@@ -426,7 +426,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.44.0
+dbus-fast==1.45.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -534,7 +534,7 @@ foobot_async==1.0.0
 forecast_solar==2.2.0
 
 # homeassistant.components.freebox
-freebox-api==0.0.10
+freebox-api==1.0.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -774,7 +774,7 @@ meater-python==0.0.8
 melnor-bluetooth==0.0.20
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.0.2
+meteofrance-api==1.1.0
 
 # homeassistant.components.mfi
 mficlient==0.3.0
