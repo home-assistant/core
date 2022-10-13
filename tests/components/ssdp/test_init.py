@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
 
+from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp import udn_from_headers
 from async_upnp_client.ssdp_listener import SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
@@ -698,13 +699,24 @@ async def test_bind_failure_skips_adapter(
             raise OSError
 
     SsdpListener.async_start = _async_start
+    UpnpServer.async_start = _async_start
     await init_ssdp_component(hass)
 
     assert "Failed to setup listener for" in caplog.text
 
-    ssdp_listeners = hass.data[ssdp.DOMAIN][ssdp.SSDP_SCANNER]._ssdp_listeners
+    ssdp_listeners: list[SsdpListener] = hass.data[ssdp.DOMAIN][
+        ssdp.SSDP_SCANNER
+    ]._ssdp_listeners
     sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
     assert sources == {("192.168.1.5", 0)}  # Note no SsdpListener for IPv6 address.
+
+    assert "Failed to setup server for" in caplog.text
+
+    upnp_servers: list[UpnpServer] = hass.data[ssdp.DOMAIN][
+        ssdp.UPNP_SERVER
+    ]._upnp_servers
+    sources = {upnp_server.source for upnp_server in upnp_servers}
+    assert sources == {("192.168.1.5", 0)}  # Note no UpnpServer for IPv6 address.
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")

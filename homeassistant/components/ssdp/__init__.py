@@ -54,9 +54,9 @@ from homeassistant.loader import async_get_ssdp, bind_hass
 
 DOMAIN = "ssdp"
 SSDP_SCANNER = "scanner"
-SSDP_SERVER = "server"
-SSDP_SERVER_MIN_PORT = 40000
-SSDP_SERVER_MAX_PORT = 40100
+UPNP_SERVER = "server"
+UPNP_SERVER_MIN_PORT = 40000
+UPNP_SERVER_MAX_PORT = 40100
 SCAN_INTERVAL = timedelta(minutes=2)
 
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
@@ -211,11 +211,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     server = Server(hass)
     hass.data[DOMAIN] = {
         SSDP_SCANNER: scanner,
-        SSDP_SERVER: server,
+        UPNP_SERVER: server,
     }
 
-    asyncio.create_task(scanner.async_start())
-    asyncio.create_task(server.async_start())
+    hass.create_task(scanner.async_start())
+    hass.create_task(server.async_start())
 
     return True
 
@@ -656,12 +656,12 @@ async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
     test_socket.setblocking(False)
     test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    for port in range(SSDP_SERVER_MIN_PORT, SSDP_SERVER_MAX_PORT):
+    for port in range(UPNP_SERVER_MIN_PORT, UPNP_SERVER_MAX_PORT):
         try:
             test_socket.bind(source)
             return port
         except OSError:
-            if port == SSDP_SERVER_MAX_PORT:
+            if port == UPNP_SERVER_MAX_PORT:
                 raise
 
     raise RuntimeError("unreachable")
@@ -739,7 +739,7 @@ class Server:
                 )
             )
         results = await asyncio.gather(
-            *(listener.async_start() for listener in self._upnp_servers),
+            *(upnp_server.async_start() for upnp_server in self._upnp_servers),
             return_exceptions=True,
         )
         failed_servers = []
