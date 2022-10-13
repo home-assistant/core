@@ -8,7 +8,6 @@ from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import EventType
 
-from . import get_block_device_wrapper, get_rpc_device_wrapper
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -17,6 +16,10 @@ from .const import (
     DOMAIN,
     EVENT_SHELLY_CLICK,
     RPC_INPUTS_EVENTS_TYPES,
+)
+from .coordinator import (
+    get_block_coordinator_by_device_id,
+    get_rpc_coordinator_by_device_id,
 )
 from .utils import get_block_device_name, get_rpc_entity_name
 
@@ -37,15 +40,15 @@ def async_describe_events(
         input_name = f"{event.data[ATTR_DEVICE]} channel {channel}"
 
         if click_type in RPC_INPUTS_EVENTS_TYPES:
-            rpc_wrapper = get_rpc_device_wrapper(hass, device_id)
-            if rpc_wrapper and rpc_wrapper.device.initialized:
+            rpc_coordinator = get_rpc_coordinator_by_device_id(hass, device_id)
+            if rpc_coordinator and rpc_coordinator.device.initialized:
                 key = f"input:{channel-1}"
-                input_name = get_rpc_entity_name(rpc_wrapper.device, key)
+                input_name = get_rpc_entity_name(rpc_coordinator.device, key)
 
         elif click_type in BLOCK_INPUTS_EVENTS_TYPES:
-            block_wrapper = get_block_device_wrapper(hass, device_id)
-            if block_wrapper and block_wrapper.device.initialized:
-                device_name = get_block_device_name(block_wrapper.device)
+            block_coordinator = get_block_coordinator_by_device_id(hass, device_id)
+            if block_coordinator and block_coordinator.device.initialized:
+                device_name = get_block_device_name(block_coordinator.device)
                 input_name = f"{device_name} channel {channel}"
 
         return {

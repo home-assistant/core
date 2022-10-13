@@ -1,6 +1,8 @@
 """The Radarr component."""
 from __future__ import annotations
 
+from typing import Any, cast
+
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
@@ -29,6 +31,7 @@ from .coordinator import (
     MoviesDataUpdateCoordinator,
     RadarrDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
+    T,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -65,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host_configuration=host_configuration,
         session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
     )
-    coordinators: dict[str, RadarrDataUpdateCoordinator] = {
+    coordinators: dict[str, RadarrDataUpdateCoordinator[Any]] = {
         "status": StatusDataUpdateCoordinator(hass, host_configuration, radarr),
         "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, radarr),
         "health": HealthDataUpdateCoordinator(hass, host_configuration, radarr),
@@ -86,15 +89,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
+class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator[T]]):
     """Defines a base Radarr entity."""
 
     _attr_has_entity_name = True
-    coordinator: RadarrDataUpdateCoordinator
+    coordinator: RadarrDataUpdateCoordinator[T]
 
     def __init__(
         self,
-        coordinator: RadarrDataUpdateCoordinator,
+        coordinator: RadarrDataUpdateCoordinator[T],
         description: EntityDescription,
     ) -> None:
         """Create Radarr entity."""
@@ -113,5 +116,7 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
             name=self.coordinator.config_entry.title,
         )
         if isinstance(self.coordinator, StatusDataUpdateCoordinator):
-            device_info[ATTR_SW_VERSION] = self.coordinator.data.version
+            device_info[ATTR_SW_VERSION] = cast(
+                StatusDataUpdateCoordinator, self.coordinator
+            ).data.version
         return device_info

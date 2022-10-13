@@ -35,6 +35,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,7 +170,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                 return
 
             self._attr_current_option = payload
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.
