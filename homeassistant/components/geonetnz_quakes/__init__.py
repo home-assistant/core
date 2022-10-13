@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     feeds = hass.data[DOMAIN].setdefault(FEED, {})
 
     radius = config_entry.data[CONF_RADIUS]
-    if hass.config.units == IMPERIAL_SYSTEM:
+    if hass.config.units is IMPERIAL_SYSTEM:
         radius = DistanceConverter.convert(radius, LENGTH_MILES, LENGTH_KILOMETERS)
     # Create feed entity manager for all platforms.
     manager = GeonetnzQuakesFeedEntityManager(hass, config_entry, radius)
