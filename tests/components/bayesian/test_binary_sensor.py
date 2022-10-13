@@ -537,10 +537,6 @@ async def test_multiple_numeric_observations(hass):
 
     assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
 
-    assert (abs(state.attributes.get("probability") - 0.58823529) < 0.01) or (
-        abs(state.attributes.get("probability") - 0.19672131) < 0.01
-    )
-
     assert abs(state.attributes.get("probability") - 0.19672131) < 0.01
     # Where there are multi numeric ranges when on the threshold, use below
     # Calculated using P(A) = 0.3, P(B|A) = 0.2, P(B|~A) = 0.35 -> 0.19672131
@@ -549,6 +545,14 @@ async def test_multiple_numeric_observations(hass):
 
     assert len(async_get(hass).issues) == 0
     assert state.attributes.get("observations")[0]["platform"] == "numeric_state"
+
+    hass.states.async_set("sensor.test_temp", "badstate")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert state.state == "off"
 
 
 async def test_mirrored_observations(hass):
