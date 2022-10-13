@@ -107,7 +107,7 @@ class GdacsEvent(GeolocationEvent):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        if self.hass.config.units == IMPERIAL_SYSTEM:
+        if self.hass.config.units is IMPERIAL_SYSTEM:
             self._attr_unit_of_measurement = LENGTH_MILES
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass, f"gdacs_delete_{self._external_id}", self._delete_callback
