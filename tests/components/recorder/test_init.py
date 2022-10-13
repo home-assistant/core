@@ -1649,7 +1649,7 @@ async def test_disable_echo(hass, db_url, echo, caplog):
 
 
 @pytest.mark.parametrize(
-    "config_url, connect_args",
+    "config_url, expected_connect_args",
     (
         (
             "mariadb://user:password@SERVER_IP/DB_NAME",
@@ -1677,15 +1677,15 @@ async def test_disable_echo(hass, db_url, echo, caplog):
         ),
         (
             "postgresql://blabla",
-            None,
+            {},
         ),
         (
             "sqlite://blabla",
-            None,
+            {},
         ),
     ),
 )
-async def test_mysql_missing_utf8mb4(hass, config_url, connect_args):
+async def test_mysql_missing_utf8mb4(hass, config_url, expected_connect_args):
     """Test recorder fails to setup if charset=utf8mb4 is missing from db_url."""
     recorder_helper.async_initialize_recorder(hass)
 
@@ -1701,7 +1701,10 @@ async def test_mysql_missing_utf8mb4(hass, config_url, connect_args):
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
         create_engine_mock.assert_called_once()
-        assert create_engine_mock.mock_calls[0][2].get("connect_args") == connect_args
+
+        connect_args = create_engine_mock.mock_calls[0][2].get("connect_args", {})
+        for key, value in expected_connect_args.items():
+            assert connect_args[key] == value
 
 
 @pytest.mark.parametrize(
@@ -1771,4 +1774,4 @@ async def test_connect_args_priority(hass, config_url):
                 }
             },
         )
-    assert connect_params == [{"charset": "utf8mb4"}]
+    assert connect_params[0]["charset"] == "utf8mb4"
