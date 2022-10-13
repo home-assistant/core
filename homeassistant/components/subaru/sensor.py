@@ -19,6 +19,7 @@ from homeassistant.const import (
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_HPA,
+    PRESSURE_PSI,
     TEMP_CELSIUS,
     VOLUME_GALLONS,
     VOLUME_LITERS,
@@ -30,7 +31,6 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, LENGTH_UNITS, PRESSURE_UNITS
 
 from . import get_device_info
 from .const import (
@@ -220,22 +220,18 @@ class SubaruSensor(
         if current_value is None:
             return None
 
-        if unit in LENGTH_UNITS:
+        if unit in {LENGTH_KILOMETERS, LENGTH_MILES}:
             return round(unit_system.length(current_value, unit), 1)
 
-        if unit in PRESSURE_UNITS and unit_system == IMPERIAL_SYSTEM:
+        if unit == PRESSURE_HPA and unit_system.pressure_unit == PRESSURE_PSI:
             return round(
                 unit_system.pressure(current_value, unit),
                 1,
             )
 
         if (
-            unit
-            in [
-                FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
-                FUEL_CONSUMPTION_MILES_PER_GALLON,
-            ]
-            and unit_system == IMPERIAL_SYSTEM
+            unit == FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS
+            and unit_system.length_unit == LENGTH_MILES
         ):
             return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)
 
@@ -246,18 +242,15 @@ class SubaruSensor(
         """Return the unit_of_measurement of the device."""
         unit = self.entity_description.native_unit_of_measurement
 
-        if unit in LENGTH_UNITS:
+        if unit in {LENGTH_KILOMETERS, LENGTH_MILES}:
             return self.hass.config.units.length_unit
 
-        if unit in PRESSURE_UNITS:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
+        if unit == PRESSURE_HPA:
+            if self.hass.config.units.pressure_unit == PRESSURE_PSI:
                 return self.hass.config.units.pressure_unit
 
-        if unit in [
-            FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
-            FUEL_CONSUMPTION_MILES_PER_GALLON,
-        ]:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
+        if unit == FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS:
+            if self.hass.config.units.length_unit == LENGTH_MILES:
                 return FUEL_CONSUMPTION_MILES_PER_GALLON
 
         return unit
