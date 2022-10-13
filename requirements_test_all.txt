@@ -537,7 +537,7 @@ foobot_async==1.0.0
 forecast_solar==2.2.0
 
 # homeassistant.components.freebox
-freebox-api==0.0.10
+freebox-api==1.0.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -831,7 +831,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==1.4.2
 
 # homeassistant.components.nexia
-nexia==2.0.2
+nexia==2.0.3
 
 # homeassistant.components.discord
 nextcord==2.0.0a8
