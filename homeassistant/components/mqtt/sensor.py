@@ -46,7 +46,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate
-from .util import valid_subscribe_topic
+from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -300,7 +300,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 or self._config[CONF_LAST_RESET_TOPIC] == self._config[CONF_STATE_TOPIC]
             ):
                 _update_last_reset(msg)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],
@@ -314,7 +314,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         def last_reset_message_received(msg):
             """Handle new last_reset messages."""
             _update_last_reset(msg)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if (
             CONF_LAST_RESET_TOPIC in self._config
