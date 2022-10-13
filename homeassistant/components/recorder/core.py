@@ -703,7 +703,7 @@ class Recorder(threading.Thread):
         while tries <= self.db_max_retries:
             try:
                 self._setup_connection()
-                return True
+                return migration.initialize_database(self.get_session)
             except UnsupportedDialect:
                 break
             except Exception as err:  # pylint: disable=broad-except
