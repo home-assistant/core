@@ -14,7 +14,6 @@ from homeassistant.components.notify import (
     DOMAIN as DOMAIN_NOTIFY,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_REPEAT,
@@ -26,10 +25,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.helpers import service
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -69,7 +68,9 @@ ALERT_SCHEMA = vol.Schema(
         vol.Optional(CONF_DONE_MESSAGE): cv.template,
         vol.Optional(CONF_TITLE): cv.template,
         vol.Optional(CONF_DATA): dict,
-        vol.Required(CONF_NOTIFIERS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_NOTIFIERS, default=list): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -77,11 +78,11 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: cv.schema_with_slug_keys(ALERT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
-ALERT_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component."""
+    component = EntityComponent[Alert](LOGGER, DOMAIN, hass)
+
     entities: list[Alert] = []
 
     for object_id, cfg in config[DOMAIN].items():
@@ -121,45 +122,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not entities:
         return False
 
-    async def async_handle_alert_service(service_call: ServiceCall) -> None:
-        """Handle calls to alert services."""
-        alert_ids = await service.async_extract_entity_ids(hass, service_call)
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
 
-        for alert_id in alert_ids:
-            for alert in entities:
-                if alert.entity_id != alert_id:
-                    continue
-
-                alert.async_set_context(service_call.context)
-                if service_call.service == SERVICE_TURN_ON:
-                    await alert.async_turn_on()
-                elif service_call.service == SERVICE_TOGGLE:
-                    await alert.async_toggle()
-                else:
-                    await alert.async_turn_off()
-
-    # Setup service calls
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TURN_OFF,
-        async_handle_alert_service,
-        schema=ALERT_SERVICE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TURN_ON,
-        async_handle_alert_service,
-        schema=ALERT_SERVICE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TOGGLE,
-        async_handle_alert_service,
-        schema=ALERT_SERVICE_SCHEMA,
-    )
-
-    for alert in entities:
-        alert.async_write_ha_state()
+    await component.async_add_entities(entities)
 
     return True
 
@@ -303,6 +270,9 @@ class Alert(Entity):
         await self._send_notification_message(message)
 
     async def _send_notification_message(self, message: Any) -> None:
+
+        if not self._notifiers:
+            return
 
         msg_payload = {ATTR_MESSAGE: message}
 
