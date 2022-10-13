@@ -28,6 +28,9 @@ from .const import SIGNAL_DEVICE_ADD
 
 _LOGGER = logging.getLogger(__name__)
 
+API_SET_POSITON = "set_position"
+API_STOP = "stop"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -112,16 +115,16 @@ class SwitcherCoverEntity(
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self._async_call_api("set_position", 0)
+        await self._async_call_api(API_SET_POSITON, 0)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        await self._async_call_api("set_position", 100)
+        await self._async_call_api(API_SET_POSITON, 100)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_call_api("set_position", kwargs[ATTR_POSITION])
+        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION])
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
         """Stop the cover."""
-        await self._async_call_api("stop")
+        await self._async_call_api(API_STOP)
