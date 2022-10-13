@@ -554,6 +554,22 @@ async def test_multiple_numeric_observations(hass):
     assert state.attributes.get("occurred_observation_entities") == []
     assert state.state == "off"
 
+    hass.states.async_set("sensor.test_temp", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_temp", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert state.state == "off"
+
 
 async def test_mirrored_observations(hass):
     """Test whether mirrored entries are detected and appropriate issues are created."""

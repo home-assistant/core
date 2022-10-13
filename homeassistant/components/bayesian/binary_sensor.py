@@ -396,8 +396,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             if len(entity_observations) == 1:
                 continue
             for observation in entity_observations:
-                if observation.platform not in ["state", "numeric_state"]:
-                    continue
                 observation.multi = True
 
         return observations_by_entity
@@ -431,8 +429,9 @@ class BayesianBinarySensor(BinarySensorEntity):
     ) -> bool | None:
         """Return True if numeric condition is met, return False if not, return None otherwise."""
         entity_id = entity_observation.entity_id
-        if entity_id is None:
-            return None
+        # if we are dealing with numeric_state observations entity_id cannot be None
+        assert entity_id is not None
+
         entity = self.hass.states.get(entity_id)
         if entity is None:
             return None
