@@ -12,11 +12,17 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH_KILOMETERS, PERCENTAGE, PRESSURE_PSI
+from homeassistant.const import (
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    PERCENTAGE,
+    PRESSURE_PSI,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_system import UnitSystem
+from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, UnitSystem
 
 from . import MazdaEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
@@ -46,7 +52,9 @@ class MazdaSensorEntityDescription(
 
 def _get_distance_unit(unit_system: UnitSystem) -> str:
     """Return the distance unit for the given unit system."""
-    return unit_system.length_unit
+    if unit_system == IMPERIAL_SYSTEM:
+        return LENGTH_MILES
+    return LENGTH_KILOMETERS
 
 
 def _fuel_remaining_percentage_supported(data):
@@ -101,15 +109,21 @@ def _ev_remaining_range_supported(data):
 
 def _fuel_distance_remaining_value(data, unit_system):
     """Get the fuel distance remaining value."""
-    return round(
-        unit_system.length(data["status"]["fuelDistanceRemainingKm"], LENGTH_KILOMETERS)
-    )
+    distance = data["status"]["fuelDistanceRemainingKm"]
+    if unit_system == IMPERIAL_SYSTEM:
+        return round(
+            DistanceConverter.convert(distance, LENGTH_KILOMETERS, LENGTH_MILES)
+        )
+    return distance
 
 
 def _odometer_value(data, unit_system):
     """Get the odometer value."""
     # In order to match the behavior of the Mazda mobile app, we always round down
-    return int(unit_system.length(data["status"]["odometerKm"], LENGTH_KILOMETERS))
+    distance = data["status"]["odometerKm"]
+    if unit_system == IMPERIAL_SYSTEM:
+        return int(DistanceConverter.convert(distance, LENGTH_KILOMETERS, LENGTH_MILES))
+    return int(distance)
 
 
 def _front_left_tire_pressure_value(data, unit_system):
@@ -139,11 +153,12 @@ def _ev_charge_level_value(data, unit_system):
 
 def _ev_remaining_range_value(data, unit_system):
     """Get the remaining range value."""
-    return round(
-        unit_system.length(
-            data["evStatus"]["chargeInfo"]["drivingRangeKm"], LENGTH_KILOMETERS
+    distance = data["evStatus"]["chargeInfo"]["drivingRangeKm"]
+    if unit_system == IMPERIAL_SYSTEM:
+        return round(
+            DistanceConverter.convert(distance, LENGTH_KILOMETERS, LENGTH_MILES)
         )
-    )
+    return distance
 
 
 SENSOR_ENTITIES = [
