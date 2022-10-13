@@ -1,7 +1,5 @@
 """Constants for Snapcast."""
 
-DATA_KEY = "snapcast"
-
 GROUP_PREFIX = "snapcast_group_"
 GROUP_SUFFIX = "Snapcast Group"
 CLIENT_PREFIX = "snapcast_client_"
@@ -15,3 +13,7 @@ SERVICE_SET_LATENCY = "set_latency"
 
 ATTR_MASTER = "master"
 ATTR_LATENCY = "latency"
+
+DEFAULT_PORT = 1705
+
+DOMAIN = "snapcast"

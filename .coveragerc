@@ -1160,7 +1160,8 @@ omit =
     homeassistant/components/sms/notify.py
     homeassistant/components/sms/sensor.py
     homeassistant/components/smtp/notify.py
-    homeassistant/components/snapcast/*
+    homeassistant/components/snapcast/__init__.py
+    homeassistant/components/snapcast/media_player.py
     homeassistant/components/snmp/*
     homeassistant/components/snooz/__init__.py
     homeassistant/components/solaredge/__init__.py

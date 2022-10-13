@@ -1564,6 +1564,9 @@ smart-meter-texas==0.4.7
 # homeassistant.components.smhi
 smhi-pkg==1.0.16
 
+# homeassistant.components.snapcast
+snapcast==2.1.3
+
 # homeassistant.components.sonos
 soco==0.28.0
 
