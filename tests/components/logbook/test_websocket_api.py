@@ -2108,8 +2108,10 @@ async def test_subscribe_disconnected(hass, recorder_mock, hass_ws_client):
     await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
-    websocket_client = await hass_ws_client()
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
     init_count = sum(hass.bus.async_listeners().values())
+    websocket_client = await hass_ws_client()
     await websocket_client.send_json(
         {
             "id": 7,
@@ -2153,6 +2155,7 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
         ]
     )
     await async_wait_recording_done(hass)
+    init_count = sum(hass.bus.async_listeners().values())
     hass.states.async_set("light.small", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
@@ -2160,7 +2163,6 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
-    init_count = sum(hass.bus.async_listeners().values())
 
     after_ws_created_count = sum(hass.bus.async_listeners().values())
 
@@ -2294,11 +2296,13 @@ async def test_subscribe_all_entities_are_continuous(
                 hass.states.async_set("counter.any", state)
                 hass.states.async_set("proximity.any", state)
 
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
+    init_count = sum(hass.bus.async_listeners().values())
     _cycle_entities()
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
-    init_count = sum(hass.bus.async_listeners().values())
     await websocket_client.send_json(
         {
             "id": 7,
@@ -2348,11 +2352,13 @@ async def test_subscribe_all_entities_have_uom_multiple(
                     entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
                 )
 
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
+    init_count = sum(hass.bus.async_listeners().values())
     _cycle_entities()
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
-    init_count = sum(hass.bus.async_listeners().values())
     await websocket_client.send_json(
         {
             "id": 7,
@@ -2407,11 +2413,13 @@ async def test_subscribe_entities_some_have_uom_multiple(
             for state in (STATE_ON, STATE_OFF):
                 hass.states.async_set(entity_id, state)
 
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
+    init_count = sum(hass.bus.async_listeners().values())
     _cycle_entities()
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
-    init_count = sum(hass.bus.async_listeners().values())
     await websocket_client.send_json(
         {
             "id": 7,
@@ -2628,11 +2636,13 @@ async def test_subscribe_all_entities_are_continuous_with_device(
         hass.bus.async_fire("mock_event", {"device_id": device.id})
         hass.bus.async_fire("mock_event", {"device_id": device2.id})
 
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
+    init_count = sum(hass.bus.async_listeners().values())
     _create_events()
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
-    init_count = sum(hass.bus.async_listeners().values())
     await websocket_client.send_json(
         {
             "id": 7,
