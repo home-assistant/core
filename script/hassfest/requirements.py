@@ -44,7 +44,7 @@ IGNORE_VIOLATIONS = {
     "blink",
     "ezviz",
     "hdmi_cec",
-    "Jandy iAqualink",
+    "iaqualink",
     "juicenet",
     "lupusec",
     "rainbird",
@@ -53,7 +53,7 @@ IGNORE_VIOLATIONS = {
 }
 
 IGNORE_FORMAT_VIOLATIONS = {
-    "Jandy iAqualink",
+    "iaqualink",
 }
 
 
@@ -62,7 +62,7 @@ def validate(integrations: dict[str, Integration], config: Config):
     # Check if we are doing format-only validation.
     if not config.requirements:
         for integration in integrations.values():
-            if integration.name in IGNORE_FORMAT_VIOLATIONS:
+            if integration.domain in IGNORE_FORMAT_VIOLATIONS:
                 continue
             validate_requirements_format(integration)
         return
@@ -125,11 +125,11 @@ def validate_requirements_format(integration: Integration) -> bool:
 
 def validate_requirements(integration: Integration):
     """Validate requirements."""
-    if not validate_requirements_format(integration):
-        return
-
     # Some integrations have not been fixed yet so are allowed to have violations.
     if integration.domain in IGNORE_VIOLATIONS:
+        return
+
+    if not validate_requirements_format(integration):
         return
 
     integration_requirements = set()
