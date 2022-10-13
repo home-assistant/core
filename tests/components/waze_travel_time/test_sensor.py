@@ -11,8 +11,8 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DOMAIN,
+    UNITS_IMPERIAL,
 )
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL
 
 from .const import MOCK_CONFIG
 
@@ -84,7 +84,7 @@ async def test_sensor(hass):
         (
             MOCK_CONFIG,
             {
-                CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+                CONF_UNITS: UNITS_IMPERIAL,
                 CONF_REALTIME: True,
                 CONF_VEHICLE_TYPE: "car",
                 CONF_AVOID_TOLL_ROADS: True,

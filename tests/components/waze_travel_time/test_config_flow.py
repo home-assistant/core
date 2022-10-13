@@ -15,8 +15,9 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_VEHICLE_TYPE,
     DEFAULT_NAME,
     DOMAIN,
+    UNITS_IMPERIAL,
 )
-from homeassistant.const import CONF_NAME, CONF_REGION, CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.const import CONF_NAME, CONF_REGION
 
 from .const import MOCK_CONFIG
 
@@ -72,7 +73,7 @@ async def test_options(hass):
             CONF_EXCL_FILTER: "exclude",
             CONF_INCL_FILTER: "include",
             CONF_REALTIME: False,
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+            CONF_UNITS: UNITS_IMPERIAL,
             CONF_VEHICLE_TYPE: "taxi",
         },
     )
@@ -85,7 +86,7 @@ async def test_options(hass):
         CONF_EXCL_FILTER: "exclude",
         CONF_INCL_FILTER: "include",
         CONF_REALTIME: False,
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNITS: UNITS_IMPERIAL,
         CONF_VEHICLE_TYPE: "taxi",
     }
 
@@ -96,7 +97,7 @@ async def test_options(hass):
         CONF_EXCL_FILTER: "exclude",
         CONF_INCL_FILTER: "include",
         CONF_REALTIME: False,
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNITS: UNITS_IMPERIAL,
         CONF_VEHICLE_TYPE: "taxi",
     }
 
@@ -117,7 +118,7 @@ async def test_import(hass):
             CONF_EXCL_FILTER: "exclude",
             CONF_INCL_FILTER: "include",
             CONF_REALTIME: False,
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+            CONF_UNITS: UNITS_IMPERIAL,
             CONF_VEHICLE_TYPE: "taxi",
         },
     )
@@ -137,7 +138,7 @@ async def test_import(hass):
         CONF_EXCL_FILTER: "exclude",
         CONF_INCL_FILTER: "include",
         CONF_REALTIME: False,
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNITS: UNITS_IMPERIAL,
         CONF_VEHICLE_TYPE: "taxi",
     }
 

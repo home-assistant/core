@@ -16,7 +16,6 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
     CONF_REGION,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_STARTED,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -47,6 +46,8 @@ from .const import (
     DEFAULT_REALTIME,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
+    UNITS_IMPERIAL,
+    UNITS_METRIC,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,11 +64,13 @@ async def async_setup_entry(
     defaults = {
         CONF_REALTIME: DEFAULT_REALTIME,
         CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
-        CONF_UNITS: hass.config.units.name,
+        CONF_UNITS: UNITS_METRIC,
         CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
         CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
         CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
     }
+    if hass.config.units.length_unit == LENGTH_MILES:
+        defaults[CONF_UNITS] = UNITS_IMPERIAL
 
     if not config_entry.options:
         new_data = config_entry.data.copy()
@@ -244,7 +247,7 @@ class WazeTravelTimeData:
 
                 self.duration, distance = routes[route]
 
-                if units == CONF_UNIT_SYSTEM_IMPERIAL:
+                if units == UNITS_IMPERIAL:
                     # Convert to miles.
                     self.distance = DistanceConverter.convert(
                         distance, LENGTH_KILOMETERS, LENGTH_MILES
