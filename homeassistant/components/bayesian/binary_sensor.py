@@ -460,8 +460,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             return False
         except ConditionError:
             return None
-        except ValueError:
-            return None
 
     def _process_state(
         self, entity_observation: Observation, multi: bool = False
