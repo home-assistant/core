@@ -58,7 +58,7 @@ class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if identifier in configured_instances(self.hass):
             return await self._show_form({"base": "already_configured"})
 
-        if self.hass.config.units == IMPERIAL_SYSTEM:
+        if self.hass.config.units is IMPERIAL_SYSTEM:
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
         else:
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
