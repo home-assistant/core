@@ -665,6 +665,23 @@ def test_recorder_setup_failure(hass):
     hass.stop()
 
 
+def test_recorder_validate_schema_failure(hass):
+    """Test some exceptions."""
+    recorder_helper.async_initialize_recorder(hass)
+    with patch(
+        "homeassistant.components.recorder.migration._inspect_schema_version"
+    ) as inspect_schema_version, patch(
+        "homeassistant.components.recorder.core.time.sleep"
+    ):
+        inspect_schema_version.side_effect = ImportError("driver not found")
+        rec = _default_recorder(hass)
+        rec.async_initialize()
+        rec.start()
+        rec.join()
+
+    hass.stop()
+
+
 def test_recorder_setup_failure_without_event_listener(hass):
     """Test recorder setup failure when the event listener is not setup."""
     recorder_helper.async_initialize_recorder(hass)
