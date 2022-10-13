@@ -29,6 +29,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
     CONF_AVOID_FERRIES,
@@ -69,7 +70,7 @@ async def async_setup_entry(
         CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
         CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
     }
-    if hass.config.units.length_unit == LENGTH_MILES:
+    if hass.config.units == IMPERIAL_SYSTEM:
         defaults[CONF_UNITS] = CONF_UNIT_SYSTEM_IMPERIAL
 
     if not config_entry.options:
