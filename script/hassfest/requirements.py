@@ -44,6 +44,7 @@ IGNORE_VIOLATIONS = {
     "blink",
     "ezviz",
     "hdmi_cec",
+    "Jandy iAqualink",
     "juicenet",
     "lupusec",
     "rainbird",
