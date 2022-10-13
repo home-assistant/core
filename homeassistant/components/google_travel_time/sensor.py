@@ -32,7 +32,6 @@ from .const import (
     CONF_OPTIONS,
     CONF_ORIGIN,
     CONF_TRAVEL_MODE,
-    CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -61,9 +60,6 @@ async def async_setup_entry(
     if not config_entry.options:
         new_data = config_entry.data.copy()
         options = new_data.pop(CONF_OPTIONS, {})
-
-        if CONF_UNITS not in options:
-            options[CONF_UNITS] = hass.config.units.name
 
         if CONF_TRAVEL_MODE in new_data:
             wstr = (

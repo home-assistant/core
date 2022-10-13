@@ -1,6 +1,4 @@
 """Constants for Google Travel Time."""
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
-
 DOMAIN = "google_travel_time"
 
 ATTRIBUTION = "Powered by Google"
@@ -11,7 +9,6 @@ CONF_ORIGIN = "origin"
 CONF_TRAVEL_MODE = "travel_mode"
 CONF_LANGUAGE = "language"
 CONF_AVOID = "avoid"
-CONF_UNITS = "units"
 CONF_ARRIVAL_TIME = "arrival_time"
 CONF_DEPARTURE_TIME = "departure_time"
 CONF_TRAFFIC_MODEL = "traffic_model"
@@ -84,4 +81,3 @@ TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
 TRANSPORT_TYPE = ["bus", "subway", "train", "tram", "rail"]
 TRAVEL_MODE = ["driving", "walking", "bicycling", "transit"]
 TRAVEL_MODEL = ["best_guess", "pessimistic", "optimistic"]
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]

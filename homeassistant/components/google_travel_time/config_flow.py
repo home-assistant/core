@@ -25,7 +25,6 @@ from .const import (
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
-    CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
     DOMAIN,
@@ -34,7 +33,6 @@ from .const import (
     TRANSPORT_TYPE,
     TRAVEL_MODE,
     TRAVEL_MODEL,
-    UNITS,
 )
 from .helpers import is_valid_config_entry
 
@@ -83,9 +81,6 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_AVOID, default=self.config_entry.options.get(CONF_AVOID)
                     ): vol.In([None, *AVOID]),
-                    vol.Optional(
-                        CONF_UNITS, default=self.config_entry.options[CONF_UNITS]
-                    ): vol.In(UNITS),
                     vol.Optional(CONF_TIME_TYPE, default=default_time_type): vol.In(
                         TIME_TYPES
                     ),
