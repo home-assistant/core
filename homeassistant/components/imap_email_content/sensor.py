@@ -1,12 +1,12 @@
 """Email sensor support."""
 from __future__ import annotations
 
-import base64
 from collections import deque
 import datetime
 import email
 import imaplib
 import logging
+import sys
 
 import voluptuous as vol
 
@@ -232,42 +232,30 @@ class EmailContentSensor(SensorEntity):
         for part in email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
                 if message_text is None:
-                    message_text_encoding = part["Content-Transfer-Encoding"]
-                    message_text = part.get_payload()
+                    message_text = part.get_payload(decode=True)
             elif part.get_content_type() == "text/html":
                 if message_html is None:
-                    message_html_encoding = part["Content-Transfer-Encoding"]
-                    message_html = part.get_payload()
+                    message_html = part.get_payload(decode=True)
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
             ):
-                message_untyped_text_encoding = part["Content-Transfer-Encoding"]
-                message_untyped_text = part.get_payload()
+                message_untyped_text = part.get_payload(decode=True)
 
         if message_text is not None:
-            return EmailContentSensor.get_decoded_body(
-                message_text, message_text_encoding
-            )
+            message = message_text
 
-        if message_html is not None:
-            return EmailContentSensor.get_decoded_body(
-                message_html, message_html_encoding
-            )
+        elif message_html is not None:
+            message = message_html
 
-        if message_untyped_text is not None:
-            return EmailContentSensor.get_decoded_body(
-                message_untyped_text, message_untyped_text_encoding
-            )
+        elif message_untyped_text is not None:
+            message = message_untyped_text
 
-        return email_message.get_payload()
+        else:
+            message = email_message.get_payload(decode=True)
 
-    @staticmethod
-    def get_decoded_body(body, encoding):
-        """Return the decoded body if encoding is base64."""
-        if "base64" == encoding:
-            return base64.standard_b64decode(body).decode("utf-8")
-        return body
+        # .get_payload(decode=True) return binary data, so we need to decode it to string
+        return message.decode(sys.stdout.encoding)
 
     def update(self) -> None:
         """Read emails and publish state change."""
