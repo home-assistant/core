@@ -200,10 +200,11 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.observations_by_entity = self._build_observations_by_entity()
         self.observations_by_template = self._build_observations_by_template()
 
-        self.observation_handlers: dict[str, Callable[[Observation], bool | None]] = {
+        self.observation_handlers: dict[
+            str, Callable[[Observation, bool], bool | None]
+        ] = {
             "numeric_state": self._process_numeric_state,
             "state": self._process_state,
-            "multi_state": self._process_multi_state,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -332,7 +333,9 @@ class BayesianBinarySensor(BinarySensorEntity):
         for observation in self.observations_by_entity[entity]:
             platform = observation.platform
 
-            observation.observed = self.observation_handlers[platform](observation)
+            observation.observed = self.observation_handlers[platform](
+                observation, observation.multi
+            )
 
             local_observations[observation.id] = observation
 
@@ -394,9 +397,9 @@ class BayesianBinarySensor(BinarySensorEntity):
             if len(entity_observations) == 1:
                 continue
             for observation in entity_observations:
-                if observation.platform != "state":
+                if observation.platform not in ["state", "numeric_state"]:
                     continue
-                observation.platform = "multi_state"
+                observation.multi = True
 
         return observations_by_entity
 
@@ -424,14 +427,16 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return observations_by_template
 
-    def _process_numeric_state(self, entity_observation: Observation) -> bool | None:
+    def _process_numeric_state(
+        self, entity_observation: Observation, multi: bool = False
+    ) -> bool | None:
         """Return True if numeric condition is met, return False if not, return None otherwise."""
         entity = entity_observation.entity_id
 
         try:
             if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
                 return None
-            return condition.async_numeric_state(
+            result = condition.async_numeric_state(
                 self.hass,
                 entity,
                 entity_observation.below,
@@ -439,10 +444,15 @@ class BayesianBinarySensor(BinarySensorEntity):
                 None,
                 entity_observation.to_dict(),
             )
+            if multi and not result:
+                return None
+            return result
         except ConditionError:
             return None
 
-    def _process_state(self, entity_observation: Observation) -> bool | None:
+    def _process_state(
+        self, entity_observation: Observation, multi: bool = False
+    ) -> bool | None:
         """Return True if state conditions are met, return False if they are not.
 
         Returns None if the state is unavailable.
@@ -454,24 +464,13 @@ class BayesianBinarySensor(BinarySensorEntity):
             if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
                 return None
 
-            return condition.state(self.hass, entity, entity_observation.to_state)
+            result = condition.state(self.hass, entity, entity_observation.to_state)
+            if multi and not result:
+                return None
+            return result
+
         except ConditionError:
             return None
-
-    def _process_multi_state(self, entity_observation: Observation) -> bool | None:
-        """Return True if state conditions are met, otherwise return None.
-
-        Never return False as all other states should have their own probabilities configured.
-        """
-
-        entity = entity_observation.entity_id
-
-        try:
-            if condition.state(self.hass, entity, entity_observation.to_state):
-                return True
-        except ConditionError:
-            return None
-        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
