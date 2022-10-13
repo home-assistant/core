@@ -12,13 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    PERCENTAGE,
-    PRESSURE_PSI,
-)
+from homeassistant.const import LENGTH_KILOMETERS, PERCENTAGE, PRESSURE_PSI
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -50,11 +44,9 @@ class MazdaSensorEntityDescription(
     unit: Callable[[UnitSystem], str | None] | None = None
 
 
-def _get_distance_unit(unit_system):
+def _get_distance_unit(unit_system: UnitSystem) -> str:
     """Return the distance unit for the given unit system."""
-    if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL:
-        return LENGTH_MILES
-    return LENGTH_KILOMETERS
+    return unit_system.length_unit
 
 
 def _fuel_remaining_percentage_supported(data):
