@@ -160,6 +160,7 @@ class MockBridge:
                 "serial": None,
                 "tilt": None,
                 "area": "822",
+                "device_name": "Main Lights",
             },
             "802": {
                 "device_id": "802",
@@ -173,6 +174,7 @@ class MockBridge:
                 "serial": None,
                 "tilt": None,
                 "area": "822",
+                "device_name": "Left Shade",
             },
             "803": {
                 "device_id": "803",
@@ -186,6 +188,7 @@ class MockBridge:
                 "serial": None,
                 "tilt": None,
                 "area": "910",
+                "device_name": "Exhaust Fan",
             },
             "804": {
                 "device_id": "804",
@@ -199,6 +202,7 @@ class MockBridge:
                 "serial": None,
                 "tilt": None,
                 "area": "1024",
+                "device_name": "Ceiling Fan",
             },
             "901": {
                 "device_id": "901",
@@ -212,6 +216,7 @@ class MockBridge:
                 "serial": 5442321,
                 "tilt": None,
                 "area": "1025",
+                "device_name": "Main Lights",
             },
             "9": {
                 "device_id": "9",

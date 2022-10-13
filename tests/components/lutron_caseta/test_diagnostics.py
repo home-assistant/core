@@ -95,6 +95,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "serial": None,
                     "tilt": None,
                     "area": "822",
+                    "device_name": "Main Lights",
                 },
                 "802": {
                     "device_id": "802",
@@ -108,6 +109,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "serial": None,
                     "tilt": None,
                     "area": "822",
+                    "device_name": "Left Shade",
                 },
                 "803": {
                     "device_id": "803",
@@ -121,6 +123,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "serial": None,
                     "tilt": None,
                     "area": "910",
+                    "device_name": "Exhaust Fan",
                 },
                 "804": {
                     "device_id": "804",
@@ -134,6 +137,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "serial": None,
                     "tilt": None,
                     "area": "1024",
+                    "device_name": "Ceiling Fan",
                 },
                 "901": {
                     "device_id": "901",
@@ -147,6 +151,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                     "serial": 5442321,
                     "tilt": None,
                     "area": "1025",
+                    "device_name": "Main Lights",
                 },
                 "9": {
                     "device_id": "9",

@@ -181,7 +181,7 @@ async def async_setup_entry(
     button_devices, device_info_by_device_id = _async_register_button_devices(
         hass, entry_id, bridge, bridge_device, buttons
     )
-    _async_subscribe_pico_remote_events(hass, bridge, buttons)
+    _async_subscribe_pico_remote_events(hass, bridge, buttons, device_info_by_device_id)
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
@@ -249,9 +249,24 @@ def _async_register_button_devices(
         seen.add(ha_device_serial)
 
         area = _area_name_from_id(bridge.areas, ha_device["area"])
-        # name field is still a combination of area and name from pylytron-caseta
-        # extract the name portion only.
-        name = ha_device["name"].split("_")[-1]
+
+        # Build the name of the Keypad/Pico
+        ha_device_name_prefix = ""
+        ha_device_name_suffix = ""
+        if "control_station_name" in ha_device:
+            # RA3/HWQSX Control Pico or Keypad, Assemble the Device Name
+            ha_device_name_prefix = ha_device["control_station_name"]
+            if "Pico" in ha_device["type"]:
+                ha_device_name_suffix = "Pico"
+            elif "Keypad" in ha_device["type"]:
+                ha_device_name_suffix = "Keypad"
+        ha_device_name_parts = [
+            ha_device_name_prefix,
+            ha_device["device_name"],
+            ha_device_name_suffix,
+        ]
+        name = " ".join(filter(None, ha_device_name_parts))
+
         device_args: DeviceInfo = {
             "name": f"{area} {name}",
             "manufacturer": MANUFACTURER,
@@ -307,6 +322,7 @@ def _async_subscribe_pico_remote_events(
     hass: HomeAssistant,
     bridge_device: Smartbridge,
     button_devices_by_id: dict[int, dict],
+    device_info_by_device_id: dict[int, DeviceInfo],
 ):
     """Subscribe to lutron events."""
     dev_reg = dr.async_get(hass)
@@ -328,21 +344,20 @@ def _async_subscribe_pico_remote_events(
             # use the parent_device for HA device info
             ha_device = bridge_devices[device["parent_device"]]
 
-        ha_device_serial = _handle_none_keypad_serial(
-            ha_device, bridge_devices[BRIDGE_DEVICE_ID]["serial"]
-        )
+        device_info = device_info_by_device_id.get(ha_device["device_id"])
 
         type_ = _lutron_model_to_device_type(ha_device["model"], ha_device["type"])
         area = _area_name_from_id(bridge_device.areas, ha_device["area"])
-        name = ha_device["name"].split("_")[-1]
+        name = device_info["name"]
+        serial = next(iter(device_info["identifiers"]))[1]
         leap_button_number = device["button_number"]
         lip_button_number = async_get_lip_button(type_, leap_button_number)
-        hass_device = dev_reg.async_get_device({(DOMAIN, ha_device_serial)})
+        hass_device = dev_reg.async_get_device(device_info["identifiers"])
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
             {
-                ATTR_SERIAL: ha_device_serial,
+                ATTR_SERIAL: serial,
                 ATTR_TYPE: type_,
                 ATTR_BUTTON_NUMBER: lip_button_number,
                 ATTR_LEAP_BUTTON_NUMBER: leap_button_number,
@@ -395,8 +410,9 @@ class LutronCasetaDevice(Entity):
         if "parent_device" in device:
             # This is a child entity, handle the naming in button.py and switch.py
             return
+
         area = _area_name_from_id(self._smartbridge.areas, device["area"])
-        name = device["name"].split("_")[-1]
+        name = device["device_name"]
         self._attr_name = full_name = f"{area} {name}"
         info = DeviceInfo(
             # Historically we used the device serial number for the identifier
