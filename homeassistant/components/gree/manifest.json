@@ -9,6 +9,6 @@
   "iot_class": "local_polling",
   "loggers": ["greeclimate"],
   "supported_brands": {
-    "Heiwa": "Heiwa"
+    "heiwa": "Heiwa"
   }
 }
