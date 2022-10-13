@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
-    LENGTH_MILES,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -27,6 +26,7 @@ from homeassistant.helpers.selector import (
     LocationSelector,
     TimeSelector,
 )
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
     CONF_ARRIVAL_TIME,
@@ -98,7 +98,7 @@ def default_options(hass: HomeAssistant) -> dict[str, str | None]:
         CONF_DEPARTURE_TIME: None,
         CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
     }
-    if hass.config.units.length_unit == LENGTH_MILES:
+    if hass.config.units == IMPERIAL_SYSTEM:
         default[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
     return default
 
