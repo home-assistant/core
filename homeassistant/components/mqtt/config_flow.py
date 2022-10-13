@@ -582,7 +582,9 @@ async def async_get_broker_settings(
         current_user = user_input_basic.get(
             CONF_USERNAME, yaml_config.get(CONF_USERNAME)
         )
-        current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
+        current_pass = user_input_basic.get(
+            CONF_PASSWORD, yaml_config.get(CONF_PASSWORD)
+        )
     else:
         # Get default settings from entry or yaml (if any)
         current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
