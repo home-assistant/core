@@ -1,7 +1,9 @@
 """Allow to set up simple automation rules via the config file."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 import logging
 from typing import Any, Protocol, cast
 
@@ -274,7 +276,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
-        if (conf := await component.async_prepare_reload()) is None:
+        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
         async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
@@ -660,20 +662,27 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         )
 
 
-async def _async_process_config(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    component: EntityComponent[AutomationEntity],
-) -> bool:
-    """Process config and add automations.
+@dataclass
+class AutomationEntityConfig:
+    """Container for prepared automation entity configuration."""
 
-    Returns if blueprints were used.
-    """
-    entities: list[AutomationEntity] = []
+    config_block: ConfigType
+    config_key: str
+    list_no: int
+    raw_blueprint_inputs: ConfigType | None
+    raw_config: ConfigType | None
+
+
+async def _prepare_automation_config(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> tuple[bool, list[AutomationEntityConfig]]:
+    """Parse configuration and prepare automation entity configuration."""
+    automation_configs: list[AutomationEntityConfig] = []
     blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[config_key]
+        conf: list[ConfigType | blueprint.BlueprintInputs] = config[config_key]
 
         for list_no, config_block in enumerate(conf):
             raw_blueprint_inputs = None
@@ -700,62 +709,121 @@ async def _async_process_config(
             else:
                 raw_config = cast(AutomationConfig, config_block).raw_config
 
-            automation_id: str | None = config_block.get(CONF_ID)
-            name: str = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
-
-            initial_state: bool | None = config_block.get(CONF_INITIAL_STATE)
-
-            action_script = Script(
-                hass,
-                config_block[CONF_ACTION],
-                name,
-                DOMAIN,
-                running_description="automation actions",
-                script_mode=config_block[CONF_MODE],
-                max_runs=config_block[CONF_MAX],
-                max_exceeded=config_block[CONF_MAX_EXCEEDED],
-                logger=LOGGER,
-                # We don't pass variables here
-                # Automation will already render them to use them in the condition
-                # and so will pass them on to the script.
-            )
-
-            if CONF_CONDITION in config_block:
-                cond_func = await _async_process_if(hass, name, config, config_block)
-
-                if cond_func is None:
-                    continue
-            else:
-                cond_func = None
-
-            # Add trigger variables to variables
-            variables = None
-            if CONF_TRIGGER_VARIABLES in config_block:
-                variables = ScriptVariables(
-                    dict(config_block[CONF_TRIGGER_VARIABLES].as_dict())
+            automation_configs.append(
+                AutomationEntityConfig(
+                    config_block, config_key, list_no, raw_blueprint_inputs, raw_config
                 )
-            if CONF_VARIABLES in config_block:
-                if variables:
-                    variables.variables.update(config_block[CONF_VARIABLES].as_dict())
-                else:
-                    variables = config_block[CONF_VARIABLES]
-
-            entity = AutomationEntity(
-                automation_id,
-                name,
-                config_block[CONF_TRIGGER],
-                cond_func,
-                action_script,
-                initial_state,
-                variables,
-                config_block.get(CONF_TRIGGER_VARIABLES),
-                raw_config,
-                raw_blueprint_inputs,
-                config_block[CONF_TRACE],
             )
 
-            entities.append(entity)
+    return (blueprints_used, automation_configs)
 
+
+async def _create_automation_entities(
+    hass: HomeAssistant, automation_configs: list[AutomationEntityConfig]
+) -> list[AutomationEntity]:
+    """Create automation entities from prepared configuration."""
+    entities: list[AutomationEntity] = []
+
+    for automation_config in automation_configs:
+        config_block = automation_config.config_block
+        config_key = automation_config.config_key
+        list_no = automation_config.list_no
+
+        automation_id: str | None = config_block.get(CONF_ID)
+        name: str = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
+
+        initial_state: bool | None = config_block.get(CONF_INITIAL_STATE)
+
+        action_script = Script(
+            hass,
+            config_block[CONF_ACTION],
+            name,
+            DOMAIN,
+            running_description="automation actions",
+            script_mode=config_block[CONF_MODE],
+            max_runs=config_block[CONF_MAX],
+            max_exceeded=config_block[CONF_MAX_EXCEEDED],
+            logger=LOGGER,
+            # We don't pass variables here
+            # Automation will already render them to use them in the condition
+            # and so will pass them on to the script.
+        )
+
+        if CONF_CONDITION in config_block:
+            cond_func = await _async_process_if(hass, name, config_block)
+
+            if cond_func is None:
+                continue
+        else:
+            cond_func = None
+
+        # Add trigger variables to variables
+        variables = None
+        if CONF_TRIGGER_VARIABLES in config_block:
+            variables = ScriptVariables(
+                dict(config_block[CONF_TRIGGER_VARIABLES].as_dict())
+            )
+        if CONF_VARIABLES in config_block:
+            if variables:
+                variables.variables.update(config_block[CONF_VARIABLES].as_dict())
+            else:
+                variables = config_block[CONF_VARIABLES]
+
+        entity = AutomationEntity(
+            automation_id,
+            name,
+            config_block[CONF_TRIGGER],
+            cond_func,
+            action_script,
+            initial_state,
+            variables,
+            config_block.get(CONF_TRIGGER_VARIABLES),
+            automation_config.raw_config,
+            automation_config.raw_blueprint_inputs,
+            config_block[CONF_TRACE],
+        )
+        entities.append(entity)
+
+    return entities
+
+
+async def _async_process_config(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    component: EntityComponent[AutomationEntity],
+) -> bool:
+    """Process config and add automations.
+
+    Returns if blueprints were used.
+    """
+
+    def find_match(
+        automations: list[AutomationEntity],
+        automation_configs: list[AutomationEntityConfig],
+    ) -> tuple[int, int] | None:
+        """Return indices of first automation and matching configuration."""
+        for automation_idx, automation in enumerate(automations):
+            for config_idx, config in enumerate(automation_configs):
+                if automation.raw_config == config.raw_config:
+                    return (automation_idx, config_idx)
+        return None
+
+    blueprints_used, updated_automation_configs = await _prepare_automation_config(
+        hass, config
+    )
+    automations_to_remove: list[AutomationEntity] = list(component.entities)
+
+    # Drop unchanged automations
+    while idx := find_match(automations_to_remove, updated_automation_configs):
+        del automations_to_remove[idx[0]]
+        del updated_automation_configs[idx[1]]
+
+    # Remove automations which have changed config or no longer exist
+    tasks = [automation.async_remove() for automation in automations_to_remove]
+    await asyncio.gather(*tasks)
+
+    # Crete automations which have new config or have been added
+    entities = await _create_automation_entities(hass, updated_automation_configs)
     if entities:
         await component.async_add_entities(entities)
 
@@ -763,10 +831,10 @@ async def _async_process_config(
 
 
 async def _async_process_if(
-    hass: HomeAssistant, name: str, config: dict[str, Any], p_config: dict[str, Any]
+    hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> IfAction | None:
     """Process if checks."""
-    if_configs = p_config[CONF_CONDITION]
+    if_configs = config[CONF_CONDITION]
 
     checks: list[condition.ConditionCheckerType] = []
     for if_config in if_configs:
