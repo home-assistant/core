@@ -822,7 +822,7 @@ async def _async_process_config(
     tasks = [automation.async_remove() for automation in automations_to_remove]
     await asyncio.gather(*tasks)
 
-    # Crete automations which have new config or have been added
+    # Create automations which have new config or have been added
     entities = await _create_automation_entities(hass, updated_automation_configs)
     if entities:
         await component.async_add_entities(entities)
