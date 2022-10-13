@@ -51,12 +51,18 @@ IGNORE_VIOLATIONS = {
     "suez_water",
 }
 
+IGNORE_FORMAT_VIOLATIONS = {
+    "Jandy iAqualink",
+}
+
 
 def validate(integrations: dict[str, Integration], config: Config):
     """Handle requirements for integrations."""
     # Check if we are doing format-only validation.
     if not config.requirements:
         for integration in integrations.values():
+            if integration.name in IGNORE_FORMAT_VIOLATIONS:
+                continue
             validate_requirements_format(integration)
         return
 

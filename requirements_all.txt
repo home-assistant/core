@@ -901,7 +901,7 @@ hyperion-py==0.7.5
 iammeter==0.1.7
 
 # homeassistant.components.iaqualink
-iaqualink==0.4.1
+iaqualink==0.4.1 --no-binary=iaqualink
 
 # homeassistant.components.ibeacon
 ibeacon_ble==0.7.4
