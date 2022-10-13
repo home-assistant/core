@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _find_fireplaces(self):
         """Perform UDP discovery."""
         fireplace_finder = AsyncUDPFireplaceFinder()
-        discovered_hosts = await fireplace_finder.search_fireplace(timeout=15)
+        discovered_hosts = await fireplace_finder.search_fireplace(timeout=12)
         configured_hosts = {
             entry.data[CONF_HOST]
             for entry in self._async_current_entries(include_ignore=False)
