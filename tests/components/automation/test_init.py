@@ -720,6 +720,7 @@ async def test_automation_stops(hass, calls, service):
             blocking=True,
         )
     else:
+        config[automation.DOMAIN]["alias"] = "goodbye"
         with patch(
             "homeassistant.config.load_yaml_config_file",
             autospec=True,
@@ -733,6 +734,48 @@ async def test_automation_stops(hass, calls, service):
     await hass.async_block_till_done()
 
     assert len(calls) == (1 if service == "turn_off_no_stop" else 0)
+
+
+async def test_reload_unchanged_does_not_stop(hass, calls):
+    """Test that turning off / reloading stops any running actions as appropriate."""
+    test_entity = "test.entity"
+
+    config = {
+        automation.DOMAIN: {
+            "alias": "hello",
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [
+                {"event": "running"},
+                {"wait_template": "{{ is_state('test.entity', 'goodbye') }}"},
+                {"service": "test.automation"},
+            ],
+        }
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config)
+
+    running = asyncio.Event()
+
+    @callback
+    def running_cb(event):
+        running.set()
+
+    hass.bus.async_listen_once("running", running_cb)
+    hass.states.async_set(test_entity, "hello")
+
+    hass.bus.async_fire("test_event")
+    await running.wait()
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    hass.states.async_set(test_entity, "goodbye")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
 
 
 async def test_automation_restore_state(hass):
