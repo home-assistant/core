@@ -67,7 +67,7 @@ async def async_setup_entry(
 
         if CONF_UNITS not in options:
             options[CONF_UNITS] = CONF_UNIT_SYSTEM_METRIC
-            if hass.config.units == IMPERIAL_SYSTEM:
+            if hass.config.units is IMPERIAL_SYSTEM:
                 options[CONF_UNITS] = CONF_UNIT_SYSTEM_IMPERIAL
 
         if CONF_TRAVEL_MODE in new_data:
