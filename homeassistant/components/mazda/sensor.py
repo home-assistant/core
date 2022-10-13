@@ -52,7 +52,7 @@ class MazdaSensorEntityDescription(
 
 def _get_distance_unit(unit_system: UnitSystem) -> str:
     """Return the distance unit for the given unit system."""
-    if unit_system == IMPERIAL_SYSTEM:
+    if unit_system is IMPERIAL_SYSTEM:
         return LENGTH_MILES
     return LENGTH_KILOMETERS
 
@@ -110,7 +110,7 @@ def _ev_remaining_range_supported(data):
 def _fuel_distance_remaining_value(data, unit_system):
     """Get the fuel distance remaining value."""
     distance = data["status"]["fuelDistanceRemainingKm"]
-    if unit_system == IMPERIAL_SYSTEM:
+    if unit_system is IMPERIAL_SYSTEM:
         distance = DistanceConverter.convert(distance, LENGTH_KILOMETERS, LENGTH_MILES)
     return round(distance)
 
@@ -119,7 +119,7 @@ def _odometer_value(data, unit_system):
     """Get the odometer value."""
     # In order to match the behavior of the Mazda mobile app, we always round down
     distance = data["status"]["odometerKm"]
-    if unit_system == IMPERIAL_SYSTEM:
+    if unit_system is IMPERIAL_SYSTEM:
         distance = DistanceConverter.convert(distance, LENGTH_KILOMETERS, LENGTH_MILES)
     return int(distance)
 
@@ -152,7 +152,7 @@ def _ev_charge_level_value(data, unit_system):
 def _ev_remaining_range_value(data, unit_system):
     """Get the remaining range value."""
     distance = data["evStatus"]["chargeInfo"]["drivingRangeKm"]
-    if unit_system == IMPERIAL_SYSTEM:
+    if unit_system is IMPERIAL_SYSTEM:
         distance = DistanceConverter.convert(distance, LENGTH_KILOMETERS, LENGTH_MILES)
     return round(distance)
 
