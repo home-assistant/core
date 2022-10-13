@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_STARTED,
-    LENGTH_MILES,
     TIME_MINUTES,
 )
 from homeassistant.core import CoreState, HomeAssistant
@@ -26,6 +25,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
     ATTRIBUTION,
@@ -67,7 +67,7 @@ async def async_setup_entry(
 
         if CONF_UNITS not in options:
             options[CONF_UNITS] = CONF_UNIT_SYSTEM_METRIC
-            if hass.config.units.length_unit == LENGTH_MILES:
+            if hass.config.units == IMPERIAL_SYSTEM:
                 options[CONF_UNITS] = CONF_UNIT_SYSTEM_IMPERIAL
 
         if CONF_TRAVEL_MODE in new_data:
