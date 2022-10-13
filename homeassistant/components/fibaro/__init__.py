@@ -656,6 +656,8 @@ class FibaroDevice(Entity):
                     attr[ATTR_ARMED] = armed
                 elif isinstance(armed, str) and armed.lower() in ("true", "false"):
                     attr[ATTR_ARMED] = armed.lower() == "true"
+                else:
+                    attr[ATTR_ARMED] = None
         except (ValueError, KeyError):
             pass
 
