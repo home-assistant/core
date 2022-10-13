@@ -1,58 +1,57 @@
-"""Test for IPMA component Init."""
-from __future__ import annotations
+"""Test the IPMA integration."""
 
-from typing import Any
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.components.ipma.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant
+from pyipma import IPMAException
 
-from . import ENTRY_CONFIG, MockLocation
+from homeassistant.components.ipma import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
+
+from .test_weather import MockLocation
 
 from tests.common import MockConfigEntry
 
 
-async def init_integration(
-    hass: HomeAssistant,
-    config: dict[str, Any] = None,
-    entry_id: str = "1",
-    source: str = SOURCE_USER,
-) -> MockConfigEntry:
-    """Set up the SQL integration in Home Assistant."""
-    if not config:
-        config = ENTRY_CONFIG
+async def test_async_setup_raises_entry_not_ready(hass):
+    """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=source,
-        data=config,
-        entry_id=entry_id,
-    )
+    with patch(
+        "pyipma.location.Location.get", side_effect=IPMAException("API unavailable")
+    ):
+
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Home",
+            data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
+        )
+
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_unload_config_entry(hass):
+    """Test entry unloading."""
 
     with patch(
         "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
+        config_entry = MockConfigEntry(
+            domain="ipma",
+            data={CONF_LATITUDE: 0, CONF_LONGITUDE: 0, CONF_MODE: "daily"},
+        )
         config_entry.add_to_hass(hass)
+
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        return config_entry
+        assert config_entry.state is ConfigEntryState.LOADED
 
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
-    """Test setup entry."""
-    config_entry = await init_integration(hass)
-    assert config_entry.state == config_entries.ConfigEntryState.LOADED
-
-
-async def test_unload_entry(hass: HomeAssistant) -> None:
-    """Test unload an entry."""
-    config_entry = await init_integration(hass)
-    assert config_entry.state == config_entries.ConfigEntryState.LOADED
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
