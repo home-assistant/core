@@ -16,6 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from . import GdacsFeedEntityManager
 from .const import DEFAULT_ICON, DOMAIN, FEED
@@ -106,7 +107,7 @@ class GdacsEvent(GeolocationEvent):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        if self.hass.config.units.length_unit == LENGTH_MILES:
+        if self.hass.config.units == IMPERIAL_SYSTEM:
             self._attr_unit_of_measurement = LENGTH_MILES
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass, f"gdacs_delete_{self._external_id}", self._delete_callback
