@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from numbers import Number
+from typing import Final
+
+import voluptuous as vol
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     LENGTH,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
@@ -40,6 +41,9 @@ from .unit_conversion import (
     TemperatureConverter,
     VolumeConverter,
 )
+
+_CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
+_CONF_UNIT_SYSTEM_METRIC: Final = "metric"
 
 LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
@@ -207,8 +211,21 @@ class UnitSystem:
         }
 
 
+def get_unit_system(key: str) -> UnitSystem:
+    """Get unit system based on key."""
+    if key == _CONF_UNIT_SYSTEM_IMPERIAL:
+        return IMPERIAL_SYSTEM
+    if key == _CONF_UNIT_SYSTEM_METRIC:
+        return METRIC_SYSTEM
+    raise ValueError(f"`{key}` is not a valid unit system key")
+
+
+validate_unit_system = vol.All(
+    vol.Lower, vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_IMPERIAL)
+)
+
 METRIC_SYSTEM = UnitSystem(
-    CONF_UNIT_SYSTEM_METRIC,
+    _CONF_UNIT_SYSTEM_METRIC,
     TEMP_CELSIUS,
     LENGTH_KILOMETERS,
     SPEED_METERS_PER_SECOND,
@@ -219,7 +236,7 @@ METRIC_SYSTEM = UnitSystem(
 )
 
 IMPERIAL_SYSTEM = UnitSystem(
-    CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_IMPERIAL,
     TEMP_FAHRENHEIT,
     LENGTH_MILES,
     SPEED_MILES_PER_HOUR,
