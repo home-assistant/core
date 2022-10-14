@@ -6,6 +6,7 @@ from unittest.mock import patch
 import bleak
 from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
+from bleak.backends.scanner import AdvertisementData
 import pytest
 
 from homeassistant.components.bluetooth.models import (
@@ -198,9 +199,16 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
 
     class FakeScanner(BaseHaScanner):
         @property
-        def discovered_devices(self) -> list[BLEDevice]:
+        def discovered_devices_and_advertisement_data(
+            self,
+        ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
             """Return a list of discovered devices."""
-            return [switchbot_proxy_device_has_connection_slot]
+            return {
+                switchbot_proxy_device_has_connection_slot.address: (
+                    switchbot_proxy_device_has_connection_slot,
+                    switchbot_adv,
+                )
+            }
 
         async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
             """Return a list of discovered devices."""
@@ -284,9 +292,16 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
 
     class FakeScanner(BaseHaScanner):
         @property
-        def discovered_devices(self) -> list[BLEDevice]:
+        def discovered_devices_and_advertisement_data(
+            self,
+        ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
             """Return a list of discovered devices."""
-            return [switchbot_proxy_device_has_connection_slot]
+            return {
+                switchbot_proxy_device_has_connection_slot.address: (
+                    switchbot_proxy_device_has_connection_slot,
+                    switchbot_adv,
+                )
+            }
 
         async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
             """Return a list of discovered devices."""
