@@ -224,8 +224,19 @@ def get_unit_system(key: str) -> UnitSystem:
     raise ValueError(f"`{key}` is not a valid unit system key")
 
 
+def _deprecated_unit_system(value: str) -> str:
+    """Add warning for deprecated unit system."""
+
+    if value == _CONF_UNIT_SYSTEM_IMPERIAL:
+        # need to add warning in 2023.1
+        return _CONF_UNIT_SYSTEM_US_CUSTOMARY
+    return value
+
+
 validate_unit_system = vol.All(
-    vol.Lower, vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_IMPERIAL)
+    vol.Lower,
+    _deprecated_unit_system,
+    vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
 )
 
 METRIC_SYSTEM = UnitSystem(
