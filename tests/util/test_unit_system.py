@@ -3,6 +3,8 @@ import pytest
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
     LENGTH,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
@@ -298,3 +300,21 @@ def test_is_metric():
     """Test the is metric flag."""
     assert METRIC_SYSTEM.is_metric
     assert not IMPERIAL_SYSTEM.is_metric
+
+
+@pytest.mark.parametrize(
+    "unit_system, expected_name",
+    [
+        (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
+        (IMPERIAL_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
+    ],
+)
+def test_deprecated_name(
+    caplog: pytest.LogCaptureFixture, unit_system: UnitSystem, expected_name: str
+) -> None:
+    """Test the name is deprecated."""
+    assert unit_system.name == expected_name
+    assert (
+        "Detected code that accesses the `name` property of the unit system."
+        in caplog.text
+    )
