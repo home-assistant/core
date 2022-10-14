@@ -10,8 +10,9 @@ from coinbase.wallet.error import AuthenticationError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry, issue_registry as ir
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -30,6 +31,23 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Coinbase component."""
+    if DOMAIN not in config:
+        return True
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "remove_yaml",
+        breaks_in_ha_version="2022.12.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="removed_yaml",
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
