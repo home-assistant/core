@@ -32,7 +32,7 @@ def setup_comp(hass):
     """Initialize components."""
     mock_component(hass, "group")
     hass.loop.run_until_complete(
-        async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
     )
 
 
