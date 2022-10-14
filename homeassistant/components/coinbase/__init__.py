@@ -41,7 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         DOMAIN,
         "remove_yaml",
-        breaks_in_ha_version="2022.12.0",
+        breaks_in_ha_version="2022.11.0",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="removed_yaml",
