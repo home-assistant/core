@@ -42,12 +42,14 @@ class DeviceTriggerAccessory(HomeAccessory):
         for idx, trigger in enumerate(device_triggers):
             type_ = trigger["type"]
             subtype = trigger.get("subtype")
+            unique_id = f'{type_}-{subtype or ""}'
             trigger_name = (
                 f"{type_.title()} {subtype.title()}" if subtype else type_.title()
             )
             serv_stateless_switch = self.add_preload_service(
                 SERV_STATELESS_PROGRAMMABLE_SWITCH,
                 [CHAR_NAME, CHAR_SERVICE_LABEL_INDEX],
+                unique_id=unique_id,
             )
             self.triggers.append(
                 serv_stateless_switch.configure_char(
@@ -60,7 +62,9 @@ class DeviceTriggerAccessory(HomeAccessory):
             serv_stateless_switch.configure_char(
                 CHAR_SERVICE_LABEL_INDEX, value=idx + 1
             )
-            serv_service_label = self.add_preload_service(SERV_SERVICE_LABEL)
+            serv_service_label = self.add_preload_service(
+                SERV_SERVICE_LABEL, unique_id=unique_id
+            )
             serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
             serv_stateless_switch.add_linked_service(serv_service_label)
 
