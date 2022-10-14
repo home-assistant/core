@@ -190,16 +190,32 @@ async def test_report_attributes(hass, mock_socket, mock_time):
     assert mock_socket.return_value.close.call_count == 1
 
 
-def test_report_with_string_state(graphite_feeder, mock_time):
+async def test_report_with_string_state(hass, mock_socket, mock_time):
     """Test the reporting with strings."""
-    mock_time.return_value = 12345
-    expected = ["ha.entity.foo 1.000000 12345", "ha.entity.state 1.000000 12345"]
+    expected = [
+        "ha.test.entity.foo 1.000000 12345",
+        "ha.test.entity.state 1.000000 12345",
+    ]
 
-    state = mock.MagicMock(state="above_horizon", attributes={"foo": 1.0})
-    with mock.patch.object(graphite_feeder, "_send_to_graphite") as mock_send:
-        graphite_feeder._report_attributes("entity", state)
-        actual = mock_send.call_args_list[0][0][0].split("\n")
-        assert sorted(expected) == sorted(actual)
+    mock_time.return_value = 12345
+    assert await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
+    await hass.async_block_till_done()
+    mock_socket.reset_mock()
+
+    await hass.async_start()
+
+    hass.states.async_set("test.entity", "above_horizon", {"foo": 1.0})
+    await asyncio.sleep(0.1)
+
+    assert mock_socket.return_value.connect.call_count == 1
+    assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
+    assert mock_socket.return_value.sendall.call_count == 1
+    assert mock_socket.return_value.sendall.call_args == mock.call(
+        "\n".join(expected).encode("utf-8")
+    )
+    assert mock_socket.return_value.send.call_count == 1
+    assert mock_socket.return_value.send.call_args == mock.call(b"\n")
+    assert mock_socket.return_value.close.call_count == 1
 
 
 def test_report_with_binary_state(graphite_feeder, mock_time):
