@@ -5,7 +5,10 @@ import logging
 from aioeafm import get_station
 import async_timeout
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorStateClass
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS
 from homeassistant.core import HomeAssistant
@@ -96,6 +99,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
         """Initialise the gauge with a data instance and station."""
         super().__init__(coordinator)
         self.key = key
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def station_name(self):
