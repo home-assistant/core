@@ -159,14 +159,6 @@ async def test_shutdown(hass, mock_socket, mock_time):
     assert mock_socket.return_value.sendall.call_count == 0
 
 
-def test_event_listener(graphite_feeder):
-    """Test the event listener."""
-    with mock.patch.object(graphite_feeder, "_queue") as mock_queue:
-        graphite_feeder.event_listener("foo")
-        assert mock_queue.put.call_count == 1
-        assert mock_queue.put.call_args == mock.call("foo")
-
-
 def test_report_attributes(graphite_feeder, mock_time):
     """Test the reporting with attributes."""
     mock_time.return_value = 12345
