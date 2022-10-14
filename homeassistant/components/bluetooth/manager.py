@@ -108,7 +108,8 @@ class BluetoothManager:
         self._integration_matcher = integration_matcher
         self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
 
-        self._advertisement_tracker = AdvertisementTracker()
+        self._connectable_advertisement_tracker = AdvertisementTracker()
+        self._non_connectable_advertisement_tracker = AdvertisementTracker()
 
         self._unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
@@ -121,9 +122,13 @@ class BluetoothManager:
         self._bleak_callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-        self._history: dict[str, BluetoothServiceInfoBleak] = {}
+
+        self._non_connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
         self._connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
+        self._all_history: dict[str, BluetoothServiceInfoBleak] = {}
+
         self._non_connectable_scanners: list[BaseHaScanner] = []
+
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
 
@@ -155,10 +160,12 @@ class BluetoothManager:
                 service_info.as_dict()
                 for service_info in self._connectable_history.values()
             ],
-            "history": [
-                service_info.as_dict() for service_info in self._history.values()
+            "non_connectable_history": [
+                service_info.as_dict()
+                for service_info in self._non_connectable_history.values()
             ],
-            "advertisement_tracker": self._advertisement_tracker.async_diagnostics(),
+            "connectable_advertisement_tracker": self._connectable_advertisement_tracker.async_diagnostics(),
+            "non_connectable_advertisement_tracker": self._non_connectable_advertisement_tracker.async_diagnostics(),
         }
 
     def _find_adapter_by_address(self, address: str) -> str | None:
@@ -189,8 +196,8 @@ class BluetoothManager:
         # Everything is connectable so it fall into both
         # buckets since the host system can only provide
         # connectable devices
-        self._history = history.copy()
         self._connectable_history = history.copy()
+        self._all_history = history.copy()
         self.async_setup_unavailable_tracking()
 
     @hass_callback
@@ -252,15 +259,14 @@ class BluetoothManager:
         """Watch for unavailable devices and cleanup state history."""
         monotonic_now = MONOTONIC_TIME()
         connectable_history = self._connectable_history
-        all_history = self._history
-        removed_addresses: set[str] = set()
+        all_history = self._all_history
 
         for connectable in (True, False):
             unavailable_callbacks = self._get_unavailable_callbacks_by_type(connectable)
-            intervals = self._advertisement_tracker.intervals
+            tracker = self._get_advertisement_tracker_by_type(connectable)
+            intervals = tracker.intervals
             history = connectable_history if connectable else all_history
-            history_set = set(history)
-            disappeared = history_set.difference(
+            disappeared = set(history).difference(
                 self._async_all_discovered_addresses(connectable)
             )
             for address in disappeared:
@@ -276,7 +282,7 @@ class BluetoothManager:
                         continue
 
                 service_info = history.pop(address)
-                removed_addresses.add(address)
+                tracker.async_remove_address(address)
 
                 if not (callbacks := unavailable_callbacks.get(address)):
                     continue
@@ -287,18 +293,15 @@ class BluetoothManager:
                     except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception("Error in unavailable callback")
 
-        # If we removed the device from both the connectable history
-        # and all history then we can remove it from the advertisement tracker
-        for address in removed_addresses:
-            if address not in connectable_history and address not in all_history:
-                self._advertisement_tracker.async_remove_address(address)
-
     def _prefer_previous_adv_from_different_source(
-        self, old: BluetoothServiceInfoBleak, new: BluetoothServiceInfoBleak
+        self,
+        old: BluetoothServiceInfoBleak,
+        new: BluetoothServiceInfoBleak,
+        tracker: AdvertisementTracker,
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
-            stale_seconds := self._advertisement_tracker.intervals.get(
+            stale_seconds := tracker.intervals.get(
                 new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
             )
         ):
@@ -356,26 +359,27 @@ class BluetoothManager:
         device = service_info.device
         connectable = service_info.connectable
         address = device.address
-        all_history = self._connectable_history if connectable else self._history
+
+        if connectable:
+            history_by_connectable = self._connectable_history
+            tracker = self._connectable_advertisement_tracker
+        else:
+            history_by_connectable = self._non_connectable_history
+            tracker = self._non_connectable_advertisement_tracker
         source = service_info.source
         if (
-            (old_service_info := all_history.get(address))
+            (old_service_info := history_by_connectable.get(address))
             and source != old_service_info.source
             and self._prefer_previous_adv_from_different_source(
-                old_service_info, service_info
+                old_service_info, service_info, tracker
             )
         ):
             return
 
-        self._history[address] = service_info
-
-        if connectable:
-            self._connectable_history[address] = service_info
-            # Bleak callbacks must get a connectable device
+        self._all_history[address] = history_by_connectable[address] = service_info
 
         # Track advertisement intervals to determine when we need to
         # switch adapters or mark a device as unavailable
-        tracker = self._advertisement_tracker
         if (last_source := tracker.sources.get(address)) and last_source != source:
             # Source changed, remove the old address from the tracker
             tracker.async_remove_address(address)
@@ -517,27 +521,31 @@ class BluetoothManager:
 
     def _get_scanners_by_type(self, connectable: bool) -> list[BaseHaScanner]:
         """Return the scanners by type."""
-        return (
-            self._connectable_scanners
-            if connectable
-            else self._non_connectable_scanners
-        )
+        if connectable:
+            return self._connectable_scanners
+        return self._non_connectable_scanners
 
     def _get_unavailable_callbacks_by_type(
         self, connectable: bool
     ) -> dict[str, list[Callable[[BluetoothServiceInfoBleak], None]]]:
         """Return the unavailable callbacks by type."""
-        return (
-            self._connectable_unavailable_callbacks
-            if connectable
-            else self._unavailable_callbacks
-        )
+        if connectable:
+            return self._connectable_unavailable_callbacks
+        return self._unavailable_callbacks
 
     def _get_history_by_type(
         self, connectable: bool
     ) -> dict[str, BluetoothServiceInfoBleak]:
         """Return the history by type."""
-        return self._connectable_history if connectable else self._history
+        return self._connectable_history if connectable else self._all_history
+
+    def _get_advertisement_tracker_by_type(
+        self, connectable: bool
+    ) -> AdvertisementTracker:
+        """Return the advertisement tracker by type."""
+        if connectable:
+            return self._connectable_advertisement_tracker
+        return self._non_connectable_advertisement_tracker
 
     def async_register_scanner(
         self, scanner: BaseHaScanner, connectable: bool
@@ -546,7 +554,9 @@ class BluetoothManager:
         scanners = self._get_scanners_by_type(connectable)
 
         def _unregister_scanner() -> None:
-            self._advertisement_tracker.async_remove_source(scanner.source)
+            self._get_advertisement_tracker_by_type(connectable).async_remove_source(
+                scanner.source
+            )
             scanners.remove(scanner)
 
         scanners.append(scanner)

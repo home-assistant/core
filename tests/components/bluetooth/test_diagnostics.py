@@ -96,11 +96,6 @@ async def test_diagnostics(
                 }
             },
             "manager": {
-                "advertisement_tracker": {
-                    "intervals": {},
-                    "sources": {},
-                    "timings": {},
-                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -115,8 +110,18 @@ async def test_diagnostics(
                         "sw_version": "BlueZ 4.63",
                     },
                 },
+                "connectable_advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {},
+                    "timings": {},
+                },
                 "connectable_history": [],
-                "history": [],
+                "non_connectable_advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {},
+                    "timings": {},
+                },
+                "non_connectable_history": [],
                 "scanners": [
                     {
                         "adapter": "hci0",
@@ -203,24 +208,34 @@ async def test_diagnostics_macos(
                 }
             },
             "manager": {
-                "advertisement_tracker": {
-                    "intervals": {},
-                    "sources": {"44:44:33:11:23:45": "local"},
-                    "timings": {"44:44:33:11:23:45": [ANY]},
-                },
                 "adapters": {
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
                         "passive_scan": False,
-                        "sw_version": ANY,
+                        "sw_version": "21.6.0",
                     }
+                },
+                "connectable_advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {"44:44:33:11:23:45": "local"},
+                    "timings": {"44:44:33:11:23:45": [ANY]},
                 },
                 "connectable_history": [
                     {
                         "address": "44:44:33:11:23:45",
-                        "advertisement": ANY,
+                        "advertisement": [
+                            "wohand",
+                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {},
+                            [],
+                            -127,
+                            -127,
+                            [[]],
+                        ],
                         "connectable": True,
-                        "manufacturer_data": ANY,
+                        "manufacturer_data": {
+                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                        },
                         "name": "wohand",
                         "rssi": -127,
                         "service_data": {},
@@ -229,20 +244,12 @@ async def test_diagnostics_macos(
                         "time": ANY,
                     }
                 ],
-                "history": [
-                    {
-                        "address": "44:44:33:11:23:45",
-                        "advertisement": ANY,
-                        "connectable": True,
-                        "manufacturer_data": ANY,
-                        "name": "wohand",
-                        "rssi": -127,
-                        "service_data": {},
-                        "service_uuids": [],
-                        "source": "local",
-                        "time": ANY,
-                    }
-                ],
+                "non_connectable_advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {},
+                    "timings": {},
+                },
+                "non_connectable_history": [],
                 "scanners": [
                     {
                         "adapter": "Core Bluetooth",
