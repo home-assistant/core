@@ -59,7 +59,7 @@ class SessionsDataUpdateCoordinator(
 ):
     """Sessions update coordinator for Jellyfin."""
 
-    async def _fetch_data(self) -> dict[str, Any]:
+    async def _fetch_data(self) -> dict[str, dict[str, Any]]:
         """Fetch the data."""
         sessions = await self.hass.async_add_executor_job(
             self.api_client.jellyfin.sessions
