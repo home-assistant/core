@@ -258,3 +258,12 @@ async def test_send_to_graphite_errors(hass, mock_socket, mock_time, caplog):
     await asyncio.sleep(0.1)
 
     assert "Unable to connect to host" in caplog.text
+
+    mock_socket.reset_mock()
+
+    mock_socket.return_value.connect.side_effect = Exception
+
+    hass.states.async_set("test.entity", STATE_ON)
+    await asyncio.sleep(0.1)
+
+    assert "Failed to process STATE_CHANGED event" in caplog.text
