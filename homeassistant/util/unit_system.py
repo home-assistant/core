@@ -217,7 +217,7 @@ def get_unit_system(key: str) -> UnitSystem:
         return IMPERIAL_SYSTEM
     if key == _CONF_UNIT_SYSTEM_METRIC:
         return METRIC_SYSTEM
-    raise ValueError("Invalid unit system key")
+    raise ValueError(f"`{key}` is not a valid unit system key")
 
 
 def get_default_key(use_metric: bool) -> str:

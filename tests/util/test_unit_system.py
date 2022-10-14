@@ -3,8 +3,6 @@ import pytest
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     LENGTH,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
@@ -21,7 +19,15 @@ from homeassistant.const import (
     WIND_SPEED,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_METRIC,
+    IMPERIAL_SYSTEM,
+    METRIC_SYSTEM,
+    UnitSystem,
+    get_default_key,
+    get_unit_system,
+)
 
 SYSTEM_NAME = "TEST"
 INVALID_UNIT = "INVALID"
@@ -317,8 +323,8 @@ def test_is_metric(
 @pytest.mark.parametrize(
     "unit_system, expected_name",
     [
-        (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
-        (IMPERIAL_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
+        (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC),
+        (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL),
     ],
 )
 def test_deprecated_name(
@@ -330,3 +336,34 @@ def test_deprecated_name(
         "Detected code that accesses the `name` property of the unit system."
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "use_metric, expected_key",
+    [
+        (True, _CONF_UNIT_SYSTEM_METRIC),
+        (False, _CONF_UNIT_SYSTEM_IMPERIAL),
+    ],
+)
+def test_get_default_key(use_metric: bool, expected_key: str) -> None:
+    """Test get_default_key."""
+    assert get_default_key(use_metric) == expected_key
+
+
+@pytest.mark.parametrize(
+    "key, expected_system",
+    [
+        (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
+        (_CONF_UNIT_SYSTEM_IMPERIAL, IMPERIAL_SYSTEM),
+    ],
+)
+def test_get_unit_system(key: str, expected_system: UnitSystem) -> None:
+    """Test get_unit_system."""
+    assert get_unit_system(key) is expected_system
+
+
+@pytest.mark.parametrize("key", [None, "", "invalid_custom"])
+def test_get_unit_system_invalid(key: str) -> None:
+    """Test get_unit_system with an invalid key."""
+    with pytest.raises(ValueError, match=f"`{key}` is not a valid unit system key"):
+        _ = get_unit_system(key)
