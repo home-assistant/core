@@ -402,9 +402,7 @@ class BluetoothManager:
         ):
             return
 
-        is_connectable_by_any_source = address in self._connectable_history
-
-        if is_connectable_by_any_source:
+        if is_connectable_by_any_source := address in self._connectable_history:
             # Bleak callbacks must get a connectable device
             for callback_filters in self._bleak_callbacks:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
