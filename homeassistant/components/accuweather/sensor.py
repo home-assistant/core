@@ -30,6 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import AccuWeatherDataUpdateCoordinator
 from .const import (
@@ -412,12 +413,12 @@ class AccuWeatherSensor(
             self._attr_unique_id = (
                 f"{coordinator.location_key}-{description.key}".lower()
             )
-        if self.coordinator.hass.config.units.is_metric:
+        if self.coordinator.hass.config.units is METRIC_SYSTEM:
             self._unit_system = API_METRIC
         else:
             self._unit_system = API_IMPERIAL
         self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
-            self.coordinator.hass.config.units.is_metric
+            self.coordinator.hass.config.units is METRIC_SYSTEM
         )
         self._attr_device_info = coordinator.device_info
         if forecast_day is not None:
