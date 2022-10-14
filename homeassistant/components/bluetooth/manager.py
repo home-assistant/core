@@ -377,16 +377,15 @@ class BluetoothManager:
         ):
             return
 
-        connectable = service_info.connectable
-        if connectable:
+        if connectable := service_info.connectable:
             self._connectable_history[address] = service_info
         else:
             self._non_connectable_history[address] = service_info
         all_history[address] = service_info
 
-        tracker = self._advertisement_tracker
         # Track advertisement intervals to determine when we need to
         # switch adapters or mark a device as unavailable
+        tracker = self._advertisement_tracker
         if (last_source := tracker.sources.get(address)) and last_source != source:
             # Source changed, remove the old address from the tracker
             tracker.async_remove_address(address)
