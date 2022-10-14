@@ -97,7 +97,7 @@ def inject_advertisement_with_time_and_source_connectable(
         models.BluetoothServiceInfoBleak(
             name=adv.local_name or device.name or device.address,
             address=device.address,
-            rssi=device.rssi,
+            rssi=adv.rssi,
             manufacturer_data=adv.manufacturer_data,
             service_data=adv.service_data,
             service_uuids=adv.service_uuids,

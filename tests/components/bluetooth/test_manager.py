@@ -127,9 +127,9 @@ async def test_switching_adapters_based_on_zero_rssi(hass, enable_bluetooth):
 
     address = "44:44:33:11:23:45"
 
-    switchbot_device_no_rssi = BLEDevice(address, "wohand_poor_signal", rssi=0)
+    switchbot_device_no_rssi = BLEDevice(address, "wohand_poor_signal")
     switchbot_adv_no_rssi = generate_advertisement_data(
-        local_name="wohand_no_rssi", service_uuids=[]
+        local_name="wohand_no_rssi", service_uuids=[], rssi=0
     )
     inject_advertisement_with_source(
         hass, switchbot_device_no_rssi, switchbot_adv_no_rssi, "hci0"
@@ -140,9 +140,9 @@ async def test_switching_adapters_based_on_zero_rssi(hass, enable_bluetooth):
         is switchbot_device_no_rssi
     )
 
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal", rssi=-60)
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
     switchbot_adv_good_signal = generate_advertisement_data(
-        local_name="wohand_good_signal", service_uuids=[]
+        local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
     inject_advertisement_with_source(
         hass, switchbot_device_good_signal, switchbot_adv_good_signal, "hci1"
