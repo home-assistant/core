@@ -316,7 +316,9 @@ class BluetoothManager:
                 stale_seconds,
             )
             return False
-        if new.rssi - RSSI_SWITCH_THRESHOLD > (old.rssi or NO_RSSI_VALUE):
+        if (new.rssi or NO_RSSI_VALUE) - RSSI_SWITCH_THRESHOLD > (
+            old.rssi or NO_RSSI_VALUE
+        ):
             # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
             _LOGGER.debug(
                 "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
