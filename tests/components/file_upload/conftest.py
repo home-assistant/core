@@ -10,7 +10,7 @@ def large_file() -> tempfile.NamedTemporaryFile:
     tmp_file = tempfile.NamedTemporaryFile()
 
     with open(tmp_file.name, "w") as fp:
-        for _ in range(10000):
+        for _ in range(100000):
             fp.write(
                 "Home Assistant is awesome. Open source home automation that puts local control and privacy first."
             )

@@ -11,6 +11,7 @@ import shutil
 import tempfile
 
 from aiohttp import BodyPartReader, web
+import janus
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -150,29 +151,41 @@ class FileUploadView(HomeAssistantView):
         file_upload_data: FileUploadData = hass.data[DOMAIN]
         file_dir = file_upload_data.file_dir(file_id)
         file_handle: io.BufferedWriter | None = None
+        queue: janus.Queue[bytes | None] = janus.Queue()
 
-        def _sync_write_file(_file_name: str, _chunk: bytes) -> None:
+        def _sync_queue_consumer(
+            sync_q: janus.SyncQueue[bytes | None], _file_name: str
+        ) -> None:
             nonlocal file_handle
+
             if file_handle is None:
                 file_dir.mkdir()
                 file_handle = (file_dir / _file_name).open("wb")
 
-            file_handle.write(_chunk)
+            try:
+                while _chunk := sync_q.get():
+                    file_handle.write(_chunk)
+            finally:
+                if file_handle is not None:
+                    file_handle.close()
 
-        def _close_file_handle() -> None:
-            nonlocal file_handle
-            if file_handle is not None:
-                file_handle.close()
-
+        fut: asyncio.Future[None] | None = None
         try:
+            fut = hass.async_add_executor_job(
+                _sync_queue_consumer,
+                queue.sync_q,
+                file_field_reader.filename,
+            )
+
             while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
-                await hass.async_add_executor_job(
-                    _sync_write_file,
-                    file_field_reader.filename,
-                    chunk,
-                )
+                queue.async_q.put_nowait(chunk)
+                if queue.async_q.qsize() > 5:  # Allow up to 5 MB buffer size
+                    await queue.async_q.join()
+
+            queue.async_q.put_nowait(None)  # terminate queue consumer
         finally:
-            await hass.async_add_executor_job(_close_file_handle)
+            if fut is not None:
+                await fut
 
         file_upload_data.files[file_id] = file_field_reader.filename
 
