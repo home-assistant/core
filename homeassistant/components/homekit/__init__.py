@@ -947,13 +947,12 @@ class HomeKit:
 
     async def async_stop(self, *args: Any) -> None:
         """Stop the accessory driver."""
-        assert self.driver is not None
-
         if self.status != STATUS_RUNNING:
             return
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
-        await self.driver.async_stop()
+        if self.driver:
+            await self.driver.async_stop()
 
     @callback
     def _async_configure_linked_sensors(
