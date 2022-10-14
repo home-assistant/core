@@ -9,7 +9,12 @@ import os
 from typing import Any, Final
 from unittest import mock
 
-from aiohomekit.model import Accessories, AccessoriesState, Accessory
+from aiohomekit.model import (
+    Accessories,
+    AccessoriesState,
+    Accessory,
+    mixin as model_mixin,
+)
 from aiohomekit.testing import FakeController, FakePairing
 from aiohomekit.zeroconf import HomeKitService
 
@@ -19,13 +24,13 @@ from homeassistant.components.homekit_controller.const import (
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
-    IDENTIFIER_SERIAL_NUMBER,
 )
 from homeassistant.components.homekit_controller.utils import async_get_controller
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -41,6 +46,19 @@ logger = logging.getLogger(__name__)
 
 # Root device in test harness always has an accessory id of this
 HUB_TEST_ACCESSORY_ID: Final[str] = "00:00:00:00:00:00:aid:1"
+
+TEST_ACCESSORY_ADDRESS = "AA:BB:CC:DD:EE:FF"
+
+
+TEST_DEVICE_SERVICE_INFO = BluetoothServiceInfo(
+    name="test_accessory",
+    address=TEST_ACCESSORY_ADDRESS,
+    rssi=-56,
+    manufacturer_data={},
+    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)
 
 
 @dataclass
@@ -182,15 +200,17 @@ async def setup_platform(hass):
     return await async_get_controller(hass)
 
 
-async def setup_test_accessories(hass, accessories):
+async def setup_test_accessories(hass, accessories, connection=None):
     """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
     return await setup_test_accessories_with_controller(
-        hass, accessories, fake_controller
+        hass, accessories, fake_controller, connection
     )
 
 
-async def setup_test_accessories_with_controller(hass, accessories, fake_controller):
+async def setup_test_accessories_with_controller(
+    hass, accessories, fake_controller, connection=None
+):
     """Load a fake homekit device based on captured JSON profile."""
 
     pairing_id = "00:00:00:00:00:00"
@@ -200,11 +220,16 @@ async def setup_test_accessories_with_controller(hass, accessories, fake_control
         accessories_obj.add_accessory(accessory)
     pairing = await fake_controller.add_paired_device(accessories_obj, pairing_id)
 
+    data = {"AccessoryPairingID": pairing_id}
+    if connection == "BLE":
+        data["Connection"] = "BLE"
+        data["AccessoryAddress"] = TEST_ACCESSORY_ADDRESS
+
     config_entry = MockConfigEntry(
         version=1,
         domain="homekit_controller",
         entry_id="TestData",
-        data={"AccessoryPairingID": pairing_id},
+        data=data,
         title="test",
     )
     config_entry.add_to_hass(hass)
@@ -250,7 +275,9 @@ async def device_config_changed(hass, accessories):
     await hass.async_block_till_done()
 
 
-async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=None):
+async def setup_test_component(
+    hass, setup_accessory, capitalize=False, suffix=None, connection=None
+):
     """Load a fake homekit accessory based on a homekit accessory model.
 
     If capitalize is True, property names will be in upper case.
@@ -271,7 +298,7 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
 
     assert domain, "Cannot map test homekit services to Home Assistant domain"
 
-    config_entry, pairing = await setup_test_accessories(hass, [accessory])
+    config_entry, pairing = await setup_test_accessories(hass, [accessory], connection)
     entity = "testdevice" if suffix is None else f"testdevice_{suffix}"
     return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)
 
@@ -297,7 +324,6 @@ async def assert_devices_and_entities_created(
 
         device = device_registry.async_get_device(
             {
-                (IDENTIFIER_SERIAL_NUMBER, expected.serial_number),
                 (IDENTIFIER_ACCESSORY_ID, expected.unique_id),
             }
         )
@@ -313,21 +339,15 @@ async def assert_devices_and_entities_created(
 
         # We might have matched the device by one identifier only
         # Lets check that the other one is correct. Otherwise the test might silently be wrong.
-        serial_number_set = False
         accessory_id_set = False
 
         for key, value in device.identifiers:
-            if key == IDENTIFIER_SERIAL_NUMBER:
-                assert value == expected.serial_number
-                serial_number_set = True
-
-            elif key == IDENTIFIER_ACCESSORY_ID:
+            if key == IDENTIFIER_ACCESSORY_ID:
                 assert value == expected.unique_id
                 accessory_id_set = True
 
         # If unique_id or serial is provided it MUST actually appear in the device registry entry.
         assert (not expected.unique_id) ^ accessory_id_set
-        assert (not expected.serial_number) ^ serial_number_set
 
         for entity_info in expected.entities:
             entity = entity_registry.async_get(entity_info.entity_id)
@@ -387,3 +407,8 @@ async def remove_device(ws_client, device_id, config_entry_id):
     )
     response = await ws_client.receive_json()
     return response["success"]
+
+
+def get_next_aid():
+    """Get next aid."""
+    return model_mixin.id_counter + 1

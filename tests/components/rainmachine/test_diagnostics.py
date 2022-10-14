@@ -10,6 +10,9 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_rainmach
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
+            "entry_id": config_entry.entry_id,
+            "version": 2,
+            "domain": "rainmachine",
             "title": "Mock Title",
             "data": {
                 "ip_address": "192.168.1.100",
@@ -18,10 +21,15 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_rainmach
                 "ssl": True,
             },
             "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
         },
         "data": {
             "coordinator": {
-                "api.versions": {"apiVer": "4.6.1", "hwVer": 3, "swVer": "4.0.1144"},
+                "api.versions": {"apiVer": "4.6.1", "hwVer": "3", "swVer": "4.0.1144"},
                 "machine.firmware_update_status": {
                     "lastUpdateCheckTimestamp": 1657825288,
                     "packageDetails": [],
@@ -624,6 +632,9 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
     controller.diagnostics.current.side_effect = RainMachineError
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
+            "entry_id": config_entry.entry_id,
+            "version": 2,
+            "domain": "rainmachine",
             "title": "Mock Title",
             "data": {
                 "ip_address": "192.168.1.100",
@@ -632,10 +643,15 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
                 "ssl": True,
             },
             "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
         },
         "data": {
             "coordinator": {
-                "api.versions": {"apiVer": "4.6.1", "hwVer": 3, "swVer": "4.0.1144"},
+                "api.versions": {"apiVer": "4.6.1", "hwVer": "3", "swVer": "4.0.1144"},
                 "machine.firmware_update_status": {
                     "lastUpdateCheckTimestamp": 1657825288,
                     "packageDetails": [],

@@ -1141,7 +1141,7 @@ async def test_entry_setup_invalid_state(hass, manager, state):
         MockModule("comp", async_setup=mock_setup, async_setup_entry=mock_setup_entry),
     )
 
-    with pytest.raises(config_entries.OperationNotAllowed):
+    with pytest.raises(config_entries.OperationNotAllowed, match=str(state)):
         assert await manager.async_setup(entry.entry_id)
 
     assert len(mock_setup.mock_calls) == 0
@@ -1201,7 +1201,7 @@ async def test_entry_unload_invalid_state(hass, manager, state):
 
     mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
 
-    with pytest.raises(config_entries.OperationNotAllowed):
+    with pytest.raises(config_entries.OperationNotAllowed, match=str(state)):
         assert await manager.async_unload(entry.entry_id)
 
     assert len(async_unload_entry.mock_calls) == 0
@@ -1296,7 +1296,7 @@ async def test_entry_reload_error(hass, manager, state):
         ),
     )
 
-    with pytest.raises(config_entries.OperationNotAllowed):
+    with pytest.raises(config_entries.OperationNotAllowed, match=str(state)):
         assert await manager.async_reload(entry.entry_id)
 
     assert len(async_unload_entry.mock_calls) == 0
@@ -1370,7 +1370,10 @@ async def test_entry_disable_without_reload_support(hass, manager):
     assert entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
 
     # Enable
-    with pytest.raises(config_entries.OperationNotAllowed):
+    with pytest.raises(
+        config_entries.OperationNotAllowed,
+        match=str(config_entries.ConfigEntryState.FAILED_UNLOAD),
+    ):
         await manager.async_set_disabled_by(entry.entry_id, None)
     assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 0
@@ -2504,7 +2507,10 @@ async def test_async_setup_update_entry(hass):
         (config_entries.SOURCE_HOMEKIT, BaseServiceInfo()),
         (config_entries.SOURCE_DHCP, BaseServiceInfo()),
         (config_entries.SOURCE_ZEROCONF, BaseServiceInfo()),
-        (config_entries.SOURCE_HASSIO, HassioServiceInfo(config={})),
+        (
+            config_entries.SOURCE_HASSIO,
+            HassioServiceInfo(config={}, name="Test", slug="test"),
+        ),
     ),
 )
 async def test_flow_with_default_discovery(hass, manager, discovery_source):
@@ -3270,7 +3276,10 @@ async def test_disallow_entry_reload_with_setup_in_progresss(hass, manager):
     )
     entry.add_to_hass(hass)
 
-    with pytest.raises(config_entries.OperationNotAllowed):
+    with pytest.raises(
+        config_entries.OperationNotAllowed,
+        match=str(config_entries.ConfigEntryState.SETUP_IN_PROGRESS),
+    ):
         assert await manager.async_reload(entry.entry_id)
     assert entry.state is config_entries.ConfigEntryState.SETUP_IN_PROGRESS
 

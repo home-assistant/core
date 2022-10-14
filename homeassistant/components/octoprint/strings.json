@@ -11,6 +11,11 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]"
+        }
       }
     },
     "error": {
@@ -21,7 +26,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "auth_failed": "Failed to retrieve application api key"
+      "auth_failed": "Failed to retrieve application api key",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "progress": {
       "get_api_key": "Open the OctoPrint UI and click 'Allow' on the Access Request for 'Home Assistant'."

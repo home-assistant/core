@@ -13,8 +13,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    FREQUENCY_HERTZ,
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -157,7 +157,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_EXTR_FAN_SPEED",
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_type=ValloxFanSpeedSensor,
         entity_registry_enabled_default=False,
     ),
@@ -167,7 +167,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_SUPP_FAN_SPEED",
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         entity_type=ValloxFanSpeedSensor,
         entity_registry_enabled_default=False,
     ),

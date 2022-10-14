@@ -7,8 +7,9 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dexcom.const import DOMAIN, MG_DL, MMOL_L
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 
+from . import CONFIG
+
 from tests.common import MockConfigEntry
-from tests.components.dexcom import CONFIG
 
 
 async def test_form(hass):

@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -185,6 +186,7 @@ class LaCrosseTemperature(LaCrosseSensor):
     """Implementation of a Lacrosse temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property
@@ -197,6 +199,7 @@ class LaCrosseHumidity(LaCrosseSensor):
     """Implementation of a Lacrosse humidity sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:water-percent"
 
     @property

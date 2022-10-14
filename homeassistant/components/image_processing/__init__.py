@@ -8,6 +8,7 @@ from typing import Any, Final, TypedDict, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components.camera import Image
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -30,11 +31,19 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "image_processing"
 SCAN_INTERVAL = timedelta(seconds=10)
 
-DEVICE_CLASSES = [
-    "alpr",  # Automatic license plate recognition
-    "face",  # Face
-    "ocr",  # OCR
-]
+
+class ImageProcessingDeviceClass(StrEnum):
+    """Device class for image processing entities."""
+
+    # Automatic license plate recognition
+    ALPR = "alpr"
+
+    # Face
+    FACE = "face"
+
+    # OCR
+    OCR = "ocr"
+
 
 SERVICE_SCAN = "scan"
 
@@ -113,6 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class ImageProcessingEntity(Entity):
     """Base entity class for image processing."""
 
+    _attr_device_class: ImageProcessingDeviceClass | str | None
     timeout = DEFAULT_TIMEOUT
 
     @property
@@ -156,6 +166,8 @@ class ImageProcessingEntity(Entity):
 class ImageProcessingFaceEntity(ImageProcessingEntity):
     """Base entity class for face image processing."""
 
+    _attr_device_class = ImageProcessingDeviceClass.FACE
+
     def __init__(self) -> None:
         """Initialize base face identify/verify entity."""
         self.faces: list[FaceInformation] = []
@@ -184,11 +196,6 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                         break
 
         return state
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return "face"
 
     @final
     @property

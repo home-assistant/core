@@ -15,8 +15,9 @@ from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import MOCK_REAUTH_INPUT, MOCK_USER_INPUT
+
 from tests.common import MockConfigEntry
-from tests.components.sonarr import MOCK_REAUTH_INPUT, MOCK_USER_INPUT
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:

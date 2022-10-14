@@ -21,25 +21,30 @@ from .const import DOMAIN
 from .coordinator import SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "rssi": SensorEntityDescription(
         key="rssi",
+        name="Bluetooth signal strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "wifi_rssi": SensorEntityDescription(
         key="wifi_rssi",
+        name="Wi-Fi signal strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "battery": SensorEntityDescription(
         key="battery",
+        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -47,18 +52,21 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "lightLevel": SensorEntityDescription(
         key="lightLevel",
+        name="Light level",
         native_unit_of_measurement="Level",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
+        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     "temperature": SensorEntityDescription(
         key="temperature",
+        name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -95,8 +103,6 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
         super().__init__(coordinator)
         self._sensor = sensor
         self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
-        name = coordinator.device_name
-        self._attr_name = f"{name} {sensor.replace('_', ' ').title()}"
         self.entity_description = SENSOR_TYPES[sensor]
 
     @property

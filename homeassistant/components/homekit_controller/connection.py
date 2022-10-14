@@ -21,7 +21,7 @@ from aiohomekit.model.services import Service
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
@@ -79,9 +79,7 @@ class HKDevice:
 
         connection: Controller = hass.data[CONTROLLER]
 
-        self.pairing = connection.load_pairing(
-            self.pairing_data["AccessoryPairingID"], self.pairing_data
-        )
+        self.pairing = connection.load_pairing(self.unique_id, self.pairing_data)
 
         # A list of callbacks that turn HK accessories into entities
         self.accessory_factories: list[AddAccessoryCb] = []
@@ -231,6 +229,9 @@ class HKDevice:
                 self.async_update_available_state,
                 timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
             )
+            # BLE devices always get an RSSI sensor as well
+            if "sensor" not in self.platforms:
+                await self.async_load_platform("sensor")
 
     async def async_add_new_entities(self) -> None:
         """Add new entities to Home Assistant."""
@@ -250,7 +251,12 @@ class HKDevice:
             identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
 
         device_info = DeviceInfo(
-            identifiers=identifiers,
+            identifiers={
+                (
+                    IDENTIFIER_ACCESSORY_ID,
+                    f"{self.unique_id}:aid:{accessory.aid}",
+                )
+            },
             name=accessory.name,
             manufacturer=accessory.manufacturer,
             model=accessory.model,
@@ -314,26 +320,86 @@ class HKDevice:
                 self.unique_id,
                 accessory.aid,
             )
+            device_registry.async_update_device(
+                device.id,
+                new_identifiers={
+                    (
+                        IDENTIFIER_ACCESSORY_ID,
+                        f"{self.unique_id}:aid:{accessory.aid}",
+                    )
+                },
+            )
 
-            new_identifiers = {
+    @callback
+    def async_migrate_unique_id(
+        self, old_unique_id: str, new_unique_id: str, platform: str
+    ) -> None:
+        """Migrate legacy unique IDs to new format."""
+        _LOGGER.debug(
+            "Checking if unique ID %s on %s needs to be migrated",
+            old_unique_id,
+            platform,
+        )
+        entity_registry = er.async_get(self.hass)
+        # async_get_entity_id wants the "homekit_controller" domain
+        # in the platform field and the actual platform in the domain
+        # field for historical reasons since everything used to be
+        # PLATFORM.INTEGRATION instead of INTEGRATION.PLATFORM
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, old_unique_id
+            )
+        ) is None:
+            _LOGGER.debug("Unique ID %s does not need to be migrated", old_unique_id)
+            return
+        if new_entity_id := entity_registry.async_get_entity_id(
+            platform, DOMAIN, new_unique_id
+        ):
+            _LOGGER.debug(
+                "Unique ID %s is already in use by %s (system may have been downgraded)",
+                new_unique_id,
+                new_entity_id,
+            )
+            return
+        _LOGGER.debug(
+            "Migrating unique ID for entity %s (%s -> %s)",
+            entity_id,
+            old_unique_id,
+            new_unique_id,
+        )
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+    @callback
+    def async_remove_legacy_device_serial_numbers(self) -> None:
+        """Migrate remove legacy serial numbers from devices.
+
+        We no longer use serial numbers as device identifiers
+        since they are not reliable, and the HomeKit spec
+        does not require them to be stable.
+        """
+        _LOGGER.debug(
+            "Removing legacy serial numbers from device registry entries for pairing %s",
+            self.unique_id,
+        )
+
+        device_registry = dr.async_get(self.hass)
+        for accessory in self.entity_map.accessories:
+            identifiers = {
                 (
                     IDENTIFIER_ACCESSORY_ID,
                     f"{self.unique_id}:aid:{accessory.aid}",
                 )
             }
-
-            if not self.unreliable_serial_numbers:
-                new_identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
-            else:
-                _LOGGER.debug(
-                    "Not migrating serial number identifier for %s:aid:%s (it is wrong, not unique or unreliable)",
-                    self.unique_id,
-                    accessory.aid,
-                )
-
-            device_registry.async_update_device(
-                device.id, new_identifiers=new_identifiers
+            legacy_serial_identifier = (
+                IDENTIFIER_SERIAL_NUMBER,
+                accessory.serial_number,
             )
+
+            device = device_registry.async_get_device(identifiers=identifiers)
+            if not device or legacy_serial_identifier not in device.identifiers:
+                continue
+
+            device_registry.async_update_device(device.id, new_identifiers=identifiers)
 
     @callback
     def async_create_devices(self) -> None:
@@ -413,6 +479,9 @@ class HKDevice:
         # Migrate to new device ids
         self.async_migrate_devices()
 
+        # Remove any of the legacy serial numbers from the device registry
+        self.async_remove_legacy_device_serial_numbers()
+
         self.async_create_devices()
 
         # Load any triggers for this config entry
@@ -423,7 +492,7 @@ class HKDevice:
         if self._polling_interval_remover:
             self._polling_interval_remover()
 
-        await self.pairing.close()
+        await self.pairing.shutdown()
 
         await self.hass.config_entries.async_unload_platforms(
             self.config_entry, self.platforms
@@ -455,7 +524,7 @@ class HKDevice:
                     self.entities.append((accessory.aid, None, None))
                     break
 
-    def add_char_factory(self, add_entities_cb) -> None:
+    def add_char_factory(self, add_entities_cb: AddCharacteristicCb) -> None:
         """Add a callback to run when discovering new entities for accessories."""
         self.char_factories.append(add_entities_cb)
         self._add_new_entities_for_char([add_entities_cb])
@@ -471,7 +540,7 @@ class HKDevice:
                             self.entities.append((accessory.aid, service.iid, char.iid))
                             break
 
-    def add_listener(self, add_entities_cb) -> None:
+    def add_listener(self, add_entities_cb: AddServiceCb) -> None:
         """Add a callback to run when discovering new entities for services."""
         self.listeners.append(add_entities_cb)
         self._add_new_entities([add_entities_cb])
@@ -513,22 +582,24 @@ class HKDevice:
 
     async def async_load_platforms(self) -> None:
         """Load any platforms needed by this HomeKit device."""
-        tasks = []
+        to_load: set[str] = set()
         for accessory in self.entity_map.accessories:
             for service in accessory.services:
                 if service.type in HOMEKIT_ACCESSORY_DISPATCH:
                     platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
                     if platform not in self.platforms:
-                        tasks.append(self.async_load_platform(platform))
+                        to_load.add(platform)
 
                 for char in service.characteristics:
                     if char.type in CHARACTERISTIC_PLATFORMS:
                         platform = CHARACTERISTIC_PLATFORMS[char.type]
                         if platform not in self.platforms:
-                            tasks.append(self.async_load_platform(platform))
+                            to_load.add(platform)
 
-        if tasks:
-            await asyncio.gather(*tasks)
+        if to_load:
+            await asyncio.gather(
+                *[self.async_load_platform(platform) for platform in to_load]
+            )
 
     @callback
     def async_update_available_state(self, *_: Any) -> None:

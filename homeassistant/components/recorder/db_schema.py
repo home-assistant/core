@@ -53,7 +53,7 @@ from .models import StatisticData, StatisticMetaData, process_timestamp
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 29
+SCHEMA_VERSION = 30
 
 _StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 

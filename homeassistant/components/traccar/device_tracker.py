@@ -11,6 +11,7 @@ from pytraccar import (
     GeofenceModel,
     PositionModel,
     TraccarAuthenticationException,
+    TraccarConnectionException,
     TraccarException,
 )
 from stringcase import camelcase
@@ -237,6 +238,9 @@ class TraccarScanner:
             await self._api.get_server()
         except TraccarAuthenticationException:
             _LOGGER.error("Authentication for Traccar failed")
+            return False
+        except TraccarConnectionException as exception:
+            _LOGGER.error("Connection with Traccar failed - %s", exception)
             return False
 
         await self._async_update()
