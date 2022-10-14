@@ -1,35 +1,66 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from oralb import OralB
-import voluptuous as vol
-
 from homeassistant import config_entries
-from homeassistant.components import bluetooth
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, TIME_SECONDS
+from homeassistant.const import CONF_MAC, PERCENTAGE, TIME_SECONDS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=3)
+SCAN_INTERVAL = timedelta(seconds=1)
 
-# Validation of the user's configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_MAC): cv.string,
-    }
+
+@dataclass
+class OralBSensorEntityDescription(SensorEntityDescription):
+    """Provide a description of a OralB sensor."""
+
+    # For backwards compat, allow description to override unique ID key to use
+    unique_id: str | None = None
+
+
+SENSORS = (
+    OralBSensorEntityDescription(
+        key="battery",
+        name="OralB Battery",
+        unique_id="oralb_battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    OralBSensorEntityDescription(
+        key="status",
+        name="OralB Status",
+        unique_id="oralb_status",
+        icon="mdi:toothbrush-electric",
+    ),
+    OralBSensorEntityDescription(
+        key="brush_time",
+        name="OralB Brush Time",
+        unique_id="oralb_brushtime",
+        native_unit_of_measurement=TIME_SECONDS,
+        icon="",
+    ),
+    OralBSensorEntityDescription(
+        key="mode",
+        name="OralB Mode",
+        unique_id="oralb_mode",
+        icon="mdi:tooth",
+    ),
 )
 
 
@@ -39,87 +70,35 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    ble_device = bluetooth.async_ble_device_from_address(
-        hass, entry.data[CONF_MAC], connectable=True
-    )
-    _LOGGER.info("OralB setup")
-    if not ble_device:
-        raise ConfigEntryNotReady(
-            f"Could not find OralB device with address {entry.data[CONF_MAC]}"
-        )
-    if ble_device:
-        _LOGGER.info("Found OralB toothbrush")
-        orlb = OralB(ble_device)
-
+    data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            Battery(orlb),
-            Status(orlb),
-            BrushTime(orlb),
-            Mode(orlb),
-        ]
+        OralBSensor(data.coordinator, data.device, description)
+        for description in SENSORS
     )
 
 
-class OralBSensor(SensorEntity):
-    """Master class for inheriting on sensors."""
+class OralBSensor(CoordinatorEntity, SensorEntity):
+    """Implementation of the OralB sensor."""
 
-    def __init__(self, orlb):
-        """Initialize a sensor."""
-        self.orlb = orlb
-        self._attr_unique_id = self.orlb.ble_device.address + self._attr_name
+    _attr_has_entity_name = True
 
-    async def async_update(self):
-        """Read data from OralB."""
-        await self.orlb.gatherdata()
+    def __init__(self, coordinator, device, description):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self.device = device
 
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, CONF_MAC)},
+            manufacturer="OralB",
+            name="OralB Toothbrush",
+        )
 
-class Battery(OralBSensor):
-    """Representation of Battery sensor."""
-
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_name = "OralB Battery"
-    _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self.orlb.result["battery"]
-
-
-class Status(OralBSensor):
-    """Representation of Status sensor."""
-
-    _attr_name = "OralB Status"
-    _attr_icon = "mdi:toothbrush-electric"
+        self._attr_unique_id = f"{CONF_MAC}_{description.unique_id}"
 
     @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self.orlb.result["status"]
-
-
-class BrushTime(OralBSensor):
-    """Representation of BrushTime sensor."""
-
-    _attr_native_unit_of_measurement = TIME_SECONDS
-    _attr_name = "OralB Brush Time"
-    _attr_icon = "mdi:timer-sand-complete"
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self.orlb.result["brush_time"]
-
-
-class Mode(OralBSensor):
-    """Representation of Mode sensor."""
-
-    _attr_name = "OralB Mode"
-    _attr_icon = "mdi:tooth"
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self.orlb.result["mode"]
+    def native_value(self) -> float | None:
+        """Return sensor state."""
+        value = self.device.result[self.entity_description.key]
+        return value

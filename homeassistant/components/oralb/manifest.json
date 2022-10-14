@@ -8,7 +8,7 @@
       "service_uuid": "0000fe0d-0000-1000-8000-00805f9b34fb"
     }
   ],
-  "requirements": ["oralb==0.1.2"],
+  "requirements": ["oralb==0.2"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
