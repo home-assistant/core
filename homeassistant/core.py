@@ -1939,7 +1939,10 @@ class Config:
         if elevation is not None:
             self.elevation = elevation
         if unit_system is not None:
-            self.units = get_unit_system(unit_system)
+            try:
+                self.units = get_unit_system(unit_system)
+            except ValueError:
+                self.units = METRIC_SYSTEM
         if location_name is not None:
             self.location_name = location_name
         if time_zone is not None:
