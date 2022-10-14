@@ -14,7 +14,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
 
@@ -264,15 +263,30 @@ async def test_report_with_binary_state(hass, mock_socket, mock_time):
     assert mock_socket.return_value.close.call_count == 1
 
 
-def test_send_to_graphite_errors(graphite_feeder, mock_time):
+async def test_send_to_graphite_errors(hass, mock_socket, mock_time, caplog):
     """Test the sending with errors."""
     mock_time.return_value = 12345
-    state = ha.State("domain.entity", STATE_ON, {"foo": 1.0})
-    with mock.patch.object(graphite_feeder, "_send_to_graphite") as mock_send:
-        mock_send.side_effect = socket.error
-        graphite_feeder._report_attributes("entity", state)
-        mock_send.side_effect = socket.gaierror
-        graphite_feeder._report_attributes("entity", state)
+    assert await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
+    await hass.async_block_till_done()
+    mock_socket.reset_mock()
+
+    await hass.async_start()
+
+    mock_socket.return_value.connect.side_effect = socket.error
+
+    hass.states.async_set("test.entity", STATE_ON)
+    await asyncio.sleep(0.1)
+
+    assert "Failed to send data to graphite" in caplog.text
+
+    mock_socket.reset_mock()
+
+    mock_socket.return_value.connect.side_effect = socket.gaierror
+
+    hass.states.async_set("test.entity", STATE_OFF)
+    await asyncio.sleep(0.1)
+
+    assert "Unable to connect to host" in caplog.text
 
 
 def test_send_to_graphite(graphite_feeder, mock_socket):
