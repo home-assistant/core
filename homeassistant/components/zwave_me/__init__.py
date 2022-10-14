@@ -46,13 +46,13 @@ class ZWaveMeController:
 
     def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
         """Create the API instance."""
-        self.entity_ids: set = set()
+        self.device_ids: set = set()
         self._hass = hass
         self.config = config
         self.zwave_api = ZWaveMe(
-            on_device_create=self.on_entity_create,
-            on_device_update=self.on_entity_update,
-            on_new_device=self.add_entity,
+            on_device_create=self.on_device_create,
+            on_device_update=self.on_device_update,
+            on_new_device=self.add_device,
             token=self.config.data[CONF_TOKEN],
             url=self.config.data[CONF_URL],
             platforms=ZWAVE_ME_PLATFORMS,
@@ -64,31 +64,31 @@ class ZWaveMeController:
         is_connected = await self.zwave_api.get_connection()
         return is_connected
 
-    def add_entity(self, entity: ZWaveMeData) -> None:
-        """Send signal to create entity."""
-        if entity.deviceType in ZWAVE_ME_PLATFORMS and self.platforms_inited:
-            if entity.id in self.entity_ids:
-                dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{entity.id}", entity)
+    def add_device(self, device: ZWaveMeData) -> None:
+        """Send signal to create device."""
+        if device.deviceType in ZWAVE_ME_PLATFORMS and self.platforms_inited:
+            if device.id in self.device_ids:
+                dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{device.id}", device)
             else:
                 dispatcher_send(
-                    self._hass, f"ZWAVE_ME_NEW_{entity.deviceType.upper()}", entity
+                    self._hass, f"ZWAVE_ME_NEW_{device.deviceType.upper()}", device
                 )
-                self.entity_ids.add(entity.id)
+                self.device_ids.add(device.id)
 
-    def on_entity_create(self, entities: list[ZWaveMeData]) -> None:
-        """Create multiple entities."""
-        for entity in entities:
-            self.add_entity(entity)
+    def on_device_create(self, devices: list[ZWaveMeData]) -> None:
+        """Create multiple devices."""
+        for device in devices:
+            self.add_device(device)
 
-    def on_entity_update(self, new_info: ZWaveMeData) -> None:
-        """Send signal to update entity."""
+    def on_device_update(self, new_info: ZWaveMeData) -> None:
+        """Send signal to update device."""
         dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{new_info.id}", new_info)
 
     def remove_stale_devices(self, registry: DeviceRegistry):
         """Remove old-format devices in the registry."""
-        for entity_id in self.entity_ids:
+        for device_id in self.device_ids:
             device = registry.async_get_device(
-                {(DOMAIN, f"{self.config.unique_id}-{entity_id}")}
+                {(DOMAIN, f"{self.config.unique_id}-{device_id}")}
             )
             if device is not None:
                 registry.async_remove_device(device.id)
