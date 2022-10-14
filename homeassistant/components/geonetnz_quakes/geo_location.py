@@ -136,7 +136,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         """Update the internal state from the provided feed entry."""
         self._attr_name = feed_entry.title
         # Convert distance if not metric system.
-        if self.hass.config.units.length_unit == LENGTH_MILES:
+        if self.hass.config.units is IMPERIAL_SYSTEM:
             self._attr_distance = DistanceConverter.convert(
                 feed_entry.distance_to_home, LENGTH_KILOMETERS, LENGTH_MILES
             )
