@@ -1,3 +1,55 @@
+# Describes the format for available schedule services
+
 reload:
   name: Reload
   description: Reload the schedule configuration
+
+configure:
+  name: Configure
+  description: Change schedule parameters
+  target:
+    entity:
+      domain: schedule
+  fields:
+    weekdays:
+      name: Weekdays
+      description: The days to be updated.
+      required: true
+      selector:
+        select:
+          options:
+            - label: "Monday"
+              value: monday
+            - label: "Tuesday"
+              value: tuesday
+            - label: "Wednesday"
+              value: wednesday
+            - label: "Thursday"
+              value: thursday
+            - label: "Friday"
+              value: friday
+            - label: "Saturday"
+              value: saturday
+            - label: "Sunday"
+              value: sunday
+          multiple: true
+    from:
+      name: Time from
+      description: Target start time.
+      required: false
+      example: '"05:00:00"'
+      selector:
+        time:
+    to:
+      name: Time to
+      description: Target finish time.
+      required: false
+      example: '"07:00:00"'
+      selector:
+        time:
+    clear:
+      name: Clear
+      description: Clear selected days before writing new time.
+      default: false
+      selector:
+        boolean:

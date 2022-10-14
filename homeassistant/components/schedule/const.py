@@ -35,3 +35,6 @@ WEEKDAY_TO_CONF: Final = {
     5: CONF_SATURDAY,
     6: CONF_SUNDAY,
 }
+
+CONF_WEEKDAYS: Final = "weekdays"
+CONF_CLEAR: Final = "clear"

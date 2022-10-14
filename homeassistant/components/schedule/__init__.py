@@ -41,8 +41,10 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
+    CONF_CLEAR,
     CONF_FROM,
     CONF_TO,
+    CONF_WEEKDAYS,
     DOMAIN,
     LOGGER,
     WEEKDAY_TO_CONF,
@@ -56,8 +58,10 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     """Validate the schedule of time ranges.
 
     Ensure they have no overlap and the end time is greater than the start time.
+    The override variable allows a time overlap (as it is going to be wiped) (used for the configure service)
     """
-    # Emtpty schedule is valid
+
+    # Empty schedule is valid
     if not schedule:
         return schedule
 
@@ -79,6 +83,31 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
         previous_to = time_range[CONF_TO]
 
     return schedule
+
+
+def valid_schedule_service(config: dict[str, Any]) -> dict[str, Any]:
+    """Check the schedule to ensure the times are valid."""
+
+    if not config[CONF_WEEKDAYS]:
+        # List of weekdays is empty, throw error
+        raise vol.Invalid("At least one weekday is required")
+
+    if config[CONF_CLEAR] and CONF_FROM not in config and CONF_TO not in config:
+        return config
+
+    if CONF_FROM in config and CONF_TO in config:
+        valid_schedule(
+            schedule=[
+                {
+                    CONF_FROM: config[CONF_FROM],
+                    CONF_TO: config[CONF_TO],
+                }
+            ],
+        )
+    else:
+        raise vol.Invalid("Must contain both 'to' and 'from' times")
+
+    return config
 
 
 def deserialize_to_time(value: Any) -> Any:
@@ -204,6 +233,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_RELOAD,
         reload_service_handler,
+    )
+
+    component.async_register_entity_service(
+        "configure",
+        vol.All(
+            vol.Schema(
+                {
+                    vol.Required(CONF_WEEKDAYS): vol.All(
+                        cv.ensure_list, [vol.In(CONF_ALL_DAYS)]
+                    ),
+                    vol.Optional(CONF_CLEAR, default=False): cv.boolean,
+                    vol.Optional(CONF_FROM): cv.time,
+                    vol.Optional(CONF_TO): deserialize_to_time,
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+            valid_schedule_service,
+        ),
+        "async_schedule_configure",
     )
 
     return True
@@ -355,3 +403,22 @@ class Schedule(CollectionEntity):
                 self._update,
                 next_event,
             )
+
+    @callback
+    async def async_schedule_configure(self, **params: Any) -> None:
+        """Service for updating schedule configuration for a specified set of days."""
+
+        for selected_day in params[CONF_WEEKDAYS]:
+            current_day_times: list = self._config.get(selected_day) or []
+            if params[CONF_CLEAR]:
+                current_day_times.clear()
+
+            if CONF_FROM in params and CONF_TO in params:
+                current_day_times.append(
+                    {CONF_FROM: params[CONF_FROM], CONF_TO: params[CONF_TO]}
+                )
+                current_day_times = valid_schedule(schedule=current_day_times)
+
+            self._config.update({selected_day: current_day_times})
+
+        await self.async_update_config(self._config)
