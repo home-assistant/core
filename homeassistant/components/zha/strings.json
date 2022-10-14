@@ -86,11 +86,11 @@
       },
       "intent_migrate": {
         "title": "Migrate to a new radio",
-        "description": "Your old radio will be factory reset.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\nDo you wish to continue?"
+        "description": "Backup to file will performed and your old radio will then be reset to its default factory configuration.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\nDo you wish to continue?"
       },
       "instruct_unplug": {
         "title": "Unplug your old radio",
-        "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it."
+        "description": "Your old radio has been reset.  If the old hardware adapter is no longer needed, you can now unplug it. Backup was saved to file if you should wish to revert back to your old radio."
       },
       "choose_serial_port": {
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]",
