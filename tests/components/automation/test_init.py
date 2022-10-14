@@ -15,6 +15,7 @@ from homeassistant.components.automation import (
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
     SERVICE_TRIGGER,
+    AutomationEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -776,6 +777,59 @@ async def test_reload_unchanged_does_not_stop(hass, calls):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
+
+
+async def test_reload_moved_automation_without_alias(hass, calls):
+    """Test that changing the order of automations without alias triggers reload."""
+    with patch(
+        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+    ) as automation_entity_init:
+        config = {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": [{"service": "test.automation"}],
+                },
+                {
+                    "alias": "automation_with_alias",
+                    "trigger": {"platform": "event", "event_type": "test_event2"},
+                    "action": [{"service": "test.automation"}],
+                },
+            ]
+        }
+        assert await async_setup_component(hass, automation.DOMAIN, config)
+        assert automation_entity_init.call_count == 2
+        automation_entity_init.reset_mock()
+
+        assert hass.states.get("automation.automation_0")
+        assert not hass.states.get("automation.automation_1")
+        assert hass.states.get("automation.automation_with_alias")
+
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 1
+
+        # Reverse the order of the automations
+        config[automation.DOMAIN].reverse()
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=config,
+        ):
+            await hass.services.async_call(
+                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+            )
+
+        assert automation_entity_init.call_count == 1
+        automation_entity_init.reset_mock()
+
+        assert not hass.states.get("automation.automation_0")
+        assert hass.states.get("automation.automation_1")
+        assert hass.states.get("automation.automation_with_alias")
+
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 2
 
 
 async def test_automation_restore_state(hass):
