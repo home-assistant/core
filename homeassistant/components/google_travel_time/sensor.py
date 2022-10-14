@@ -23,6 +23,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
     ATTRIBUTION,
@@ -35,6 +36,8 @@ from .const import (
     CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
+    UNITS_IMPERIAL,
+    UNITS_METRIC,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +66,9 @@ async def async_setup_entry(
         options = new_data.pop(CONF_OPTIONS, {})
 
         if CONF_UNITS not in options:
-            options[CONF_UNITS] = hass.config.units.name
+            options[CONF_UNITS] = UNITS_METRIC
+            if hass.config.units is IMPERIAL_SYSTEM:
+                options[CONF_UNITS] = UNITS_IMPERIAL
 
         if CONF_TRAVEL_MODE in new_data:
             wstr = (
