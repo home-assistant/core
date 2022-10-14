@@ -110,17 +110,12 @@ async def test_diagnostics(
                         "sw_version": "BlueZ 4.63",
                     },
                 },
-                "connectable_advertisement_tracker": {
+                "advertisement_tracker": {
                     "intervals": {},
                     "sources": {},
                     "timings": {},
                 },
                 "connectable_history": [],
-                "non_connectable_advertisement_tracker": {
-                    "intervals": {},
-                    "sources": {},
-                    "timings": {},
-                },
                 "non_connectable_history": [],
                 "scanners": [
                     {
@@ -212,10 +207,10 @@ async def test_diagnostics_macos(
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
                         "passive_scan": False,
-                        "sw_version": "21.6.0",
+                        "sw_version": ANY,
                     }
                 },
-                "connectable_advertisement_tracker": {
+                "advertisement_tracker": {
                     "intervals": {},
                     "sources": {"44:44:33:11:23:45": "local"},
                     "timings": {"44:44:33:11:23:45": [ANY]},
@@ -244,11 +239,6 @@ async def test_diagnostics_macos(
                         "time": ANY,
                     }
                 ],
-                "non_connectable_advertisement_tracker": {
-                    "intervals": {},
-                    "sources": {},
-                    "timings": {},
-                },
                 "non_connectable_history": [],
                 "scanners": [
                     {
