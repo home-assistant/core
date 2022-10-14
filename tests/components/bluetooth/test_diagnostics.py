@@ -121,7 +121,7 @@ async def test_diagnostics(
                     {
                         "adapter": "hci0",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -132,7 +132,7 @@ async def test_diagnostics(
                     {
                         "adapter": "hci0",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -143,7 +143,7 @@ async def test_diagnostics(
                     {
                         "adapter": "hci1",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "hci1 (00:00:00:00:00:02)",
@@ -247,7 +247,7 @@ async def test_diagnostics_macos(
                     {
                         "adapter": "Core Bluetooth",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "Core Bluetooth",
