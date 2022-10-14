@@ -25,13 +25,19 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    CONF_UNIT_SYSTEM_US_CUSTOMARY,
     __version__,
 )
-from homeassistant.core import ConfigSource, HomeAssistantError
+from homeassistant.core import ConfigSource, HomeAssistant, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import async_get_integration
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 from homeassistant.util.yaml import SECRET_YAML
 
 from tests.common import get_test_config_dir, patch_yaml_files
@@ -591,6 +597,35 @@ async def test_loading_configuration_from_packages(hass):
                 "packages": {"empty_package": None},
             },
         )
+
+
+@pytest.mark.parametrize(
+    "unit_system_name, expected_unit_system",
+    [
+        (CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
+        (CONF_UNIT_SYSTEM_IMPERIAL, US_CUSTOMARY_SYSTEM),
+        (CONF_UNIT_SYSTEM_US_CUSTOMARY, US_CUSTOMARY_SYSTEM),
+    ],
+)
+async def test_loading_configuration_unit_system(
+    hass: HomeAssistant, unit_system_name: str, expected_unit_system: UnitSystem
+) -> None:
+    """Test backward compatibility when loading core config."""
+    await config_util.async_process_ha_core_config(
+        hass,
+        {
+            "latitude": 60,
+            "longitude": 50,
+            "elevation": 25,
+            "name": "Huis",
+            "unit_system": unit_system_name,
+            "time_zone": "America/New_York",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
+        },
+    )
+
+    assert hass.config.units is expected_unit_system
 
 
 @patch("homeassistant.helpers.check_config.async_check_ha_config_file")
