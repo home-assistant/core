@@ -128,9 +128,9 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
             )
             return data
-        except ConnectionError as wallbox_connection_error:
-            raise UpdateFailed from wallbox_connection_error
-        except requests.exceptions.HTTPError as wallbox_connection_error:
+        except (
+            ConnectionError, requests.exceptions.HTTPError
+        ) as wallbox_connection_error:
             raise UpdateFailed from wallbox_connection_error
 
     async def _async_update_data(self) -> dict[str, Any]:
