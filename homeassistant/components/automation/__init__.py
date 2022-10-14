@@ -718,6 +718,14 @@ async def _prepare_automation_config(
     return (blueprints_used, automation_configs)
 
 
+def _automation_name(automation_config: AutomationEntityConfig) -> str:
+    """Return the configured name of an automation."""
+    config_block = automation_config.config_block
+    config_key = automation_config.config_key
+    list_no = automation_config.list_no
+    return config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
+
+
 async def _create_automation_entities(
     hass: HomeAssistant, automation_configs: list[AutomationEntityConfig]
 ) -> list[AutomationEntity]:
@@ -726,11 +734,9 @@ async def _create_automation_entities(
 
     for automation_config in automation_configs:
         config_block = automation_config.config_block
-        config_key = automation_config.config_key
-        list_no = automation_config.list_no
 
         automation_id: str | None = config_block.get(CONF_ID)
-        name: str = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
+        name = _automation_name(automation_config)
 
         initial_state: bool | None = config_block.get(CONF_INITIAL_STATE)
 
@@ -797,6 +803,12 @@ async def _async_process_config(
     Returns if blueprints were used.
     """
 
+    def automation_matches_config(
+        automation: AutomationEntity, config: AutomationEntityConfig
+    ) -> bool:
+        name = _automation_name(config)
+        return automation.name == name and automation.raw_config == config.raw_config
+
     def find_matches(
         automations: list[AutomationEntity],
         automation_configs: list[AutomationEntityConfig],
@@ -807,10 +819,6 @@ async def _async_process_config(
         the case of multiple automations with identical configuration.
 
         Returns a tuple of sets of indices: ({automation_matches}, {config_matches})
-
-        Note: An automation which has identical configuration, but where the config key
-        or list index has changed will be considered identical, although that may
-        influence the automation's name.
         """
         automation_matches: set[int] = set()
         config_matches: set[int] = set()
@@ -820,7 +828,7 @@ async def _async_process_config(
                 if config_idx in config_matches:
                     # Only allow an automation config to match at most once
                     continue
-                if automation.raw_config == config.raw_config:
+                if automation_matches_config(automation, config):
                     automation_matches.add(automation_idx)
                     config_matches.add(config_idx)
                     # Only allow an automation to match at most once
