@@ -67,7 +67,10 @@ class AccessoryIIDStorage:
         service_hap_type: str = uuid_to_hap_type(service_uuid)
         char_hap_type: str | None = uuid_to_hap_type(char_uuid) if char_uuid else None
         # Allocation key must be a string since we are saving it to JSON
-        allocation_key = f'{aid}_{service_hap_type}_{service_unique_id or ""}_{char_hap_type or ""}_{char_unique_id or ""}'
+        allocation_key = (
+            f'{aid}_{service_hap_type}_{service_unique_id or ""}_'
+            f'{char_hap_type or ""}_{char_unique_id or ""}'
+        )
         if allocation_key in self.allocations:
             return self.allocations[allocation_key]
         next_iid = self.allocated_iids[-1] + 1 if self.allocated_iids else 1
