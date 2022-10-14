@@ -280,7 +280,6 @@ class BluetoothManager:
                 # to it we can only determine its availability by the lack of advertisements
                 #
                 if not connectable:
-                    # Non-connectable device we need to check the advertising interval
                     if advertising_interval := (
                         non_connectable_intervals.get(address)
                         or connectable_intervals.get(address)
