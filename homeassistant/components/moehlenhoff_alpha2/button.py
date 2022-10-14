@@ -1,4 +1,4 @@
-"""Support for Alpha2 IO device battery sensors."""
+"""Button entity to set the time of the Alpha2 base."""
 
 from datetime import datetime
 
