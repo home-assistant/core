@@ -31,6 +31,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
     WIND_SPEED,
 )
+from homeassistant.helpers.frame import report
 
 from .unit_conversion import (
     DistanceConverter,
@@ -107,7 +108,7 @@ class UnitSystem:
         if errors:
             raise ValueError(errors)
 
-        self.name = name
+        self._name = name
         self.accumulated_precipitation_unit = accumulated_precipitation
         self.temperature_unit = temperature
         self.length_unit = length
@@ -117,9 +118,20 @@ class UnitSystem:
         self.wind_speed_unit = wind_speed
 
     @property
+    def name(self) -> str:
+        """Return the name of the unit system."""
+        report(
+            "accesses the `name` property of the unit system. "
+            "This is deprecated and will stop working in Home Assistant 2023.1. "
+            "Please adjust to use instance check instead.",
+            error_if_core=False,
+        )
+        return self._name
+
+    @property
     def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
-        return self.name == CONF_UNIT_SYSTEM_METRIC
+        return self._name == CONF_UNIT_SYSTEM_METRIC
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
