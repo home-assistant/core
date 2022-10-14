@@ -5,10 +5,7 @@ import logging
 from aioeafm import get_station
 import async_timeout
 
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorStateClass
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS
 from homeassistant.core import HomeAssistant
