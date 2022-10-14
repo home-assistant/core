@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_STARTED,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -28,6 +29,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
     CONF_AVOID_FERRIES,
@@ -63,11 +65,13 @@ async def async_setup_entry(
     defaults = {
         CONF_REALTIME: DEFAULT_REALTIME,
         CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
-        CONF_UNITS: hass.config.units.name,
+        CONF_UNITS: CONF_UNIT_SYSTEM_METRIC,
         CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
         CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
         CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
     }
+    if hass.config.units is IMPERIAL_SYSTEM:
+        defaults[CONF_UNITS] = CONF_UNIT_SYSTEM_IMPERIAL
 
     if not config_entry.options:
         new_data = config_entry.data.copy()
