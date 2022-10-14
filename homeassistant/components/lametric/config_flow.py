@@ -107,7 +107,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Handle initiation of re-authentication with PVOutput."""
+        """Handle initiation of re-authentication with LaMetric."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
