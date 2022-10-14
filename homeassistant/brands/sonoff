@@ -1,0 +1,5 @@
+{
+  "domain": "sonoff",
+  "name": "Sonoff",
+  "integrations": ["esphome", "tasmota", "zha"]
+}
