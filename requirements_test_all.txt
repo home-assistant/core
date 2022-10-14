@@ -12,9 +12,6 @@ AIOAladdinConnect==0.1.46
 # homeassistant.components.adax
 Adax-local==0.1.4
 
-# homeassistant.components.homekit
-HAP-python==4.5.0
-
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -426,7 +423,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.44.0
+dbus-fast==1.45.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -612,6 +609,9 @@ gspread==5.5.0
 
 # homeassistant.components.profiler
 guppy3==3.1.2
+
+# homeassistant.components.homekit
+ha-HAP-python==4.5.2
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -828,7 +828,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==1.4.2
 
 # homeassistant.components.nexia
-nexia==2.0.2
+nexia==2.0.4
 
 # homeassistant.components.discord
 nextcord==2.0.0a8

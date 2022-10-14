@@ -10,9 +10,6 @@ AIOAladdinConnect==0.1.46
 # homeassistant.components.adax
 Adax-local==0.1.4
 
-# homeassistant.components.homekit
-HAP-python==4.5.0
-
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
 
@@ -546,7 +543,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.44.0
+dbus-fast==1.45.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -820,6 +817,9 @@ gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
 guppy3==3.1.2
+
+# homeassistant.components.homekit
+ha-HAP-python==4.5.2
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -1138,7 +1138,7 @@ nettigo-air-monitor==1.4.2
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.0.2
+nexia==2.0.4
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -2377,7 +2377,7 @@ tellduslive==0.10.11
 temescal==0.5
 
 # homeassistant.components.temper
-temperusb==1.5.3
+temperusb==1.6.0
 
 # homeassistant.components.nibe_heatpump
 tenacity==8.0.1
