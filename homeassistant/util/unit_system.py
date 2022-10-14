@@ -121,7 +121,7 @@ class UnitSystem:
     def name(self) -> str:
         """Return the name of the unit system."""
         report(
-            "accesses the name of the unit system. "
+            "accesses the `name` property of the unit system. "
             "This is deprecated and will stop working in Home Assistant 2023.1. "
             "Please adjust to use instance check instead.",
             error_if_core=False,
