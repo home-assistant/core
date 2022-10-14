@@ -10,9 +10,6 @@ AIOAladdinConnect==0.1.46
 # homeassistant.components.adax
 Adax-local==0.1.4
 
-# homeassistant.components.homekit
-HAP-python==4.5.0
-
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
 
@@ -156,7 +153,7 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==11.1.0
+aioesphomeapi==11.1.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -815,6 +812,9 @@ gstreamer-player==1.1.2
 # homeassistant.components.profiler
 guppy3==3.1.2
 
+# homeassistant.components.homekit
+ha-HAP-python==4.5.2
+
 # homeassistant.components.generic
 # homeassistant.components.stream
 ha-av==10.0.0b5
@@ -1132,7 +1132,7 @@ nettigo-air-monitor==1.4.2
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==2.0.2
+nexia==2.0.4
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -2416,7 +2416,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2022.5
+total_connect_client==2022.10
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
@@ -2503,7 +2503,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.4.9
+wallbox==0.4.10
 
 # homeassistant.components.waqi
 waqiasync==1.0.0
@@ -2568,7 +2568,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==1.9.2
 
 # homeassistant.components.august
-yalexs==1.2.4
+yalexs==1.2.6
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
