@@ -331,28 +331,6 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
-    def _handle_input_number(self, state):
-        if unit := self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
-            metric = self._metric(
-                f"input_number_state_{unit}",
-                self.prometheus_cli.Gauge,
-                f"State of the input number measured in {unit}",
-            )
-        else:
-            metric = self._metric(
-                "input_number_state",
-                self.prometheus_cli.Gauge,
-                "State of the input number",
-            )
-
-        with suppress(ValueError):
-            value = self.state_as_number(state)
-            if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-                value = TemperatureConverter.convert(
-                    value, TEMP_FAHRENHEIT, TEMP_CELSIUS
-                )
-            metric.labels(**self._labels(state)).set(value)
-
     def _handle_device_tracker(self, state):
         metric = self._metric(
             "device_tracker_state",
@@ -506,15 +484,13 @@ class PrometheusMetrics:
 
             _metric = self._metric(metric, self.prometheus_cli.Gauge, documentation)
 
-            try:
+            with suppress(ValueError):
                 value = self.state_as_number(state)
                 if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
                     value = TemperatureConverter.convert(
                         value, TEMP_FAHRENHEIT, TEMP_CELSIUS
                     )
                 _metric.labels(**self._labels(state)).set(value)
-            except ValueError:
-                pass
 
         self._battery(state)
 
@@ -523,6 +499,9 @@ class PrometheusMetrics:
 
     def _handle_number(self, state):
         return self._handle_generic(state, "number")
+
+    def _handle_input_number(self, state):
+        return self._handle_generic(state, "input_number")
 
     def _metric_name_default(self, state, unit, domain):
         """Get default metric."""
