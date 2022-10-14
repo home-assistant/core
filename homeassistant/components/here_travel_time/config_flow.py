@@ -15,6 +15,8 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -24,6 +26,7 @@ from homeassistant.helpers.selector import (
     LocationSelector,
     TimeSelector,
 )
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
     CONF_ARRIVAL_TIME,
@@ -88,13 +91,16 @@ def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
 
 def default_options(hass: HomeAssistant) -> dict[str, str | None]:
     """Get the default options."""
-    return {
+    default = {
         CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: None,
         CONF_DEPARTURE_TIME: None,
-        CONF_UNIT_SYSTEM: hass.config.units.name,
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
     }
+    if hass.config.units is IMPERIAL_SYSTEM:
+        default[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
+    return default
 
 
 class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -255,24 +261,25 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
                 menu_options=["departure_time", "no_time"],
             )
 
+        defaults = default_options(self.hass)
         schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_TRAFFIC_MODE,
                     default=self.config_entry.options.get(
-                        CONF_TRAFFIC_MODE, TRAFFIC_MODE_ENABLED
+                        CONF_TRAFFIC_MODE, defaults[CONF_TRAFFIC_MODE]
                     ),
                 ): vol.In(TRAFFIC_MODES),
                 vol.Optional(
                     CONF_ROUTE_MODE,
                     default=self.config_entry.options.get(
-                        CONF_ROUTE_MODE, ROUTE_MODE_FASTEST
+                        CONF_ROUTE_MODE, defaults[CONF_ROUTE_MODE]
                     ),
                 ): vol.In(ROUTE_MODES),
                 vol.Optional(
                     CONF_UNIT_SYSTEM,
                     default=self.config_entry.options.get(
-                        CONF_UNIT_SYSTEM, self.hass.config.units.name
+                        CONF_UNIT_SYSTEM, defaults[CONF_UNIT_SYSTEM]
                     ),
                 ): vol.In(UNITS),
             }
