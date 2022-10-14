@@ -276,7 +276,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
         for key, value in power_flow.items():
             if key in ["LOAD", "PV", "GRID", "STORAGE"]:
-                self.data[key] = value.get("currentPower", -1)
+                self.data[key] = value.get("currentPower", None)
                 self.attributes[key] = {"status": value["status"]}
 
             if key in ["GRID"]:
