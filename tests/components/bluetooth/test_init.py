@@ -2595,7 +2595,7 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(hass, enable_blu
 
 async def test_scanner_count_connectable(hass, enable_bluetooth):
     """Test getting the connectable scanner count."""
-    scanner = models.BaseHaScanner()
+    scanner = models.BaseHaScanner(hass, "any")
     cancel = bluetooth.async_register_scanner(hass, scanner, False)
     assert bluetooth.async_scanner_count(hass, connectable=True) == 1
     cancel()
@@ -2603,7 +2603,7 @@ async def test_scanner_count_connectable(hass, enable_bluetooth):
 
 async def test_scanner_count(hass, enable_bluetooth):
     """Test getting the connectable and non-connectable scanner count."""
-    scanner = models.BaseHaScanner()
+    scanner = models.BaseHaScanner(hass, "any")
     cancel = bluetooth.async_register_scanner(hass, scanner, False)
     assert bluetooth.async_scanner_count(hass, connectable=False) == 2
     cancel()

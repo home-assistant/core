@@ -6,7 +6,9 @@ from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth.manager import STALE_ADVERTISEMENT_SECONDS
+from homeassistant.components.bluetooth.manager import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+)
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -227,7 +229,7 @@ async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
         hass,
         switchbot_device_poor_signal_hci1,
         switchbot_adv_poor_signal_hci1,
-        start_time_monotonic + STALE_ADVERTISEMENT_SECONDS + 1,
+        start_time_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1,
         "hci1",
     )
 
