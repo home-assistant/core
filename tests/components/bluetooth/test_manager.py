@@ -71,9 +71,9 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
 
     address = "44:44:33:11:23:45"
 
-    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal", rssi=-100)
+    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
     switchbot_adv_poor_signal = generate_advertisement_data(
-        local_name="wohand_poor_signal", service_uuids=[]
+        local_name="wohand_poor_signal", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, "hci0"
@@ -84,9 +84,9 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
         is switchbot_device_poor_signal
     )
 
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal", rssi=-60)
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
     switchbot_adv_good_signal = generate_advertisement_data(
-        local_name="wohand_good_signal", service_uuids=[]
+        local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
     inject_advertisement_with_source(
         hass, switchbot_device_good_signal, switchbot_adv_good_signal, "hci1"
@@ -106,11 +106,9 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
     )
 
     # We should not switch adapters unless the signal hits the threshold
-    switchbot_device_similar_signal = BLEDevice(
-        address, "wohand_similar_signal", rssi=-62
-    )
+    switchbot_device_similar_signal = BLEDevice(address, "wohand_similar_signal")
     switchbot_adv_similar_signal = generate_advertisement_data(
-        local_name="wohand_similar_signal", service_uuids=[]
+        local_name="wohand_similar_signal", service_uuids=[], rssi=-62
     )
 
     inject_advertisement_with_source(
