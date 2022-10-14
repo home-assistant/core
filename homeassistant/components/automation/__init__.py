@@ -276,9 +276,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
+        await async_get_blueprints(hass).async_reset_cache()
         if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
-        async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
