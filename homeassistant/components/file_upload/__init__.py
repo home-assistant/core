@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-import io
 from pathlib import Path
 import shutil
 import tempfile
@@ -155,19 +154,15 @@ class FileUploadView(HomeAssistantView):
         def _sync_queue_consumer(
             sync_q: janus.SyncQueue[bytes | None], _file_name: str
         ) -> None:
-            file_handle: io.BufferedWriter | None = None
+            file_dir.mkdir()
+            with (file_dir / _file_name).open("wb") as file_handle:
+                while True:
+                    _chunk = sync_q.get()
+                    if _chunk is None:
+                        break
 
-            if file_handle is None:
-                file_dir.mkdir()
-                file_handle = (file_dir / _file_name).open("wb")
-
-            try:
-                while _chunk := sync_q.get():
                     file_handle.write(_chunk)
                     sync_q.task_done()
-            finally:
-                if file_handle is not None:
-                    file_handle.close()
 
         fut: asyncio.Future[None] | None = None
         try:
