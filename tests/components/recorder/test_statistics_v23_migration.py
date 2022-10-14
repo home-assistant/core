@@ -544,7 +544,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
         {
             "duplicate": {
                 "created": "2021-08-01T00:00:00",
-                "id": 4,
+                "id": 5,
                 "last_reset": None,
                 "max": None,
                 "mean": None,
@@ -556,7 +556,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
             },
             "original": {
                 "created": "2021-08-01T00:00:00",
-                "id": 5,
+                "id": 6,
                 "last_reset": None,
                 "max": None,
                 "mean": None,
