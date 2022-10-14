@@ -89,9 +89,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     @refresh_system
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await await_or_reraise(
-            self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE]))
-        )
+        await await_or_reraise(self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE])))
 
     @property
     def current_temperature(self) -> float | None:
