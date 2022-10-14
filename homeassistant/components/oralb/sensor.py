@@ -61,7 +61,20 @@ async def async_setup_entry(
     )
 
 
-class Battery(SensorEntity):
+class OralBSensor(SensorEntity):
+    """Master class for inheriting on sensors."""
+
+    def __init__(self, orlb):
+        """Initialize a sensor."""
+        self.orlb = orlb
+        self._attr_unique_id = self.orlb.ble_device.address + self._attr_name
+
+    async def async_update(self):
+        """Read data from OralB."""
+        await self.orlb.gatherdata()
+
+
+class Battery(OralBSensor):
     """Representation of Battery sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
@@ -69,35 +82,17 @@ class Battery(SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, orlb):
-        """Initialize a sensor."""
-        self.orlb = orlb
-        self._attr_unique_id = self.orlb.ble_device.address + self._attr_name
-
-    async def async_update(self):
-        """Read data from OralB."""
-        await self.orlb.gatherdata()
-
     @property
     def native_value(self):
         """Return the state of the device."""
         return self.orlb.result["battery"]
 
 
-class Status(SensorEntity):
+class Status(OralBSensor):
     """Representation of Status sensor."""
 
     _attr_name = "OralB Status"
     _attr_icon = "mdi:toothbrush-electric"
-
-    def __init__(self, orlb):
-        """Initialize a sensor."""
-        self.orlb = orlb
-        self._attr_unique_id = self.orlb.ble_device.address + self._attr_name
-
-    async def async_update(self):
-        """Read data from OralB."""
-        await self.orlb.gatherdata()
 
     @property
     def native_value(self):
@@ -105,21 +100,12 @@ class Status(SensorEntity):
         return self.orlb.result["status"]
 
 
-class BrushTime(SensorEntity):
+class BrushTime(OralBSensor):
     """Representation of BrushTime sensor."""
 
     _attr_native_unit_of_measurement = TIME_SECONDS
     _attr_name = "OralB Brush Time"
     _attr_icon = "mdi:timer-sand-complete"
-
-    def __init__(self, orlb):
-        """Initialize a sensor."""
-        self.orlb = orlb
-        self._attr_unique_id = self.orlb.ble_device.address + self._attr_name
-
-    async def async_update(self):
-        """Read data from OralB."""
-        await self.orlb.gatherdata()
 
     @property
     def native_value(self):
@@ -127,20 +113,11 @@ class BrushTime(SensorEntity):
         return self.orlb.result["brush_time"]
 
 
-class Mode(SensorEntity):
+class Mode(OralBSensor):
     """Representation of Mode sensor."""
 
     _attr_name = "OralB Mode"
     _attr_icon = "mdi:tooth"
-
-    def __init__(self, orlb):
-        """Initialize a sensor."""
-        self.orlb = orlb
-        self._attr_unique_id = self.orlb.ble_device.address + self._attr_name
-
-    async def async_update(self):
-        """Read data from OralB."""
-        await self.orlb.gatherdata()
 
     @property
     def native_value(self):
