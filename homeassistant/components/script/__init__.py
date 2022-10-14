@@ -176,9 +176,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
+        await async_get_blueprints(hass).async_reset_cache()
         if (conf := await component.async_prepare_reload()) is None:
             return
-        async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
 
     async def turn_on_service(service: ServiceCall) -> None:
