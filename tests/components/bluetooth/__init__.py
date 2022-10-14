@@ -32,6 +32,7 @@ __all__ = (
 )
 
 ADVERTISEMENT_DATA_DEFAULTS = {
+    "local_name": "",
     "manufacturer_data": {},
     "service_data": {},
     "service_uuids": [],
