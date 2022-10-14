@@ -762,8 +762,6 @@ class HomeKit:
 
     async def async_start(self, *args: Any) -> None:
         """Load storage and start."""
-        assert self.driver is not None
-
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
@@ -775,6 +773,8 @@ class HomeKit:
         await self.aid_storage.async_initialize()
         await self.iid_storage.async_initialize()
         await self.hass.async_add_executor_job(self.setup, async_zc_instance, uuid)
+        assert self.driver is not None
+
         if not await self._async_create_accessories():
             return
         self._async_register_bridge()
