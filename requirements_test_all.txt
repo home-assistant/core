@@ -12,9 +12,6 @@ AIOAladdinConnect==0.1.46
 # homeassistant.components.adax
 Adax-local==0.1.4
 
-# homeassistant.components.homekit
-HAP-python==4.5.0
-
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -615,6 +612,9 @@ gspread==5.5.0
 
 # homeassistant.components.profiler
 guppy3==3.1.2
+
+# homeassistant.components.homekit
+ha-HAP-python==4.5.2
 
 # homeassistant.components.generic
 # homeassistant.components.stream
