@@ -173,3 +173,29 @@ async def setup_integration_read_only(hass: HomeAssistant) -> None:
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def setup_integration_platform_not_ready(hass: HomeAssistant) -> None:
+    """Test wallbox sensor class setup for read only."""
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v2/charger/12345",
+            json=test_response,
+            status_code=HTTPStatus.NOT_FOUND,
+        )
+
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
