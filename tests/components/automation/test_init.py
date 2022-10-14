@@ -46,6 +46,7 @@ from homeassistant.helpers.script import (
     _async_stop_scripts_at_shutdown,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import yaml
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -1000,6 +1001,59 @@ async def test_reload_unchanged_automation(hass, calls, automation_config):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
+
+
+async def test_reload_automation_when_blueprint_changes(hass, calls):
+    """Test an automation is updated at reload if the blueprint has changed."""
+    with patch(
+        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+    ) as automation_entity_init:
+        config = {
+            automation.DOMAIN: [
+                {
+                    "use_blueprint": {
+                        "path": "test_event_service.yaml",
+                        "input": {
+                            "trigger_event": "test_event",
+                            "service_to_call": "test.automation",
+                            "a_number": 5,
+                        },
+                    }
+                }
+            ]
+        }
+        assert await async_setup_component(hass, automation.DOMAIN, config)
+        assert automation_entity_init.call_count == 1
+        automation_entity_init.reset_mock()
+
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 1
+
+        # Reload the automations without any change
+        blueprint_path = automation.async_get_blueprints(hass).blueprint_folder
+        blueprint_config = yaml.load_yaml(blueprint_path / "test_event_service.yaml")
+        blueprint_config["action"].append(blueprint_config["action"][-1])
+
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=config,
+        ), patch(
+            "homeassistant.components.blueprint.models.yaml.load_yaml",
+            autospec=True,
+            return_value=blueprint_config,
+        ):
+            await hass.services.async_call(
+                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+            )
+
+        assert automation_entity_init.call_count == 1
+        automation_entity_init.reset_mock()
+
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 3
 
 
 async def test_automation_restore_state(hass):
