@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_MAC, PERCENTAGE, TIME_SECONDS
+from homeassistant.const import PERCENTAGE, TIME_SECONDS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -90,12 +90,14 @@ class OralBSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, CONF_MAC)},
+            identifiers={(DOMAIN, self.device.ble_device.address)},
             manufacturer="OralB",
             name="OralB Toothbrush",
         )
 
-        self._attr_unique_id = f"{CONF_MAC}_{description.unique_id}"
+        self._attr_unique_id = (
+            f"{self.device.ble_device.address}_{description.unique_id}"
+        )
 
     @property
     def native_value(self) -> float | None:
