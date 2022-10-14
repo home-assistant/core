@@ -267,6 +267,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             reason="replaced by EntityCategory enum",
             constant=re.compile(r"^(ENTITY_CATEGORY_(\w*))|(ENTITY_CATEGORIES)$"),
         ),
+        ObsoleteImportMatch(
+            reason="replaced by local constants",
+            constant=re.compile(r"^(CONF_UNIT_SYSTEM_(\w*))$"),
+        ),
     ],
     "homeassistant.core": [
         ObsoleteImportMatch(
