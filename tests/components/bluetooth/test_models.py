@@ -6,7 +6,6 @@ from unittest.mock import patch
 import bleak
 from bleak import BleakClient, BleakError
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 import pytest
 
 from homeassistant.components.bluetooth.models import (
@@ -16,7 +15,12 @@ from homeassistant.components.bluetooth.models import (
     HaBluetoothConnector,
 )
 
-from . import _get_manager, inject_advertisement, inject_advertisement_with_source
+from . import (
+    _get_manager,
+    generate_advertisement_data,
+    inject_advertisement,
+    inject_advertisement_with_source,
+)
 
 
 class MockBleakClient(BleakClient):
@@ -49,7 +53,7 @@ async def test_wrapped_bleak_scanner(hass, enable_bluetooth):
     """Test wrapped bleak scanner dispatches calls as expected."""
     scanner = HaBleakScannerWrapper()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
     inject_advertisement(hass, switchbot_device, switchbot_adv)
@@ -84,7 +88,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
     switchbot_device = BLEDevice(
         "44:44:33:11:23:45", "wohand", {"path": "/org/bluez/hci0/dev_44_44_33_11_23_45"}
     )
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
     inject_advertisement(hass, switchbot_device, switchbot_adv)
@@ -116,7 +120,7 @@ async def test_ble_device_with_proxy_client_out_of_connections(
         },
         rssi=-30,
     )
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
@@ -172,7 +176,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         {"path": "/org/bluez/hci0/dev_44_44_33_11_23_45"},
         rssi=-100,
     )
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
@@ -258,7 +262,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         rssi=-100,
     )
     switchbot_device.metadata["delegate"] = 0
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 

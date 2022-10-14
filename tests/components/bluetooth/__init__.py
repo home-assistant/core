@@ -2,6 +2,7 @@
 
 
 import time
+from typing import Any
 from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -27,7 +28,25 @@ __all__ = (
     "inject_bluetooth_service_info",
     "patch_all_discovered_devices",
     "patch_discovered_devices",
+    "generate_advertisement_data",
 )
+
+ADVERTISEMENT_DATA_DEFAULTS = {
+    "manufacturer_data": {},
+    "service_data": {},
+    "service_uuids": [],
+    "rssi": -127,
+    "platform_data": ((),),
+    "tx_power": -127,
+}
+
+
+def generate_advertisement_data(**kwargs: Any) -> AdvertisementData:
+    """Generate advertisement data with defaults."""
+    new = kwargs.copy()
+    for key, value in ADVERTISEMENT_DATA_DEFAULTS.items():
+        new.setdefault(key, value)
+    return AdvertisementData(**new)
 
 
 def _get_manager() -> BluetoothManager:

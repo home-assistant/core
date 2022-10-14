@@ -3,12 +3,12 @@
 
 from unittest.mock import ANY, patch
 
-from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bleak.backends.scanner import BLEDevice
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 
-from . import inject_advertisement
+from . import generate_advertisement_data, inject_advertisement
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -161,7 +161,7 @@ async def test_diagnostics_macos(
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
