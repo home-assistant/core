@@ -934,6 +934,74 @@ async def test_reload_identical_automations_without_id(hass, calls):
         assert len(calls) == 10
 
 
+@pytest.mark.parametrize(
+    "automation_config",
+    (
+        {
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [{"service": "test.automation"}],
+        },
+        # An automation using templates
+        {
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "action": [{"service": "{{ 'test.automation' }}"}],
+        },
+        # An automation using blueprint
+        {
+            "use_blueprint": {
+                "path": "test_event_service.yaml",
+                "input": {
+                    "trigger_event": "test_event",
+                    "service_to_call": "test.automation",
+                    "a_number": 5,
+                },
+            }
+        },
+        # An automation using blueprint with templated input
+        {
+            "use_blueprint": {
+                "path": "test_event_service.yaml",
+                "input": {
+                    "trigger_event": "{{ 'test_event' }}",
+                    "service_to_call": "{{ 'test.automation' }}",
+                    "a_number": 5,
+                },
+            }
+        },
+    ),
+)
+async def test_reload_unchanged_automation(hass, calls, automation_config):
+    """Test an unmodified automation is not reloaded."""
+    with patch(
+        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+    ) as automation_entity_init:
+        config = {automation.DOMAIN: [automation_config]}
+        assert await async_setup_component(hass, automation.DOMAIN, config)
+        assert automation_entity_init.call_count == 1
+        automation_entity_init.reset_mock()
+
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 1
+
+        # Reload the automations without any change
+        with patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value=config,
+        ):
+            await hass.services.async_call(
+                automation.DOMAIN, SERVICE_RELOAD, blocking=True
+            )
+
+        assert automation_entity_init.call_count == 0
+        automation_entity_init.reset_mock()
+
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 2
+
+
 async def test_automation_restore_state(hass):
     """Ensure states are restored on startup."""
     time = dt_util.utcnow()
