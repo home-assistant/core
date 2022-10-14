@@ -131,6 +131,9 @@ class UnitSystem:
             "Please adjust to use instance check instead.",
             error_if_core=False,
         )
+        if self is IMPERIAL_SYSTEM:
+            # kept for compatibility reasons, with associated warning above
+            return _CONF_UNIT_SYSTEM_IMPERIAL
         return self._name
 
     @property

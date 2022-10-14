@@ -24,6 +24,7 @@ from homeassistant.util.unit_system import (
     _CONF_UNIT_SYSTEM_METRIC,
     IMPERIAL_SYSTEM,
     METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
     UnitSystem,
     get_unit_system,
 )
@@ -324,6 +325,7 @@ def test_is_metric(
     [
         (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC),
         (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL),
+        (US_CUSTOMARY_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL),
     ],
 )
 def test_deprecated_name(
