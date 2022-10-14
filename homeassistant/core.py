@@ -2015,6 +2015,8 @@ class Config:
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
+            # We don't want any components to use the name of the unit system
+            # so we are using the private attribute here
             "unit_system": self.units._name,  # pylint: disable=protected-access
             "location_name": self.location_name,
             "time_zone": self.time_zone,
