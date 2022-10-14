@@ -202,21 +202,19 @@ class BluetoothManager:
             self._cancel_unavailable_tracking = None
         uninstall_multiple_bleak_catcher()
 
-    async def async_get_devices_by_address(
+    async def async_get_discovered_devices_and_advertisement_data_by_address(
         self, address: str, connectable: bool
-    ) -> list[BLEDevice]:
-        """Get devices by address."""
+    ) -> list[tuple[BLEDevice, AdvertisementData]]:
+        """Get devices and advertisement_data by address."""
         types_ = (True,) if connectable else (True, False)
         return [
-            device
-            for device in await asyncio.gather(
-                *(
-                    scanner.async_get_device_by_address(address)
-                    for type_ in types_
-                    for scanner in self._get_scanners_by_type(type_)
-                )
+            device_advertisement_data
+            for device_advertisement_data in (
+                scanner.discovered_devices_and_advertisement_data.get(address)
+                for type_ in types_
+                for scanner in self._get_scanners_by_type(type_)
             )
-            if device is not None
+            if device_advertisement_data is not None
         ]
 
     @hass_callback
@@ -318,7 +316,7 @@ class BluetoothManager:
                 stale_seconds,
             )
             return False
-        if new.device.rssi - RSSI_SWITCH_THRESHOLD > (old.device.rssi or NO_RSSI_VALUE):
+        if new.rssi - RSSI_SWITCH_THRESHOLD > (old.rssi or NO_RSSI_VALUE):
             # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
             _LOGGER.debug(
                 "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
@@ -328,9 +326,9 @@ class BluetoothManager:
                 old.connectable,
                 new.source,
                 new.connectable,
-                new.device.rssi,
+                new.rssi,
                 RSSI_SWITCH_THRESHOLD,
-                old.device.rssi,
+                old.rssi,
             )
             return False
         return True
@@ -406,7 +404,7 @@ class BluetoothManager:
             advertisement_data,
             connectable,
             matched_domains,
-            device.rssi,
+            advertisement_data.rssi,
         )
 
         for match in self._callback_index.match_callbacks(service_info):

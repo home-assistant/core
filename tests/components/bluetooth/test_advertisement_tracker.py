@@ -4,7 +4,7 @@ from datetime import timedelta
 import time
 from unittest.mock import patch
 
-from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bleak.backends.scanner import BLEDevice
 
 from homeassistant.components.bluetooth import (
     async_register_scanner,
@@ -21,7 +21,7 @@ from homeassistant.components.bluetooth.models import BaseHaScanner
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-from . import inject_advertisement_with_time_and_source
+from . import generate_advertisement_data, inject_advertisement_with_time_and_source
 
 from tests.common import async_fire_time_changed
 
@@ -34,7 +34,7 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout(
     """Test we can determine the advertisement interval."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
     switchbot_device_went_unavailable = False
@@ -78,7 +78,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectab
     """Test device with a long advertisement interval."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
     switchbot_device_went_unavailable = False
@@ -124,7 +124,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     """Test device with a long advertisement interval with an adapter change."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
     switchbot_device_went_unavailable = False
@@ -179,7 +179,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_not_conne
     """Test device with a long advertisement interval that is not connectable not reaching the advertising interval."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
     switchbot_device_went_unavailable = False
@@ -228,7 +228,7 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
     """Test device with a short advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
     switchbot_device_went_unavailable = False
@@ -282,7 +282,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     """Test device with a long advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
     switchbot_device_went_unavailable = False
@@ -364,7 +364,7 @@ async def test_advertisment_interval_longer_increasing_than_adapter_stack_timeou
     """Test device with a increasing advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
     switchbot_device_went_unavailable = False

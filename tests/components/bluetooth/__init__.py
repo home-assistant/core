@@ -113,17 +113,17 @@ def inject_bluetooth_service_info_bleak(
     hass: HomeAssistant, info: models.BluetoothServiceInfoBleak
 ) -> None:
     """Inject an advertisement into the manager with connectable status."""
-    advertisement_data = AdvertisementData(  # type: ignore[no-untyped-call]
+    advertisement_data = generate_advertisement_data(
         local_name=None if info.name == "" else info.name,
         manufacturer_data=info.manufacturer_data,
         service_data=info.service_data,
         service_uuids=info.service_uuids,
+        rssi=info.rssi,
     )
     device = BLEDevice(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},
-        rssi=info.rssi,
     )
     inject_advertisement_with_time_and_source_connectable(
         hass,
@@ -139,17 +139,17 @@ def inject_bluetooth_service_info(
     hass: HomeAssistant, info: models.BluetoothServiceInfo
 ) -> None:
     """Inject a BluetoothServiceInfo into the manager."""
-    advertisement_data = AdvertisementData(  # type: ignore[no-untyped-call]
+    advertisement_data = generate_advertisement_data(  # type: ignore[no-untyped-call]
         local_name=None if info.name == "" else info.name,
         manufacturer_data=info.manufacturer_data,
         service_data=info.service_data,
         service_uuids=info.service_uuids,
+        rssi=info.rssi,
     )
     device = BLEDevice(  # type: ignore[no-untyped-call]
         address=info.address,
         name=info.name,
         details={},
-        rssi=info.rssi,
     )
     inject_advertisement(hass, device, advertisement_data)
 
