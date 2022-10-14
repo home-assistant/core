@@ -478,18 +478,15 @@ def _is_zero_but_true(value: Any) -> bool:
     return convert_to_float(value) == 0
 
 
-def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str) -> bool:
+def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str) -> None:
     """Remove the state files from disk."""
-    persist_file_path = get_persist_fullpath_for_entry_id(hass, entry_id)
-    aid_storage_path = get_aid_storage_fullpath_for_entry_id(hass, entry_id)
-    iid_storage_path = get_iid_storage_fullpath_for_entry_id(hass, entry_id)
-
-    os.unlink(persist_file_path)
-    if os.path.exists(aid_storage_path):
-        os.unlink(aid_storage_path)
-    if os.path.exists(iid_storage_path):
-        os.unlink(iid_storage_path)
-    return True
+    for path in (
+        get_persist_fullpath_for_entry_id(hass, entry_id),
+        get_aid_storage_fullpath_for_entry_id(hass, entry_id),
+        get_iid_storage_fullpath_for_entry_id(hass, entry_id),
+    ):
+        if os.path.exists(path):
+            os.unlink(path)
 
 
 def _get_test_socket() -> socket.socket:
