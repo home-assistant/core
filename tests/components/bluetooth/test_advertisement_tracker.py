@@ -4,7 +4,7 @@ from datetime import timedelta
 import time
 from unittest.mock import patch
 
-from bleak.backends.scanner import BLEDevice
+from bleak.backends.scanner import AdvertisementData, BLEDevice
 
 from homeassistant.components.bluetooth import (
     async_register_scanner,
@@ -291,8 +291,11 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         """Fake scanner."""
 
         @property
-        def discovered_devices(self) -> list[BLEDevice]:
-            return []
+        def discovered_devices_and_advertisement_data(
+            self,
+        ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
+            """Return a list of discovered devices."""
+            return {}
 
     scanner = FakeScanner(hass, "new")
     cancel_scanner = async_register_scanner(hass, scanner, False)

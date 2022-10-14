@@ -158,7 +158,9 @@ def inject_bluetooth_service_info(
 def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock all the discovered devices from all the scanners."""
     return patch.object(
-        _get_manager(), "async_all_discovered_devices", return_value=mock_discovered
+        _get_manager(),
+        "_async_all_discovered_addresses",
+        return_value={ble_device.address for ble_device in mock_discovered},
     )
 
 

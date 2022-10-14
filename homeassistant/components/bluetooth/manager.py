@@ -218,14 +218,15 @@ class BluetoothManager:
         ]
 
     @hass_callback
-    def async_all_discovered_devices(self, connectable: bool) -> Iterable[BLEDevice]:
-        """Return all of discovered devices from all the scanners including duplicates."""
+    def _async_all_discovered_addresses(self, connectable: bool) -> Iterable[str]:
+        """Return all of discovered addresses from all the scanners including duplicates."""
         yield from itertools.chain.from_iterable(
-            scanner.discovered_devices for scanner in self._get_scanners_by_type(True)
+            scanner.discovered_devices_and_advertisement_data
+            for scanner in self._get_scanners_by_type(True)
         )
         if not connectable:
             yield from itertools.chain.from_iterable(
-                scanner.discovered_devices
+                scanner.discovered_devices_and_advertisement_data
                 for scanner in self._get_scanners_by_type(False)
             )
 
@@ -259,11 +260,9 @@ class BluetoothManager:
             intervals = self._advertisement_tracker.intervals
             history = connectable_history if connectable else all_history
             history_set = set(history)
-            active_addresses = {
-                device.address
-                for device in self.async_all_discovered_devices(connectable)
-            }
-            disappeared = history_set.difference(active_addresses)
+            disappeared = history_set.difference(
+                self._async_all_discovered_addresses(connectable)
+            )
             for address in disappeared:
                 #
                 # For non-connectable devices we also check the device has exceeded

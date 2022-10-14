@@ -971,8 +971,8 @@ async def test_async_discovered_device_api(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ), patch(
-        "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
-        [MagicMock(address="44:44:33:11:23:45")],
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         assert not bluetooth.async_discovered_service_info(hass)
         assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
@@ -2451,8 +2451,8 @@ async def test_async_ble_device_from_address(
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ), patch(
-        "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
-        [MagicMock(address="44:44:33:11:23:45")],
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         assert not bluetooth.async_discovered_service_info(hass)
         assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
