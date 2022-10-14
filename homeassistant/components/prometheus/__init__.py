@@ -491,7 +491,7 @@ class PrometheusMetrics:
                     float(mode == current_mode)
                 )
 
-    def _handle_generic(self, domain, state):
+    def _handle_generic(self, state, domain):
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
         for metric_handler in self._metric_name_handlers:
@@ -519,10 +519,10 @@ class PrometheusMetrics:
         self._battery(state)
 
     def _handle_sensor(self, state):
-        return self._handle_generic("sensor", state)
+        return self._handle_generic(state, "sensor")
 
     def _handle_number(self, state):
-        return self._handle_generic("number", state)
+        return self._handle_generic(state, "number")
 
     def _metric_name_default_metric(self, state, unit, domain):
         """Get default metric."""
