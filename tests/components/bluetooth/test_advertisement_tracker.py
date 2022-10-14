@@ -21,7 +21,11 @@ from homeassistant.components.bluetooth.models import BaseHaScanner
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-from . import generate_advertisement_data, inject_advertisement_with_time_and_source
+from . import (
+    generate_advertisement_data,
+    inject_advertisement_with_time_and_source,
+    inject_advertisement_with_time_and_source_connectable,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -320,12 +324,13 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         switchbot_device_went_unavailable = True
 
     for i in range(ADVERTISING_TIMES_NEEDED):
-        inject_advertisement_with_time_and_source(
+        inject_advertisement_with_time_and_source_connectable(
             hass,
             switchbot_device,
             switchbot_adv,
             start_monotonic_time + (i * 2),
             "original",
+            connectable=False,
         )
 
     switchbot_better_rssi_adv = generate_advertisement_data(
@@ -334,12 +339,13 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
         rssi=-30,
     )
     for i in range(ADVERTISING_TIMES_NEEDED):
-        inject_advertisement_with_time_and_source(
+        inject_advertisement_with_time_and_source_connectable(
             hass,
             switchbot_device,
             switchbot_better_rssi_adv,
             start_monotonic_time + (i * ONE_HOUR_SECONDS),
             "new",
+            connectable=False,
         )
 
     switchbot_device_unavailable_cancel = async_track_unavailable(

@@ -259,12 +259,15 @@ class BluetoothManager:
         """Watch for unavailable devices and cleanup state history."""
         monotonic_now = MONOTONIC_TIME()
         connectable_history = self._connectable_history
+        non_connectable_history = self._non_connectable_history
         all_history = self._all_history
+        connectable_tracker = self._connectable_advertisement_tracker
+        connectable_intervals = connectable_tracker.intervals
+        non_connectable_tracker = self._non_connectable_advertisement_tracker
+        non_connectable_intervals = non_connectable_tracker.intervals
 
         for connectable in (True, False):
             unavailable_callbacks = self._get_unavailable_callbacks_by_type(connectable)
-            tracker = self._get_advertisement_tracker_by_type(connectable)
-            intervals = tracker.intervals
             history = connectable_history if connectable else all_history
             disappeared = set(history).difference(
                 self._async_all_discovered_addresses(connectable)
@@ -276,13 +279,21 @@ class BluetoothManager:
                 # since it may have gone to sleep and since we do not need an active connection
                 # to it we can only determine its availability by the lack of advertisements
                 #
-                if not connectable and (advertising_interval := intervals.get(address)):
-                    time_since_seen = monotonic_now - history[address].time
-                    if time_since_seen <= advertising_interval:
-                        continue
+                if not connectable:
+                    # Non-connectable device we need to check the advertising interval
+                    if advertising_interval := (
+                        non_connectable_intervals.get(address)
+                        or connectable_intervals.get(address)
+                    ):
+                        time_since_seen = monotonic_now - all_history[address].time
+                        if time_since_seen <= advertising_interval:
+                            continue
+
+                    non_connectable_history.pop(address, None)
+                    non_connectable_tracker.async_remove_address(address)
+                    connectable_tracker.async_remove_address(address)
 
                 service_info = history.pop(address)
-                tracker.async_remove_address(address)
 
                 if not (callbacks := unavailable_callbacks.get(address)):
                     continue
@@ -554,9 +565,8 @@ class BluetoothManager:
         scanners = self._get_scanners_by_type(connectable)
 
         def _unregister_scanner() -> None:
-            self._get_advertisement_tracker_by_type(connectable).async_remove_source(
-                scanner.source
-            )
+            tracker = self._get_advertisement_tracker_by_type(connectable)
+            tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
 
         scanners.append(scanner)
