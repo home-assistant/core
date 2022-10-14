@@ -613,7 +613,6 @@ omit =
     homeassistant/components/izone/climate.py
     homeassistant/components/izone/discovery.py
     homeassistant/components/jellyfin/media_source.py
-    homeassistant/components/jellyfin/media_player.py
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/__init__.py
     homeassistant/components/juicenet/const.py

@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        _, connect_result = await validate_input(hass, dict(entry.data), client)
+        user_id, connect_result = await validate_input(hass, dict(entry.data), client)
     except CannotConnect as ex:
         raise ConfigEntryNotReady("Cannot connect to Jellyfin server") from ex
     except InvalidAuth:
@@ -36,18 +36,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     server_info: dict[str, Any] = connect_result["Servers"][0]
 
     coordinators: dict[str, JellyfinDataUpdateCoordinator[Any]] = {
-        "sessions": SessionsDataUpdateCoordinator(hass, client, server_info),
+        "sessions": SessionsDataUpdateCoordinator(hass, client, server_info, user_id),
     }
 
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = JellyfinData(
+        client_device_id=entry.data[CONF_CLIENT_DEVICE_ID],
         jellyfin_client=client,
         coordinators=coordinators,
     )
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

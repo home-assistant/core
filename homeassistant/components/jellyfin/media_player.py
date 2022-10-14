@@ -1,363 +1,280 @@
-"""Support to interface with the Jellyfin API."""
+"""Support for the Jellyfin media player."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import timedelta
-from functools import wraps
-import logging
-from typing import Any, TypeVar
-from xml.dom import NotFoundErr
+from typing import Any
 
-from jellyfin_apiclient_python import JellyfinClient
-from typing_extensions import Concatenate, ParamSpec
-
-import homeassistant
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityDescription,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
+from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.util.dt import parse_datetime
 
-from .const import (
-    CONTENT_TYPE_MAP,
-    DATA_CLIENT,
-    DOMAIN,
-    EXPANDABLE_TYPES,
-    ITEM_KEY_IMAGE_TAGS,
-    MEDIA_CLASS_MAP,
-    MEDIA_TYPE_NONE,
-    SUPPORTED_LIBRARY_TYPES,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-
-_JellyfinMediaPlayerT = TypeVar("_JellyfinMediaPlayerT", bound="JellyfinMediaPlayer")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
-def needs_data(
-    func: Callable[Concatenate[_JellyfinMediaPlayerT, _P], _R]
-) -> Callable[Concatenate[_JellyfinMediaPlayerT, _P], _R | None]:
-    """Ensure session is available for certain attributes."""
-
-    @wraps(func)
-    def get_data_value(
-        self: _JellyfinMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
-    ) -> _R | None:
-        if self._data is None:  # pylint: disable=protected-access
-            return None
-
-        try:
-            return func(self, *args, **kwargs)
-        except KeyError:
-            return None
-
-    return get_data_value
+from .browse_media import build_item_response, build_root_response
+from .client_wrapper import get_artwork_url
+from .const import CONTENT_TYPE_MAP, DOMAIN
+from .coordinator import JellyfinDataUpdateCoordinator
+from .entity import JellyfinEntity
+from .models import JellyfinData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Jellyfin media_player from a config entry."""
-    client: JellyfinClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
-    user = await hass.async_add_executor_job(client.jellyfin.get_user)
+    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
+    coordinator = jellyfin_data.coordinators["sessions"]
 
-    coord = JellyfinMediaPlayerCoordinator(hass, client, user, async_add_entities)
-    await coord.async_config_entry_first_refresh()
-    _LOGGER.debug("New entity listener created")
-
-
-class JellyfinMediaPlayerCoordinator(DataUpdateCoordinator):
-    """Bundles data retrieval for sessions form Jellyfin server."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        client: JellyfinClient,
-        user: str,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Initialize the UpdateCoordinator."""
-        super().__init__(
-            hass, _LOGGER, name="Jellyfin", update_interval=timedelta(seconds=5)
-        )
-
-        self._client = client
-        self._hass = hass
-        self.user = user
-        self.sessions: Any | None = None
-
-        self._known: set[str] = set()
-        self._async_add_entities = async_add_entities
-
-    async def _async_update_data(self) -> None:
-        self.sessions = await self._hass.async_add_executor_job(
-            self._client.jellyfin.get_sessions
-        )
-
-        if not self.sessions:
-            return
-
-        for session in self.sessions:
-            if session["Id"] not in self._known:
-                self._known.add(session["Id"])
-                entity = JellyfinMediaPlayer(self, self._hass, self._client, session)
-                self._async_add_entities([entity], False)
+    async_add_entities(
+        (
+            JellyfinMediaPlayer(coordinator, session_id, session_data)
+            for session_id, session_data in coordinator.data.items()
+            if session_data["DeviceId"] != jellyfin_data.client_device_id
+            and session_data["Client"] != "Home Assistant"
+        ),
+    )
 
 
-class JellyfinMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
     """Represents a Jellyfin Player device."""
 
     def __init__(
         self,
-        coordinator: JellyfinMediaPlayerCoordinator,
-        hass: HomeAssistant,
-        client: JellyfinClient,
-        session: Any,
+        coordinator: JellyfinDataUpdateCoordinator,
+        session_id: str,
+        session_data: dict[str, Any],
     ) -> None:
-        """Initialize the MediaPlayer Entity.
+        """Initialize the Jellyfin Media Player entity."""
+        super().__init__(
+            coordinator,
+            MediaPlayerEntityDescription(
+                key=session_id,
+            ),
+        )
 
-        Pulls out the properties from the session object we need, even when unavailable.
-        """
-        super().__init__(coordinator)
-        self._hass = hass
-        self._client = client
-        self._device_id = session["DeviceId"]
-        self._id = session["Id"]
+        self.session_id = session_id
+        self.session_data: dict[str, Any] | None = session_data
+        self.device_id: str = session_data["DeviceId"]
+        self.device_name: str = session_data["DeviceName"]
+        self.client_name: str = session_data["Client"]
+        self.app_version: str = session_data["ApplicationVersion"]
 
-        self._data = session
+        self.capabilities: dict[str, Any] = session_data["Capabilities"]
+        self.now_playing: dict[str, Any] | None = session_data.get("NowPlayingItem")
+        self.play_state: dict[str, Any] | None = session_data.get("PlayState")
 
-        self._attr_unique_id = f"{self._data['ServerId']}:{self._id}"
-        self._attr_name = self._data["DeviceName"]
-        self._attr_media_position_updated_at = homeassistant.util.dt.utcnow()
-        self._attr_media_content_type = "video"
-        self._attr_media_image_remotely_accessible = True
-        self._attr_should_poll = True
+        if self.capabilities.get("SupportsPersistentIdentifier", False):
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self.device_id)},
+                manufacturer="Jellyfin",
+                model=self.client_name,
+                name=self.device_name,
+                sw_version=self.app_version,
+                via_device=(DOMAIN, coordinator.server_id),
+            )
+        else:
+            self._attr_device_info = None
+            self._attr_has_entity_name = False
+            self._attr_name = self.device_name
 
-    def update(self) -> None:
-        """Update the internal state from Coordinator state."""
-        self._data = None
-        for session in self.coordinator.sessions:
-            if session["Id"] == self._id:
-                self._data = session
-                self._attr_media_position_updated_at = homeassistant.util.dt.utcnow()
+        self._update_from_session_data()
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self.update()
+        self.session_data = (
+            self.coordinator.data.get(self.session_id)
+            if self.coordinator.data is not None
+            else None
+        )
+        self.now_playing = (
+            self.session_data.get("NowPlayingItem")
+            if self.session_data is not None
+            else None
+        )
+        self.play_state = (
+            self.session_data.get("PlayState")
+            if self.session_data is not None
+            else None
+        )
+        self._update_from_session_data()
         super()._handle_coordinator_update()
 
-    @property  # type: ignore[misc]
-    @needs_data
+    @callback
+    def _update_from_session_data(self) -> None:
+        """Process session data to update entity properties."""
+        state = None
+        media_content_type = None
+        media_content_id = None
+        media_title = None
+        media_series_title = None
+        media_season = None
+        media_episode = None
+        media_album_name = None
+        media_album_artist = None
+        media_artist = None
+        media_track = None
+        media_duration = None
+        media_position = None
+        media_position_updated = None
+        volume_muted = False
+        volume_level = None
+
+        if self.session_data is not None:
+            state = MediaPlayerState.IDLE
+            media_position_updated = (
+                parse_datetime(self.session_data["LastPlaybackCheckIn"])
+                if self.now_playing
+                else None
+            )
+
+        if self.now_playing is not None:
+            state = MediaPlayerState.PLAYING
+            media_content_type = CONTENT_TYPE_MAP.get(self.now_playing["Type"], None)
+            media_content_id = self.now_playing["Id"]
+            media_title = self.now_playing["Name"]
+            media_duration = int(self.now_playing["RunTimeTicks"] / 10000000)
+
+        if self.now_playing is not None and media_content_type == MediaType.EPISODE:
+            # HA frontend does not display all info for episode content type
+            media_content_type = MediaType.TVSHOW
+            media_series_title = self.now_playing.get("SeriesName")
+            media_season = self.now_playing.get("ParentIndexNumber")
+            media_episode = self.now_playing.get("IndexNumber")
+        elif self.now_playing is not None and media_content_type == MediaType.MUSIC:
+            media_album_name = self.now_playing.get("Album")
+            media_album_artist = self.now_playing.get("AlbumArtist")
+            media_track = self.now_playing.get("IndexNumber")
+            if media_artists := self.now_playing.get("Artists"):
+                media_artist = str(media_artists[0])
+
+        if self.play_state is not None:
+            if self.play_state.get("IsPaused"):
+                state = MediaPlayerState.PAUSED
+
+            media_position = (
+                int(self.play_state["PositionTicks"] / 10000000)
+                if "PositionTicks" in self.play_state
+                else None
+            )
+            volume_muted = bool(self.play_state.get("IsMuted", False))
+            volume_level = (
+                float(self.play_state["VolumeLevel"] / 100)
+                if "VolumeLevel" in self.play_state
+                else None
+            )
+
+        self._attr_state = state
+        self._attr_is_volume_muted = volume_muted
+        self._attr_volume_level = volume_level
+        self._attr_media_content_type = media_content_type
+        self._attr_media_content_id = media_content_id
+        self._attr_media_title = media_title
+        self._attr_media_series_title = media_series_title
+        self._attr_media_season = media_season
+        self._attr_media_episode = media_episode
+        self._attr_media_album_name = media_album_name
+        self._attr_media_album_artist = media_album_artist
+        self._attr_media_artist = media_artist
+        self._attr_media_track = media_track
+        self._attr_media_duration = media_duration
+        self._attr_media_position = media_position
+        self._attr_media_position_updated_at = media_position_updated
+        self._attr_media_image_remotely_accessible = True
+
+    @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         # We always need the now playing item.
         # If there is none, there's also no url
-        now_playing = self._data["NowPlayingItem"]
+        if self.now_playing is None:
+            return None
 
-        # Priority here is a bit questionable.
-        # If the item has a backdrop, that works well.
-        if "Backdrop" in now_playing[ITEM_KEY_IMAGE_TAGS]:
-            return str(
-                self._client.jellyfin.artwork(now_playing["Id"], "Backdrop", 100)
-            )
-
-        # We can get parent backdrop (e.g. Season's splash) easyily
-        try:
-            backdrop_item_id = now_playing["ParentBackdropItemId"]
-
-            return str(self._client.jellyfin.artwork(backdrop_item_id, "Backdrop", 100))
-        except KeyError:
-            pass
-
-        # As sort of last resort, use the item's primary
-        if "Primary" in now_playing[ITEM_KEY_IMAGE_TAGS]:
-            return str(self._client.jellyfin.artwork(now_playing["Id"], "Primary", 100))
-
-        # Bail with no image. Should we use parent primary?
-        # pylint tricks itself with the formatting here...
-        _LOGGER.warning(  # pylint: disable=logging-not-lazy
-            "Could not get image for %s even though there's an item playing" % self.name
-        )
-        return None
+        return get_artwork_url(self.coordinator.api_client, self.now_playing, 150)
 
     @property
     def supported_features(self) -> int:
         """Flag media player features that are supported."""
-        ret = (
-            MediaPlayerEntityFeature.BROWSE_MEDIA
-            | MediaPlayerEntityFeature.PLAY_MEDIA
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_MUTE
-        )
-        try:
-            if self._data and self._data["PlayState"]["CanSeek"]:
-                ret |= MediaPlayerEntityFeature.SEEK
-        except KeyError:
-            pass
+        commands: list[str] = self.capabilities.get("SupportedCommands", [])
+        controllable = self.capabilities.get("SupportsMediaControl", False)
+        features = 0
 
-        try:
-            if (
-                self._data
-                and self._data["Capabilities"]["SupportsMediaControl"]
-                and self.state != STATE_IDLE
-            ):
-                ret |= (
-                    MediaPlayerEntityFeature.PAUSE
-                    | MediaPlayerEntityFeature.PLAY
-                    | MediaPlayerEntityFeature.STOP
-                )
-        except KeyError:
-            pass
+        if controllable:
+            features |= (
+                MediaPlayerEntityFeature.BROWSE_MEDIA
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.SEEK
+            )
 
-        return ret
+            if "Mute" in commands:
+                features |= MediaPlayerEntityFeature.VOLUME_MUTE
 
-    @property
-    def state(self) -> str:
-        """State of the player."""
-        if not self._data:
-            return STATE_OFF
+            if "VolumeSet" in commands:
+                features |= MediaPlayerEntityFeature.VOLUME_SET
 
-        if not ("NowPlayingItem" in self._data):
-            return STATE_IDLE
-
-        if self._data["PlayState"]["IsPaused"]:
-            return STATE_PAUSED
-
-        return STATE_PLAYING
-
-    @property  # type: ignore[misc]
-    @needs_data
-    def is_volume_muted(self) -> bool:
-        """Boolean if volume is currently muted."""
-        return bool(self._data["PlayState"]["IsMuted"])
-
-    @property  # type: ignore[misc]
-    @needs_data
-    def media_episode(self) -> str | None:
-        """Episode of current playing media, TV show only."""
-        return str(self._data["NowPlayingItem"]["IndexNumber"])
-
-    @property  # type: ignore[misc]
-    @needs_data
-    def media_season(self) -> str | None:
-        """Season of current playing media, TV show only."""
-        return str(self._data["NowPlayingItem"]["ParentIndexNumber"])
-
-    @property  # type: ignore[misc]
-    @needs_data
-    def media_series_title(self) -> str | None:
-        """Title of series of current playing media, TV show only."""
-        return str(self._data["NowPlayingItem"]["SeriesName"])
-
-    @property  # type: ignore[misc]
-    @needs_data
-    def media_title(self) -> str | None:
-        """Title of current playing media."""
-        return str(self._data["NowPlayingItem"]["Name"])
-
-    @property  # type: ignore[misc]
-    @needs_data
-    def media_position(self) -> int | None:
-        """Position of current playing media in seconds."""
-        return int(self._data["PlayState"]["PositionTicks"] / 10000000)
-
-    @property  # type: ignore[misc]
-    @needs_data
-    def media_duration(self) -> int | None:
-        """Duration of current playing media in seconds."""
-        return int(self._data["NowPlayingItem"]["RunTimeTicks"] / 10000000)
-
-    @property  # type: ignore[misc]
-    @needs_data
-    def media_content_id(self) -> str | None:
-        """Content ID of current playing media."""
-        return str(self._data["NowPlayingItem"]["Id"])
-
-    @property  # type: ignore[misc]
-    @needs_data
-    def volume_level(self) -> float | None:
-        """Volume level of the media player (0..1)."""
-        return float(self._data["PlayState"]["VolumeLevel"] / 100)
+        return features
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return bool(self._data)
+        return self.coordinator.last_update_success and self.session_data is not None
 
-    def media_seek(self, position: int) -> None:
+    def media_seek(self, position: float) -> None:
         """Send seek command."""
-        self._client.jellyfin.remote_seek(self._id, int(position * 10000000))
+        self.coordinator.api_client.jellyfin.remote_seek(
+            self.session_id, int(position * 10000000)
+        )
 
     def media_pause(self) -> None:
         """Send pause command."""
-        self._client.jellyfin.remote_pause(self._id)
+        self.coordinator.api_client.jellyfin.remote_pause(self.session_id)
+        self._attr_state = MediaPlayerState.PAUSED
 
     def media_play(self) -> None:
         """Send play command."""
-        self._client.jellyfin.remote_unpause(self._id)
+        self.coordinator.api_client.jellyfin.remote_unpause(self.session_id)
+        self._attr_state = MediaPlayerState.PLAYING
 
     def media_play_pause(self) -> None:
         """Send the PlayPause command to the session."""
-        self._client.jellyfin.remote_playpause(self._id)
+        self.coordinator.api_client.jellyfin.remote_playpause(self.session_id)
 
     def media_stop(self) -> None:
         """Send stop command."""
-        self._client.jellyfin.remote_stop(self._id)
+        self.coordinator.api_client.jellyfin.remote_stop(self.session_id)
+        self._attr_state = MediaPlayerState.IDLE
 
     def play_media(
         self, media_type: str, media_id: str, **kwargs: dict[str, Any]
     ) -> None:
         """Play a piece of media."""
-        self._client.jellyfin.remote_play_media(self._id, [media_id])
+        self.coordinator.api_client.jellyfin.remote_play_media(
+            self.session_id, [media_id]
+        )
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._client.jellyfin.remote_set_volume(self._id, int(volume * 100))
+        self.coordinator.api_client.jellyfin.remote_set_volume(
+            self.session_id, int(volume * 100)
+        )
 
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
-            self._client.jellyfin.remote_mute(self._id)
+            self.coordinator.api_client.jellyfin.remote_mute(self.session_id)
         else:
-            self._client.jellyfin.remote_unmute(self._id)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return a device description for device registry."""
-
-        if not self._data["Capabilities"]["SupportsPersistentIdentifier"]:
-            return DeviceInfo(
-                identifiers={(DOMAIN, "Jellyfin-clients")},
-                name="Jellyfin Client Service",
-                manufacturer="Jellyfin",
-                model="Jellyfin Clients",
-                entry_type=DeviceEntryType.SERVICE,
-            )
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._data["DeviceId"])},
-            manufacturer="Jellyfin",
-            model=self._data["Client"],
-            name=self.name,
-            sw_version=self._data["ApplicationVersion"],
-            via_device=(DOMAIN, self._data["ServerId"]),
-        )
+            self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
 
     async def async_browse_media(
         self, media_content_type: str | None = None, media_content_id: str | None = None
@@ -367,97 +284,15 @@ class JellyfinMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         The BrowseMedia instance will be used by the "media_player/browse_media" websocket command.
 
         """
-
-        def browse_media_from_item(media: Any) -> BrowseMedia:
-            return BrowseMedia(
-                title=media["Name"],
-                media_content_id=media["Id"],
-                media_content_type=CONTENT_TYPE_MAP.get(media["Type"], MEDIA_TYPE_NONE),
-                media_class=MEDIA_CLASS_MAP.get(media["Type"], MEDIA_CLASS_DIRECTORY),
-                can_play=True,
-                can_expand=media["Type"] not in EXPANDABLE_TYPES,
-                children_media_class="",
-                thumbnail=str(
-                    self._client.jellyfin.artwork(media["Id"], "Primary", 500)
-                ),
-                children=[],
+        if media_content_id is None or media_content_id == "media-source://jellyfin":
+            return await build_root_response(
+                self.hass, self.coordinator.api_client, self.coordinator.user_id
             )
 
-        async def create_item_children(
-            hass: HomeAssistant, client: JellyfinClient, user: str, itemid: str
-        ) -> list[BrowseMedia]:
-            children = await hass.async_add_executor_job(
-                lambda: dict(
-                    client.jellyfin.items(params={"parentId": itemid, "userId": user})
-                )
-            )
-
-            return [browse_media_from_item(item) for item in children["Items"]]
-
-        async def create_item_response(
-            hass: HomeAssistant, client: JellyfinClient, user: str, itemid: str
-        ) -> BrowseMedia:
-            items = await hass.async_add_executor_job(
-                lambda: dict(
-                    client.jellyfin.items(params={"ids": [itemid], "userId": user})
-                )
-            )
-
-            if not items or "Items" not in items or len(items["Items"]) < 1:
-                raise NotFoundErr()
-
-            return browse_media_from_item(items["Items"][0])
-
-        async def create_root_response(
-            hass: HomeAssistant, client: JellyfinClient, user: str
-        ) -> BrowseMedia:
-            folders = await hass.async_add_executor_job(
-                client.jellyfin.get_media_folders
-            )
-
-            children = [
-                await create_item_response(hass, client, user, folder["Id"])
-                for folder in folders["Items"]
-                if folder["CollectionType"] in SUPPORTED_LIBRARY_TYPES
-            ]
-
-            ret = BrowseMedia(
-                media_content_id="root",
-                media_content_type="server",
-                media_class=MEDIA_CLASS_DIRECTORY,
-                children_media_class=MEDIA_CLASS_DIRECTORY,
-                title="Jellyfin",
-                can_play=False,
-                can_expand=True,
-                children=children,
-            )
-
-            return ret
-
-        async def create_single_response(
-            hass: HomeAssistant, client: JellyfinClient, user: str, itemid: str
-        ) -> BrowseMedia:
-            item = await create_item_response(hass, client, user, itemid)
-            item.children = await create_item_children(hass, client, user, itemid)
-
-            return item
-
-        # media_content_id will be none, when HA asks for toplevel info
-        # we give our toplevel object which houses that info the id root.
-        # When HA browses via Media tab, the toplevel is called media-source://jellyfin
-        if (
-            media_content_id is None
-            or media_content_id == "root"
-            or media_content_id == "media-source://jellyfin"
-        ):
-            _LOGGER.debug("Creating root instance in browse_media")
-            return await create_root_response(
-                self.hass, self._client, self.coordinator.user["Id"]
-            )
-
-        _LOGGER.debug(  # pylint: disable=logging-not-lazy
-            "Creating item instance in browse_media for %s" % media_content_id
-        )
-        return await create_single_response(
-            self._hass, self._client, self.coordinator.user["Id"], media_content_id
+        return await build_item_response(
+            self.hass,
+            self.coordinator.api_client,
+            self.coordinator.user_id,
+            media_content_type,
+            media_content_id,
         )
