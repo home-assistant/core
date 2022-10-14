@@ -137,11 +137,11 @@ class PrometheusMetrics:
         self._default_metric = default_metric
         self._filter = entity_filter
         self._metric_name_handlers = [
-            self._metric_name_override_component_metric,
-            self._metric_name_override_metric,
-            self._metric_name_attribute_metric,
-            self._metric_name_default_metric,
-            self._metric_name_fallback_metric,
+            self._metric_name_override_component,
+            self._metric_name_override,
+            self._metric_name_attribute,
+            self._metric_name_default,
+            self._metric_name_fallback,
         ]
 
         if namespace:
@@ -524,30 +524,30 @@ class PrometheusMetrics:
     def _handle_number(self, state):
         return self._handle_generic(state, "number")
 
-    def _metric_name_default_metric(self, state, unit, domain):
+    def _metric_name_default(self, state, unit, domain):
         """Get default metric."""
         return self._default_metric
 
     @staticmethod
-    def _metric_name_attribute_metric(state, unit, domain):
+    def _metric_name_attribute(state, unit, domain):
         """Get metric based on device class attribute."""
         metric = state.attributes.get(ATTR_DEVICE_CLASS)
         if metric is not None:
             return f"{domain}_{metric}_{unit}"
         return None
 
-    def _metric_name_override_metric(self, state, unit, domain):
+    def _metric_name_override(self, state, unit, domain):
         """Get metric from override in configuration."""
         if self._override_metric:
             return self._override_metric
         return None
 
-    def _metric_name_override_component_metric(self, state, unit, domain):
+    def _metric_name_override_component(self, state, unit, domain):
         """Get metric from override in component confioguration."""
         return self._component_config.get(state.entity_id).get(CONF_OVERRIDE_METRIC)
 
     @staticmethod
-    def _metric_name_fallback_metric(state, unit, domain):
+    def _metric_name_fallback(state, unit, domain):
         """Get metric from fallback logic for compatibility."""
         if unit in (None, ""):
             try:
