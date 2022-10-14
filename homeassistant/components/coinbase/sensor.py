@@ -184,8 +184,8 @@ class ExchangeRateSensor(SensorEntity):
         self._precision = precision
         self._attr_icon = CURRENCY_ICONS.get(exchange_currency, DEFAULT_COIN_ICON)
         self._attr_native_value = round(
-            1 / float(self._coinbase_data.exchange_rates[API_RATES][self._currency]),
-            self._precision,
+            1 / float(coinbase_data.exchange_rates[API_RATES][exchange_currency]),
+            precision,
         )
         self._attr_native_unit_of_measurement = exchange_base
         self._attr_state_class = SensorStateClass.MEASUREMENT
