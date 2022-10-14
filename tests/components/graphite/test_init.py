@@ -125,12 +125,38 @@ async def test_start(hass, mock_socket, mock_time):
     assert mock_socket.return_value.close.call_count == 1
 
 
-async def test_shutdown(graphite_feeder):
+async def test_shutdown(hass, mock_socket, mock_time):
     """Test the shutdown."""
-    with mock.patch.object(graphite_feeder, "_queue") as mock_queue:
-        graphite_feeder.shutdown("event")
-        assert mock_queue.put.call_count == 1
-        assert mock_queue.put.call_args == mock.call(graphite_feeder._quit_object)
+    mock_time.return_value = 12345
+    assert await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
+    await hass.async_block_till_done()
+    mock_socket.reset_mock()
+
+    await hass.async_start()
+
+    hass.states.async_set("test.entity", STATE_ON)
+    await asyncio.sleep(0.1)
+
+    assert mock_socket.return_value.connect.call_count == 1
+    assert mock_socket.return_value.connect.call_args == mock.call(("localhost", 2003))
+    assert mock_socket.return_value.sendall.call_count == 1
+    assert mock_socket.return_value.sendall.call_args == mock.call(
+        b"ha.test.entity.state 1.000000 12345"
+    )
+    assert mock_socket.return_value.send.call_count == 1
+    assert mock_socket.return_value.send.call_args == mock.call(b"\n")
+    assert mock_socket.return_value.close.call_count == 1
+
+    mock_socket.reset_mock()
+
+    await hass.async_stop()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", STATE_OFF)
+    await asyncio.sleep(0.1)
+
+    assert mock_socket.return_value.connect.call_count == 0
+    assert mock_socket.return_value.sendall.call_count == 0
 
 
 def test_event_listener(graphite_feeder):
