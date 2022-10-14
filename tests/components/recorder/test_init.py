@@ -665,6 +665,23 @@ def test_recorder_setup_failure(hass):
     hass.stop()
 
 
+def test_recorder_validate_schema_failure(hass):
+    """Test some exceptions."""
+    recorder_helper.async_initialize_recorder(hass)
+    with patch(
+        "homeassistant.components.recorder.migration._get_schema_version"
+    ) as inspect_schema_version, patch(
+        "homeassistant.components.recorder.core.time.sleep"
+    ):
+        inspect_schema_version.side_effect = ImportError("driver not found")
+        rec = _default_recorder(hass)
+        rec.async_initialize()
+        rec.start()
+        rec.join()
+
+    hass.stop()
+
+
 def test_recorder_setup_failure_without_event_listener(hass):
     """Test recorder setup failure when the event listener is not setup."""
     recorder_helper.async_initialize_recorder(hass)
@@ -985,54 +1002,48 @@ def test_statistics_runs_initiated(hass_recorder):
             ) - timedelta(minutes=5)
 
 
-def test_compile_missing_statistics(tmpdir):
+@pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
+def test_compile_missing_statistics(tmpdir, freezer):
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
-    ):
+    hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
 
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-        hass.start()
-        wait_recording_done(hass)
-        wait_recording_done(hass)
+    with session_scope(hass=hass) as session:
+        statistics_runs = list(session.query(StatisticsRuns))
+        assert len(statistics_runs) == 1
+        last_run = process_timestamp(statistics_runs[0].start)
+        assert last_run == now - timedelta(minutes=5)
 
-        with session_scope(hass=hass) as session:
-            statistics_runs = list(session.query(StatisticsRuns))
-            assert len(statistics_runs) == 1
-            last_run = process_timestamp(statistics_runs[0].start)
-            assert last_run == now - timedelta(minutes=5)
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
 
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-        hass.stop()
+    # Start Home Assistant one hour later
+    freezer.tick(timedelta(hours=1))
+    hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=now + timedelta(hours=1),
-    ):
+    with session_scope(hass=hass) as session:
+        statistics_runs = list(session.query(StatisticsRuns))
+        assert len(statistics_runs) == 13  # 12 5-minute runs
+        last_run = process_timestamp(statistics_runs[1].start)
+        assert last_run == now
 
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-        hass.start()
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-
-        with session_scope(hass=hass) as session:
-            statistics_runs = list(session.query(StatisticsRuns))
-            assert len(statistics_runs) == 13  # 12 5-minute runs
-            last_run = process_timestamp(statistics_runs[1].start)
-            assert last_run == now
-
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-        hass.stop()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
 
 
 def test_saving_sets_old_state(hass_recorder):
@@ -1632,7 +1643,7 @@ async def test_disable_echo(hass, db_url, echo, caplog):
 
 
 @pytest.mark.parametrize(
-    "config_url, connect_args",
+    "config_url, expected_connect_args",
     (
         (
             "mariadb://user:password@SERVER_IP/DB_NAME",
@@ -1660,15 +1671,15 @@ async def test_disable_echo(hass, db_url, echo, caplog):
         ),
         (
             "postgresql://blabla",
-            None,
+            {},
         ),
         (
             "sqlite://blabla",
-            None,
+            {},
         ),
     ),
 )
-async def test_mysql_missing_utf8mb4(hass, config_url, connect_args):
+async def test_mysql_missing_utf8mb4(hass, config_url, expected_connect_args):
     """Test recorder fails to setup if charset=utf8mb4 is missing from db_url."""
     recorder_helper.async_initialize_recorder(hass)
 
@@ -1684,7 +1695,10 @@ async def test_mysql_missing_utf8mb4(hass, config_url, connect_args):
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
         create_engine_mock.assert_called_once()
-        assert create_engine_mock.mock_calls[0][2].get("connect_args") == connect_args
+
+        connect_args = create_engine_mock.mock_calls[0][2].get("connect_args", {})
+        for key, value in expected_connect_args.items():
+            assert connect_args[key] == value
 
 
 @pytest.mark.parametrize(
@@ -1754,4 +1768,4 @@ async def test_connect_args_priority(hass, config_url):
                 }
             },
         )
-    assert connect_params == [{"charset": "utf8mb4"}]
+    assert connect_params[0]["charset"] == "utf8mb4"

@@ -75,18 +75,6 @@ If the code communicates with devices, web services, or third-party tools:
 - [ ] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
 - [ ] Untested files have been added to `.coveragerc`.
 
-The integration reached or maintains the following [Integration Quality Scale][quality-scale]:
-<!--
-  The Integration Quality Scale scores an integration on the code quality
-  and user experience. Each level of the quality scale consists of a list
-  of requirements. We highly recommend getting your integration scored!
--->
-
-- [ ] No score or internal
-- [ ] 🥈 Silver
-- [ ] 🥇 Gold
-- [ ] 🏆 Platinum
-
 <!--
   This project is very active and we have a high turnover of pull requests.
 

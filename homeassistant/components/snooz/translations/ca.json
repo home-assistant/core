@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "wait_for_pairing_mode": "Per completar la configuraci\u00f3, posa el dispositiu en mode de vinculaci\u00f3. \n\n### Com entrar en el mode de vinculaci\u00f3\n1. For\u00e7a el tancament de les aplicacions m\u00f2bils SNOOZ.\n2. Mant\u00e9 premut el bot\u00f3 d'engegada del dispositiu i allibera'l quan els llums comencin a parpellejar (despr\u00e9s d'uns 5 segons)."
+        },
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vols configurar {name}?"
+            },
+            "pairing_timeout": {
+                "description": "El dispositiu no ha entrat en mode de vinculaci\u00f3. Fes clic a Envia per tornar-ho a intentar.\n\n### Resoluci\u00f3 de problemes\n1. Comprova que el dispositiu no estigui connectat a l'aplicaci\u00f3 m\u00f2bil.\n2. Desconnecta el dispositiu durant 5 segons i, a continuaci\u00f3, torna'l a connectar."
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositiu"
+                },
+                "description": "Tria un dispositiu a configurar"
+            }
+        }
+    }
+}

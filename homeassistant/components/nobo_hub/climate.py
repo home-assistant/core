@@ -1,7 +1,6 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pynobo import nobo
@@ -24,7 +23,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_VIA_DEVICE,
-    PRECISION_WHOLE,
+    PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -51,8 +50,6 @@ PRESET_MODES = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
 
 MIN_TEMPERATURE = 7
 MAX_TEMPERATURE = 40
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -87,11 +84,12 @@ class NoboZone(ClimateEntity):
 
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
-    _attr_precision = PRECISION_WHOLE
+    _attr_precision = PRECISION_TENTHS
     _attr_preset_modes = PRESET_MODES
-    # Need to poll to get preset change when in HVACMode.AUTO.
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = TEMP_CELSIUS
+    _attr_target_temperature_step = 1
+    # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
 
     def __init__(self, zone_id, hub: nobo, override_type):
         """Initialize the climate device."""

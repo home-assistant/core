@@ -12,9 +12,6 @@ AIOAladdinConnect==0.1.46
 # homeassistant.components.adax
 Adax-local==0.1.4
 
-# homeassistant.components.homekit
-HAP-python==4.5.0
-
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
@@ -426,7 +423,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.41.0
+dbus-fast==1.45.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -440,7 +437,7 @@ defusedxml==0.7.1
 deluge-client==1.7.1
 
 # homeassistant.components.lametric
-demetriek==0.2.4
+demetriek==0.3.0
 
 # homeassistant.components.denonavr
 denonavr==0.10.11
@@ -534,7 +531,7 @@ foobot_async==1.0.0
 forecast_solar==2.2.0
 
 # homeassistant.components.freebox
-freebox-api==0.0.10
+freebox-api==1.0.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -613,6 +610,9 @@ gspread==5.5.0
 # homeassistant.components.profiler
 guppy3==3.1.2
 
+# homeassistant.components.homekit
+ha-HAP-python==4.5.2
+
 # homeassistant.components.generic
 # homeassistant.components.stream
 ha-av==10.0.0b5
@@ -675,7 +675,7 @@ hyperion-py==0.7.5
 iaqualink==0.4.1
 
 # homeassistant.components.ibeacon
-ibeacon_ble==0.7.3
+ibeacon_ble==0.7.4
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -774,7 +774,7 @@ meater-python==0.0.8
 melnor-bluetooth==0.0.20
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.0.2
+meteofrance-api==1.1.0
 
 # homeassistant.components.mfi
 mficlient==0.3.0
@@ -807,7 +807,7 @@ motioneye-client==0.3.12
 mullvad-api==1.0.0
 
 # homeassistant.components.tts
-mutagen==1.45.1
+mutagen==1.46.0
 
 # homeassistant.components.mutesync
 mutesync==0.0.1
@@ -828,7 +828,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==1.4.2
 
 # homeassistant.components.nexia
-nexia==2.0.2
+nexia==2.0.4
 
 # homeassistant.components.discord
 nextcord==2.0.0a8
@@ -939,7 +939,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.21.4
+plugwise==0.25.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1009,7 +1009,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.25.2
+pyTibber==0.25.4
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -1665,7 +1665,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2022.5
+total_connect_client==2022.10
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
@@ -1740,7 +1740,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.4.9
+wallbox==0.4.10
 
 # homeassistant.components.folder_watcher
 watchdog==2.1.9
@@ -1770,7 +1770,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.10.0
 
 # homeassistant.components.knx
-xknx==1.1.0
+xknx==1.2.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -1787,7 +1787,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==1.9.2
 
 # homeassistant.components.august
-yalexs==1.2.4
+yalexs==1.2.6
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
