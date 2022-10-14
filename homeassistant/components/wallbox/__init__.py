@@ -129,7 +129,8 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             return data
         except (
-            ConnectionError, requests.exceptions.HTTPError
+            ConnectionError,
+            requests.exceptions.HTTPError,
         ) as wallbox_connection_error:
             raise UpdateFailed from wallbox_connection_error
 
