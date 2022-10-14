@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure camera",
+        "data": {
+          "ffmpeg_arguments": "FFMPEG Arguments",
+          "resolution": "Resolution",
+          "stream_source": "Stream source",
+          "sensors": "Sensors",
+          "binary_sensors": "Binary Sensors",
+          "control_light": "Control light"
+        }
+      }
+    },
+    "error": {
+      "exclusive_binary_sensors": "Binary sensors cannot be both streaming and polled"
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Amcrest YAML configuration is being removed",
+      "description": "Configuring the Amcrest platform using YAML is being removed in a future release of Home Assistant.\n\nYour existing configuration has been imported into the UI automatically. Remove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
+  }
+}

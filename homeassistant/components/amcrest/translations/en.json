@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Configuring the Amcrest platform using YAML is being removed in a future release of Home Assistant.\n\nYour existing configuration has been imported into the UI automatically. Remove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Amcrest YAML configuration is being removed"
+        }
+    },
+    "options": {
+        "error": {
+            "exclusive_binary_sensors": "Binary sensors cannot be both streaming and polled"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "binary_sensors": "Binary Sensors",
+                    "control_light": "Control light",
+                    "ffmpeg_arguments": "FFMPEG Arguments",
+                    "resolution": "Resolution",
+                    "sensors": "Sensors",
+                    "stream_source": "Stream source"
+                },
+                "title": "Configure camera"
+            }
+        }
+    }
+}

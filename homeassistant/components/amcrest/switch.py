@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DATA_AMCREST, DEVICES
+from .const import DEVICES, DOMAIN
 
 if TYPE_CHECKING:
     from . import AmcrestDevice
@@ -38,7 +38,7 @@ async def async_setup_platform(
         return
 
     name = discovery_info[CONF_NAME]
-    device = hass.data[DATA_AMCREST][DEVICES][name]
+    device = hass.data[DOMAIN][DEVICES][name]
     switches = discovery_info[CONF_SWITCHES]
     async_add_entities(
         [

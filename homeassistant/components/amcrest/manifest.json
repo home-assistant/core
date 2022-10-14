@@ -1,6 +1,7 @@
 {
   "domain": "amcrest",
   "name": "Amcrest",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/amcrest",
   "requirements": ["amcrest==1.9.7"],
   "dependencies": ["ffmpeg"],

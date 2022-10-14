@@ -56,7 +56,12 @@ omit =
     homeassistant/components/ambient_station/__init__.py
     homeassistant/components/ambient_station/binary_sensor.py
     homeassistant/components/ambient_station/sensor.py
-    homeassistant/components/amcrest/*
+    homeassistant/components/amcrest/__init__.py
+    homeassistant/components/amcrest/binary_sensor.py
+    homeassistant/components/amcrest/camera.py
+    homeassistant/components/amcrest/const.py
+    homeassistant/components/amcrest/helpers.py
+    homeassistant/components/amcrest/sensor.py
     homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/binary_sensor.py
     homeassistant/components/android_ip_webcam/sensor.py

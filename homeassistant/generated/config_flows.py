@@ -26,6 +26,7 @@ FLOWS = {
         "amberelectric",
         "ambiclimate",
         "ambient_station",
+        "amcrest",
         "android_ip_webcam",
         "androidtv",
         "anthemav",

@@ -12,15 +12,11 @@ from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    DOMAIN as CAMERA_DOMAIN,
-    Camera,
-    CameraEntityFeature,
-)
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
@@ -29,13 +25,11 @@ from homeassistant.helpers.aiohttp_client import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CAMERA_WEB_SESSION_TIMEOUT,
     CAMERAS,
     COMM_TIMEOUT,
-    DATA_AMCREST,
     DEVICES,
     DOMAIN,
     RESOLUTION_TO_STREAM,
@@ -50,8 +44,6 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=15)
-
-STREAM_SOURCE_LIST = ["snapshot", "mjpeg", "rtsp"]
 
 _SRV_EN_REC = "enable_recording"
 _SRV_DS_REC = "disable_recording"
@@ -125,35 +117,20 @@ CAMERA_SERVICES = {
 }
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
+_RESOLUTION_TO_ARG = {"high": 0, "low": 1}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up an Amcrest IP Camera."""
-    if discovery_info is None:
-        return
-
-    name = discovery_info[CONF_NAME]
-    device = hass.data[DATA_AMCREST][DEVICES][name]
+    """Set up the camera entity."""
+    name = config_entry.data[CONF_NAME]
+    device = hass.data[DOMAIN][DEVICES][config_entry.entry_id]
     entity = AmcrestCam(name, device, get_ffmpeg_manager(hass))
-
-    # 2021.9.0 introduced unique id's for the camera entity, but these were not
-    # unique for different resolution streams.  If any cameras were configured
-    # with this version, update the old entity with the new unique id.
-    serial_number = await device.api.async_serial_number
-    serial_number = serial_number.strip()
-    registry = entity_registry.async_get(hass)
-    entity_id = registry.async_get_entity_id(CAMERA_DOMAIN, DOMAIN, serial_number)
-    if entity_id is not None:
-        _LOGGER.debug("Updating unique id for camera %s", entity_id)
-        new_unique_id = f"{serial_number}-{device.resolution}-{device.channel}"
-        registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-    async_add_entities([entity], True)
+    await entity.async_update()
+    async_add_entities([entity])
 
 
 class CannotSnapshot(Exception):
@@ -182,6 +159,7 @@ class AmcrestCam(Camera):
         self._channel = device.channel
         self._token = self._auth = device.authentication
         self._control_light = device.control_light
+        self._attr_unique_id = device.serial_number
         self._is_recording: bool = False
         self._motion_detection_enabled: bool = False
         self._brand: str | None = None
@@ -259,7 +237,9 @@ class AmcrestCam(Camera):
         if self._stream_source == "mjpeg":
             # stream an MJPEG image stream directly from the camera
             websession = async_get_clientsession(self.hass)
-            streaming_url = self._api.mjpeg_url(typeno=self._resolution)
+            streaming_url = self._api.mjpeg_url(
+                typeno=_RESOLUTION_TO_ARG[self._resolution]
+            )
             stream_coro = websession.get(
                 streaming_url, auth=self._token, timeout=CAMERA_WEB_SESSION_TIMEOUT
             )
@@ -363,11 +343,11 @@ class AmcrestCam(Camera):
                 self.async_on_demand_update,
             )
         )
-        self.hass.data[DATA_AMCREST][CAMERAS].append(self.entity_id)
+        self.hass.data[DOMAIN][CAMERAS].append(self.entity_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove camera from list and disconnect from signals."""
-        self.hass.data[DATA_AMCREST][CAMERAS].remove(self.entity_id)
+        self.hass.data[DOMAIN][CAMERAS].remove(self.entity_id)
         for unsub_dispatcher in self._unsub_dispatcher:
             unsub_dispatcher()
 
@@ -391,15 +371,10 @@ class AmcrestCam(Camera):
                     self._model = resp
                 else:
                     self._model = "unknown"
-            if self._attr_unique_id is None:
-                serial_number = (await self._api.async_serial_number).strip()
-                if serial_number:
-                    self._attr_unique_id = (
-                        f"{serial_number}-{self._resolution}-{self._channel}"
-                    )
-                    _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
             if self._rtsp_url is None:
-                self._rtsp_url = await self._api.async_rtsp_url(typeno=self._resolution)
+                self._rtsp_url = await self._api.async_rtsp_url(
+                    typeno=_RESOLUTION_TO_ARG[self._resolution]
+                )
 
             (
                 self._attr_is_streaming,

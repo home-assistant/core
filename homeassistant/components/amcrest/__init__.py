@@ -17,6 +17,10 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_CONTROL
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.camera import DOMAIN as CAMERA
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_AUTHENTICATION,
@@ -32,29 +36,40 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     HTTP_BASIC_AUTHENTICATION,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import Unauthorized, UnknownUser
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 
-from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
-from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
+from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS
+from .camera import CAMERA_SERVICES
 from .const import (
+    AUTHENTICATION_LIST,
     CAMERAS,
     COMM_RETRIES,
     COMM_TIMEOUT,
-    DATA_AMCREST,
+    CONF_CONTROL_LIGHT,
+    CONF_FFMPEG_ARGUMENTS,
+    CONF_RESOLUTION,
+    CONF_STREAM_SOURCE,
+    DEFAULT_AUTHENTICATION,
+    DEFAULT_CONTROL_LIGHT,
+    DEFAULT_FFMPEG_ARGUMENTS,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_RESOLUTION,
+    DEFAULT_STREAM_SOURCE,
     DEVICES,
     DOMAIN,
     RESOLUTION_LIST,
     SERVICE_EVENT,
     SERVICE_UPDATE,
+    STREAM_SOURCE_LIST,
 )
 from .helpers import service_signal
 from .sensor import SENSOR_KEYS
@@ -62,15 +77,6 @@ from .switch import SWITCH_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_RESOLUTION = "resolution"
-CONF_STREAM_SOURCE = "stream_source"
-CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
-CONF_CONTROL_LIGHT = "control_light"
-
-DEFAULT_NAME = "Amcrest Camera"
-DEFAULT_PORT = 80
-DEFAULT_RESOLUTION = "high"
-DEFAULT_ARGUMENTS = "-pred 1"
 MAX_ERRORS = 5
 RECHECK_INTERVAL = timedelta(minutes=1)
 
@@ -79,13 +85,7 @@ NOTIFICATION_TITLE = "Amcrest Camera Setup"
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-AUTHENTICATION_LIST = {"basic": "basic"}
-
-
-def _has_unique_names(devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    names = [device[CONF_NAME] for device in devices]
-    vol.Schema(vol.Unique())(names)
-    return devices
+PLATFORMS = (BINARY_SENSOR, CAMERA, SENSOR)
 
 
 AMCREST_SCHEMA = vol.Schema(
@@ -104,13 +104,14 @@ AMCREST_SCHEMA = vol.Schema(
         vol.Optional(CONF_STREAM_SOURCE, default=STREAM_SOURCE_LIST[0]): vol.All(
             vol.In(STREAM_SOURCE_LIST)
         ),
-        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+        vol.Optional(
+            CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS
+        ): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list,
             [vol.In(BINARY_SENSOR_KEYS)],
             vol.Unique(),
-            check_binary_sensors,
         ),
         vol.Optional(CONF_SWITCHES): vol.All(
             cv.ensure_list, [vol.In(SWITCH_KEYS)], vol.Unique()
@@ -123,7 +124,7 @@ AMCREST_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)},
+    {DOMAIN: vol.All(cv.ensure_list, [AMCREST_SCHEMA])},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -313,97 +314,69 @@ def _start_event_monitor(
     thread.start()
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Amcrest IP Camera component."""
-    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up platform from a ConfigEntry."""
 
-    for device in config[DOMAIN]:
-        name: str = device[CONF_NAME]
-        username: str = device[CONF_USERNAME]
-        password: str = device[CONF_PASSWORD]
+    name = entry.data[CONF_NAME]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+    api = AmcrestChecker(
+        hass,
+        name=name,
+        host=entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        user=username,
+        password=password,
+    )
 
-        api = AmcrestChecker(
-            hass, name, device[CONF_HOST], device[CONF_PORT], username, password
-        )
-
-        ffmpeg_arguments = device[CONF_FFMPEG_ARGUMENTS]
-        resolution = RESOLUTION_LIST[device[CONF_RESOLUTION]]
-        binary_sensors = device.get(CONF_BINARY_SENSORS)
-        sensors = device.get(CONF_SENSORS)
-        switches = device.get(CONF_SWITCHES)
-        stream_source = device[CONF_STREAM_SOURCE]
-        control_light = device.get(CONF_CONTROL_LIGHT)
-
-        # currently aiohttp only works with basic authentication
-        # only valid for mjpeg streaming
-        if device[CONF_AUTHENTICATION] == HTTP_BASIC_AUTHENTICATION:
-            authentication: aiohttp.BasicAuth | None = aiohttp.BasicAuth(
-                username, password
-            )
-        else:
-            authentication = None
-
-        hass.data[DATA_AMCREST][DEVICES][name] = AmcrestDevice(
-            api,
-            authentication,
-            ffmpeg_arguments,
-            stream_source,
-            resolution,
-            control_light,
-        )
-
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, Platform.CAMERA, DOMAIN, {CONF_NAME: name}, config
-            )
-        )
-
-        event_codes = set()
-        if binary_sensors:
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass,
-                    Platform.BINARY_SENSOR,
-                    DOMAIN,
-                    {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
-                    config,
-                )
-            )
-            event_codes = {
-                event_code
-                for sensor in BINARY_SENSORS
-                if sensor.key in binary_sensors
-                and not sensor.should_poll
-                and sensor.event_codes is not None
-                for event_code in sensor.event_codes
-            }
-
-        _start_event_monitor(hass, name, api, event_codes)
-
-        if sensors:
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass,
-                    Platform.SENSOR,
-                    DOMAIN,
-                    {CONF_NAME: name, CONF_SENSORS: sensors},
-                    config,
-                )
-            )
-
-        if switches:
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass,
-                    Platform.SWITCH,
-                    DOMAIN,
-                    {CONF_NAME: name, CONF_SWITCHES: switches},
-                    config,
-                )
-            )
-
-    if not hass.data[DATA_AMCREST][DEVICES]:
+    try:
+        serial_number = await api.async_serial_number
+    except AmcrestError:
         return False
+
+    if (
+        entry.options.get(CONF_AUTHENTICATION, DEFAULT_AUTHENTICATION)
+        == HTTP_BASIC_AUTHENTICATION
+    ):
+        authentication: aiohttp.BasicAuth | None = aiohttp.BasicAuth(username, password)
+    else:
+        authentication = None
+
+    ffmpeg_arguments: str = entry.options.get(
+        CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
+    )
+    stream_source: str = entry.options.get(CONF_STREAM_SOURCE, DEFAULT_STREAM_SOURCE)
+    resolution: str = entry.options.get(CONF_RESOLUTION, DEFAULT_RESOLUTION)
+    control_light: bool = entry.options.get(CONF_CONTROL_LIGHT, DEFAULT_CONTROL_LIGHT)
+
+    hass.data.setdefault(DOMAIN, {DEVICES: {}, CAMERAS: []})
+    hass.data[DOMAIN][DEVICES][entry.entry_id] = AmcrestDevice(
+        api,
+        serial_number,
+        authentication,
+        ffmpeg_arguments,
+        stream_source,
+        resolution,
+        control_light,
+    )
+
+    event_codes = set()
+    binary_sensors = entry.options.get(CONF_BINARY_SENSORS, [])
+    if binary_sensors:
+        event_codes = {
+            event_code
+            for sensor in BINARY_SENSORS
+            if sensor.key in binary_sensors
+            and not sensor.should_poll
+            and sensor.event_codes is not None
+            for event_code in sensor.event_codes
+        }
+
+    _start_event_monitor(hass, name, api, event_codes)
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     def have_permission(user: User | None, entity_id: str) -> bool:
         return not user or user.permissions.check_entity(entity_id, POLICY_CONTROL)
@@ -420,7 +393,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # Return all entity_ids user has permission to control.
             return [
                 entity_id
-                for entity_id in hass.data[DATA_AMCREST][CAMERAS]
+                for entity_id in hass.data[DOMAIN][CAMERAS]
                 if have_permission(user, entity_id)
             ]
 
@@ -429,7 +402,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         call_ids = await async_extract_entity_ids(hass, call)
         entity_ids = []
-        for entity_id in hass.data[DATA_AMCREST][CAMERAS]:
+        for entity_id in hass.data[DOMAIN][CAMERAS]:
             if entity_id not in call_ids:
                 continue
             if not have_permission(user, entity_id):
@@ -447,7 +420,68 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_dispatcher_send(hass, service_signal(call.service, entity_id), *args)
 
     for service, params in CAMERA_SERVICES.items():
-        hass.services.async_register(DOMAIN, service, async_service_handler, params[0])
+        if not hass.services.has_service(DOMAIN, service):
+            hass.services.async_register(
+                DOMAIN, service, async_service_handler, params[0]
+            )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload the Amcrest config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        del hass.data[DOMAIN][DEVICES][entry.entry_id]
+        if len(hass.data[DOMAIN][DEVICES]) == 0:
+            del hass.data[DOMAIN]
+            for service in CAMERA_SERVICES:
+                hass.services.async_remove(DOMAIN, service)
+
+    return unload_ok
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry when it changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Amcrest IP Camera component."""
+    if DOMAIN not in config:
+        return True
+
+    for device in config[DOMAIN]:
+        new_config = {
+            CONF_NAME: device[CONF_NAME],
+            CONF_HOST: device[CONF_HOST],
+            CONF_PORT: device[CONF_PORT],
+            CONF_USERNAME: device[CONF_USERNAME],
+            CONF_PASSWORD: device[CONF_PASSWORD],
+            CONF_FFMPEG_ARGUMENTS: device[CONF_FFMPEG_ARGUMENTS],
+            CONF_RESOLUTION: device[CONF_RESOLUTION],
+            CONF_STREAM_SOURCE: device[CONF_STREAM_SOURCE],
+            CONF_AUTHENTICATION: device[CONF_AUTHENTICATION],
+            CONF_BINARY_SENSORS: device.get(CONF_BINARY_SENSORS, []),
+            CONF_SENSORS: device.get(CONF_SENSORS, []),
+            CONF_SWITCHES: device.get(CONF_SWITCHES, []),
+            CONF_CONTROL_LIGHT: device[CONF_CONTROL_LIGHT],
+        }
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=new_config
+            )
+        )
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version=None,
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
 
     return True
 
@@ -457,9 +491,10 @@ class AmcrestDevice:
     """Representation of a base Amcrest discovery device."""
 
     api: AmcrestChecker
+    serial_number: str
     authentication: aiohttp.BasicAuth | None
-    ffmpeg_arguments: list[str]
+    ffmpeg_arguments: str | list[str]
     stream_source: str
-    resolution: int
+    resolution: str
     control_light: bool
     channel: int = 0

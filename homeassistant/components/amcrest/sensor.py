@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING
 from amcrest import AmcrestError
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
+from .const import DEVICES, DOMAIN, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ SCAN_INTERVAL = timedelta(seconds=SENSOR_SCAN_INTERVAL_SECS)
 SENSOR_PTZ_PRESET = "ptz_preset"
 SENSOR_SDCARD = "sdcard"
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=SENSOR_PTZ_PRESET,
         name="PTZ Preset",
@@ -40,31 +40,27 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:sd",
     ),
 )
+SENSOR_KEYS = [description.key for description in SENSORS]
 
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up a sensor for an Amcrest IP Camera."""
-    if discovery_info is None:
-        return
-
-    name = discovery_info[CONF_NAME]
-    device = hass.data[DATA_AMCREST][DEVICES][name]
-    sensors = discovery_info[CONF_SENSORS]
-    async_add_entities(
-        [
-            AmcrestSensor(name, device, description)
-            for description in SENSOR_TYPES
-            if description.key in sensors
-        ],
-        True,
-    )
+    """Set up the sensor entities."""
+    sensors = config_entry.options.get(CONF_SENSORS, [])
+    if sensors:
+        name = config_entry.data[CONF_NAME]
+        device = hass.data[DOMAIN][DEVICES][config_entry.entry_id]
+        async_add_entities(
+            (
+                AmcrestSensor(name, device, description)
+                for description in SENSORS
+                if description.key in sensors
+            ),
+            True,
+        )
 
 
 class AmcrestSensor(SensorEntity):
@@ -80,6 +76,9 @@ class AmcrestSensor(SensorEntity):
         self._channel = device.channel
 
         self._attr_name = f"{name} {description.name}"
+        self._attr_unique_id = (
+            f"{device.serial_number}-{self.entity_description.key}-{self._channel}"
+        )
         self._attr_extra_state_attributes = {}
 
     @property
@@ -96,11 +95,6 @@ class AmcrestSensor(SensorEntity):
         sensor_type = self.entity_description.key
 
         try:
-            if self._attr_unique_id is None and (
-                serial_number := (await self._api.async_serial_number)
-            ):
-                self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
-
             if sensor_type == SENSOR_PTZ_PRESET:
                 self._attr_native_value = await self._api.async_ptz_presets_count
 
