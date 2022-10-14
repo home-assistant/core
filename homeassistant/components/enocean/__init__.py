@@ -706,6 +706,7 @@ def _get_humidity_platform_config(configs: list[EnOceanPlatformConfig]):
 def _get_a5_02_device_type(
     min_temp: int, max_temp: int
 ) -> EnOceanSupportedDeviceType | None:
+    """Return a suitable device type (or None) for the supplied temperature scale."""
     if (min_temp, max_temp) == (-40, 0):
         return EEP_A5_02_01
     if (min_temp, max_temp) == (-30, 10):
