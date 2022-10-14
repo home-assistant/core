@@ -36,7 +36,6 @@ from async_upnp_client.utils import CaseInsensitiveDict
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import (
-    APPLICATION_NAME,
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
     __version__ as current_version,
@@ -601,14 +600,14 @@ class HassUpnpServiceDevice(UpnpServerDevice):
 
     DEVICE_DEFINITION = DeviceInfo(
         device_type="urn:home-assistant.io:device:HomeAssistant:1",
-        friendly_name="Home Assistant",
+        friendly_name="filled_later_on",
         manufacturer="Home Assistant",
         manufacturer_url="https://www.home-assistant.io",
         model_description=None,
-        model_name=APPLICATION_NAME,
+        model_name="filled_later_on",
         model_number=current_version,
         model_url="https://www.home-assistant.io",
-        serial_number=None,
+        serial_number="filled_later_on",
         udn="filled_later_on",
         upc=None,
         presentation_url="https://my.home-assistant.io/",
@@ -696,6 +695,7 @@ class Server:
         HassUpnpServiceDevice.DEVICE_DEFINITION = (
             HassUpnpServiceDevice.DEVICE_DEFINITION._replace(
                 udn=udn,
+                friendly_name=f"Home Assistant - {self.hass.config.location_name}",
                 model_name=model_name,
                 presentation_url=presentation_url,
                 serial_number=serial_number,
@@ -703,9 +703,8 @@ class Server:
         )
 
         # Update icon URLs.
-        base_icon_url = get_url(self.hass, allow_cloud=False, allow_external=False)
         for index, icon in enumerate(HassUpnpServiceDevice.DEVICE_DEFINITION.icons):
-            new_url = urljoin(base_icon_url, icon.url)
+            new_url = urljoin(presentation_url, icon.url)
             HassUpnpServiceDevice.DEVICE_DEFINITION.icons[index] = icon._replace(
                 url=new_url
             )
