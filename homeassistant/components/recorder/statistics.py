@@ -1529,7 +1529,7 @@ def _filter_unique_constraint_integrity_error(
             and err.orig.pgcode == "23505"
         ):
             ignore = True
-        if dialect_name == "mysql" and hasattr(err.orig, "args"):
+        if dialect_name == SupportedDialect.MYSQL and hasattr(err.orig, "args"):
             with contextlib.suppress(TypeError):
                 if err.orig.args[0] == 1062:
                     ignore = True
