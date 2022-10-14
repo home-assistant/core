@@ -195,8 +195,8 @@ class BluetoothManager:
         # Everything is connectable so it fall into both
         # buckets since the host system can only provide
         # connectable devices
-        self._connectable_history = history.copy()
         self._all_history = history.copy()
+        self._connectable_history = history.copy()
         self.async_setup_unavailable_tracking()
 
     @hass_callback
