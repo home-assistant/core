@@ -254,7 +254,17 @@ async def test_report_with_binary_state(hass, mock_socket, mock_time):
     assert mock_socket.return_value.close.call_count == 1
 
 
-async def test_send_to_graphite_errors(hass, mock_socket, mock_time, caplog):
+@pytest.mark.parametrize(
+    "error, log_text",
+    [
+        (OSError, "Failed to send data to graphite"),
+        (socket.gaierror, "Unable to connect to host"),
+        (Exception, "Failed to process STATE_CHANGED event"),
+    ],
+)
+async def test_send_to_graphite_errors(
+    hass, mock_socket, mock_time, caplog, error, log_text
+):
     """Test the sending with errors."""
     mock_time.return_value = 12345
     assert await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
@@ -263,27 +273,9 @@ async def test_send_to_graphite_errors(hass, mock_socket, mock_time, caplog):
 
     await hass.async_start()
 
-    mock_socket.return_value.connect.side_effect = socket.error
+    mock_socket.return_value.connect.side_effect = error
 
     hass.states.async_set("test.entity", STATE_ON)
     await asyncio.sleep(0.1)
 
-    assert "Failed to send data to graphite" in caplog.text
-
-    mock_socket.reset_mock()
-
-    mock_socket.return_value.connect.side_effect = socket.gaierror
-
-    hass.states.async_set("test.entity", STATE_OFF)
-    await asyncio.sleep(0.1)
-
-    assert "Unable to connect to host" in caplog.text
-
-    mock_socket.reset_mock()
-
-    mock_socket.return_value.connect.side_effect = Exception
-
-    hass.states.async_set("test.entity", STATE_ON)
-    await asyncio.sleep(0.1)
-
-    assert "Failed to process STATE_CHANGED event" in caplog.text
+    assert log_text in caplog.text
