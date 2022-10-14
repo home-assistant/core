@@ -49,7 +49,6 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -82,7 +81,7 @@ from .util.async_ import (
 )
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
-from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from .util.unit_system import METRIC_SYSTEM, UnitSystem, get_unit_system
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -1940,9 +1939,9 @@ class Config:
         if elevation is not None:
             self.elevation = elevation
         if unit_system is not None:
-            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-                self.units = IMPERIAL_SYSTEM
-            else:
+            try:
+                self.units = get_unit_system(unit_system)
+            except ValueError:
                 self.units = METRIC_SYSTEM
         if location_name is not None:
             self.location_name = location_name
@@ -2015,7 +2014,7 @@ class Config:
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
-            # We don't want any components to use the name of the unit system
+            # We don't want any integrations to use the name of the unit system
             # so we are using the private attribute here
             "unit_system": self.units._name,  # pylint: disable=protected-access
             "location_name": self.location_name,
