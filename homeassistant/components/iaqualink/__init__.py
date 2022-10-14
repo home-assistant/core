@@ -159,7 +159,7 @@ async def async_setup_entry(  # noqa: C901
                     )
             else:
                 cur = system.online
-                if cur is True and prev is not True:
+                if cur and not prev:
                     _LOGGER.warning("System %s reconnected to iAqualink", system.serial)
 
             async_dispatcher_send(hass, DOMAIN)
