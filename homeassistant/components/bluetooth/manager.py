@@ -209,7 +209,8 @@ class BluetoothManager:
             self._cancel_unavailable_tracking = None
         uninstall_multiple_bleak_catcher()
 
-    async def async_get_discovered_devices_and_advertisement_data_by_address(
+    @hass_callback
+    def async_get_discovered_devices_and_advertisement_data_by_address(
         self, address: str, connectable: bool
     ) -> list[tuple[BLEDevice, AdvertisementData]]:
         """Get devices and advertisement_data by address."""

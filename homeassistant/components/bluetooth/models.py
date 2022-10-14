@@ -287,7 +287,7 @@ class HaBleakClientWrapper(BleakClient):
         """Connect to the specified GATT server."""
         if not self._backend:
             wrapped_backend = (
-                self._async_get_backend() or await self._async_get_fallback_backend()
+                self._async_get_backend() or self._async_get_fallback_backend()
             )
             self._backend = wrapped_backend.client(
                 await freshen_ble_device(wrapped_backend.device)
@@ -331,7 +331,8 @@ class HaBleakClientWrapper(BleakClient):
 
         return None
 
-    async def _async_get_fallback_backend(self) -> _HaWrappedBleakBackend:
+    @hass_callback
+    def _async_get_fallback_backend(self) -> _HaWrappedBleakBackend:
         """Get a fallback backend for the given address."""
         #
         # The preferred backend cannot currently connect the device
@@ -342,8 +343,10 @@ class HaBleakClientWrapper(BleakClient):
         #
         assert MANAGER is not None
         address = self.__address
-        device_advertisement_datas = await MANAGER.async_get_discovered_devices_and_advertisement_data_by_address(
-            address, True
+        device_advertisement_datas = (
+            MANAGER.async_get_discovered_devices_and_advertisement_data_by_address(
+                address, True
+            )
         )
         for device_advertisement_data in sorted(
             device_advertisement_datas,
