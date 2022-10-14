@@ -31,6 +31,7 @@ from .enocean_supported_device_type import (
     EEP_D2_01_13,
     EEP_D2_01_14,
     EEP_F6_02_01,
+    ELTAKO_FUD61,
     EnOceanSupportedDeviceType,
 )
 
@@ -57,17 +58,17 @@ class EnOceanImportConfig:
 
     new_unique_ids: list[str]
     old_unique_ids: dict[str, str]
-    device_type: EnOceanSupportedDeviceType | None
+    device_type: EnOceanSupportedDeviceType
     device_name: str
     sender_id: str | None
 
     def __init__(
         self,
+        device_type: EnOceanSupportedDeviceType,
         new_unique_ids: list[str],
         old_unique_ids: dict[str, str],
-        device_type: EnOceanSupportedDeviceType | None,
-        sender_id: str | None,
-        device_name: str,
+        sender_id: str | None = None,
+        device_name: str = "",
     ) -> None:
         """Create a new EnOcean import configuration."""
         self.new_unique_ids = new_unique_ids
@@ -210,7 +211,7 @@ def _setup_yaml_import(
         for device_id, configs in enocean_platform_configs.items():
             # skip configured devices
             if _is_configured(
-                dev_id_string=device_id,
+                device_id=device_id,
                 configured_enocean_devices=configured_enocean_devices,
             ):
                 LOGGER.debug(
@@ -223,11 +224,11 @@ def _setup_yaml_import(
             old_unique_ids[device_id] = {}
             old_entities[device_id] = {}
 
-            import_config: EnOceanImportConfig = _get_import_config(
+            import_config = _get_import_config(
                 dev_id_string=device_id, platform_configs=configs
             )
 
-            if import_config.device_type is None:
+            if import_config is None:
                 continue
 
             new_unique_ids[device_id] = import_config.new_unique_ids
@@ -323,10 +324,10 @@ def _setup_yaml_import(
     return True
 
 
-def _is_configured(dev_id_string: str, configured_enocean_devices):
+def _is_configured(device_id: str, configured_enocean_devices):
     """Check if an EnOcean device with the given id was already configured."""
     for device in configured_enocean_devices:
-        if device[CONF_ENOCEAN_DEVICE_ID] == dev_id_string:
+        if device[CONF_ENOCEAN_DEVICE_ID] == device_id:
             return True
 
     return False
@@ -335,91 +336,64 @@ def _is_configured(dev_id_string: str, configured_enocean_devices):
 def _get_import_config(
     dev_id_string: str,
     platform_configs: list[EnOceanPlatformConfig],
-) -> EnOceanImportConfig:
+) -> EnOceanImportConfig | None:
     """Return a list of EnOcean import configurations for the supplied EnOcean platform configurations."""
 
-    # group platform configs by platform
-    platform_configs_by_platform: dict[str, list[EnOceanPlatformConfig]] = {}
+    # ensure that only one platform is configured for this device
+    platform = platform_configs[0].platform
     for platform_config in platform_configs:
-        if platform_config.platform not in platform_configs_by_platform:
-            platform_configs_by_platform[platform_config.platform] = [platform_config]
-        else:
-            platform_configs_by_platform[platform_config.platform].append(
-                platform_config
+        if platform_config.platform != platform:
+            LOGGER.warning(
+                "Cannot import EnOcean device '%s' because it has different platforms"
             )
+            return None
 
-    # iterate platforms
-    for platform, configs in platform_configs_by_platform.items():
-        if platform == Platform.BINARY_SENSOR.value:
-            config = configs[0].config
-            device_name = config.get(CONF_ENOCEAN_DEVICE_NAME, "").strip()
-            device_class = config.get("device_class", None)
+    if platform == Platform.BINARY_SENSOR.value:
+        return _get_binary_sensor_import_config(
+            device_id=dev_id_string, configs=platform_configs
+        )
 
-            if len(configs) > 1:
-                LOGGER.warning(
-                    "Cannot import more than one platform config for 'binary sensor' EnOcean device %s (invalid configuration.yaml). Will use the first platform config with name '%s' and device class '%s'",
-                    dev_id_string,
-                    device_name,
-                    device_class,
-                )
+    if platform == Platform.LIGHT.value:
+        return _get_light_import_config(
+            device_id=dev_id_string, configs=platform_configs
+        )
 
-            return _get_binary_sensor_import_config(
-                dev_id_string=dev_id_string,
-                device_name=device_name,
-                device_class=device_class,
-            )
+    if platform == Platform.SWITCH.value:
+        return _get_switch_import_config(
+            device_id=dev_id_string,
+            configs=platform_configs,
+        )
 
-        if platform == Platform.LIGHT.value:
-            config = configs[0].config
-            device_name = config.get(CONF_ENOCEAN_DEVICE_NAME, "").strip()
-            sender_id = config.get(CONF_ENOCEAN_SENDER_ID, None)
-
-            sender_id_string: str = ""
-            if sender_id is not None:
-                sender_id_string = to_hex_string(sender_id).upper()
-
-            if len(configs) > 1:
-                LOGGER.warning(
-                    "Cannot import more than one platform config for 'light' EnOcean device '%s' (invalid configuration.yaml). Will use the first platform config with sender id '%s'",
-                    dev_id_string,
-                    sender_id_string,
-                )
-
-            return _get_light_import_config(
-                dev_id_string=dev_id_string,
-                sender_id=sender_id_string,
-                device_name=device_name,
-            )
-
-        if platform == Platform.SWITCH.value:
-            return _get_switch_import_config(
-                device_id=dev_id_string,
-                platform_configs=configs,
-            )
-
-    return EnOceanImportConfig(
-        new_unique_ids=[],
-        old_unique_ids={},
-        device_type=None,
-        sender_id=None,
-        device_name="",
-    )
+    return None
 
 
 def _get_binary_sensor_import_config(
-    dev_id_string: str, device_name: str, device_class: str
+    device_id: str, configs: list[EnOceanPlatformConfig]
 ) -> EnOceanImportConfig:
     """Return an import config for a binary sensor."""
-    dev_id = from_hex_string(dev_id_string)
-    new_unique_id = dev_id_string + "-" + Platform.BINARY_SENSOR.value + "-0"
+    device_id_as_list = from_hex_string(device_id)
+    config = configs[0].config
+
+    device_name = config.get(CONF_ENOCEAN_DEVICE_NAME, "").strip()
+    if device_name == "":
+        device_name = "Imported EnOcean binary sensor " + device_id
+
+    device_class = config.get("device_class", None)
+
+    if len(configs) > 1:
+        LOGGER.warning(
+            "Cannot import more than one platform config for 'binary sensor' EnOcean device %s (invalid configuration.yaml). Will use the first platform config with name '%s' and device class '%s'",
+            device_id,
+            device_name,
+            device_class,
+        )
+
+    new_unique_id = device_id + "-" + Platform.BINARY_SENSOR.value + "-0"
 
     if device_class is None:
-        old_unique_id = str(combine_hex(dev_id)) + "-None"
+        old_unique_id = str(combine_hex(device_id_as_list)) + "-None"
     else:
-        old_unique_id = str(combine_hex(dev_id)) + "-" + device_class
-
-    if device_name == "":
-        device_name = "Imported EnOcean binary sensor " + dev_id_string
+        old_unique_id = str(combine_hex(device_id_as_list)) + "-" + device_class
 
     return EnOceanImportConfig(
         new_unique_ids=[new_unique_id],
@@ -431,35 +405,47 @@ def _get_binary_sensor_import_config(
 
 
 def _get_light_import_config(
-    dev_id_string: str, device_name: str, sender_id: str
+    device_id: str, configs: list[EnOceanPlatformConfig]
 ) -> EnOceanImportConfig:
     """Return an import config for a light."""
-    dev_id = from_hex_string(dev_id_string)
-    new_unique_id = dev_id_string + "-" + Platform.LIGHT.value + "-0"
-    old_unique_id = str(combine_hex(dev_id))
+    device_id_as_list = from_hex_string(device_id)
+    config = configs[0].config
 
+    device_name = config.get(CONF_ENOCEAN_DEVICE_NAME, "").strip()
     if device_name == "":
-        device_name = "Imported EnOcean light " + dev_id_string
+        device_name = "Imported EnOcean light " + device_id
 
-    device_type = EnOceanSupportedDeviceType(
-        eep="A5-38-08_EltakoFUD61", manufacturer="Eltako", model="FUD61NPN"
-    )
+    sender_id_as_list = config.get(CONF_ENOCEAN_SENDER_ID, None)
+
+    sender_id: str = ""
+    if sender_id_as_list is not None:
+        sender_id = to_hex_string(sender_id_as_list).upper()
+
+    if len(configs) > 1:
+        LOGGER.warning(
+            "Cannot import more than one platform config for 'light' EnOcean device '%s' (invalid configuration.yaml). Will use the first platform config with sender id '%s'",
+            device_id,
+            sender_id,
+        )
+
+    new_unique_id = device_id + "-" + Platform.LIGHT.value + "-0"
+    old_unique_id = str(combine_hex(device_id_as_list))
 
     return EnOceanImportConfig(
         new_unique_ids=[new_unique_id],
         old_unique_ids={new_unique_id: old_unique_id},
-        device_type=device_type,
-        sender_id=sender_id,
+        device_type=ELTAKO_FUD61,
+        sender_id=sender_id_as_list,
         device_name=device_name,
     )
 
 
 def _get_switch_import_config(
     device_id: str,
-    platform_configs: list[EnOceanPlatformConfig],
+    configs: list[EnOceanPlatformConfig],
 ) -> EnOceanImportConfig:
     """Return an import config for a switch."""
-    dev_id = from_hex_string(device_id)
+    device_id_as_list = from_hex_string(device_id)
 
     # 1 channel device
     device_type = EEP_D2_01_07
@@ -471,17 +457,17 @@ def _get_switch_import_config(
     device_name = ""
 
     # iterate configs to determine unique ids and required channels
-    for platform_config in platform_configs:
+    for config in configs:
         if device_name == "":
-            device_name = platform_config.config.get("name", "")
+            device_name = config.config.get("name", "")
 
-        channel = platform_config.config.get("channel", 0)
+        channel = config.config.get("channel", 0)
         max_channel = max(max_channel, channel)
 
         new_unique_id = device_id + "-" + Platform.SWITCH.value + "-" + str(channel)
         new_unique_ids.append(new_unique_id)
 
-        old_unique_id = str(combine_hex(dev_id)) + "-" + str(channel)
+        old_unique_id = str(combine_hex(device_id_as_list)) + "-" + str(channel)
         old_unique_ids[new_unique_id] = old_unique_id
 
     if device_name == "":
@@ -508,6 +494,16 @@ def _get_switch_import_config(
         device_name=device_name,
         sender_id="",
     )
+
+
+def _get_sensor_import_config(
+    device_id: str,
+    configs: list[EnOceanPlatformConfig],
+) -> EnOceanImportConfig | None:
+    """Return an import config for a switch."""
+    # device_id_as_list = from_hex_string(device_id)
+
+    return None
 
 
 @callback
