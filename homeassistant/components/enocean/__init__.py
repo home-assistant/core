@@ -26,11 +26,38 @@ from .config_flow import (
 from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, LOGGER, PLATFORMS
 from .dongle import EnOceanDongle
 from .enocean_supported_device_type import (
+    EEP_A5_02_0A,
+    EEP_A5_02_0B,
+    EEP_A5_02_01,
+    EEP_A5_02_1A,
+    EEP_A5_02_1B,
+    EEP_A5_02_02,
+    EEP_A5_02_03,
+    EEP_A5_02_04,
+    EEP_A5_02_05,
+    EEP_A5_02_06,
+    EEP_A5_02_07,
+    EEP_A5_02_08,
+    EEP_A5_02_09,
+    EEP_A5_02_10,
+    EEP_A5_02_11,
+    EEP_A5_02_12,
+    EEP_A5_02_13,
+    EEP_A5_02_14,
+    EEP_A5_02_15,
+    EEP_A5_02_16,
+    EEP_A5_02_17,
+    EEP_A5_02_18,
+    EEP_A5_02_19,
+    EEP_A5_04_01,
+    EEP_A5_04_02,
+    EEP_A5_12_01,
     EEP_D2_01_07,
     EEP_D2_01_11,
     EEP_D2_01_13,
     EEP_D2_01_14,
     EEP_F6_02_01,
+    EEP_F6_10_00,
     ELTAKO_FUD61,
     EnOceanSupportedDeviceType,
 )
@@ -364,6 +391,12 @@ def _get_import_config(
             configs=platform_configs,
         )
 
+    if platform == Platform.SENSOR.value:
+        return _get_sensor_import_config(
+            device_id=dev_id_string,
+            configs=platform_configs,
+        )
+
     return None
 
 
@@ -501,7 +534,224 @@ def _get_sensor_import_config(
     configs: list[EnOceanPlatformConfig],
 ) -> EnOceanImportConfig | None:
     """Return an import config for a switch."""
-    # device_id_as_list = from_hex_string(device_id)
+    device_id_as_list = from_hex_string(device_id)
+    device_id_as_number = combine_hex(device_id_as_list)
+
+    # first config defines device name
+    config0 = configs[0]
+    device_name = config0.config.get("name", "").strip()
+    device_class = config0.config.get("device_class", "")
+
+    if device_name == "":
+        device_name = "Imported EnOcean " + device_class + " sensor " + device_id
+
+    new_unique_id = device_id + "-" + device_class
+    old_unique_id = str(device_id_as_number) + "-" + device_class
+
+    if device_class == "power":
+        if len(configs) > 1:
+            LOGGER.warning(
+                "EnOcean device %s will be imported as power sensor (EEP A5-12-01); the other configurations will not be imported and must be imported manually",
+                device_id,
+            )
+        return EnOceanImportConfig(
+            device_type=EEP_A5_12_01,
+            new_unique_ids=[new_unique_id],
+            old_unique_ids={new_unique_id: old_unique_id},
+            device_name=device_name,
+        )
+
+    if device_class == "windowhandle":
+        if len(configs) > 1:
+            LOGGER.warning(
+                "EnOcean device %s will be imported as window handle sensor (EEP F6-10-00); the other configurations will not be imported and must be imported manually",
+                device_id,
+            )
+
+        return EnOceanImportConfig(
+            device_type=EEP_F6_10_00,
+            new_unique_ids=[new_unique_id],
+            old_unique_ids={new_unique_id: old_unique_id},
+            device_name=device_name,
+        )
+
+    # only remaining sensor types are temperature sensors and combined temperature/humidity sensors
+    humidity_config = None
+    temperature_config = None
+
+    if device_class == "humidity":
+        humidity_config = config0
+        temperature_config = _get_temperature_platform_config(configs)
+
+    if device_class == "temperature":
+        # find humidity sensor (if any)
+        temperature_config = config0
+        humidity_config = _get_humidity_platform_config(configs)
+
+    if temperature_config is not None:
+        # get additional config data
+        min_temp = temperature_config.config.get("min_temp", 0)
+        max_temp = temperature_config.config.get("max_temp", 40)
+        range_from = temperature_config.config.get("range_from", 255)
+        range_to = temperature_config.config.get("range_to", 0)
+
+        # step 1: check if a humidity sensor is configured
+        # then it can be either  A5-04-01/02 Temperature and Humidity sensors
+        # or one of the room panels A5-10-10 - A5-10-14 with humidity sensor
+        # but since we cannot differentiate A5-04-01/02 and the room operating panels  using the configuration data,
+        # we will just configure A5-04-01/02
+        if humidity_config is not None:
+            device_type = None
+
+            if range_from != 0 or range_to != 250:
+                LOGGER.warning(
+                    "Cannot import EnOcean device %s temperature/humidity sensor combination: unsupported range %i - %i",
+                    device_id,
+                    range_from,
+                    range_to,
+                )
+                return None
+
+            if min_temp == 0 and max_temp == 40:
+                device_type = EEP_A5_04_01
+
+            if min_temp == -20 and max_temp == 60:
+                device_type = EEP_A5_04_02
+
+            if device_type is None:
+                LOGGER.warning(
+                    "Cannot import EnOcean device %s temperature/humidity sensor combination: unsupported scale %i°C - %i°C",
+                    device_id,
+                    range_from,
+                    range_to,
+                )
+                return None
+
+            new_unique_id_temperature = device_id + "-temperature"
+            new_unique_id_humidity = device_id + "-humidity"
+
+            old_unique_id_temperature = device_id_as_number + "-temperature"
+            old_unique_id_humidity = device_id_as_number + "-humidity"
+
+            return EnOceanImportConfig(
+                device_type=device_type,
+                new_unique_ids=[
+                    new_unique_id_temperature,
+                    new_unique_id_humidity,
+                ],
+                old_unique_ids={
+                    new_unique_id_temperature: old_unique_id_temperature,
+                    new_unique_id_humidity: old_unique_id_humidity,
+                },
+                device_name=device_name,
+            )
+
+        # find correct temperature sensor (still TODO!)
+        device_type = None
+
+        # there are two valid ranges:
+        # 1: 255-0 (default) -> A5-02 temperature sensors
+        # 2: 0-250 (alternative) -> A5-04-01/02 temperature/humidity sensor, or A5-10-10 - A5-10-14 room operating panels (with temperature/humidity) or A5-20-01 (BI-DIR)
+        range_variant = 0  # (invalid)
+        if range_from == 255 and range_to == 0:
+            range_variant = 1
+        elif range_from == 0 and range_to == 250:
+            range_variant = 2
+
+        if range_variant == 0:  # (invalid)
+            LOGGER.warning(
+                "Cannot import EnOcean device %s temperature/humidity sensor combination: unsupported range %i - %i",
+                device_id,
+                range_from,
+                range_to,
+            )
+            return None
+
+        if range_variant == 1:  # (255-0) -> A5-02 temperature sensors
+            device_type = _get_a5_02_device_type(min_temp=min_temp, max_temp=max_temp)
+            if device_type is None:
+                LOGGER.warning(
+                    "Cannot import EnOcean device %s temperature/humidity sensor combination: unsupported scale %i°C - %i°C",
+                    device_id,
+                    range_from,
+                    range_to,
+                )
+                return None
+
+            return EnOceanImportConfig(
+                device_type=device_type,
+                new_unique_ids=[new_unique_id],
+                old_unique_ids={new_unique_id: old_unique_id},
+                device_name=device_name,
+            )
+
+        # range_variant ==  (0-250)
+
+        return None
+    return None
+
+
+def _get_temperature_platform_config(configs: list[EnOceanPlatformConfig]):
+    for config in configs:
+        if config.config.get("device_class", "") == "temperature":
+            return config
+
+
+def _get_humidity_platform_config(configs: list[EnOceanPlatformConfig]):
+    for config in configs:
+        if config.config.get("device_class", "") == "humidity":
+            return config
+
+
+def _get_a5_02_device_type(
+    min_temp: int, max_temp: int
+) -> EnOceanSupportedDeviceType | None:
+    if (min_temp, max_temp) == (-40, 0):
+        return EEP_A5_02_01
+    if (min_temp, max_temp) == (-30, 10):
+        return EEP_A5_02_02
+    if (min_temp, max_temp) == (-20, 20):
+        return EEP_A5_02_03
+    if (min_temp, max_temp) == (-10, 30):
+        return EEP_A5_02_04
+    if (min_temp, max_temp) == (0, 40):
+        return EEP_A5_02_05
+    if (min_temp, max_temp) == (10, 50):
+        return EEP_A5_02_06
+    if (min_temp, max_temp) == (20, 60):
+        return EEP_A5_02_07
+    if (min_temp, max_temp) == (30, 70):
+        return EEP_A5_02_08
+    if (min_temp, max_temp) == (40, 80):
+        return EEP_A5_02_09
+    if (min_temp, max_temp) == (50, 90):
+        return EEP_A5_02_0A
+    if (min_temp, max_temp) == (60, 100):
+        return EEP_A5_02_0B
+    if (min_temp, max_temp) == (-60, 20):
+        return EEP_A5_02_10
+    if (min_temp, max_temp) == (-50, 30):
+        return EEP_A5_02_11
+    if (min_temp, max_temp) == (-40, 40):
+        return EEP_A5_02_12
+    if (min_temp, max_temp) == (-30, 50):
+        return EEP_A5_02_13
+    if (min_temp, max_temp) == (-20, 60):
+        return EEP_A5_02_14
+    if (min_temp, max_temp) == (-10, 70):
+        return EEP_A5_02_15
+    if (min_temp, max_temp) == (0, 80):
+        return EEP_A5_02_16
+    if (min_temp, max_temp) == (10, 90):
+        return EEP_A5_02_17
+    if (min_temp, max_temp) == (20, 100):
+        return EEP_A5_02_18
+    if (min_temp, max_temp) == (30, 110):
+        return EEP_A5_02_19
+    if (min_temp, max_temp) == (40, 120):
+        return EEP_A5_02_1A
+    if (min_temp, max_temp) == (50, 130):
+        return EEP_A5_02_1B
 
     return None
 

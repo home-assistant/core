@@ -31,6 +31,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import (
+    EnOceanPlatformConfig,
+    register_platform_config_for_migration_to_config_entry,
+)
 from .config_flow import (
     CONF_ENOCEAN_DEVICE_ID,
     CONF_ENOCEAN_DEVICE_NAME,
@@ -128,38 +132,43 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an EnOcean sensor device."""
-    dev_id: list[int] = config[CONF_ID]
-    dev_name: str = config[CONF_NAME]
-    sensor_type: str = config[CONF_DEVICE_CLASS]
+    register_platform_config_for_migration_to_config_entry(
+        EnOceanPlatformConfig(platform=Platform.SENSOR.value, config=config)
+    )
 
-    entities: list[EnOceanSensor] = []
-    if sensor_type == SENSOR_TYPE_TEMPERATURE:
-        temp_min: int = config[CONF_MIN_TEMP]
-        temp_max: int = config[CONF_MAX_TEMP]
-        range_from: int = config[CONF_RANGE_FROM]
-        range_to: int = config[CONF_RANGE_TO]
-        entities = [
-            EnOceanTemperatureSensor(
-                dev_id,
-                dev_name,
-                SENSOR_DESC_TEMPERATURE,
-                scale_min=temp_min,
-                scale_max=temp_max,
-                range_from=range_from,
-                range_to=range_to,
-            )
-        ]
+    # dev_id = config[CONF_ID]
+    # dev_name = config[CONF_NAME]
+    # sensor_type = config[CONF_DEVICE_CLASS]
 
-    elif sensor_type == SENSOR_TYPE_HUMIDITY:
-        entities = [EnOceanHumiditySensor(dev_id, dev_name, SENSOR_DESC_HUMIDITY)]
+    # entities: list[EnOceanSensor] = []
+    # if sensor_type == SENSOR_TYPE_TEMPERATURE:
+    #     temp_min = config[CONF_MIN_TEMP]
+    #     temp_max = config[CONF_MAX_TEMP]
+    #     range_from = config[CONF_RANGE_FROM]
+    #     range_to = config[CONF_RANGE_TO]
+    #     entities = [
+    #         EnOceanTemperatureSensor(
+    #             dev_id,
+    #             dev_name,
+    #             SENSOR_DESC_TEMPERATURE,
+    #             scale_min=temp_min,
+    #             scale_max=temp_max,
+    #             range_from=range_from,
+    #             range_to=range_to,
+    #         )
+    #     ]
 
-    elif sensor_type == SENSOR_TYPE_POWER:
-        entities = [EnOceanPowerSensor(dev_id, dev_name, SENSOR_DESC_POWER)]
+    # elif sensor_type == SENSOR_TYPE_HUMIDITY:
+    #     entities = [EnOceanHumiditySensor(dev_id, dev_name, SENSOR_DESC_HUMIDITY)]
 
-    elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
-        entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
+    # elif sensor_type == SENSOR_TYPE_POWER:
+    #     entities = [EnOceanPowerSensor(dev_id, dev_name, SENSOR_DESC_POWER)]
 
-    add_entities(entities)
+    # elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
+    #     entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
+
+    # if entities:
+    #     add_entities(entities)
 
 
 async def async_setup_entry(
@@ -184,7 +193,9 @@ async def async_setup_entry(
 
         # temperature sensors (EEP A5-02)
         if eep[0:5] == "A5-02":
-            min_temp, max_temp = _get_a5_02_min_max_temp(eep)
+            min_temp, max_temp = _get_a5_02_min_max_temp(
+                to_hex_string(device_id).upper(), eep
+            )
             async_add_entities(
                 [
                     EnOceanTemperatureSensor(
@@ -493,24 +504,25 @@ class EnOceanWindowHandle(EnOceanSensor):
         self.schedule_update_ha_state()
 
 
-def _get_a5_02_min_max_temp(eep: str):
+def _get_a5_02_min_max_temp(device_id: str, eep: str):
     """Determine the min and max temp for an A5-02-XX temperature sensor."""
     sensor_range_type = int(eep[6:8], 16)
 
-    if sensor_range_type in range(0x01, 0x0B):
+    if sensor_range_type in range(0x01, 0x0B + 1):
         multiplier = sensor_range_type - 0x01
         min_temp = -40 + multiplier * 10
         max_temp = multiplier * 10
         return min_temp, max_temp
 
-    if sensor_range_type in range(0x10, 0x1B):
+    if sensor_range_type in range(0x10, 0x1B + 1):
         multiplier = sensor_range_type - 0x10
         min_temp = -60 + multiplier * 10
         max_temp = 20 + multiplier * 10
         return min_temp, max_temp
 
     LOGGER.warning(
-        "Unsupported A5-02-XX temperature sensor with EEP %s; using default values (min_temp = 0, max_temp = 40)",
+        "EnOcean device %s is an unsupported A5-02-XX temperature sensor with EEP %s; using default values (min_temp = 0, max_temp = 40)",
+        device_id,
         eep,
     )
     return 0, 40
