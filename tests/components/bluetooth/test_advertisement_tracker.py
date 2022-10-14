@@ -33,7 +33,7 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout(
 ):
     """Test we can determine the advertisement interval."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = BLEDevice("44:44:33:11:23:12", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
@@ -77,7 +77,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_connectab
 ):
     """Test device with a long advertisement interval."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = BLEDevice("44:44:33:11:23:18", "wohand")
     switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
     )
@@ -227,9 +227,11 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
 ):
     """Test device with a short advertisement interval with an adapter change that is not connectable."""
     start_monotonic_time = time.monotonic()
-    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_device = BLEDevice("44:44:33:11:23:5C", "wohand")
     switchbot_adv = generate_advertisement_data(
-        local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        rssi=-100,
     )
     switchbot_device_went_unavailable = False
 
@@ -248,9 +250,18 @@ async def test_advertisment_interval_shorter_than_adapter_stack_timeout_adapter_
             "original",
         )
 
+    switchbot_adv_better_rssi = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        rssi=-30,
+    )
     for i in range(ADVERTISING_TIMES_NEEDED):
         inject_advertisement_with_time_and_source(
-            hass, switchbot_device, switchbot_adv, start_monotonic_time + (i * 2), "new"
+            hass,
+            switchbot_device,
+            switchbot_adv_better_rssi,
+            start_monotonic_time + (i * 2),
+            "new",
         )
 
     switchbot_device_unavailable_cancel = async_track_unavailable(
@@ -283,7 +294,9 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     start_monotonic_time = time.monotonic()
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
     switchbot_adv = generate_advertisement_data(
-        local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        rssi=-100,
     )
     switchbot_device_went_unavailable = False
 
@@ -315,11 +328,16 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
             "original",
         )
 
+    switchbot_better_rssi_adv = generate_advertisement_data(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        rssi=-30,
+    )
     for i in range(ADVERTISING_TIMES_NEEDED):
         inject_advertisement_with_time_and_source(
             hass,
             switchbot_device,
-            switchbot_adv,
+            switchbot_better_rssi_adv,
             start_monotonic_time + (i * ONE_HOUR_SECONDS),
             "new",
         )
