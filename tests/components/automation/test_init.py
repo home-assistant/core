@@ -1030,9 +1030,10 @@ async def test_reload_automation_when_blueprint_changes(hass, calls):
         await hass.async_block_till_done()
         assert len(calls) == 1
 
-        # Reload the automations without any change
+        # Reload the automations without any change, but with updated blueprint
         blueprint_path = automation.async_get_blueprints(hass).blueprint_folder
         blueprint_config = yaml.load_yaml(blueprint_path / "test_event_service.yaml")
+        blueprint_config["action"] = [blueprint_config["action"]]
         blueprint_config["action"].append(blueprint_config["action"][-1])
 
         with patch(
