@@ -306,8 +306,8 @@ class BluetoothManager:
             # If the old advertisement is stale, any new advertisement is preferred
             _LOGGER.debug(
                 "%s (%s): Switching from %s[%s] to %s[%s] (time elapsed:%s > stale seconds:%s)",
-                new.advertisement.local_name,
-                new.device.address,
+                new.name,
+                new.address,
                 old.source,
                 old.connectable,
                 new.source,
@@ -322,8 +322,8 @@ class BluetoothManager:
             # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
             _LOGGER.debug(
                 "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
-                new.advertisement.local_name,
-                new.device.address,
+                new.name,
+                new.address,
                 old.source,
                 old.connectable,
                 new.source,
