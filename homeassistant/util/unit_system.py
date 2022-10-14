@@ -220,13 +220,6 @@ def get_unit_system(key: str) -> UnitSystem:
     raise ValueError(f"`{key}` is not a valid unit system key")
 
 
-def get_default_key(use_metric: bool) -> str:
-    """Get default unit system based on location information."""
-    if use_metric:
-        return _CONF_UNIT_SYSTEM_METRIC
-    return _CONF_UNIT_SYSTEM_IMPERIAL
-
-
 validate_unit_system = vol.All(
     vol.Lower, vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_IMPERIAL)
 )

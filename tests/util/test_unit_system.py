@@ -25,7 +25,6 @@ from homeassistant.util.unit_system import (
     IMPERIAL_SYSTEM,
     METRIC_SYSTEM,
     UnitSystem,
-    get_default_key,
     get_unit_system,
 )
 
@@ -336,18 +335,6 @@ def test_deprecated_name(
         "Detected code that accesses the `name` property of the unit system."
         in caplog.text
     )
-
-
-@pytest.mark.parametrize(
-    "use_metric, expected_key",
-    [
-        (True, _CONF_UNIT_SYSTEM_METRIC),
-        (False, _CONF_UNIT_SYSTEM_IMPERIAL),
-    ],
-)
-def test_get_default_key(use_metric: bool, expected_key: str) -> None:
-    """Test get_default_key."""
-    assert get_default_key(use_metric) == expected_key
 
 
 @pytest.mark.parametrize(
