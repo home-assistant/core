@@ -46,7 +46,6 @@ from .const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
-    TEMP_CELSIUS,
     __version__,
 )
 from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
@@ -204,7 +203,7 @@ CORE_CONFIG_SCHEMA = vol.All(
             CONF_LATITUDE: cv.latitude,
             CONF_LONGITUDE: cv.longitude,
             CONF_ELEVATION: vol.Coerce(int),
-            vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+            vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
             CONF_UNIT_SYSTEM: cv.unit_system,
             CONF_TIME_ZONE: cv.time_zone,
             vol.Optional(CONF_INTERNAL_URL): cv.url,
@@ -607,18 +606,6 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             hac.units = IMPERIAL_SYSTEM
         else:
             hac.units = METRIC_SYSTEM
-    elif CONF_TEMPERATURE_UNIT in config:
-        unit = config[CONF_TEMPERATURE_UNIT]
-        hac.units = METRIC_SYSTEM if unit == TEMP_CELSIUS else IMPERIAL_SYSTEM
-        _LOGGER.warning(
-            "Found deprecated temperature unit in core "
-            "configuration expected unit system. Replace '%s: %s' "
-            "with '%s: %s'",
-            CONF_TEMPERATURE_UNIT,
-            unit,
-            CONF_UNIT_SYSTEM,
-            hac.units.name,
-        )
 
 
 def _log_pkg_error(package: str, component: str, config: dict, message: str) -> None:
