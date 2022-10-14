@@ -797,32 +797,57 @@ async def _async_process_config(
     Returns if blueprints were used.
     """
 
-    def find_match(
+    def find_matches(
         automations: list[AutomationEntity],
         automation_configs: list[AutomationEntityConfig],
-    ) -> tuple[int, int] | None:
-        """Return indices of first automation and matching configuration."""
+    ) -> tuple[set[int], set[int]]:
+        """Find matches between a list of automation entities and a list of configurations.
+
+        An automation or configuration is only allowed to match at most once to handle
+        the case of multiple automations with identical configuration.
+
+        Returns a tuple of sets of indices: ({automation_matches}, {config_matches})
+
+        Note: An automation which has identical configuration, but where the config key
+        or list index has changed will be considered identical, although that may
+        influence the automation's name.
+        """
+        automation_matches: set[int] = set()
+        config_matches: set[int] = set()
+
         for automation_idx, automation in enumerate(automations):
             for config_idx, config in enumerate(automation_configs):
+                if config_idx in config_matches:
+                    # Only allow an automation config to match at most once
+                    continue
                 if automation.raw_config == config.raw_config:
-                    return (automation_idx, config_idx)
-        return None
+                    automation_matches.add(automation_idx)
+                    config_matches.add(config_idx)
+                    # Only allow an automation to match at most once
+                    break
 
-    blueprints_used, updated_automation_configs = await _prepare_automation_config(
-        hass, config
-    )
-    automations_to_remove: list[AutomationEntity] = list(component.entities)
+        return automation_matches, config_matches
 
-    # Drop unchanged automations
-    while idx := find_match(automations_to_remove, updated_automation_configs):
-        del automations_to_remove[idx[0]]
-        del updated_automation_configs[idx[1]]
+    blueprints_used, automation_configs = await _prepare_automation_config(hass, config)
+    automations: list[AutomationEntity] = list(component.entities)
+
+    # Find automations and configurations which have matches
+    automation_matches, config_matches = find_matches(automations, automation_configs)
 
     # Remove automations which have changed config or no longer exist
-    tasks = [automation.async_remove() for automation in automations_to_remove]
+    tasks = [
+        automation.async_remove()
+        for idx, automation in enumerate(automations)
+        if idx not in automation_matches
+    ]
     await asyncio.gather(*tasks)
 
-    # Create automations which have new config or have been added
+    # Create automations which have changed config or have been added
+    updated_automation_configs = [
+        config
+        for idx, config in enumerate(automation_configs)
+        if idx not in config_matches
+    ]
     entities = await _create_automation_entities(hass, updated_automation_configs)
     if entities:
         await component.async_add_entities(entities)
