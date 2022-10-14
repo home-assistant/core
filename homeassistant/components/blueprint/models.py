@@ -339,6 +339,10 @@ class DomainBlueprints:
 
     async def async_populate(self) -> None:
         """Create folder if it doesn't exist and populate with examples."""
+        if self._blueprints:
+            # If we have already loaded some blueprint the blueprint folder must exist
+            return
+
         integration = await loader.async_get_integration(self.hass, self.domain)
 
         def populate():
