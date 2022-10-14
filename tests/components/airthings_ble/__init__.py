@@ -1,5 +1,6 @@
 """Tests for the Airthings BLE integration."""
-from typing import Union
+from __future__ import annotations
+
 from unittest.mock import patch
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
@@ -17,9 +18,7 @@ def patch_async_setup_entry(return_value=True):
     )
 
 
-def patch_async_ble_device_from_address(
-    return_value: Union[BluetoothServiceInfoBleak, None]
-):
+def patch_async_ble_device_from_address(return_value: BluetoothServiceInfoBleak | None):
     """Patch async ble device from address to return a given value."""
     return patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",

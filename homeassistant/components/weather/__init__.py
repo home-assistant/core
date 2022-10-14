@@ -44,6 +44,7 @@ from homeassistant.util.unit_conversion import (
     SpeedConverter,
     TemperatureConverter,
 )
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -419,7 +420,9 @@ class WeatherEntity(Entity):
 
         Should not be set by integrations.
         """
-        return PRESSURE_HPA if self.hass.config.units.is_metric else PRESSURE_INHG
+        return (
+            PRESSURE_HPA if self.hass.config.units is METRIC_SYSTEM else PRESSURE_INHG
+        )
 
     @final
     @property
@@ -483,7 +486,7 @@ class WeatherEntity(Entity):
         """
         return (
             SPEED_KILOMETERS_PER_HOUR
-            if self.hass.config.units.is_metric
+            if self.hass.config.units is METRIC_SYSTEM
             else SPEED_MILES_PER_HOUR
         )
 

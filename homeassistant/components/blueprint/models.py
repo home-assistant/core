@@ -202,10 +202,10 @@ class DomainBlueprints:
         """Return the blueprint folder."""
         return pathlib.Path(self.hass.config.path(BLUEPRINT_FOLDER, self.domain))
 
-    @callback
-    def async_reset_cache(self) -> None:
+    async def async_reset_cache(self) -> None:
         """Reset the blueprint cache."""
-        self._blueprints = {}
+        async with self._load_lock:
+            self._blueprints = {}
 
     def _load_blueprint(self, blueprint_path) -> Blueprint:
         """Load a blueprint."""
@@ -339,6 +339,10 @@ class DomainBlueprints:
 
     async def async_populate(self) -> None:
         """Create folder if it doesn't exist and populate with examples."""
+        if self._blueprints:
+            # If we have already loaded some blueprint the blueprint folder must exist
+            return
+
         integration = await loader.async_get_integration(self.hass, self.domain)
 
         def populate():
