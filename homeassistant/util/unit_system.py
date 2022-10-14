@@ -131,7 +131,13 @@ class UnitSystem:
     @property
     def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
-        return self._name == CONF_UNIT_SYSTEM_METRIC
+        report(
+            "accesses the `is_metric` property of the unit system. "
+            "This is deprecated and will stop working in Home Assistant 2023.1. "
+            "Please adjust to use instance check instead.",
+            error_if_core=False,
+        )
+        return self is METRIC_SYSTEM
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
