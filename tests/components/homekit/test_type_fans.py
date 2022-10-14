@@ -561,7 +561,7 @@ async def test_fan_restore(hass, hk_driver, events):
     assert acc.char_speed is None
     assert acc.char_swing is None
 
-    acc = Fan(hass, hk_driver, "Fan", "fan.all_info_set", 2, None)
+    acc = Fan(hass, hk_driver, "Fan", "fan.all_info_set", 3, None)
     assert acc.category == 3
     assert acc.char_active is not None
     assert acc.char_direction is not None
