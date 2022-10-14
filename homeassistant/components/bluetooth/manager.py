@@ -273,13 +273,13 @@ class BluetoothManager:
                 self._async_all_discovered_addresses(connectable)
             )
             for address in disappeared:
-                #
-                # For non-connectable devices we also check the device has exceeded
-                # the advertising interval before we mark it as unavailable
-                # since it may have gone to sleep and since we do not need an active connection
-                # to it we can only determine its availability by the lack of advertisements
-                #
                 if not connectable:
+                    #
+                    # For non-connectable devices we also check the device has exceeded
+                    # the advertising interval before we mark it as unavailable
+                    # since it may have gone to sleep and since we do not need an active connection
+                    # to it we can only determine its availability by the lack of advertisements
+                    #
                     if advertising_interval := (
                         non_connectable_intervals.get(address)
                         or connectable_intervals.get(address)
@@ -289,6 +289,10 @@ class BluetoothManager:
                             continue
 
                     non_connectable_history.pop(address, None)
+
+                    # The second loop (connectable=False) is responsible for removing
+                    # the device from all the interval tracking since it is no longer
+                    # available for both connectable and non-connectable
                     non_connectable_tracker.async_remove_address(address)
                     connectable_tracker.async_remove_address(address)
 
