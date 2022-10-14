@@ -11,12 +11,13 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
+    LENGTH_MILES,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     ATTR_ACTIVITY,
@@ -114,7 +115,9 @@ class GeonetnzVolcanoSensor(SensorEntity):
         # Convert distance if not metric system.
         if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
             self._distance = round(
-                IMPERIAL_SYSTEM.length(feed_entry.distance_to_home, LENGTH_KILOMETERS),
+                DistanceConverter.convert(
+                    feed_entry.distance_to_home, LENGTH_KILOMETERS, LENGTH_MILES
+                ),
                 1,
             )
         else:
