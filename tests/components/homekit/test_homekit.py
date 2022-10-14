@@ -176,6 +176,48 @@ async def test_setup_min(hass, mock_async_zeroconf):
     assert mock_homekit().async_start.called is True
 
 
+async def test_removing_entry(hass, mock_async_zeroconf):
+    """Test removing a config entry."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit, patch(
+        "homeassistant.components.network.async_get_source_ip", return_value="1.2.3.4"
+    ):
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_homekit.assert_any_call(
+        hass,
+        BRIDGE_NAME,
+        DEFAULT_PORT,
+        "1.2.3.4",
+        ANY,
+        ANY,
+        {},
+        HOMEKIT_MODE_BRIDGE,
+        None,
+        entry.entry_id,
+        entry.title,
+        devices=[],
+    )
+
+    # Test auto start enabled
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert mock_homekit().async_start.called is True
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_homekit_setup(hass, hk_driver, mock_async_zeroconf):
     """Test setup of bridge and driver."""
     entry = MockConfigEntry(
