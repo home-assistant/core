@@ -6,22 +6,9 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.graphite as graphite
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    EVENT_STATE_CHANGED,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components import graphite
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
-
-
-@pytest.fixture(name="graphite_feeder")
-def fixture_graphite_feeder(hass):
-    """Graphite feeder fixture."""
-    gf = graphite.GraphiteFeeder(hass, "foo", 123, "tcp", "ha")
-    return gf
 
 
 @pytest.fixture(name="mock_gf")
@@ -83,22 +70,6 @@ async def test_config_port(hass, mock_gf, mock_socket):
     assert mock_gf.called
     assert mock_socket.call_count == 1
     assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_STREAM)
-
-
-def test_subscribe():
-    """Test the subscription."""
-    fake_hass = mock.MagicMock()
-    gf = graphite.GraphiteFeeder(fake_hass, "foo", 123, "tcp", "ha")
-    fake_hass.bus.listen_once.has_calls(
-        [
-            mock.call(EVENT_HOMEASSISTANT_START, gf.start_listen),
-            mock.call(EVENT_HOMEASSISTANT_STOP, gf.shutdown),
-        ]
-    )
-    assert fake_hass.bus.listen.call_count == 1
-    assert fake_hass.bus.listen.call_args == mock.call(
-        EVENT_STATE_CHANGED, gf.event_listener
-    )
 
 
 async def test_start(hass, mock_socket, mock_time):
@@ -287,58 +258,3 @@ async def test_send_to_graphite_errors(hass, mock_socket, mock_time, caplog):
     await asyncio.sleep(0.1)
 
     assert "Unable to connect to host" in caplog.text
-
-
-def test_send_to_graphite(graphite_feeder, mock_socket):
-    """Test the sending of data."""
-    graphite_feeder._send_to_graphite("foo")
-    assert mock_socket.call_count == 1
-    assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_STREAM)
-    sock = mock_socket.return_value
-    assert sock.connect.call_count == 1
-    assert sock.connect.call_args == mock.call(("foo", 123))
-    assert sock.sendall.call_count == 1
-    assert sock.sendall.call_args == mock.call(b"foo")
-    assert sock.send.call_count == 1
-    assert sock.send.call_args == mock.call(b"\n")
-    assert sock.close.call_count == 1
-    assert sock.close.call_args == mock.call()
-
-
-def test_run_stops(graphite_feeder):
-    """Test the stops."""
-    with mock.patch.object(graphite_feeder, "_queue") as mock_queue:
-        mock_queue.get.return_value = graphite_feeder._quit_object
-        assert graphite_feeder.run() is None
-        assert mock_queue.get.call_count == 1
-        assert mock_queue.get.call_args == mock.call()
-        assert mock_queue.task_done.call_count == 1
-        assert mock_queue.task_done.call_args == mock.call()
-
-
-def test_run(graphite_feeder):
-    """Test the running."""
-    runs = []
-    event = mock.MagicMock(
-        event_type=EVENT_STATE_CHANGED,
-        data={"entity_id": "entity", "new_state": mock.MagicMock()},
-    )
-
-    def fake_get():
-        if len(runs) >= 2:
-            return graphite_feeder._quit_object
-        if runs:
-            runs.append(1)
-            return mock.MagicMock(event_type="somethingelse", data={"new_event": None})
-        runs.append(1)
-        return event
-
-    with mock.patch.object(graphite_feeder, "_queue") as mock_queue, mock.patch.object(
-        graphite_feeder, "_report_attributes"
-    ) as mock_r:
-        mock_queue.get.side_effect = fake_get
-        graphite_feeder.run()
-        # Twice for two events, once for the stop
-        assert mock_queue.task_done.call_count == 3
-        assert mock_r.call_count == 1
-        assert mock_r.call_args == mock.call("entity", event.data["new_state"])
