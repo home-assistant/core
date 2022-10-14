@@ -1,18 +1,16 @@
 """Fixtures for FileUpload integration."""
-import tempfile
+from io import StringIO
 
 import pytest
 
 
 @pytest.fixture
-def large_file() -> tempfile.NamedTemporaryFile:
+def large_file_io() -> StringIO:
     """Generate a large file on the fly."""
-    tmp_file = tempfile.NamedTemporaryFile()
-
-    with open(tmp_file.name, "w") as fp:
-        for _ in range(100000):
-            fp.write(
-                "Home Assistant is awesome. Open source home automation that puts local control and privacy first."
-            )
-
-    return tmp_file
+    file = StringIO("")
+    for _ in range(10000):
+        file.write(
+            "Home Assistant is awesome. Open source home automation that puts local control and privacy first."
+        )
+    file.seek(0)
+    return file

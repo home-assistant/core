@@ -150,13 +150,12 @@ class FileUploadView(HomeAssistantView):
 
         file_upload_data: FileUploadData = hass.data[DOMAIN]
         file_dir = file_upload_data.file_dir(file_id)
-        file_handle: io.BufferedWriter | None = None
         queue: janus.Queue[bytes | None] = janus.Queue()
 
         def _sync_queue_consumer(
             sync_q: janus.SyncQueue[bytes | None], _file_name: str
         ) -> None:
-            nonlocal file_handle
+            file_handle: io.BufferedWriter | None = None
 
             if file_handle is None:
                 file_dir.mkdir()
@@ -165,6 +164,7 @@ class FileUploadView(HomeAssistantView):
             try:
                 while _chunk := sync_q.get():
                     file_handle.write(_chunk)
+                    sync_q.task_done()
             finally:
                 if file_handle is not None:
                     file_handle.close()
@@ -181,7 +181,6 @@ class FileUploadView(HomeAssistantView):
                 queue.async_q.put_nowait(chunk)
                 if queue.async_q.qsize() > 5:  # Allow up to 5 MB buffer size
                     await queue.async_q.join()
-
             queue.async_q.put_nowait(None)  # terminate queue consumer
         finally:
             if fut is not None:
