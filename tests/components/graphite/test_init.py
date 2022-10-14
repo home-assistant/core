@@ -16,8 +16,6 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_test_home_assistant
-
 
 @pytest.fixture(name="graphite_feeder")
 def fixture_graphite_feeder(hass):
