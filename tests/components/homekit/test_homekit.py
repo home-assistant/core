@@ -176,7 +176,8 @@ async def test_setup_min(hass, mock_async_zeroconf):
     assert mock_homekit().async_start.called is True
 
 
-async def test_removing_entry(hass, mock_async_zeroconf):
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
+async def test_removing_entry(port_mock, hass, mock_async_zeroconf):
     """Test removing a config entry."""
 
     entry = MockConfigEntry(
