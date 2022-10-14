@@ -96,6 +96,11 @@ async def test_diagnostics(
                 }
             },
             "manager": {
+                "advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {},
+                    "timings": {},
+                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -198,6 +203,11 @@ async def test_diagnostics_macos(
                 }
             },
             "manager": {
+                "advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {"44:44:33:11:23:45": "local"},
+                    "timings": {"44:44:33:11:23:45": [ANY]},
+                },
                 "adapters": {
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
