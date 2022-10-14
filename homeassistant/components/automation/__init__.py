@@ -242,11 +242,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # we will create entities before firing EVENT_COMPONENT_LOADED
     await async_process_integration_platform_for_component(hass, DOMAIN)
 
-    # To register the automation blueprints
+    # Register automation as valid domain for Blueprint
     async_get_blueprints(hass)
 
-    if not await _async_process_config(hass, config, component):
-        await async_get_blueprints(hass).async_populate()
+    await _async_process_config(hass, config, component)
+
+    # Add some default blueprints to blueprints/automation, does nothing
+    # if blueprints/automation already exists
+    await async_get_blueprints(hass).async_populate()
 
     async def trigger_service_handler(
         entity: AutomationEntity, service_call: ServiceCall
@@ -676,10 +679,9 @@ class AutomationEntityConfig:
 async def _prepare_automation_config(
     hass: HomeAssistant,
     config: ConfigType,
-) -> tuple[bool, list[AutomationEntityConfig]]:
+) -> list[AutomationEntityConfig]:
     """Parse configuration and prepare automation entity configuration."""
     automation_configs: list[AutomationEntityConfig] = []
-    blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
         conf: list[ConfigType | blueprint.BlueprintInputs] = config[config_key]
@@ -688,7 +690,6 @@ async def _prepare_automation_config(
             raw_blueprint_inputs = None
             raw_config = None
             if isinstance(config_block, blueprint.BlueprintInputs):
-                blueprints_used = True
                 blueprint_inputs = config_block
                 raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
@@ -715,7 +716,7 @@ async def _prepare_automation_config(
                 )
             )
 
-    return (blueprints_used, automation_configs)
+    return automation_configs
 
 
 def _automation_name(automation_config: AutomationEntityConfig) -> str:
@@ -797,11 +798,8 @@ async def _async_process_config(
     hass: HomeAssistant,
     config: dict[str, Any],
     component: EntityComponent[AutomationEntity],
-) -> bool:
-    """Process config and add automations.
-
-    Returns if blueprints were used.
-    """
+) -> None:
+    """Process config and add automations."""
 
     def automation_matches_config(
         automation: AutomationEntity, config: AutomationEntityConfig
@@ -836,7 +834,7 @@ async def _async_process_config(
 
         return automation_matches, config_matches
 
-    blueprints_used, automation_configs = await _prepare_automation_config(hass, config)
+    automation_configs = await _prepare_automation_config(hass, config)
     automations: list[AutomationEntity] = list(component.entities)
 
     # Find automations and configurations which have matches
@@ -860,7 +858,7 @@ async def _async_process_config(
     if entities:
         await component.async_add_entities(entities)
 
-    return blueprints_used
+    return
 
 
 async def _async_process_if(
