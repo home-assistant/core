@@ -23,7 +23,7 @@ from tests.common import get_test_home_assistant
 def fixture_graphite_feeder(hass):
     """Graphite feeder fixture."""
     gf = graphite.GraphiteFeeder(hass, "foo", 123, "tcp", "ha")
-    yield gf
+    return gf
 
 
 @pytest.fixture(name="mock_gf")
