@@ -573,7 +573,7 @@ async def test_windowcovering_basic_restore(hass, hk_driver, events):
     assert acc.char_target_position is not None
     assert acc.char_position_state is not None
 
-    acc = WindowCoveringBasic(hass, hk_driver, "Cover", "cover.all_info_set", 2, None)
+    acc = WindowCoveringBasic(hass, hk_driver, "Cover", "cover.all_info_set", 3, None)
     assert acc.category == 14
     assert acc.char_current_position is not None
     assert acc.char_target_position is not None
@@ -611,7 +611,7 @@ async def test_windowcovering_restore(hass, hk_driver, events):
     assert acc.char_target_position is not None
     assert acc.char_position_state is not None
 
-    acc = WindowCovering(hass, hk_driver, "Cover", "cover.all_info_set", 2, None)
+    acc = WindowCovering(hass, hk_driver, "Cover", "cover.all_info_set", 3, None)
     assert acc.category == 14
     assert acc.char_current_position is not None
     assert acc.char_target_position is not None
