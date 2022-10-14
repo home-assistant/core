@@ -39,6 +39,16 @@ async def test_setup(hass, mock_socket):
     assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_STREAM)
 
 
+async def test_setup_failure(hass, mock_socket):
+    """Test setup fails due to socket error."""
+    mock_socket.return_value.connect.side_effect = OSError
+    assert not await async_setup_component(hass, graphite.DOMAIN, {"graphite": {}})
+
+    assert mock_socket.call_count == 1
+    assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_STREAM)
+    assert mock_socket.return_value.connect.call_count == 1
+
+
 async def test_full_config(hass, mock_gf, mock_socket):
     """Test setup with full configuration."""
     config = {"graphite": {"host": "foo", "port": 123, "prefix": "me"}}
