@@ -62,7 +62,7 @@ def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> s
 @callback
 def async_get_client_wrapper_by_device_entry(
     hass: HomeAssistant, device: DeviceEntry
-) -> WebOsClientWrapper:
+) -> WebOsClientWrapper | None:
     """
     Get WebOsClientWrapper from Device Registry by device entry.
 
