@@ -10,7 +10,10 @@ from aiohomekit.model.characteristics import Characteristic, CharacteristicsType
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_last_service_info,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -571,8 +574,8 @@ class RSSISensor(HomeKitEntity, SensorEntity):
     def native_value(self) -> int | None:
         """Return the current rssi value."""
         address = self._accessory.pairing_data["AccessoryAddress"]
-        ble_device = async_ble_device_from_address(self.hass, address)
-        return ble_device.rssi if ble_device else None
+        last_service_info = async_last_service_info(self.hass, address)
+        return last_service_info.rssi if last_service_info else None
 
 
 async def async_setup_entry(

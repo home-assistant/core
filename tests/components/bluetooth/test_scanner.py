@@ -4,11 +4,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
-from bleak.backends.scanner import (
-    AdvertisementData,
-    AdvertisementDataCallback,
-    BLEDevice,
-)
+from bleak.backends.scanner import AdvertisementDataCallback, BLEDevice
 from dbus_fast import InvalidMessageError
 import pytest
 
@@ -22,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager, async_setup_with_one_adapter
+from . import _get_manager, async_setup_with_one_adapter, generate_advertisement_data
 
 from tests.common import async_fire_time_changed
 
@@ -222,7 +218,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     ):
         _callback(
             BLEDevice("44:44:33:11:23:42", "any_name"),
-            AdvertisementData(local_name="any_name"),
+            generate_advertisement_data(local_name="any_name"),
         )
 
     # Ensure we don't restart the scanner if we don't need to

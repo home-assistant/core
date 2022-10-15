@@ -117,4 +117,5 @@ class SwitchbotRSSISensor(SwitchBotSensor):
     @property
     def native_value(self) -> str | int:
         """Return the state of the sensor."""
-        return self.coordinator.ble_device.rssi
+        assert self.coordinator.service_info is not None
+        return self.coordinator.service_info.rssi
