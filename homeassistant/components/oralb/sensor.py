@@ -36,7 +36,7 @@ class OralBSensorEntityDescription(SensorEntityDescription):
 SENSORS = (
     OralBSensorEntityDescription(
         key="battery",
-        name="OralB Battery",
+        name="Battery",
         unique_id="oralb_battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
