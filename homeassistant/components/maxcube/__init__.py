@@ -4,6 +4,7 @@ import logging
 from socket import timeout
 from threading import Lock
 import time
+from typing import cast
 
 from maxcube.cube import MaxCube
 import voluptuous as vol
@@ -12,6 +13,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
@@ -89,6 +91,57 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     return True
+
+
+class MaxCubeDeviceUpdater:
+    """Update MaxCube device."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, cube, device) -> None:
+        """Initialize device updater."""
+        self.hass = hass
+        self.entry = entry
+        self.cube = cube
+        self.device_last_update_ts = 0
+        self.device = device
+
+    def get_device_model_name(self):
+        """Get device model name."""
+        model = "unknown"
+        if self.device.is_thermostat():
+            model = "MAX! Radiator Thermostat"
+        if self.device.is_wallthermostat():
+            model = "MAX! Wall Thermostat"
+        if self.device.is_windowshutter():
+            model = "MAX! Window Sensor"
+        return model
+
+    def update_device(self, entity_id: str):
+        """Update device and attach with entity."""
+        if (time.monotonic() - self.device_last_update_ts) < 60:
+            return
+
+        self.device_last_update_ts = time.monotonic()
+
+        room = self.cube.room_by_id(self.device.room_id)
+
+        device_registry = dr.async_get(self.hass)
+
+        # Create new device if needed
+        new_device = device_registry.async_get_or_create(
+            config_entry_id=cast(str, self.entry.entry_id),
+            identifiers={(DOMAIN, self.device.serial)},
+            manufacturer="eQ-3",
+            name=f"{room.name} {self.device.name}",
+            model=self.get_device_model_name(),
+        )
+
+        # Attach entity to device if needed
+        entity_registry = er.async_get(self.hass)
+        if (
+            entity := entity_registry.async_get(entity_id)
+        ) and entity.device_id != new_device.id:
+            _LOGGER.info("%s is moving to %s", entity_id, new_device.name)
+            entity_registry.async_update_entity(entity_id, device_id=new_device.id)
 
 
 class MaxCubeHandle:

@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_KEY
+from . import DATA_KEY, MaxCubeDeviceUpdater
 
 
 async def async_setup_entry(
@@ -20,29 +20,31 @@ async def async_setup_entry(
     devices: list[MaxCubeBinarySensorBase] = []
     for handler in hass.data[DATA_KEY].values():
         for device in handler.cube.devices:
-            devices.append(MaxCubeBattery(handler, device))
+            devices.append(MaxCubeBattery(hass, config_entry, handler, device))
             # Only add Window Shutters
             if device.is_windowshutter():
-                devices.append(MaxCubeShutter(handler, device))
+                devices.append(MaxCubeShutter(hass, config_entry, handler, device))
 
     if devices:
         async_add_devices(devices)
 
 
-class MaxCubeBinarySensorBase(BinarySensorEntity):
+class MaxCubeBinarySensorBase(BinarySensorEntity, MaxCubeDeviceUpdater):
     """Base class for maxcube binary sensors."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, handler, device):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
         self._cubehandle = handler
         self._device = device
         self._room = handler.cube.room_by_id(device.room_id)
+        MaxCubeDeviceUpdater.__init__(self, hass, config_entry, handler.cube, device)
 
     def update(self):
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
+        self.update_device(self.entity_id)
 
 
 class MaxCubeShutter(MaxCubeBinarySensorBase):
@@ -50,9 +52,9 @@ class MaxCubeShutter(MaxCubeBinarySensorBase):
 
     _attr_device_class = BinarySensorDeviceClass.WINDOW
 
-    def __init__(self, handler, device):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
-        super().__init__(handler, device)
+        super().__init__(hass, config_entry, handler, device)
 
         self._attr_name = f"{self._room.name} {self._device.name}"
         self._attr_unique_id = self._device.serial
@@ -68,9 +70,9 @@ class MaxCubeBattery(MaxCubeBinarySensorBase):
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
 
-    def __init__(self, handler, device):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
-        super().__init__(handler, device)
+        super().__init__(hass, config_entry, handler, device)
 
         self._attr_name = f"{self._room.name} {device.name} battery"
         self._attr_unique_id = f"{self._device.serial}_battery"

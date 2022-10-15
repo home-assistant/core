@@ -32,7 +32,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_KEY
+from . import DATA_KEY, MaxCubeDeviceUpdater
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,16 +63,16 @@ async def async_setup_entry(
     for handler in hass.data[DATA_KEY].values():
         for device in handler.cube.devices:
             if device.is_thermostat() or device.is_wallthermostat():
-                devices.append(MaxCubeClimate(handler, device))
+                devices.append(MaxCubeClimate(hass, config_entry, handler, device))
 
     if devices:
         async_add_devices(devices)
 
 
-class MaxCubeClimate(ClimateEntity):
+class MaxCubeClimate(ClimateEntity, MaxCubeDeviceUpdater):
     """MAX! Cube ClimateEntity."""
 
-    def __init__(self, handler, device):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
         room = handler.cube.room_by_id(device.room_id)
         self._attr_name = f"{room.name} {device.name}"
@@ -91,6 +91,7 @@ class MaxCubeClimate(ClimateEntity):
             PRESET_AWAY,
             PRESET_ON,
         ]
+        MaxCubeDeviceUpdater.__init__(self, hass, config_entry, handler.cube, device)
 
     @property
     def min_temp(self):
@@ -239,3 +240,4 @@ class MaxCubeClimate(ClimateEntity):
     def update(self):
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
+        self.update_device(self.entity_id)
