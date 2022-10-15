@@ -57,7 +57,7 @@ SENSORS = (
     ),
     OralBSensorEntityDescription(
         key="mode",
-        name="OralB Mode",
+        name="Mode",
         unique_id="oralb_mode",
         icon="mdi:tooth",
     ),
