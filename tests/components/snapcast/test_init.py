@@ -79,3 +79,26 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     assert result["type"] == "form"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_import(hass: HomeAssistant) -> None:
+    """Test successful import."""
+    mock_connection = create_mock_snapcast()
+
+    with patch(
+        "snapcast.control.create_server",
+        return_value=mock_connection,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=TEST_CONNECTION,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert (
+        result["title"] == f"{TEST_CONNECTION[CONF_HOST]}:{TEST_CONNECTION[CONF_PORT]}"
+    )
+    assert result["data"] == TEST_CONNECTION
+    assert len(mock_setup_entry.mock_calls) == 2
