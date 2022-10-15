@@ -454,7 +454,7 @@ async def test_updating_configuration(hass, hass_storage):
             "location_name": "Home",
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
-            "unit_system": "metric",
+            "unit_system_key": "metric",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             "currency": "BTC",
