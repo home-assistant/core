@@ -44,7 +44,7 @@ SENSORS = (
     ),
     OralBSensorEntityDescription(
         key="status",
-        name="OralB Status",
+        name="Status",
         unique_id="oralb_status",
         icon="mdi:toothbrush-electric",
     ),
