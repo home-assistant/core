@@ -144,7 +144,7 @@ SENSORS: Final = {
         key="emeter|powerFactor",
         name="Power Factor",
         native_unit_of_measurement=PERCENTAGE,
-        value=lambda value: round(value * 100, 1),
+        value=lambda value: abs(round(value * 100, 1)),
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
