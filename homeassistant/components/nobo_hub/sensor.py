@@ -39,10 +39,8 @@ async def async_setup_entry(
     async_add_entities(
         [
             NoboTemperatureSensor(component["serial"], hub)
-            for component in filter(
-                lambda component: component[ATTR_MODEL].has_temp_sensor,
-                hub.components.values(),
-            )
+            for component in hub.components.values()
+            if component[ATTR_MODEL].has_temp_sensor
         ],
         True,
     )
@@ -90,9 +88,11 @@ class NoboTemperatureSensor(SensorEntity):
 
     @callback
     def _read_state(self) -> None:
-        self._attr_native_value = round(
-            float(self._nobo.get_current_component_temperature(self._id)), 1
-        )
+        value = self._nobo.get_current_component_temperature(self._id)
+        if value is None:
+            self._attr_native_value = None
+        else:
+            self._attr_native_value = round(float(value), 1)
 
     @callback
     def _after_update(self, hub) -> None:
