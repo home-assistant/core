@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 import logging
-import socket
 
-import snapcast.control
 from snapcast.control.server import CONTROL_PORT, Snapserver
 import voluptuous as vol
 
@@ -14,12 +12,12 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -94,34 +92,23 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Snapcast platform."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2022.12.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT, CONTROL_PORT)
+    config[CONF_PORT] = config.get(CONF_PORT, CONTROL_PORT)
 
-    register_services()
-    hass.data.setdefault(DOMAIN, {})
-
-    try:
-        server = await snapcast.control.create_server(
-            hass.loop, host, port, reconnect=True
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
-    except socket.gaierror as ex:
-        raise PlatformNotReady(
-            f"Could not connect to Snapcast server at {host}:{port}"
-        ) from ex
-
-    # Note: Host part is needed, when using multiple snapservers
-    hpid = f"{host}:{port}"
-
-    groups: list[MediaPlayerEntity] = [
-        SnapcastGroupDevice(group, hpid) for group in server.groups
-    ]
-    clients: list[MediaPlayerEntity] = [
-        SnapcastClientDevice(client, hpid) for client in server.clients
-    ]
-    hass.data[DOMAIN]["clients"] = clients
-    hass.data[DOMAIN]["groups"] = groups
-    async_add_entities(clients + groups)
+    )
 
 
 async def handle_async_join(entity, service_call):

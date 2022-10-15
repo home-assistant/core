@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -26,7 +27,7 @@ SNAPCAST_SCHEMA = vol.Schema(
 class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
     """Snapcast config flow."""
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle first step."""
 
         def _show_form(errors=None):
@@ -70,3 +71,7 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
             title=f"{host}:{port}",
             data=user_input,
         )
+
+    async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
