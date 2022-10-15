@@ -216,7 +216,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
         try:
             for event_code in event_codes:
-                if len(await self._api.async_event_channels_happened(event_code)) > 0:
+                if await self._api.async_event_channels_happened(event_code):
                     self._attr_is_on = True
                     break
             else:
