@@ -73,6 +73,13 @@
         "data": {
           "content_type": "[%key:component::generic::config::step::content_type::data::content_type%]"
         }
+      },
+      "confirm_still": {
+        "title": "[%key:component::generic::config::step::user_confirm_still::title%]",
+        "description": "[%key:component::generic::config::step::user_confirm_still::description%]",
+        "data": {
+          "confirmed_ok": "[%key:component::generic::config::step::user_confirm_still::data::confirmed_ok%]"
+        }
       }
     },
     "error": {
