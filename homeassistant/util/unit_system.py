@@ -225,7 +225,7 @@ def get_unit_system(key: str) -> UnitSystem:
 
 
 def _deprecated_unit_system(value: str) -> str:
-    """Add warning for deprecated unit system."""
+    """Convert deprecated unit system."""
 
     if value == _CONF_UNIT_SYSTEM_IMPERIAL:
         # need to add warning in 2023.1
