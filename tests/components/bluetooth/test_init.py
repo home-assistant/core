@@ -502,8 +502,20 @@ async def test_discovery_match_by_name_connectable_false(
 
         mock_config_flow.reset_mock()
         # Make sure it will also take a connectable device
+        qingping_adv_with_better_rssi = generate_advertisement_data(
+            local_name="Qingping Motion & Light",
+            service_data={
+                "0000fdcd-0000-1000-8000-00805f9b34fb": b"H\x12\xcd\xd5`4-X\x08\x04\x01\xe8\x00\x00\x0f\x02{"
+            },
+            rssi=-30,
+        )
         inject_advertisement_with_time_and_source_connectable(
-            hass, qingping_device, qingping_adv, time.monotonic(), "any", True
+            hass,
+            qingping_device,
+            qingping_adv_with_better_rssi,
+            time.monotonic(),
+            "any",
+            True,
         )
         await hass.async_block_till_done()
         assert _domains_from_mock_config_flow(mock_config_flow) == ["qingping"]
@@ -1322,12 +1334,23 @@ async def test_register_callback_by_address_connectable_only(
             manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
             service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
         )
-
+        switchbot_adv_better_rssi = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x84"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+            rssi=-30,
+        )
         inject_advertisement_with_time_and_source_connectable(
             hass, switchbot_device, switchbot_adv, time.monotonic(), "test", False
         )
         inject_advertisement_with_time_and_source_connectable(
-            hass, switchbot_device, switchbot_adv, time.monotonic(), "test", True
+            hass,
+            switchbot_device,
+            switchbot_adv_better_rssi,
+            time.monotonic(),
+            "test",
+            True,
         )
 
         cancel()
