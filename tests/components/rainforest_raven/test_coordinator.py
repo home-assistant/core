@@ -69,7 +69,6 @@ async def test_coordinator_device_error_setup(hass: HomeAssistant, mock_device):
     mock_device.get_network_info.side_effect = SerialException
     with pytest.raises(ConfigEntryNotReady):
         await coordinator.async_config_entry_first_refresh()
-    assert coordinator.last_update_success is True
 
 
 async def test_coordinator_device_error_update(hass: HomeAssistant, mock_device):
