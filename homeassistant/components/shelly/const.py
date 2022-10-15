@@ -158,9 +158,6 @@ KELVIN_MIN_VALUE_COLOR: Final = 3000
 
 UPTIME_DEVIATION: Final = 5
 
-# Max RPC switch/input key instances
-MAX_RPC_KEY_INSTANCES = 4
-
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
 
