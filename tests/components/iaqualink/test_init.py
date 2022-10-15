@@ -172,8 +172,6 @@ async def test_setup_all_good_all_device_types(hass, config_entry, client):
         get_aqualink_device(system, name="pool_set_point", cls=IaquaThermostat),
     ]
     devices = {d.name: d for d in devices}
-    print(devices)
-    print(type(devices["aux_1"]))
 
     system.get_devices = AsyncMock(return_value=devices)
 
