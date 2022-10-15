@@ -442,7 +442,7 @@ async def test_tv_restore(hass, hk_driver, events):
     assert not hasattr(acc, "char_input_source")
 
     acc = TelevisionMediaPlayer(
-        hass, hk_driver, "MediaPlayer", "media_player.all_info_set", 2, None
+        hass, hk_driver, "MediaPlayer", "media_player.all_info_set", 3, None
     )
     assert acc.category == 31
     assert acc.chars_tv == [CHAR_REMOTE_KEY]

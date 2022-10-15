@@ -168,17 +168,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # we will create entities before firing EVENT_COMPONENT_LOADED
     await async_process_integration_platform_for_component(hass, DOMAIN)
 
-    # To register scripts as valid domain for Blueprint
+    # Register script as valid domain for Blueprint
     async_get_blueprints(hass)
 
-    if not await _async_process_config(hass, config, component):
-        await async_get_blueprints(hass).async_populate()
+    await _async_process_config(hass, config, component)
+
+    # Add some default blueprints to blueprints/script, does nothing
+    # if blueprints/script already exists
+    await async_get_blueprints(hass).async_populate()
 
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
+        await async_get_blueprints(hass).async_reset_cache()
         if (conf := await component.async_prepare_reload()) is None:
             return
-        async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
 
     async def turn_on_service(service: ServiceCall) -> None:
@@ -228,13 +231,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _async_process_config(hass, config, component) -> bool:
+async def _async_process_config(hass, config, component) -> None:
     """Process script configuration.
 
     Return true, if Blueprints were used.
     """
     entities = []
-    blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
         conf: dict[str, dict[str, Any] | BlueprintInputs] = config[config_key]
@@ -244,7 +246,6 @@ async def _async_process_config(hass, config, component) -> bool:
             raw_config = None
 
             if isinstance(config_block, BlueprintInputs):
-                blueprints_used = True
                 blueprint_inputs = config_block
                 raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
@@ -270,8 +271,6 @@ async def _async_process_config(hass, config, component) -> bool:
             )
 
     await component.async_add_entities(entities)
-
-    return blueprints_used
 
 
 class ScriptEntity(ToggleEntity, RestoreEntity):

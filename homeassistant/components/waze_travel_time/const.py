@@ -1,6 +1,4 @@
 """Constants for waze_travel_time."""
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
-
 DOMAIN = "waze_travel_time"
 
 CONF_DESTINATION = "destination"
@@ -21,7 +19,9 @@ DEFAULT_AVOID_TOLL_ROADS = False
 DEFAULT_AVOID_SUBSCRIPTION_ROADS = False
 DEFAULT_AVOID_FERRIES = False
 
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
+IMPERIAL_UNITS = "imperial"
+METRIC_UNITS = "metric"
+UNITS = [METRIC_UNITS, IMPERIAL_UNITS]
 
 REGIONS = ["US", "NA", "EU", "IL", "AU"]
 VEHICLE_TYPES = ["car", "taxi", "motorcycle"]

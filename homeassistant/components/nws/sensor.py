@@ -23,6 +23,7 @@ from homeassistant.util.unit_conversion import (
     PressureConverter,
     SpeedConverter,
 )
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from . import base_unique_id, device_info
 from .const import (
@@ -80,7 +81,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
         self._attr_name = f"{station} {description.name}"
-        if not hass.config.units.is_metric:
+        if hass.config.units is IMPERIAL_SYSTEM:
             self._attr_native_unit_of_measurement = description.unit_convert
 
     @property

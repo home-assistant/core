@@ -33,6 +33,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import AccuWeatherDataUpdateCoordinator
 from .const import (
@@ -70,7 +71,7 @@ class AccuWeatherEntity(
         # Coordinator data is used also for sensors which don't have units automatically
         # converted, hence the weather entity's native units follow the configured unit
         # system
-        if coordinator.hass.config.units.is_metric:
+        if coordinator.hass.config.units is METRIC_SYSTEM:
             self._attr_native_precipitation_unit = LENGTH_MILLIMETERS
             self._attr_native_pressure_unit = PRESSURE_HPA
             self._attr_native_temperature_unit = TEMP_CELSIUS
