@@ -11,6 +11,10 @@
         "flow_title": "{name}",
         "step": {
             "user": {
+                "data": {
+                    "host": "IP \u0430\u0434\u0440\u0435\u0441",
+                    "port": "\u041f\u043e\u0440\u0442"
+                },
                 "description": "\u041f\u0440\u043e\u0434\u0443\u043a\u0442:"
             },
             "user_gateway": {

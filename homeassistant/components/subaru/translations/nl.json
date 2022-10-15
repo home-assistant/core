@@ -6,9 +6,12 @@
         },
         "error": {
             "bad_pin_format": "De pincode moet uit 4 cijfers bestaan",
+            "bad_validation_code_format": "De validatiecode moet uit 6 cijfers bestaan",
             "cannot_connect": "Kan geen verbinding maken",
             "incorrect_pin": "Onjuiste PIN",
-            "invalid_auth": "Ongeldige authenticatie"
+            "incorrect_validation_code": "Onjuiste validatiecode",
+            "invalid_auth": "Ongeldige authenticatie",
+            "two_factor_request_failed": "Verzoek om 2FA code mislukt, probeer opnieuw"
         },
         "step": {
             "pin": {
@@ -17,6 +20,20 @@
                 },
                 "description": "Voer uw MySubaru-pincode in\n OPMERKING: Alle voertuigen in een account moeten dezelfde pincode hebben",
                 "title": "Subaru Starlink Configuratie"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Selecteer een contactmethode:"
+                },
+                "description": "Tweefactorauthenticatie vereist",
+                "title": "Subaru Starlink-configuratie"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Validatiecode"
+                },
+                "description": "Voer de ontvangen validatiecode in",
+                "title": "Subaru Starlink-configuratie"
             },
             "user": {
                 "data": {

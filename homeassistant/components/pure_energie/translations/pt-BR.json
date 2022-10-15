@@ -12,6 +12,9 @@
             "user": {
                 "data": {
                     "host": "Nome do host"
+                },
+                "data_description": {
+                    "host": "O endere\u00e7o IP ou nome de host do seu Medidor Pure Energie."
                 }
             },
             "zeroconf_confirm": {

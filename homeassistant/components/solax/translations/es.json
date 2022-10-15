@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto"
+                }
+            }
+        }
+    }
+}

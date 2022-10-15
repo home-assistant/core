@@ -113,7 +113,34 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock):
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
+    assert await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
+        True,
+    )
+    assert device.set_state_on.call_count == 1
+    assert device.set_level.call_count == 1
+    assert device.set_unmapped_color.call_count == 1
 
+
+async def test_turn_on_color_unsupported_api_method(hass: HomeAssistant, fritz: Mock):
+    """Test turn device on in mapped color mode if unmapped is not supported."""
+    device = FritzDeviceLightMock()
+    device.get_color_temps.return_value = [2700, 6500]
+    device.get_colors.return_value = {
+        "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
+    }
+    mockresponse = Mock()
+    mockresponse.status_code = 400
+
+    error = HTTPError("Bad Request")
+    error.response = mockresponse
+    device.set_unmapped_color.side_effect = error
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -135,7 +162,6 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock):
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
-
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )

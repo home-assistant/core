@@ -36,16 +36,16 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
     )
     _attr_title = "WLED"
+    _attr_name = "Firmware"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize the update entity."""
         super().__init__(coordinator=coordinator)
-        self._attr_name = f"{coordinator.data.info.name} Firmware"
         self._attr_unique_id = coordinator.data.info.mac_address
 
     @property
-    def current_version(self) -> str | None:
-        """Version currently in use."""
+    def installed_version(self) -> str | None:
+        """Version currently installed and in use."""
         if (version := self.coordinator.data.info.version) is None:
             return None
         return str(version)

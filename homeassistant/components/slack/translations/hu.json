@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "default_channel": "Alap\u00e9rtelmezett csatorna",
+                    "icon": "Ikon",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "data_description": {
+                    "api_key": "A Slack API token a Slack \u00fczenetek k\u00fcld\u00e9s\u00e9re.",
+                    "default_channel": "Az a csatorna, amelyre k\u00f6zz\u00e9tehet, ha nincs megadva csatorna az \u00fczenet k\u00fcld\u00e9sekor.",
+                    "icon": "Haszn\u00e1lja a Slack hangulatjelek egyik\u00e9t ikonk\u00e9nt a megadott felhaszn\u00e1l\u00f3n\u00e9vhez.",
+                    "username": "A Home Assistant a megadott felhaszn\u00e1l\u00f3n\u00e9vvel fog \u00fczenetet k\u00fcldeni a Slackre."
+                },
+                "description": "L\u00e1sd a Slack API-kulcs megszerz\u00e9s\u00e9nek dokument\u00e1ci\u00f3j\u00e1t."
+            }
+        }
+    }
+}

@@ -14,12 +14,15 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from . import config_per_platform
+from .entity import Entity
 from .entity_component import EntityComponent
 from .entity_platform import EntityPlatform, async_get_platforms
 from .service import async_register_admin_service
 from .typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_RESET_LOCK = "lock_async_reset_platform_{}"
 
 
 async def async_reload_integration_platforms(
@@ -79,8 +82,11 @@ async def _resetup_platform(
     if hasattr(component, "async_reset_platform"):
         # If the integration has its own way to reset
         # use this method.
-        await component.async_reset_platform(hass, integration_name)
-        await component.async_setup(hass, root_config)
+        async with hass.data.setdefault(
+            PLATFORM_RESET_LOCK.format(integration_platform), asyncio.Lock()
+        ):
+            await component.async_reset_platform(hass, integration_name)
+            await component.async_setup(hass, root_config)
         return
 
     # If it's an entity platform, we use the entity_platform
@@ -115,7 +121,7 @@ async def _async_setup_platform(
         )
         return
 
-    entity_component: EntityComponent = hass.data[integration_platform]
+    entity_component: EntityComponent[Entity] = hass.data[integration_platform]
     tasks = [
         entity_component.async_setup_platform(integration_name, p_config)
         for p_config in platform_configs

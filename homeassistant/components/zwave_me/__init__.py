@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 ZWAVE_ME_PLATFORMS = [platform.value for platform in ZWaveMePlatform]
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave-Me from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     controller = hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, entry):
     raise ConfigEntryNotReady()
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

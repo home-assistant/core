@@ -11,8 +11,7 @@ from aiohttp.web_request import FileField
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
@@ -109,12 +108,12 @@ class LocalSource(MediaSource):
             base = BrowseMediaSource(
                 domain=DOMAIN,
                 identifier="",
-                media_class=MEDIA_CLASS_DIRECTORY,
+                media_class=MediaClass.DIRECTORY,
                 media_content_type=None,
                 title=self.name,
                 can_play=False,
                 can_expand=True,
-                children_media_class=MEDIA_CLASS_DIRECTORY,
+                children_media_class=MediaClass.DIRECTORY,
             )
 
             base.children = [
@@ -158,10 +157,10 @@ class LocalSource(MediaSource):
 
         title = path.name
 
-        media_class = MEDIA_CLASS_DIRECTORY
+        media_class = MediaClass.DIRECTORY
         if mime_type:
             media_class = MEDIA_CLASS_MAP.get(
-                mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
+                mime_type.split("/")[0], MediaClass.DIRECTORY
             )
 
         media = BrowseMediaSource(
@@ -180,9 +179,10 @@ class LocalSource(MediaSource):
         # Append first level children
         media.children = []
         for child_path in path.iterdir():
-            child = self._build_item_response(source_dir_id, child_path, True)
-            if child:
-                media.children.append(child)
+            if child_path.name[0] != ".":
+                child = self._build_item_response(source_dir_id, child_path, True)
+                if child:
+                    media.children.append(child)
 
         # Sort children showing directories first, then by name
         media.children.sort(key=lambda child: (child.can_play, child.title))
@@ -263,7 +263,7 @@ class UploadMediaView(http.HomeAssistantView):
             raise web.HTTPBadRequest() from err
 
         try:
-            item = MediaSourceItem.from_uri(self.hass, data["media_content_id"])
+            item = MediaSourceItem.from_uri(self.hass, data["media_content_id"], None)
         except ValueError as err:
             LOGGER.error("Received invalid upload data: %s", err)
             raise web.HTTPBadRequest() from err
@@ -300,9 +300,7 @@ class UploadMediaView(http.HomeAssistantView):
             {"media_content_id": f"{data['media_content_id']}/{uploaded_file.filename}"}
         )
 
-    def _move_file(  # pylint: disable=no-self-use
-        self, target_dir: Path, uploaded_file: FileField
-    ) -> None:
+    def _move_file(self, target_dir: Path, uploaded_file: FileField) -> None:
         """Move file to target."""
         if not target_dir.is_dir():
             raise ValueError("Target is not an existing directory")
@@ -329,7 +327,7 @@ async def websocket_remove_media(
 ) -> None:
     """Remove media."""
     try:
-        item = MediaSourceItem.from_uri(hass, msg["media_content_id"])
+        item = MediaSourceItem.from_uri(hass, msg["media_content_id"], None)
     except ValueError as err:
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
         return

@@ -1,7 +1,7 @@
 """Test the update significant change platform."""
 from homeassistant.components.update.const import (
-    ATTR_CURRENT_VERSION,
     ATTR_IN_PROGRESS,
+    ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
@@ -23,7 +23,7 @@ async def test_significant_change(hass: HomeAssistant) -> None:
     assert not async_check_significant_change(hass, STATE_ON, {}, STATE_ON, {})
 
     attrs = {
-        ATTR_CURRENT_VERSION: "1.0.0",
+        ATTR_INSTALLED_VERSION: "1.0.0",
         ATTR_IN_PROGRESS: False,
         ATTR_LATEST_VERSION: "1.0.1",
         ATTR_RELEASE_SUMMARY: "Fixes!",
@@ -38,7 +38,7 @@ async def test_significant_change(hass: HomeAssistant) -> None:
         STATE_ON,
         attrs,
         STATE_ON,
-        attrs.copy() | {ATTR_CURRENT_VERSION: "1.0.1"},
+        attrs.copy() | {ATTR_INSTALLED_VERSION: "1.0.1"},
     )
 
     assert async_check_significant_change(

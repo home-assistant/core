@@ -14,7 +14,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
 from homeassistant.core import EventOrigin, HomeAssistant, State, callback
@@ -59,7 +58,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)
     ignore_event = conf.get(CONF_IGNORE_EVENT)
-    ignore_event.append(EVENT_TIME_CHANGED)
 
     async def _event_publisher(event):
         """Handle events by publishing them on the MQTT queue."""

@@ -85,7 +85,7 @@ set_control_setpoint:
           min: 0
           max: 90
           step: 0.1
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
 
 set_hot_water_ovrd:
   name: Set hot water override
@@ -136,7 +136,7 @@ set_hot_water_setpoint:
           min: 0
           max: 90
           step: 0.1
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
 
 set_gpio_mode:
   name: Set gpio mode
@@ -156,8 +156,8 @@ set_gpio_mode:
       selector:
         select:
           options:
-            - 'A'
-            - 'B'
+            - "A"
+            - "B"
     mode:
       name: Mode
       description: >
@@ -187,12 +187,12 @@ set_led_mode:
       selector:
         select:
           options:
-            - 'A'
-            - 'B'
-            - 'C'
-            - 'D'
-            - 'E'
-            - 'F'
+            - "A"
+            - "B"
+            - "C"
+            - "D"
+            - "E"
+            - "F"
     mode:
       name: Mode
       description: >
@@ -202,18 +202,18 @@ set_led_mode:
       selector:
         select:
           options:
-            - 'B'
-            - 'C'
-            - 'E'
-            - 'F'
-            - 'H'
-            - 'M'
-            - 'O'
-            - 'P'
-            - 'R'
-            - 'T'
-            - 'W'
-            - 'X'
+            - "B"
+            - "C"
+            - "E"
+            - "F"
+            - "H"
+            - "M"
+            - "O"
+            - "P"
+            - "R"
+            - "T"
+            - "W"
+            - "X"
 
 set_max_modulation:
   name: Set max modulation

@@ -19,7 +19,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -130,7 +134,7 @@ class SeventeenTrackSummarySensor(SensorEntity):
         """Return the state."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the sensor."""
         await self._data.async_update()
 
@@ -185,7 +189,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the entity is available."""
         return self._data.packages.get(self._tracking_number) is not None
 
@@ -201,7 +205,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
         """Return the state."""
         return self._state
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the sensor."""
         await self._data.async_update()
 
@@ -234,7 +238,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
         """Remove entity itself."""
         await self.async_remove(force_remove=True)
 
-        reg = await self.hass.helpers.entity_registry.async_get_registry()
+        reg = er.async_get(self.hass)
         entity_id = reg.async_get_entity_id(
             "sensor",
             "seventeentrack",

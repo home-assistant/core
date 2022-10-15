@@ -117,8 +117,10 @@ async def async_setup_entry(
     data: PowerwallData = coordinator.data
     entities: list[PowerWallEntity] = [
         PowerWallChargeSensor(powerwall_data),
-        PowerWallBackupReserveSensor(powerwall_data),
     ]
+
+    if data.backup_reserve is not None:
+        entities.append(PowerWallBackupReserveSensor(powerwall_data))
 
     for meter in data.meters.meters:
         entities.append(PowerWallExportSensor(powerwall_data, meter))
@@ -190,8 +192,10 @@ class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
         return f"{self.base_unique_id}_backup_reserve"
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Get the current value in percentage."""
+        if self.data.backup_reserve is None:
+            return None
         return round(self.data.backup_reserve)
 
 

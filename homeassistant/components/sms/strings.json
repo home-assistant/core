@@ -3,7 +3,10 @@
     "step": {
       "user": {
         "title": "Connect to the modem",
-        "data": { "device": "Device" }
+        "data": {
+          "device": "Device",
+          "baud_speed": "Baud Speed"
+        }
       }
     },
     "error": {

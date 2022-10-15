@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_ID,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PROTOCOL,
     PERCENTAGE,
@@ -34,7 +35,6 @@ DatatypeDescription = namedtuple(
 CONF_DATATYPE_MASK = "datatype_mask"
 CONF_ONLY_NAMED = "only_named"
 CONF_TEMPERATURE_SCALE = "temperature_scale"
-CONF_MODEL = "model"
 
 DEFAULT_DATATYPE_MASK = 127
 DEFAULT_TEMPERATURE_SCALE = TEMP_CELSIUS
@@ -160,6 +160,6 @@ class TellstickSensor(SensorEntity):
         self._attr_native_unit_of_measurement = sensor_info.unit or None
         self._attr_name = f"{name} {sensor_info.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Update tellstick sensor."""
         self._attr_native_value = self._tellcore_sensor.value(self._datatype).value

@@ -32,19 +32,20 @@
             "2": "\u7b2c\u4e8c\u952e",
             "3": "\u7b2c\u4e09\u952e",
             "4": "\u7b2c\u56db\u952e",
-            "turn_off": "\u5173\u95ed"
+            "turn_off": "\u5173\u95ed",
+            "turn_on": "\u6253\u5f00"
         },
         "trigger_type": {
-            "double_short_release": "\u201c{subtype}\u201d\u4e24\u952e\u540c\u65f6\u677e\u5f00",
-            "initial_press": "\u201c{subtype}\u201d\u9996\u6b21\u6309\u4e0b",
-            "long_release": "\u201c{subtype}\u201d\u957f\u6309\u540e\u677e\u5f00",
+            "double_short_release": "\"{subtype}\" \u4e24\u952e\u540c\u65f6\u677e\u5f00",
+            "initial_press": "\"{subtype}\" \u9996\u6b21\u6309\u4e0b",
+            "long_release": "\"{subtype}\" \u957f\u6309\u540e\u677e\u5f00",
             "remote_button_long_release": "\"{subtype}\" \u957f\u6309\u540e\u677e\u5f00",
             "remote_button_short_press": "\"{subtype}\" \u5355\u51fb",
             "remote_button_short_release": "\"{subtype}\" \u677e\u5f00",
             "remote_double_button_long_press": "\"{subtype}\" \u4e24\u952e\u540c\u65f6\u957f\u6309\u540e\u677e\u5f00",
             "remote_double_button_short_press": "\"{subtype}\" \u4e24\u952e\u540c\u65f6\u677e\u5f00",
-            "repeat": "\u201c{subtype}\u201d\u6309\u4f4f\u4e0d\u653e",
-            "short_release": "\u201c{subtype}\u201d\u77ed\u6309\u540e\u677e\u5f00"
+            "repeat": "\"{subtype}\" \u6309\u4f4f\u4e0d\u653e",
+            "short_release": "\"{subtype}\" \u77ed\u6309\u540e\u677e\u5f00"
         }
     },
     "options": {

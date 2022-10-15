@@ -1,11 +1,12 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
 import asyncio
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import logbook, script
+from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -25,7 +26,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import template
+from homeassistant.helpers import entity_registry as er, template
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -33,13 +34,14 @@ from homeassistant.helpers.script import (
     SCRIPT_MODE_QUEUED,
     SCRIPT_MODE_RESTART,
     SCRIPT_MODE_SINGLE,
+    _async_stop_scripts_at_shutdown,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_mock_service, mock_restore_cache
-from tests.components.logbook.test_init import MockLazyEventPartialState
+from tests.common import async_fire_time_changed, async_mock_service, mock_restore_cache
+from tests.components.logbook.common import MockRow, mock_humanify
 
 ENTITY_ID = "script.test"
 
@@ -205,7 +207,8 @@ async def test_reload_service(hass, running):
         await hass.async_block_till_done()
 
     if running != "same":
-        assert hass.states.get(ENTITY_ID) is None
+        state = hass.states.get(ENTITY_ID)
+        assert state.attributes["restored"] is True
         assert not hass.services.has_service(script.DOMAIN, "test")
 
         assert hass.states.get("script.test2") is not None
@@ -374,7 +377,7 @@ async def test_async_get_descriptions_script(hass):
     }
 
     await async_setup_component(hass, DOMAIN, script_config)
-    descriptions = await hass.helpers.service.async_get_all_descriptions()
+    descriptions = await async_get_all_descriptions(hass)
 
     assert descriptions[DOMAIN]["test1"]["description"] == ""
     assert not descriptions[DOMAIN]["test1"]["fields"]
@@ -482,6 +485,11 @@ async def test_config_basic(hass):
     assert test_script.name == "Script Name"
     assert test_script.attributes["icon"] == "mdi:party"
 
+    registry = er.async_get(hass)
+    entry = registry.async_get("script.test_script")
+    assert entry
+    assert entry.unique_id == "test_script"
+
 
 async def test_config_multiple_domains(hass):
     """Test splitting configuration over multiple domains."""
@@ -518,24 +526,19 @@ async def test_logbook_humanify_script_started_event(hass):
     hass.config.components.add("recorder")
     await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                MockLazyEventPartialState(
-                    EVENT_SCRIPT_STARTED,
-                    {ATTR_ENTITY_ID: "script.hello", ATTR_NAME: "Hello Script"},
-                ),
-                MockLazyEventPartialState(
-                    EVENT_SCRIPT_STARTED,
-                    {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    event1, event2 = mock_humanify(
+        hass,
+        [
+            MockRow(
+                EVENT_SCRIPT_STARTED,
+                {ATTR_ENTITY_ID: "script.hello", ATTR_NAME: "Hello Script"},
+            ),
+            MockRow(
+                EVENT_SCRIPT_STARTED,
+                {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
+            ),
+        ],
     )
 
     assert event1["name"] == "Hello Script"
@@ -911,3 +914,208 @@ async def test_recursive_script_indirect(hass, script_mode, warning_msg, caplog)
     await asyncio.wait_for(service_called.wait(), 1)
 
     assert warning_msg in caplog.text
+
+
+@pytest.mark.parametrize(
+    "script_mode", [SCRIPT_MODE_PARALLEL, SCRIPT_MODE_QUEUED, SCRIPT_MODE_RESTART]
+)
+async def test_recursive_script_turn_on(hass: HomeAssistant, script_mode, caplog):
+    """Test script turning itself on.
+
+    - Illegal recursion detection should not be triggered
+    - Home Assistant should not hang on shut down
+    - SCRIPT_MODE_SINGLE is not relevant because suca script can't turn itself on
+    """
+    # Make sure we cover all script modes
+    assert SCRIPT_MODE_CHOICES == [
+        SCRIPT_MODE_PARALLEL,
+        SCRIPT_MODE_QUEUED,
+        SCRIPT_MODE_RESTART,
+        SCRIPT_MODE_SINGLE,
+    ]
+    stop_scripts_at_shutdown_called = asyncio.Event()
+    real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
+
+    async def stop_scripts_at_shutdown(*args):
+        await real_stop_scripts_at_shutdown(*args)
+        stop_scripts_at_shutdown_called.set()
+
+    with patch(
+        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        wraps=stop_scripts_at_shutdown,
+    ):
+        assert await async_setup_component(
+            hass,
+            script.DOMAIN,
+            {
+                script.DOMAIN: {
+                    "script1": {
+                        "mode": script_mode,
+                        "sequence": [
+                            {
+                                "choose": {
+                                    "conditions": {
+                                        "condition": "template",
+                                        "value_template": "{{ request == 'step_2' }}",
+                                    },
+                                    "sequence": {"service": "test.script_done"},
+                                },
+                                "default": {
+                                    "service": "script.turn_on",
+                                    "data": {
+                                        "entity_id": "script.script1",
+                                        "variables": {"request": "step_2"},
+                                    },
+                                },
+                            },
+                            {
+                                "service": "script.turn_on",
+                                "data": {"entity_id": "script.script1"},
+                            },
+                        ],
+                    }
+                }
+            },
+        )
+
+        service_called = asyncio.Event()
+
+        async def async_service_handler(service):
+            if service.service == "script_done":
+                service_called.set()
+
+        hass.services.async_register("test", "script_done", async_service_handler)
+
+        await hass.services.async_call("script", "script1")
+        await asyncio.wait_for(service_called.wait(), 1)
+
+        # Trigger 1st stage script shutdown
+        hass.state = CoreState.stopping
+        hass.bus.async_fire("homeassistant_stop")
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+
+        # Trigger 2nd stage script shutdown
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+        await hass.async_block_till_done()
+
+        assert "Disallowed recursion detected" not in caplog.text
+
+
+async def test_setup_with_duplicate_scripts(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup with duplicate configs."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script one": {
+                "duplicate": {
+                    "sequence": [],
+                },
+            },
+            "script two": {
+                "duplicate": {
+                    "sequence": [],
+                },
+            },
+        },
+    )
+    assert "Duplicate script detected with name: 'duplicate'" in caplog.text
+    assert len(hass.states.async_entity_ids("script")) == 1
+
+
+async def test_websocket_config(hass, hass_ws_client):
+    """Test config command."""
+    config = {
+        "alias": "hello",
+        "sequence": [{"service": "light.turn_on"}],
+    }
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "hello": config,
+            },
+        },
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "script/config",
+            "entity_id": "script.hello",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"config": config}
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "script/config",
+            "entity_id": "script.not_exist",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+
+
+async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
+    """Test the script service works for scripts with overridden entity_id."""
+    entity_reg = er.async_get(hass)
+    entry = entity_reg.async_get_or_create("script", "script", "test")
+    entry = entity_reg.async_update_entity(
+        entry.entity_id, new_entity_id="script.custom_entity_id"
+    )
+    assert entry.entity_id == "script.custom_entity_id"
+
+    calls = []
+
+    @callback
+    def record_call(service):
+        """Add recorded event to set."""
+        calls.append(service)
+
+    hass.services.async_register("test", "script", record_call)
+
+    # Make sure the service of a script with overridden entity_id works
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test": {
+                    "sequence": {
+                        "service": "test.script",
+                        "data_template": {"entity_id": "{{ this.entity_id }}"},
+                    }
+                }
+            }
+        },
+    )
+
+    await hass.services.async_call(DOMAIN, "test", {"greeting": "world"})
+
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["entity_id"] == "script.custom_entity_id"
+
+    # Change entity while the script entity is loaded, and make sure the service still works
+    entry = entity_reg.async_update_entity(
+        entry.entity_id, new_entity_id="script.custom_entity_id_2"
+    )
+    assert entry.entity_id == "script.custom_entity_id_2"
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(DOMAIN, "test", {"greeting": "world"})
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[1].data["entity_id"] == "script.custom_entity_id_2"

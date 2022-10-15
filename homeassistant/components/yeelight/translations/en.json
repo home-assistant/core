@@ -34,8 +34,7 @@
                     "save_on_change": "Save Status On Change",
                     "transition": "Transition Time (ms)",
                     "use_music_mode": "Enable Music Mode"
-                },
-                "description": "If you leave model empty, it will be automatically detected."
+                }
             }
         }
     }

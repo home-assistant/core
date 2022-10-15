@@ -48,7 +48,7 @@ class RuntimeConfig:
     open_ui: bool = False
 
 
-class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid-type,misc]
+class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:
@@ -59,7 +59,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
     @property
     def loop_name(self) -> str:
         """Return name of the loop."""
-        return self._loop_factory.__name__  # type: ignore[no-any-return]
+        return self._loop_factory.__name__  # type: ignore[no-any-return,attr-defined]
 
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""

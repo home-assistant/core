@@ -1,11 +1,12 @@
 """Support for Cameras with FFmpeg as decoder."""
 from __future__ import annotations
 
+from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, CameraEntityFeature
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
@@ -40,6 +41,8 @@ async def async_setup_platform(
 class FFmpegCamera(Camera):
     """An implementation of an FFmpeg camera."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+
     def __init__(self, hass, config):
         """Initialize a FFmpeg camera."""
         super().__init__()
@@ -48,11 +51,6 @@ class FFmpegCamera(Camera):
         self._name = config.get(CONF_NAME)
         self._input = config.get(CONF_INPUT)
         self._extra_arguments = config.get(CONF_EXTRA_ARGUMENTS)
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_STREAM
 
     async def stream_source(self):
         """Return the stream source."""
@@ -69,7 +67,9 @@ class FFmpegCamera(Camera):
             extra_cmd=self._extra_arguments,
         )
 
-    async def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse:
         """Generate an HTTP MJPEG stream from the camera."""
 
         stream = CameraMjpeg(self._manager.binary)

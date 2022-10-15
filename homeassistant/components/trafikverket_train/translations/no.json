@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "incorrect_api_key": "Ugyldig API-n\u00f8kkel for valgt konto",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_station": "Kunne ikke finne en stasjon med det angitte navnet",
+            "invalid_time": "Ugyldig tid oppgitt",
+            "more_stations": "Fant flere stasjoner med det angitte navnet"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "from": "Fra stasjon",
+                    "time": "Tid (valgfritt)",
+                    "to": "Til stasjon",
+                    "weekday": "Dager"
+                }
+            }
+        }
+    }
+}

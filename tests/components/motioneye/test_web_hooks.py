@@ -67,7 +67,7 @@ async def test_setup_camera_without_webhook(hass: HomeAssistant) -> None:
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
     )
@@ -122,7 +122,7 @@ async def test_setup_camera_with_wrong_webhook(
         )
         await hass.async_block_till_done()
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
     )
@@ -175,7 +175,7 @@ async def test_setup_camera_with_old_webhook(
     )
     assert client.async_set_camera.called
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER}
     )
@@ -211,7 +211,7 @@ async def test_setup_camera_with_correct_webhook(
         hass, data={CONF_URL: TEST_URL, CONF_WEBHOOK_ID: "webhook_secret_id"}
     )
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -281,7 +281,7 @@ async def test_good_query(hass: HomeAssistant, hass_client_no_auth: Any) -> None
     """Test good callbacks."""
     await async_setup_component(hass, "http", {"http": {}})
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
 
@@ -378,7 +378,7 @@ async def test_event_media_data(hass: HomeAssistant, hass_client_no_auth: Any) -
     """Test an event with a file path generates media data."""
     await async_setup_component(hass, "http", {"http": {}})
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
 

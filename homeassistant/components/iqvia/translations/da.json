@@ -8,8 +8,7 @@
                 "data": {
                     "zip_code": "Postnummer"
                 },
-                "description": "Udfyld dit amerikanske eller canadiske postnummer.",
-                "title": "IQVIA"
+                "description": "Udfyld dit amerikanske eller canadiske postnummer."
             }
         }
     }

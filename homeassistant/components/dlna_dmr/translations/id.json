@@ -4,7 +4,6 @@
             "already_configured": "Perangkat sudah dikonfigurasi",
             "alternative_integration": "Perangkat dapat didukung lebih baik lewat integrasi lainnya",
             "cannot_connect": "Gagal terhubung",
-            "could_not_connect": "Gagal terhubung ke perangkat DLNA",
             "discovery_error": "Gagal menemukan perangkat DLNA yang cocok",
             "incomplete_config": "Konfigurasi tidak memiliki variabel yang diperlukan",
             "non_unique_id": "Beberapa perangkat ditemukan dengan ID unik yang sama",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
-            "could_not_connect": "Gagal terhubung ke perangkat DLNA",
             "not_dmr": "Perangkat bukan Digital Media Renderer yang didukung"
         },
         "flow_title": "{name}",
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "url": "URL"
+                    "host": "Host"
                 },
                 "description": "Pilih perangkat untuk dikonfigurasi atau biarkan kosong untuk memasukkan URL",
                 "title": "Perangkat DLNA DMR yang ditemukan"
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Tampilkan media yang tidak kompatibel saat menjelajah",
                     "callback_url_override": "URL panggilan balik pendengar peristiwa",
                     "listen_port": "Port pendengar peristiwa (acak jika tidak diatur)",
                     "poll_availability": "Polling untuk ketersediaan perangkat"

@@ -27,6 +27,10 @@
             "reauth": {
                 "description": "Das Profil \"{profile}\" muss neu authentifiziert werden, um weiterhin Withings-Daten zu empfangen.",
                 "title": "Integration erneut authentifizieren"
+            },
+            "reauth_confirm": {
+                "description": "Das Profil \"{profile}\" muss neu authentifiziert werden, um weiterhin Withings-Daten zu empfangen.",
+                "title": "Integration erneut authentifizieren"
             }
         }
     }

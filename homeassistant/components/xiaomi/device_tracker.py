@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> XiaomiDeviceScanner | None:
     """Validate the configuration and return a Xiaomi Device Scanner."""
     scanner = XiaomiDeviceScanner(config[DOMAIN])
 
@@ -113,7 +113,7 @@ def _retrieve_list(host, token, **kwargs):
     url = "http://{}/cgi-bin/luci/;stok={}/api/misystem/devicelist"
     url = url.format(host, token)
     try:
-        res = requests.get(url, timeout=5, **kwargs)
+        res = requests.get(url, timeout=10, **kwargs)
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out at URL %s", url)
         return

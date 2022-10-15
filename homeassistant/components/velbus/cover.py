@@ -7,18 +7,15 @@ from velbusaio.channels import Blind as VelbusBlind
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VelbusEntity
 from .const import DOMAIN
+from .entity import VelbusEntity
 
 
 async def async_setup_entry(
@@ -45,10 +42,17 @@ class VelbusCover(VelbusEntity, CoverEntity):
         super().__init__(channel)
         if self._channel.support_position():
             self._attr_supported_features = (
-                SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+                | CoverEntityFeature.SET_POSITION
             )
         else:
-            self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+            self._attr_supported_features = (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+            )
 
     @property
     def is_closed(self) -> bool | None:
@@ -62,7 +66,10 @@ class VelbusCover(VelbusEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open
         Velbus: 100 = closed, 0 = open
         """
-        return 100 - self._channel.get_position()
+        pos = self._channel.get_position()
+        if pos is not None:
+            return 100 - pos
+        return None
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

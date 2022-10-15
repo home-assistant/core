@@ -8,15 +8,16 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "fallback": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Rooni serverit ei leitud, sisesta hostinimi ja port."
+            },
             "link": {
                 "description": "Pead Roonis koduabilise volitama. Kui oled kl\u00f5psanud nuppu Esita, mine rakendusse Roon Core, ava Seaded ja luba vahekaardil Laiendused Home Assistant.",
                 "title": "Volita HomeAssistant Roonis"
-            },
-            "user": {
-                "data": {
-                    "host": ""
-                },
-                "description": "Rooni serverit ei leitud. Sisesta oma Rooni serveri hostinimi v\u00f5i IP."
             }
         }
     }

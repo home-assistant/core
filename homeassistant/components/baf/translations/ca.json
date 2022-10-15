@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "ipv6_not_supported": "IPv6 no est\u00e0 suportat."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "{name} - {model} ({ip_address})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vols configurar {name} - {model} ({ip_address})?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP"
+                }
+            }
+        }
+    }
+}

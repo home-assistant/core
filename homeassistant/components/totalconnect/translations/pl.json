@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Lokalizacja",
                     "usercode": "Kod u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a kod u\u017cytkownika dla u\u017cytkownika w lokalizacji {location_id}",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Automatyczne obej\u015bcie niskiego poziomu baterii"
                 },
-                "title": "Total Connect"
+                "description": "Automatycznie pomijaj strefy, kt\u00f3re zg\u0142osz\u0105 niski poziom na\u0142adowania baterii.",
+                "title": "Opcje TotalConnect"
             }
         }
     }

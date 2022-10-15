@@ -6,7 +6,7 @@ from typing import Any
 
 from aiolookin import Remote
 
-from homeassistant.components.light import COLOR_MODE_ONOFF, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -49,8 +49,8 @@ async def async_setup_entry(
 class LookinLightEntity(LookinPowerPushRemoteEntity, LightEntity):
     """A lookin IR controlled light."""
 
-    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
-    _attr_color_mode = COLOR_MODE_ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_color_mode = ColorMode.ONOFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

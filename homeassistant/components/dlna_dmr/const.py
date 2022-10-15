@@ -7,7 +7,7 @@ from typing import Final
 
 from async_upnp_client.profiles.dlna import PlayMode as _PlayMode
 
-from homeassistant.components.media_player import const as _mp_const
+from homeassistant.components.media_player import MediaType, RepeatMode
 
 LOGGER = logging.getLogger(__package__)
 
@@ -16,6 +16,7 @@ DOMAIN: Final = "dlna_dmr"
 CONF_LISTEN_PORT: Final = "listen_port"
 CONF_CALLBACK_URL_OVERRIDE: Final = "callback_url_override"
 CONF_POLL_AVAILABILITY: Final = "poll_availability"
+CONF_BROWSE_UNFILTERED: Final = "browse_unfiltered"
 
 DEFAULT_NAME: Final = "DLNA Digital Media Renderer"
 
@@ -27,66 +28,66 @@ PROTOCOL_ANY: Final = "*"
 STREAMABLE_PROTOCOLS: Final = [PROTOCOL_HTTP, PROTOCOL_RTSP, PROTOCOL_ANY]
 
 # Map UPnP class to media_player media_content_type
-MEDIA_TYPE_MAP: Mapping[str, str] = {
-    "object": _mp_const.MEDIA_TYPE_URL,
-    "object.item": _mp_const.MEDIA_TYPE_URL,
-    "object.item.imageItem": _mp_const.MEDIA_TYPE_IMAGE,
-    "object.item.imageItem.photo": _mp_const.MEDIA_TYPE_IMAGE,
-    "object.item.audioItem": _mp_const.MEDIA_TYPE_MUSIC,
-    "object.item.audioItem.musicTrack": _mp_const.MEDIA_TYPE_MUSIC,
-    "object.item.audioItem.audioBroadcast": _mp_const.MEDIA_TYPE_MUSIC,
-    "object.item.audioItem.audioBook": _mp_const.MEDIA_TYPE_PODCAST,
-    "object.item.videoItem": _mp_const.MEDIA_TYPE_VIDEO,
-    "object.item.videoItem.movie": _mp_const.MEDIA_TYPE_MOVIE,
-    "object.item.videoItem.videoBroadcast": _mp_const.MEDIA_TYPE_TVSHOW,
-    "object.item.videoItem.musicVideoClip": _mp_const.MEDIA_TYPE_VIDEO,
-    "object.item.playlistItem": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.item.textItem": _mp_const.MEDIA_TYPE_URL,
-    "object.item.bookmarkItem": _mp_const.MEDIA_TYPE_URL,
-    "object.item.epgItem": _mp_const.MEDIA_TYPE_EPISODE,
-    "object.item.epgItem.audioProgram": _mp_const.MEDIA_TYPE_EPISODE,
-    "object.item.epgItem.videoProgram": _mp_const.MEDIA_TYPE_EPISODE,
-    "object.container": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.person": _mp_const.MEDIA_TYPE_ARTIST,
-    "object.container.person.musicArtist": _mp_const.MEDIA_TYPE_ARTIST,
-    "object.container.playlistContainer": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.album": _mp_const.MEDIA_TYPE_ALBUM,
-    "object.container.album.musicAlbum": _mp_const.MEDIA_TYPE_ALBUM,
-    "object.container.album.photoAlbum": _mp_const.MEDIA_TYPE_ALBUM,
-    "object.container.genre": _mp_const.MEDIA_TYPE_GENRE,
-    "object.container.genre.musicGenre": _mp_const.MEDIA_TYPE_GENRE,
-    "object.container.genre.movieGenre": _mp_const.MEDIA_TYPE_GENRE,
-    "object.container.channelGroup": _mp_const.MEDIA_TYPE_CHANNELS,
-    "object.container.channelGroup.audioChannelGroup": _mp_const.MEDIA_TYPE_CHANNELS,
-    "object.container.channelGroup.videoChannelGroup": _mp_const.MEDIA_TYPE_CHANNELS,
-    "object.container.epgContainer": _mp_const.MEDIA_TYPE_TVSHOW,
-    "object.container.storageSystem": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.storageVolume": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.storageFolder": _mp_const.MEDIA_TYPE_PLAYLIST,
-    "object.container.bookmarkFolder": _mp_const.MEDIA_TYPE_PLAYLIST,
+MEDIA_TYPE_MAP: Mapping[str, MediaType] = {
+    "object": MediaType.URL,
+    "object.item": MediaType.URL,
+    "object.item.imageItem": MediaType.IMAGE,
+    "object.item.imageItem.photo": MediaType.IMAGE,
+    "object.item.audioItem": MediaType.MUSIC,
+    "object.item.audioItem.musicTrack": MediaType.MUSIC,
+    "object.item.audioItem.audioBroadcast": MediaType.MUSIC,
+    "object.item.audioItem.audioBook": MediaType.PODCAST,
+    "object.item.videoItem": MediaType.VIDEO,
+    "object.item.videoItem.movie": MediaType.MOVIE,
+    "object.item.videoItem.videoBroadcast": MediaType.TVSHOW,
+    "object.item.videoItem.musicVideoClip": MediaType.VIDEO,
+    "object.item.playlistItem": MediaType.PLAYLIST,
+    "object.item.textItem": MediaType.URL,
+    "object.item.bookmarkItem": MediaType.URL,
+    "object.item.epgItem": MediaType.EPISODE,
+    "object.item.epgItem.audioProgram": MediaType.EPISODE,
+    "object.item.epgItem.videoProgram": MediaType.EPISODE,
+    "object.container": MediaType.PLAYLIST,
+    "object.container.person": MediaType.ARTIST,
+    "object.container.person.musicArtist": MediaType.ARTIST,
+    "object.container.playlistContainer": MediaType.PLAYLIST,
+    "object.container.album": MediaType.ALBUM,
+    "object.container.album.musicAlbum": MediaType.ALBUM,
+    "object.container.album.photoAlbum": MediaType.ALBUM,
+    "object.container.genre": MediaType.GENRE,
+    "object.container.genre.musicGenre": MediaType.GENRE,
+    "object.container.genre.movieGenre": MediaType.GENRE,
+    "object.container.channelGroup": MediaType.CHANNELS,
+    "object.container.channelGroup.audioChannelGroup": MediaType.CHANNELS,
+    "object.container.channelGroup.videoChannelGroup": MediaType.CHANNELS,
+    "object.container.epgContainer": MediaType.TVSHOW,
+    "object.container.storageSystem": MediaType.PLAYLIST,
+    "object.container.storageVolume": MediaType.PLAYLIST,
+    "object.container.storageFolder": MediaType.PLAYLIST,
+    "object.container.bookmarkFolder": MediaType.PLAYLIST,
 }
 
 # Map media_player media_content_type to UPnP class. Not everything will map
 # directly, in which case it's not specified and other defaults will be used.
-MEDIA_UPNP_CLASS_MAP: Mapping[str, str] = {
-    _mp_const.MEDIA_TYPE_ALBUM: "object.container.album.musicAlbum",
-    _mp_const.MEDIA_TYPE_ARTIST: "object.container.person.musicArtist",
-    _mp_const.MEDIA_TYPE_CHANNEL: "object.item.videoItem.videoBroadcast",
-    _mp_const.MEDIA_TYPE_CHANNELS: "object.container.channelGroup",
-    _mp_const.MEDIA_TYPE_COMPOSER: "object.container.person.musicArtist",
-    _mp_const.MEDIA_TYPE_CONTRIBUTING_ARTIST: "object.container.person.musicArtist",
-    _mp_const.MEDIA_TYPE_EPISODE: "object.item.epgItem.videoProgram",
-    _mp_const.MEDIA_TYPE_GENRE: "object.container.genre",
-    _mp_const.MEDIA_TYPE_IMAGE: "object.item.imageItem",
-    _mp_const.MEDIA_TYPE_MOVIE: "object.item.videoItem.movie",
-    _mp_const.MEDIA_TYPE_MUSIC: "object.item.audioItem.musicTrack",
-    _mp_const.MEDIA_TYPE_PLAYLIST: "object.item.playlistItem",
-    _mp_const.MEDIA_TYPE_PODCAST: "object.item.audioItem.audioBook",
-    _mp_const.MEDIA_TYPE_SEASON: "object.item.epgItem.videoProgram",
-    _mp_const.MEDIA_TYPE_TRACK: "object.item.audioItem.musicTrack",
-    _mp_const.MEDIA_TYPE_TVSHOW: "object.item.videoItem.videoBroadcast",
-    _mp_const.MEDIA_TYPE_URL: "object.item.bookmarkItem",
-    _mp_const.MEDIA_TYPE_VIDEO: "object.item.videoItem",
+MEDIA_UPNP_CLASS_MAP: Mapping[MediaType | str, str] = {
+    MediaType.ALBUM: "object.container.album.musicAlbum",
+    MediaType.ARTIST: "object.container.person.musicArtist",
+    MediaType.CHANNEL: "object.item.videoItem.videoBroadcast",
+    MediaType.CHANNELS: "object.container.channelGroup",
+    MediaType.COMPOSER: "object.container.person.musicArtist",
+    MediaType.CONTRIBUTING_ARTIST: "object.container.person.musicArtist",
+    MediaType.EPISODE: "object.item.epgItem.videoProgram",
+    MediaType.GENRE: "object.container.genre",
+    MediaType.IMAGE: "object.item.imageItem",
+    MediaType.MOVIE: "object.item.videoItem.movie",
+    MediaType.MUSIC: "object.item.audioItem.musicTrack",
+    MediaType.PLAYLIST: "object.item.playlistItem",
+    MediaType.PODCAST: "object.item.audioItem.audioBook",
+    MediaType.SEASON: "object.item.epgItem.videoProgram",
+    MediaType.TRACK: "object.item.audioItem.musicTrack",
+    MediaType.TVSHOW: "object.item.videoItem.videoBroadcast",
+    MediaType.URL: "object.item.bookmarkItem",
+    MediaType.VIDEO: "object.item.videoItem",
 }
 
 # Translation of MediaMetadata keys to DIDL-Lite keys.
@@ -108,32 +109,32 @@ MEDIA_METADATA_DIDL: Mapping[str, str] = {
 # of play modes in order of suitability. Fall back to _PlayMode.NORMAL in any
 # case. NOTE: This list is slightly different to that in SHUFFLE_PLAY_MODES,
 # due to fallback behaviour when turning on repeat modes.
-REPEAT_PLAY_MODES: Mapping[tuple[bool, str], list[_PlayMode]] = {
-    (False, _mp_const.REPEAT_MODE_OFF): [
+REPEAT_PLAY_MODES: Mapping[tuple[bool, RepeatMode], list[_PlayMode]] = {
+    (False, RepeatMode.OFF): [
         _PlayMode.NORMAL,
     ],
-    (False, _mp_const.REPEAT_MODE_ONE): [
+    (False, RepeatMode.ONE): [
         _PlayMode.REPEAT_ONE,
         _PlayMode.REPEAT_ALL,
         _PlayMode.NORMAL,
     ],
-    (False, _mp_const.REPEAT_MODE_ALL): [
+    (False, RepeatMode.ALL): [
         _PlayMode.REPEAT_ALL,
         _PlayMode.REPEAT_ONE,
         _PlayMode.NORMAL,
     ],
-    (True, _mp_const.REPEAT_MODE_OFF): [
+    (True, RepeatMode.OFF): [
         _PlayMode.SHUFFLE,
         _PlayMode.RANDOM,
         _PlayMode.NORMAL,
     ],
-    (True, _mp_const.REPEAT_MODE_ONE): [
+    (True, RepeatMode.ONE): [
         _PlayMode.REPEAT_ONE,
         _PlayMode.RANDOM,
         _PlayMode.SHUFFLE,
         _PlayMode.NORMAL,
     ],
-    (True, _mp_const.REPEAT_MODE_ALL): [
+    (True, RepeatMode.ALL): [
         _PlayMode.RANDOM,
         _PlayMode.REPEAT_ALL,
         _PlayMode.SHUFFLE,
@@ -145,31 +146,31 @@ REPEAT_PLAY_MODES: Mapping[tuple[bool, str], list[_PlayMode]] = {
 # of play modes in order of suitability. Fall back to _PlayMode.NORMAL in any
 # case.
 SHUFFLE_PLAY_MODES: Mapping[tuple[bool, str], list[_PlayMode]] = {
-    (False, _mp_const.REPEAT_MODE_OFF): [
+    (False, RepeatMode.OFF): [
         _PlayMode.NORMAL,
     ],
-    (False, _mp_const.REPEAT_MODE_ONE): [
+    (False, RepeatMode.ONE): [
         _PlayMode.REPEAT_ONE,
         _PlayMode.REPEAT_ALL,
         _PlayMode.NORMAL,
     ],
-    (False, _mp_const.REPEAT_MODE_ALL): [
+    (False, RepeatMode.ALL): [
         _PlayMode.REPEAT_ALL,
         _PlayMode.REPEAT_ONE,
         _PlayMode.NORMAL,
     ],
-    (True, _mp_const.REPEAT_MODE_OFF): [
+    (True, RepeatMode.OFF): [
         _PlayMode.SHUFFLE,
         _PlayMode.RANDOM,
         _PlayMode.NORMAL,
     ],
-    (True, _mp_const.REPEAT_MODE_ONE): [
+    (True, RepeatMode.ONE): [
         _PlayMode.RANDOM,
         _PlayMode.SHUFFLE,
         _PlayMode.REPEAT_ONE,
         _PlayMode.NORMAL,
     ],
-    (True, _mp_const.REPEAT_MODE_ALL): [
+    (True, RepeatMode.ALL): [
         _PlayMode.RANDOM,
         _PlayMode.SHUFFLE,
         _PlayMode.REPEAT_ALL,

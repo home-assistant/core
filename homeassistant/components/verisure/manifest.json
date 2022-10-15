@@ -2,7 +2,7 @@
   "domain": "verisure",
   "name": "Verisure",
   "documentation": "https://www.home-assistant.io/integrations/verisure",
-  "requirements": ["vsure==1.7.3"],
+  "requirements": ["vsure==1.8.1"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "dhcp": [

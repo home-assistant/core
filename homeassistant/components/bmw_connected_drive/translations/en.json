@@ -21,8 +21,7 @@
         "step": {
             "account_options": {
                 "data": {
-                    "read_only": "Read-only (only sensors and notify, no execution of services, no lock)",
-                    "use_location": "Use Home Assistant location for car location polls (required for non i3/i8 vehicles produced before 7/2014)"
+                    "read_only": "Read-only (only sensors and notify, no execution of services, no lock)"
                 }
             }
         }

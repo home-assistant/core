@@ -4,9 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aseko_pool_live",
   "requirements": ["aioaseko==0.0.2"],
-  "codeowners": [
-    "@milanmeu"
-  ],
+  "codeowners": ["@milanmeu"],
   "iot_class": "cloud_polling",
   "loggers": ["aioaseko"]
 }

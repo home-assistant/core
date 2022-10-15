@@ -64,11 +64,11 @@ async def test_user(hass, webhook_id, secret):
     flow = await init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user({})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "OwnTracks"
     assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
     assert result["data"][CONF_SECRET] == SECRET
@@ -98,7 +98,7 @@ async def test_abort_if_already_setup(hass):
 
     # Should fail, already setup (flow)
     result = await flow.async_step_user({})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -107,7 +107,7 @@ async def test_user_not_supports_encryption(hass, not_supports_encryption):
     flow = await init_config_flow(hass)
 
     result = await flow.async_step_user({})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert (
         result["description_placeholders"]["secret"]
         == "Encryption is not supported because nacl is not installed."
@@ -165,7 +165,7 @@ async def test_with_cloud_sub(hass):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     entry = result["result"]
     assert entry.data["cloudhook"]
     assert (
@@ -192,5 +192,5 @@ async def test_with_cloud_sub_not_connected(hass):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cloud_not_connected"

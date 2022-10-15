@@ -2,11 +2,11 @@
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa habilitada",
-            "can_reach_cert_server": "Servidor de Certificados accesible",
-            "can_reach_cloud": "Home Assistant Cloud accesible",
-            "can_reach_cloud_auth": "Servidor de Autenticaci\u00f3n accesible",
+            "can_reach_cert_server": "Se llega al Servidor de Certificados",
+            "can_reach_cloud": "Se llega a Home Assistant Cloud",
+            "can_reach_cloud_auth": "Se llega al Servidor de Autenticaci\u00f3n",
             "google_enabled": "Google habilitado",
-            "logged_in": "Iniciada sesi\u00f3n",
+            "logged_in": "Sesi\u00f3n iniciada",
             "relayer_connected": "Relayer conectado",
             "remote_connected": "Remoto conectado",
             "remote_enabled": "Remoto habilitado",

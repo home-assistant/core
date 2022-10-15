@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+            "invalid_unique_id": "Seadme kehtivat kordumatut ID-d on v\u00f5imatu m\u00e4\u00e4rata",
+            "no_unique_id": "Seade, millel puudub kehtiv kordumatu ID, on juba seadistatud. Mitme eksemplari seadistamine pole v\u00f5imalik"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
@@ -18,7 +19,7 @@
                     "mode": "Re\u017eiim",
                     "name": "Nimi",
                     "password": "Salas\u00f5na",
-                    "port": "Port",
+                    "port": "Port (vaikepordi kasutamiseks j\u00e4ta t\u00fchjaks)",
                     "protocol": "Kasutatav sideprotokoll",
                     "ssh_key": "Rada SSH v\u00f5tmefailini (parooli asemel)",
                     "username": "Kasutajanimi"

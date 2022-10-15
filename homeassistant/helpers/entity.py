@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections.abc import Awaitable, Iterable, Mapping, MutableMapping
+from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, auto
@@ -12,7 +12,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Literal, TypedDict, final
+from typing import Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -28,24 +28,20 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
-    ENTITY_CATEGORIES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
-from . import entity_registry as er
+from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
-from .frame import report
 from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,15 +53,6 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
-
-
-def validate_entity_category(value: Any | None) -> EntityCategory:
-    """Validate entity category configuration."""
-    value = vol.In(ENTITY_CATEGORIES)(value)
-    return EntityCategory(value)
-
-
-ENTITY_CATEGORIES_SCHEMA = validate_entity_category
 
 
 @callback
@@ -204,8 +191,8 @@ class EntityCategory(StrEnum):
     # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
     DIAGNOSTIC = "diagnostic"
 
-    # System: An entity which is not useful for the user to interact with
-    SYSTEM = "system"
+
+ENTITY_CATEGORIES_SCHEMA: Final = vol.Coerce(EntityCategory)
 
 
 class EntityPlatformState(Enum):
@@ -221,29 +208,6 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-def convert_to_entity_category(
-    value: EntityCategory | str | None, raise_report: bool = True
-) -> EntityCategory | None:
-    """Force incoming entity_category to be an enum."""
-
-    if value is None:
-        return value
-
-    if not isinstance(value, EntityCategory):
-        if raise_report:
-            report(
-                "uses %s (%s) for entity category. This is deprecated and will "
-                "stop working in Home Assistant 2022.4, it should be updated to use "
-                "EntityCategory instead" % (type(value).__name__, value),
-                error_if_core=False,
-            )
-        try:
-            return EntityCategory(value)
-        except ValueError:
-            return None
-    return value
-
-
 @dataclass
 class EntityDescription:
     """A class that describes Home Assistant entities."""
@@ -252,13 +216,12 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    # Type string is deprecated as of 2021.12, use EntityCategory
-    entity_category: EntityCategory | Literal[
-        "config", "diagnostic", "system"
-    ] | None = None
+    entity_category: EntityCategory | None = None
     entity_registry_enabled_default: bool = True
+    entity_registry_visible_default: bool = True
     force_update: bool = False
     icon: str | None = None
+    has_entity_name: bool = False
     name: str | None = None
     unit_of_measurement: str | None = None
 
@@ -311,12 +274,15 @@ class Entity(ABC):
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
     _attr_available: bool = True
+    _attr_capability_attributes: Mapping[str, Any] | None = None
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
+    _attr_has_entity_name: bool
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
+    _attr_entity_registry_visible_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
@@ -341,6 +307,15 @@ class Entity(ABC):
         return self._attr_unique_id
 
     @property
+    def has_entity_name(self) -> bool:
+        """Return if the name of the entity is describing only the entity itself."""
+        if hasattr(self, "_attr_has_entity_name"):
+            return self._attr_has_entity_name
+        if hasattr(self, "entity_description"):
+            return self.entity_description.has_entity_name
+        return False
+
+    @property
     def name(self) -> str | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
@@ -363,7 +338,7 @@ class Entity(ABC):
         Implemented by component base class. Convention for attribute names
         is lowercase snake_case.
         """
-        return None
+        return self._attr_capability_attributes
 
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -477,13 +452,21 @@ class Entity(ABC):
         return True
 
     @property
+    def entity_registry_visible_default(self) -> bool:
+        """Return if the entity should be visible when first added to the entity registry."""
+        if hasattr(self, "_attr_entity_registry_visible_default"):
+            return self._attr_entity_registry_visible_default
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_registry_visible_default
+        return True
+
+    @property
     def attribution(self) -> str | None:
         """Return the attribution."""
         return self._attr_attribution
 
-    # Type str is deprecated as of 2021.12, use EntityCategory
     @property
-    def entity_category(self) -> EntityCategory | str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
@@ -612,7 +595,26 @@ class Entity(ABC):
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        if (name := (entry and entry.name) or self.name) is not None:
+        def friendly_name() -> str | None:
+            """Return the friendly name.
+
+            If has_entity_name is False, this returns self.name
+            If has_entity_name is True, this returns device.name + self.name
+            """
+            if not self.has_entity_name or not self.registry_entry:
+                return self.name
+
+            device_registry = dr.async_get(self.hass)
+            if not (device_id := self.registry_entry.device_id) or not (
+                device_entry := device_registry.async_get(device_id)
+            ):
+                return self.name
+
+            if not self.name:
+                return device_entry.name_by_user or device_entry.name
+            return f"{device_entry.name_by_user or device_entry.name} {self.name}"
+
+        if (name := (entry and entry.name) or friendly_name()) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
@@ -634,22 +636,6 @@ class Entity(ABC):
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
-
-        # Convert temperature if we detect one
-        try:
-            unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-            units = self.hass.config.units
-            if (
-                unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
-                and unit_of_measure != units.temperature_unit
-            ):
-                prec = len(state) - state.index(".") - 1 if "." in state else 0
-                temp = units.temperature(float(state), unit_of_measure)
-                state = str(round(temp) if prec == 0 else round(temp, prec))
-                attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
 
         if (
             self._context_set is not None
@@ -737,7 +723,7 @@ class Entity(ABC):
 
     @callback
     def async_on_remove(self, func: CALLBACK_TYPE) -> None:
-        """Add a function to call when entity removed."""
+        """Add a function to call when entity is removed or not added."""
         if self._on_remove is None:
             self._on_remove = []
         self._on_remove.append(func)
@@ -766,13 +752,23 @@ class Entity(ABC):
         self.parallel_updates = parallel_updates
         self._platform_state = EntityPlatformState.ADDED
 
+    def _call_on_remove_callbacks(self) -> None:
+        """Call callbacks registered by async_on_remove."""
+        if self._on_remove is None:
+            return
+        while self._on_remove:
+            self._on_remove.pop()()
+
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
+
+        self._platform_state = EntityPlatformState.NOT_ADDED
+        self._call_on_remove_callbacks()
+
         self.hass = None  # type: ignore[assignment]
         self.platform = None
         self.parallel_updates = None
-        self._platform_state = EntityPlatformState.NOT_ADDED
 
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
@@ -797,9 +793,7 @@ class Entity(ABC):
 
         self._platform_state = EntityPlatformState.REMOVED
 
-        if self._on_remove is not None:
-            while self._on_remove:
-                self._on_remove.pop()()
+        self._call_on_remove_callbacks()
 
         await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()
@@ -823,6 +817,13 @@ class Entity(ABC):
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
+
+        To be extended by integrations.
+        """
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated.
 
         To be extended by integrations.
         """
@@ -888,6 +889,7 @@ class Entity(ABC):
 
         assert old is not None
         if self.registry_entry.entity_id == old.entity_id:
+            self.async_registry_entry_updated()
             self.async_write_ha_state()
             return
 
@@ -920,7 +922,7 @@ class Entity(ABC):
         """Return the representation."""
         return f"<Entity {self.name}: {self.state}>"
 
-    async def async_request_call(self, coro: Awaitable) -> None:
+    async def async_request_call(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Process request batched."""
         if self.parallel_updates:
             await self.parallel_updates.acquire()
@@ -935,7 +937,7 @@ class Entity(ABC):
         """Suggest to report an issue."""
         report_issue = ""
         if "custom_components" in type(self).__module__:
-            report_issue = "report it to the custom component author."
+            report_issue = "report it to the custom integration author."
         else:
             report_issue = (
                 "create a bug report at "
@@ -990,15 +992,20 @@ class ToggleEntity(Entity):
         """Turn the entity off."""
         await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
+    @final
     def toggle(self, **kwargs: Any) -> None:
-        """Toggle the entity."""
-        if self.is_on:
-            self.turn_off(**kwargs)
-        else:
-            self.turn_on(**kwargs)
+        """Toggle the entity.
+
+        This method will never be called by Home Assistant and should not be implemented
+        by integrations.
+        """
 
     async def async_toggle(self, **kwargs: Any) -> None:
-        """Toggle the entity."""
+        """Toggle the entity.
+
+        This method should typically not be implemented by integrations, it's enough to
+        implement async_turn_on + async_turn_off or turn_on + turn_off.
+        """
         if self.is_on:
             await self.async_turn_off(**kwargs)
         else:

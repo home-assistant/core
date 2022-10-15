@@ -5,15 +5,10 @@
             "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
         },
         "error": {
-            "identifier_exists": "\u00da\u010det je ji\u017e zaregistrov\u00e1n",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
-            "mfa": {
-                "description": "Zkontrolujte, zda v\u00e1m do e-mail p\u0159i\u0161el odkaz od SimpliSafe. Po ov\u011b\u0159en\u00ed odkazu se vra\u0165te sem a dokon\u010dete instalaci integrace.",
-                "title": "V\u00edcefaktorov\u00e9 ov\u011b\u0159ov\u00e1n\u00ed SimpliSafe"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Heslo"
@@ -23,12 +18,9 @@
             },
             "user": {
                 "data": {
-                    "auth_code": "Autoriza\u010dn\u00ed k\u00f3d",
-                    "code": "K\u00f3d (pou\u017eit\u00fd v u\u017eivatelsk\u00e9m rozhran\u00ed Home Assistant)",
                     "password": "Heslo",
                     "username": "E-mail"
-                },
-                "title": "Vypl\u0148te sv\u00e9 \u00fadaje."
+                }
             }
         }
     },

@@ -20,8 +20,7 @@ from homeassistant.components.vacuum import (
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
     STATE_CLEANING,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_START,
+    VacuumEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -188,10 +187,10 @@ class Vacuum(Switch):
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if value:
-            sup_start = features & SUPPORT_START
+            sup_start = features & VacuumEntityFeature.START
             service = SERVICE_START if sup_start else SERVICE_TURN_ON
         else:
-            sup_return_home = features & SUPPORT_RETURN_HOME
+            sup_return_home = features & VacuumEntityFeature.RETURN_HOME
             service = SERVICE_RETURN_TO_BASE if sup_return_home else SERVICE_TURN_OFF
 
         self.async_call_service(
@@ -260,7 +259,7 @@ class SelectSwitch(HomeAccessory):
         options = state.attributes[ATTR_OPTIONS]
         for option in options:
             serv_option = self.add_preload_service(
-                SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE]
+                SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE], unique_id=option
             )
             serv_option.configure_char(
                 CHAR_NAME, value=cleanup_name_for_homekit(option)

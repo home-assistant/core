@@ -11,7 +11,7 @@
         "flow_title": "LG webOS Smart TV",
         "step": {
             "pairing": {
-                "description": "Klicke auf Senden und akzeptiere die Kopplungsanfrage auf deinem Fernsehger\u00e4t.\n\n![Bild](/static/images/config_webos.png)",
+                "description": "Dr\u00fccke auf Senden und akzeptiere die Kopplungsanfrage auf deinem Fernsehger\u00e4t.\n\n![Bild](/static/images/config_webos.png)",
                 "title": "webOS TV-Kopplung"
             },
             "user": {
@@ -19,7 +19,7 @@
                     "host": "Host",
                     "name": "Name"
                 },
-                "description": "Schalte den TV ein, f\u00fclle die folgenden Felder aus und klicke auf Senden",
+                "description": "Schalte den TV ein, f\u00fclle die folgenden Felder aus und dr\u00fccke auf Senden",
                 "title": "Mit webOS TV verbinden"
             }
         }

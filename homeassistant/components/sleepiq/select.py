@@ -1,16 +1,7 @@
 """Support for SleepIQ foundation preset selection."""
 from __future__ import annotations
 
-from asyncsleepiq import (
-    FAVORITE,
-    FLAT,
-    READ,
-    SNORE,
-    WATCH_TV,
-    ZERO_G,
-    SleepIQBed,
-    SleepIQPreset,
-)
+from asyncsleepiq import BED_PRESETS, Side, SleepIQBed, SleepIQPreset
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -21,16 +12,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 from .coordinator import SleepIQData
 from .entity import SleepIQBedEntity
-
-FOUNDATION_PRESET_NAMES = {
-    "Not at preset": 0,
-    "Favorite": FAVORITE,
-    "Read": READ,
-    "Watch TV": WATCH_TV,
-    "Flat": FLAT,
-    "Zero G": ZERO_G,
-    "Snore": SNORE,
-}
 
 
 async def async_setup_entry(
@@ -50,7 +31,7 @@ async def async_setup_entry(
 class SleepIQSelectEntity(SleepIQBedEntity, SelectEntity):
     """Representation of a SleepIQ select entity."""
 
-    _attr_options = list(FOUNDATION_PRESET_NAMES.keys())
+    _attr_options = list(BED_PRESETS)
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, bed: SleepIQBed, preset: SleepIQPreset
@@ -58,14 +39,11 @@ class SleepIQSelectEntity(SleepIQBedEntity, SelectEntity):
         """Initialize the select entity."""
         self.preset = preset
 
-        if preset.side:
-            self._attr_name = (
-                f"SleepNumber {bed.name} Foundation Preset {preset.side_full}"
-            )
-            self._attr_unique_id = f"{bed.id}_preset_{preset.side}"
-        else:
-            self._attr_name = f"SleepNumber {bed.name} Foundation Preset"
-            self._attr_unique_id = f"{bed.id}_preset"
+        self._attr_name = f"SleepNumber {bed.name} Foundation Preset"
+        self._attr_unique_id = f"{bed.id}_preset"
+        if preset.side != Side.NONE:
+            self._attr_name += f" {preset.side_full}"
+            self._attr_unique_id += f"_{preset.side}"
 
         super().__init__(coordinator, bed)
         self._async_update_attrs()
@@ -77,6 +55,6 @@ class SleepIQSelectEntity(SleepIQBedEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the current preset."""
-        await self.preset.set_preset(FOUNDATION_PRESET_NAMES[option])
+        await self.preset.set_preset(option)
         self._attr_current_option = option
         self.async_write_ha_state()

@@ -2,8 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "UniFi Network-nettstedet er allerede konfigurert",
-            "configuration_updated": "Konfigurasjonen er oppdatert.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "configuration_updated": "Konfigurasjonen er oppdatert",
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "faulty_credentials": "Ugyldig godkjenning",
@@ -26,6 +26,9 @@
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "UniFi-integrasjon er ikke konfigurert"
+        },
         "step": {
             "client_control": {
                 "data": {

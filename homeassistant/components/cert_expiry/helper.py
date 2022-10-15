@@ -2,6 +2,7 @@
 import socket
 import ssl
 
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt
 
 from .const import TIMEOUT
@@ -13,7 +14,10 @@ from .errors import (
 )
 
 
-def get_cert(host, port):
+def get_cert(
+    host: str,
+    port: int,
+):
     """Get the certificate for the host and port combination."""
     ctx = ssl.create_default_context()
     address = (host, port)
@@ -23,7 +27,11 @@ def get_cert(host, port):
             return cert
 
 
-async def get_cert_expiry_timestamp(hass, hostname, port):
+async def get_cert_expiry_timestamp(
+    hass: HomeAssistant,
+    hostname: str,
+    port: int,
+):
     """Return the certificate's expiration timestamp."""
     try:
         cert = await hass.async_add_executor_job(get_cert, hostname, port)

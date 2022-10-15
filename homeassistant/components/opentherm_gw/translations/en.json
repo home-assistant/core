@@ -3,7 +3,8 @@
         "error": {
             "already_configured": "Device is already configured",
             "cannot_connect": "Failed to connect",
-            "id_exists": "Gateway id already exists"
+            "id_exists": "Gateway id already exists",
+            "timeout_connect": "Timeout establishing connection"
         },
         "step": {
             "init": {
@@ -11,8 +12,7 @@
                     "device": "Path or URL",
                     "id": "ID",
                     "name": "Name"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -24,8 +24,7 @@
                     "read_precision": "Read Precision",
                     "set_precision": "Set Precision",
                     "temporary_override_mode": "Temporary Setpoint Override Mode"
-                },
-                "description": "Options for the OpenTherm Gateway"
+                }
             }
         }
     }

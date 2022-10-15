@@ -108,6 +108,7 @@ def soco_fixture(
         mock_soco.mute = False
         mock_soco.night_mode = True
         mock_soco.dialog_level = True
+        mock_soco.loudness = True
         mock_soco.volume = 19
         mock_soco.audio_delay = 2
         mock_soco.bass = 1
@@ -116,9 +117,14 @@ def soco_fixture(
         mock_soco.sub_enabled = False
         mock_soco.sub_gain = 5
         mock_soco.surround_enabled = True
+        mock_soco.surround_mode = True
+        mock_soco.surround_level = 3
+        mock_soco.music_surround_level = 4
         mock_soco.soundbar_audio_input_format = "Dolby 5.1"
         mock_soco.get_battery_info.return_value = battery_info
-        mock_soco.all_zones = [mock_soco]
+        mock_soco.all_zones = {mock_soco}
+        mock_soco.visible_zones = {mock_soco}
+        mock_soco.group.coordinator = mock_soco
         yield mock_soco
 
 
@@ -129,6 +135,10 @@ async def silent_ssdp_scanner(hass):
         "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+    ), patch(
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
     ):
         yield
 

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "incorrect_api_key": "Ongeldige API-sleutel voor geselecteerd account",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_station": "Kon geen station vinden met de opgegeven naam",
+            "invalid_time": "Ongeldige tijd opgegeven",
+            "more_stations": "Meerdere stations gevonden met de opgegeven naam"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-sleutel"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "from": "Van station",
+                    "time": "Tijd (optioneel)",
+                    "to": "Naar station",
+                    "weekday": "Dagen"
+                }
+            }
+        }
+    }
+}

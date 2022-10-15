@@ -25,3 +25,10 @@ skip:
   target:
     entity:
       domain: update
+
+clear_skipped:
+  name: Clear skipped update
+  description: Removes the skipped version marker from an update.
+  target:
+    entity:
+      domain: update

@@ -14,6 +14,7 @@
                 "data": {
                     "2fa": "2FA PIN"
                 },
+                "description": "Leer",
                 "title": "2-Faktor-Authentifizierung"
             },
             "user": {
@@ -23,7 +24,7 @@
                     "password": "Passwort"
                 },
                 "description": "Leer",
-                "title": "Google Hangouts Login"
+                "title": "Google Chat Anmeldung"
             }
         }
     }

@@ -8,19 +8,16 @@ import prometheus_client
 import voluptuous as vol
 
 from homeassistant import core as hacore
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_ACTIONS,
+    HVACAction,
 )
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.humidifier.const import (
-    ATTR_AVAILABLE_MODES,
-    ATTR_HUMIDITY,
-)
+from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -43,7 +40,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.temperature import fahrenheit_to_celsius
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -351,7 +348,9 @@ class PrometheusMetrics:
         with suppress(ValueError):
             value = self.state_as_number(state)
             if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-                value = fahrenheit_to_celsius(value)
+                value = TemperatureConverter.convert(
+                    value, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                )
             metric.labels(**self._labels(state)).set(value)
 
     def _handle_device_tracker(self, state):
@@ -397,7 +396,7 @@ class PrometheusMetrics:
     def _handle_climate_temp(self, state, attr, metric_name, metric_description):
         if temp := state.attributes.get(attr):
             if self._climate_units == TEMP_FAHRENHEIT:
-                temp = fahrenheit_to_celsius(temp)
+                temp = TemperatureConverter.convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
             metric = self._metric(
                 metric_name,
                 self.prometheus_cli.Gauge,
@@ -438,8 +437,8 @@ class PrometheusMetrics:
                 "HVAC action",
                 ["action"],
             )
-            for action in CURRENT_HVAC_ACTIONS:
-                metric.labels(**dict(self._labels(state), action=action)).set(
+            for action in HVACAction:
+                metric.labels(**dict(self._labels(state), action=action.value)).set(
                     float(action == current_action)
                 )
 
@@ -510,7 +509,9 @@ class PrometheusMetrics:
             try:
                 value = self.state_as_number(state)
                 if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-                    value = fahrenheit_to_celsius(value)
+                    value = TemperatureConverter.convert(
+                        value, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                    )
                 _metric.labels(**self._labels(state)).set(value)
             except ValueError:
                 pass

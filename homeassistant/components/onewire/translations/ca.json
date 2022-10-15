@@ -4,22 +4,15 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_path": "No s'ha trobat el directori."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
-            "owserver": {
+            "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
                     "port": "Port"
                 },
-                "title": "Defineix els detalls d'owserver"
-            },
-            "user": {
-                "data": {
-                    "type": "Tipus de connexi\u00f3"
-                },
-                "title": "Configuraci\u00f3 d'1-Wire"
+                "title": "Detalls del servidor"
             }
         }
     },
@@ -28,10 +21,6 @@
             "device_not_selected": "Selecciona els dispositius a configurar"
         },
         "step": {
-            "ack_no_options": {
-                "description": "No hi ha opcions per a la implementaci\u00f3 de SysBus",
-                "title": "Opcions SysBus de OneWire"
-            },
             "configure_device": {
                 "data": {
                     "precision": "Precisi\u00f3 del sensor"

@@ -21,7 +21,6 @@ from .entity import OverkizDescriptiveEntity, OverkizDeviceClass
 class OverkizSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
-    options: list[str | OverkizCommandParam]
     select_option: Callable[[str, Callable[..., Awaitable[None]]], Awaitable[None]]
 
 
@@ -39,8 +38,7 @@ def _select_option_open_closed_pedestrian(
             OverkizCommandParam.CLOSED: OverkizCommand.CLOSE,
             OverkizCommandParam.OPEN: OverkizCommand.OPEN,
             OverkizCommandParam.PEDESTRIAN: OverkizCommand.SET_PEDESTRIAN_POSITION,
-        }[OverkizCommandParam(option)],
-        None,
+        }[OverkizCommandParam(option)]
     )
 
 
@@ -49,6 +47,17 @@ def _select_option_memorized_simple_volume(
 ) -> Awaitable[None]:
     """Change the selected option for Memorized Simple Volume."""
     return execute_command(OverkizCommand.SET_MEMORIZED_SIMPLE_VOLUME, option)
+
+
+def _select_option_active_zone(
+    option: str, execute_command: Callable[..., Awaitable[None]]
+) -> Awaitable[None]:
+    """Change the selected option for Active Zone(s)."""
+    # Turn alarm off when empty zone is selected
+    if option == "":
+        return execute_command(OverkizCommand.ALARM_OFF)
+
+    return execute_command(OverkizCommand.ALARM_ZONE_ON, option)
 
 
 SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
@@ -66,7 +75,7 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     ),
     OverkizSelectDescription(
         key=OverkizState.IO_MEMORIZED_SIMPLE_VOLUME,
-        name="Memorized Simple Volume",
+        name="Memorized simple volume",
         icon="mdi:volume-high",
         options=[OverkizCommandParam.STANDARD, OverkizCommandParam.HIGHEST],
         select_option=_select_option_memorized_simple_volume,
@@ -76,13 +85,21 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     # SomfyHeatingTemperatureInterface
     OverkizSelectDescription(
         key=OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_OPERATING_MODE,
-        name="Operating Mode",
+        name="Operating mode",
         icon="mdi:sun-snowflake",
         options=[OverkizCommandParam.HEATING, OverkizCommandParam.COOLING],
         select_option=lambda option, execute_command: execute_command(
             OverkizCommand.SET_OPERATING_MODE, option
         ),
         entity_category=EntityCategory.CONFIG,
+    ),
+    # StatefulAlarmController
+    OverkizSelectDescription(
+        key=OverkizState.CORE_ACTIVE_ZONES,
+        name="Active zones",
+        icon="mdi:shield-lock",
+        options=["", "A", "B", "C", "A,B", "B,C", "A,C", "A,B,C"],
+        select_option=_select_option_active_zone,
     ),
 ]
 
@@ -130,11 +147,6 @@ class OverkizSelect(OverkizDescriptiveEntity, SelectEntity):
             return str(state.value)
 
         return None
-
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return self.entity_description.options
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

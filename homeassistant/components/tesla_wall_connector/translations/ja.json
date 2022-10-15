@@ -16,15 +16,5 @@
                 "title": "Tesla Wall Connector\u306e\u8a2d\u5b9a"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "\u66f4\u65b0\u983b\u5ea6"
-                },
-                "title": "Tesla Wall Connector\u306e\u30aa\u30d7\u30b7\u30e7\u30f3\u3092\u8a2d\u5b9a"
-            }
-        }
     }
 }

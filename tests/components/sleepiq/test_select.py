@@ -1,8 +1,6 @@
 """Tests for the SleepIQ select platform."""
 from unittest.mock import MagicMock
 
-from asyncsleepiq import ZERO_G
-
 from homeassistant.components.select import DOMAIN, SERVICE_SELECT_OPTION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.sleepiq.conftest import (
+from .conftest import (
     BED_ID,
     BED_NAME,
     BED_NAME_LOWER,
@@ -75,7 +73,7 @@ async def test_split_foundation_preset(
 
     mock_asyncsleepiq.beds[BED_ID].foundation.presets[0].set_preset.assert_called_once()
     mock_asyncsleepiq.beds[BED_ID].foundation.presets[0].set_preset.assert_called_with(
-        ZERO_G
+        "Zero G"
     )
 
 
@@ -116,4 +114,4 @@ async def test_single_foundation_preset(
     ].set_preset.assert_called_once()
     mock_asyncsleepiq_single_foundation.beds[BED_ID].foundation.presets[
         0
-    ].set_preset.assert_called_with(ZERO_G)
+    ].set_preset.assert_called_with("Zero G")

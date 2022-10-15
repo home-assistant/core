@@ -97,6 +97,7 @@ class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Sensor.Community sensor."""
 
     _attr_attribution = "Data provided by Sensor.Community"
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(

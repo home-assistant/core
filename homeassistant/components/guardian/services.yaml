@@ -1,26 +1,4 @@
 # Describes the format for available Elexa Guardians services
-disable_ap:
-  name: Disable AP
-  description: Disable the device's onboard access point.
-  fields:
-    device_id:
-      name: Valve Controller
-      description: The valve controller whose AP should be disabled
-      required: true
-      selector:
-        device:
-          integration: guardian
-enable_ap:
-  name: Enable AP
-  description: Enable the device's onboard access point.
-  fields:
-    device_id:
-      name: Valve Controller
-      description: The valve controller whose AP should be enabled
-      required: true
-      selector:
-        device:
-          integration: guardian
 pair_sensor:
   name: Pair Sensor
   description: Add a new paired sensor to the valve controller.
@@ -39,28 +17,6 @@ pair_sensor:
       example: 5410EC688BCF
       selector:
         text:
-reboot:
-  name: Reboot
-  description: Reboot the device.
-  fields:
-    device_id:
-      name: Valve Controller
-      description: The valve controller to reboot
-      required: true
-      selector:
-        device:
-          integration: guardian
-reset_valve_diagnostics:
-  name: Reset Valve Diagnostics
-  description: Fully (and irrecoverably) reset all valve diagnostics.
-  fields:
-    device_id:
-      name: Valve Controller
-      description: The valve controller whose diagnostics should be reset
-      required: true
-      selector:
-        device:
-          integration: guardian
 unpair_sensor:
   name: Unpair Sensor
   description: Remove a paired sensor from the valve controller.

@@ -1,11 +1,12 @@
 """The tests for the Met Office sensor component."""
+import datetime
 import json
-from unittest.mock import patch
+
+from freezegun import freeze_time
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 
-from . import NewDateTime
 from .const import (
     DEVICE_KEY_KINGSLYNN,
     DEVICE_KEY_WAVERTREE,
@@ -21,11 +22,8 @@ from .const import (
 from tests.common import MockConfigEntry, load_fixture
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_one_sensor_site_running(hass, requests_mock):
     """Test the Met Office sensor platform."""
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
@@ -70,11 +68,8 @@ async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_tim
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@patch(
-    "datapoint.Forecast.datetime.datetime",
-    NewDateTime,
-)
-async def test_two_sensor_sites_running(hass, requests_mock, legacy_patchable_time):
+@freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.timezone.utc))
+async def test_two_sensor_sites_running(hass, requests_mock):
     """Test we handle two sets of sensors running for two different sites."""
 
     # all metoffice test data encapsulated in here

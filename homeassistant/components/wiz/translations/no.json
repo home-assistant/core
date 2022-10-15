@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "Vil du starte oppsettet?"
-            },
             "discovery_confirm": {
                 "description": "Vil du konfigurere {name} ({host})?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP adresse",
-                    "name": "Navn"
+                    "host": "IP adresse"
                 },
                 "description": "Hvis du lar IP-adressen st\u00e5 tom, vil oppdagelse bli brukt til \u00e5 finne enheter."
             }

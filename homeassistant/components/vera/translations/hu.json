@@ -10,8 +10,9 @@
                     "lights": "A Vera kapcsol\u00f3eszk\u00f6z-azonos\u00edt\u00f3k f\u00e9nyk\u00e9nt kezelhet\u0151k a Home Assistant alkalmaz\u00e1sban.",
                     "vera_controller_url": "Vez\u00e9rl\u0151 URL"
                 },
-                "description": "Adja meg a Vera vez\u00e9rl\u0151 URL-j\u00e9t al\u00e1bb. Hasonl\u00f3k\u00e9ppen kell kin\u00e9znie: http://192.168.1.161:3480.",
-                "title": "Vera vez\u00e9rl\u0151 be\u00e1ll\u00edt\u00e1sa"
+                "data_description": {
+                    "vera_controller_url": "\u00cdgy kell kin\u00e9znie: http://192.168.1.161:3480"
+                }
             }
         }
     },

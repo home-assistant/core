@@ -20,15 +20,19 @@ write:
       selector:
         select:
           options:
-            - "debug"
-            - "info"
-            - "warning"
-            - "error"
-            - "critical"
+            - label: "Debug"
+              value: "debug"
+            - label: "Info"
+              value: "info"
+            - label: "Warning"
+              value: "warning"
+            - label: "Error"
+              value: "error"
+            - label: "Critical"
+              value: "critical"
     logger:
       name: Logger
-      description:
-        Logger name under which to log the message. Defaults to
+      description: Logger name under which to log the message. Defaults to
         'system_log.external'.
       example: mycomponent.myplatform
       selector:

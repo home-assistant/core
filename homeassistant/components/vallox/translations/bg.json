@@ -14,10 +14,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u0425\u043e\u0441\u0442",
-                    "name": "\u0418\u043c\u0435"
-                },
-                "title": "Vallox"
+                    "host": "\u0425\u043e\u0441\u0442"
+                }
             }
         }
     }

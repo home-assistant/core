@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Bekreft at du legger til mottakeren",
-                "title": "Denon AVR nettverksmottakere"
+                "description": "Bekreft at du legger til mottakeren"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "IP adresse"
                 },
-                "description": "Koble til mottakeren, hvis IP-adressen ikke er angitt, brukes automatisk oppdagelse",
-                "title": "Denon AVR Network Receivers"
+                "data_description": {
+                    "host": "La feltet st\u00e5 tomt hvis du vil bruke automatisk s\u00f8k"
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "Sett opp sone 2",
                     "zone3": "Sett opp sone 3"
                 },
-                "description": "Spesifiser valgfrie innstillinger",
-                "title": "Denon AVR Network Receivers"
+                "description": "Spesifiser valgfrie innstillinger"
             }
         }
     }

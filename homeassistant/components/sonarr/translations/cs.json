@@ -18,9 +18,7 @@
             "user": {
                 "data": {
                     "api_key": "Kl\u00ed\u010d API",
-                    "host": "Hostitel",
-                    "port": "Port",
-                    "ssl": "Pou\u017e\u00edv\u00e1 SSL certifik\u00e1t",
+                    "url": "URL",
                     "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL"
                 }
             }

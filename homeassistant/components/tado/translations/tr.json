@@ -23,9 +23,9 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Geri d\u00f6n\u00fc\u015f modunu etkinle\u015ftirin."
+                    "fallback": "Geri d\u00f6n\u00fc\u015f modunu se\u00e7in."
                 },
-                "description": "Geri d\u00f6n\u00fc\u015f modu, bir b\u00f6lgeyi manuel olarak ayarlad\u0131ktan sonra bir sonraki program anahtar\u0131nda Ak\u0131ll\u0131 Programa ge\u00e7ecektir.",
+                "description": "Geri d\u00f6n\u00fc\u015f modu, manuel b\u00f6lge yerle\u015fiminizden Ak\u0131ll\u0131 Programa ne zaman geri d\u00f6nece\u011finizi se\u00e7menizi sa\u011flar. (NEXT_TIME_BLOCK:= Sonraki Ak\u0131ll\u0131 Program de\u011fi\u015fikli\u011finde de\u011fi\u015ftirin; MANUAL:= \u0130ptal edene kadar de\u011fi\u015ftirmeyin; TADO_DEFAULT:= Tado Uygulamas\u0131ndaki ayar\u0131n\u0131za g\u00f6re de\u011fi\u015ftirin).",
                 "title": "Tado se\u00e7eneklerini ayarlay\u0131n."
             }
         }

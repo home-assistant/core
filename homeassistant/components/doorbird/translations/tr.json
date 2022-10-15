@@ -18,8 +18,7 @@
                     "name": "Cihaz ad\u0131",
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                },
-                "title": "DoorBird'e ba\u011flan\u0131n"
+                }
             }
         }
     },
@@ -29,7 +28,9 @@
                 "data": {
                     "events": "Virg\u00fclle ayr\u0131lm\u0131\u015f olaylar\u0131n listesi."
                 },
-                "description": "\u0130zlemek istedi\u011finiz her etkinlik i\u00e7in virg\u00fclle ayr\u0131lm\u0131\u015f bir etkinlik ad\u0131 ekleyin. Bunlar\u0131 buraya girdikten sonra, onlar\u0131 belirli bir etkinli\u011fe atamak i\u00e7in DoorBird uygulamas\u0131n\u0131 kullan\u0131n. https://www.home-assistant.io/integrations/doorbird/#events adresindeki belgelere bak\u0131n. \u00d6rnek: birisi_pressed_the_button, hareket"
+                "data_description": {
+                    "events": "\u0130zlemek istedi\u011finiz her etkinlik i\u00e7in virg\u00fclle ayr\u0131lm\u0131\u015f bir etkinlik ad\u0131 ekleyin. Bunlar\u0131 buraya girdikten sonra, onlar\u0131 belirli bir etkinli\u011fe atamak i\u00e7in DoorBird uygulamas\u0131n\u0131 kullan\u0131n. \n\n \u00d6rnek: birisi_butona_basti, hareket"
+                }
             }
         }
     }

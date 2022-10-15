@@ -1,8 +1,7 @@
 """Siren support for switch entities."""
 from __future__ import annotations
 
-from homeassistant.components.siren import SirenEntity
-from homeassistant.components.siren.const import SUPPORT_TURN_OFF, SUPPORT_TURN_ON
+from homeassistant.components.siren import SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -24,6 +23,7 @@ async def async_setup_entry(
     )
     wrapped_switch = registry.async_get(entity_id)
     device_id = wrapped_switch.device_id if wrapped_switch else None
+    entity_category = wrapped_switch.entity_category if wrapped_switch else None
 
     async_add_entities(
         [
@@ -32,6 +32,7 @@ async def async_setup_entry(
                 entity_id,
                 config_entry.entry_id,
                 device_id,
+                entity_category,
             )
         ]
     )
@@ -40,4 +41,4 @@ async def async_setup_entry(
 class SirenSwitch(BaseToggleEntity, SirenEntity):
     """Represents a Switch as a Siren."""
 
-    _attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+    _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF

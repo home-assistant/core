@@ -1,4 +1,6 @@
 """Config flow for Coinbase integration."""
+from __future__ import annotations
+
 import logging
 
 from coinbase.wallet.client import Client
@@ -18,6 +20,8 @@ from .const import (
     API_TYPE_VAULT,
     CONF_CURRENCIES,
     CONF_EXCHANGE_BASE,
+    CONF_EXCHANGE_PRECISION,
+    CONF_EXCHANGE_PRECISION_DEFAULT,
     CONF_EXCHANGE_RATES,
     CONF_OPTIONS,
     CONF_YAML_API_TOKEN,
@@ -158,7 +162,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -177,6 +183,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         default_currencies = self.config_entry.options.get(CONF_CURRENCIES, [])
         default_exchange_rates = self.config_entry.options.get(CONF_EXCHANGE_RATES, [])
         default_exchange_base = self.config_entry.options.get(CONF_EXCHANGE_BASE, "USD")
+        default_exchange_precision = self.config_entry.options.get(
+            CONF_EXCHANGE_PRECISION, CONF_EXCHANGE_PRECISION_DEFAULT
+        )
 
         if user_input is not None:
             # Pass back user selected options, even if bad
@@ -188,6 +197,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             if CONF_EXCHANGE_RATES in user_input:
                 default_exchange_base = user_input[CONF_EXCHANGE_BASE]
+
+            if CONF_EXCHANGE_PRECISION in user_input:
+                default_exchange_precision = user_input[CONF_EXCHANGE_PRECISION]
 
             try:
                 await validate_options(self.hass, self.config_entry, user_input)
@@ -217,6 +229,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_EXCHANGE_BASE,
                         default=default_exchange_base,
                     ): vol.In(WALLETS),
+                    vol.Optional(
+                        CONF_EXCHANGE_PRECISION, default=default_exchange_precision
+                    ): int,
                 }
             ),
             errors=errors,

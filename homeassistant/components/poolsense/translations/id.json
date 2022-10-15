@@ -11,9 +11,7 @@
                 "data": {
                     "email": "Email",
                     "password": "Kata Sandi"
-                },
-                "description": "Ingin memulai penyiapan?",
-                "title": "PoolSense"
+                }
             }
         }
     }

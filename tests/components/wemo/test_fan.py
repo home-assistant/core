@@ -19,6 +19,7 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STAT
 from homeassistant.setup import async_setup_component
 
 from . import entity_test_helpers
+from .conftest import async_create_wemo_entity
 
 
 @pytest.fixture
@@ -161,21 +162,14 @@ async def test_fan_set_percentage(
     pywemo_device.set_state.assert_called_with(expected_fan_mode)
 
 
-class TestInitialFanMode:
-    """Test that the FanMode is set to High when turned on the first time."""
-
-    @pytest.fixture
-    def pywemo_device(self, pywemo_device):
-        """Set the FanMode to off initially."""
-        pywemo_device.fan_mode = FanMode.Off
-        yield pywemo_device
-
-    async def test_fan_mode_high_initially(self, hass, pywemo_device, wemo_entity):
-        """Verify the FanMode is set to High when turned on."""
-        assert await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
-            blocking=True,
-        )
-        pywemo_device.set_state.assert_called_with(FanMode.High)
+async def test_fan_mode_high_initially(hass, pywemo_device):
+    """Verify the FanMode is set to High when turned on."""
+    pywemo_device.fan_mode = FanMode.Off
+    wemo_entity = await async_create_wemo_entity(hass, pywemo_device, "")
+    assert await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+        blocking=True,
+    )
+    pywemo_device.set_state.assert_called_with(FanMode.High)

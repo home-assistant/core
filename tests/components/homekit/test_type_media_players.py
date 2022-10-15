@@ -18,13 +18,13 @@ from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
     TelevisionMediaPlayer,
 )
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
+    MediaPlayerDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -442,7 +442,7 @@ async def test_tv_restore(hass, hk_driver, events):
     assert not hasattr(acc, "char_input_source")
 
     acc = TelevisionMediaPlayer(
-        hass, hk_driver, "MediaPlayer", "media_player.all_info_set", 2, None
+        hass, hk_driver, "MediaPlayer", "media_player.all_info_set", 3, None
     )
     assert acc.category == 31
     assert acc.chars_tv == [CHAR_REMOTE_KEY]

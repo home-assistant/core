@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Konum",
                     "usercode": "Kullan\u0131c\u0131 kodu"
                 },
                 "description": "Bu kullan\u0131c\u0131n\u0131n kullan\u0131c\u0131 kodunu {location_id} konumuna girin",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "D\u00fc\u015f\u00fck pili otomatik atla"
                 },
-                "title": "Toplam Ba\u011flant\u0131"
+                "description": "D\u00fc\u015f\u00fck pil bildirdikleri anda b\u00f6lgeleri otomatik olarak atlay\u0131n.",
+                "title": "Toplam Ba\u011flant\u0131 Se\u00e7enekleri"
             }
         }
     }

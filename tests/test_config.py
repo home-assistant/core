@@ -1,6 +1,7 @@
 """Test config utils."""
 # pylint: disable=protected-access
 from collections import OrderedDict
+import contextlib
 import copy
 import os
 from unittest import mock
@@ -21,7 +22,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    CONF_TEMPERATURE_UNIT,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
@@ -147,7 +147,7 @@ def test_load_yaml_config_raises_error_if_not_dict():
 def test_load_yaml_config_raises_error_if_malformed_yaml():
     """Test error raised if invalid YAML."""
     with open(YAML_PATH, "w") as fp:
-        fp.write(":")
+        fp.write(":-")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -156,10 +156,21 @@ def test_load_yaml_config_raises_error_if_malformed_yaml():
 def test_load_yaml_config_raises_error_if_unsafe_yaml():
     """Test error raised if unsafe YAML."""
     with open(YAML_PATH, "w") as fp:
-        fp.write("hello: !!python/object/apply:os.system")
+        fp.write("- !!python/object/apply:os.system []")
 
-    with pytest.raises(HomeAssistantError):
+    with patch.object(os, "system") as system_mock, contextlib.suppress(
+        HomeAssistantError
+    ):
         config_util.load_yaml_config_file(YAML_PATH)
+
+    assert len(system_mock.mock_calls) == 0
+
+    # Here we validate that the test above is a good test
+    # since previously the syntax was not valid
+    with open(YAML_PATH) as fp, patch.object(os, "system") as system_mock:
+        list(yaml.unsafe_load_all(fp))
+
+    assert len(system_mock.mock_calls) == 1
 
 
 def test_load_yaml_config_preserves_key_order():
@@ -526,34 +537,6 @@ async def test_loading_configuration(hass):
     assert hass.config.currency == "EUR"
 
 
-async def test_loading_configuration_temperature_unit(hass):
-    """Test backward compatibility when loading core config."""
-    await config_util.async_process_ha_core_config(
-        hass,
-        {
-            "latitude": 60,
-            "longitude": 50,
-            "elevation": 25,
-            "name": "Huis",
-            CONF_TEMPERATURE_UNIT: "C",
-            "time_zone": "America/New_York",
-            "external_url": "https://www.example.com",
-            "internal_url": "http://example.local",
-        },
-    )
-
-    assert hass.config.latitude == 60
-    assert hass.config.longitude == 50
-    assert hass.config.elevation == 25
-    assert hass.config.location_name == "Huis"
-    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
-    assert hass.config.time_zone == "America/New_York"
-    assert hass.config.external_url == "https://www.example.com"
-    assert hass.config.internal_url == "http://example.local"
-    assert hass.config.config_source is ConfigSource.YAML
-    assert hass.config.currency == "EUR"
-
-
 async def test_loading_configuration_default_media_dirs_docker(hass):
     """Test loading core config onto hass object."""
     with patch("homeassistant.config.is_docker_env", return_value=True):
@@ -579,7 +562,7 @@ async def test_loading_configuration_from_packages(hass):
             "longitude": -1,
             "elevation": 500,
             "name": "Huis",
-            CONF_TEMPERATURE_UNIT: "C",
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             "time_zone": "Europe/Madrid",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
@@ -603,7 +586,7 @@ async def test_loading_configuration_from_packages(hass):
                 "longitude": -1,
                 "elevation": 500,
                 "name": "Huis",
-                CONF_TEMPERATURE_UNIT: "C",
+                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
                 "time_zone": "Europe/Madrid",
                 "packages": {"empty_package": None},
             },

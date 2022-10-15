@@ -186,7 +186,6 @@ class WirelessTagBaseSensor(Entity):
         """
         return self.decorate_value(self.principal_value)
 
-    # pylint: disable=no-self-use
     def decorate_value(self, value):
         """Decorate input value to be well presented for end user."""
         return f"{value:.1f}"

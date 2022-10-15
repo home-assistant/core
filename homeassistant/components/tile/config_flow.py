@@ -1,6 +1,7 @@
 """Config flow to configure the Tile integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pytile import async_login
@@ -74,9 +75,9 @@ class TileFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._username = config[CONF_USERNAME]
+        self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

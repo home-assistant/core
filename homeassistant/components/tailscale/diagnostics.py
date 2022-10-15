@@ -23,7 +23,6 @@ TO_REDACT = {
     "name",
     "node_key",
     "user",
-    "user",
 }
 
 

@@ -4,7 +4,6 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r be van konfigur\u00e1lva",
             "alternative_integration": "Az eszk\u00f6zt jobban t\u00e1mogatja egy m\u00e1sik integr\u00e1ci\u00f3",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "could_not_connect": "Nem siker\u00fclt csatlakozni a DLNA-eszk\u00f6zh\u00f6z",
             "discovery_error": "Nem siker\u00fclt megfelel\u0151 DLNA-eszk\u00f6zt tal\u00e1lni",
             "incomplete_config": "A konfigur\u00e1ci\u00f3b\u00f3l hi\u00e1nyzik egy sz\u00fcks\u00e9ges \u00e9rt\u00e9k",
             "non_unique_id": "T\u00f6bb eszk\u00f6z tal\u00e1lhat\u00f3 ugyanazzal az egyedi azonos\u00edt\u00f3val",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "could_not_connect": "Nem siker\u00fclt csatlakozni a DLNA-eszk\u00f6zh\u00f6z",
             "not_dmr": "Az eszk\u00f6z nem digit\u00e1lis m\u00e9dia renderel\u0151"
         },
         "flow_title": "{name}",
@@ -21,7 +19,7 @@
                 "description": "Kezd\u0151dhet a be\u00e1ll\u00edt\u00e1s?"
             },
             "import_turn_on": {
-                "description": "Kapcsolja be az eszk\u00f6zt, \u00e9s kattintson a K\u00fcld\u00e9s gombra a migr\u00e1ci\u00f3 folytat\u00e1s\u00e1hoz"
+                "description": "Kapcsolja be az eszk\u00f6zt, majd folytassa a migr\u00e1ci\u00f3t"
             },
             "manual": {
                 "data": {
@@ -32,10 +30,9 @@
             },
             "user": {
                 "data": {
-                    "host": "C\u00edm",
-                    "url": "URL"
+                    "host": "C\u00edm"
                 },
-                "description": "V\u00e1lassz egy be\u00e1ll\u00edtand\u00f3 eszk\u00f6zt vagy adj meg egy URL-t",
+                "description": "V\u00e1lassza ki a konfigur\u00e1lni k\u00edv\u00e1nt eszk\u00f6zt, vagy hagyja \u00fcresen az URL-c\u00edm k\u00e9zi megad\u00e1s\u00e1hoz",
                 "title": "DLNA digit\u00e1lis m\u00e9dia renderel\u0151"
             }
         }
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Inkompatibilis m\u00e9dia megjelen\u00edt\u00e9se b\u00f6ng\u00e9sz\u00e9s k\u00f6zben",
                     "callback_url_override": "Esem\u00e9nyfigyel\u0151 visszah\u00edv\u00e1si URL (callback)",
                     "listen_port": "Esem\u00e9nyfigyel\u0151 port (v\u00e9letlenszer\u0171, ha nincs be\u00e1ll\u00edtva)",
                     "poll_availability": "Eszk\u00f6z el\u00e9r\u00e9s\u00e9nek tesztel\u00e9se lek\u00e9rdez\u00e9ssel"

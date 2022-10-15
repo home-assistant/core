@@ -18,12 +18,12 @@ write_data_by_name:
       selector:
         select:
           options:
-            - 'bool'
-            - 'byte'
-            - 'dint'
-            - 'int'
-            - 'udint'
-            - 'uint'
+            - "bool"
+            - "byte"
+            - "dint"
+            - "int"
+            - "udint"
+            - "uint"
     value:
       name: Value
       description: The value to write to the variable.

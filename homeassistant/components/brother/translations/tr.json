@@ -15,14 +15,13 @@
                 "data": {
                     "host": "Sunucu",
                     "type": "Yaz\u0131c\u0131n\u0131n t\u00fcr\u00fc"
-                },
-                "description": "Brother yaz\u0131c\u0131 entegrasyonunu ayarlay\u0131n. Yap\u0131land\u0131rmayla ilgili sorunlar\u0131n\u0131z varsa \u015fu adrese gidin: https://www.home-assistant.io/integrations/brother"
+                }
             },
             "zeroconf_confirm": {
                 "data": {
                     "type": "Yaz\u0131c\u0131n\u0131n t\u00fcr\u00fc"
                 },
-                "description": "Seri numaras\u0131 ` {serial_number} ` olan Brother Yaz\u0131c\u0131 {model} }'i Home Assistant'a eklemek ister misiniz?",
+                "description": "Seri numaras\u0131 ` {serial_number} ` olan {model} yaz\u0131c\u0131y\u0131 Home Assistant'a eklemek istiyor musunuz?",
                 "title": "Ke\u015ffedilen Brother Yaz\u0131c\u0131"
             }
         }

@@ -21,25 +21,25 @@ async def test_vehicle_sensors(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("sensor.apk_expiration")
-    entry = entity_registry.async_get("sensor.apk_expiration")
+    state = hass.states.get("sensor.skoda_11zkz3_apk_expiration")
+    entry = entity_registry.async_get("sensor.skoda_11zkz3_apk_expiration")
     assert entry
     assert state
     assert entry.unique_id == "11ZKZ3_apk_expiration"
     assert state.state == "2022-01-04"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "APK Expiration"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Skoda 11ZKZ3 APK expiration"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert ATTR_ICON not in state.attributes
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
-    state = hass.states.get("sensor.ascription_date")
-    entry = entity_registry.async_get("sensor.ascription_date")
+    state = hass.states.get("sensor.skoda_11zkz3_ascription_date")
+    entry = entity_registry.async_get("sensor.skoda_11zkz3_ascription_date")
     assert entry
     assert state
     assert entry.unique_id == "11ZKZ3_ascription_date"
     assert state.state == "2021-11-04"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Ascription Date"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Skoda 11ZKZ3 Ascription date"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert ATTR_ICON not in state.attributes
     assert ATTR_STATE_CLASS not in state.attributes
@@ -50,7 +50,7 @@ async def test_vehicle_sensors(
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, "11ZKZ3")}
     assert device_entry.manufacturer == "Skoda"
-    assert device_entry.name == "Skoda: 11ZKZ3"
+    assert device_entry.name == "Skoda 11ZKZ3"
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.model == "Citigo"
     assert (

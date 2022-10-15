@@ -5,21 +5,20 @@ import pytest
 from wled import WLEDError
 
 from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
+    ATTR_LATEST_VERSION,
+    ATTR_RELEASE_SUMMARY,
+    ATTR_RELEASE_URL,
+    ATTR_TITLE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateDeviceClass,
     UpdateEntityFeature,
 )
-from homeassistant.components.update.const import (
-    ATTR_CURRENT_VERSION,
-    ATTR_LATEST_VERSION,
-    ATTR_RELEASE_SUMMARY,
-    ATTR_RELEASE_URL,
-    ATTR_TITLE,
-)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
@@ -46,7 +45,11 @@ async def test_update_available(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "0.8.5"
+    assert (
+        state.attributes[ATTR_ENTITY_PICTURE]
+        == "https://brands.home-assistant.io/_/wled/icon.png"
+    )
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.5"
     assert state.attributes[ATTR_LATEST_VERSION] == "0.12.0"
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert (
@@ -79,7 +82,7 @@ async def test_update_information_available(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_CURRENT_VERSION] is None
+    assert state.attributes[ATTR_INSTALLED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] is None
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert state.attributes[ATTR_RELEASE_URL] is None
@@ -110,7 +113,7 @@ async def test_no_update_available(
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
-    assert state.attributes[ATTR_CURRENT_VERSION] == "0.12.0-b2"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.12.0-b2"
     assert state.attributes[ATTR_LATEST_VERSION] == "0.12.0-b2"
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert (
@@ -169,7 +172,7 @@ async def test_update_stay_stable(
     state = hass.states.get("update.wled_rgb_light_firmware")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "0.8.5"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.5"
     assert state.attributes[ATTR_LATEST_VERSION] == "0.12.0"
 
     await hass.services.async_call(
@@ -198,7 +201,7 @@ async def test_update_beta_to_stable(
     state = hass.states.get("update.wled_rgbw_light_firmware")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "0.8.6b4"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.6b4"
     assert state.attributes[ATTR_LATEST_VERSION] == "0.8.6"
 
     await hass.services.async_call(
@@ -226,7 +229,7 @@ async def test_update_stay_beta(
     state = hass.states.get("update.wled_rgb_light_firmware")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_CURRENT_VERSION] == "0.8.6b1"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.8.6b1"
     assert state.attributes[ATTR_LATEST_VERSION] == "0.8.6b2"
 
     await hass.services.async_call(

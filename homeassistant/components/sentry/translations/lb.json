@@ -11,9 +11,7 @@
             "user": {
                 "data": {
                     "dsn": "DSN"
-                },
-                "description": "Gitt \u00e4r Sentry DSN un",
-                "title": "Sentry"
+                }
             }
         }
     },

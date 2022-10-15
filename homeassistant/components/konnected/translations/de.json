@@ -39,7 +39,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Invertiere den \u00d6ffnungs- / Schlie\u00dfzustand",
-                    "name": "Name (optional)",
+                    "name": "Name",
                     "type": "Bin\u00e4rer Sensortyp"
                 },
                 "description": "Bitte w\u00e4hle die Optionen f\u00fcr den an {zone} angeschlossenen Bin\u00e4rsensor",
@@ -47,8 +47,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Name (optional)",
-                    "poll_interval": "Abfrageintervall (Minuten) (optional)",
+                    "name": "Name",
+                    "poll_interval": "Abfrageintervall (Minuten)",
                     "type": "Sensortyp"
                 },
                 "description": "Bitte w\u00e4hle die Optionen f\u00fcr den an {zone} angeschlossenen digitalen Sensor aus",
@@ -84,7 +84,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "API-Host-URL \u00fcberschreiben (optional)",
+                    "api_host": "API-Host-URL \u00fcberschreiben",
                     "blink": "LED Panel blinkt beim senden von Status\u00e4nderungen",
                     "discovery": "Reagieren auf Suchanfragen in deinem Netzwerk",
                     "override_api_host": "\u00dcberschreibe die Standard-Host-Panel-URL der Home Assistant-API"
@@ -95,11 +95,11 @@
             "options_switch": {
                 "data": {
                     "activation": "Ausgabe, wenn eingeschaltet",
-                    "momentary": "Impulsdauer (ms) (optional)",
+                    "momentary": "Impulsdauer (ms)",
                     "more_states": "Konfiguriere zus\u00e4tzliche Zust\u00e4nde f\u00fcr diese Zone",
-                    "name": "Name (optional)",
-                    "pause": "Pause zwischen Impulsen (ms) (optional)",
-                    "repeat": "Mal wiederholen (-1 = unendlich) (optional)"
+                    "name": "Name",
+                    "pause": "Pause zwischen Impulsen (ms)",
+                    "repeat": "Mal wiederholen (-1 = unendlich)"
                 },
                 "description": "Bitte w\u00e4hlen die Ausgabeoptionen f\u00fcr {zone} : Status {state}",
                 "title": "Konfiguriere den schaltbaren Ausgang"

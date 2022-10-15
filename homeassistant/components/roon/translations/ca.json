@@ -8,15 +8,16 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "fallback": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "description": "No s'ha pogut descobrir el servidor Roon, introdueix l'amfitri\u00f3 i el port."
+            },
             "link": {
                 "description": "Has d'autoritzar Home Assistant a Roon. Despr\u00e9s de fer clic a envia, ves a l'aplicaci\u00f3 Roon Core, obre la Configuraci\u00f3 i activa Home Assistant a la pestanya d'Extensions.",
                 "title": "Autoritza Home Assistant a Roon"
-            },
-            "user": {
-                "data": {
-                    "host": "Amfitri\u00f3"
-                },
-                "description": "No s'ha pogut descobrir el servidor Roon, introdueix el nom d'amfitri\u00f3 o la IP."
             }
         }
     }

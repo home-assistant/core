@@ -3,15 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -34,9 +32,7 @@ from .const import (
 )
 from .model import ClimateExtraAttributes
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
-OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+OPERATION_LIST = [HVACMode.HEAT, HVACMode.OFF]
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
@@ -68,20 +64,11 @@ async def async_setup_entry(
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     """The thermostat class for FRITZ!SmartHome thermostats."""
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement that is used."""
-        return TEMP_CELSIUS
-
-    @property
-    def precision(self) -> float:
-        """Return precision 0.5."""
-        return PRECISION_HALVES
+    _attr_precision = PRECISION_HALVES
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+    _attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def current_temperature(self) -> float:
@@ -118,18 +105,18 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
             OFF_REPORT_SET_TEMPERATURE,
             OFF_API_TEMPERATURE,
         ):
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
-        return HVAC_MODE_HEAT
+        return HVACMode.HEAT
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return OPERATION_LIST
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
         else:
             await self.async_set_temperature(

@@ -11,6 +11,7 @@ from homeassistant.components.vacuum import (
     STATE_RETURNING,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import assert_setup_component
 from tests.components.vacuum import common
@@ -244,9 +245,7 @@ async def test_attribute_templates(hass, start_ha):
 
     hass.states.async_set("sensor.test_state", "Works")
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity(
-        "vacuum.test_template_vacuum"
-    )
+    await async_update_entity(hass, "vacuum.test_template_vacuum")
     state = hass.states.get("vacuum.test_template_vacuum")
     assert state.attributes["test_attribute"] == "It Works."
 
@@ -343,7 +342,7 @@ async def test_unused_services(hass):
     _verify(hass, STATE_UNKNOWN, None)
 
 
-async def test_state_services(hass):
+async def test_state_services(hass, calls):
     """Test state services."""
     await _register_components(hass)
 
@@ -354,6 +353,9 @@ async def test_state_services(hass):
     # verify
     assert hass.states.get(_STATE_INPUT_SELECT).state == STATE_CLEANING
     _verify(hass, STATE_CLEANING, None)
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "start"
+    assert calls[-1].data["caller"] == _TEST_VACUUM
 
     # Pause vacuum
     await common.async_pause(hass, _TEST_VACUUM)
@@ -362,6 +364,9 @@ async def test_state_services(hass):
     # verify
     assert hass.states.get(_STATE_INPUT_SELECT).state == STATE_PAUSED
     _verify(hass, STATE_PAUSED, None)
+    assert len(calls) == 2
+    assert calls[-1].data["action"] == "pause"
+    assert calls[-1].data["caller"] == _TEST_VACUUM
 
     # Stop vacuum
     await common.async_stop(hass, _TEST_VACUUM)
@@ -370,6 +375,9 @@ async def test_state_services(hass):
     # verify
     assert hass.states.get(_STATE_INPUT_SELECT).state == STATE_IDLE
     _verify(hass, STATE_IDLE, None)
+    assert len(calls) == 3
+    assert calls[-1].data["action"] == "stop"
+    assert calls[-1].data["caller"] == _TEST_VACUUM
 
     # Return vacuum to base
     await common.async_return_to_base(hass, _TEST_VACUUM)
@@ -378,9 +386,12 @@ async def test_state_services(hass):
     # verify
     assert hass.states.get(_STATE_INPUT_SELECT).state == STATE_RETURNING
     _verify(hass, STATE_RETURNING, None)
+    assert len(calls) == 4
+    assert calls[-1].data["action"] == "return_to_base"
+    assert calls[-1].data["caller"] == _TEST_VACUUM
 
 
-async def test_clean_spot_service(hass):
+async def test_clean_spot_service(hass, calls):
     """Test clean spot service."""
     await _register_components(hass)
 
@@ -390,9 +401,12 @@ async def test_clean_spot_service(hass):
 
     # verify
     assert hass.states.get(_SPOT_CLEANING_INPUT_BOOLEAN).state == STATE_ON
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "clean_spot"
+    assert calls[-1].data["caller"] == _TEST_VACUUM
 
 
-async def test_locate_service(hass):
+async def test_locate_service(hass, calls):
     """Test locate service."""
     await _register_components(hass)
 
@@ -402,9 +416,12 @@ async def test_locate_service(hass):
 
     # verify
     assert hass.states.get(_LOCATING_INPUT_BOOLEAN).state == STATE_ON
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "locate"
+    assert calls[-1].data["caller"] == _TEST_VACUUM
 
 
-async def test_set_fan_speed(hass):
+async def test_set_fan_speed(hass, calls):
     """Test set valid fan speed."""
     await _register_components(hass)
 
@@ -414,6 +431,10 @@ async def test_set_fan_speed(hass):
 
     # verify
     assert hass.states.get(_FAN_SPEED_INPUT_SELECT).state == "high"
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "set_fan_speed"
+    assert calls[-1].data["caller"] == _TEST_VACUUM
+    assert calls[-1].data["option"] == "high"
 
     # Set fan's speed to medium
     await common.async_set_fan_speed(hass, "medium", _TEST_VACUUM)
@@ -421,9 +442,13 @@ async def test_set_fan_speed(hass):
 
     # verify
     assert hass.states.get(_FAN_SPEED_INPUT_SELECT).state == "medium"
+    assert len(calls) == 2
+    assert calls[-1].data["action"] == "set_fan_speed"
+    assert calls[-1].data["caller"] == _TEST_VACUUM
+    assert calls[-1].data["option"] == "medium"
 
 
-async def test_set_invalid_fan_speed(hass):
+async def test_set_invalid_fan_speed(hass, calls):
     """Test set invalid fan speed when fan has valid speed."""
     await _register_components(hass)
 
@@ -523,37 +548,107 @@ async def _register_components(hass):
         test_vacuum_config = {
             "value_template": "{{ states('input_select.state') }}",
             "fan_speed_template": "{{ states('input_select.fan_speed') }}",
-            "start": {
-                "service": "input_select.select_option",
-                "data": {"entity_id": _STATE_INPUT_SELECT, "option": STATE_CLEANING},
-            },
-            "pause": {
-                "service": "input_select.select_option",
-                "data": {"entity_id": _STATE_INPUT_SELECT, "option": STATE_PAUSED},
-            },
-            "stop": {
-                "service": "input_select.select_option",
-                "data": {"entity_id": _STATE_INPUT_SELECT, "option": STATE_IDLE},
-            },
-            "return_to_base": {
-                "service": "input_select.select_option",
-                "data": {"entity_id": _STATE_INPUT_SELECT, "option": STATE_RETURNING},
-            },
-            "clean_spot": {
-                "service": "input_boolean.turn_on",
-                "entity_id": _SPOT_CLEANING_INPUT_BOOLEAN,
-            },
-            "locate": {
-                "service": "input_boolean.turn_on",
-                "entity_id": _LOCATING_INPUT_BOOLEAN,
-            },
-            "set_fan_speed": {
-                "service": "input_select.select_option",
-                "data_template": {
-                    "entity_id": _FAN_SPEED_INPUT_SELECT,
-                    "option": "{{ fan_speed }}",
+            "start": [
+                {
+                    "service": "input_select.select_option",
+                    "data": {
+                        "entity_id": _STATE_INPUT_SELECT,
+                        "option": STATE_CLEANING,
+                    },
                 },
-            },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "start",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "pause": [
+                {
+                    "service": "input_select.select_option",
+                    "data": {"entity_id": _STATE_INPUT_SELECT, "option": STATE_PAUSED},
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "pause",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "stop": [
+                {
+                    "service": "input_select.select_option",
+                    "data": {"entity_id": _STATE_INPUT_SELECT, "option": STATE_IDLE},
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "stop",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "return_to_base": [
+                {
+                    "service": "input_select.select_option",
+                    "data": {
+                        "entity_id": _STATE_INPUT_SELECT,
+                        "option": STATE_RETURNING,
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "return_to_base",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "clean_spot": [
+                {
+                    "service": "input_boolean.turn_on",
+                    "entity_id": _SPOT_CLEANING_INPUT_BOOLEAN,
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "clean_spot",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "locate": [
+                {
+                    "service": "input_boolean.turn_on",
+                    "entity_id": _LOCATING_INPUT_BOOLEAN,
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "locate",
+                        "caller": "{{ this.entity_id }}",
+                    },
+                },
+            ],
+            "set_fan_speed": [
+                {
+                    "service": "input_select.select_option",
+                    "data_template": {
+                        "entity_id": _FAN_SPEED_INPUT_SELECT,
+                        "option": "{{ fan_speed }}",
+                    },
+                },
+                {
+                    "service": "test.automation",
+                    "data_template": {
+                        "action": "set_fan_speed",
+                        "caller": "{{ this.entity_id }}",
+                        "option": "{{ fan_speed }}",
+                    },
+                },
+            ],
             "fan_speeds": ["low", "medium", "high"],
             "attribute_templates": {
                 "test_attribute": "It {{ states.sensor.test_state.state }}."

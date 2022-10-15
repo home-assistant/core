@@ -91,7 +91,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
         """In some locales a decimal numbers uses ',' instead of '.'."""
         return string.replace(",", ".")
 
-    def update(self):
+    def update(self) -> None:
         """Update the device from a new JSON object."""
         self._data.update()
 

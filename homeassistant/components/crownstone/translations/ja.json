@@ -56,13 +56,6 @@
                 "description": "Crownstone USB\u30c9\u30f3\u30b0\u30eb\u306e\u30b7\u30ea\u30a2\u30eb \u30dd\u30fc\u30c8\u3092\u9078\u629e\u3057\u307e\u3059\u3002\n\nVID 10C4 \u3067 PID EA60 \u306a\u5024\u306e\u30c7\u30d0\u30a4\u30b9\u3092\u63a2\u3057\u307e\u3059\u3002",
                 "title": "Crownstone USB\u30c9\u30f3\u30b0\u30eb\u306e\u8a2d\u5b9a"
             },
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "USB\u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
-                },
-                "description": "Crownstone USB\u30c9\u30f3\u30b0\u30eb\u306e\u30b7\u30ea\u30a2\u30eb \u30dd\u30fc\u30c8\u3092\u9078\u629e\u3057\u307e\u3059\u3002\n\nVID 10C4 \u3067 PID EA60 \u306a\u5024\u306e\u30c7\u30d0\u30a4\u30b9\u3092\u63a2\u3057\u307e\u3059\u3002",
-                "title": "Crownstone USB\u30c9\u30f3\u30b0\u30eb\u306e\u8a2d\u5b9a"
-            },
             "usb_manual_config": {
                 "data": {
                     "usb_manual_path": "USB\u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
@@ -70,21 +63,7 @@
                 "description": "\u624b\u52d5\u3067\u3001Crownstone USB\u30c9\u30f3\u30b0\u30eb\u306e\u30d1\u30b9\u3092\u5165\u529b\u3057\u307e\u3059\u3002",
                 "title": "Crownstone USB\u30c9\u30f3\u30b0\u30eb\u3078\u306e\u624b\u52d5\u30d1\u30b9"
             },
-            "usb_manual_config_option": {
-                "data": {
-                    "usb_manual_path": "USB\u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
-                },
-                "description": "\u624b\u52d5\u3067\u3001Crownstone USB\u30c9\u30f3\u30b0\u30eb\u306e\u30d1\u30b9\u3092\u5165\u529b\u3057\u307e\u3059\u3002",
-                "title": "Crownstone USB\u30c9\u30f3\u30b0\u30eb\u3078\u306e\u624b\u52d5\u30d1\u30b9"
-            },
             "usb_sphere_config": {
-                "data": {
-                    "usb_sphere": "Crownstone Sphere"
-                },
-                "description": "USB\u306b\u914d\u7f6e\u3055\u308c\u3066\u3044\u308b\u3001CrownstoneSphere\u3092\u9078\u629e\u3057\u307e\u3059\u3002",
-                "title": "Crownstone USB Sphere"
-            },
-            "usb_sphere_config_option": {
                 "data": {
                     "usb_sphere": "Crownstone Sphere"
                 },

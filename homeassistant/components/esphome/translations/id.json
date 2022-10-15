@@ -9,7 +9,7 @@
             "connection_error": "Tidak dapat terhubung ke ESP. Pastikan file YAML Anda mengandung baris 'api:'.",
             "invalid_auth": "Autentikasi tidak valid",
             "invalid_psk": "Kunci enkripsi transport tidak valid. Pastikan kuncinya sesuai dengan yang ada pada konfigurasi Anda",
-            "resolve_error": "Tidak dapat menemukan alamat ESP. Jika kesalahan ini terus terjadi, atur alamat IP statis: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+            "resolve_error": "Tidak dapat menemukan alamat ESP. Jika kesalahan ini terus terjadi, atur alamat IP statis"
         },
         "flow_title": "{name}",
         "step": {
@@ -40,7 +40,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Masukkan pengaturan koneksi node [ESPHome](https://esphomelib.com/)."
+                "description": "Masukkan pengaturan koneksi node [ESPHome]({esphome_url})."
             }
         }
     }

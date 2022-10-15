@@ -15,6 +15,5 @@
                 "description": "Kullan\u0131c\u0131n\u0131z\u0131n profilinin ve g\u00f6revlerinin izlenmesine izin vermek i\u00e7in Habitica profilinizi ba\u011flay\u0131n. api_id ve api_key'in https://habitica.com/user/settings/api adresinden al\u0131nmas\u0131 gerekti\u011fini unutmay\u0131n."
             }
         }
-    },
-    "title": "Habitica"
+    }
 }

@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -47,9 +48,11 @@ class LyricSensorEntityDescription(SensorEntityDescription):
     value: Callable[[LyricDevice], StateType | datetime] = round
 
 
-def get_datetime_from_future_time(time: str) -> datetime:
+def get_datetime_from_future_time(time_str: str) -> datetime:
     """Get datetime from future time provided."""
-    time = dt_util.parse_time(time)
+    time = dt_util.parse_time(time_str)
+    if time is None:
+        raise ValueError(f"Unable to parse time {time_str}")
     now = dt_util.utcnow()
     if time <= now.time():
         now = now + timedelta(days=1)
@@ -64,7 +67,7 @@ async def async_setup_entry(
 
     entities = []
 
-    def get_setpoint_status(status: str, time: str) -> str:
+    def get_setpoint_status(status: str, time: str) -> str | None:
         if status == PRESET_HOLD_UNTIL:
             return f"Held until {time}"
         return LYRIC_SETPOINT_STATUS_NAMES.get(status, None)
@@ -112,7 +115,7 @@ async def async_setup_entry(
                             name="Outdoor Humidity",
                             device_class=SensorDeviceClass.HUMIDITY,
                             state_class=SensorStateClass.MEASUREMENT,
-                            native_unit_of_measurement="%",
+                            native_unit_of_measurement=PERCENTAGE,
                             value=lambda device: device.displayedOutdoorHumidity,
                         ),
                         location,

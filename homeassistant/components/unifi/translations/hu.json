@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "A vez\u00e9rl\u0151 webhelye m\u00e1r konfigur\u00e1lva van",
-            "configuration_updated": "A konfigur\u00e1ci\u00f3 friss\u00edtve.",
+            "already_configured": "Az UniFi Network webhely m\u00e1r konfigur\u00e1lva van",
+            "configuration_updated": "Konfigur\u00e1ci\u00f3 friss\u00edtve",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
@@ -26,6 +26,9 @@
         }
     },
     "options": {
+        "abort": {
+            "integration_not_setup": "Az UniFi integr\u00e1ci\u00f3 nincs be\u00e1ll\u00edtva"
+        },
         "step": {
             "client_control": {
                 "data": {
@@ -39,7 +42,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Id\u0151 m\u00e1sodpercben az utols\u00f3 l\u00e1t\u00e1st\u00f3l a t\u00e1vol tart\u00e1sig",
-                    "ignore_wired_bug": "Az UniFi vezet\u00e9kes hibalogika letilt\u00e1sa",
+                    "ignore_wired_bug": "Az UniFi Network vezet\u00e9kes hibalogika letilt\u00e1sa",
                     "ssid_filter": "V\u00e1lassza ki az SSID -ket a vezet\u00e9k n\u00e9lk\u00fcli \u00fcgyfelek nyomon k\u00f6vet\u00e9s\u00e9hez",
                     "track_clients": "K\u00f6vesse nyomon a h\u00e1l\u00f3zati \u00fcgyfeleket",
                     "track_devices": "H\u00e1l\u00f3zati eszk\u00f6z\u00f6k nyomon k\u00f6vet\u00e9se (Ubiquiti eszk\u00f6z\u00f6k)",

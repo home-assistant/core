@@ -38,9 +38,13 @@ from .const import (  # noqa: F401
     DEVICE_CLASS_DEHUMIDIFIER,
     DEVICE_CLASS_HUMIDIFIER,
     DOMAIN,
+    MODE_AUTO,
+    MODE_AWAY,
+    MODE_NORMAL,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SUPPORT_MODES,
+    HumidifierEntityFeature,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,6 +68,8 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
 # use the HumidifierDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
 
+# mypy: disallow-any-generics
+
 
 @bind_hass
 def is_on(hass, entity_id):
@@ -76,7 +82,7 @@ def is_on(hass, entity_id):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up humidifier devices."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[HumidifierEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -88,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_MODE,
         {vol.Required(ATTR_MODE): cv.string},
         "async_set_mode",
-        [SUPPORT_MODES],
+        [HumidifierEntityFeature.MODES],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
@@ -105,13 +111,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[HumidifierEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[HumidifierEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -142,7 +148,7 @@ class HumidifierEntity(ToggleEntity):
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
-        if supported_features & SUPPORT_MODES:
+        if supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
@@ -166,7 +172,7 @@ class HumidifierEntity(ToggleEntity):
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if supported_features & SUPPORT_MODES:
+        if supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_MODE] = self.mode
 
         return data
@@ -180,7 +186,7 @@ class HumidifierEntity(ToggleEntity):
     def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         return self._attr_mode
 
@@ -188,7 +194,7 @@ class HumidifierEntity(ToggleEntity):
     def available_modes(self) -> list[str] | None:
         """Return a list of available modes.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         return self._attr_available_modes
 

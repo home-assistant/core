@@ -103,21 +103,3 @@ async def test_turn_off(port, switch):
     assert port.control.call_args == mock.call(False)
     # pylint: disable=protected-access
     assert not switch._target_state
-
-
-async def test_current_power_w(port, switch):
-    """Test current power."""
-    port.data = {"active_pwr": 10}
-    assert switch.current_power_w == 10
-
-
-async def test_current_power_w_no_data(port, switch):
-    """Test current power if there is no data."""
-    port.data = {"notpower": 123}
-    assert switch.current_power_w == 0
-
-
-async def test_extra_state_attributes(port, switch):
-    """Test the state attributes."""
-    port.data = {"v_rms": 1.25, "i_rms": 2.75}
-    assert switch.extra_state_attributes == {"volts": 1.2, "amps": 2.8}

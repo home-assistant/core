@@ -1,14 +1,14 @@
 {
     "config": {
         "step": {
-            "init": {
+            "user": {
                 "data": {
-                    "entity_id": "Entiteit wijzigen",
-                    "target_domain": "Type"
+                    "entity_id": "Schakelaar",
+                    "target_domain": "Nieuw type"
                 },
-                "title": "Schakel een..."
+                "description": "Kies een schakelaar die u in Home Assistant wilt laten verschijnen als licht, klep of iets anders. De oorspronkelijke schakelaar wordt verborgen."
             }
         }
     },
-    "title": "Schakelen als X"
+    "title": "Apparaattype van een schakelaar wijzigen"
 }

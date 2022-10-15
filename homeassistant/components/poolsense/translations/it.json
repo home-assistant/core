@@ -11,9 +11,7 @@
                 "data": {
                     "email": "Email",
                     "password": "Password"
-                },
-                "description": "Vuoi iniziare la configurazione?",
-                "title": "PoolSense"
+                }
             }
         }
     }

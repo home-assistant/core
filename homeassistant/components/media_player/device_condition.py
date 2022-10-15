@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -23,7 +24,14 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN
 
-CONDITION_TYPES = {"is_on", "is_off", "is_idle", "is_paused", "is_playing"}
+CONDITION_TYPES = {
+    "is_on",
+    "is_off",
+    "is_buffering",
+    "is_idle",
+    "is_paused",
+    "is_playing",
+}
 
 CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
@@ -37,8 +45,8 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Media player devices."""
-    registry = await entity_registry.async_get_registry(hass)
-    conditions = []
+    registry = entity_registry.async_get(hass)
+    conditions: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
@@ -63,16 +71,18 @@ def async_condition_from_config(
     hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config[CONF_TYPE] == "is_playing":
-        state = STATE_PLAYING
+    if config[CONF_TYPE] == "is_buffering":
+        state = STATE_BUFFERING
     elif config[CONF_TYPE] == "is_idle":
         state = STATE_IDLE
-    elif config[CONF_TYPE] == "is_paused":
-        state = STATE_PAUSED
+    elif config[CONF_TYPE] == "is_off":
+        state = STATE_OFF
     elif config[CONF_TYPE] == "is_on":
         state = STATE_ON
-    else:
-        state = STATE_OFF
+    elif config[CONF_TYPE] == "is_paused":
+        state = STATE_PAUSED
+    else:  # is_playing
+        state = STATE_PLAYING
 
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""

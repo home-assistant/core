@@ -12,6 +12,8 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
+from .conftest import create_rfx_test_cfg
+
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
@@ -19,7 +21,6 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
 @pytest.fixture(name="device_reg")
@@ -105,7 +106,7 @@ async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
     actions = [action for action in actions if action["domain"] == DOMAIN]
 
     expected_actions = [
-        {"domain": DOMAIN, "device_id": device_entry.id, **action_type}
+        {"domain": DOMAIN, "device_id": device_entry.id, "metadata": {}, **action_type}
         for action_type in expected
     ]
 

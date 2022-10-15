@@ -12,8 +12,9 @@
                 "data": {
                     "code": "Stasjonskode"
                 },
-                "description": "Angi Meteoclimatic stasjonskode (f.eks. ESCAT4300000043206B)",
-                "title": "Meteoclimatic"
+                "data_description": {
+                    "code": "Ser ut som ESCAT4300000043206B"
+                }
             }
         }
     }

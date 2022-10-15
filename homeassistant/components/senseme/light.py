@@ -9,8 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -75,8 +74,8 @@ class HASensemeFanLight(HASensemeLight):
     def __init__(self, device: SensemeDevice) -> None:
         """Init a fan light."""
         super().__init__(device, device.name)
-        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        self._attr_color_mode = ColorMode.BRIGHTNESS
 
 
 class HASensemeStandaloneLight(HASensemeLight):
@@ -85,8 +84,8 @@ class HASensemeStandaloneLight(HASensemeLight):
     def __init__(self, device: SensemeDevice) -> None:
         """Init a standalone light."""
         super().__init__(device, f"{device.name} Light")
-        self._attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP}
-        self._attr_color_mode = COLOR_MODE_COLOR_TEMP
+        self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+        self._attr_color_mode = ColorMode.COLOR_TEMP
         self._attr_min_mireds = color_temperature_kelvin_to_mired(
             device.light_color_temp_max
         )

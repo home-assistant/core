@@ -125,7 +125,7 @@ class VasttrafikDepartureSensor(SensorEntity):
         return self._state
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the departure board."""
         try:
             self._departureboard = self._planner.departureboard(
@@ -139,7 +139,7 @@ class VasttrafikDepartureSensor(SensorEntity):
 
         if not self._departureboard:
             _LOGGER.debug(
-                "No departures from departure station %s " "to destination station %s",
+                "No departures from departure station %s to destination station %s",
                 self._departure["station_name"],
                 self._heading["station_name"] if self._heading else "ANY",
             )

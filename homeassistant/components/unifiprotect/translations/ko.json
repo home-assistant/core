@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "discovery_started": "\uc7a5\uce58\uac80\uc0c9 \uc2dc\uc791"
+        },
+        "step": {
+            "discovery_confirm": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "{name} ( {ip_address} )\uc744(\ub97c) \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c? ",
+                "title": "UniFi Protect \ubc1c\uacac"
+            }
+        }
+    }
+}

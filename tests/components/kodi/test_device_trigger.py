@@ -4,7 +4,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.kodi import DOMAIN
-from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
@@ -57,17 +57,12 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "turn_off",
+            "type": trigger,
             "device_id": device_entry.id,
             "entity_id": f"{MP_DOMAIN}.kodi_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "turn_on",
-            "device_id": device_entry.id,
-            "entity_id": f"{MP_DOMAIN}.kodi_5678",
-        },
+            "metadata": {"secondary": False},
+        }
+        for trigger in ["turn_off", "turn_on"]
     ]
 
     # Test triggers are either kodi specific triggers or media_player entity triggers

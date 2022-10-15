@@ -14,11 +14,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Sunucu",
-                    "name": "Ad"
-                },
-                "description": "Vallox entegrasyonunu ayarlay\u0131n. Yap\u0131land\u0131rmayla ilgili sorunlar\u0131n\u0131z varsa {integration_docs_url} adresine gidin.",
-                "title": "Vallox"
+                    "host": "Sunucu"
+                }
             }
         }
     }

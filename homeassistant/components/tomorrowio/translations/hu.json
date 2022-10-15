@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
+            "rate_limited": "Jelenleg korl\u00e1tozott a hozz\u00e1f\u00e9r\u00e9s, k\u00e9rem, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "location": "Elhelyezked\u00e9s",
+                    "name": "Elnevez\u00e9s"
+                },
+                "description": "API-kulcs beszerz\u00e9s\u00e9hez regisztr\u00e1ljon a [Tomorrow.io] (https://app.tomorrow.io/signup) oldalon."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "Percek NowCast el\u0151rejelz\u00e9sek k\u00f6z\u00f6tt"
+                },
+                "description": "Ha enged\u00e9lyezi a 'nowcast' id\u0151j\u00e1r\u00e1st, be\u00e1ll\u00edthatja az egyes el\u0151rejelz\u00e9sek k\u00f6z\u00f6tt eltelt percek sz\u00e1m\u00e1t. Az el\u0151rejelz\u00e9sek sz\u00e1ma az el\u0151rejelz\u00e9sek k\u00f6z\u00f6tt v\u00e1lasztott percek sz\u00e1m\u00e1t\u00f3l f\u00fcgg.",
+                "title": "Tomorrow.io be\u00e1ll\u00edt\u00e1sok friss\u00edt\u00e9se"
+            }
+        }
+    }
+}

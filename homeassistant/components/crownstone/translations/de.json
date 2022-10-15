@@ -56,13 +56,6 @@
                 "description": "W\u00e4hle den seriellen Anschluss des Crownstone-USB-Dongles.\n\nSuche nach einem Ger\u00e4t mit VID 10C4 und PID EA60.",
                 "title": "Crownstone USB-Dongle-Konfiguration"
             },
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "USB-Ger\u00e4te-Pfad"
-                },
-                "description": "W\u00e4hle den seriellen Anschluss des Crownstone-USB-Dongles.\n\nSuche nach einem Ger\u00e4t mit VID 10C4 und PID EA60.",
-                "title": "Crownstone USB-Dongle-Konfiguration"
-            },
             "usb_manual_config": {
                 "data": {
                     "usb_manual_path": "USB-Ger\u00e4te-Pfad"
@@ -70,21 +63,7 @@
                 "description": "Gib den Pfad eines Crownstone USB-Dongles manuell ein.",
                 "title": "Crownstone USB-Dongle manueller Pfad"
             },
-            "usb_manual_config_option": {
-                "data": {
-                    "usb_manual_path": "USB-Ger\u00e4te-Pfad"
-                },
-                "description": "Gib den Pfad eines Crownstone USB-Dongles manuell ein.",
-                "title": "Crownstone USB-Dongle manueller Pfad"
-            },
             "usb_sphere_config": {
-                "data": {
-                    "usb_sphere": "Crownstone Sphere"
-                },
-                "description": "W\u00e4hle eine Crownstone Sphere aus, in der sich der USB-Stick befindet.",
-                "title": "Crownstone USB Sphere"
-            },
-            "usb_sphere_config_option": {
                 "data": {
                     "usb_sphere": "Crownstone Sphere"
                 },

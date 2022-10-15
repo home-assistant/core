@@ -13,15 +13,17 @@ from pyoverkiz.enums import (
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
+    CoverEntityFeature,
 )
-from homeassistant.components.overkiz.coordinator import OverkizDataUpdateCoordinator
 
-from .generic_cover import COMMANDS_STOP, OverkizGenericCover
+from ..coordinator import OverkizDataUpdateCoordinator
+from .generic_cover import (
+    COMMANDS_CLOSE_TILT,
+    COMMANDS_OPEN_TILT,
+    COMMANDS_STOP,
+    OverkizGenericCover,
+)
 
 COMMANDS_OPEN = [OverkizCommand.OPEN, OverkizCommand.UP, OverkizCommand.CYCLE]
 COMMANDS_CLOSE = [OverkizCommand.CLOSE, OverkizCommand.DOWN, OverkizCommand.CYCLE]
@@ -49,16 +51,16 @@ class VerticalCover(OverkizGenericCover):
         supported_features: int = super().supported_features
 
         if self.executor.has_command(OverkizCommand.SET_CLOSURE):
-            supported_features |= SUPPORT_SET_POSITION
+            supported_features |= CoverEntityFeature.SET_POSITION
 
         if self.executor.has_command(*COMMANDS_OPEN):
-            supported_features |= SUPPORT_OPEN
+            supported_features |= CoverEntityFeature.OPEN
 
             if self.executor.has_command(*COMMANDS_STOP):
-                supported_features |= SUPPORT_STOP
+                supported_features |= CoverEntityFeature.STOP
 
         if self.executor.has_command(*COMMANDS_CLOSE):
-            supported_features |= SUPPORT_CLOSE
+            supported_features |= CoverEntityFeature.CLOSE
 
         return supported_features
 
@@ -107,6 +109,38 @@ class VerticalCover(OverkizGenericCover):
         if command := self.executor.select_command(*COMMANDS_CLOSE):
             await self.executor.async_execute_command(command)
 
+    @property
+    def is_opening(self) -> bool | None:
+        """Return if the cover is opening or not."""
+        if self.is_running(COMMANDS_OPEN + COMMANDS_OPEN_TILT):
+            return True
+
+        # Check if cover is moving based on current state
+        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
+        current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
+        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
+
+        if not is_moving or not current_closure or not target_closure:
+            return None
+
+        return cast(int, current_closure.value) > cast(int, target_closure.value)
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the cover is closing or not."""
+        if self.is_running(COMMANDS_CLOSE + COMMANDS_CLOSE_TILT):
+            return True
+
+        # Check if cover is moving based on current state
+        is_moving = self.device.states.get(OverkizState.CORE_MOVING)
+        current_closure = self.device.states.get(OverkizState.CORE_CLOSURE)
+        target_closure = self.device.states.get(OverkizState.CORE_TARGET_CLOSURE)
+
+        if not is_moving or not current_closure or not target_closure:
+            return None
+
+        return cast(int, current_closure.value) < cast(int, target_closure.value)
+
 
 class LowSpeedCover(VerticalCover):
     """Representation of an Overkiz Low Speed cover."""
@@ -118,7 +152,7 @@ class LowSpeedCover(VerticalCover):
     ) -> None:
         """Initialize the device."""
         super().__init__(device_url, coordinator)
-        self._attr_name = f"{self._attr_name} Low Speed"
+        self._attr_name = "Low speed"
         self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:

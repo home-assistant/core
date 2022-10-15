@@ -21,12 +21,12 @@
                 "data": {
                     "password": "Jelsz\u00f3"
                 },
-                "description": "K\u00e9rj\u00fck, adja meg a helyes jelsz\u00f3t: {host}"
+                "description": "K\u00e9rem, adja meg a helyes jelsz\u00f3t: {host}"
             },
             "user": {
                 "data": {
                     "host": "C\u00edm",
-                    "name": "N\u00e9v",
+                    "name": "Elnevez\u00e9s",
                     "password": "Jelsz\u00f3",
                     "port": "Port"
                 }

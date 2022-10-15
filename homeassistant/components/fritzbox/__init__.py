@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await async_migrate_entries(hass, entry.entry_id, _update_unique_id)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     def logout_fritzbox(event: Event) -> None:
         """Close connections to this fritzbox."""

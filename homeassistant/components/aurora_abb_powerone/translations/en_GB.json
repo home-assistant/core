@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "unknown": "Unexpected error"
-        },
         "step": {
             "user": {
                 "data": {

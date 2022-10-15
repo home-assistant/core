@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "alread_configured": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
             "already_configured": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
             "not_compatible": "Impossibile ottenere informazioni sulla CPU, questa integrazione non \u00e8 compatibile con il tuo sistema"
         },

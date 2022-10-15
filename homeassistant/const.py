@@ -5,8 +5,9 @@ from typing import Final
 
 from .backports.enum import StrEnum
 
+APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 4
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -61,6 +62,7 @@ MATCH_ALL: Final = "*"
 # Entity target all constant
 ENTITY_MATCH_NONE: Final = "none"
 ENTITY_MATCH_ALL: Final = "all"
+ENTITY_MATCH_ANY: Final = "any"
 
 # If no name is specified
 DEVICE_DEFAULT_NAME: Final = "Unnamed Device"
@@ -115,6 +117,7 @@ CONF_COMMAND_STATE: Final = "command_state"
 CONF_COMMAND_STOP: Final = "command_stop"
 CONF_CONDITION: Final = "condition"
 CONF_CONDITIONS: Final = "conditions"
+CONF_CONTINUE_ON_ERROR: Final = "continue_on_error"
 CONF_CONTINUE_ON_TIMEOUT: Final = "continue_on_timeout"
 CONF_COUNT: Final = "count"
 CONF_COVERS: Final = "covers"
@@ -139,12 +142,15 @@ CONF_DOMAIN: Final = "domain"
 CONF_DOMAINS: Final = "domains"
 CONF_EFFECT: Final = "effect"
 CONF_ELEVATION: Final = "elevation"
+CONF_ELSE: Final = "else"
 CONF_EMAIL: Final = "email"
+CONF_ENABLED: Final = "enabled"
 CONF_ENTITIES: Final = "entities"
 CONF_ENTITY_CATEGORY: Final = "entity_category"
 CONF_ENTITY_ID: Final = "entity_id"
 CONF_ENTITY_NAMESPACE: Final = "entity_namespace"
 CONF_ENTITY_PICTURE_TEMPLATE: Final = "entity_picture_template"
+CONF_ERROR: Final = "error"
 CONF_EVENT: Final = "event"
 CONF_EVENT_DATA: Final = "event_data"
 CONF_EVENT_DATA_TEMPLATE: Final = "event_data_template"
@@ -153,6 +159,7 @@ CONF_EXTERNAL_URL: Final = "external_url"
 CONF_FILENAME: Final = "filename"
 CONF_FILE_PATH: Final = "file_path"
 CONF_FOR: Final = "for"
+CONF_FOR_EACH: Final = "for_each"
 CONF_FORCE_UPDATE: Final = "force_update"
 CONF_FRIENDLY_NAME: Final = "friendly_name"
 CONF_FRIENDLY_NAME_TEMPLATE: Final = "friendly_name_template"
@@ -163,25 +170,30 @@ CONF_HS: Final = "hs"
 CONF_ICON: Final = "icon"
 CONF_ICON_TEMPLATE: Final = "icon_template"
 CONF_ID: Final = "id"
+CONF_IF: Final = "if"
 CONF_INCLUDE: Final = "include"
 CONF_INTERNAL_URL: Final = "internal_url"
 CONF_IP_ADDRESS: Final = "ip_address"
 CONF_LATITUDE: Final = "latitude"
 CONF_LEGACY_TEMPLATES: Final = "legacy_templates"
 CONF_LIGHTS: Final = "lights"
+CONF_LOCATION: Final = "location"
 CONF_LONGITUDE: Final = "longitude"
 CONF_MAC: Final = "mac"
+CONF_MATCH: Final = "match"
 CONF_MAXIMUM: Final = "maximum"
 CONF_MEDIA_DIRS: Final = "media_dirs"
 CONF_METHOD: Final = "method"
 CONF_MINIMUM: Final = "minimum"
 CONF_MODE: Final = "mode"
+CONF_MODEL: Final = "model"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
 CONF_PACKAGES: Final = "packages"
+CONF_PARALLEL: Final = "parallel"
 CONF_PARAMS: Final = "params"
 CONF_PASSWORD: Final = "password"
 CONF_PATH: Final = "path"
@@ -215,6 +227,7 @@ CONF_SENSOR_TYPE: Final = "sensor_type"
 CONF_SEQUENCE: Final = "sequence"
 CONF_SERVICE: Final = "service"
 CONF_SERVICE_DATA: Final = "data"
+CONF_SERVICE_DATA_TEMPLATE: Final = "data_template"
 CONF_SERVICE_TEMPLATE: Final = "service_template"
 CONF_SHOW_ON_MAP: Final = "show_on_map"
 CONF_SLAVE: Final = "slave"
@@ -222,10 +235,12 @@ CONF_SOURCE: Final = "source"
 CONF_SSL: Final = "ssl"
 CONF_STATE: Final = "state"
 CONF_STATE_TEMPLATE: Final = "state_template"
+CONF_STOP: Final = "stop"
 CONF_STRUCTURE: Final = "structure"
 CONF_SWITCHES: Final = "switches"
 CONF_TARGET: Final = "target"
 CONF_TEMPERATURE_UNIT: Final = "temperature_unit"
+CONF_THEN: Final = "then"
 CONF_TIMEOUT: Final = "timeout"
 CONF_TIME_ZONE: Final = "time_zone"
 CONF_TOKEN: Final = "token"
@@ -249,7 +264,6 @@ CONF_WHILE: Final = "while"
 CONF_WHITELIST: Final = "whitelist"
 CONF_ALLOWLIST_EXTERNAL_DIRS: Final = "allowlist_external_dirs"
 LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
-CONF_WHITE_VALUE: Final = "white_value"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
 
@@ -267,9 +281,6 @@ EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
-EVENT_TIMER_OUT_OF_SYNC: Final = "timer_out_of_sync"
-EVENT_TIME_CHANGED: Final = "time_changed"
-
 
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12
@@ -313,6 +324,7 @@ STATE_OPEN: Final = "open"
 STATE_OPENING: Final = "opening"
 STATE_CLOSED: Final = "closed"
 STATE_CLOSING: Final = "closing"
+STATE_BUFFERING: Final = "buffering"
 STATE_PLAYING: Final = "playing"
 STATE_PAUSED: Final = "paused"
 STATE_IDLE: Final = "idle"
@@ -384,7 +396,9 @@ ATTR_ICON: Final = "icon"
 ATTR_UNIT_OF_MEASUREMENT: Final = "unit_of_measurement"
 
 CONF_UNIT_SYSTEM_METRIC: Final = "metric"
+"""Deprecated: please use a local constant."""
 CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
+"""Deprecated: please use a local constant."""
 
 # Electrical attributes
 ATTR_VOLTAGE: Final = "voltage"
@@ -457,6 +471,8 @@ ATTR_DEVICE_CLASS: Final = "device_class"
 # Temperature attribute
 ATTR_TEMPERATURE: Final = "temperature"
 
+# Persons attribute
+ATTR_PERSONS: Final = "persons"
 
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
@@ -546,7 +562,10 @@ VOLUME_CUBIC_METERS: Final = "m³"
 VOLUME_CUBIC_FEET: Final = "ft³"
 
 VOLUME_GALLONS: Final = "gal"
+"""US gallon (British gallon is not yet supported)"""
+
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
+"""US fluid ounce (British fluid ounce is not yet supported)"""
 
 # Volume Flow Rate units
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
@@ -576,6 +595,9 @@ UV_INDEX: Final = "UV index"
 # Percentage units
 PERCENTAGE: Final = "%"
 
+# Rotational speed units
+REVOLUTIONS_PER_MINUTE: Final = "rpm"
+
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
 IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
@@ -595,10 +617,12 @@ CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
 # Speed units
 SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
+SPEED_FEET_PER_SECOND: Final = "ft/s"
 SPEED_INCHES_PER_DAY: Final = "in/d"
 SPEED_METERS_PER_SECOND: Final = "m/s"
 SPEED_INCHES_PER_HOUR: Final = "in/h"
 SPEED_KILOMETERS_PER_HOUR: Final = "km/h"
+SPEED_KNOTS: Final = "kn"
 SPEED_MILES_PER_HOUR: Final = "mph"
 
 # Signal_strength units
@@ -751,11 +775,9 @@ CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 # use the EntityCategory enum instead.
 ENTITY_CATEGORY_CONFIG: Final = "config"
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
-ENTITY_CATEGORY_SYSTEM: Final = "system"
 ENTITY_CATEGORIES: Final[list[str]] = [
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_SYSTEM,
 ]
 
 # The ID of the Home Assistant Media Player Cast App
@@ -766,4 +788,4 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 # User used by Supervisor
 HASSIO_USER_NAME = "Supervisor"
 
-SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
+SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"

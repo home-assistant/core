@@ -35,14 +35,12 @@
                 "title": "Plex-Server ausw\u00e4hlen"
             },
             "user": {
-                "description": "Gehe zu [plex.tv] (https://plex.tv), um einen Plex-Server zu verbinden",
-                "title": "Plex Media Server"
+                "description": "Gehe zu [plex.tv] (https://plex.tv), um einen Plex-Server zu verbinden"
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Einrichtungsmethode"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

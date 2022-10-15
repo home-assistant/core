@@ -37,3 +37,8 @@ def controller(hass):
 @pytest.fixture(autouse=True)
 def hk_mock_async_zeroconf(mock_async_zeroconf):
     """Auto mock zeroconf."""
+
+
+@pytest.fixture(autouse=True)
+def auto_mock_bluetooth(mock_bluetooth):
+    """Auto mock bluetooth."""

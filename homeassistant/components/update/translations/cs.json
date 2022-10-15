@@ -1,0 +1,9 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "Dostupnost aktualizace {entity_name} zm\u011bn\u011bna",
+            "turned_off": "{entity_name} se stal aktu\u00e1ln\u00edm",
+            "turned_on": "{entity_name} m\u00e1 k dispozici aktualizaci"
+        }
+    }
+}

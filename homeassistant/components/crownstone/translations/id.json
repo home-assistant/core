@@ -56,13 +56,6 @@
                 "description": "Pilih port serial dongle USB Crownstone. \n\nCari perangkat dengan VID 10C4 dan PID EA60.",
                 "title": "Konfigurasi dongle USB Crownstone"
             },
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "Jalur Perangkat USB"
-                },
-                "description": "Pilih port serial dongle USB Crownstone. \n\nCari perangkat dengan VID 10C4 dan PID EA60.",
-                "title": "Konfigurasi dongle USB Crownstone"
-            },
             "usb_manual_config": {
                 "data": {
                     "usb_manual_path": "Jalur Perangkat USB"
@@ -70,21 +63,7 @@
                 "description": "Masukkan jalur dongle USB Crownstone secara manual.",
                 "title": "Jalur manual dongle USB Crownstone"
             },
-            "usb_manual_config_option": {
-                "data": {
-                    "usb_manual_path": "Jalur Perangkat USB"
-                },
-                "description": "Masukkan jalur dongle USB Crownstone secara manual.",
-                "title": "Jalur manual dongle USB Crownstone"
-            },
             "usb_sphere_config": {
-                "data": {
-                    "usb_sphere": "Crownstone Sphere"
-                },
-                "description": "Pilih Crownstone Sphere tempat USB berada.",
-                "title": "Crownstone USB Sphere"
-            },
-            "usb_sphere_config_option": {
                 "data": {
                     "usb_sphere": "Crownstone Sphere"
                 },

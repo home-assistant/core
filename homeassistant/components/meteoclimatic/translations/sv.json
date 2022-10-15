@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "error": {
+            "not_found": "Inga enheter hittades i n\u00e4tverket"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Stationskod"
+                },
+                "data_description": {
+                    "code": "Ser ut som ESCAT4300000043206B"
+                }
+            }
+        }
+    }
+}

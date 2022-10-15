@@ -8,33 +8,54 @@ from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
+import socket
 from typing import Any
+from urllib.parse import urljoin
+import xml.etree.ElementTree as ET
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import (
     AddressTupleVXType,
+    DeviceIcon,
+    DeviceInfo,
     DeviceOrServiceType,
-    SsdpHeaders,
     SsdpSource,
 )
 from async_upnp_client.description_cache import DescriptionCache
+from async_upnp_client.server import (
+    SSDP_SEARCH_RESPONDER_OPTION_ALWAYS_REPLY_WITH_ROOT_DEVICE,
+    SSDP_SEARCH_RESPONDER_OPTIONS,
+    UpnpServer,
+    UpnpServerDevice,
+    UpnpServerService,
+)
 from async_upnp_client.ssdp import SSDP_PORT, determine_source_target, is_ipv4_address
 from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, MATCH_ALL
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+    __version__ as current_version,
+)
 from homeassistant.core import HomeAssistant, callback as core_callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.frame import report
+from homeassistant.helpers.instance_id import async_get as async_get_instance_id
+from homeassistant.helpers.network import get_url
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 
 DOMAIN = "ssdp"
+SSDP_SCANNER = "scanner"
+UPNP_SERVER = "server"
+UPNP_SERVER_MIN_PORT = 40000
+UPNP_SERVER_MAX_PORT = 40100
 SCAN_INTERVAL = timedelta(minutes=2)
 
 IPV4_BROADCAST = IPv4Address("255.255.255.255")
@@ -50,6 +71,8 @@ ATTR_SSDP_SERVER = "ssdp_server"
 ATTR_SSDP_BOOTID = "BOOTID.UPNP.ORG"
 ATTR_SSDP_NEXTBOOTID = "NEXTBOOTID.UPNP.ORG"
 # Attributes for accessing info from retrieved UPnP device description
+ATTR_ST = "st"
+ATTR_NT = "nt"
 ATTR_UPNP_DEVICE_TYPE = "deviceType"
 ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
 ATTR_UPNP_MANUFACTURER = "manufacturer"
@@ -66,7 +89,13 @@ ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 # Attributes for accessing info added by Home Assistant
 ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
-PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
+PRIMARY_MATCH_KEYS = [
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_ST,
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_NT,
+    ATTR_UPNP_MANUFACTURER_URL,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,63 +137,6 @@ class SsdpServiceInfo(
 ):
     """Prepared info from ssdp/upnp entries."""
 
-    def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info['{name}'] instead of discovery_info.{name}, "
-            f"discovery_info.upnp['{name}'] "
-            f"or discovery_info.ssdp_headers['{name}']; "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        # Use a property if it is available, fallback to upnp data
-        if hasattr(self, name):
-            return getattr(self, name)
-        if name in self.ssdp_headers and name not in self.upnp:
-            return self.ssdp_headers.get(name)
-        return self.upnp[name]
-
-    def get(self, name: str, default: Any = None) -> Any:
-        """
-        Enable method for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}, "
-            f"discovery_info.upnp.get('{name}') "
-            f"or discovery_info.ssdp_headers.get('{name}'); "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        if hasattr(self, name):
-            return getattr(self, name)
-        return self.upnp.get(name, self.ssdp_headers.get(name, default))
-
-    def __contains__(self, name: str) -> bool:
-        """
-        Enable method for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        report(
-            f"accessed discovery_info.__contains__('{name}') "
-            f"instead of discovery_info.upnp.__contains__('{name}') "
-            f"or discovery_info.ssdp_headers.__contains__('{name}'); "
-            "this will fail in version 2022.6",
-            exclude_integrations={DOMAIN},
-            error_if_core=False,
-        )
-        if hasattr(self, name):
-            return getattr(self, name) is not None
-        return name in self.upnp or name in self.ssdp_headers
-
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
 SsdpCallback = Callable[[SsdpServiceInfo, SsdpChange], Awaitable]
@@ -188,7 +160,7 @@ async def async_register_callback(
 
     Returns a callback that can be used to cancel the registration.
     """
-    scanner: Scanner = hass.data[DOMAIN]
+    scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_register_callback(callback, match_dict)
 
 
@@ -197,7 +169,7 @@ async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, udn: str, st: str
 ) -> SsdpServiceInfo | None:
     """Fetch the discovery info cache."""
-    scanner: Scanner = hass.data[DOMAIN]
+    scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_get_discovery_info_by_udn_st(udn, st)
 
 
@@ -206,7 +178,7 @@ async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, st: str
 ) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the st."""
-    scanner: Scanner = hass.data[DOMAIN]
+    scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_get_discovery_info_by_st(st)
 
 
@@ -215,8 +187,17 @@ async def async_get_discovery_info_by_udn(
     hass: HomeAssistant, udn: str
 ) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the udn."""
-    scanner: Scanner = hass.data[DOMAIN]
+    scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_get_discovery_info_by_udn(udn)
+
+
+async def async_build_source_set(hass: HomeAssistant) -> set[IPv4Address | IPv6Address]:
+    """Build the list of ssdp sources."""
+    return {
+        source_ip
+        for source_ip in await network.async_get_enabled_source_ips(hass)
+        if not source_ip.is_loopback and not source_ip.is_global
+    }
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -225,9 +206,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     integration_matchers = IntegrationMatchers()
     integration_matchers.async_setup(await async_get_ssdp(hass))
 
-    scanner = hass.data[DOMAIN] = Scanner(hass, integration_matchers)
+    scanner = Scanner(hass, integration_matchers)
+    server = Server(hass)
+    hass.data[DOMAIN] = {
+        SSDP_SCANNER: scanner,
+        UPNP_SERVER: server,
+    }
 
-    asyncio.create_task(scanner.async_start())
+    hass.create_task(scanner.async_start())
+    hass.create_task(server.async_start())
 
     return True
 
@@ -246,13 +233,13 @@ async def _async_process_callbacks(
 
 @core_callback
 def _async_headers_match(
-    headers: Mapping[str, Any], match_dict: dict[str, str]
+    headers: CaseInsensitiveDict, lower_match_dict: dict[str, str]
 ) -> bool:
-    for header, val in match_dict.items():
+    for header, val in lower_match_dict.items():
         if val == MATCH_ALL:
             if header not in headers:
                 return False
-        elif headers.get(header) != val:
+        elif headers.get_lower(header) != val:
             return False
     return True
 
@@ -328,7 +315,7 @@ class Scanner:
     @property
     def _all_headers_from_ssdp_devices(
         self,
-    ) -> dict[tuple[str, str], Mapping[str, Any]]:
+    ) -> dict[tuple[str, str], CaseInsensitiveDict]:
         return {
             (ssdp_device.udn, dst): headers
             for ssdp_device in self._ssdp_devices
@@ -340,19 +327,21 @@ class Scanner:
     ) -> Callable[[], None]:
         """Register a callback."""
         if match_dict is None:
-            match_dict = {}
+            lower_match_dict = {}
+        else:
+            lower_match_dict = {k.lower(): v for k, v in match_dict.items()}
 
         # Make sure any entries that happened
         # before the callback was registered are fired
         for headers in self._all_headers_from_ssdp_devices.values():
-            if _async_headers_match(headers, match_dict):
+            if _async_headers_match(headers, lower_match_dict):
                 await _async_process_callbacks(
                     [callback],
                     await self._async_headers_to_discovery_info(headers),
                     SsdpChange.ALIVE,
                 )
 
-        callback_entry = (callback, match_dict)
+        callback_entry = (callback, lower_match_dict)
         self._callbacks.append(callback_entry)
 
         @core_callback
@@ -375,14 +364,6 @@ class Scanner:
             return_exceptions=True,
         )
 
-    async def _async_build_source_set(self) -> set[IPv4Address | IPv6Address]:
-        """Build the list of ssdp sources."""
-        return {
-            source_ip
-            for source_ip in await network.async_get_enabled_source_ips(self.hass)
-            if not source_ip.is_loopback and not source_ip.is_global
-        }
-
     async def async_scan(self, *_: Any) -> None:
         """Scan for new entries using ssdp listeners."""
         await self.async_scan_multicast()
@@ -404,7 +385,7 @@ class Scanner:
 
     async def async_start(self) -> None:
         """Start the scanners."""
-        session = async_get_clientsession(self.hass)
+        session = async_get_clientsession(self.hass, verify_ssl=False)
         requester = AiohttpSessionRequester(session, True, 10)
         self._description_cache = DescriptionCache(requester)
 
@@ -422,7 +403,7 @@ class Scanner:
         """Start the SSDP Listeners."""
         # Devices are shared between all sources.
         device_tracker = SsdpDeviceTracker()
-        for source_ip in await self._async_build_source_set():
+        for source_ip in await async_build_source_set(self.hass):
             source_ip_str = str(source_ip)
             if source_ip.version == 6:
                 source_tuple: AddressTupleVXType = (
@@ -461,13 +442,13 @@ class Scanner:
     @core_callback
     def _async_get_matching_callbacks(
         self,
-        combined_headers: SsdpHeaders,
+        combined_headers: CaseInsensitiveDict,
     ) -> list[SsdpCallback]:
         """Return a list of callbacks that match."""
         return [
             callback
-            for callback, match_dict in self._callbacks
-            if _async_headers_match(combined_headers, match_dict)
+            for callback, lower_match_dict in self._callbacks
+            if _async_headers_match(combined_headers, lower_match_dict)
         ]
 
     async def _ssdp_listener_callback(
@@ -490,9 +471,8 @@ class Scanner:
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
             info_desc = await self._async_get_description_dict(location) or {}
-            assert isinstance(combined_headers, CaseInsensitiveDict)
             matching_domains = self.integration_matchers.async_matching_domains(
-                CaseInsensitiveDict({**combined_headers.as_dict(), **info_desc})
+                CaseInsensitiveDict(combined_headers.as_dict(), **info_desc)
             )
 
         if not callbacks and not matching_domains:
@@ -530,7 +510,7 @@ class Scanner:
         return await self._description_cache.async_get_description_dict(location) or {}
 
     async def _async_headers_to_discovery_info(
-        self, headers: Mapping[str, Any]
+        self, headers: CaseInsensitiveDict
     ) -> SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
@@ -571,7 +551,7 @@ class Scanner:
 
 
 def discovery_info_from_headers_and_description(
-    combined_headers: Mapping[str, Any],
+    combined_headers: CaseInsensitiveDict,
     info_desc: Mapping[str, Any],
 ) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
@@ -613,3 +593,171 @@ def _udn_from_usn(usn: str | None) -> str | None:
     if usn.startswith("uuid:"):
         return usn.split("::")[0]
     return None
+
+
+class HassUpnpServiceDevice(UpnpServerDevice):
+    """Hass Device."""
+
+    DEVICE_DEFINITION = DeviceInfo(
+        device_type="urn:home-assistant.io:device:HomeAssistant:1",
+        friendly_name="filled_later_on",
+        manufacturer="Home Assistant",
+        manufacturer_url="https://www.home-assistant.io",
+        model_description=None,
+        model_name="filled_later_on",
+        model_number=current_version,
+        model_url="https://www.home-assistant.io",
+        serial_number="filled_later_on",
+        udn="filled_later_on",
+        upc=None,
+        presentation_url="https://my.home-assistant.io/",
+        url="/device.xml",
+        icons=[
+            DeviceIcon(
+                mimetype="image/png",
+                width=1024,
+                height=1024,
+                depth=24,
+                url="/static/icons/favicon-1024x1024.png",
+            ),
+            DeviceIcon(
+                mimetype="image/png",
+                width=512,
+                height=512,
+                depth=24,
+                url="/static/icons/favicon-512x512.png",
+            ),
+            DeviceIcon(
+                mimetype="image/png",
+                width=384,
+                height=384,
+                depth=24,
+                url="/static/icons/favicon-384x384.png",
+            ),
+            DeviceIcon(
+                mimetype="image/png",
+                width=192,
+                height=192,
+                depth=24,
+                url="/static/icons/favicon-192x192.png",
+            ),
+        ],
+        xml=ET.Element("server_device"),
+    )
+    EMBEDDED_DEVICES: list[type[UpnpServerDevice]] = []
+    SERVICES: list[type[UpnpServerService]] = []
+
+
+async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
+    """Get a free TCP port."""
+    family = socket.AF_INET if is_ipv4_address(source) else socket.AF_INET6
+    test_socket = socket.socket(family, socket.SOCK_STREAM)
+    test_socket.setblocking(False)
+    test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    for port in range(UPNP_SERVER_MIN_PORT, UPNP_SERVER_MAX_PORT):
+        try:
+            test_socket.bind(source)
+            return port
+        except OSError:
+            if port == UPNP_SERVER_MAX_PORT:
+                raise
+
+    raise RuntimeError("unreachable")
+
+
+class Server:
+    """Class to be visible via SSDP searching and advertisements."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize class."""
+        self.hass = hass
+        self._upnp_servers: list[UpnpServer] = []
+
+    async def async_start(self) -> None:
+        """Start the server."""
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
+        await self._async_start_upnp_servers()
+
+    async def _async_get_instance_udn(self) -> str:
+        """Get Unique Device Name for this instance."""
+        instance_id = await async_get_instance_id(self.hass)
+        return f"uuid:{instance_id[0:8]}-{instance_id[8:12]}-{instance_id[12:16]}-{instance_id[16:20]}-{instance_id[20:32]}".upper()
+
+    async def _async_start_upnp_servers(self) -> None:
+        """Start the UPnP/SSDP servers."""
+        # Update UDN with our instance UDN.
+        udn = await self._async_get_instance_udn()
+        system_info = await async_get_system_info(self.hass)
+        model_name = system_info["installation_type"]
+        presentation_url = get_url(self.hass)
+        serial_number = await async_get_instance_id(self.hass)
+        HassUpnpServiceDevice.DEVICE_DEFINITION = (
+            HassUpnpServiceDevice.DEVICE_DEFINITION._replace(
+                udn=udn,
+                friendly_name=f"{self.hass.config.location_name} (Home Assistant)",
+                model_name=model_name,
+                presentation_url=presentation_url,
+                serial_number=serial_number,
+            )
+        )
+
+        # Update icon URLs.
+        for index, icon in enumerate(HassUpnpServiceDevice.DEVICE_DEFINITION.icons):
+            new_url = urljoin(presentation_url, icon.url)
+            HassUpnpServiceDevice.DEVICE_DEFINITION.icons[index] = icon._replace(
+                url=new_url
+            )
+
+        # Start a server on all source IPs.
+        for source_ip in await async_build_source_set(self.hass):
+            source_ip_str = str(source_ip)
+            if source_ip.version == 6:
+                source_tuple: AddressTupleVXType = (
+                    source_ip_str,
+                    0,
+                    0,
+                    int(getattr(source_ip, "scope_id")),
+                )
+            else:
+                source_tuple = (source_ip_str, 0)
+            source, target = determine_source_target(source_tuple)
+            http_port = await _async_find_next_available_port(source)
+            _LOGGER.debug("Binding UPnP HTTP server to: %s:%s", source_ip, http_port)
+            self._upnp_servers.append(
+                UpnpServer(
+                    source=source,
+                    target=target,
+                    http_port=http_port,
+                    server_device=HassUpnpServiceDevice,
+                    options={
+                        SSDP_SEARCH_RESPONDER_OPTIONS: {
+                            SSDP_SEARCH_RESPONDER_OPTION_ALWAYS_REPLY_WITH_ROOT_DEVICE: True
+                        }
+                    },
+                )
+            )
+        results = await asyncio.gather(
+            *(upnp_server.async_start() for upnp_server in self._upnp_servers),
+            return_exceptions=True,
+        )
+        failed_servers = []
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                _LOGGER.debug(
+                    "Failed to setup server for %s: %s",
+                    self._upnp_servers[idx].source,
+                    result,
+                )
+                failed_servers.append(self._upnp_servers[idx])
+        for server in failed_servers:
+            self._upnp_servers.remove(server)
+
+    async def async_stop(self, *_: Any) -> None:
+        """Stop the server."""
+        await self._async_stop_upnp_servers()
+
+    async def _async_stop_upnp_servers(self) -> None:
+        """Stop UPnP/SSDP servers."""
+        for server in self._upnp_servers:
+            await server.async_stop()

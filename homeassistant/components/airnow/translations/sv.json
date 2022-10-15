@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "invalid_auth": "Ogiltig autentisering",
+            "invalid_location": "Inga resultat hittades f\u00f6r den platsen",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "radius": "Stationsradie (miles; valfritt)"
+                },
+                "description": "F\u00f6r att generera API-nyckel g\u00e5 till https://docs.airnowapi.org/account/request/"
+            }
+        }
+    }
+}

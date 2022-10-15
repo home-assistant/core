@@ -1,5 +1,6 @@
 """The tests for the webdav calendar component."""
 import datetime
+from http import HTTPStatus
 from unittest.mock import MagicMock, Mock, patch
 
 from caldav.objects import Event
@@ -272,6 +273,23 @@ def mock_private_cal():
     patch_dav_client = patch("caldav.DAVClient", return_value=client)
     with patch_dav_client:
         yield _calendar
+
+
+@pytest.fixture
+def get_api_events(hass_client):
+    """Fixture to return events for a specific calendar using the API."""
+
+    async def api_call(entity_id):
+        client = await hass_client()
+        response = await client.get(
+            # The start/end times are arbitrary since they are ignored by `_mock_calendar`
+            # which just returns all events for the calendar.
+            f"/api/calendars/{entity_id}?start=2022-01-01&end=2022-01-01"
+        )
+        assert response.status == HTTPStatus.OK
+        return await response.json()
+
+    return api_call
 
 
 def _local_datetime(hours, minutes):
@@ -893,18 +911,17 @@ async def test_event_rrule_hourly_ended(mock_now, hass, calendar):
     assert state.state == STATE_OFF
 
 
-async def test_get_events(hass, calendar):
+async def test_get_events(hass, calendar, get_api_events):
     """Test that all events are returned on API."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
-    entity = hass.data["calendar"].get_entity("calendar.private")
-    events = await entity.async_get_events(
-        hass, datetime.date(2015, 11, 27), datetime.date(2015, 11, 28)
-    )
+
+    events = await get_api_events("calendar.private")
     assert len(events) == 14
+    assert calendar.call
 
 
-async def test_get_events_custom_calendars(hass, calendar):
+async def test_get_events_custom_calendars(hass, calendar, get_api_events):
     """Test that only searched events are returned on API."""
     config = dict(CALDAV_CONFIG)
     config["custom_calendars"] = [
@@ -914,9 +931,13 @@ async def test_get_events_custom_calendars(hass, calendar):
     assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    entity = hass.data["calendar"].get_entity("calendar.private_private")
-    events = await entity.async_get_events(
-        hass, datetime.date(2015, 11, 27), datetime.date(2015, 11, 28)
-    )
-    assert len(events) == 1
-    assert events[0]["summary"] == "This is a normal event"
+    events = await get_api_events("calendar.private_private")
+    assert events == [
+        {
+            "end": {"dateTime": "2017-11-27T10:00:00-08:00"},
+            "start": {"dateTime": "2017-11-27T09:00:00-08:00"},
+            "summary": "This is a normal event",
+            "location": "Hamburg",
+            "description": "Surprisingly rainy",
+        }
+    ]

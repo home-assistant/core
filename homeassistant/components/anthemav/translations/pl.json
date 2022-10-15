@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "cannot_receive_deviceinfo": "Nie uda\u0142o si\u0119 pobra\u0107 adresu MAC. Upewnij si\u0119, \u017ce urz\u0105dzenie jest w\u0142\u0105czone."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfiguracja Anthem A/V Receivers przy u\u017cyciu YAML zostanie usuni\u0119ta. \n\nTwoja istniej\u0105ca konfiguracja YAML zosta\u0142a automatycznie zaimportowana do interfejsu u\u017cytkownika. \n\nUsu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Konfiguracja YAML dla Anthem A/V Receivers zostanie usuni\u0119ta"
+        }
+    }
+}

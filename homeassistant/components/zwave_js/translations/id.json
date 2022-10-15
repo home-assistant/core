@@ -10,7 +10,8 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
             "discovery_requires_supervisor": "Fitur penemuan membutuhkan supervisor.",
-            "not_zwave_device": "Perangkat yang ditemukan bukanperangkat Z-Wave."
+            "not_zwave_device": "Perangkat yang ditemukan bukan perangkat Z-Wave.",
+            "not_zwave_js_addon": "Add-on yang ditemukan bukanlah add-on Z-Wave JS resmi."
         },
         "error": {
             "addon_start_failed": "Gagal memulai add-on Z-Wave JS. Periksa konfigurasi.",
@@ -26,7 +27,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Kunci Jaringan",
                     "s0_legacy_key": "Kunci S0 (Warisan)",
                     "s2_access_control_key": "Kunci Kontrol Akses S2",
                     "s2_authenticated_key": "Kunci Autentikasi S2",
@@ -59,6 +59,10 @@
             },
             "usb_confirm": {
                 "description": "Ingin menyiapkan {name} dengan add-on Z-Wave JS?"
+            },
+            "zeroconf_confirm": {
+                "description": "Apakah Anda ingin menambahkan Server Z-Wave JS dengan ID rumah {home_id} di {url} ke Home Assistant?",
+                "title": "Server Z-Wave JS yang Ditemukan"
             }
         }
     },
@@ -88,6 +92,12 @@
             "zwave_js.value_updated.value": "Perubahan nilai pada Nilai Z-Wave JS"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "Versi Z-Wave JS Server yang dijalankan saat ini terlalu lama untuk versi Home Assistant ini. Harap perbarui Z-Wave JS Server ke versi terbaru untuk memperbaiki masalah ini.",
+            "title": "Diperlukan versi terbaru dari Z-Wave JS Server"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Gagal mendapatkan info penemuan add-on Z-Wave JS.",
@@ -113,7 +123,6 @@
                 "data": {
                     "emulate_hardware": "Emulasikan Perangkat Keras",
                     "log_level": "Tingkat log",
-                    "network_key": "Kunci Jaringan",
                     "s0_legacy_key": "Kunci S0 (Warisan)",
                     "s2_access_control_key": "Kunci Kontrol Akses S2",
                     "s2_authenticated_key": "Kunci Autentikasi S2",
@@ -142,6 +151,5 @@
                 "title": "Add-on Z-Wave JS sedang dimulai."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

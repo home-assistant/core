@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_api_key": "\u7121\u52b9\u306aAPI\u30ad\u30fc",
+            "rate_limited": "\u73fe\u5728\u30ec\u30fc\u30c8\u304c\u5236\u9650\u3055\u308c\u3066\u3044\u307e\u3059\u306e\u3067\u3001\u5f8c\u3067\u3082\u3046\u4e00\u5ea6\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002",
+            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc",
+                    "location": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3",
+                    "name": "\u540d\u524d"
+                },
+                "description": "API\u30ad\u30fc\u3092\u53d6\u5f97\u3059\u308b\u306b\u306f\u3001 [Tomorrow.io](https://app.tomorrow.io/signup) \u306b\u30b5\u30a4\u30f3\u30a2\u30c3\u30d7\u3057\u3066\u304f\u3060\u3055\u3044\u3002"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timestep": "\u6700\u5c0f\u3002 NowCast \u4e88\u6e2c\u306e\u9593"
+                },
+                "description": "`nowcast` forecast(\u4e88\u6e2c) \u30a8\u30f3\u30c6\u30a3\u30c6\u30a3\u3092\u6709\u52b9\u306b\u3059\u308b\u3053\u3068\u3092\u9078\u629e\u3057\u305f\u5834\u5408\u3001\u5404\u4e88\u6e2c\u9593\u306e\u5206\u6570\u3092\u8a2d\u5b9a\u3059\u308b\u3053\u3068\u304c\u3067\u304d\u307e\u3059\u3002\u63d0\u4f9b\u3055\u308c\u308bforecast(\u4e88\u6e2c)\u306e\u6570\u306f\u3001forecast(\u4e88\u6e2c)\u306e\u9593\u306b\u9078\u629e\u3057\u305f\u5206\u6570\u306b\u4f9d\u5b58\u3057\u307e\u3059\u3002",
+                "title": "Tomorrow.io\u30aa\u30d7\u30b7\u30e7\u30f3\u306e\u66f4\u65b0"
+            }
+        }
+    }
+}

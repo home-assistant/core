@@ -3,10 +3,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hole.exceptions import HoleError
 
-from homeassistant.components.pi_hole.const import CONF_LOCATION, CONF_STATISTICS_ONLY
+from homeassistant.components.pi_hole.const import CONF_STATISTICS_ONLY
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_LOCATION,
     CONF_NAME,
     CONF_PORT,
     CONF_SSL,
@@ -82,7 +83,7 @@ CONF_CONFIG_ENTRY = {
 SWITCH_ENTITY_ID = "switch.pi_hole"
 
 
-def _create_mocked_hole(raise_exception=False):
+def _create_mocked_hole(raise_exception=False, has_versions=True):
     mocked_hole = MagicMock()
     type(mocked_hole).get_data = AsyncMock(
         side_effect=HoleError("") if raise_exception else None
@@ -93,7 +94,10 @@ def _create_mocked_hole(raise_exception=False):
     type(mocked_hole).enable = AsyncMock()
     type(mocked_hole).disable = AsyncMock()
     mocked_hole.data = ZERO_DATA
-    mocked_hole.versions = SAMPLE_VERSIONS
+    if has_versions:
+        mocked_hole.versions = SAMPLE_VERSIONS
+    else:
+        mocked_hole.versions = None
     return mocked_hole
 
 

@@ -72,7 +72,7 @@ class BlinkSensor(SensorEntity):
             model=self._camera.camera_type,
         )
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve sensor data from the camera."""
         self.data.refresh()
         try:

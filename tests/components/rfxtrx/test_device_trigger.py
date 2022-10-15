@@ -11,6 +11,8 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
+from .conftest import create_rfx_test_cfg
+
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
@@ -18,7 +20,6 @@ from tests.common import (
     async_mock_service,
     mock_device_registry,
 )
-from tests.components.rfxtrx.conftest import create_rfx_test_cfg
 
 
 class EventTestData(NamedTuple):
@@ -90,7 +91,13 @@ async def test_get_triggers(hass, device_reg, event: EventTestData, expected):
     device_entry = device_reg.async_get_device(event.device_identifiers, set())
 
     expected_triggers = [
-        {"domain": DOMAIN, "device_id": device_entry.id, "platform": "device", **expect}
+        {
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "platform": "device",
+            "metadata": {},
+            **expect,
+        }
         for expect in expected
     ]
 

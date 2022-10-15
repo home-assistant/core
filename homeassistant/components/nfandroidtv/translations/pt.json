@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "name": "Nome"
+                }
+            }
+        }
+    }
+}

@@ -14,8 +14,7 @@
                     "longitude": "Boylam",
                     "name": "Entegrasyonun ad\u0131"
                 },
-                "description": "AEMET OpenData entegrasyonunu ayarlay\u0131n. API anahtar\u0131 olu\u015fturmak i\u00e7in https://opendata.aemet.es/centrodedescargas/altaUsuario adresine gidin.",
-                "title": "AEMET OpenData"
+                "description": "API anahtar\u0131 olu\u015fturmak i\u00e7in https://opendata.aemet.es/centrodedescargas/altaUsuario adresine gidin."
             }
         }
     },

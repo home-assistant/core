@@ -10,7 +10,9 @@ import weakref
 from homeassistant.util.executor import InterruptibleThreadPoolExecutor
 
 
-def _worker_with_shutdown_hook(shutdown_hook, *args, **kwargs):
+def _worker_with_shutdown_hook(
+    shutdown_hook: Callable[[], None], *args: Any, **kwargs: Any
+) -> None:
     """Create a worker that calls a function after its finished."""
     _worker(*args, **kwargs)
     shutdown_hook()
@@ -37,7 +39,7 @@ class DBInterruptibleThreadPoolExecutor(InterruptibleThreadPoolExecutor):
 
         # When the executor gets lost, the weakref callback will wake up
         # the worker threads.
-        def weakref_cb(_, q=self._work_queue):  # pylint: disable=invalid-name
+        def weakref_cb(_: Any, q=self._work_queue) -> None:  # type: ignore[no-untyped-def] # pylint: disable=invalid-name
             q.put(None)
 
         num_threads = len(self._threads)

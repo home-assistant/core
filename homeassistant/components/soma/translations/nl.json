@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
-            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "already_setup": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
+            "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
             "connection_error": "Kan geen verbinding maken",
             "missing_configuration": "De Soma-component is niet geconfigureerd. Gelieve de documentatie te volgen.",
             "result_error": "SOMA Connect reageerde met een foutstatus."
         },
         "create_entry": {
-            "default": "Succesvol geauthenticeerd"
+            "default": "Authenticatie geslaagd"
         },
         "step": {
             "user": {

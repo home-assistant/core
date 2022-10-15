@@ -11,9 +11,7 @@
                 "data": {
                     "email": "Correu electr\u00f2nic",
                     "password": "Contrasenya"
-                },
-                "description": "Vols comen\u00e7ar la configuraci\u00f3?",
-                "title": "PoolSense"
+                }
             }
         }
     }

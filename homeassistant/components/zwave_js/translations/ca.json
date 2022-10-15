@@ -10,7 +10,8 @@
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "discovery_requires_supervisor": "El descobriment requereix el supervisor.",
-            "not_zwave_device": "El dispositiu descobert no \u00e9s un dispositiu Z-Wave."
+            "not_zwave_device": "El dispositiu descobert no \u00e9s un dispositiu Z-Wave.",
+            "not_zwave_js_addon": "El complement descobert no \u00e9s el complement oficial Z-Wave JS."
         },
         "error": {
             "addon_start_failed": "No s'ha pogut iniciar el complement Z-Wave JS. Comprova la configuraci\u00f3.",
@@ -26,7 +27,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Clau de xarxa",
                     "s0_legacy_key": "Clau d'S0 (est\u00e0ndard)",
                     "s2_access_control_key": "Clau de control d'acc\u00e9s d'S2",
                     "s2_authenticated_key": "Clau d'S2 autenticat",
@@ -59,6 +59,10 @@
             },
             "usb_confirm": {
                 "description": "Vols configurar {name} amb el complement Z-Wave JS?"
+            },
+            "zeroconf_confirm": {
+                "description": "Vols afegir el servidor Z-Wave JS amb ID {home_id} que es troba a {url} a Home Assistant?",
+                "title": "Servidor Z-Wave JS descobert"
             }
         }
     },
@@ -88,6 +92,12 @@
             "zwave_js.value_updated.value": "Canvi del valor en un valor Z-Wave JS"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "La versi\u00f3 del servidor Z-Wave JS que est\u00e0s executant actualment \u00e9s massa antiga per a aquesta versi\u00f3 de Home Assistant. Actualitza a l'\u00faltima versi\u00f3 per resoldre aquest problema.",
+            "title": "Es necessita una versi\u00f3 m\u00e9s nova del servidor Z-Wave JS"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "No s'ha pogut obtenir la informaci\u00f3 de descobriment del complement Z-Wave JS.",
@@ -113,7 +123,6 @@
                 "data": {
                     "emulate_hardware": "Emula maquinari",
                     "log_level": "Nivell dels registres",
-                    "network_key": "Clau de xarxa",
                     "s0_legacy_key": "Clau d'S0 (est\u00e0ndard)",
                     "s2_access_control_key": "Clau de control d'acc\u00e9s d'S2",
                     "s2_authenticated_key": "Clau d'S2 autenticat",
@@ -142,6 +151,5 @@
                 "title": "El complement Z-Wave JS s'est\u00e0 iniciant."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

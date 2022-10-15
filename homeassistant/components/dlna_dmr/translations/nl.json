@@ -4,7 +4,6 @@
             "already_configured": "Apparaat is al geconfigureerd",
             "alternative_integration": "Apparaat wordt beter ondersteund door een andere integratie",
             "cannot_connect": "Kan geen verbinding maken",
-            "could_not_connect": "Mislukt om te verbinden met DNLA apparaat",
             "discovery_error": "Kan geen overeenkomend DLNA-apparaat vinden",
             "incomplete_config": "Configuratie mist een vereiste variabele",
             "non_unique_id": "Meerdere apparaten gevonden met hetzelfde unieke ID",
@@ -12,13 +11,12 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
-            "could_not_connect": "Mislukt om te verbinden met DNLA apparaat",
             "not_dmr": "Apparaat is een niet-ondersteund Digital Media Renderer"
         },
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Wilt u beginnen met instellen?"
+                "description": "Wil je beginnen met instellen?"
             },
             "import_turn_on": {
                 "description": "Zet het apparaat aan en klik op verzenden om door te gaan met de migratie"
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "url": "URL"
+                    "host": "Host"
                 },
                 "description": "Kies een apparaat om te configureren of laat leeg om een URL in te voeren",
                 "title": "Ontdekt DLNA Digital Media Renderer"
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Incompatibele media weergeven tijdens browsen",
                     "callback_url_override": "Event listener callback URL",
                     "listen_port": "Poort om naar gebeurtenissen te luisteren (willekeurige poort indien niet ingesteld)",
                     "poll_availability": "Pollen voor apparaat beschikbaarheid"

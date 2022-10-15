@@ -8,11 +8,21 @@
                 "data": {
                     "port": "Port"
                 }
+            },
+            "secure_manual": {
+                "data": {
+                    "device_authentication": "Heslo na overenie zariadenia"
+                }
             }
         }
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "local_ip": "Lok\u00e1lna IP adresa Home Assistant-a"
+                }
+            },
             "tunnel": {
                 "data": {
                     "port": "Port"

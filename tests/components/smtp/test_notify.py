@@ -76,6 +76,7 @@ def message():
         ["recip1@example.com", "testrecip@test.com"],
         "Home Assistant",
         0,
+        True,
     )
     yield mailer
 

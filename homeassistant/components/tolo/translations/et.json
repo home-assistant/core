@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
-            "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi seadet"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"

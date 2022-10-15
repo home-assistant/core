@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_format": "Ugyldig format. Vennligst spesifiser som xxx-xxx.",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Auth-kode (xxx-xxx)"
+                },
+                "description": "Vennligst skriv inn din personlige autentiseringskode som vises i laundrify-appen."
+            },
+            "reauth_confirm": {
+                "description": "Integrasjonen av vaskeri m\u00e5 autentiseres p\u00e5 nytt.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            }
+        }
+    }
+}

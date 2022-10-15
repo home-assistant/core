@@ -14,12 +14,14 @@ DEFAULT_SCAN_INTERVAL = 60
 DOMAIN = "sensibo"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
 ]
-ALL = ["all"]
 DEFAULT_NAME = "Sensibo"
 TIMEOUT = 8
 

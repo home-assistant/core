@@ -1,0 +1,31 @@
+{
+    "state": {
+        "litterrobot__status_code": {
+            "br": "Tet\u0151 elt\u00e1vol\u00edtva",
+            "ccc": "Tiszt\u00edt\u00e1s befejez\u0151d\u00f6tt",
+            "ccp": "Tiszt\u00edt\u00e1s folyamatban",
+            "cd": "Macska \u00e9szlelve",
+            "csf": "Macska\u00e9rz\u00e9kel\u0151 hiba",
+            "csi": "Macska\u00e9rz\u00e9kel\u0151 megszak\u00edtva",
+            "cst": "Macska\u00e9rz\u00e9kel\u0151 id\u0151z\u00edt\u00e9se",
+            "df1": "A fi\u00f3k majdnem megtelt \u2013 2 ciklus van h\u00e1tra",
+            "df2": "A fi\u00f3k majdnem megtelt \u2013 1 ciklus maradt",
+            "dfs": "Fi\u00f3k tele",
+            "dhf": "Dump + Home poz\u00edci\u00f3 hiba",
+            "dpf": "Dump poz\u00edci\u00f3 hiba",
+            "ec": "\u00dcres ciklus",
+            "hpf": "Home poz\u00edci\u00f3 hiba",
+            "off": "Ki",
+            "offline": "Offline",
+            "otf": "T\u00falzott nyomat\u00e9k hiba",
+            "p": "Sz\u00fcnetel",
+            "pd": "Pinch Detect",
+            "pwrd": "Kikapcsol\u00e1s",
+            "pwru": "Bekapcsol\u00e1s",
+            "rdy": "K\u00e9sz",
+            "scf": "Macska\u00e9rz\u00e9kel\u0151 hiba ind\u00edt\u00e1skor",
+            "sdf": "Ind\u00edt\u00e1skor megtelt a fi\u00f3k",
+            "spf": "Pinch Detect ind\u00edt\u00e1skor"
+        }
+    }
+}

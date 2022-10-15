@@ -21,7 +21,6 @@ from homeassistant.components.alexa import (
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.websocket_api import const as ws_const
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
@@ -419,6 +418,7 @@ async def websocket_hook_delete(hass, connection, msg):
 async def _account_data(hass: HomeAssistant, cloud: Cloud):
     """Generate the auth data JSON response."""
 
+    assert hass.config.api
     if not cloud.is_logged_in:
         return {
             "logged_in": False,
@@ -615,7 +615,9 @@ async def alexa_sync(hass, connection, msg):
     if success:
         connection.send_result(msg["id"])
     else:
-        connection.send_error(msg["id"], ws_const.ERR_UNKNOWN_ERROR, "Unknown error")
+        connection.send_error(
+            msg["id"], websocket_api.ERR_UNKNOWN_ERROR, "Unknown error"
+        )
 
 
 @websocket_api.websocket_command({"type": "cloud/thingtalk/convert", "query": str})
@@ -630,7 +632,7 @@ async def thingtalk_convert(hass, connection, msg):
                 msg["id"], await thingtalk.async_convert(cloud, msg["query"])
             )
         except thingtalk.ThingTalkConversionError as err:
-            connection.send_error(msg["id"], ws_const.ERR_UNKNOWN_ERROR, str(err))
+            connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
 
 
 @websocket_api.websocket_command({"type": "cloud/tts/info"})

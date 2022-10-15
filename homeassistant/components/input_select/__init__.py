@@ -20,6 +20,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -53,17 +56,9 @@ def _unique(options: Any) -> Any:
         raise HomeAssistantError("Duplicate options are not allowed") from exc
 
 
-CREATE_FIELDS = {
+STORAGE_FIELDS = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Required(CONF_OPTIONS): vol.All(
-        cv.ensure_list, vol.Length(min=1), _unique, [cv.string]
-    ),
-    vol.Optional(CONF_INITIAL): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-}
-UPDATE_FIELDS = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OPTIONS): vol.All(
         cv.ensure_list, vol.Length(min=1), _unique, [cv.string]
     ),
     vol.Optional(CONF_INITIAL): cv.string,
@@ -137,14 +132,19 @@ class InputSelectStore(Store):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputSelect](_LOGGER, DOMAIN, hass)
+
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
+
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputSelect.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputSelect
     )
 
     storage_collection = InputSelectStorageCollection(
@@ -164,7 +164,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await storage_collection.async_load()
 
     collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
@@ -230,12 +230,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class InputSelectStorageCollection(collection.StorageCollection):
     """Input storage based collection."""
 
-    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_select))
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_select))
 
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
-        return cast(dict[str, Any], self.CREATE_SCHEMA(data))
+        return cast(dict[str, Any], self.CREATE_UPDATE_SCHEMA(data))
 
     @callback
     def _get_suggested_id(self, info: dict[str, Any]) -> str:
@@ -246,15 +245,15 @@ class InputSelectStorageCollection(collection.StorageCollection):
         self, data: dict[str, Any], update_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return _cv_input_select({**data, **update_data})
+        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
+        return {CONF_ID: data[CONF_ID]} | update_data
 
 
-class InputSelect(SelectEntity, RestoreEntity):
+class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
     _attr_should_poll = False
-    editable = True
+    editable: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize a select input."""
@@ -265,8 +264,15 @@ class InputSelect(SelectEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
+    def from_storage(cls, config: ConfigType) -> InputSelect:
+        """Return entity instance initialized from storage."""
+        input_select = cls(config)
+        input_select.editable = True
+        return input_select
+
+    @classmethod
     def from_yaml(cls, config: ConfigType) -> InputSelect:
-        """Return entity instance initialized from yaml storage."""
+        """Return entity instance initialized from yaml."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_select.editable = False

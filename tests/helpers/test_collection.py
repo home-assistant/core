@@ -1,10 +1,18 @@
 """Tests for the collection helper."""
+from __future__ import annotations
+
 import logging
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.helpers import collection, entity, entity_component, storage
+from homeassistant.helpers import (
+    collection,
+    entity_component,
+    entity_registry as er,
+    storage,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from tests.common import flush_store
 
@@ -23,12 +31,22 @@ def track_changes(coll: collection.ObservableCollection):
     return changes
 
 
-class MockEntity(entity.Entity):
+class MockEntity(collection.CollectionEntity):
     """Entity that is config based."""
 
     def __init__(self, config):
         """Initialize entity."""
         self._config = config
+
+    @classmethod
+    def from_storage(cls, config: ConfigType) -> MockEntity:
+        """Create instance from storage."""
+        return cls(config)
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> MockEntity:
+        """Create instance from storage."""
+        raise NotImplementedError
 
     @property
     def unique_id(self):
@@ -49,6 +67,17 @@ class MockEntity(entity.Entity):
         """Update entity config."""
         self._config = config
         self.async_write_ha_state()
+
+
+class MockObservableCollection(collection.ObservableCollection):
+    """Mock observable collection which can create entities."""
+
+    @staticmethod
+    def create_entity(
+        entity_class: type[collection.CollectionEntity], config: ConfigType
+    ) -> collection.CollectionEntity:
+        """Create a CollectionEntity instance."""
+        return entity_class.from_storage(config)
 
 
 class MockStorageCollection(collection.StorageCollection):
@@ -225,7 +254,7 @@ async def test_storage_collection(hass):
 async def test_attach_entity_component_collection(hass):
     """Test attaching collection to entity component."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
-    coll = collection.ObservableCollection(_LOGGER)
+    coll = MockObservableCollection(_LOGGER)
     collection.sync_entity_lifecycle(hass, "test", "test", ent_comp, coll, MockEntity)
 
     await coll.notify_changes(
@@ -259,6 +288,140 @@ async def test_attach_entity_component_collection(hass):
     )
 
     assert hass.states.get("test.mock_1") is None
+
+
+async def test_entity_component_collection_abort(hass):
+    """Test aborted entity adding is handled."""
+    ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
+    coll = MockObservableCollection(_LOGGER)
+
+    async_update_config_calls = []
+    async_remove_calls = []
+
+    class MockMockEntity(MockEntity):
+        """Track calls to async_update_config and async_remove."""
+
+        async def async_update_config(self, config):
+            nonlocal async_update_config_calls
+            async_update_config_calls.append(None)
+            await super().async_update_config()
+
+        async def async_remove(self, *, force_remove: bool = False):
+            nonlocal async_remove_calls
+            async_remove_calls.append(None)
+            await super().async_remove()
+
+    collection.sync_entity_lifecycle(
+        hass, "test", "test", ent_comp, coll, MockMockEntity
+    )
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        "test",
+        "test",
+        "mock_id",
+        suggested_object_id="mock_1",
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    await coll.notify_changes(
+        [
+            collection.CollectionChangeSet(
+                collection.CHANGE_ADDED,
+                "mock_id",
+                {"id": "mock_id", "state": "initial", "name": "Mock 1"},
+            )
+        ],
+    )
+
+    assert hass.states.get("test.mock_1") is None
+
+    await coll.notify_changes(
+        [
+            collection.CollectionChangeSet(
+                collection.CHANGE_UPDATED,
+                "mock_id",
+                {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
+            )
+        ],
+    )
+
+    assert hass.states.get("test.mock_1") is None
+    assert len(async_update_config_calls) == 0
+
+    await coll.notify_changes(
+        [collection.CollectionChangeSet(collection.CHANGE_REMOVED, "mock_id", None)],
+    )
+
+    assert hass.states.get("test.mock_1") is None
+    assert len(async_remove_calls) == 0
+
+
+async def test_entity_component_collection_entity_removed(hass):
+    """Test entity removal is handled."""
+    ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
+    coll = MockObservableCollection(_LOGGER)
+
+    async_update_config_calls = []
+    async_remove_calls = []
+
+    class MockMockEntity(MockEntity):
+        """Track calls to async_update_config and async_remove."""
+
+        async def async_update_config(self, config):
+            nonlocal async_update_config_calls
+            async_update_config_calls.append(None)
+            await super().async_update_config()
+
+        async def async_remove(self, *, force_remove: bool = False):
+            nonlocal async_remove_calls
+            async_remove_calls.append(None)
+            await super().async_remove()
+
+    collection.sync_entity_lifecycle(
+        hass, "test", "test", ent_comp, coll, MockMockEntity
+    )
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        "test", "test", "mock_id", suggested_object_id="mock_1"
+    )
+
+    await coll.notify_changes(
+        [
+            collection.CollectionChangeSet(
+                collection.CHANGE_ADDED,
+                "mock_id",
+                {"id": "mock_id", "state": "initial", "name": "Mock 1"},
+            )
+        ],
+    )
+
+    assert hass.states.get("test.mock_1").name == "Mock 1"
+    assert hass.states.get("test.mock_1").state == "initial"
+
+    entity_registry.async_remove("test.mock_1")
+    await hass.async_block_till_done()
+    assert hass.states.get("test.mock_1") is None
+    assert len(async_remove_calls) == 1
+
+    await coll.notify_changes(
+        [
+            collection.CollectionChangeSet(
+                collection.CHANGE_UPDATED,
+                "mock_id",
+                {"id": "mock_id", "state": "second", "name": "Mock 1 updated"},
+            )
+        ],
+    )
+
+    assert hass.states.get("test.mock_1") is None
+    assert len(async_update_config_calls) == 0
+
+    await coll.notify_changes(
+        [collection.CollectionChangeSet(collection.CHANGE_REMOVED, "mock_id", None)],
+    )
+
+    assert hass.states.get("test.mock_1") is None
+    assert len(async_remove_calls) == 1
 
 
 async def test_storage_collection_websocket(hass, hass_ws_client):

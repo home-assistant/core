@@ -1,12 +1,10 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
-import logging
 import math
 from typing import Any
 
 from aionanoleaf import Nanoleaf
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,20 +12,13 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
@@ -41,38 +32,6 @@ from .entity import NanoleafEntity
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
 DEFAULT_NAME = "Nanoleaf"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import Nanoleaf light platform."""
-    _LOGGER.warning(
-        "Configuration of the Nanoleaf integration in YAML is deprecated and "
-        "will be removed in Home Assistant 2022.4; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_HOST: config[CONF_HOST], CONF_TOKEN: config[CONF_TOKEN]},
-        )
-    )
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -84,6 +43,9 @@ async def async_setup_entry(
 
 class NanoleafLight(NanoleafEntity, LightEntity):
     """Representation of a Nanoleaf Light."""
+
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
 
     def __init__(self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the Nanoleaf light."""
@@ -135,15 +97,14 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         return self._nanoleaf.hue, self._nanoleaf.saturation
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return (
-            SUPPORT_BRIGHTNESS
-            | SUPPORT_COLOR_TEMP
-            | SUPPORT_EFFECT
-            | SUPPORT_COLOR
-            | SUPPORT_TRANSITION
-        )
+    def color_mode(self) -> ColorMode | None:
+        """Return the color mode of the light."""
+        # According to API docs, color mode is "ct", "effect" or "hs"
+        # https://forum.nanoleaf.me/docs/openapi#_4qgqrz96f44d
+        if self._nanoleaf.color_mode == "ct":
+            return ColorMode.COLOR_TEMP
+        # Home Assistant does not have an "effect" color mode, just report hs
+        return ColorMode.HS
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""

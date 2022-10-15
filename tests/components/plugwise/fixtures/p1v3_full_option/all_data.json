@@ -1,19 +1,30 @@
 [
   {
-    "smile_name": "P1",
-    "gateway_id": "e950c7d5e1ee407a858e2a8b5016c8b3",
+    "smile_name": "Smile P1",
+    "gateway_id": "cd3e822288064775a7c4afcdd70bdda2",
     "notifications": {}
   },
   {
-    "e950c7d5e1ee407a858e2a8b5016c8b3": {
-      "class": "gateway",
-      "fw": "3.3.9",
-      "hw": "AME Smile 2.0 board",
+    "cd3e822288064775a7c4afcdd70bdda2": {
+      "dev_class": "gateway",
+      "firmware": "3.3.9",
+      "hardware": "AME Smile 2.0 board",
       "location": "cd3e822288064775a7c4afcdd70bdda2",
       "mac_address": "012345670001",
-      "model": "P1",
+      "model": "Gateway",
+      "name": "Smile P1",
+      "vendor": "Plugwise",
+      "binary_sensors": {
+        "plugwise_notification": false
+      }
+    },
+    "e950c7d5e1ee407a858e2a8b5016c8b3": {
+      "dev_class": "smartmeter",
+      "location": "cd3e822288064775a7c4afcdd70bdda2",
+      "model": "2M550E-1012",
       "name": "P1",
-      "vendor": "Plugwise B.V.",
+      "vendor": "ISKRAEMECO",
+      "available": true,
       "sensors": {
         "net_electricity_point": -2816,
         "electricity_consumed_peak_point": 0,

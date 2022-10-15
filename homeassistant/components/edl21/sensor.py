@@ -17,20 +17,21 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_NAME,
+    DEGREE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    FREQUENCY_HERTZ,
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
@@ -222,9 +223,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     # C=81: Angles
     # D=7: Instantaneous value
+    # E=1:  U(L2) x U(L1)
+    # E=2:  U(L3) x U(L1)
     # E=4:  U(L1) x I(L1)
     # E=15: U(L2) x I(L2)
     # E=26: U(L3) x I(L3)
+    SensorEntityDescription(
+        key="1-0:81.7.1*255", name="U(L2)/U(L1) phase angle", icon="mdi:sine-wave"
+    ),
+    SensorEntityDescription(
+        key="1-0:81.7.2*255", name="U(L3)/U(L1) phase angle", icon="mdi:sine-wave"
+    ),
     SensorEntityDescription(
         key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle", icon="mdi:sine-wave"
     ),
@@ -251,6 +260,8 @@ SENSOR_UNIT_MAPPING = {
     "W": POWER_WATT,
     "A": ELECTRIC_CURRENT_AMPERE,
     "V": ELECTRIC_POTENTIAL_VOLT,
+    "°": DEGREE,
+    "Hz": FREQUENCY_HERTZ,
 }
 
 
@@ -270,9 +281,13 @@ class EDL21:
 
     _OBIS_BLACKLIST = {
         # C=96: Electricity-related service entries
-        "1-0:96.50.1*1",  # Manufacturer specific
-        "1-0:96.90.2*1",  # Manufacturer specific
-        "1-0:96.90.2*2",  # Manufacturer specific
+        "1-0:96.50.1*1",  # Manufacturer specific EFR SGM-C4 Hardware version
+        "1-0:96.50.1*4",  # Manufacturer specific EFR SGM-C4 Hardware version
+        "1-0:96.50.4*4",  # Manufacturer specific EFR SGM-C4 Parameters version
+        "1-0:96.90.2*1",  # Manufacturer specific EFR SGM-C4 Firmware Checksum
+        "1-0:96.90.2*2",  # Manufacturer specific EFR SGM-C4 Firmware Checksum
+        # C=97: Electricity-related service entries
+        "1-0:97.97.0*0",  # Manufacturer specific EFR SGM-C4 Error register
         # A=129: Manufacturer specific
         "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
         "129-129:199.130.5*255",  # Iskraemeco: Public Key
@@ -329,9 +344,9 @@ class EDL21:
                     self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
-                        "Unhandled sensor %s detected. Please report at "
-                        'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
+                        "Unhandled sensor %s detected. Please report at %s",
                         obis,
+                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+edl21%22",
                     )
                     self._OBIS_BLACKLIST.add(obis)
 
@@ -340,7 +355,7 @@ class EDL21:
 
     async def add_entities(self, new_entities) -> None:
         """Migrate old unique IDs, then add entities to hass."""
-        registry = await async_get_registry(self._hass)
+        registry = er.async_get(self._hass)
 
         for entity in new_entities:
             old_entity_id = registry.async_get_entity_id(
@@ -365,6 +380,8 @@ class EDL21:
 class EDL21Entity(SensorEntity):
     """Entity reading values from EDL21 telegram."""
 
+    _attr_should_poll = False
+
     def __init__(self, electricity_id, obis, name, entity_description, telegram):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
@@ -383,7 +400,7 @@ class EDL21Entity(SensorEntity):
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
         @callback
@@ -408,15 +425,10 @@ class EDL21Entity(SensorEntity):
             self.hass, SIGNAL_EDL21_TELEGRAM, handle_telegram
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._async_remove_dispatcher:
             self._async_remove_dispatcher()
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
 
     @property
     def unique_id(self) -> str:
@@ -450,7 +462,7 @@ class EDL21Entity(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
-        if (unit := self._telegram.get("unit")) is None:
+        if (unit := self._telegram.get("unit")) is None or unit == 0:
             return None
 
         return SENSOR_UNIT_MAPPING[unit]

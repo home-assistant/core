@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Aggiorna la tua password per {email}",
+                "title": "Autentica nuovamente l'integrazione"
+            },
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                }
+            }
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "La configurazione di Skybell tramite YAML \u00e8 stata rimossa. \n\n La tua configurazione YAML esistente non \u00e8 utilizzata da Home Assistant. \n\nRimuovi la configurazione YAML dal file configuration.yaml e riavvia Home Assistant per risolvere questo problema.",
+            "title": "La configurazione YAML di Skybell \u00e8 stata rimossa"
+        }
+    }
+}

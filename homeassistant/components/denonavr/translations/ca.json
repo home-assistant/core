@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Confirma l'addici\u00f3 del receptor",
-                "title": "Receptors de xarxa AVR de Denon"
+                "description": "Confirma l'addici\u00f3 del receptor"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "Adre\u00e7a IP"
                 },
-                "description": "Connecta el teu receptor, si no es configura l'adre\u00e7a IP, s'utilitza el descobriment autom\u00e0tic",
-                "title": "Receptors de xarxa AVR de Denon"
+                "data_description": {
+                    "host": "Deixeu-ho en blanc per utilitzar descobriment autom\u00e0tic"
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "Configura la Zona 2",
                     "zone3": "Configura la Zona 3"
                 },
-                "description": "Especifica par\u00e0metres opcionals",
-                "title": "Receptors de xarxa AVR de Denon"
+                "description": "Especifica par\u00e0metres opcionals"
             }
         }
     }

@@ -9,6 +9,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_api_key": "Chiave API non valida",
+            "not_main_key": "Rilevato tipo di chiave API errato, utilizza la chiave API 'principale'.",
             "reauth_failed_matching_account": "La chiave API che hai fornito non corrisponde all'ID account per la configurazione esistente.",
             "unknown": "Errore imprevisto"
         },
@@ -17,14 +18,14 @@
                 "data": {
                     "api_key": "Chiave API"
                 },
-                "description": "Devi fornire una nuova chiave API di sola lettura da UptimeRobot",
+                "description": "Devi fornire una nuova chiave API 'principale' da UptimeRobot",
                 "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {
                     "api_key": "Chiave API"
                 },
-                "description": "Devi fornire una chiave API di sola lettura da UptimeRobot"
+                "description": "Devi fornire la chiave API 'principale' da UptimeRobot"
             }
         }
     }

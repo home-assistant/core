@@ -1,12 +1,13 @@
 """Test ZHA Device Tracker."""
 from datetime import timedelta
 import time
+from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.zha.core.registries import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
@@ -22,6 +23,23 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_fire_time_changed
+
+
+@pytest.fixture(autouse=True)
+def device_tracker_platforms_only():
+    """Only setup the device_tracker platforms and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.BUTTON,
+            Platform.SELECT,
+            Platform.NUMBER,
+            Platform.BINARY_SENSOR,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -52,7 +70,7 @@ async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt)
     entity_id = await find_entity_id(Platform.DEVICE_TRACKER, zha_device, hass)
     assert entity_id is not None
 
-    assert hass.states.get(entity_id).state == STATE_HOME
+    assert hass.states.get(entity_id).state == STATE_NOT_HOME
     await async_enable_traffic(hass, [zha_device], enabled=False)
     # test that the device tracker was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
@@ -83,7 +101,7 @@ async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt)
     entity = hass.data[Platform.DEVICE_TRACKER].get_entity(entity_id)
 
     assert entity.is_connected is True
-    assert entity.source_type == SOURCE_TYPE_ROUTER
+    assert entity.source_type == SourceType.ROUTER
     assert entity.battery_level == 100
 
     # test adding device tracker to the network and HA

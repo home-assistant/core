@@ -126,7 +126,7 @@ async def test_air_quality(hass, hk_driver):
     hass.states.async_set(entity_id, "34")
     await hass.async_block_till_done()
     assert acc.char_density.value == 34
-    assert acc.char_quality.value == 1
+    assert acc.char_quality.value == 2
 
     hass.states.async_set(entity_id, "200")
     await hass.async_block_till_done()
@@ -205,7 +205,7 @@ async def test_pm25(hass, hk_driver):
     hass.states.async_set(entity_id, "23")
     await hass.async_block_till_done()
     assert acc.char_density.value == 23
-    assert acc.char_quality.value == 1
+    assert acc.char_quality.value == 2
 
     hass.states.async_set(entity_id, "34")
     await hass.async_block_till_done()
@@ -215,12 +215,12 @@ async def test_pm25(hass, hk_driver):
     hass.states.async_set(entity_id, "90")
     await hass.async_block_till_done()
     assert acc.char_density.value == 90
-    assert acc.char_quality.value == 3
+    assert acc.char_quality.value == 4
 
     hass.states.async_set(entity_id, "200")
     await hass.async_block_till_done()
     assert acc.char_density.value == 200
-    assert acc.char_quality.value == 4
+    assert acc.char_quality.value == 5
 
     hass.states.async_set(entity_id, "400")
     await hass.async_block_till_done()
@@ -423,12 +423,14 @@ async def test_motion_uses_bool(hass, hk_driver):
 async def test_binary_device_classes(hass, hk_driver):
     """Test if services and characteristics are assigned correctly."""
     entity_id = "binary_sensor.demo"
+    aid = 1
 
     for device_class, (service, char, _) in BINARY_SENSOR_SERVICE_MAP.items():
         hass.states.async_set(entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: device_class})
         await hass.async_block_till_done()
 
-        acc = BinarySensor(hass, hk_driver, "Binary Sensor", entity_id, 2, None)
+        aid += 1
+        acc = BinarySensor(hass, hk_driver, "Binary Sensor", entity_id, aid, None)
         assert acc.get_service(service).display_name == service
         assert acc.char_detected.display_name == char
 
@@ -460,7 +462,7 @@ async def test_sensor_restore(hass, hk_driver, events):
     acc = get_accessory(hass, hk_driver, hass.states.get("sensor.temperature"), 2, {})
     assert acc.category == 10
 
-    acc = get_accessory(hass, hk_driver, hass.states.get("sensor.humidity"), 2, {})
+    acc = get_accessory(hass, hk_driver, hass.states.get("sensor.humidity"), 3, {})
     assert acc.category == 10
 
 

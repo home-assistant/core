@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
 from ..const import DEVICE_ADDRESS, ID, INSTEON_DEVICE_NOT_FOUND, TYPE
 from .device import async_device_name, notify_device_not_found
@@ -82,7 +83,7 @@ async def websocket_get_aldb(
     aldb.update(device.aldb.pending_changes)
     changed_records = list(device.aldb.pending_changes.keys())
 
-    dev_registry = await hass.helpers.device_registry.async_get_registry()
+    dev_registry = dr.async_get(hass)
 
     records = [
         await async_aldb_record_to_dict(

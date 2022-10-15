@@ -109,12 +109,6 @@ async def async_setup_legacy(hass: HomeAssistant, config: dict) -> bool:
     if DOMAIN not in config:
         return True
 
-    _LOGGER.warning(
-        "The Legacy Works With Nest API is deprecated and support will be removed "
-        "in Home Assistant Core 2022.5; See instructions for using the Smart Device "
-        "Management API at https://www.home-assistant.io/integrations/nest/"
-    )
-
     conf = config[DOMAIN]
 
     local_auth.initialize(hass, conf[CONF_CLIENT_ID], conf[CONF_CLIENT_SECRET])
@@ -354,6 +348,8 @@ class NestLegacyDevice:
 class NestSensorDevice(Entity):
     """Representation of a Nest sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, structure, device, variable):
         """Initialize the sensor."""
         self.structure = structure
@@ -375,11 +371,6 @@ class NestSensorDevice(Entity):
     def name(self):
         """Return the name of the nest, if any."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Do not need poll thanks using Nest streaming API."""
-        return False
 
     @property
     def unique_id(self):

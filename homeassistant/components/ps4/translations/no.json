@@ -15,8 +15,7 @@
         },
         "step": {
             "creds": {
-                "description": "Legitimasjon n\u00f8dvendig. Trykk 'Send' og deretter i PS4-ens andre skjerm app, kan du oppdatere enheter, og velg 'Home-Assistant' enheten for \u00e5 fortsette.",
-                "title": ""
+                "description": "Legitimasjon n\u00f8dvendig. Trykk 'Send' og deretter i PS4-ens andre skjerm app, kan du oppdatere enheter, og velg 'Home-Assistant' enheten for \u00e5 fortsette."
             },
             "link": {
                 "data": {
@@ -25,16 +24,18 @@
                     "name": "Navn",
                     "region": ""
                 },
-                "description": "Skriv inn PlayStation 4-informasjonen din. For PIN kode , naviger til 'Innstillinger' p\u00e5 PlayStation 4-konsollen. Naviger deretter til 'Innstillinger for tilkobling av mobilapp' og velg 'Legg til enhet'. Skriv inn PIN kode som vises. Se [dokumentasjon] (https://www.home-assistant.io/components/ps4/) for mer informasjon.",
-                "title": ""
+                "data_description": {
+                    "code": "Naviger til \"Innstillinger\" p\u00e5 PlayStation 4-konsollen. Naviger deretter til \"Mobile App Connection Settings\" og velg \"Add Device\" for \u00e5 hente pinnen."
+                }
             },
             "mode": {
                 "data": {
                     "ip_address": "IP adresse (La v\u00e6re tom hvis du bruker automatisk oppdagelse)",
                     "mode": "Konfigureringsmodus"
                 },
-                "description": "Velg modus for konfigurasjon. Feltet IP adresse kan st\u00e5 tomt hvis du velger automatisk oppdagelse, da enheter automatisk blir oppdaget.",
-                "title": ""
+                "data_description": {
+                    "ip_address": "La st\u00e5 tomt hvis du velger automatisk oppdagelse."
+                }
             }
         }
     }

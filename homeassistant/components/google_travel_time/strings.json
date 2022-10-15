@@ -27,7 +27,7 @@
           "mode": "Travel Mode",
           "language": "Language",
           "time_type": "Time Type",
-          "time":  "Time",
+          "time": "Time",
           "avoid": "Avoid",
           "transit_mode": "Transit Mode",
           "transit_routing_preference": "Transit Routing Preference",

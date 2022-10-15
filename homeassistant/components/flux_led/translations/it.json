@@ -27,7 +27,7 @@
                 "data": {
                     "custom_effect_colors": "Effetto personalizzato: Lista da 1 a 16 colori [R,G,B]. Esempio: [255,0,255],[60,128,0]",
                     "custom_effect_speed_pct": "Effetto personalizzato: Velocit\u00e0 in percentuale per l'effetto che cambia colore.",
-                    "custom_effect_transition": "Effetto personalizzato: Tipo di transizione tra i colori.",
+                    "custom_effect_transition": "Effetto personalizzato: tipo di transizione tra i colori.",
                     "mode": "La modalit\u00e0 di luminosit\u00e0 scelta."
                 }
             }

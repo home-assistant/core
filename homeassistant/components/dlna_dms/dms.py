@@ -11,24 +11,22 @@ from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.client import UpnpRequester
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.const import NotificationSubType
-from async_upnp_client.event_handler import UpnpEventHandler, UpnpNotifyServer
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
 from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components import ssdp
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import BrowseMediaSource, PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.util import slugify
 
 from .const import (
+    CONF_SOURCE_ID,
     DLNA_BROWSE_FILTER,
     DLNA_PATH_FILTER,
     DLNA_RESOLVE_FILTER,
@@ -51,10 +49,8 @@ class DlnaDmsData:
     """Storage class for domain global data."""
 
     hass: HomeAssistant
-    lock: asyncio.Lock
     requester: UpnpRequester
     upnp_factory: UpnpFactory
-    event_handler: UpnpEventHandler
     devices: dict[str, DmsDeviceSource]  # Indexed by config_entry.unique_id
     sources: dict[str, DmsDeviceSource]  # Indexed by source_id
 
@@ -64,68 +60,31 @@ class DlnaDmsData:
     ) -> None:
         """Initialize global data."""
         self.hass = hass
-        self.lock = asyncio.Lock()
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
         self.requester = AiohttpSessionRequester(session, with_sleep=True)
         self.upnp_factory = UpnpFactory(self.requester, non_strict=True)
-        # NOTE: event_handler is not actually used, and is only created to
-        # satisfy the DmsDevice.__init__ signature
-        self.event_handler = UpnpEventHandler(UpnpNotifyServer(), self.requester)
         self.devices = {}
         self.sources = {}
 
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Create a DMS device connection from a config entry."""
         assert config_entry.unique_id
-        async with self.lock:
-            source_id = self._generate_source_id(config_entry.title)
-            device = DmsDeviceSource(self.hass, config_entry, source_id)
-            self.devices[config_entry.unique_id] = device
-            self.sources[device.source_id] = device
-
-        # Update the device when the associated config entry is modified
-        config_entry.async_on_unload(
-            config_entry.add_update_listener(self.async_update_entry)
-        )
-
+        device = DmsDeviceSource(self.hass, config_entry)
+        self.devices[config_entry.unique_id] = device
+        # source_id must be unique, which generate_source_id should guarantee.
+        # Ensure this is the case, for debugging purposes.
+        assert device.source_id not in self.sources
+        self.sources[device.source_id] = device
         await device.async_added_to_hass()
         return True
 
     async def async_unload_entry(self, config_entry: ConfigEntry) -> bool:
         """Unload a config entry and disconnect the corresponding DMS device."""
         assert config_entry.unique_id
-        async with self.lock:
-            device = self.devices.pop(config_entry.unique_id)
-            del self.sources[device.source_id]
+        device = self.devices.pop(config_entry.unique_id)
+        del self.sources[device.source_id]
         await device.async_will_remove_from_hass()
         return True
-
-    async def async_update_entry(
-        self, hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> None:
-        """Update a DMS device when the config entry changes."""
-        assert config_entry.unique_id
-        async with self.lock:
-            device = self.devices[config_entry.unique_id]
-            # Update the source_id to match the new name
-            del self.sources[device.source_id]
-            device.source_id = self._generate_source_id(config_entry.title)
-            self.sources[device.source_id] = device
-
-    def _generate_source_id(self, name: str) -> str:
-        """Generate a unique source ID.
-
-        Caller should hold self.lock when calling this method.
-        """
-        source_id_base = slugify(name)
-        if source_id_base not in self.sources:
-            return source_id_base
-
-        tries = 1
-        while (suggested_source_id := f"{source_id_base}_{tries}") in self.sources:
-            tries += 1
-
-        return suggested_source_id
 
 
 @callback
@@ -202,12 +161,6 @@ def catch_request_errors(
 class DmsDeviceSource:
     """DMS Device wrapper, providing media files as a media_source."""
 
-    hass: HomeAssistant
-    config_entry: ConfigEntry
-
-    # Unique slug used for media-source URIs
-    source_id: str
-
     # Last known URL for the device, used when adding this wrapper to hass to
     # try to connect before SSDP has rediscovered it, or when SSDP discovery
     # fails.
@@ -222,13 +175,10 @@ class DmsDeviceSource:
     # Track BOOTID in SSDP advertisements for device changes
     _bootid: int | None = None
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, source_id: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize a DMS Source."""
         self.hass = hass
         self.config_entry = config_entry
-        self.source_id = source_id
         self.location = self.config_entry.data[CONF_URL]
         self._device_lock = asyncio.Lock()
 
@@ -336,14 +286,11 @@ class DmsDeviceSource:
     async def device_connect(self) -> None:
         """Connect to the device now that it's available."""
         LOGGER.debug("Connecting to device at %s", self.location)
+        assert self.location
 
         async with self._device_lock:
             if self._device:
                 LOGGER.debug("Trying to connect when device already connected")
-                return
-
-            if not self.location:
-                LOGGER.debug("Not connecting because location is not known")
                 return
 
             domain_data = get_domain_data(self.hass)
@@ -354,7 +301,7 @@ class DmsDeviceSource:
             )
 
             # Create profile wrapper
-            self._device = DmsDevice(upnp_device, domain_data.event_handler)
+            self._device = DmsDevice(upnp_device, event_handler=None)
 
             # Update state variables. We don't care if they change, so this is
             # only done once, here.
@@ -397,12 +344,14 @@ class DmsDeviceSource:
         return self.config_entry.title
 
     @property
+    def source_id(self) -> str:
+        """Return a unique ID (slug) for this source for people to use in URLs."""
+        return self.config_entry.data[CONF_SOURCE_ID]
+
+    @property
     def icon(self) -> str | None:
         """Return an URL to an icon for the media server."""
-        if not self._device:
-            return None
-
-        return self._device.icon
+        return self._device.icon if self._device else None
 
     # MediaSource methods
 
@@ -411,6 +360,8 @@ class DmsDeviceSource:
         LOGGER.debug("async_resolve_media(%s)", identifier)
         action, parameters = _parse_identifier(identifier)
 
+        assert action is not None, f"Invalid identifier: {identifier}"
+
         if action is Action.OBJECT:
             return await self.async_resolve_object(parameters)
 
@@ -418,11 +369,8 @@ class DmsDeviceSource:
             object_id = await self.async_resolve_path(parameters)
             return await self.async_resolve_object(object_id)
 
-        if action is Action.SEARCH:
-            return await self.async_resolve_search(parameters)
-
-        LOGGER.debug("Invalid identifier %s", identifier)
-        raise Unresolvable(f"Invalid identifier {identifier}")
+        assert action is Action.SEARCH
+        return await self.async_resolve_search(parameters)
 
     async def async_browse_media(self, identifier: str | None) -> BrowseMediaSource:
         """Browse media."""
@@ -569,16 +517,13 @@ class DmsDeviceSource:
         media_source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=self._make_identifier(Action.SEARCH, query),
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="",
             title="Search results",
             can_play=False,
             can_expand=True,
             children=children,
         )
-
-        if media_source.children:
-            media_source.calculate_children_class()
 
         return media_source
 
@@ -647,9 +592,6 @@ class DmsDeviceSource:
             children=children,
             thumbnail=self._didl_thumbnail_url(item),
         )
-
-        if media_source.children:
-            media_source.calculate_children_class()
 
         return media_source
 

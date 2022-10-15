@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "reauth_successful": "Re-autentisering var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API-token"
+                },
+                "description": "Se dokumentasjonen for \u00e5 f\u00e5 din Discord-botn\u00f8kkel. \n\n {url}"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API-token"
+                },
+                "description": "Se dokumentasjonen for \u00e5 f\u00e5 din Discord-botn\u00f8kkel. \n\n {url}"
+            }
+        }
+    }
+}

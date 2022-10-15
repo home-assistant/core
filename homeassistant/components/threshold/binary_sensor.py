@@ -112,6 +112,8 @@ async def async_setup_platform(
 class ThresholdSensor(BinarySensorEntity):
     """Representation of a Threshold sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, hass, entity_id, name, lower, upper, hysteresis, device_class, unique_id
     ):
@@ -151,8 +153,10 @@ class ThresholdSensor(BinarySensorEntity):
             _update_sensor_state()
             self.async_write_ha_state()
 
-        async_track_state_change_event(
-            hass, [entity_id], async_threshold_sensor_state_listener
+        self.async_on_remove(
+            async_track_state_change_event(
+                hass, [entity_id], async_threshold_sensor_state_listener
+            )
         )
         _update_sensor_state()
 
@@ -165,11 +169,6 @@ class ThresholdSensor(BinarySensorEntity):
     def is_on(self):
         """Return true if sensor is on."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_class(self):

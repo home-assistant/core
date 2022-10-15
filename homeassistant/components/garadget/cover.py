@@ -2,11 +2,16 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
+from homeassistant.components.cover import (
+    PLATFORM_SCHEMA,
+    CoverDeviceClass,
+    CoverEntity,
+)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_COVERS,
@@ -134,17 +139,17 @@ class GaradgetCover(CoverEntity):
             self.remove_token()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the cover."""
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         data = {}
 
@@ -163,16 +168,16 @@ class GaradgetCover(CoverEntity):
         return data
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._state is None:
             return None
         return self._state == STATE_CLOSED
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "garage"
+        return CoverDeviceClass.GARAGE
 
     def get_token(self):
         """Get new token for usage during this session."""
@@ -207,28 +212,28 @@ class GaradgetCover(CoverEntity):
         """Check the state of the service during an operation."""
         self.schedule_update_ha_state(True)
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._state not in ["close", "closing"]:
             ret = self._put_command("setState", "close")
             self._start_watcher("close")
             return ret.get("return_value") == 1
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._state not in ["open", "opening"]:
             ret = self._put_command("setState", "open")
             self._start_watcher("open")
             return ret.get("return_value") == 1
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door where it is."""
         if self._state not in ["stopped"]:
             ret = self._put_command("setState", "stop")
             self._start_watcher("stop")
             return ret["return_value"] == 1
 
-    def update(self):
+    def update(self) -> None:
         """Get updated status from API."""
         try:
             status = self._get_variable("doorStatus")

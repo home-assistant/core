@@ -7,17 +7,18 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.twinkly.const import (
     CONF_HOST,
     CONF_ID,
-    CONF_MODEL,
     CONF_NAME,
     DOMAIN as TWINKLY_DOMAIN,
 )
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
+from . import TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock
+
 from tests.common import MockConfigEntry
-from tests.components.twinkly import TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock
 
 
 async def test_initial_state(hass: HomeAssistant):

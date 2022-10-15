@@ -9,7 +9,6 @@ from homeassistant.helpers.state import async_reproduce_state
 from tests.common import async_mock_service
 
 VALID_BRIGHTNESS = {"brightness": 180}
-VALID_WHITE_VALUE = {"white_value": 200}
 VALID_FLASH = {"flash": "short"}
 VALID_EFFECT = {"effect": "random"}
 VALID_TRANSITION = {"transition": 15}
@@ -28,7 +27,6 @@ async def test_reproducing_states(hass, caplog):
     """Test reproducing Light states."""
     hass.states.async_set("light.entity_off", "off", {})
     hass.states.async_set("light.entity_bright", "on", VALID_BRIGHTNESS)
-    hass.states.async_set("light.entity_white", "on", VALID_WHITE_VALUE)
     hass.states.async_set("light.entity_flash", "on", VALID_FLASH)
     hass.states.async_set("light.entity_effect", "on", VALID_EFFECT)
     hass.states.async_set("light.entity_trans", "on", VALID_TRANSITION)
@@ -49,7 +47,6 @@ async def test_reproducing_states(hass, caplog):
         [
             State("light.entity_off", "off"),
             State("light.entity_bright", "on", VALID_BRIGHTNESS),
-            State("light.entity_white", "on", VALID_WHITE_VALUE),
             State("light.entity_flash", "on", VALID_FLASH),
             State("light.entity_effect", "on", VALID_EFFECT),
             State("light.entity_trans", "on", VALID_TRANSITION),
@@ -79,8 +76,7 @@ async def test_reproducing_states(hass, caplog):
         [
             State("light.entity_xy", "off"),
             State("light.entity_off", "on", VALID_BRIGHTNESS),
-            State("light.entity_bright", "on", VALID_WHITE_VALUE),
-            State("light.entity_white", "on", VALID_FLASH),
+            State("light.entity_bright", "on", VALID_FLASH),
             State("light.entity_flash", "on", VALID_EFFECT),
             State("light.entity_effect", "on", VALID_TRANSITION),
             State("light.entity_trans", "on", VALID_COLOR_NAME),
@@ -93,7 +89,7 @@ async def test_reproducing_states(hass, caplog):
         ],
     )
 
-    assert len(turn_on_calls) == 12
+    assert len(turn_on_calls) == 11
 
     expected_calls = []
 
@@ -101,13 +97,9 @@ async def test_reproducing_states(hass, caplog):
     expected_off["entity_id"] = "light.entity_off"
     expected_calls.append(expected_off)
 
-    expected_bright = dict(VALID_WHITE_VALUE)
+    expected_bright = dict(VALID_FLASH)
     expected_bright["entity_id"] = "light.entity_bright"
     expected_calls.append(expected_bright)
-
-    expected_white = dict(VALID_FLASH)
-    expected_white["entity_id"] = "light.entity_white"
-    expected_calls.append(expected_white)
 
     expected_flash = dict(VALID_EFFECT)
     expected_flash["entity_id"] = "light.entity_flash"
@@ -165,23 +157,22 @@ async def test_reproducing_states(hass, caplog):
 @pytest.mark.parametrize(
     "color_mode",
     (
-        light.COLOR_MODE_COLOR_TEMP,
-        light.COLOR_MODE_BRIGHTNESS,
-        light.COLOR_MODE_HS,
-        light.COLOR_MODE_ONOFF,
-        light.COLOR_MODE_RGB,
-        light.COLOR_MODE_RGBW,
-        light.COLOR_MODE_RGBWW,
-        light.COLOR_MODE_UNKNOWN,
-        light.COLOR_MODE_WHITE,
-        light.COLOR_MODE_XY,
+        light.ColorMode.COLOR_TEMP,
+        light.ColorMode.BRIGHTNESS,
+        light.ColorMode.HS,
+        light.ColorMode.ONOFF,
+        light.ColorMode.RGB,
+        light.ColorMode.RGBW,
+        light.ColorMode.RGBWW,
+        light.ColorMode.UNKNOWN,
+        light.ColorMode.WHITE,
+        light.ColorMode.XY,
     ),
 )
 async def test_filter_color_modes(hass, caplog, color_mode):
     """Test filtering of parameters according to color mode."""
     hass.states.async_set("light.entity", "off", {})
     all_colors = {
-        **VALID_WHITE_VALUE,
         **VALID_COLOR_NAME,
         **VALID_COLOR_TEMP,
         **VALID_HS_COLOR,
@@ -200,23 +191,22 @@ async def test_filter_color_modes(hass, caplog, color_mode):
     )
 
     expected_map = {
-        light.COLOR_MODE_COLOR_TEMP: {**VALID_BRIGHTNESS, **VALID_COLOR_TEMP},
-        light.COLOR_MODE_BRIGHTNESS: VALID_BRIGHTNESS,
-        light.COLOR_MODE_HS: {**VALID_BRIGHTNESS, **VALID_HS_COLOR},
-        light.COLOR_MODE_ONOFF: {**VALID_BRIGHTNESS},
-        light.COLOR_MODE_RGB: {**VALID_BRIGHTNESS, **VALID_RGB_COLOR},
-        light.COLOR_MODE_RGBW: {**VALID_BRIGHTNESS, **VALID_RGBW_COLOR},
-        light.COLOR_MODE_RGBWW: {**VALID_BRIGHTNESS, **VALID_RGBWW_COLOR},
-        light.COLOR_MODE_UNKNOWN: {
+        light.ColorMode.COLOR_TEMP: {**VALID_BRIGHTNESS, **VALID_COLOR_TEMP},
+        light.ColorMode.BRIGHTNESS: VALID_BRIGHTNESS,
+        light.ColorMode.HS: {**VALID_BRIGHTNESS, **VALID_HS_COLOR},
+        light.ColorMode.ONOFF: {**VALID_BRIGHTNESS},
+        light.ColorMode.RGB: {**VALID_BRIGHTNESS, **VALID_RGB_COLOR},
+        light.ColorMode.RGBW: {**VALID_BRIGHTNESS, **VALID_RGBW_COLOR},
+        light.ColorMode.RGBWW: {**VALID_BRIGHTNESS, **VALID_RGBWW_COLOR},
+        light.ColorMode.UNKNOWN: {
             **VALID_BRIGHTNESS,
             **VALID_HS_COLOR,
-            **VALID_WHITE_VALUE,
         },
-        light.COLOR_MODE_WHITE: {
+        light.ColorMode.WHITE: {
             **VALID_BRIGHTNESS,
             light.ATTR_WHITE: VALID_BRIGHTNESS[light.ATTR_BRIGHTNESS],
         },
-        light.COLOR_MODE_XY: {**VALID_BRIGHTNESS, **VALID_XY_COLOR},
+        light.ColorMode.XY: {**VALID_BRIGHTNESS, **VALID_XY_COLOR},
     }
     expected = expected_map[color_mode]
 

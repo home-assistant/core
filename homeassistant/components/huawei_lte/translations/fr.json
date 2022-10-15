@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
-            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
-            "not_huawei_lte": "Pas un appareil Huawei LTE"
+            "not_huawei_lte": "Pas un appareil Huawei LTE",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
             "connection_timeout": "D\u00e9lai de connexion d\u00e9pass\u00e9",
@@ -17,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Saisissez les informations d'identification permettant d'acc\u00e9der \u00e0 l'appareil.",
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
+            },
             "user": {
                 "data": {
                     "password": "Mot de passe",
@@ -34,7 +41,6 @@
                 "data": {
                     "name": "Nom du service de notification (red\u00e9marrage requis)",
                     "recipient": "Destinataires des notifications SMS",
-                    "track_new_devices": "Suivre les nouveaux appareils",
                     "track_wired_clients": "Suivre les clients du r\u00e9seau filaire",
                     "unauthenticated_mode": "Mode non authentifi\u00e9 (le changement n\u00e9cessite un rechargement)"
                 }

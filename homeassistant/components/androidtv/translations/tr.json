@@ -20,9 +20,7 @@
                     "device_class": "Cihaz\u0131n t\u00fcr\u00fc",
                     "host": "Sunucu",
                     "port": "Port"
-                },
-                "description": "Android TV cihaz\u0131n\u0131za ba\u011flanmak i\u00e7in gerekli parametreleri ayarlay\u0131n",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Durum alg\u0131lama kurallar\u0131n\u0131 yap\u0131land\u0131r\u0131n",
                     "turn_off_command": "ADB kabu\u011fu kapatma komutu (varsay\u0131lan olarak bo\u015f b\u0131rak\u0131n)",
                     "turn_on_command": "ADB kabu\u011fu a\u00e7ma komutu (varsay\u0131lan olarak bo\u015f b\u0131rak\u0131n)"
-                },
-                "title": "Android TV Se\u00e7enekleri"
+                }
             },
             "rules": {
                 "data": {

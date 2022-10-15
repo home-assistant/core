@@ -42,35 +42,35 @@
     "@version": "5.2.0",
     "#text": "Pluto TV - It's Free TV"
   },
-  "apps": [  
+  "apps": [
     {
       "@id": "11",
       "#text": "Roku Channel Store"
-    },  
+    },
     {
       "@id": "12",
       "#text": "Netflix"
-    },  
+    },
     {
       "@id": "13",
       "#text": "Amazon Video on Demand"
-    },  
+    },
     {
       "@id": "14",
       "#text": "MLB.TV®"
-    },  
+    },
     {
       "@id": "26",
       "#text": "Free FrameChannel Service"
-    },  
+    },
     {
       "@id": "27",
       "#text": "Mediafly"
-    },  
+    },
     {
       "@id": "28",
       "#text": "Pandora"
-    },  
+    },
     {
       "@id": "74519",
       "@subtype": "rsga",

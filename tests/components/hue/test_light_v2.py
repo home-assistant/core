@@ -1,6 +1,6 @@
 """Philips Hue lights platform tests for V2 bridge/api."""
 
-from homeassistant.components.light import COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY
+from homeassistant.components.light import ColorMode
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
@@ -14,8 +14,8 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     await setup_platform(hass, mock_bridge_v2, "light")
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 6 entities should be created from test data (grouped_lights are disabled by default)
-    assert len(hass.states.async_all()) == 6
+    # 8 entities should be created from test data
+    assert len(hass.states.async_all()) == 8
 
     # test light which supports color and color temperature
     light_1 = hass.states.get("light.hue_light_with_color_and_color_temperature_1")
@@ -27,10 +27,10 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert light_1.state == "on"
     assert light_1.attributes["brightness"] == int(46.85 / 100 * 255)
     assert light_1.attributes["mode"] == "normal"
-    assert light_1.attributes["color_mode"] == COLOR_MODE_XY
+    assert light_1.attributes["color_mode"] == ColorMode.XY
     assert set(light_1.attributes["supported_color_modes"]) == {
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_XY,
+        ColorMode.COLOR_TEMP,
+        ColorMode.XY,
     }
     assert light_1.attributes["xy_color"] == (0.5614, 0.4058)
     assert light_1.attributes["min_mireds"] == 153
@@ -47,7 +47,7 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     )
     assert light_2.state == "off"
     assert light_2.attributes["mode"] == "normal"
-    assert light_2.attributes["supported_color_modes"] == [COLOR_MODE_COLOR_TEMP]
+    assert light_2.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
     assert light_2.attributes["min_mireds"] == 153
     assert light_2.attributes["max_mireds"] == 454
     assert light_2.attributes["dynamics"] == "none"
@@ -60,8 +60,8 @@ async def test_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert light_3.state == "on"
     assert light_3.attributes["brightness"] == 128
     assert light_3.attributes["mode"] == "normal"
-    assert light_3.attributes["supported_color_modes"] == [COLOR_MODE_XY]
-    assert light_3.attributes["color_mode"] == COLOR_MODE_XY
+    assert light_3.attributes["supported_color_modes"] == [ColorMode.XY]
+    assert light_3.attributes["color_mode"] == ColorMode.XY
     assert light_3.attributes["dynamics"] == "dynamic_palette"
 
     # test light which supports on/off only
@@ -113,8 +113,8 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     assert test_light is not None
     assert test_light.state == "on"
     assert test_light.attributes["mode"] == "normal"
-    assert test_light.attributes["supported_color_modes"] == [COLOR_MODE_COLOR_TEMP]
-    assert test_light.attributes["color_mode"] == COLOR_MODE_COLOR_TEMP
+    assert test_light.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
+    assert test_light.attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert test_light.attributes["brightness"] == 255
 
     # test again with sending transition with 250ms which should round up to 200ms
@@ -329,32 +329,14 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
 
     await setup_platform(hass, mock_bridge_v2, "light")
 
-    # test if entities for hue groups are created and disabled by default
+    # test if entities for hue groups are created and enabled by default
     for entity_id in ("light.test_zone", "light.test_room"):
         ent_reg = er.async_get(hass)
         entity_entry = ent_reg.async_get(entity_id)
 
         assert entity_entry
-        assert entity_entry.disabled
-        assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        # entity should not have a device assigned
-        assert entity_entry.device_id is None
-
-        # enable the entity
-        updated_entry = ent_reg.async_update_entity(
-            entity_entry.entity_id, **{"disabled_by": None}
-        )
-        assert updated_entry != entity_entry
-        assert updated_entry.disabled is False
-
-    # reload platform and check if entities are correctly there
-    await hass.config_entries.async_forward_entry_unload(
-        mock_bridge_v2.config_entry, "light"
-    )
-    await hass.config_entries.async_forward_entry_setup(
-        mock_bridge_v2.config_entry, "light"
-    )
-    await hass.async_block_till_done()
+        # scene entities should have be assigned to the room/zone device/service
+        assert entity_entry.device_id is not None
 
     # test light created for hue zone
     test_entity = hass.states.get("light.test_zone")
@@ -362,10 +344,10 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity.attributes["friendly_name"] == "Test Zone"
     assert test_entity.state == "on"
     assert test_entity.attributes["brightness"] == 119
-    assert test_entity.attributes["color_mode"] == COLOR_MODE_XY
+    assert test_entity.attributes["color_mode"] == ColorMode.XY
     assert set(test_entity.attributes["supported_color_modes"]) == {
-        COLOR_MODE_COLOR_TEMP,
-        COLOR_MODE_XY,
+        ColorMode.COLOR_TEMP,
+        ColorMode.XY,
     }
     assert test_entity.attributes["min_mireds"] == 153
     assert test_entity.attributes["max_mireds"] == 500
@@ -383,7 +365,7 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     assert test_entity is not None
     assert test_entity.attributes["friendly_name"] == "Test Room"
     assert test_entity.state == "off"
-    assert test_entity.attributes["supported_color_modes"] == [COLOR_MODE_COLOR_TEMP]
+    assert test_entity.attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
     assert test_entity.attributes["min_mireds"] == 153
     assert test_entity.attributes["max_mireds"] == 454
     assert test_entity.attributes["is_hue_group"] is True
@@ -435,7 +417,7 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "on"
-    assert test_light.attributes["color_mode"] == COLOR_MODE_XY
+    assert test_light.attributes["color_mode"] == ColorMode.XY
     assert test_light.attributes["brightness"] == 255
     assert test_light.attributes["xy_color"] == (0.123, 0.123)
 

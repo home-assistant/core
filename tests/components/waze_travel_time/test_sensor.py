@@ -97,7 +97,9 @@ async def test_sensor(hass):
 @pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_imperial(hass):
     """Test that the imperial option works."""
-    assert hass.states.get("sensor.waze_travel_time").attributes["distance"] == 186.4113
+    assert hass.states.get("sensor.waze_travel_time").attributes[
+        "distance"
+    ] == pytest.approx(186.4113)
 
 
 @pytest.mark.usefixtures("mock_update_wrcerror")

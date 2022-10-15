@@ -557,7 +557,7 @@ async def test_event_listener_states(
     """Test the event listener against ignored states."""
     handler_method = await _setup(hass, mock_client, config_ext, get_write_api)
 
-    for state_state in (1, "unknown", "", "unavailable"):
+    for state_state in (1, "unknown", "", "unavailable", None):
         state = MagicMock(
             state=state_state,
             domain="fake",
@@ -866,7 +866,7 @@ async def test_event_listener_filtered_allowlist(
         FilterTest("fake.excluded", False),
         FilterTest("another_fake.denied", False),
         FilterTest("fake.excluded_entity", False),
-        FilterTest("another_fake.included_entity", False),
+        FilterTest("another_fake.included_entity", True),
     ]
     execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
 

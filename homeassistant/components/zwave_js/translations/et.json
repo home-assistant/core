@@ -10,7 +10,8 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "cannot_connect": "\u00dchendamine nurjus",
             "discovery_requires_supervisor": "Avastamine n\u00f5uab supervisorit.",
-            "not_zwave_device": "Avastatud seade ei ole Z-Wave seade."
+            "not_zwave_device": "Avastatud seade ei ole Z-Wave seade.",
+            "not_zwave_js_addon": "Avastatud lisandmoodul ei ole ametlik Z-Wave JS-i lisandmoodul."
         },
         "error": {
             "addon_start_failed": "Z-Wave JS lisandmooduli k\u00e4ivitamine nurjus. Kontrolli seadistusi.",
@@ -26,7 +27,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "V\u00f5rgu v\u00f5ti",
                     "s0_legacy_key": "S0 vana t\u00fc\u00fcpi v\u00f5ti",
                     "s2_access_control_key": "S2 juurdep\u00e4\u00e4suv\u00f5ti",
                     "s2_authenticated_key": "Autenditud S2 v\u00f5ti",
@@ -59,6 +59,10 @@
             },
             "usb_confirm": {
                 "description": "Kas seadistada Z-Wave JS lisandmoodul {name}?"
+            },
+            "zeroconf_confirm": {
+                "description": "Kas lisada Z-Wave JS-server, mille ID {home_id} on leitud aadressil {url}, Home Assistant'ile?",
+                "title": "Avastatud Z-Wave JS Server"
             }
         }
     },
@@ -88,6 +92,12 @@
             "zwave_js.value_updated.value": "Z-Wave JS v\u00e4\u00e4rtuse muutus"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "Z-Wave JS Serveri versioon, mida praegu kasutad, on selle Home Assistanti versiooni jaoks liiga vana. Selle probleemi lahendamiseks v\u00e4rskenda Z-Wave JS Server uusimale versioonile.",
+            "title": "Vajalik on Z-Wave JS Serveri uuem versioon"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "Z-Wave JS lisandmooduli tuvastusteabe hankimine nurjus.",
@@ -113,7 +123,6 @@
                 "data": {
                     "emulate_hardware": "Riistvara emuleerimine",
                     "log_level": "Logimise tase",
-                    "network_key": "V\u00f5rgu v\u00f5ti",
                     "s0_legacy_key": "S0 vana t\u00fc\u00fcpi v\u00f5ti",
                     "s2_access_control_key": "S2 juurdep\u00e4\u00e4suv\u00f5ti",
                     "s2_authenticated_key": "Autenditud S2 v\u00f5ti",
@@ -142,6 +151,5 @@
                 "title": "Z-Wave JS lisandmoodul k\u00e4ivitub."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

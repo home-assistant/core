@@ -6,7 +6,7 @@ from homeassistant.const import __version__
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
-from . import get_default_config, get_new_request
+from .test_common import get_default_config, get_new_request
 
 
 async def test_unsupported_domain(hass):
@@ -45,18 +45,11 @@ async def test_categorized_hidden_entities(hass):
     entity_entry3 = entity_registry.async_get_or_create(
         "switch",
         "test",
-        "switch_system_id",
-        suggested_object_id="system_switch",
-        entity_category=EntityCategory.SYSTEM,
-    )
-    entity_entry4 = entity_registry.async_get_or_create(
-        "switch",
-        "test",
         "switch_hidden_integration_id",
         suggested_object_id="hidden_integration_switch",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
-    entity_entry5 = entity_registry.async_get_or_create(
+    entity_entry4 = entity_registry.async_get_or_create(
         "switch",
         "test",
         "switch_hidden_user_id",
@@ -69,7 +62,6 @@ async def test_categorized_hidden_entities(hass):
     hass.states.async_set(entity_entry2.entity_id, "something_else")
     hass.states.async_set(entity_entry3.entity_id, "blah")
     hass.states.async_set(entity_entry4.entity_id, "foo")
-    hass.states.async_set(entity_entry5.entity_id, "bar")
 
     msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
 

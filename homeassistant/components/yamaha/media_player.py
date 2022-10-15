@@ -2,35 +2,20 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import requests
 import rxv
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -73,13 +58,13 @@ DATA_YAMAHA = "yamaha_known_receivers"
 DEFAULT_NAME = "Yamaha Receiver"
 
 SUPPORT_YAMAHA = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-    | SUPPORT_SELECT_SOUND_MODE
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -210,7 +195,7 @@ class YamahaDevice(MediaPlayerEntity):
         self.receiver = receiver
         self._muted = False
         self._volume = 0
-        self._pwstate = STATE_OFF
+        self._pwstate = MediaPlayerState.OFF
         self._current_source = None
         self._sound_mode = None
         self._sound_mode_list = None
@@ -225,7 +210,7 @@ class YamahaDevice(MediaPlayerEntity):
         self._name = name
         self._zone = receiver.zone
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
         try:
             self._play_status = self.receiver.play_status()
@@ -235,13 +220,13 @@ class YamahaDevice(MediaPlayerEntity):
 
         if self.receiver.on:
             if self._play_status is None:
-                self._pwstate = STATE_ON
+                self._pwstate = MediaPlayerState.ON
             elif self._play_status.playing:
-                self._pwstate = STATE_PLAYING
+                self._pwstate = MediaPlayerState.PLAYING
             else:
-                self._pwstate = STATE_IDLE
+                self._pwstate = MediaPlayerState.IDLE
         else:
-            self._pwstate = STATE_OFF
+            self._pwstate = MediaPlayerState.OFF
 
         self._muted = self.receiver.mute
         self._volume = (self.receiver.volume / 100) + 1
@@ -332,53 +317,55 @@ class YamahaDevice(MediaPlayerEntity):
 
         supports = self._playback_support
         mapping = {
-            "play": (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
-            "pause": SUPPORT_PAUSE,
-            "stop": SUPPORT_STOP,
-            "skip_f": SUPPORT_NEXT_TRACK,
-            "skip_r": SUPPORT_PREVIOUS_TRACK,
+            "play": (
+                MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PLAY_MEDIA
+            ),
+            "pause": MediaPlayerEntityFeature.PAUSE,
+            "stop": MediaPlayerEntityFeature.STOP,
+            "skip_f": MediaPlayerEntityFeature.NEXT_TRACK,
+            "skip_r": MediaPlayerEntityFeature.PREVIOUS_TRACK,
         }
         for attr, feature in mapping.items():
             if getattr(supports, attr, False):
                 supported_features |= feature
         return supported_features
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self.receiver.on = False
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         receiver_vol = 100 - (volume * 100)
         negative_receiver_vol = -receiver_vol
         self.receiver.volume = negative_receiver_vol
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self.receiver.mute = mute
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.receiver.on = True
         self._volume = (self.receiver.volume / 100) + 1
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
         self._call_playback_function(self.receiver.play, "play")
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
         self._call_playback_function(self.receiver.pause, "pause")
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
         self._call_playback_function(self.receiver.stop, "stop")
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send previous track command."""
         self._call_playback_function(self.receiver.previous, "previous track")
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
         self._call_playback_function(self.receiver.next, "next track")
 
@@ -388,11 +375,11 @@ class YamahaDevice(MediaPlayerEntity):
         except rxv.exceptions.ResponseException:
             _LOGGER.warning("Failed to execute %s on %s", function_text, self._name)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self.receiver.input = self._reverse_mapping.get(source, source)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Play media from an ID.
 
         This exposes a pass through for various input sources in the
@@ -429,7 +416,7 @@ class YamahaDevice(MediaPlayerEntity):
         except AssertionError:
             _LOGGER.warning("Scene '%s' does not exist!", scene)
 
-    def select_sound_mode(self, sound_mode):
+    def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
         self.receiver.surround_program = sound_mode
 
@@ -450,7 +437,7 @@ class YamahaDevice(MediaPlayerEntity):
         """Content type of current playing media."""
         # Loose assumption that if playback is supported, we are playing music
         if self._is_playback_supported:
-            return MEDIA_TYPE_MUSIC
+            return MediaType.MUSIC
         return None
 
     @property

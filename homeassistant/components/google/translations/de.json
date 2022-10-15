@@ -1,0 +1,55 @@
+{
+    "application_credentials": {
+        "description": "Folge den [Anweisungen]({more_info_url}) f\u00fcr den [OAuth-Zustimmungsbildschirm]({oauth_consent_url}), um Home Assistant Zugriff auf deinen Google-Kalender zu geben. Du musst auch Anwendungsnachweise erstellen, die mit deinem Kalender verkn\u00fcpft sind:\n1. Gehe zu [Credentials]({oauth_creds_url}) und dr\u00fccke auf **Create Credentials**.\n1. W\u00e4hle in der Dropdown-Liste **OAuth-Client-ID**.\n1. W\u00e4hle **TV und eingeschr\u00e4nkte Eingabeger\u00e4te** f\u00fcr den Anwendungstyp.\n\n"
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "code_expired": "Der Authentifizierungscode ist abgelaufen oder die Anmeldedaten sind ung\u00fcltig, bitte versuche es erneut.",
+            "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "oauth_error": "Ung\u00fcltige Token-Daten empfangen.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "timeout_connect": "Zeit\u00fcberschreitung beim Verbindungsaufbau"
+        },
+        "create_entry": {
+            "default": "Erfolgreich authentifiziert"
+        },
+        "progress": {
+            "exchange": "Um dein Google-Konto zu verkn\u00fcpfen, besuche [{url}]({url}) und gib folgenden Code ein:\n\n{user_code}"
+        },
+        "step": {
+            "auth": {
+                "title": "Google-Konto verkn\u00fcpfen"
+            },
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            },
+            "reauth_confirm": {
+                "description": "Die Google Kalender-Integration muss dein Konto erneut authentifizieren",
+                "title": "Integration erneut authentifizieren"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Die Konfiguration des Google Kalenders in configuration.yaml wird in Home Assistant 2022.9 entfernt. \n\nDeine bestehenden OAuth-Anwendungsdaten und Zugriffseinstellungen wurden automatisch in die Benutzeroberfl\u00e4che importiert. Entferne die YAML-Konfiguration aus deiner configuration.yaml-Datei und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Die Google Calendar YAML-Konfiguration wird entfernt"
+        },
+        "removed_track_new_yaml": {
+            "description": "Du hast die Entit\u00e4tsverfolgung f\u00fcr Google Kalender in configuration.yaml deaktiviert, was nicht mehr unterst\u00fctzt wird. Du musst die Integrationssystemoptionen in der Benutzeroberfl\u00e4che manuell \u00e4ndern, um neu entdeckte Entit\u00e4ten in Zukunft zu deaktivieren. Entferne die Einstellung track_new aus configuration.yaml und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "Google Calendar Entity Tracking hat sich ge\u00e4ndert"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant-Zugriff auf Google Kalender"
+                }
+            }
+        }
+    }
+}

@@ -8,9 +8,9 @@ from aiosteamist import Steamist, SteamistStatus
 from discovery30303 import AIODiscovery30303, Device30303
 
 from homeassistant.components import steamist
-from homeassistant.components.steamist.const import CONF_MODEL, DOMAIN
+from homeassistant.components.steamist.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component

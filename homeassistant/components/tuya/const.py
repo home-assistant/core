@@ -181,6 +181,7 @@ class DPCode(StrEnum):
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
     CLICK_SUSTAIN_TIME = "click_sustain_time"
+    CLOUD_RECIPE_NUMBER = "cloud_recipe_number"
     CO_STATE = "co_state"
     CO_STATUS = "co_status"
     CO_VALUE = "co_value"
@@ -191,6 +192,8 @@ class DPCode(StrEnum):
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    COOK_TEMPERATURE = "cook_temperature"
+    COOK_TIME = "cook_time"
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CONTROL = "control"
     CONTROL_2 = "control_2"
@@ -223,6 +226,7 @@ class DPCode(StrEnum):
     FAN_SPEED = "fan_speed"
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
+    FAN_SWITCH = "fan_switch"
     FAN_MODE = "fan_mode"
     FAN_VERTICAL = "fan_vertical"  # Vertical swing flap angle
     FAR_DETECTION = "far_detection"
@@ -294,6 +298,7 @@ class DPCode(StrEnum):
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
+    REMAIN_TIME = "remain_time"
     RESET_DUSTER_CLOTH = "reset_duster_cloth"
     RESET_EDGE_BRUSH = "reset_edge_brush"
     RESET_FILTER = "reset_filter"
@@ -428,7 +433,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=PERCENTAGE,
-        aliases={"pct", "percent"},
+        aliases={"pct", "percent", "% RH"},
         device_classes={
             SensorDeviceClass.BATTERY,
             SensorDeviceClass.HUMIDITY,
@@ -574,7 +579,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=TEMP_CELSIUS,
-        aliases={"°c", "c", "celsius"},
+        aliases={"°c", "c", "celsius", "℃"},
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(

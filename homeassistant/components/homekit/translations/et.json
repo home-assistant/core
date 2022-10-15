@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (keela kui kasutad homekit.start teenust k\u00e4sitsi)",
                     "devices": "Seadmed (p\u00e4\u00e4stikud)"
                 },
                 "description": "Iga valitud seadme jaoks luuakse programmeeritavad l\u00fclitid. Seadme p\u00e4\u00e4stiku k\u00e4ivitamisel saab HomeKiti seadistada automaatiseeringu v\u00f5i stseeni k\u00e4ivitamiseks.",
@@ -55,18 +54,9 @@
                 "description": "Kaasatakse k\u00f5ik olemid {domains}, v\u00e4lja arvatud juhul, kui valitud on konkreetsed olemid.",
                 "title": "Vali kaasatavad olemid"
             },
-            "include_exclude": {
-                "data": {
-                    "entities": "Olemid",
-                    "mode": "Re\u017eiim"
-                },
-                "description": "Vali kaasatavad olemid. Tarvikute re\u017eiimis on kaasatav ainult \u00fcks olem. Silla re\u017eiimis kaasatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud juhul, kui valitud on kindlad olemid. Silla v\u00e4listamisre\u017eiimis kaasatakse k\u00f5ik domeeni olemid, v\u00e4lja arvatud v\u00e4listatud olemid. Parima kasutuskogemuse jaoks on eraldi HomeKit seadmed iga TV meediumim\u00e4ngija, luku, juhtpuldi ja kaamera jaoks.",
-                "title": "Vali kaasatavd olemid"
-            },
             "init": {
                 "data": {
                     "domains": "Kaasa domeenid",
-                    "include_domains": "Kaasatud domeenid",
                     "include_exclude_mode": "Kaasamise re\u017eiim",
                     "mode": "HomeKiti re\u017eiim"
                 },

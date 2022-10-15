@@ -22,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CAT,
+    CONF_DEV_PATH,
     CONF_DIM_STEPS,
     CONF_FIRMWARE,
     CONF_HOUSECODE,
@@ -121,6 +122,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_X10): vol.All(
                         cv.ensure_list_csv, [CONF_X10_SCHEMA]
                     ),
+                    vol.Optional(CONF_DEV_PATH): cv.string,
                 },
                 extra=vol.ALLOW_EXTRA,
                 required=True,

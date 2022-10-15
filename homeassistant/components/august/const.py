@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from homeassistant.const import Platform
 
-DEFAULT_TIMEOUT = 15
+DEFAULT_TIMEOUT = 25
 
 CONF_ACCESS_TOKEN_CACHE_FILE = "access_token_cache_file"
 CONF_LOGIN_METHOD = "login_method"

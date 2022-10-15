@@ -14,8 +14,7 @@
                     "longitude": "\u7d93\u5ea6",
                     "name": "\u6574\u5408\u540d\u7a31"
                 },
-                "description": "\u6b32\u8a2d\u5b9a AEMET OpenData \u6574\u5408\u3002\u8acb\u81f3 https://opendata.aemet.es/centrodedescargas/altaUsuario \u7522\u751f API \u91d1\u9470",
-                "title": "AEMET OpenData"
+                "description": "\u8acb\u81f3 https://opendata.aemet.es/centrodedescargas/altaUsuario \u4ee5\u7522\u751f API \u91d1\u9470"
             }
         }
     },

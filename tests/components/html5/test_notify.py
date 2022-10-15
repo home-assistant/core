@@ -527,3 +527,46 @@ async def test_send_fcm_without_targets(hass, hass_client):
     assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_5["subscription"]
     # Third mock_call checks the status_code of the response.
     assert mock_wp.mock_calls[2][0] == "().send().status_code.__eq__"
+
+
+async def test_send_fcm_expired(hass, hass_client):
+    """Test that the FCM target is removed when expired."""
+    registrations = {"device": SUBSCRIPTION_5}
+    await mock_client(hass, hass_client, registrations)
+
+    with (
+        patch("homeassistant.components.html5.notify.WebPusher") as mock_wp,
+        patch("homeassistant.components.html5.notify.save_json"),
+    ):
+        mock_wp().send().status_code = 410
+        await hass.services.async_call(
+            "notify",
+            "notify",
+            {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
+            blocking=True,
+        )
+    # "device" should be removed when expired.
+    assert "device" not in registrations
+
+
+async def test_send_fcm_expired_save_fails(hass, hass_client):
+    """Test that the FCM target remains after expiry if save_json fails."""
+    registrations = {"device": SUBSCRIPTION_5}
+    await mock_client(hass, hass_client, registrations)
+
+    with (
+        patch("homeassistant.components.html5.notify.WebPusher") as mock_wp,
+        patch(
+            "homeassistant.components.html5.notify.save_json",
+            side_effect=HomeAssistantError(),
+        ),
+    ):
+        mock_wp().send().status_code = 410
+        await hass.services.async_call(
+            "notify",
+            "notify",
+            {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
+            blocking=True,
+        )
+    # "device" should still exist if save fails.
+    assert "device" in registrations

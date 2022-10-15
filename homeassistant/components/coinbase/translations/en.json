@@ -14,21 +14,23 @@
             "user": {
                 "data": {
                     "api_key": "API Key",
-                    "api_token": "API Secret",
-                    "currencies": "Account Balance Currencies",
-                    "exchange_rates": "Exchange Rates"
+                    "api_token": "API Secret"
                 },
                 "description": "Please enter the details of your API key as provided by Coinbase.",
                 "title": "Coinbase API Key Details"
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "Configuring Coinbase using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Coinbase YAML configuration has been removed"
+        }
+    },
     "options": {
         "error": {
             "currency_unavailable": "One or more of the requested currency balances is not provided by your Coinbase API.",
-            "currency_unavaliable": "One or more of the requested currency balances is not provided by your Coinbase API.",
             "exchange_rate_unavailable": "One or more of the requested exchange rates is not provided by Coinbase.",
-            "exchange_rate_unavaliable": "One or more of the requested exchange rates is not provided by Coinbase.",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -36,7 +38,8 @@
                 "data": {
                     "account_balance_currencies": "Wallet balances to report.",
                     "exchange_base": "Base currency for exchange rate sensors.",
-                    "exchange_rate_currencies": "Exchange rates to report."
+                    "exchange_rate_currencies": "Exchange rates to report.",
+                    "exchnage_rate_precision": "Number of decimal places for exchange rates."
                 },
                 "description": "Adjust Coinbase Options"
             }

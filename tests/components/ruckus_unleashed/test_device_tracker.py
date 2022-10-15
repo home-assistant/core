@@ -5,10 +5,10 @@ from unittest.mock import patch
 from homeassistant.components.ruckus_unleashed import API_MAC, DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import utcnow
 
-from tests.common import async_fire_time_changed
-from tests.components.ruckus_unleashed import (
+from . import (
     DEFAULT_AP_INFO,
     DEFAULT_SYSTEM_INFO,
     DEFAULT_TITLE,
@@ -18,6 +18,8 @@ from tests.components.ruckus_unleashed import (
     init_integration,
     mock_config_entry,
 )
+
+from tests.common import async_fire_time_changed
 
 
 async def test_client_connected(hass):
@@ -33,7 +35,7 @@ async def test_client_connected(hass):
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        await hass.helpers.entity_component.async_update_entity(TEST_CLIENT_ENTITY_ID)
+        await async_update_entity(hass, TEST_CLIENT_ENTITY_ID)
 
     test_client = hass.states.get(TEST_CLIENT_ENTITY_ID)
     assert test_client.state == STATE_HOME
@@ -51,7 +53,7 @@ async def test_client_disconnected(hass):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(TEST_CLIENT_ENTITY_ID)
+        await async_update_entity(hass, TEST_CLIENT_ENTITY_ID)
         test_client = hass.states.get(TEST_CLIENT_ENTITY_ID)
         assert test_client.state == STATE_NOT_HOME
 
@@ -68,7 +70,7 @@ async def test_clients_update_failed(hass):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        await hass.helpers.entity_component.async_update_entity(TEST_CLIENT_ENTITY_ID)
+        await async_update_entity(hass, TEST_CLIENT_ENTITY_ID)
         test_client = hass.states.get(TEST_CLIENT_ENTITY_ID)
         assert test_client.state == STATE_UNAVAILABLE
 

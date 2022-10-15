@@ -4,7 +4,6 @@
             "already_configured": "Enheten er allerede konfigurert",
             "alternative_integration": "Enheten st\u00f8ttes bedre av en annen integrasjon",
             "cannot_connect": "Tilkobling mislyktes",
-            "could_not_connect": "Kunne ikke koble til DLNA -enhet",
             "discovery_error": "Kunne ikke finne en matchende DLNA -enhet",
             "incomplete_config": "Konfigurasjonen mangler en n\u00f8dvendig variabel",
             "non_unique_id": "Flere enheter ble funnet med samme unike ID",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "could_not_connect": "Kunne ikke koble til DLNA -enhet",
             "not_dmr": "Enheten er ikke en st\u00f8ttet Digital Media Renderer"
         },
         "flow_title": "{name}",
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Vert",
-                    "url": "URL"
+                    "host": "Vert"
                 },
                 "description": "Velg en enhet du vil konfigurere, eller la den st\u00e5 tom for \u00e5 angi en URL",
                 "title": "Oppdaget DLNA DMR -enheter"
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Vis inkompatible medier n\u00e5r du surfer",
                     "callback_url_override": "URL for tilbakeringing av hendelseslytter",
                     "listen_port": "Hendelseslytterport (tilfeldig hvis den ikke er angitt)",
                     "poll_availability": "Avstemning for tilgjengelighet av enheter"

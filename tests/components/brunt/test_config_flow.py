@@ -35,58 +35,10 @@ async def test_form(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
     assert result2["data"] == CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import(hass):
-    """Test we get the form."""
-
-    with patch(
-        "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.brunt.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=CONFIG
-        )
-
-        await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test-username"
-    assert result["data"] == CONFIG
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_duplicate_login(hass):
-    """Test uniqueness of username."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG,
-        title="test-username",
-        unique_id="test-username",
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.brunt.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=CONFIG
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
 
 
 async def test_form_duplicate_login(hass):
@@ -105,7 +57,7 @@ async def test_form_duplicate_login(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -128,17 +80,17 @@ async def test_form_error(hass, side_effect, error_message):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=CONFIG
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": error_message}
 
 
 @pytest.mark.parametrize(
     "side_effect, result_type, password, step_id, reason",
     [
-        (None, data_entry_flow.RESULT_TYPE_ABORT, "test", None, "reauth_successful"),
+        (None, data_entry_flow.FlowResultType.ABORT, "test", None, "reauth_successful"),
         (
             Exception,
-            data_entry_flow.RESULT_TYPE_FORM,
+            data_entry_flow.FlowResultType.FORM,
             CONFIG[CONF_PASSWORD],
             "reauth_confirm",
             None,
@@ -163,7 +115,7 @@ async def test_reauth(hass, side_effect, result_type, password, step_id, reason)
         },
         data=None,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     with patch(
         "homeassistant.components.brunt.config_flow.BruntClientAsync.async_login",

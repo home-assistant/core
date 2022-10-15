@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "account_locked": "Account vergrendeld. Probeer het later nog eens.",
@@ -17,10 +17,8 @@
                     "password": "Wachtwoord",
                     "region": "Regio"
                 },
-                "description": "Voer het e-mailadres en wachtwoord in dat u gebruikt om in te loggen op de MyMazda mobiele app.",
-                "title": "Mazda Connected Services - Account toevoegen"
+                "description": "Voer het e-mailadres en wachtwoord in dat u gebruikt om in te loggen op de MyMazda mobiele app."
             }
         }
-    },
-    "title": "Mazda Connected Services"
+    }
 }

@@ -15,7 +15,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 async def test_entry_diagnostics(hass, hass_client):
     """Test config entry diagnostics."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_API_KEY: "", "location": ""}
+        domain=DOMAIN, data={CONF_API_KEY: "api_key", "location": ""}
     )
     config_entry.add_to_hass(hass)
     with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD):

@@ -6,7 +6,8 @@
         },
         "error": {
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "unknown": "Unerwarteter Fehler"
+            "unknown": "Unerwarteter Fehler",
+            "unknown_mfa": "Beim MFA-Setup ist ein unbekannter Fehler aufgetreten"
         },
         "step": {
             "installation": {
@@ -15,11 +16,23 @@
                 },
                 "description": "Home Assistant hat mehrere Verisure-Installationen in deinen My Pages-Konto gefunden. Bitte w\u00e4hle die Installation aus, die du zu Home Assistant hinzuf\u00fcgen m\u00f6chtest."
             },
+            "mfa": {
+                "data": {
+                    "code": "Verifizierungs-Code",
+                    "description": "Dein Konto hat die 2-Schritt-Verifizierung aktiviert. Bitte gib den Verifizierungscode ein, den du von Verisure erhalten hast."
+                }
+            },
             "reauth_confirm": {
                 "data": {
                     "description": "Authentifiziere dich erneut mit deinem Verisure My Pages-Konto.",
                     "email": "E-Mail",
                     "password": "Passwort"
+                }
+            },
+            "reauth_mfa": {
+                "data": {
+                    "code": "Verifizierungs-Code",
+                    "description": "Dein Konto hat die 2-Schritt-Verifizierung aktiviert. Bitte gib den Verifizierungscode ein, den du von Verisure erhalten hast."
                 }
             },
             "user": {

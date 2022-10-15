@@ -10,8 +10,7 @@
                 "data": {
                     "show_on_map": "Op der Kaart uweisen",
                     "station_id": "Luftdaten Sensor ID"
-                },
-                "title": "Luftdaten d\u00e9fin\u00e9ieren"
+                }
             }
         }
     }

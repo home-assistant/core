@@ -13,11 +13,16 @@ from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import GroupAddress, IndividualAddress
 from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.components.knx import ConnectionSchema
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
     CONF_KNX_CONNECTION_TYPE,
+    CONF_KNX_DEFAULT_RATE_LIMIT,
+    CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_INDIVIDUAL_ADDRESS,
+    CONF_KNX_MCAST_GRP,
+    CONF_KNX_MCAST_PORT,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_STATE_UPDATER,
     DOMAIN as KNX_DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -50,19 +55,28 @@ class KNXTestKit:
     async def setup_integration(self, config):
         """Create the KNX integration."""
 
+        async def patch_xknx_start():
+            """Patch `xknx.start` for unittests."""
+            # after XKNX.__init__() to not overwrite it by the config entry again
+            # before StateUpdater starts to avoid slow down of tests
+            self.xknx.rate_limit = 0
+            # set XknxConnectionState.CONNECTED to avoid `unavailable` entities at startup
+            # and start StateUpdater. This would be awaited on normal startup too.
+            await self.xknx.connection_manager.connection_state_changed(
+                XknxConnectionState.CONNECTED
+            )
+
         def knx_ip_interface_mock():
             """Create a xknx knx ip interface mock."""
             mock = Mock()
-            mock.start = AsyncMock()
+            mock.start = AsyncMock(side_effect=patch_xknx_start)
             mock.stop = AsyncMock()
             mock.send_telegram = AsyncMock(side_effect=self._outgoing_telegrams.put)
             return mock
 
         def fish_xknx(*args, **kwargs):
             """Get the XKNX object from the constructor call."""
-            self.xknx = kwargs["xknx"]
-            # disable rate limiter for tests (before StateUpdater starts)
-            self.xknx.rate_limit = 0
+            self.xknx = args[0]
             return DEFAULT
 
         with patch(
@@ -72,9 +86,6 @@ class KNXTestKit:
         ):
             self.mock_config_entry.add_to_hass(self.hass)
             await async_setup_component(self.hass, KNX_DOMAIN, {KNX_DOMAIN: config})
-            await self.xknx.connection_manager.connection_state_changed(
-                XknxConnectionState.CONNECTED
-            )
             await self.hass.async_block_till_done()
 
     ########################
@@ -208,10 +219,12 @@ def mock_config_entry() -> MockConfigEntry:
         title="KNX",
         domain=KNX_DOMAIN,
         data={
-            CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
-            ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
-            ConnectionSchema.CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
+            CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
+            CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
+            CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
+            CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
+            CONF_KNX_INDIVIDUAL_ADDRESS: XKNX.DEFAULT_ADDRESS,
         },
     )
 

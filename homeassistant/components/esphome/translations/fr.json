@@ -9,7 +9,7 @@
             "connection_error": "Impossible de se connecter \u00e0 ESP. Assurez-vous que votre fichier YAML contient une ligne 'api:'.",
             "invalid_auth": "Authentification non valide",
             "invalid_psk": "La cl\u00e9 de chiffrement de transport n\u2019est pas valide. Assurez-vous qu\u2019elle correspond \u00e0 ce que vous avez dans votre configuration",
-            "resolve_error": "Impossible de r\u00e9soudre l'adresse de l'ESP. Si cette erreur persiste, veuillez d\u00e9finir une adresse IP statique: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+            "resolve_error": "Impossible de r\u00e9soudre l'adresse de l'ESP. Si cette erreur persiste, essayez de d\u00e9finir une adresse IP statique"
         },
         "flow_title": "{name}",
         "step": {
@@ -40,7 +40,7 @@
                     "host": "H\u00f4te",
                     "port": "Port"
                 },
-                "description": "Veuillez saisir les param\u00e8tres de connexion de votre n\u0153ud [ESPHome] (https://esphomelib.com/)."
+                "description": "Veuillez saisir les param\u00e8tres de connexion de votre n\u0153ud [ESPHome]({esphome_url})."
             }
         }
     }

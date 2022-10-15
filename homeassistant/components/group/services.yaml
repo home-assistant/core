@@ -25,7 +25,7 @@ set:
       description: Name of icon for the group.
       example: "mdi:camera"
       selector:
-        text:
+        icon:
     entities:
       name: Entities
       description: List of all members in the group. Not compatible with 'delta'.

@@ -23,7 +23,7 @@
                     "host": "Nazwa hosta lub adres IP"
                 },
                 "description": "Wprowad\u017a adres IP urz\u0105dzenia",
-                "title": "Po\u0142\u0105cz si\u0119 automatycznie z mostkiem"
+                "title": "Automatyczne po\u0142\u0105czenie z mostkiem"
             }
         }
     },
@@ -33,6 +33,9 @@
             "button_2": "drugi",
             "button_3": "trzeci",
             "button_4": "czwarty",
+            "button_5": "pi\u0105ty",
+            "button_6": "sz\u00f3sty",
+            "button_7": "si\u00f3dmy",
             "close_1": "zamknij 1",
             "close_2": "zamknij 2",
             "close_3": "zamknij 3",
