@@ -23,6 +23,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
     __version__,
 )
 from homeassistant.core import ConfigSource, HomeAssistant, HomeAssistantError
@@ -31,8 +33,6 @@ import homeassistant.helpers.check_config as check_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import async_get_integration
 from homeassistant.util.unit_system import (
-    _CONF_UNIT_SYSTEM_IMPERIAL,
-    _CONF_UNIT_SYSTEM_METRIC,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -225,7 +225,7 @@ def test_core_config_schema():
             "longitude": "123.45",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
-            CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_METRIC,
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             "currency": "USD",
             "customize": {"sensor.temperature": {"hidden": True}},
         }
@@ -405,7 +405,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.longitude == 13
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
-    assert hass.config.units.name == _CONF_UNIT_SYSTEM_METRIC
+    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
@@ -437,7 +437,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert hass.config.longitude == 13
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
-    assert hass.config.units.name == _CONF_UNIT_SYSTEM_METRIC
+    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
@@ -499,7 +499,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.longitude == 13
     assert hass.config.elevation == 10
     assert hass.config.location_name == "Home"
-    assert hass.config.units.name == _CONF_UNIT_SYSTEM_METRIC
+    assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone == "Europe/Copenhagen"
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
@@ -515,7 +515,7 @@ async def test_loading_configuration(hass):
             "longitude": 50,
             "elevation": 25,
             "name": "Huis",
-            CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_IMPERIAL,
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             "time_zone": "America/New_York",
             "allowlist_external_dirs": "/etc",
             "external_url": "https://www.example.com",
@@ -530,7 +530,7 @@ async def test_loading_configuration(hass):
     assert hass.config.longitude == 50
     assert hass.config.elevation == 25
     assert hass.config.location_name == "Huis"
-    assert hass.config.units.name == _CONF_UNIT_SYSTEM_IMPERIAL
+    assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
     assert hass.config.time_zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
@@ -568,7 +568,7 @@ async def test_loading_configuration_from_packages(hass):
             "longitude": -1,
             "elevation": 500,
             "name": "Huis",
-            CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_METRIC,
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             "time_zone": "Europe/Madrid",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
@@ -592,7 +592,7 @@ async def test_loading_configuration_from_packages(hass):
                 "longitude": -1,
                 "elevation": 500,
                 "name": "Huis",
-                CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_METRIC,
+                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
                 "time_zone": "Europe/Madrid",
                 "packages": {"empty_package": None},
             },
@@ -602,8 +602,8 @@ async def test_loading_configuration_from_packages(hass):
 @pytest.mark.parametrize(
     "unit_system_name, expected_unit_system",
     [
-        (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
-        (_CONF_UNIT_SYSTEM_IMPERIAL, US_CUSTOMARY_SYSTEM),
+        (CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
+        (CONF_UNIT_SYSTEM_IMPERIAL, US_CUSTOMARY_SYSTEM),
         (_CONF_UNIT_SYSTEM_US_CUSTOMARY, US_CUSTOMARY_SYSTEM),
     ],
 )
@@ -877,7 +877,7 @@ async def test_merge_customize(hass):
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         "time_zone": "GMT",
         "customize": {"a.a": {"friendly_name": "A"}},
         "packages": {
@@ -896,7 +896,7 @@ async def test_auth_provider_config(hass):
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [
             {"type": "homeassistant"},
@@ -923,7 +923,7 @@ async def test_auth_provider_config_default(hass):
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         "time_zone": "GMT",
     }
     if hasattr(hass, "auth"):
@@ -943,7 +943,7 @@ async def test_disallowed_auth_provider_config(hass):
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [
             {
@@ -969,7 +969,7 @@ async def test_disallowed_duplicated_auth_provider_config(hass):
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [{"type": "homeassistant"}, {"type": "homeassistant"}],
     }
@@ -984,7 +984,7 @@ async def test_disallowed_auth_mfa_module_config(hass):
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         "time_zone": "GMT",
         CONF_AUTH_MFA_MODULES: [
             {
@@ -1004,7 +1004,7 @@ async def test_disallowed_duplicated_auth_mfa_module_config(hass):
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: _CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         "time_zone": "GMT",
         CONF_AUTH_MFA_MODULES: [{"type": "totp"}, {"type": "totp"}],
     }
