@@ -116,7 +116,7 @@ async def test_diagnostics(
                     "timings": {},
                 },
                 "connectable_history": [],
-                "non_connectable_history": [],
+                "all_history": [],
                 "scanners": [
                     {
                         "adapter": "hci0",
@@ -239,7 +239,30 @@ async def test_diagnostics_macos(
                         "time": ANY,
                     }
                 ],
-                "non_connectable_history": [],
+                "all_history": [
+                    {
+                        "address": "44:44:33:11:23:45",
+                        "advertisement": [
+                            "wohand",
+                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {},
+                            [],
+                            -127,
+                            -127,
+                            [[]],
+                        ],
+                        "connectable": True,
+                        "manufacturer_data": {
+                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                        },
+                        "name": "wohand",
+                        "rssi": -127,
+                        "service_data": {},
+                        "service_uuids": [],
+                        "source": "local",
+                        "time": ANY,
+                    }
+                ],
                 "scanners": [
                     {
                         "adapter": "Core Bluetooth",
