@@ -90,7 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    print("update listener")
     data = hass.data[DOMAIN][entry.entry_id]
     data.device.gatherdata()
     print(data.device.result)
