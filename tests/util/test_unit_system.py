@@ -352,7 +352,7 @@ def test_deprecated_name(
     "key, expected_system",
     [
         (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
-        (_CONF_UNIT_SYSTEM_IMPERIAL, IMPERIAL_SYSTEM),
+        (_CONF_UNIT_SYSTEM_US_CUSTOMARY, US_CUSTOMARY_SYSTEM),
     ],
 )
 def test_get_unit_system(key: str, expected_system: UnitSystem) -> None:
@@ -360,7 +360,9 @@ def test_get_unit_system(key: str, expected_system: UnitSystem) -> None:
     assert get_unit_system(key) is expected_system
 
 
-@pytest.mark.parametrize("key", [None, "", "invalid_custom"])
+@pytest.mark.parametrize(
+    "key", [None, "", "invalid_custom", _CONF_UNIT_SYSTEM_IMPERIAL]
+)
 def test_get_unit_system_invalid(key: str) -> None:
     """Test get_unit_system with an invalid key."""
     with pytest.raises(ValueError, match=f"`{key}` is not a valid unit system key"):

@@ -81,7 +81,13 @@ from .util.async_ import (
 )
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
-from .util.unit_system import METRIC_SYSTEM, UnitSystem, get_unit_system
+from .util.unit_system import (
+    _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+    METRIC_SYSTEM,
+    UnitSystem,
+    get_unit_system,
+)
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -2041,7 +2047,10 @@ class Config:
             data = old_data
             if old_major_version == 1 and old_minor_version < 2:
                 # Version 1.1 moves unit_system to unit_system_key
+                # and deprecates "imperial" unit system
                 data["unit_system_key"] = data.get("unit_system")
+                if data["unit_system_key"] == _CONF_UNIT_SYSTEM_IMPERIAL:
+                    data["unit_system_key"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
             if old_major_version > 1:
                 raise NotImplementedError
             return data
