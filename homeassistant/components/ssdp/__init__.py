@@ -695,7 +695,7 @@ class Server:
         HassUpnpServiceDevice.DEVICE_DEFINITION = (
             HassUpnpServiceDevice.DEVICE_DEFINITION._replace(
                 udn=udn,
-                friendly_name=f"Home Assistant - {self.hass.config.location_name}",
+                friendly_name=f"{self.hass.config.location_name} (Home Assistant)",
                 model_name=model_name,
                 presentation_url=presentation_url,
                 serial_number=serial_number,
