@@ -62,15 +62,12 @@ def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> s
 @callback
 def async_get_client_wrapper_by_device_entry(
     hass: HomeAssistant, device: DeviceEntry
-) -> WebOsClientWrapper | None:
+) -> WebOsClientWrapper:
     """
     Get WebOsClientWrapper from Device Registry by device entry.
 
     Raises ValueError if client wrapper is not found.
     """
-    if DOMAIN not in hass.data:
-        return None
-
     for config_entry_id in device.config_entries:
         wrapper: WebOsClientWrapper | None
         if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry_id):
