@@ -107,6 +107,7 @@ CALLBACK_TYPE = Callable[[], None]  # pylint: disable=invalid-name
 
 CORE_STORAGE_KEY = "core.config"
 CORE_STORAGE_VERSION = 1
+CORE_STORAGE_MINOR_VERSION = 2
 
 DOMAIN = "homeassistant"
 
@@ -1986,7 +1987,7 @@ class Config:
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),
             elevation=data.get("elevation"),
-            unit_system=data.get("unit_system"),
+            unit_system=data.get("unit_system_key"),
             location_name=data.get("location_name"),
             time_zone=data.get("time_zone"),
             external_url=data.get("external_url", _UNDEF),
@@ -2002,7 +2003,7 @@ class Config:
             "elevation": self.elevation,
             # We don't want any integrations to use the name of the unit system
             # so we are using the private attribute here
-            "unit_system": self.units._name,  # pylint: disable=protected-access
+            "unit_system_key": self.units._name,  # pylint: disable=protected-access
             "location_name": self.location_name,
             "time_zone": self.time_zone,
             "external_url": self.external_url,
@@ -2027,4 +2028,20 @@ class Config:
                 CORE_STORAGE_KEY,
                 private=True,
                 atomic_writes=True,
+                minor_version=CORE_STORAGE_MINOR_VERSION,
             )
+
+        async def _async_migrate_func(
+            self,
+            old_major_version: int,
+            old_minor_version: int,
+            old_data: dict[str, Any],
+        ) -> dict[str, Any]:
+            """Migrate to the new version."""
+            data = old_data
+            if old_major_version == 1 and old_minor_version < 2:
+                # Version 1.1 moves unit_system to unit_system_key
+                data["unit_system_key"] = data.get("unit_system")
+            if old_major_version > 1:
+                raise NotImplementedError
+            return data
