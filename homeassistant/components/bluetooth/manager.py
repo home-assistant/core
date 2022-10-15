@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 import itertools
 import logging
+import time
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
@@ -20,11 +21,12 @@ from homeassistant.core import (
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 
+from .advertisement_tracker import AdvertisementTracker
 from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     NO_RSSI_VALUE,
-    STALE_ADVERTISEMENT_SECONDS,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
 )
@@ -66,47 +68,9 @@ APPLE_START_BYTES_WANTED: Final = {
 
 RSSI_SWITCH_THRESHOLD = 6
 
+MONOTONIC_TIME: Final = time.monotonic
+
 _LOGGER = logging.getLogger(__name__)
-
-
-def _prefer_previous_adv(
-    old: BluetoothServiceInfoBleak, new: BluetoothServiceInfoBleak
-) -> bool:
-    """Prefer previous advertisement if it is better."""
-    if new.time - old.time > STALE_ADVERTISEMENT_SECONDS:
-        # If the old advertisement is stale, any new advertisement is preferred
-        if new.source != old.source:
-            _LOGGER.debug(
-                "%s (%s): Switching from %s[%s] to %s[%s] (time elapsed:%s > stale seconds:%s)",
-                new.advertisement.local_name,
-                new.device.address,
-                old.source,
-                old.connectable,
-                new.source,
-                new.connectable,
-                new.time - old.time,
-                STALE_ADVERTISEMENT_SECONDS,
-            )
-        return False
-    if new.device.rssi - RSSI_SWITCH_THRESHOLD > (old.device.rssi or NO_RSSI_VALUE):
-        # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
-        if new.source != old.source:
-            _LOGGER.debug(
-                "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
-                new.advertisement.local_name,
-                new.device.address,
-                old.source,
-                old.connectable,
-                new.source,
-                new.connectable,
-                new.device.rssi,
-                RSSI_SWITCH_THRESHOLD,
-                old.device.rssi,
-            )
-        return False
-    # If the source is the different, the old one is preferred because its
-    # not stale and its RSSI_SWITCH_THRESHOLD less than the new one
-    return old.source != new.source
 
 
 def _dispatch_bleak_callback(
@@ -142,13 +106,17 @@ class BluetoothManager:
         """Init bluetooth manager."""
         self.hass = hass
         self._integration_matcher = integration_matcher
-        self._cancel_unavailable_tracking: list[CALLBACK_TYPE] = []
+        self._cancel_unavailable_tracking: CALLBACK_TYPE | None = None
+
+        self._advertisement_tracker = AdvertisementTracker()
+
         self._unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
         ] = {}
         self._connectable_unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
         ] = {}
+
         self._callback_index = BluetoothCallbackMatcherIndex()
         self._bleak_callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
@@ -190,6 +158,7 @@ class BluetoothManager:
             "history": [
                 service_info.as_dict() for service_info in self._history.values()
             ],
+            "advertisement_tracker": self._advertisement_tracker.async_diagnostics(),
         }
 
     def _find_adapter_by_address(self, address: str) -> str | None:
@@ -229,9 +198,8 @@ class BluetoothManager:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
         if self._cancel_unavailable_tracking:
-            for cancel in self._cancel_unavailable_tracking:
-                cancel()
-            self._cancel_unavailable_tracking.clear()
+            self._cancel_unavailable_tracking()
+            self._cancel_unavailable_tracking = None
         uninstall_multiple_bleak_catcher()
 
     async def async_get_devices_by_address(
@@ -274,18 +242,24 @@ class BluetoothManager:
     @hass_callback
     def async_setup_unavailable_tracking(self) -> None:
         """Set up the unavailable tracking."""
-        self._async_setup_unavailable_tracking(True)
-        self._async_setup_unavailable_tracking(False)
+        self._cancel_unavailable_tracking = async_track_time_interval(
+            self.hass,
+            self._async_check_unavailable,
+            timedelta(seconds=UNAVAILABLE_TRACK_SECONDS),
+        )
 
     @hass_callback
-    def _async_setup_unavailable_tracking(self, connectable: bool) -> None:
-        """Set up the unavailable tracking."""
-        unavailable_callbacks = self._get_unavailable_callbacks_by_type(connectable)
-        history = self._get_history_by_type(connectable)
+    def _async_check_unavailable(self, now: datetime) -> None:
+        """Watch for unavailable devices and cleanup state history."""
+        monotonic_now = MONOTONIC_TIME()
+        connectable_history = self._connectable_history
+        all_history = self._history
+        removed_addresses: set[str] = set()
 
-        @hass_callback
-        def _async_check_unavailable(now: datetime) -> None:
-            """Watch for unavailable devices."""
+        for connectable in (True, False):
+            unavailable_callbacks = self._get_unavailable_callbacks_by_type(connectable)
+            intervals = self._advertisement_tracker.intervals
+            history = connectable_history if connectable else all_history
             history_set = set(history)
             active_addresses = {
                 device.address
@@ -293,35 +267,79 @@ class BluetoothManager:
             }
             disappeared = history_set.difference(active_addresses)
             for address in disappeared:
+                #
+                # For non-connectable devices we also check the device has exceeded
+                # the advertising interval before we mark it as unavailable
+                # since it may have gone to sleep and since we do not need an active connection
+                # to it we can only determine its availability by the lack of advertisements
+                #
+                if not connectable and (advertising_interval := intervals.get(address)):
+                    time_since_seen = monotonic_now - history[address].time
+                    if time_since_seen <= advertising_interval:
+                        continue
+
                 service_info = history.pop(address)
+                removed_addresses.add(address)
+
                 if not (callbacks := unavailable_callbacks.get(address)):
                     continue
+
                 for callback in callbacks:
                     try:
                         callback(service_info)
                     except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception("Error in unavailable callback")
 
-        self._cancel_unavailable_tracking.append(
-            async_track_time_interval(
-                self.hass,
-                _async_check_unavailable,
-                timedelta(seconds=UNAVAILABLE_TRACK_SECONDS),
+        # If we removed the device from both the connectable history
+        # and all history then we can remove it from the advertisement tracker
+        for address in removed_addresses:
+            if address not in connectable_history and address not in all_history:
+                self._advertisement_tracker.async_remove_address(address)
+
+    def _prefer_previous_adv_from_different_source(
+        self, old: BluetoothServiceInfoBleak, new: BluetoothServiceInfoBleak
+    ) -> bool:
+        """Prefer previous advertisement from a different source if it is better."""
+        if new.time - old.time > (
+            stale_seconds := self._advertisement_tracker.intervals.get(
+                new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
             )
-        )
+        ):
+            # If the old advertisement is stale, any new advertisement is preferred
+            _LOGGER.debug(
+                "%s (%s): Switching from %s[%s] to %s[%s] (time elapsed:%s > stale seconds:%s)",
+                new.advertisement.local_name,
+                new.device.address,
+                old.source,
+                old.connectable,
+                new.source,
+                new.connectable,
+                new.time - old.time,
+                stale_seconds,
+            )
+            return False
+        if new.device.rssi - RSSI_SWITCH_THRESHOLD > (old.device.rssi or NO_RSSI_VALUE):
+            # If new advertisement is RSSI_SWITCH_THRESHOLD more, the new one is preferred
+            _LOGGER.debug(
+                "%s (%s): Switching from %s[%s] to %s[%s] (new rssi:%s - threshold:%s > old rssi:%s)",
+                new.advertisement.local_name,
+                new.device.address,
+                old.source,
+                old.connectable,
+                new.source,
+                new.connectable,
+                new.device.rssi,
+                RSSI_SWITCH_THRESHOLD,
+                old.device.rssi,
+            )
+            return False
+        return True
 
     @hass_callback
     def scanner_adv_received(self, service_info: BluetoothServiceInfoBleak) -> None:
         """Handle a new advertisement from any scanner.
 
         Callbacks from all the scanners arrive here.
-
-        In the future we will only process callbacks if
-
-        - The device is not in the history
-        - The RSSI is above a certain threshold better than
-          than the source from the history or the timestamp
-          in the history is older than 180s
         """
 
         # Pre-filter noisy apple devices as they can account for 20-35% of the
@@ -340,8 +358,14 @@ class BluetoothManager:
         connectable = service_info.connectable
         address = device.address
         all_history = self._connectable_history if connectable else self._history
-        old_service_info = all_history.get(address)
-        if old_service_info and _prefer_previous_adv(old_service_info, service_info):
+        source = service_info.source
+        if (
+            (old_service_info := all_history.get(address))
+            and source != old_service_info.source
+            and self._prefer_previous_adv_from_different_source(
+                old_service_info, service_info
+            )
+        ):
             return
 
         self._history[address] = service_info
@@ -349,6 +373,15 @@ class BluetoothManager:
         if connectable:
             self._connectable_history[address] = service_info
             # Bleak callbacks must get a connectable device
+
+        # Track advertisement intervals to determine when we need to
+        # switch adapters or mark a device as unavailable
+        tracker = self._advertisement_tracker
+        if (last_source := tracker.sources.get(address)) and last_source != source:
+            # Source changed, remove the old address from the tracker
+            tracker.async_remove_address(address)
+        if address not in tracker.intervals:
+            tracker.async_collect(service_info)
 
         # If the advertisement data is the same as the last time we saw it, we
         # don't need to do anything else.
@@ -360,7 +393,6 @@ class BluetoothManager:
         ):
             return
 
-        source = service_info.source
         if connectable:
             # Bleak callbacks must get a connectable device
             for callback_filters in self._bleak_callbacks:
@@ -515,6 +547,7 @@ class BluetoothManager:
         scanners = self._get_scanners_by_type(connectable)
 
         def _unregister_scanner() -> None:
+            self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
 
         scanners.append(scanner)

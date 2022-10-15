@@ -206,7 +206,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         """Set the hvac run mode."""
         if run_mode is not None:
             if run_mode == HOLD_PERMANENT:
-                await self._zone.call_permanent_hold()
+                await self._zone.set_permanent_hold()
             else:
                 await self._zone.call_return_to_schedule()
         if hvac_mode is not None:
@@ -399,7 +399,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             await self._zone.call_return_to_schedule()
             await self._zone.set_mode(mode=OPERATION_MODE_AUTO)
         else:
-            await self._zone.call_permanent_hold()
+            await self._zone.set_permanent_hold()
             await self._zone.set_mode(mode=HA_TO_NEXIA_HVAC_MODE_MAP[hvac_mode])
 
         self._signal_zone_update()

@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 HAS_SUPPORTED_BRANDS = [
     "denonavr",
+    "gree",
     "hunterdouglas_powerview",
     "inkbird",
     "motion_blinds",
@@ -15,5 +16,6 @@ HAS_SUPPORTED_BRANDS = [
     "thermobeacon",
     "upb",
     "wemo",
+    "xiaomi_miio",
     "yalexs_ble",
 ]

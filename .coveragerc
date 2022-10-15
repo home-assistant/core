@@ -612,7 +612,6 @@ omit =
     homeassistant/components/izone/__init__.py
     homeassistant/components/izone/climate.py
     homeassistant/components/izone/discovery.py
-    homeassistant/components/jellyfin/__init__.py
     homeassistant/components/jellyfin/media_source.py
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/__init__.py
@@ -657,7 +656,6 @@ omit =
     homeassistant/components/kostal_plenticore/switch.py
     homeassistant/components/kwb/sensor.py
     homeassistant/components/lacrosse/sensor.py
-    homeassistant/components/lametric/notify.py
     homeassistant/components/lannouncer/notify.py
     homeassistant/components/lastfm/sensor.py
     homeassistant/components/launch_library/__init__.py
@@ -1105,7 +1103,6 @@ omit =
     homeassistant/components/shelly/climate.py
     homeassistant/components/shelly/coordinator.py
     homeassistant/components/shelly/entity.py
-    homeassistant/components/shelly/light.py
     homeassistant/components/shelly/number.py
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/utils.py
@@ -1161,6 +1158,7 @@ omit =
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/*
     homeassistant/components/snmp/*
+    homeassistant/components/snooz/__init__.py
     homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/coordinator.py
     homeassistant/components/solaredge/sensor.py

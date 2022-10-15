@@ -45,6 +45,13 @@
                     "verify_ssl": "Verifiera SSL-certifikat"
                 },
                 "description": "Skriv in inst\u00e4llningarna f\u00f6r att ansluta till kameran."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Bilden ser bra ut."
+                },
+                "description": "![F\u00f6rhandsvisning stillbild]({preview_url})",
+                "title": "F\u00f6rhandsvisning"
             }
         }
     },
