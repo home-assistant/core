@@ -17,7 +17,6 @@ from bleak.backends.bluezdbus.advertisement_monitor import OrPattern
 from bleak.backends.bluezdbus.scanner import BlueZScannerArgs
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
-from bleak_retry_connector import get_device_by_adapter
 from dbus_fast import InvalidMessageError
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
@@ -144,21 +143,18 @@ class HaScanner(BaseHaScanner):
         """Return a list of discovered devices."""
         return self.scanner.discovered_devices
 
+    @property
+    def discovered_devices_and_advertisement_data(
+        self,
+    ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
+        """Return a list of discovered devices and advertisement data."""
+        return self.scanner.discovered_devices_and_advertisement_data
+
     @hass_callback
     def async_setup(self) -> None:
         """Set up the scanner."""
         self.scanner = create_bleak_scanner(
             self._async_detection_callback, self.mode, self.adapter
-        )
-
-    async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
-        """Get a device by address."""
-        if platform.system() == "Linux":
-            return await get_device_by_adapter(address, self.adapter)
-        # We don't have a fast version of this for MacOS yet
-        return next(
-            (device for device in self.discovered_devices if device.address == address),
-            None,
         )
 
     async def async_diagnostics(self) -> dict[str, Any]:
