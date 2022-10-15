@@ -39,5 +39,11 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "turn_on": "{entity_name} was requested to turn on",
+      "turn_off": "{entity_name} was requested to turn off"
+    }
   }
 }

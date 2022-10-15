@@ -30,7 +30,13 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_component
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -48,6 +54,8 @@ from .const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_NAME,
     DOMAIN,
+    EVENT_TURN_OFF,
+    EVENT_TURN_ON,
     LOGGER,
 )
 
@@ -61,6 +69,7 @@ SUPPORT_SAMSUNGTV = (
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
 )
@@ -355,16 +364,12 @@ class SamsungTVDevice(MediaPlayerEntity):
         """Return the availability of the device."""
         if self._auth_failed:
             return False
-        return (
-            self.state == MediaPlayerState.ON
-            or self._on_script is not None
-            or self._mac is not None
-            or self._power_off_in_progress()
-        )
+        return True
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
+        self.hass.bus.async_fire(EVENT_TURN_OFF, {ATTR_ENTITY_ID: self.entity_id})
         await self._bridge.async_power_off()
 
     async def async_set_volume_level(self, volume: float) -> None:
@@ -446,6 +451,7 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
+        self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
         if self._on_script:
             await self._on_script.async_run(context=self._context)
         elif self._mac:
