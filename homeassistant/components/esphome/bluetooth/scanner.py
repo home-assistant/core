@@ -108,6 +108,7 @@ class ESPHomeScanner(BaseHaScanner):
             address=address,
             name=name,
             details=self._details,
+            rssi=adv.rssi,  # deprecated, will be removed in newer bleak
         )
         self._discovered_device_advertisement_datas[address] = (
             device,
