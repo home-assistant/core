@@ -136,7 +136,7 @@ def async_setup_forwarded(
         # Process X-Forwarded-For from the right side (by reversing the list)
         forwarded_for_split = list(reversed(forwarded_for_headers[0].split(",")))
         try:
-            forwarded_for = [ip_address(addr.strip()) for addr in forwarded_for_split]
+            forwarded_for = [ip_address(addr.strip(" []")) for addr in forwarded_for_split]
         except ValueError as err:
             _LOGGER.error(
                 "Invalid IP address in X-Forwarded-For: %s", forwarded_for_headers[0]
