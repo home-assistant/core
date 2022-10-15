@@ -217,8 +217,8 @@ class UnitSystem:
 
 def get_unit_system(key: str) -> UnitSystem:
     """Get unit system based on key."""
-    if key == _CONF_UNIT_SYSTEM_IMPERIAL:
-        return IMPERIAL_SYSTEM
+    if key == _CONF_UNIT_SYSTEM_US_CUSTOMARY:
+        return US_CUSTOMARY_SYSTEM
     if key == _CONF_UNIT_SYSTEM_METRIC:
         return METRIC_SYSTEM
     raise ValueError(f"`{key}` is not a valid unit system key")
