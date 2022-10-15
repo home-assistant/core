@@ -11,6 +11,9 @@
         },
         "step": {
             "reauth_confirm": {
+                "data": {
+                    "api_key": "API\u30ad\u30fc"
+                },
                 "title": "\u7d71\u5408\u306e\u518d\u8a8d\u8a3c"
             },
             "user": {

@@ -21,7 +21,6 @@ from .const import (
     DEFAULT_COAP_PORT,
     DOMAIN,
     LOGGER,
-    MAX_RPC_KEY_INSTANCES,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
@@ -303,28 +302,12 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
 
-    keys_list: list[str] = []
-    for i in range(MAX_RPC_KEY_INSTANCES):
-        key_inst = f"{key}:{i}"
-        if key_inst not in keys_dict:
-            return keys_list
-
-        keys_list.append(key_inst)
-
-    return keys_list
+    return [k for k in keys_dict if k.startswith(key)]
 
 
 def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     """Return list of key ids for RPC device from a dict."""
-    key_ids: list[int] = []
-    for i in range(MAX_RPC_KEY_INSTANCES):
-        key_inst = f"{key}:{i}"
-        if key_inst not in keys_dict:
-            return key_ids
-
-        key_ids.append(i)
-
-    return key_ids
+    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(key)]
 
 
 def is_rpc_momentary_input(
