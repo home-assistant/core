@@ -33,12 +33,12 @@ def create_mock_device():
     return device
 
 
-def create_mock_entry():
+def create_mock_entry(no_meters=False):
     """Create a mock config entry for a RAVEn device."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_DEVICE: DISCOVERY_INFO.device,
-            CONF_MAC: [METER_INFO[None].meter_mac_id.hex()],
+            CONF_MAC: [] if no_meters else [METER_INFO[None].meter_mac_id.hex()],
         },
     )
