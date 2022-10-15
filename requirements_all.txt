@@ -934,7 +934,7 @@ inkbird-ble==0.5.5
 insteon-frontend-home-assistant==0.2.0
 
 # homeassistant.components.intellifire
-intellifire4py==2.0.1
+intellifire4py==2.2.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
