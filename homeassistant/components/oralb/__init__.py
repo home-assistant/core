@@ -92,7 +92,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     """Handle options update."""
     data = hass.data[DOMAIN][entry.entry_id]
     data.device.gatherdata()
-    print(data.device.result)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
