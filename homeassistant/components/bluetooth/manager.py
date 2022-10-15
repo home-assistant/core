@@ -122,13 +122,10 @@ class BluetoothManager:
         self._bleak_callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-
+        self._all_history: dict[str, BluetoothServiceInfoBleak] = {}
         self._non_connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
         self._connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
-        self._all_history: dict[str, BluetoothServiceInfoBleak] = {}
-
         self._non_connectable_scanners: list[BaseHaScanner] = []
-
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
 
