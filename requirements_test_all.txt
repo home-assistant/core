@@ -1632,7 +1632,7 @@ tellduslive==0.10.11
 temescal==0.5
 
 # homeassistant.components.temper
-temperusb==1.5.3
+temperusb==1.6.0
 
 # homeassistant.components.nibe_heatpump
 tenacity==8.0.1
