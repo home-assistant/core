@@ -43,7 +43,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Deprecated in Home Assistant 2022.9
+# Deprecated in Home Assistant 2022.12
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         # pylint: disable=no-value-for-parameter
@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-# Deprecated in Home Assistant 2022.9
+# Deprecated in Home Assistant 2022.12
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -108,15 +108,14 @@ async def async_setup_entry(
     for calendar in list(calendars):
         # If a calendar name was given in the configuration,
         # ignore all the others
-        if (
-            config_entry.options[CONF_CALENDARS]
-            and calendar.name not in config_entry.options[CONF_CALENDARS]
-        ):
+        if config_entry.options.get(
+            CONF_CALENDARS
+        ) and calendar.name not in config_entry.options.get(CONF_CALENDARS, []):
             _LOGGER.debug("Ignoring calendar '%s'", calendar.name)
             continue
 
         # Create additional calendars based on custom filtering rules
-        for cust_calendar in config_entry.options[CONF_CUSTOM_CALENDARS]:
+        for cust_calendar in config_entry.options.get(CONF_CUSTOM_CALENDARS, []):
             # Check that the base calendar matches
             if cust_calendar[CONF_CALENDAR] != calendar.name:
                 continue
@@ -131,7 +130,7 @@ async def async_setup_entry(
             )
 
         # Create a default calendar if there was no custom one
-        if not config_entry.options[CONF_CUSTOM_CALENDARS]:
+        if not config_entry.options.get(CONF_CUSTOM_CALENDARS, []):
             name = calendar.name
             device_id = calendar.name
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
