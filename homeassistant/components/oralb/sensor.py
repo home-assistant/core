@@ -50,7 +50,7 @@ SENSORS = (
     ),
     OralBSensorEntityDescription(
         key="brush_time",
-        name="OralB Brush Time",
+        name="Brush Time",
         unique_id="oralb_brushtime",
         native_unit_of_measurement=TIME_SECONDS,
         icon="",
