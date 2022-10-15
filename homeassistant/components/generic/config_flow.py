@@ -356,7 +356,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self.title, data={}, options=self.user_input
             )
         register_preview(self.hass)
-        preview_url = f"/api/generic/preview_flow_image/config/{self.flow_id}?t={datetime.now().isoformat()}"
+        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
         return self.async_show_form(
             step_id="user_confirm_still",
             data_schema=vol.Schema(
@@ -461,7 +461,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 data=self.user_input,
             )
         register_preview(self.hass)
-        preview_url = f"/api/generic/preview_flow_image/options/{self.flow_id}?t={datetime.now().isoformat()}"
+        preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
         return self.async_show_form(
             step_id="confirm_still",
             data_schema=vol.Schema(
@@ -477,7 +477,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 class CameraImagePreview(HomeAssistantView):
     """Camera view to temporarily serve an image."""
 
-    url = "/api/generic/preview_flow_image/{flow_type}/{flow_id}"
+    url = "/api/generic/preview_flow_image/{flow_id}"
     name = "api:generic:preview_flow_image"
     requires_auth = False
 
@@ -485,22 +485,17 @@ class CameraImagePreview(HomeAssistantView):
         """Initialise."""
         self.hass = hass
 
-    async def get(
-        self, request: web.Request, flow_type: str, flow_id: str
-    ) -> web.Response:
+    async def get(self, request: web.Request, flow_id: str) -> web.Response:
         """Start a GET request."""
-        _LOGGER.debug(
-            "processing GET request for flow_type=%s flow_id=%s", flow_type, flow_id
-        )
-        flow: FlowResult
+        _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
         try:
-            if flow_type == "config":
-                flow = self.hass.config_entries.flow.async_get(flow_id)
-            else:  # flow_type == "options"
+            flow = self.hass.config_entries.flow.async_get(flow_id)
+        except UnknownFlow:
+            try:
                 flow = self.hass.config_entries.options.async_get(flow_id)
-        except UnknownFlow as exc:
-            _LOGGER.warning("Unknown flow while getting image preview")
-            raise web.HTTPNotFound() from exc
+            except UnknownFlow as exc:
+                _LOGGER.warning("Unknown flow while getting image preview")
+                raise web.HTTPNotFound() from exc
         user_input = flow["context"]["preview_cam"]
         camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:
