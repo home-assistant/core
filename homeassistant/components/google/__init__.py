@@ -36,6 +36,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from .api import ApiAuthImpl, get_feature_access
 from .const import (
     DATA_SERVICE,
+    DATA_STORE,
     DOMAIN,
     EVENT_DESCRIPTION,
     EVENT_END_DATE,
@@ -49,6 +50,7 @@ from .const import (
     EVENT_TYPES_CONF,
     FeatureAccess,
 )
+from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,6 +173,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ApiAuthImpl(async_get_clientsession(hass), session)
     )
     hass.data[DOMAIN][entry.entry_id][DATA_SERVICE] = calendar_service
+    hass.data[DOMAIN][entry.entry_id][DATA_STORE] = LocalCalendarStore(
+        hass, entry.entry_id
+    )
 
     if entry.unique_id is None:
         try:
@@ -211,6 +216,12 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry if the access options change."""
     if not async_entry_has_scopes(hass, entry):
         await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of a local storage."""
+    store = LocalCalendarStore(hass, entry.entry_id)
+    await store.async_remove()
 
 
 async def async_setup_add_event_service(
