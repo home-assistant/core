@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -52,8 +54,12 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = f"{device_id}-climate"
 
-        # Determine preset modes
+        # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        if self.coordinator.data.gateway["cooling_present"]:
+            self._attr_supported_features = (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
         if presets := self.device.get("preset_modes"):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = presets
@@ -61,7 +67,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         # Determine hvac modes and current hvac mode
         self._attr_hvac_modes = [HVACMode.HEAT]
         if self.coordinator.data.gateway["cooling_present"]:
-            self._attr_hvac_modes.append(HVACMode.COOL)
+            self._attr_hvac_modes = [HVACMode.HEAT_COOL]
         if self.device["available_schedules"] != ["None"]:
             self._attr_hvac_modes.append(HVACMode.AUTO)
 
@@ -79,12 +85,32 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
     @property
     def target_temperature(self) -> float:
-        """Return the temperature we try to reach."""
+        """Return the temperature we try to reach.
+
+        Connected to the HVACMode combination of AUTO-HEAT.
+        """
+
         return self.device["thermostat"]["setpoint"]
 
     @property
+    def target_temperature_high(self) -> float:
+        """Return the temperature we try to reach in case of cooling.
+
+        Connected to the HVACMode combination of AUTO-HEAT_COOL.
+        """
+        return self.device["thermostat"]["setpoint_high"]
+
+    @property
+    def target_temperature_low(self) -> float:
+        """Return the heating temperature we try to reach in case of heating.
+
+        Connected to the HVACMode combination AUTO-HEAT_COOL.
+        """
+        return self.device["thermostat"]["setpoint_low"]
+
+    @property
     def hvac_mode(self) -> HVACMode:
-        """Return HVAC operation ie. heat, cool mode."""
+        """Return HVAC operation ie. auto, heat, or heat_cool mode."""
         if (mode := self.device.get("mode")) is None or mode not in self.hvac_modes:
             return HVACMode.HEAT
         return HVACMode(mode)
@@ -127,12 +153,21 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @plugwise_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if ((temperature := kwargs.get(ATTR_TEMPERATURE)) is None) or not (
-            self._attr_min_temp <= temperature <= self._attr_max_temp
-        ):
-            raise ValueError("Invalid temperature change requested")
+        data: dict[str, Any] = {}
+        if ATTR_TEMPERATURE in kwargs:
+            data["setpoint"] = kwargs.get(ATTR_TEMPERATURE)
+        if ATTR_TARGET_TEMP_HIGH in kwargs:
+            data["setpoint_high"] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if ATTR_TARGET_TEMP_LOW in kwargs:
+            data["setpoint_low"] = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        await self.coordinator.api.set_temperature(self.device["location"], temperature)
+        for temperature in data.values():
+            if temperature is None or not (
+                self._attr_min_temp <= temperature <= self._attr_max_temp
+            ):
+                raise ValueError("Invalid temperature change requested")
+
+        await self.coordinator.api.set_temperature(self.device["location"], data)
 
     @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
