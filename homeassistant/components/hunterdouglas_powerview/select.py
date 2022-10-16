@@ -51,7 +51,7 @@ DROPDOWNS: Final = [
         name="Power Source",
         icon="mdi:power-plug-outline",
         current_fn=lambda shade: POWER_SUPPLY_TYPE_MAP.get(
-            shade.raw_data.get(ATTR_BATTERY_KIND)
+            shade.raw_data.get(ATTR_BATTERY_KIND), None
         ),
         options=list(POWER_SUPPLY_TYPE_MAP.values()),
         select_fn=lambda shade, option: shade.set_power_source(
@@ -113,7 +113,7 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
     @property
     def current_option(self) -> str:
         """Return the selected entity option to represent the entity state."""
-        return str(self.entity_description.current_fn(self._shade))
+        return self.entity_description.current_fn(self._shade)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
