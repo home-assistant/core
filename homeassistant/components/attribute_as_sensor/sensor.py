@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -33,7 +34,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import PLATFORMS
-from .const import CONF_ENTITY_ID, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_ATTRIBUTE, "attribute"): cv.string,
+        vol.Required(CONF_ATTRIBUTE): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,

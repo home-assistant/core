@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_NAME,
     TEMP_CELSIUS,
@@ -27,7 +28,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 
-from .const import CONF_ENTITY_ID, DOMAIN
+from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
