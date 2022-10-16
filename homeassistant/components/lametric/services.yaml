@@ -1,17 +1,17 @@
-text:
-  name: Display a text
-  description: Display a text with an optional icon on a LaMetric device.
+message:
+  name: Display a message
+  description: Display a message with an optional icon on a LaMetric device.
   fields:
     device_id:
       name: Device
-      description: The LaMetric device to display the text on.
+      description: The LaMetric device to display the message on.
       required: true
       selector:
         device:
           integration: lametric
-    text:
-      name: Text
-      description: The text to display.
+    message:
+      name: Message
+      description: The messtea to display.
       required: true
       selector:
         text:
@@ -129,8 +129,8 @@ text:
     cycles:
       name: Cycles
       description: >-
-        The number of times to display the text. When set to 0, the text will
-        be displayed until dismissed.
+        The number of times to display the message. When set to 0, the message
+        will be displayed until dismissed.
       required: false
       default: 1
       selector:

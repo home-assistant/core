@@ -15,11 +15,11 @@ import pytest
 from homeassistant.components.lametric.const import (
     CONF_CYCLES,
     CONF_ICON_TYPE,
+    CONF_MESSAGE,
     CONF_PRIORITY,
     CONF_SOUND,
-    CONF_TEXT,
     DOMAIN,
-    SERVICE_TEXT,
+    SERVICE_MESSAGE,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_ICON
 from homeassistant.core import HomeAssistant
@@ -29,7 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-async def test_service_text(
+async def test_service_message(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_lametric: MagicMock,
@@ -43,10 +43,10 @@ async def test_service_text(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TEXT,
+        SERVICE_MESSAGE,
         {
             CONF_DEVICE_ID: entry.device_id,
-            CONF_TEXT: "Hi!",
+            CONF_MESSAGE: "Hi!",
         },
         blocking=True,
     )
@@ -70,10 +70,10 @@ async def test_service_text(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_TEXT,
+        SERVICE_MESSAGE,
         {
             CONF_DEVICE_ID: entry.device_id,
-            CONF_TEXT: "Meow!",
+            CONF_MESSAGE: "Meow!",
             CONF_CYCLES: 3,
             CONF_ICON_TYPE: "info",
             CONF_PRIORITY: "critical",
@@ -109,10 +109,10 @@ async def test_service_text(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TEXT,
+            SERVICE_MESSAGE,
             {
                 CONF_DEVICE_ID: entry.device_id,
-                CONF_TEXT: "Epic failure!",
+                CONF_MESSAGE: "Epic failure!",
             },
             blocking=True,
         )
