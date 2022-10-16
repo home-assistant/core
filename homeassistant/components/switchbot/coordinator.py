@@ -60,7 +60,6 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         self.device_name = device_name
         self.base_unique_id = base_unique_id
         self.model = model
-        self.service_info: bluetooth.BluetoothServiceInfoBleak | None = None
         self._ready_event = asyncio.Event()
 
     @callback
@@ -71,7 +70,6 @@ class SwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
     ) -> None:
         """Handle a Bluetooth event."""
         self.ble_device = service_info.device
-        self.service_info = service_info
         if adv := switchbot.parse_advertisement_data(
             service_info.device, service_info.advertisement
         ):
