@@ -67,8 +67,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         # Determine hvac modes and current hvac mode
         self._attr_hvac_modes = [HVACMode.HEAT]
         if self.coordinator.data.gateway["cooling_present"]:
-            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
-            self._attr_hvac_modes.remove(HVACMode.HEAT)
+            self._attr_hvac_modes = [HVACMode.HEAT_COOL]
         if self.device["available_schedules"] != ["None"]:
             self._attr_hvac_modes.append(HVACMode.AUTO)
 
