@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import LENGTH_MILLIMETERS, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -80,6 +80,58 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda data: cast(float, data["telemetry"]["temp-nozzle"]),
             entity_registry_enabled_default=False,
+        ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="printer.temperature.bed.actual",
+            name="Actual Heatbed Temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast(float, data["temperature"]["bed"]["actual"]),
+        ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="printer.temperature.nozzle.actual",
+            name="Actual Nozzle Temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast(float, data["temperature"]["tool0"]["actual"]),
+        ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="printer.temperature.bed.target",
+            name="Target Heatbed Temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast(float, data["temperature"]["bed"]["target"]),
+        ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="printer.temperature.nozzle.target",
+            name="Target Nozzle Temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast(float, data["temperature"]["tool0"]["target"]),
+        ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="printer.telemetry.z-height",
+            name="Z-Height",
+            native_unit_of_measurement=LENGTH_MILLIMETERS,
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda data: cast(float, data["telemetry"]["z-height"]),
+        ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="printer.telemetry.print-speed",
+            name="Print Speed",
+            native_unit_of_measurement=PERCENTAGE,
+            value_fn=lambda data: cast(float, data["telemetry"]["print-speed"]),
+        ),
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="printer.telemetry.material",
+            name="Material",
+            icon="mdi:palette-swatch-variant",
+            value_fn=lambda data: cast(str, data["telemetry"]["material"]),
         ),
     ),
     "job": (
