@@ -63,7 +63,7 @@ async def test_mandatory_params_only(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(result["flow_id"], config)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "123.123.123.123:62910"
+    assert result["title"] == "123.123.123.123"
     assert result["data"]["host"] == "123.123.123.123"
     # default values
     assert result["data"]["port"] == 62910
@@ -103,7 +103,7 @@ async def test_step_import_mandatory_params(hass):
     await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "11.22.33.44:62910"
+    assert result["title"] == "11.22.33.44"
     assert result["data"]["host"] == "11.22.33.44"
     assert result["data"].get("port") is None
     assert result["data"].get("scan_interval") is None
