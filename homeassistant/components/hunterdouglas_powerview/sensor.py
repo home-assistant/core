@@ -25,42 +25,6 @@ from .entity import ShadeEntity
 from .model import PowerviewEntryData
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up the hunter douglas shades sensors."""
-
-    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
-
-    entities: list[PowerViewSensor] = []
-    for raw_shade in pv_entry.shade_data.values():
-        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
-        name_before_refresh = shade.name
-        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
-        if SHADE_BATTERY_LEVEL in shade.raw_data:
-            entities.append(
-                PowerViewShadeBatterySensor(
-                    pv_entry.coordinator,
-                    pv_entry.device_info,
-                    room_name,
-                    shade,
-                    name_before_refresh,
-                )
-            )
-        if ATTR_SIGNAL_STRENGTH in shade.raw_data:
-            entities.append(
-                PowerViewShadeSignalSensor(
-                    pv_entry.coordinator,
-                    pv_entry.device_info,
-                    room_name,
-                    shade,
-                    name_before_refresh,
-                )
-            )
-    async_add_entities(entities)
-
-
 class PowerViewSensor(ShadeEntity, SensorEntity):
     """Representation of an shade battery charge sensor."""
 
@@ -126,3 +90,36 @@ class PowerViewShadeSignalSensor(PowerViewSensor):
     async def async_update(self) -> None:
         """Refresh signal strength."""
         await self._shade.refresh()
+
+
+SENSOR_TYPES = {
+    PowerViewShadeBatterySensor: SHADE_BATTERY_LEVEL,
+    PowerViewShadeSignalSensor: ATTR_SIGNAL_STRENGTH,
+}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the hunter douglas shades sensors."""
+
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
+
+    entities: list[PowerViewSensor] = []
+    for raw_shade in pv_entry.shade_data.values():
+        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
+        name_before_refresh = shade.name
+        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
+        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
+        for cls, attr in SENSOR_TYPES.items():
+            if attr in shade.raw_data:
+                entities.append(
+                    cls(
+                        pv_entry.coordinator,
+                        pv_entry.device_info,
+                        room_name,
+                        shade,
+                        name_before_refresh,
+                    )
+                )
+    async_add_entities(entities)
