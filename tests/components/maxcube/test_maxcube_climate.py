@@ -140,9 +140,6 @@ async def test_thermostat_set_hvac_mode_off(
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
     assert state.attributes.get(VALVE_POSITION) == 0
 
-    wall_state = hass.states.get(WALL_ENTITY_ID)
-    assert wall_state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
-
 
 async def test_thermostat_set_hvac_mode_heat(
     hass, cube: MaxCube, thermostat: MaxThermostat
