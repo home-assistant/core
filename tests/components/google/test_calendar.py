@@ -24,6 +24,7 @@ from .conftest import (
     TEST_API_ENTITY,
     TEST_API_ENTITY_NAME,
     TEST_YAML_ENTITY,
+    TEST_YAML_ENTITY_NAME,
 )
 
 from tests.common import async_fire_time_changed
@@ -576,6 +577,11 @@ async def test_opaque_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert (len(events) > 0) == expect_visible_event
+
+    # Verify entity state for upcoming event
+    state = hass.states.get(TEST_YAML_ENTITY)
+    assert state.name == TEST_YAML_ENTITY_NAME
+    assert state.state == (STATE_ON if expect_visible_event else STATE_OFF)
 
 
 @pytest.mark.parametrize("mock_test_setup", [None])
