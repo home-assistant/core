@@ -24,8 +24,8 @@
             "title": "Konfigurasi YAML Simplepush dalam proses penghapusan"
         },
         "removed_yaml": {
-            "description": "Proses konfigurasi Simplepush lewat YAML telah dihapus.\n\nKonfigurasi YAML yang ada tidak digunakan oleh Home Assistant.\n\nHapus konfigurasi YAML Simplepush dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Konfigurasi YAML Simplepush telah dihapus"
+            "description": "Proses konfigurasi Integrasi Simplepush lewat YAML telah dihapus.\n\nKonfigurasi YAML yang ada tidak digunakan oleh Home Assistant.\n\nHapus konfigurasi YAML Simplepush dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Integrasi Simplepush telah dihapus"
         }
     }
 }

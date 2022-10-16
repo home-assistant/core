@@ -20,8 +20,8 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "Proses konfigurasi Bose SoundTouch lewat YAML dalam proses penghapusan.\n\nKonfigurasi YAML yang ada telah diimpor ke antarmuka secara otomatis.\n\nHapus konfigurasi YAML Bose SoundTouch dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Konfigurasi YAML Bose SoundTouch dalam proses penghapusan"
+            "description": "Proses konfigurasi Integrasi Bose SoundTouch lewat YAML dalam proses penghapusan.\n\nKonfigurasi YAML yang ada telah diimpor ke antarmuka secara otomatis.\n\nHapus konfigurasi YAML Integrasi Bose SoundTouch dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Integrasi Bose SoundTouch dalam proses penghapusan"
         }
     }
 }
