@@ -1,0 +1,38 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "Nedre og \u00f8vre grense kan ikke begge v\u00e6re tomme"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Inngangssensor",
+                    "hysteresis": "Hysterese",
+                    "lower": "Nedre grense",
+                    "name": "Navn",
+                    "upper": "\u00d8vre grense"
+                },
+                "description": "Lag en bin\u00e6r sensor som sl\u00e5s av og p\u00e5 avhengig av verdien til en sensor \n\n Kun nedre grense konfigurert - Sl\u00e5 p\u00e5 n\u00e5r inngangssensorens verdi er mindre enn den nedre grensen.\n Bare \u00f8vre grense konfigurert - Sl\u00e5 p\u00e5 n\u00e5r inngangssensorens verdi er st\u00f8rre enn den \u00f8vre grensen.\n B\u00e5de nedre og \u00f8vre grense konfigurert - Sl\u00e5 p\u00e5 n\u00e5r inngangssensorens verdi er innenfor omr\u00e5det [nedre grense .. \u00f8vre grense].",
+                "title": "Legg til terskelsensor"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "need_lower_upper": "Nedre og \u00f8vre grense kan ikke begge v\u00e6re tomme"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Inngangssensor",
+                    "hysteresis": "Hysterese",
+                    "lower": "Nedre grense",
+                    "name": "Navn",
+                    "upper": "\u00d8vre grense"
+                },
+                "description": "Kun nedre grense konfigurert - Sl\u00e5 p\u00e5 n\u00e5r inngangssensorens verdi er mindre enn den nedre grensen.\n Bare \u00f8vre grense konfigurert - Sl\u00e5 p\u00e5 n\u00e5r inngangssensorens verdi er st\u00f8rre enn den \u00f8vre grensen.\n B\u00e5de nedre og \u00f8vre grense konfigurert - Sl\u00e5 p\u00e5 n\u00e5r inngangssensorens verdi er innenfor omr\u00e5det [nedre grense .. \u00f8vre grense]."
+            }
+        }
+    },
+    "title": "Terskelsensor"
+}

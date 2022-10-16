@@ -45,6 +45,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -584,7 +585,7 @@ def setup_platform(
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
-    elif hass.config.units.is_metric:
+    elif hass.config.units is METRIC_SYSTEM:
         units = "si"
     else:
         units = "us"
