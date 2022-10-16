@@ -1478,7 +1478,7 @@ pycarwings2==2.13
 pycfdns==1.2.2
 
 # homeassistant.components.channels
-pychannels==1.0.0
+pychannels==1.2.3
 
 # homeassistant.components.cast
 pychromecast==12.1.4
