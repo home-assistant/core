@@ -1,9 +1,12 @@
 """Support for hunterdouglass_powerview settings."""
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 import logging
+from typing import Any, Final
 
 from aiopvapi.resources.shade import BaseShade, factory as PvShade
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -12,21 +15,57 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     ATTR_BATTERY_KIND,
     DOMAIN,
-    POWER_SUPPLY_TYPE,
+    POWER_SUPPLY_TYPE_MAP,
+    POWER_SUPPLY_TYPE_REVERSE_MAP,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
     SHADE_BATTERY_LEVEL,
 )
+from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewEntryData
+from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class PowerviewSelectDescriptionMixin:
+    """Mixin to describe a select entity."""
+
+    current_fn: Callable[[BaseShade], Any]
+    options_fn: Callable[[BaseShade], list[Any]]
+    select_fn: Callable[[BaseShade, str], Coroutine[Any, Any, bool]]
+
+
+@dataclass
+class PowerviewSelectDescription(
+    SelectEntityDescription, PowerviewSelectDescriptionMixin
+):
+    """A class that describes select entities."""
+
+    entity_category: EntityCategory = EntityCategory.CONFIG
+
+
+DROPDOWNS: Final = [
+    PowerviewSelectDescription(
+        key="powersource",
+        name="Power Source",
+        icon="mdi:power-plug-outline",
+        current_fn=lambda shade: POWER_SUPPLY_TYPE_MAP.get(
+            shade.raw_data.get(ATTR_BATTERY_KIND)
+        ),
+        options_fn=lambda shade: list(POWER_SUPPLY_TYPE_MAP.values()),
+        select_fn=lambda shade, option: shade.set_power_source(
+            POWER_SUPPLY_TYPE_REVERSE_MAP.get(option)
+        ),
+    ),
+]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the hunter douglas shades settings."""
+    """Set up the hunter douglas select entities."""
 
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
@@ -38,42 +77,49 @@ async def async_setup_entry(
         name_before_refresh = shade.name
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
         room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
-        entities.append(
-            PowerViewShadePowerSource(
-                pv_entry.coordinator,
-                pv_entry.device_info,
-                room_name,
-                shade,
-                name_before_refresh,
+
+        for description in DROPDOWNS:
+            entities.append(
+                PowerViewSelect(
+                    pv_entry.coordinator,
+                    pv_entry.device_info,
+                    room_name,
+                    shade,
+                    name_before_refresh,
+                    description,
+                )
             )
-        )
+
     async_add_entities(entities)
 
 
-class PowerViewShadePowerSource(ShadeEntity, SelectEntity):
-    """Representation of the type of battery used to power the shade."""
+class PowerViewSelect(ShadeEntity, SelectEntity):
+    """Representation of a select entity."""
 
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:power-plug-outline"
-
-    def __init__(self, coordinator, device_info, room_name, shade, name):
-        """Initialize the shade."""
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+        description: PowerviewSelectDescription,
+    ) -> None:
+        """Initialize the select entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_unique_id = f"{self._attr_unique_id}_powersource"
-        self._attr_name = f"{self._shade_name} Power Source"
-        self._attr_options = list(POWER_SUPPLY_TYPE)
+        self.entity_description: PowerviewSelectDescription = description
+        self._attr_name = f"{self._shade_name} {description.name}"
+        self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
+        options = self.entity_description.options_fn(self._shade)
+        self._attr_options = list(map(str, options))
 
     @property
     def current_option(self) -> str:
-        """Return the current selected value."""
-        battery_type = self._shade.raw_data.get(ATTR_BATTERY_KIND)
-        if battery_type not in POWER_SUPPLY_TYPE.values():
-            return ""
-        return list(POWER_SUPPLY_TYPE.keys())[
-            list(POWER_SUPPLY_TYPE.values()).index(battery_type)
-        ]
+        """Return the selected entity option to represent the entity state."""
+        return str(self.entity_description.current_fn(self._shade))
 
     async def async_select_option(self, option: str) -> None:
-        """Set power source in the hub."""
-        _LOGGER.debug("Power supply set to: %s (%s)", option, POWER_SUPPLY_TYPE[option])
-        await self._shade.set_power_source(POWER_SUPPLY_TYPE[option])
+        """Change the selected option."""
+        await self.entity_description.select_fn(self._shade, option)
+        await self._shade.refresh()  # force update data to ensure new info is in co-ordinator
+        self.async_write_ha_state()
