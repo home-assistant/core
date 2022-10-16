@@ -330,9 +330,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # self._abort_if_unique_id_configured()
         self.context["title_placeholders"] = {"gateway_id": gateway_id}
 
+        # Overkiz hub via cloud API
         if discovery_info.type == "_kizbox._tcp.local.":
             return await self.async_step_cloud()
 
+        # Somfy TaHoma Developer Mode - Local API
         if discovery_info.type == "_kizboxdev._tcp.local.":
             self._default_host = f"gateway-{gateway_id}.local:8443"
             return await self.async_step_local()
