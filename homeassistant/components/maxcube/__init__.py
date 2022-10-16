@@ -101,7 +101,7 @@ class MaxCubeDeviceUpdater:
         self.hass = hass
         self.entry = entry
         self.cube = cube
-        self.device_last_update_ts = 0
+        self.device_last_update_ts = 0.0
         self.device = device
 
     def get_device_model_name(self):
@@ -128,7 +128,7 @@ class MaxCubeDeviceUpdater:
 
         # Create new device if needed
         new_device = device_registry.async_get_or_create(
-            config_entry_id=cast(str, self.entry.entry_id),
+            config_entry_id=self.entry.entry_id,
             identifiers={(DOMAIN, self.device.serial)},
             manufacturer="eQ-3",
             name=f"{room.name} {self.device.name}",
