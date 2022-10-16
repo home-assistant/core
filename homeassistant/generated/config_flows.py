@@ -143,6 +143,7 @@ FLOWS = {
         "garages_amsterdam",
         "gdacs",
         "generic",
+        "generic_thermostat",
         "geocaching",
         "geofency",
         "geonetnz_quakes",

@@ -1,0 +1,61 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure genric Thermostat",
+        "data": {
+          "heater": "Heater.",
+          "target_sensor": "Target sensor.",
+          "ac_mode": "AC mode.",
+          "max_temp": "Maximum temperature.",
+          "min_cycle_duration": "Minimum cycle duration.",
+          "min_temp": "Minimum temperature",
+          "name": "Name",
+          "cold_tolerance": "Cold tolerance.",
+          "hot_tolerance": "Hot tolerance.",
+          "target_temp": "Target temperature.",
+          "keep_alive": "Keep Alive.",
+          "initial_hvac_mode": "Initial HVAC Mode.",
+          "precision": "Preicsion.",
+          "target_temp_step": "Target temperature step",
+          "comfort_temp": "Comfort temperature",
+          "away_temp": "Away temperature",
+          "home_temp": "Home temperature",
+          "sleep_temp": "Sleep temperature",
+          "activity_temp": "Activity temperature"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "",
+        "data": {
+          "heater": "Heater.",
+          "target_sensor": "Target sensor.",
+          "ac_mode": "AC mode.",
+          "max_temp": "Maximum temperature.",
+          "min_cycle_duration": "Minimum cycle duration.",
+          "min_temp": "Minimum temperature",
+          "name": "Name",
+          "cold_tolerance": "Cold tolerance.",
+          "hot_tolerance": "Hot tolerance.",
+          "target_temp": "Target temperature.",
+          "keep_alive": "Keep Alive.",
+          "initial_hvac_mode": "Initial HVAC Mode.",
+          "precision": "Preicsion.",
+          "target_temp_step": "Target temperature step",
+          "comfort_temp": "Comfort temperature",
+          "away_temp": "Away temperature",
+          "home_temp": "Home temperature",
+          "sleep_temp": "Sleep temperature",
+          "activity_temp": "Activity temperature"
+        }
+      }
+    }
+  }
+}

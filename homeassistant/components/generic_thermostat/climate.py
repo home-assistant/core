@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta
 import logging
 import math
 from typing import Any
@@ -22,6 +23,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -50,26 +52,27 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
+from .consts import (
+    CONF_AC_MODE,
+    CONF_COLD_TOLERANCE,
+    CONF_HEATER,
+    CONF_HOT_TOLERANCE,
+    CONF_INITIAL_HVAC_MODE,
+    CONF_KEEP_ALIVE,
+    CONF_MAX_TEMP,
+    CONF_MIN_DUR,
+    CONF_MIN_TEMP,
+    CONF_PRECISION,
+    CONF_SENSOR,
+    CONF_TARGET_TEMP,
+    CONF_TEMP_STEP,
+    DEFAULT_NAME,
+    DEFAULT_TOLERANCE,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_TOLERANCE = 0.3
-DEFAULT_NAME = "Generic Thermostat"
-
-CONF_HEATER = "heater"
-CONF_SENSOR = "target_sensor"
-CONF_MIN_TEMP = "min_temp"
-CONF_MAX_TEMP = "max_temp"
-CONF_TARGET_TEMP = "target_temp"
-CONF_AC_MODE = "ac_mode"
-CONF_MIN_DUR = "min_cycle_duration"
-CONF_COLD_TOLERANCE = "cold_tolerance"
-CONF_HOT_TOLERANCE = "hot_tolerance"
-CONF_KEEP_ALIVE = "keep_alive"
-CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
-CONF_PRECISION = "precision"
-CONF_TEMP_STEP = "target_temp_step"
 
 CONF_PRESETS = {
     p: f"{p}_temp"
@@ -109,6 +112,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 ).extend({vol.Optional(v): vol.Coerce(float) for (k, v) in CONF_PRESETS.items()})
 
 
+# Deprecated in Home Assistant 2022.12
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -116,29 +120,60 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the generic thermostat platform."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
+    _LOGGER.warning(
+        "Configuration of the Generic Thermostat integration in YAML is deprecated and "
+        "will be removed in a 2022.12; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+
+
+def convert_timedelta(value: str) -> timedelta:
+    """Convert string to deltatime."""
+    return (
+        datetime.combine(datetime.min, datetime.strptime(value, "%H:%M:%S").time())
+        - datetime.min
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up a generic Thermostat."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    name = config.get(CONF_NAME)
-    heater_entity_id = config.get(CONF_HEATER)
-    sensor_entity_id = config.get(CONF_SENSOR)
-    min_temp = config.get(CONF_MIN_TEMP)
-    max_temp = config.get(CONF_MAX_TEMP)
-    target_temp = config.get(CONF_TARGET_TEMP)
-    ac_mode = config.get(CONF_AC_MODE)
-    min_cycle_duration = config.get(CONF_MIN_DUR)
-    cold_tolerance = config.get(CONF_COLD_TOLERANCE)
-    hot_tolerance = config.get(CONF_HOT_TOLERANCE)
-    keep_alive = config.get(CONF_KEEP_ALIVE)
-    initial_hvac_mode = config.get(CONF_INITIAL_HVAC_MODE)
+    name = entry.title
+    heater_entity_id = entry.options.get(CONF_HEATER)
+    sensor_entity_id = entry.options.get(CONF_SENSOR)
+    min_temp = entry.options.get(CONF_MIN_TEMP)
+    max_temp = entry.options.get(CONF_MAX_TEMP)
+    target_temp = entry.options.get(CONF_TARGET_TEMP)
+    ac_mode = entry.options.get(CONF_AC_MODE)
+    min_cycle_duration = entry.options.get(CONF_MIN_DUR)
+    if isinstance(min_cycle_duration, str):
+        min_cycle_duration = convert_timedelta(min_cycle_duration)
+    cold_tolerance = entry.options.get(CONF_COLD_TOLERANCE)
+    hot_tolerance = entry.options.get(CONF_HOT_TOLERANCE)
+    keep_alive = entry.options.get(CONF_KEEP_ALIVE)
+    if isinstance(keep_alive, str):
+        keep_alive = convert_timedelta(keep_alive)
+    initial_hvac_mode = entry.options.get(CONF_INITIAL_HVAC_MODE)
     presets = {
-        key: config[value] for key, value in CONF_PRESETS.items() if value in config
+        key: entry.options[value]
+        for key, value in CONF_PRESETS.items()
+        if value in entry.options
     }
-    precision = config.get(CONF_PRECISION)
-    target_temperature_step = config.get(CONF_TEMP_STEP)
+    precision = entry.options.get(CONF_PRECISION)
+    target_temperature_step = entry.options.get(CONF_TEMP_STEP)
     unit = hass.config.units.temperature_unit
-    unique_id = config.get(CONF_UNIQUE_ID)
-
+    unique_id = entry.options.get(CONF_UNIQUE_ID, entry.entry_id)
     async_add_entities(
         [
             GenericThermostat(

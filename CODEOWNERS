@@ -399,6 +399,8 @@ build.json @home-assistant/supervisor
 /tests/components/generic/ @davet2001
 /homeassistant/components/generic_hygrostat/ @Shulyaka
 /tests/components/generic_hygrostat/ @Shulyaka
+/homeassistant/components/generic_thermostat/ @cyr-ius
+/tests/components/generic_thermostat/ @cyr-ius
 /homeassistant/components/geniushub/ @zxdavb
 /homeassistant/components/geo_json_events/ @exxamalte
 /tests/components/geo_json_events/ @exxamalte
