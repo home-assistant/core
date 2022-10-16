@@ -33,7 +33,6 @@ class PowerviewSelectDescriptionMixin:
     """Mixin to describe a select entity."""
 
     current_fn: Callable[[BaseShade], Any]
-    options_fn: Callable[[BaseShade], list[Any]]
     select_fn: Callable[[BaseShade, str], Coroutine[Any, Any, bool]]
 
 
@@ -54,7 +53,7 @@ DROPDOWNS: Final = [
         current_fn=lambda shade: POWER_SUPPLY_TYPE_MAP.get(
             shade.raw_data.get(ATTR_BATTERY_KIND)
         ),
-        options_fn=lambda shade: list(POWER_SUPPLY_TYPE_MAP.values()),
+        options=list(POWER_SUPPLY_TYPE_MAP.values()),
         select_fn=lambda shade, option: shade.set_power_source(
             POWER_SUPPLY_TYPE_REVERSE_MAP.get(option)
         ),
@@ -110,8 +109,6 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
         self.entity_description: PowerviewSelectDescription = description
         self._attr_name = f"{self._shade_name} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
-        options = self.entity_description.options_fn(self._shade)
-        self._attr_options = list(map(str, options))
 
     @property
     def current_option(self) -> str:
