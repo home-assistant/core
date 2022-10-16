@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
+from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_NAME
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -38,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="sensor")
         ),
+        vol.Optional(CONF_ATTRIBUTE): str,
     }
 ).extend(OPTIONS_SCHEMA.schema)
 

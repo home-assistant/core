@@ -7,6 +7,7 @@
         "description": "Create a binary sensor that turns on and off depending on the value of a sensor.",
         "data": {
           "entity_id": "Input sensor",
+          "attribute": "Sensor attribute",
           "name": "Name",
           "invert": "Invert",
           "max_samples": "Max samples",
@@ -21,6 +22,7 @@
       "init": {
         "data": {
           "entity_id": "[%key:component::trend::config::step::user::data::entity_id%]",
+          "attribute": "[%key:component::trend::config::step::user::data::attribute%]",
           "name": "[%key:component::trend::config::step::user::data::name%]",
           "invert": "[%key:component::trend::config::step::user::data::invert%]",
           "max_samples": "[%key:component::trend::config::step::user::data::max_samples%]",

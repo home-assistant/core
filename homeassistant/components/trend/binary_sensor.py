@@ -80,6 +80,7 @@ async def async_setup_entry(
     entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_ENTITY_ID]
     )
+    attribute = config_entry.options.get(CONF_ATTRIBUTE)
     name = config_entry.title
     invert = config_entry.options[CONF_INVERT]
     max_samples = config_entry.options[CONF_MAX_SAMPLES]
@@ -94,7 +95,7 @@ async def async_setup_entry(
                 name,
                 name,
                 entity_id,
-                None,
+                attribute,
                 device_class,
                 invert,
                 max_samples,
