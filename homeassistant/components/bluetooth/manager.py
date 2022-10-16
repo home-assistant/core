@@ -483,15 +483,15 @@ class BluetoothManager:
         # immediately with the last packet so the subscriber can see the
         # device.
         all_history = self._get_history_by_type(connectable)
-        if (
-            (address := callback_matcher.get(ADDRESS))
-            and (service_info := all_history.get(address))
-            and ble_device_matches(callback_matcher, service_info)
-        ):
-            try:
-                callback(service_info, BluetoothChange.ADVERTISEMENT)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error in bluetooth callback")
+        for service_info in all_history.values():
+            address_match = callback_matcher.get(ADDRESS)
+            if (
+                address_match is None or address_match == service_info.address
+            ) and ble_device_matches(callback_matcher, service_info):
+                try:
+                    callback(service_info, BluetoothChange.ADVERTISEMENT)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Error in bluetooth callback")
 
         return _async_remove_callback
 
