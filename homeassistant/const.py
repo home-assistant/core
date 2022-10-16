@@ -396,7 +396,9 @@ ATTR_ICON: Final = "icon"
 ATTR_UNIT_OF_MEASUREMENT: Final = "unit_of_measurement"
 
 CONF_UNIT_SYSTEM_METRIC: Final = "metric"
+"""Deprecated: please use a local constant."""
 CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
+"""Deprecated: please use a local constant."""
 
 # Electrical attributes
 ATTR_VOLTAGE: Final = "voltage"

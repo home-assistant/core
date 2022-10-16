@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig autentisering"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                }
+            }
+        }
+    }
+}

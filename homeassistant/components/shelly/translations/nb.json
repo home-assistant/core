@@ -6,6 +6,12 @@
                     "password": "Passord",
                     "username": "Brukernavn"
                 }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                }
             }
         }
     }

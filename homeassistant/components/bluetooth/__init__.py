@@ -39,6 +39,7 @@ from .const import (
     DATA_MANAGER,
     DEFAULT_ADDRESS,
     DOMAIN,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     SOURCE_LOCAL,
     AdapterDetails,
 )
@@ -81,6 +82,7 @@ __all__ = [
     "BluetoothCallback",
     "HaBluetoothConnector",
     "SOURCE_LOCAL",
+    "FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS",
 ]
 
 _LOGGER = logging.getLogger(__name__)
