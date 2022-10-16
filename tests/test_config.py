@@ -445,7 +445,7 @@ async def test_loading_configuration_from_storage_with_yaml_only(hass, hass_stor
     assert hass.config.config_source is ConfigSource.STORAGE
 
 
-async def test_updating_configuration(hass, hass_storage):
+async def test_igration_and_updating_configuration(hass, hass_storage):
     """Test updating configuration stores the new configuration."""
     core_data = {
         "data": {
@@ -454,7 +454,7 @@ async def test_updating_configuration(hass, hass_storage):
             "location_name": "Home",
             "longitude": 13,
             "time_zone": "Europe/Copenhagen",
-            "unit_system_key": "metric",
+            "unit_system": "imperial",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             "currency": "BTC",
@@ -469,10 +469,14 @@ async def test_updating_configuration(hass, hass_storage):
     )
     await hass.config.async_update(latitude=50, currency="USD")
 
-    new_core_data = copy.deepcopy(core_data)
-    new_core_data["data"]["latitude"] = 50
-    new_core_data["data"]["currency"] = "USD"
-    assert hass_storage["core.config"] == new_core_data
+    expected_new_core_data = copy.deepcopy(core_data)
+    # From async_update above
+    expected_new_core_data["data"]["latitude"] = 50
+    expected_new_core_data["data"]["currency"] = "USD"
+    # 1.1 -> 1.2 store migration with migrated unit system
+    expected_new_core_data["data"]["unit_system_v2"] = "us_customary"
+    expected_new_core_data["minor_version"] = 2
+    assert hass_storage["core.config"] == expected_new_core_data
     assert hass.config.latitude == 50
     assert hass.config.currency == "USD"
 
