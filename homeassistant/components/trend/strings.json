@@ -21,13 +21,13 @@
     "step": {
       "init": {
         "data": {
-          "entity_id": "[%key:component::trend::config::step::user::data::entity_id%]",
-          "attribute": "[%key:component::trend::config::step::user::data::attribute%]",
-          "name": "[%key:component::trend::config::step::user::data::name%]",
-          "invert": "[%key:component::trend::config::step::user::data::invert%]",
-          "max_samples": "[%key:component::trend::config::step::user::data::max_samples%]",
-          "min_gradient": "[%key:component::trend::config::step::user::data::min_gradient%]",
-          "sample_duration": "[%key:component::trend::config::step::user::data::sample_duration%]"
+          "entity_id": "Input sensor",
+          "attribute": "Sensor attribute",
+          "name": "Name",
+          "invert": "Invert",
+          "max_samples": "Max samples",
+          "min_gradient": "Min gradient",
+          "sample_duration": "Sample duration"
         }
       }
     }
