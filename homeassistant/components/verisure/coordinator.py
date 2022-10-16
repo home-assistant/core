@@ -2,13 +2,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from http import HTTPStatus
+from time import sleep
 
-from verisure import (
-    Error as VerisureError,
-    ResponseError as VerisureResponseError,
-    Session as Verisure,
-)
+from verisure import LoginError as VerisureLoginError, Session as Verisure
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -25,13 +21,13 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Verisure hub."""
-        self.imageseries: dict[str, list] = {}
+        self.imageseries: list[dict[str, str]] = []
         self.entry = entry
 
         self.verisure = Verisure(
             username=entry.data[CONF_EMAIL],
             password=entry.data[CONF_PASSWORD],
-            cookieFileName=hass.config.path(
+            cookie_file_name=hass.config.path(
                 STORAGE_DIR, f"verisure_{entry.data[CONF_EMAIL]}"
             ),
         )
@@ -43,8 +39,8 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     async def async_login(self) -> bool:
         """Login to Verisure."""
         try:
-            await self.hass.async_add_executor_job(self.verisure.login)
-        except VerisureError as ex:
+            await self.hass.async_add_executor_job(self.verisure.login_cookie)
+        except VerisureLoginError as ex:
             LOGGER.error("Could not log in to verisure, %s", ex)
             return False
 
@@ -56,60 +52,100 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_logout(self, _event: Event) -> None:
         """Logout from Verisure."""
-        try:
-            await self.hass.async_add_executor_job(self.verisure.logout)
-        except VerisureError as ex:
-            LOGGER.error("Could not log out from verisure, %s", ex)
+        await self.hass.async_add_executor_job(self.verisure.logout)
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
         try:
             overview = await self.hass.async_add_executor_job(
-                self.verisure.get_overview
+                self.verisure.request,
+                self.verisure.arm_state(),
+                self.verisure.broadband(),
+                self.verisure.cameras(),
+                self.verisure.climate(),
+                self.verisure.door_window(),
+                self.verisure.smart_lock(),
+                self.verisure.smartplugs(),
             )
-        except VerisureResponseError as ex:
+        except Exception as ex:
             LOGGER.error("Could not read overview, %s", ex)
-            if ex.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
-                LOGGER.info("Trying to log in again")
-                await self.async_login()
-                return {}
             raise
+
+        def unpack(overview: list, value: str) -> dict:
+            unpacked = [
+                item["data"]["installation"][value]
+                for item in overview
+                if value in item.get("data", {}).get("installation", {})
+            ]
+            return unpacked[0]
 
         # Store data in a way Home Assistant can easily consume it
         return {
-            "alarm": overview["armState"],
-            "ethernet": overview.get("ethernetConnectedNow"),
+            "alarm": unpack(overview, "armState"),
+            "broadband": unpack(overview, "broadband"),
             "cameras": {
-                device["deviceLabel"]: device
-                for device in overview["customerImageCameras"]
+                device["device"]["deviceLabel"]: device
+                for device in unpack(overview, "cameras")
             },
             "climate": {
-                device["deviceLabel"]: device for device in overview["climateValues"]
+                device["device"]["deviceLabel"]: device
+                for device in unpack(overview, "climates")
             },
             "door_window": {
-                device["deviceLabel"]: device
-                for device in overview["doorWindow"]["doorWindowDevice"]
+                device["device"]["deviceLabel"]: device
+                for device in unpack(overview, "doorWindows")
             },
             "locks": {
-                device["deviceLabel"]: device
-                for device in overview["doorLockStatusList"]
-            },
-            "mice": {
-                device["deviceLabel"]: device
-                for device in overview["eventCounts"]
-                if device["deviceType"] == "MOUSE1"
+                device["device"]["deviceLabel"]: device
+                for device in unpack(overview, "smartLocks")
             },
             "smart_plugs": {
-                device["deviceLabel"]: device for device in overview["smartPlugs"]
+                device["device"]["deviceLabel"]: device
+                for device in unpack(overview, "smartplugs")
             },
         }
 
     @Throttle(timedelta(seconds=60))
     def update_smartcam_imageseries(self) -> None:
         """Update the image series."""
-        self.imageseries = self.verisure.get_camera_imageseries()
+        image_data = self.verisure.request(self.verisure.cameras_image_series())
+        self.imageseries = [
+            content
+            for series in (
+                image_data.get("data", {})
+                .get("ContentProviderMediaSearch", {})
+                .get("mediaSeriesList", [])
+            )
+            for content in series.get("deviceMediaList", [])
+            if content.get("contentType") == "IMAGE_JPEG"
+        ]
 
     @Throttle(timedelta(seconds=30))
     def smartcam_capture(self, device_id: str) -> None:
         """Capture a new image from a smartcam."""
-        self.verisure.capture_image(device_id)
+        capture_request = self.verisure.request(
+            self.verisure.camera_get_request_id(device_id)
+        )
+        request_id = (
+            capture_request.get("data", {})
+            .get("ContentProviderCaptureImageRequest", {})
+            .get("requestId")
+        )
+        capture_status = None
+        attempts = 0
+        while capture_status != "AVAILABLE":
+            if attempts == 30:
+                break
+            if attempts > 1:
+                sleep(0.5)
+            attempts += 1
+            capture_data = self.verisure.request(
+                self.verisure.camera_capture(device_id, request_id)
+            )
+            capture_status = (
+                capture_data.get("data", {})
+                .get("installation", {})
+                .get("cameraContentProvider", {})
+                .get("captureImageRequestStatus", {})
+                .get("mediaRequestStatus")
+            )

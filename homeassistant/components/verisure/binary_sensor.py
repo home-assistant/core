@@ -108,9 +108,9 @@ class VerisureEthernetStatus(
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return self.coordinator.data["ethernet"]
+        return self.coordinator.data["broadband"]["isBroadbandConnected"]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.coordinator.data["ethernet"] is not None
+        return super().available and self.coordinator.data["broadband"] is not None
