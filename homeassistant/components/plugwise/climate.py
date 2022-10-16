@@ -161,7 +161,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if ATTR_TARGET_TEMP_LOW in kwargs:
             data["setpoint_low"] = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        for _, temperature in data.items():
+        for temperature in data.values():
             if temperature is None or not (
                 self._attr_min_temp <= temperature <= self._attr_max_temp
             ):
