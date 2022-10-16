@@ -84,15 +84,6 @@ def upcoming() -> dict[str, Any]:
     }
 
 
-def upcoming_date() -> dict[str, Any]:
-    """Create a test event with an arbitrary start/end date fetched from the api url."""
-    now = dt_util.now()
-    return {
-        "start": {"date": now.date().isoformat()},
-        "end": {"date": now.date().isoformat()},
-    }
-
-
 def upcoming_event_url(entity: str = TEST_ENTITY) -> str:
     """Return a calendar API to return events created by upcoming()."""
     now = dt_util.now()
@@ -462,7 +453,8 @@ async def test_http_api_all_day_event(
     """Test querying the API and fetching events from the server."""
     event = {
         **TEST_EVENT,
-        **upcoming_date(),
+        "start": {"date": "2022-03-27"},
+        "end": {"date": "2022-03-28"},
     }
     mock_events_list_items([event])
     assert await component_setup()
@@ -475,7 +467,7 @@ async def test_http_api_all_day_event(
     assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
         "summary": TEST_EVENT["summary"],
         "start": {"date": "2022-03-27"},
-        "end": {"date": "2022-03-27"},
+        "end": {"date": "2022-03-28"},
     }
 
 
