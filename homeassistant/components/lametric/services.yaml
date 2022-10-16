@@ -11,7 +11,7 @@ message:
           integration: lametric
     message:
       name: Message
-      description: The messtea to display.
+      description: The message to display.
       required: true
       selector:
         text:
