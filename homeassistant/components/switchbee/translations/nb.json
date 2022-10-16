@@ -1,13 +1,9 @@
 {
     "config": {
         "step": {
-            "reauth_confirm": {
-                "data": {
-                    "username": "Brukernavn"
-                }
-            },
             "user": {
                 "data": {
+                    "password": "Passord",
                     "username": "Brukernavn"
                 }
             }
