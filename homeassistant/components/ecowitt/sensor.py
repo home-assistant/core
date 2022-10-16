@@ -40,6 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from .const import DOMAIN
 from .entity import EcowittEntity
@@ -216,9 +217,9 @@ async def async_setup_entry(
             return
 
         # Ignore metrics that are not supported by the user's locale
-        if sensor.stype in _METRIC and not hass.config.units.is_metric:
+        if sensor.stype in _METRIC and hass.config.units is not METRIC_SYSTEM:
             return
-        if sensor.stype in _IMPERIAL and hass.config.units.is_metric:
+        if sensor.stype in _IMPERIAL and hass.config.units is not IMPERIAL_SYSTEM:
             return
         mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
 
