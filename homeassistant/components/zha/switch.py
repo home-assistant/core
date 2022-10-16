@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CHANNEL_COVER,
     CHANNEL_INOVELLI,
     CHANNEL_ON_OFF,
     DATA_ZHA,
@@ -391,3 +392,13 @@ class InovelliRelayClickInOnOffMode(
 
     _zcl_attribute: str = "relay_click_in_on_off_mode"
     _attr_name: str = "Disable relay click in on off mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_COVER,
+)
+class InvertedCover(ZHASwitchConfigurationEntity, id_suffix="window_covering_mode"):
+    """ZHA inverted cover switch."""
+
+    _zcl_attribute: str = "window_covering_mode"
+    _attr_name: str  = "Switch covering mode"
