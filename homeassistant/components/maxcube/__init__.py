@@ -4,7 +4,6 @@ import logging
 from socket import timeout
 from threading import Lock
 import time
-from typing import cast
 
 from maxcube.cube import MaxCube
 import voluptuous as vol
