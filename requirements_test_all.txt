@@ -33,7 +33,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.20.0
+PySwitchbot==0.20.1
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -1261,7 +1261,7 @@ pyopenuv==2022.04.0
 pyopnsense==0.2.0
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.0.3
+pyotgw==2.1.1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
