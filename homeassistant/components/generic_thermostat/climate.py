@@ -112,7 +112,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 ).extend({vol.Optional(v): vol.Coerce(float) for (k, v) in CONF_PRESETS.items()})
 
 
-# Deprecated in Home Assistant 2022.12
+# Deprecated in Home Assistant 2023.2
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -130,7 +130,7 @@ async def async_setup_platform(
 
     _LOGGER.warning(
         "Configuration of the Generic Thermostat integration in YAML is deprecated and "
-        "will be removed in a 2022.12; Your existing configuration "
+        "will be removed in a 2023.2; Your existing configuration "
         "has been imported into the UI automatically and can be safely removed "
         "from your configuration.yaml file"
     )
