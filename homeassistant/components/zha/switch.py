@@ -401,4 +401,4 @@ class InvertedCover(ZHASwitchConfigurationEntity, id_suffix="window_covering_mod
     """ZHA inverted cover switch."""
 
     _zcl_attribute: str = "window_covering_mode"
-    _attr_name: str  = "Switch covering mode"
+    _attr_name: str = "Switch covering mode"
