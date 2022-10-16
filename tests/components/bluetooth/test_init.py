@@ -1089,6 +1089,16 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start, enable_bluetoo
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
+        seen_switchbot_device = BLEDevice("44:44:33:11:23:46", "wohand")
+        seen_switchbot_adv = generate_advertisement_data(
+            local_name="wohand",
+            service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+            manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+            service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+        )
+
+        inject_advertisement(hass, seen_switchbot_device, seen_switchbot_adv)
+
         cancel = bluetooth.async_register_callback(
             hass,
             _fake_subscriber,
@@ -1125,7 +1135,7 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start, enable_bluetoo
         inject_advertisement(hass, empty_device, empty_adv)
         await hass.async_block_till_done()
 
-    assert len(callbacks) == 1
+    assert len(callbacks) == 2
 
     service_info: BluetoothServiceInfo = callbacks[0][0]
     assert service_info.name == "wohand"
