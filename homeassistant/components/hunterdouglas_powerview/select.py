@@ -118,5 +118,5 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self._shade, option)
-        await self._shade.refresh()  # force update data to ensure new info is in co-ordinator
+        await self._shade.refresh()  # force update data to ensure new info is in coordinator
         self.async_write_ha_state()
