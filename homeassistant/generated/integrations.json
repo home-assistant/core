@@ -5674,12 +5674,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "trend": {
-      "name": "Trend",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "tuya": {
       "name": "Tuya",
       "integration_type": "hub",
@@ -6446,6 +6440,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "trend": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "utility_meter": {
       "integration_type": "helper",
       "config_flow": true,
@@ -6489,6 +6488,7 @@
     "tag",
     "threshold",
     "tod",
+    "trend",
     "uptime",
     "utility_meter",
     "waze_travel_time"

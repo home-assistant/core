@@ -1,9 +1,11 @@
 {
   "domain": "trend",
+  "integration_type": "helper",
   "name": "Trend",
   "documentation": "https://www.home-assistant.io/integrations/trend",
   "requirements": ["numpy==1.23.2"],
   "codeowners": [],
   "quality_scale": "internal",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "config_flow": true
 }

@@ -14,6 +14,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -26,7 +27,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -68,6 +69,43 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize trend config entry."""
+    registry = er.async_get(hass)
+    device_class = None
+    entity_id = er.async_validate_entity_id(
+        registry, config_entry.options[CONF_ENTITY_ID]
+    )
+    name = config_entry.title
+    invert = config_entry.options[CONF_INVERT]
+    max_samples = config_entry.options[CONF_MAX_SAMPLES]
+    min_gradient = config_entry.options[CONF_MIN_GRADIENT]
+    sample_duration = config_entry.options[CONF_SAMPLE_DURATION]
+    unique_id = config_entry.entry_id
+
+    async_add_entities(
+        [
+            SensorTrend(
+                hass,
+                name,
+                name,
+                entity_id,
+                None,
+                device_class,
+                invert,
+                max_samples,
+                min_gradient,
+                sample_duration,
+                unique_id,
+            )
+        ]
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -101,6 +139,7 @@ async def async_setup_platform(
                 max_samples,
                 min_gradient,
                 sample_duration,
+                None,
             )
         )
     if not sensors:
@@ -127,10 +166,12 @@ class SensorTrend(BinarySensorEntity):
         max_samples,
         min_gradient,
         sample_duration,
+        unique_id,
     ):
         """Initialize the sensor."""
         self._hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+        self._attr_unique_id = unique_id
         self._name = friendly_name
         self._entity_id = entity_id
         self._attribute = attribute
