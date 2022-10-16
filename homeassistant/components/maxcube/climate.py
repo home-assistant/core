@@ -57,7 +57,9 @@ async def async_setup_entry(
     for handler in hass.data[DATA_KEY].values():
         for device in handler.cube.devices:
             if device.is_thermostat() or device.is_wallthermostat():
-                devices.append(MaxCubeClimate(hass, config_entry, handler, device))
+                room = handler.cube.room_by_id(device.room_id)
+                device_updater = MaxCubeDeviceUpdater(hass, config_entry, room, device)
+                devices.append(MaxCubeClimate(handler, device, device_updater))
 
     if devices:
         async_add_devices(devices)
@@ -71,7 +73,7 @@ class MaxCubeClimate(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry, handler, device):
+    def __init__(self, handler, device, device_updater: MaxCubeDeviceUpdater):
         """Initialize MAX! Cube ClimateEntity."""
         room = handler.cube.room_by_id(device.room_id)
         self._attr_name = f"{room.name} {device.name}"
@@ -88,7 +90,7 @@ class MaxCubeClimate(ClimateEntity):
             PRESET_AWAY,
             PRESET_ON,
         ]
-        self.device_updater = MaxCubeDeviceUpdater(hass, config_entry, room, device)
+        self.device_updater = device_updater
 
     @property
     def min_temp(self):
