@@ -56,6 +56,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
+        await self.hass.async_add_executor_job(self.verisure.login_cookie)
         try:
             overview = await self.hass.async_add_executor_job(
                 self.verisure.request,
