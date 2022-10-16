@@ -49,6 +49,7 @@ def cover_platform_only():
             Platform.DEVICE_TRACKER,
             Platform.NUMBER,
             Platform.SELECT,
+            Platform.SWITCH,
         ),
     ):
         yield
