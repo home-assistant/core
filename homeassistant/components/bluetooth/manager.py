@@ -483,12 +483,10 @@ class BluetoothManager:
         # immediately with the last packet so the subscriber can see the
         # device.
         all_history = self._get_history_by_type(connectable)
-        service_infos: Iterable[BluetoothServiceInfoBleak]
+        service_infos: Iterable[BluetoothServiceInfoBleak] = []
         if address := callback_matcher.get(ADDRESS):
             if service_info := all_history.get(address):
                 service_infos = [service_info]
-            else:
-                service_infos = []
         else:
             service_infos = all_history.values()
 
