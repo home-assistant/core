@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.0.1
+aiohomekit==2.0.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -413,7 +413,7 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.2.0
+bleak-retry-connector==2.3.0
 
 # homeassistant.components.bluetooth
 bleak==0.19.0
@@ -690,7 +690,7 @@ fivem-api==0.1.2
 fixerio==1.0.0a0
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==2.1.0
+fjaraskupan==2.2.0
 
 # homeassistant.components.flipr
 flipr-api==1.4.2
@@ -940,7 +940,7 @@ inkbird-ble==0.5.5
 insteon-frontend-home-assistant==0.2.0
 
 # homeassistant.components.intellifire
-intellifire4py==2.0.1
+intellifire4py==2.2.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0

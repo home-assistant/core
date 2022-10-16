@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Bryter",
+                    "target_domain": "Ny type"
+                },
+                "description": "Velg en bryter du vil vise i Home Assistant som lys, deksel eller noe annet. Den opprinnelige bryteren vil v\u00e6re skjult."
+            }
+        }
+    },
+    "title": "Endre enhetstype for en bryter"
+}
