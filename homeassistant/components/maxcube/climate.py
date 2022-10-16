@@ -63,7 +63,7 @@ async def async_setup_entry(
         async_add_devices(devices)
 
 
-class MaxCubeClimate(ClimateEntity, MaxCubeDeviceUpdater):
+class MaxCubeClimate(ClimateEntity):
     """MAX! Cube ClimateEntity."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT]
@@ -88,7 +88,7 @@ class MaxCubeClimate(ClimateEntity, MaxCubeDeviceUpdater):
             PRESET_AWAY,
             PRESET_ON,
         ]
-        MaxCubeDeviceUpdater.__init__(self, hass, config_entry, handler.cube, device)
+        self.device_updater = MaxCubeDeviceUpdater(hass, config_entry, room, device)
 
     @property
     def min_temp(self):
@@ -235,4 +235,4 @@ class MaxCubeClimate(ClimateEntity, MaxCubeDeviceUpdater):
     def update(self) -> None:
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
-        self.update_device(self.entity_id)
+        self.device_updater.update_device(self.entity_id)

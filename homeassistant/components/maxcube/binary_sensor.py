@@ -29,7 +29,7 @@ async def async_setup_entry(
         async_add_devices(devices)
 
 
-class MaxCubeBinarySensorBase(BinarySensorEntity, MaxCubeDeviceUpdater):
+class MaxCubeBinarySensorBase(BinarySensorEntity):
     """Base class for maxcube binary sensors."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -39,12 +39,12 @@ class MaxCubeBinarySensorBase(BinarySensorEntity, MaxCubeDeviceUpdater):
         self._cubehandle = handler
         self._device = device
         self._room = handler.cube.room_by_id(device.room_id)
-        MaxCubeDeviceUpdater.__init__(self, hass, config_entry, handler.cube, device)
+        self.device_updater = MaxCubeDeviceUpdater(hass, config_entry, self._room, device)
 
     def update(self) -> None:
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
-        self.update_device(self.entity_id)
+        self.device_updater.update_device(self.entity_id)
 
 
 class MaxCubeShutter(MaxCubeBinarySensorBase):

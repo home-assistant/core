@@ -95,11 +95,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class MaxCubeDeviceUpdater:
     """Update MaxCube device."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, cube, device) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, room, device) -> None:
         """Initialize device updater."""
         self.hass = hass
         self.entry = entry
-        self.cube = cube
+        self.room = room
         self.device_last_update_ts = 0.0
         self.device = device
 
@@ -121,8 +121,6 @@ class MaxCubeDeviceUpdater:
 
         self.device_last_update_ts = time.monotonic()
 
-        room = self.cube.room_by_id(self.device.room_id)
-
         device_registry = dr.async_get(self.hass)
 
         # Create new device if needed
@@ -130,7 +128,7 @@ class MaxCubeDeviceUpdater:
             config_entry_id=self.entry.entry_id,
             identifiers={(DOMAIN, self.device.serial)},
             manufacturer="eQ-3",
-            name=f"{room.name} {self.device.name}",
+            name=f"{self.room.name} {self.device.name}",
             model=self.get_device_model_name(),
         )
 
