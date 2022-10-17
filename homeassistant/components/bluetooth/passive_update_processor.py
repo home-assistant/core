@@ -219,7 +219,8 @@ class PassiveBluetoothDataProcessor(Generic[_T]):
                 if entity_key not in created:
                     entities.append(entity_class(self, entity_key, description))
                     created.add(entity_key)
-            async_add_entites(entities)
+            if entities:
+                async_add_entites(entities)
 
         return self.async_add_listener(_async_add_or_update_entities)
 
