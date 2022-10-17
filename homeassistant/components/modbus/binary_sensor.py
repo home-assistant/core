@@ -21,6 +21,12 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
+    CALL_TYPE_REGISTER_HOLDING
+)
+
 from . import get_hub
 from .base_platform import BasePlatform
 from .const import CONF_SLAVE_COUNT
@@ -109,9 +115,16 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             self._result = None
         else:
             self._lazy_errors = self._lazy_error_count
-            self._attr_is_on = result.bits[0] & 1
             self._attr_available = True
             self._result = result
+            if self._input_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
+                self._attr_is_on = bool(result.bits[0] & 1)
+            else:
+                value = int(result.registers[0])
+                if value > 0:
+                    self._attr_is_on = True
+                else:
+                    self._attr_is_on = False
 
         self.async_write_ha_state()
         if self._coordinator:
