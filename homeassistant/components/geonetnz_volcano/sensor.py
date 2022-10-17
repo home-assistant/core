@@ -9,7 +9,6 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
 )
@@ -27,6 +26,7 @@ from .const import (
     DEFAULT_ICON,
     DOMAIN,
     FEED,
+    IMPERIAL_UNITS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +113,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         """Update the internal state from the provided feed entry."""
         self._title = feed_entry.title
         # Convert distance if not metric system.
-        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self._unit_system == IMPERIAL_UNITS:
             self._distance = round(
                 DistanceConverter.convert(
                     feed_entry.distance_to_home, LENGTH_KILOMETERS, LENGTH_MILES
