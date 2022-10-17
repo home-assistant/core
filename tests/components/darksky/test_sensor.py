@@ -4,6 +4,7 @@ import re
 from unittest.mock import patch
 
 import forecastio
+from requests.exceptions import ConnectionError as ConnectError
 
 from homeassistant.setup import async_setup_component
 
@@ -65,22 +66,6 @@ INVALID_CONFIG_LANG = {
     }
 }
 
-VALID_CONFIG_ALERTS = {
-    "sensor": {
-        "platform": "darksky",
-        "api_key": "foo",
-        "forecast": [1, 2],
-        "hourly_forecast": [1, 2],
-        "monitored_conditions": ["summary", "icon", "temperature_high", "alerts"],
-        "scan_interval": timedelta(seconds=120),
-    }
-}
-
-
-def load_forecastMock(key, lat, lon, units, lang):  # pylint: disable=invalid-name
-    """Mock darksky forecast loading."""
-    return ""
-
 
 async def test_setup_with_config(hass, requests_mock):
     """Test the platform setup with configuration."""
@@ -138,17 +123,17 @@ async def test_setup_bad_api_key(hass, requests_mock):
     assert hass.states.get("sensor.dark_sky_summary") is None
 
 
-async def test_setup_with_alerts_config(hass):
-    """Test the platform setup with configuration."""
+async def test_connection_error(hass):
+    """Test setting up with a connection error."""
     with patch(
         "homeassistant.components.darksky.sensor.forecastio.load_forecast",
-        new=load_forecastMock,
+        side_effect=ConnectError(),
     ):
-        await async_setup_component(hass, "sensor", VALID_CONFIG_ALERTS)
+        await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL)
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.dark_sky_alerts")
-        assert state is not None
+        state = hass.states.get("sensor.dark_sky_summary")
+        assert state is None
 
 
 async def test_setup(hass, requests_mock):

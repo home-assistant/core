@@ -3,7 +3,7 @@ import re
 from unittest.mock import patch
 
 import forecastio
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError as ConnectError
 
 from homeassistant.components import weather
 from homeassistant.setup import async_setup_component
@@ -35,7 +35,7 @@ async def test_setup(hass, requests_mock):
 
 async def test_failed_setup(hass):
     """Test to ensure that a network error does not break component state."""
-    with patch("forecastio.load_forecast", side_effect=ConnectionError()):
+    with patch("forecastio.load_forecast", side_effect=ConnectError()):
         assert await async_setup_component(
             hass,
             weather.DOMAIN,
