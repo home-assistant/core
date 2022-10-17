@@ -42,7 +42,7 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_tile_details", scope="session")
+@pytest.fixture(name="data_tile_details")
 def data_tile_details_fixture():
     """Define a Tile details data payload."""
     return json.loads(load_fixture("tile_details_data.json", "tile"))
