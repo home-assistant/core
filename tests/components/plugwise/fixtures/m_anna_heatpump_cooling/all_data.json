@@ -66,7 +66,6 @@
       "name": "Anna",
       "vendor": "Plugwise",
       "thermostat": {
-        "setpoint": 24.0,
         "setpoint_low": 20.5,
         "setpoint_high": 24.0,
         "lower_bound": 4.0,
@@ -85,7 +84,6 @@
         "illuminance": 86.0,
         "cooling_activation_outdoor_temperature": 21.0,
         "cooling_deactivation_threshold": 4.0,
-        "setpoint": 24.0,
         "setpoint_low": 20.5,
         "setpoint_high": 24.0
       }
