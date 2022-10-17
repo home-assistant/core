@@ -7,7 +7,14 @@ from typing import Final
 
 from pyoverkiz.enums import OverkizCommandParam, UIClass, UIWidget
 
-from homeassistant.const import Platform
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    LIGHT_LUX,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    Platform,
+)
 
 DOMAIN: Final = "overkiz"
 LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -97,4 +104,12 @@ OVERKIZ_STATE_TO_TRANSLATION: dict[str, str] = {
     OverkizCommandParam.SAAC: "saac",
     OverkizCommandParam.SFC: "sfc",
     OverkizCommandParam.UPS: "ups",
+}
+
+OVERKIZ_UNIT_TO_HA: dict[str, str] = {
+    "core:ElectricalEnergyInKWh": ENERGY_KILO_WATT_HOUR,
+    "core:ElectricalEnergyInWh": ENERGY_WATT_HOUR,
+    "core:LuminanceInLux": LIGHT_LUX,
+    "core:TemperatureInCelcius": TEMP_CELSIUS,
+    "core:RelativeValueInPercentage": PERCENTAGE,
 }
