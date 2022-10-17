@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
 import subarulink.const as sc
@@ -298,13 +297,10 @@ async def _async_migrate_entries(
 
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, Any] | None:
-        id_suffix_match = re.match(r".*?_(.+)", entry.unique_id)
-        id_suffix = id_suffix_match.group(1) if id_suffix_match else ""
+        id_split = entry.unique_id.split("_")
 
-        if id_suffix.upper() in replacements:
-            new_unique_id = entry.unique_id.replace(
-                id_suffix, replacements[id_suffix.upper()]
-            )
+        if len(id_split) == 2 and (key := id_split[1].upper()) in replacements:
+            new_unique_id = entry.unique_id.replace(id_split[1], replacements[key])
             _LOGGER.debug(
                 "Migrating entity '%s' unique_id from '%s' to '%s'",
                 entry.entity_id,
