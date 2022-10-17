@@ -18,6 +18,7 @@ LOGSEVERITY = {
     "NOTSET": logging.NOTSET,
 }
 
+
 DEFAULT_LOGSEVERITY = "DEBUG"
 
 LOGGER_DEFAULT = "default"

@@ -23,27 +23,6 @@ from .const import (
     SERVICE_SET_LEVEL,
 )
 from .helpers import LoggerSettings, set_default_log_level, set_log_levels
-DOMAIN = "logger"
-
-SERVICE_SET_DEFAULT_LEVEL = "set_default_level"
-SERVICE_SET_LEVEL = "set_level"
-
-LOGSEVERITY = {
-    "CRITICAL": 50,
-    "FATAL": 50,
-    "ERROR": 40,
-    "WARNING": 30,
-    "WARN": 30,
-    "INFO": 20,
-    "DEBUG": 10,
-    "NOTSET": 0,
-}
-
-LOGGER_DEFAULT = "default"
-LOGGER_LOGS = "logs"
-LOGGER_FILTERS = "filters"
-
-ATTR_LEVEL = "level"
 
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY), LOGSEVERITY.__getitem__)
 
