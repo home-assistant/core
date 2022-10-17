@@ -1,7 +1,8 @@
 """Support for hunterdouglass_powerview settings."""
+from __future__ import annotations
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any, Final
 
 from aiopvapi.resources.shade import BaseShade, factory as PvShade
@@ -25,15 +26,12 @@ from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class PowerviewSelectDescriptionMixin:
     """Mixin to describe a select entity."""
 
     current_fn: Callable[[BaseShade], Any]
-    options_fn: Callable[[BaseShade], list[Any]]
     select_fn: Callable[[BaseShade, str], Coroutine[Any, Any, bool]]
 
 
@@ -52,9 +50,9 @@ DROPDOWNS: Final = [
         name="Power Source",
         icon="mdi:power-plug-outline",
         current_fn=lambda shade: POWER_SUPPLY_TYPE_MAP.get(
-            shade.raw_data.get(ATTR_BATTERY_KIND)
+            shade.raw_data.get(ATTR_BATTERY_KIND), None
         ),
-        options_fn=lambda shade: list(POWER_SUPPLY_TYPE_MAP.values()),
+        options=list(POWER_SUPPLY_TYPE_MAP.values()),
         select_fn=lambda shade, option: shade.set_power_source(
             POWER_SUPPLY_TYPE_REVERSE_MAP.get(option)
         ),
@@ -110,16 +108,14 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
         self.entity_description: PowerviewSelectDescription = description
         self._attr_name = f"{self._shade_name} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
-        options = self.entity_description.options_fn(self._shade)
-        self._attr_options = list(map(str, options))
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return str(self.entity_description.current_fn(self._shade))
+        return self.entity_description.current_fn(self._shade)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self._shade, option)
-        await self._shade.refresh()  # force update data to ensure new info is in co-ordinator
+        await self._shade.refresh()  # force update data to ensure new info is in coordinator
         self.async_write_ha_state()
