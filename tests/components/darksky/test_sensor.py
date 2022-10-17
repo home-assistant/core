@@ -150,7 +150,6 @@ async def test_setup(hass, requests_mock):
         assert await async_setup_component(hass, "sensor", VALID_CONFIG_MINIMAL)
         await hass.async_block_till_done()
 
-        assert mock_get_forecast.called
         assert mock_get_forecast.call_count == 1
         assert len(hass.states.async_entity_ids()) == 13
 

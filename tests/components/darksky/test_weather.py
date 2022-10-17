@@ -13,7 +13,9 @@ from tests.common import load_fixture
 
 async def test_setup(hass, requests_mock):
     """Test for successfully setting up the forecast.io platform."""
-    with patch("forecastio.api.get_forecast", wraps=forecastio.api.get_forecast):
+    with patch(
+        "forecastio.api.get_forecast", wraps=forecastio.api.get_forecast
+    ) as mock_get_forecast:
         requests_mock.get(
             re.compile(
                 r"https://api.(darksky.net|forecast.io)\/forecast\/(\w+)\/"
@@ -29,6 +31,7 @@ async def test_setup(hass, requests_mock):
         )
         await hass.async_block_till_done()
 
+        assert mock_get_forecast.call_count == 1
         state = hass.states.get("weather.test")
         assert state.state == "sunny"
 
