@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
 import logging
-from typing import cast
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
@@ -89,7 +89,9 @@ class LoggerSettings:
         self._default_level = logging.INFO
         if DOMAIN in yaml_config:
             self._default_level = yaml_config[DOMAIN][LOGGER_DEFAULT]
-        self._store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store: Store[dict[str, dict[str, dict[str, Any]]]] = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY
+        )
 
     async def async_load(self) -> None:
         """Load stored settings."""
@@ -106,7 +108,7 @@ class LoggerSettings:
             self._stored_config = {
                 "logs": {
                     domain: reset_persistence(LoggerSetting(**settings))
-                    for domain, settings in cast(dict, stored_config)["logs"].items()
+                    for domain, settings in stored_config["logs"].items()
                 }
             }
             await self._store.async_save(self._async_data_to_save())
