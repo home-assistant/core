@@ -238,11 +238,10 @@ class SubaruSensor(
             if unit == FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS:
                 return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)
 
-        if self.hass.config.units is METRIC_SYSTEM:
-            if unit == LENGTH_MILES:
-                return round(
-                    DistanceConverter.convert(current_value, unit, LENGTH_KILOMETERS), 1
-                )
+        if self.hass.config.units is METRIC_SYSTEM and unit == LENGTH_MILES:
+            return round(
+                DistanceConverter.convert(current_value, unit, LENGTH_KILOMETERS), 1
+            )
 
         return current_value
 
@@ -261,9 +260,8 @@ class SubaruSensor(
             if unit == FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS:
                 return FUEL_CONSUMPTION_MILES_PER_GALLON
 
-        if self.hass.config.units is METRIC_SYSTEM:
-            if unit == LENGTH_MILES:
-                return LENGTH_KILOMETERS
+        if self.hass.config.units is METRIC_SYSTEM and unit == LENGTH_MILES:
+            return LENGTH_KILOMETERS
 
         return unit
 
