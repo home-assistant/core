@@ -861,14 +861,16 @@ async def test_device_types(hass: HomeAssistant, caplog):
             await hass.async_block_till_done()
 
     bright = round(255 * int(PROPERTIES["bright"]) / 100)
-    ct = color_temperature_kelvin_to_mired(int(PROPERTIES["ct"]))
+    ct = int(PROPERTIES["ct"])
+    ct_mired = color_temperature_kelvin_to_mired(int(PROPERTIES["ct"]))
     hue = int(PROPERTIES["hue"])
     sat = int(PROPERTIES["sat"])
     rgb = int(PROPERTIES["rgb"])
     rgb_color = ((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF)
     hs_color = (hue, sat)
     bg_bright = round(255 * int(PROPERTIES["bg_bright"]) / 100)
-    bg_ct = color_temperature_kelvin_to_mired(int(PROPERTIES["bg_ct"]))
+    bg_ct = int(PROPERTIES["bg_ct"])
+    bg_ct_kelvin = color_temperature_kelvin_to_mired(int(PROPERTIES["bg_ct"]))
     bg_hue = int(PROPERTIES["bg_hue"])
     bg_sat = int(PROPERTIES["bg_sat"])
     bg_rgb = int(PROPERTIES["bg_rgb"])
@@ -911,6 +913,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -918,7 +924,8 @@ async def test_device_types(hass: HomeAssistant, caplog):
                 model_specs["color_temp"]["min"]
             ),
             "brightness": bright,
-            "color_temp": ct,
+            "color_temp_kelvin": ct,
+            "color_temp": ct_mired,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
             "hs_color": (26.812, 34.87),
@@ -936,6 +943,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "hs_color": (28.401, 100.0),
             "rgb_color": (255, 120, 0),
             "xy_color": (0.621, 0.367),
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -945,6 +956,7 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "brightness": nl_br,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
+            "color_temp_kelvin": model_specs["color_temp"]["min"],
             "color_temp": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
@@ -960,6 +972,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -989,6 +1005,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1019,6 +1039,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1046,6 +1070,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1072,6 +1100,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1097,6 +1129,12 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
+            ),
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1104,7 +1142,8 @@ async def test_device_types(hass: HomeAssistant, caplog):
                 model_specs["color_temp"]["min"]
             ),
             "brightness": bright,
-            "color_temp": ct,
+            "color_temp_kelvin": ct,
+            "color_temp": ct_mired,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
             "hs_color": (26.812, 34.87),
@@ -1120,6 +1159,12 @@ async def test_device_types(hass: HomeAssistant, caplog):
         nightlight_mode_properties={
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
+            ),
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1127,6 +1172,9 @@ async def test_device_types(hass: HomeAssistant, caplog):
                 model_specs["color_temp"]["min"]
             ),
             "brightness": nl_br,
+            "color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
+            ),
             "color_temp": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
@@ -1151,6 +1199,12 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
+            ),
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1158,7 +1212,8 @@ async def test_device_types(hass: HomeAssistant, caplog):
                 model_specs["color_temp"]["min"]
             ),
             "brightness": bright,
-            "color_temp": ct,
+            "color_temp_kelvin": ct,
+            "color_temp": ct_mired,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
             "hs_color": (26.812, 34.87),
@@ -1177,6 +1232,12 @@ async def test_device_types(hass: HomeAssistant, caplog):
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
+            ),
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1184,6 +1245,9 @@ async def test_device_types(hass: HomeAssistant, caplog):
                 model_specs["color_temp"]["min"]
             ),
             "brightness": nl_br,
+            "color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
+            ),
             "color_temp": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
@@ -1202,10 +1266,15 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": 1700,
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(6500)
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(6500),
             "max_mireds": color_temperature_kelvin_to_mired(1700),
             "brightness": bg_bright,
-            "color_temp": bg_ct,
+            "color_temp_kelvin": bg_ct,
+            "color_temp": bg_ct_kelvin,
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp", "hs", "rgb"],
             "hs_color": (27.001, 19.243),
@@ -1224,6 +1293,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": 1700,
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(6500)
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(6500),
             "max_mireds": color_temperature_kelvin_to_mired(1700),
             "brightness": bg_bright,
@@ -1245,6 +1318,10 @@ async def test_device_types(hass: HomeAssistant, caplog):
         {
             "effect_list": YEELIGHT_COLOR_EFFECT_LIST,
             "supported_features": SUPPORT_YEELIGHT,
+            "min_color_temp_kelvin": 1700,
+            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
+                color_temperature_kelvin_to_mired(6500)
+            ),
             "min_mireds": color_temperature_kelvin_to_mired(6500),
             "max_mireds": color_temperature_kelvin_to_mired(1700),
             "brightness": bg_bright,

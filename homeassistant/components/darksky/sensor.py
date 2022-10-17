@@ -18,7 +18,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -46,10 +45,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Powered by Dark Sky"
 
 CONF_FORECAST = "forecast"
 CONF_HOURLY_FORECAST = "hourly_forecast"
@@ -587,7 +585,7 @@ def setup_platform(
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
-    elif hass.config.units.is_metric:
+    elif hass.config.units is METRIC_SYSTEM:
         units = "si"
     else:
         units = "us"
@@ -647,8 +645,8 @@ def setup_platform(
 class DarkSkySensor(SensorEntity):
     """Implementation of a Dark Sky sensor."""
 
+    _attr_attribution = "Powered by Dark Sky"
     entity_description: DarkskySensorEntityDescription
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def __init__(
         self,

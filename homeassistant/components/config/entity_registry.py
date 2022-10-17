@@ -136,21 +136,17 @@ def websocket_update_entity(hass, connection, msg):
 
     changes = {}
 
-    for key in ("area_id", "device_class", "disabled_by", "hidden_by", "icon", "name"):
+    for key in (
+        "area_id",
+        "device_class",
+        "disabled_by",
+        "hidden_by",
+        "icon",
+        "name",
+        "new_entity_id",
+    ):
         if key in msg:
             changes[key] = msg[key]
-
-    if "new_entity_id" in msg and msg["new_entity_id"] != entity_id:
-        changes["new_entity_id"] = msg["new_entity_id"]
-        if hass.states.get(msg["new_entity_id"]) is not None:
-            connection.send_message(
-                websocket_api.error_message(
-                    msg["id"],
-                    "invalid_info",
-                    "Entity with this ID is already registered",
-                )
-            )
-            return
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device
@@ -238,6 +234,7 @@ def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
         "hidden_by": entry.hidden_by,
         "icon": entry.icon,
         "id": entry.id,
+        "unique_id": entry.unique_id,
         "name": entry.name,
         "original_name": entry.original_name,
         "platform": entry.platform,
@@ -253,5 +250,4 @@ def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     data["options"] = entry.options
     data["original_device_class"] = entry.original_device_class
     data["original_icon"] = entry.original_icon
-    data["unique_id"] = entry.unique_id
     return data

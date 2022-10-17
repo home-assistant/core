@@ -56,7 +56,7 @@ def bluez_dbus_mock():
 @pytest.fixture(name="macos_adapter")
 def macos_adapter():
     """Fixture that mocks the macos adapter."""
-    with patch(
+    with patch("bleak.get_platform_scanner_backend_type"), patch(
         "homeassistant.components.bluetooth.platform.system", return_value="Darwin"
     ), patch(
         "homeassistant.components.bluetooth.scanner.platform.system",

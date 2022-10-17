@@ -4,10 +4,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Generic
+from typing import Any, Generic
 
-from aiopyarr import LidarrQueueItem, LidarrRootFolder
+from aiopyarr import LidarrQueue, LidarrQueueItem, LidarrRootFolder
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -18,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import LidarrEntity
 from .const import BYTE_SIZES, DOMAIN
@@ -27,7 +25,7 @@ from .coordinator import LidarrDataUpdateCoordinator, T
 
 def get_space(data: list[LidarrRootFolder], name: str) -> str:
     """Get space."""
-    space = []
+    space: list[float] = []
     for mount in data:
         if name in mount.path:
             mount.freeSpace = mount.freeSpace if mount.accessible else 0
@@ -36,8 +34,8 @@ def get_space(data: list[LidarrRootFolder], name: str) -> str:
 
 
 def get_modified_description(
-    description: LidarrSensorEntityDescription, mount: LidarrRootFolder
-) -> tuple[LidarrSensorEntityDescription, str]:
+    description: LidarrSensorEntityDescription[T], mount: LidarrRootFolder
+) -> tuple[LidarrSensorEntityDescription[T], str]:
     """Return modified description and folder name."""
     desc = deepcopy(description)
     name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
@@ -50,25 +48,23 @@ def get_modified_description(
 class LidarrSensorEntityDescriptionMixIn(Generic[T]):
     """Mixin for required keys."""
 
-    value_fn: Callable[[T, str], str]
+    value_fn: Callable[[T, str], str | int]
 
 
 @dataclass
 class LidarrSensorEntityDescription(
-    SensorEntityDescription, LidarrSensorEntityDescriptionMixIn, Generic[T]
+    SensorEntityDescription, LidarrSensorEntityDescriptionMixIn[T], Generic[T]
 ):
     """Class to describe a Lidarr sensor."""
 
-    attributes_fn: Callable[
-        [T], dict[str, StateType | datetime] | None
-    ] = lambda _: None
+    attributes_fn: Callable[[T], dict[str, str] | None] = lambda _: None
     description_fn: Callable[
-        [LidarrSensorEntityDescription, LidarrRootFolder],
-        tuple[LidarrSensorEntityDescription, str] | None,
-    ] = lambda _, __: None
+        [LidarrSensorEntityDescription[T], LidarrRootFolder],
+        tuple[LidarrSensorEntityDescription[T], str] | None,
+    ] | None = None
 
 
-SENSOR_TYPES: dict[str, LidarrSensorEntityDescription] = {
+SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     "disk_space": LidarrSensorEntityDescription(
         key="disk_space",
         name="Disk space",
@@ -78,7 +74,7 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL,
         description_fn=get_modified_description,
     ),
-    "queue": LidarrSensorEntityDescription(
+    "queue": LidarrSensorEntityDescription[LidarrQueue](
         key="queue",
         name="Queue",
         native_unit_of_measurement="Albums",
@@ -87,7 +83,7 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL,
         attributes_fn=lambda data: {i.title: queue_str(i) for i in data.records},
     ),
-    "wanted": LidarrSensorEntityDescription(
+    "wanted": LidarrSensorEntityDescription[LidarrQueue](
         key="wanted",
         name="Wanted",
         native_unit_of_measurement="Albums",
@@ -108,10 +104,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lidarr sensors based on a config entry."""
-    coordinators: dict[str, LidarrDataUpdateCoordinator] = hass.data[DOMAIN][
+    coordinators: dict[str, LidarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
         entry.entry_id
     ]
-    entities = []
+    entities: list[LidarrSensor[Any]] = []
     for coordinator_type, description in SENSOR_TYPES.items():
         coordinator = coordinators[coordinator_type]
         if coordinator_type != "disk_space":
@@ -125,15 +121,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class LidarrSensor(LidarrEntity, SensorEntity):
+class LidarrSensor(LidarrEntity[T], SensorEntity):
     """Implementation of the Lidarr sensor."""
 
-    entity_description: LidarrSensorEntityDescription
+    entity_description: LidarrSensorEntityDescription[T]
 
     def __init__(
         self,
-        coordinator: LidarrDataUpdateCoordinator,
-        description: LidarrSensorEntityDescription,
+        coordinator: LidarrDataUpdateCoordinator[T],
+        description: LidarrSensorEntityDescription[T],
         folder_name: str = "",
     ) -> None:
         """Create Lidarr entity."""
@@ -141,12 +137,12 @@ class LidarrSensor(LidarrEntity, SensorEntity):
         self.folder_name = folder_name
 
     @property
-    def extra_state_attributes(self) -> dict[str, StateType | datetime] | None:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the sensor."""
         return self.entity_description.attributes_fn(self.coordinator.data)
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str | int:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data, self.folder_name)
 

@@ -141,7 +141,9 @@ def threaded_listener_factory(
 def async_track_state_change(
     hass: HomeAssistant,
     entity_ids: str | Iterable[str],
-    action: Callable[[str, State | None, State], Coroutine[Any, Any, None] | None],
+    action: Callable[
+        [str, State | None, State | None], Coroutine[Any, Any, None] | None
+    ],
     from_state: None | str | Iterable[str] = None,
     to_state: None | str | Iterable[str] = None,
 ) -> CALLBACK_TYPE:
@@ -804,7 +806,7 @@ def async_track_template(
 track_template = threaded_listener_factory(async_track_template)
 
 
-class _TrackTemplateResultInfo:
+class TrackTemplateResultInfo:
     """Handle removal / refresh of tracker."""
 
     def __init__(
@@ -1143,7 +1145,7 @@ def async_track_template_result(
     raise_on_template_error: bool = False,
     strict: bool = False,
     has_super_template: bool = False,
-) -> _TrackTemplateResultInfo:
+) -> TrackTemplateResultInfo:
     """Add a listener that fires when the result of a template changes.
 
     The action will fire with the initial result from the template, and
@@ -1182,9 +1184,7 @@ def async_track_template_result(
     Info object used to unregister the listener, and refresh the template.
 
     """
-    tracker = _TrackTemplateResultInfo(
-        hass, track_templates, action, has_super_template
-    )
+    tracker = TrackTemplateResultInfo(hass, track_templates, action, has_super_template)
     tracker.async_setup(raise_on_template_error, strict=strict)
     return tracker
 

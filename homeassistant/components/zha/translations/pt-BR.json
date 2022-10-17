@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Efeito de emiss\u00e3o para todos os LEDs",
+            "issue_individual_led_effect": "Efeito de emiss\u00e3o para LED individual",
             "squawk": "Squawk",
             "warn": "Aviso"
         },
@@ -210,6 +212,14 @@
                 "description": "ZHA ser\u00e1 interrompido. Voc\u00ea deseja continuar?",
                 "title": "Reconfigurar ZHA"
             },
+            "instruct_unplug": {
+                "description": "Seu r\u00e1dio antigo foi reiniciado. Se o hardware n\u00e3o for mais necess\u00e1rio, agora voc\u00ea pode desconect\u00e1-lo.",
+                "title": "Desconecte seu r\u00e1dio antigo"
+            },
+            "intent_migrate": {
+                "description": "Seu r\u00e1dio antigo ser\u00e1 redefinido de f\u00e1brica. Se voc\u00ea estiver usando um adaptador Z-Wave e Zigbee combinado, como o HUSBZB-1, isso apenas redefinir\u00e1 a parte Zigbee. \n\n Voc\u00ea deseja continuar?",
+                "title": "Migrar para um novo r\u00e1dio"
+            },
             "manual_pick_radio_type": {
                 "data": {
                     "radio_type": "Tipo de r\u00e1dio"
@@ -232,6 +242,14 @@
                 },
                 "description": "Seu backup tem um endere\u00e7o IEEE diferente do seu r\u00e1dio. Para que sua rede funcione corretamente, o endere\u00e7o IEEE do seu r\u00e1dio tamb\u00e9m deve ser alterado. \n\n Esta \u00e9 uma opera\u00e7\u00e3o permanente.",
                 "title": "Sobrescrever o endere\u00e7o IEEE do r\u00e1dio"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "Voc\u00ea est\u00e1 migrando para um novo r\u00e1dio ou reconfigurando o r\u00e1dio atual?",
+                "menu_options": {
+                    "intent_migrate": "Migrar para um novo r\u00e1dio",
+                    "intent_reconfigure": "Reconfigure o r\u00e1dio atual"
+                },
+                "title": "Migrar ou reconfigurar"
             },
             "upload_manual_backup": {
                 "data": {

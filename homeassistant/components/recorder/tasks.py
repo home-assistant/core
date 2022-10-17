@@ -14,6 +14,7 @@ from homeassistant.helpers.typing import UndefinedType
 
 from . import purge, statistics
 from .const import DOMAIN, EXCLUDE_ATTRIBUTES
+from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups
 
@@ -29,6 +30,24 @@ class RecorderTask(abc.ABC):
     @abc.abstractmethod
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
+
+
+@dataclass
+class ChangeStatisticsUnitTask(RecorderTask):
+    """Object to store statistics_id and unit to convert unit of statistics."""
+
+    statistic_id: str
+    new_unit_of_measurement: str
+    old_unit_of_measurement: str
+
+    def run(self, instance: Recorder) -> None:
+        """Handle the task."""
+        statistics.change_statistics_unit(
+            instance,
+            self.statistic_id,
+            self.new_unit_of_measurement,
+            self.old_unit_of_measurement,
+        )
 
 
 @dataclass
@@ -129,13 +148,18 @@ class ImportStatisticsTask(RecorderTask):
 
     metadata: StatisticMetaData
     statistics: Iterable[StatisticData]
+    table: type[Statistics | StatisticsShortTerm]
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
-        if statistics.import_statistics(instance, self.metadata, self.statistics):
+        if statistics.import_statistics(
+            instance, self.metadata, self.statistics, self.table
+        ):
             return
         # Schedule a new statistics task if this one didn't finish
-        instance.queue_task(ImportStatisticsTask(self.metadata, self.statistics))
+        instance.queue_task(
+            ImportStatisticsTask(self.metadata, self.statistics, self.table)
+        )
 
 
 @dataclass
@@ -145,7 +169,7 @@ class AdjustStatisticsTask(RecorderTask):
     statistic_id: str
     start_time: datetime
     sum_adjustment: float
-    display_unit: str
+    adjustment_unit: str
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task."""
@@ -154,7 +178,7 @@ class AdjustStatisticsTask(RecorderTask):
             self.statistic_id,
             self.start_time,
             self.sum_adjustment,
-            self.display_unit,
+            self.adjustment_unit,
         ):
             return
         # Schedule a new adjust statistics task if this one didn't finish
@@ -163,7 +187,7 @@ class AdjustStatisticsTask(RecorderTask):
                 self.statistic_id,
                 self.start_time,
                 self.sum_adjustment,
-                self.display_unit,
+                self.adjustment_unit,
             )
         )
 

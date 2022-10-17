@@ -4,11 +4,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
-from bleak.backends.scanner import (
-    AdvertisementData,
-    AdvertisementDataCallback,
-    BLEDevice,
-)
+from bleak.backends.scanner import AdvertisementDataCallback, BLEDevice
 from dbus_fast import InvalidMessageError
 import pytest
 
@@ -22,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager, async_setup_with_one_adapter
+from . import _get_manager, async_setup_with_one_adapter, generate_advertisement_data
 
 from tests.common import async_fire_time_changed
 
@@ -174,6 +170,10 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     mock_discovered = []
 
     class MockBleakScanner:
+        def __init__(self, detection_callback, *args, **kwargs):
+            nonlocal _callback
+            _callback = detection_callback
+
         async def start(self, *args, **kwargs):
             """Mock Start."""
             nonlocal called_start
@@ -190,23 +190,15 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
             nonlocal mock_discovered
             return mock_discovered
 
-        def register_detection_callback(self, callback: AdvertisementDataCallback):
-            """Mock Register Detection Callback."""
-            nonlocal _callback
-            _callback = callback
-
-    scanner = MockBleakScanner()
-
     with patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
-        return_value=scanner,
+        MockBleakScanner,
     ):
         await async_setup_with_one_adapter(hass)
 
         assert called_start == 1
 
     start_time_monotonic = time.monotonic()
-    scanner = _get_manager()
     mock_discovered = [MagicMock()]
 
     # Ensure we don't restart the scanner if we don't need to
@@ -226,7 +218,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     ):
         _callback(
             BLEDevice("44:44:33:11:23:42", "any_name"),
-            AdvertisementData(local_name="any_name"),
+            generate_advertisement_data(local_name="any_name"),
         )
 
     # Ensure we don't restart the scanner if we don't need to

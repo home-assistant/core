@@ -1,5 +1,8 @@
 """SwitchBee integration Coordinator."""
 
+from __future__ import annotations
+
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 
@@ -15,7 +18,7 @@ from .const import DOMAIN, SCAN_INTERVAL_SEC
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]):
+class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevice]]):
     """Class to manage fetching Freedompro data API."""
 
     def __init__(
@@ -26,7 +29,10 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
         """Initialize."""
         self.api: CentralUnitAPI = swb_api
         self._reconnect_counts: int = 0
-        self.mac_formated: str = format_mac(swb_api.mac)
+        self.mac_formatted: str | None = (
+            None if self.api.mac is None else format_mac(self.api.mac)
+        )
+
         super().__init__(
             hass,
             _LOGGER,
@@ -34,7 +40,7 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
             update_interval=timedelta(seconds=SCAN_INTERVAL_SEC),
         )
 
-    async def _async_update_data(self) -> dict[int, SwitchBeeBaseDevice]:
+    async def _async_update_data(self) -> Mapping[int, SwitchBeeBaseDevice]:
         """Update data via library."""
 
         if self._reconnect_counts != self.api.reconnect_count:
@@ -55,6 +61,10 @@ class SwitchBeeCoordinator(DataUpdateCoordinator[dict[int, SwitchBeeBaseDevice]]
                         DeviceType.GroupSwitch,
                         DeviceType.TimedPowerSwitch,
                         DeviceType.Scenario,
+                        DeviceType.Dimmer,
+                        DeviceType.Shutter,
+                        DeviceType.Somfy,
+                        DeviceType.Thermostat,
                     ]
                 )
             except SwitchBeeError as exp:

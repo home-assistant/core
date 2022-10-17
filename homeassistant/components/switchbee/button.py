@@ -1,17 +1,17 @@
 """Support for SwitchBee scenario button."""
 
 from switchbee.api import SwitchBeeError
-from switchbee.device import ApiStateCommand, DeviceType, SwitchBeeBaseDevice
+from switchbee.device import ApiStateCommand, DeviceType
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
+from .entity import SwitchBeeEntity
 
 
 async def async_setup_entry(
@@ -26,24 +26,13 @@ async def async_setup_entry(
     )
 
 
-class SwitchBeeButton(CoordinatorEntity[SwitchBeeCoordinator], ButtonEntity):
+class SwitchBeeButton(SwitchBeeEntity, ButtonEntity):
     """Representation of an Switchbee button."""
-
-    def __init__(
-        self,
-        device: SwitchBeeBaseDevice,
-        coordinator: SwitchBeeCoordinator,
-    ) -> None:
-        """Initialize the Switchbee switch."""
-        super().__init__(coordinator)
-        self._attr_name = device.name
-        self._device_id = device.id
-        self._attr_unique_id = f"{coordinator.mac_formated}-{device.id}"
 
     async def async_press(self) -> None:
         """Fire the scenario in the SwitchBee hub."""
         try:
-            await self.coordinator.api.set_state(self._device_id, ApiStateCommand.ON)
+            await self.coordinator.api.set_state(self._device.id, ApiStateCommand.ON)
         except SwitchBeeError as exp:
             raise HomeAssistantError(
                 f"Failed to fire scenario {self.name}, {str(exp)}"

@@ -82,6 +82,12 @@ def mock_connection(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
+    aioclient_mock.get(
+        f"{url}/api/v3/health",
+        text=load_fixture("radarr/health.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
     if windows:
         aioclient_mock.get(
             f"{url}/api/v3/rootfolder",

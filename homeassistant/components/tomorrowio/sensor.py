@@ -38,8 +38,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
-from homeassistant.util.distance import convert as distance_convert
-from homeassistant.util.speed import convert as speed_convert
+from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
@@ -135,7 +135,7 @@ SENSOR_TYPES = (
         name="Cloud Base",
         unit_imperial=LENGTH_MILES,
         unit_metric=LENGTH_KILOMETERS,
-        imperial_conversion=lambda val: distance_convert(
+        imperial_conversion=lambda val: DistanceConverter.convert(
             val, LENGTH_KILOMETERS, LENGTH_MILES
         ),
     ),
@@ -145,7 +145,7 @@ SENSOR_TYPES = (
         name="Cloud Ceiling",
         unit_imperial=LENGTH_MILES,
         unit_metric=LENGTH_KILOMETERS,
-        imperial_conversion=lambda val: distance_convert(
+        imperial_conversion=lambda val: DistanceConverter.convert(
             val, LENGTH_KILOMETERS, LENGTH_MILES
         ),
     ),
@@ -160,7 +160,7 @@ SENSOR_TYPES = (
         name="Wind Gust",
         unit_imperial=SPEED_MILES_PER_HOUR,
         unit_metric=SPEED_METERS_PER_SECOND,
-        imperial_conversion=lambda val: speed_convert(
+        imperial_conversion=lambda val: SpeedConverter.convert(
             val, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR
         ),
     ),
@@ -328,11 +328,9 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         )
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
         if self.entity_description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = (
-                description.unit_metric
-                if hass.config.units.is_metric
-                else description.unit_imperial
-            )
+            self._attr_native_unit_of_measurement = description.unit_metric
+            if hass.config.units is IMPERIAL_SYSTEM:
+                self._attr_native_unit_of_measurement = description.unit_imperial
 
     @property
     @abstractmethod
@@ -360,7 +358,7 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
             desc.imperial_conversion
             and desc.unit_imperial is not None
             and desc.unit_imperial != desc.unit_metric
-            and not self.hass.config.units.is_metric
+            and self.hass.config.units is IMPERIAL_SYSTEM
         ):
             return handle_conversion(state, desc.imperial_conversion)
 

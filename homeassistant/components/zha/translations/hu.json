@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Effekt minden LED-re",
+            "issue_individual_led_effect": "Effekt egyes LED-ekre",
             "squawk": "Riaszt\u00e1s",
             "warn": "Figyelmeztet\u00e9s"
         },
@@ -210,6 +212,14 @@
                 "description": "A ZHA le\u00e1ll. Biztos benne, hogy folytatja?",
                 "title": "A ZHA \u00fajrakonfigur\u00e1l\u00e1sa"
             },
+            "instruct_unplug": {
+                "description": "A r\u00e9gi r\u00e1di\u00f3t vissza lett \u00e1ll\u00edtva Ha a hardverre m\u00e1r nincs sz\u00fcks\u00e9g, most kih\u00fazhatja.",
+                "title": "H\u00fazza ki a r\u00e9gi r\u00e1di\u00f3t"
+            },
+            "intent_migrate": {
+                "description": "A r\u00e9gi r\u00e1di\u00f3ja gy\u00e1ri alaphelyzetbe ker\u00fcl.  Ha kombin\u00e1lt Z-Wave \u00e9s Zigbee adaptert haszn\u00e1l, mint p\u00e9ld\u00e1ul a HUSBZB-1, akkor ez csak a Zigbee r\u00e9szt \u00e1ll\u00edtja vissza.\n\nSzeretn\u00e9 folytatni?",
+                "title": "\u00daj r\u00e1di\u00f3ra val\u00f3 \u00e1tt\u00e9r\u00e9s"
+            },
             "manual_pick_radio_type": {
                 "data": {
                     "radio_type": "R\u00e1di\u00f3 t\u00edpusa"
@@ -232,6 +242,14 @@
                 },
                 "description": "A biztons\u00e1gi m\u00e1solat IEEE-c\u00edme elt\u00e9r a r\u00e1di\u00f3\u00e9t\u00f3l. A h\u00e1l\u00f3zat megfelel\u0151 m\u0171k\u00f6d\u00e9s\u00e9hez a r\u00e1di\u00f3 IEEE-c\u00edm\u00e9t is meg kell v\u00e1ltoztatni. \n\n Ez egy v\u00e9gleles m\u0171velet.",
                 "title": "A r\u00e1di\u00f3 IEEE-c\u00edm\u00e9nek fel\u00fcl\u00edr\u00e1sa"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "\u00daj r\u00e1di\u00f3ra val\u00f3 \u00e1tt\u00e9r\u00e9s vagy a jelenlegi r\u00e1di\u00f3 \u00fajrakonfigur\u00e1l\u00e1sa?",
+                "menu_options": {
+                    "intent_migrate": "\u00daj r\u00e1di\u00f3ra val\u00f3 \u00e1tt\u00e9r\u00e9s",
+                    "intent_reconfigure": "Az aktu\u00e1lis r\u00e1di\u00f3 \u00fajrakonfigur\u00e1l\u00e1sa"
+                },
+                "title": "Migr\u00e1l\u00e1s vagy \u00fajrakonfigur\u00e1l\u00e1s"
             },
             "upload_manual_backup": {
                 "data": {

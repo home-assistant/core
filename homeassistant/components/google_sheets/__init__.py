@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import cast
 
 import aiohttp
 from google.auth.exceptions import RefreshError
@@ -10,7 +9,7 @@ from google.oauth2.credentials import Credentials
 from gspread import Client
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -69,6 +68,15 @@ def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.data[DOMAIN].pop(entry.entry_id)
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        for service_name in hass.services.async_services()[DOMAIN]:
+            hass.services.async_remove(DOMAIN, service_name)
+
     return True
 
 
@@ -96,12 +104,13 @@ async def async_setup_service(hass: HomeAssistant) -> None:
 
     async def append_to_sheet(call: ServiceCall) -> None:
         """Append new line of data to a Google Sheets document."""
-
-        entry = cast(
-            ConfigEntry,
-            hass.config_entries.async_get_entry(call.data[DATA_CONFIG_ENTRY]),
+        entry: ConfigEntry | None = hass.config_entries.async_get_entry(
+            call.data[DATA_CONFIG_ENTRY]
         )
-        session: OAuth2Session = hass.data[DOMAIN][entry.entry_id]
+        if not entry:
+            raise ValueError(f"Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
+        if not (session := hass.data[DOMAIN].get(entry.entry_id)):
+            raise ValueError(f"Config entry not loaded: {call.data[DATA_CONFIG_ENTRY]}")
         await session.async_ensure_token_valid()
         await hass.async_add_executor_job(_append_to_sheet, call, entry)
 

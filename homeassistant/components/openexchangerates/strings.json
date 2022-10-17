@@ -23,11 +23,5 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Open Exchange Rates YAML configuration is being removed",
-      "description": "Configuring Open Exchange Rates using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Open Exchange Rates YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-    }
   }
 }

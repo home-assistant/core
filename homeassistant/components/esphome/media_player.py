@@ -64,19 +64,19 @@ class EsphomeMediaPlayer(
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def state(self) -> MediaPlayerState | None:
         """Return current state."""
         return _STATES.from_esphome(self._state.state)
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
         return self._state.muted
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
