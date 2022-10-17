@@ -126,7 +126,7 @@
       "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
       "bad_client_cert_key": "Client certificate and private are no valid pair",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_inclusion": "The client certificate and private key must be configurered together"
+      "invalid_inclusion": "The client certificate and private key must be configured together"
     }
   }
 }

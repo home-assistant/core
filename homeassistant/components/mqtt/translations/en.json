@@ -86,7 +86,7 @@
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_will": "Invalid will topic",
             "cannot_connect": "Failed to connect",
-            "invalid_inclusion": "The client certificate and private key must be configurered together"
+            "invalid_inclusion": "The client certificate and private key must be configured together"
         },
         "step": {
             "broker": {
