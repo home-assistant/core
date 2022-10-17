@@ -111,8 +111,7 @@ def add_client_entities(controller, async_add_entities, clients):
 
         trackers.append(UniFiClientTracker(client, controller))
 
-    if trackers:
-        async_add_entities(trackers)
+    async_add_entities(trackers)
 
 
 @callback
@@ -127,8 +126,7 @@ def add_device_entities(controller, async_add_entities, devices):
         device = controller.api.devices[mac]
         trackers.append(UniFiDeviceTracker(device, controller))
 
-    if trackers:
-        async_add_entities(trackers)
+    async_add_entities(trackers)
 
 
 class UniFiClientTracker(UniFiClientBase, ScannerEntity):

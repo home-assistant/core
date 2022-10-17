@@ -39,8 +39,7 @@ async def async_setup_entry(
             new_entities.append(NetgearScannerEntity(coordinator, router, device))
             tracked.add(mac)
 
-        if new_entities:
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
 
