@@ -10,8 +10,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.setup import async_get_loaded_integrations
 
-from .const import DOMAIN, LOGSEVERITY, LogPersistance
+from .const import DOMAIN, LOGSEVERITY
 from .helpers import LoggerSetting, LoggerSettings
+from .models import LogPersistance
 
 
 @callback

@@ -21,8 +21,8 @@ from .const import (
     LOGSEVERITY,
     STORAGE_KEY,
     STORAGE_VERSION,
-    LogPersistance,
 )
+from .models import LogPersistance
 
 
 @callback

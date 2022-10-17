@@ -1,8 +1,6 @@
 """Constants for the Logger integration."""
 import logging
 
-from homeassistant.backports.enum import StrEnum
-
 DOMAIN = "logger"
 
 SERVICE_SET_DEFAULT_LEVEL = "set_default_level"
@@ -32,11 +30,3 @@ EVENT_LOGGING_CHANGED = "logging_changed"
 
 STORAGE_KEY = "core.logger"
 STORAGE_VERSION = 1
-
-
-class LogPersistance(StrEnum):
-    """Log persistence."""
-
-    NONE = "none"
-    ONCE = "once"
-    PERMANENT = "permanent"
