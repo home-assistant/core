@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import logging
+import re
 
-import regex
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -49,8 +49,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the logger component."""
     settings = LoggerSettings(hass, config)
 
-    hass.data[DOMAIN] = {"overrides": {}, "settings": settings}
-    logging.setLoggerClass(_get_logger_class(hass.data[DOMAIN]["overrides"]))
+    domain_config = hass.data[DOMAIN] = {"overrides": {}, "settings": settings}
+    logging.setLoggerClass(_get_logger_class(domain_config["overrides"]))
 
     websocket_api.async_load_websocket_api(hass)
 
@@ -58,10 +58,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Set default log severity and filter
     if DOMAIN in config:
-        set_default_log_level(hass, config[DOMAIN][LOGGER_DEFAULT])
+        set_default_log_level(hass, domain_config[LOGGER_DEFAULT])
 
-        if LOGGER_FILTERS in config[DOMAIN]:
-            for key, value in config[DOMAIN][LOGGER_FILTERS].items():
+        if LOGGER_FILTERS in domain_config:
+            filters: dict[str, list[re.Pattern]] = domain_config[LOGGER_FILTERS]
+            for key, value in filters.items():
                 logger = logging.getLogger(key)
                 _add_log_filter(logger, value)
 
@@ -72,10 +73,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     logger_config = config.get(DOMAIN, {})
 
     if LOGGER_DEFAULT in logger_config:
-        set_default_log_level(logger_config[LOGGER_DEFAULT])
+        set_default_log_level(hass, logger_config[LOGGER_DEFAULT])
 
     if LOGGER_LOGS in logger_config:
-        set_log_levels(config[DOMAIN][LOGGER_LOGS])
+        set_log_levels(hass, domain_config[LOGGER_LOGS])
 
     if LOGGER_FILTERS in logger_config:
         for key, value in logger_config[LOGGER_FILTERS].items():
@@ -107,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _add_log_filter(logger: logging.Logger, patterns: list[regex.regex]) -> None:
+def _add_log_filter(logger: logging.Logger, patterns: list[re.Pattern]) -> None:
     """Add a Filter to the logger based on a regexp of the filter_str."""
 
     def filter_func(logrecord: logging.LogRecord) -> bool:
