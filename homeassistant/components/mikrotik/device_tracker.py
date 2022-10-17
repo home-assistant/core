@@ -68,8 +68,7 @@ def update_items(
             tracked[mac] = MikrotikDataUpdateCoordinatorTracker(device, coordinator)
             new_tracked.append(tracked[mac])
 
-    if new_tracked:
-        async_add_entities(new_tracked)
+    async_add_entities(new_tracked)
 
 
 class MikrotikDataUpdateCoordinatorTracker(

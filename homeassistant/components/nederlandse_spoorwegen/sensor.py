@@ -88,8 +88,7 @@ def setup_platform(
                 departure.get(CONF_TIME),
             )
         )
-    if sensors:
-        add_entities(sensors, True)
+    add_entities(sensors, True)
 
 
 def valid_stations(stations, given_stations):
