@@ -537,9 +537,9 @@ class SensorEntity(Entity):
 
         # SensorDeviceClass.TEMPERATURE is opt-out for °C and °F, opt-in for K
         if (
-            self.device_class == SensorDeviceClass.TEMPERATURE
+            self.automatic_unit_conversion_enabled is None
+            and self.device_class == SensorDeviceClass.TEMPERATURE
             and native_unit_of_measurement in {TEMP_CELSIUS, TEMP_FAHRENHEIT}
-            and self.automatic_unit_conversion_enabled is None
         ):
             return self.hass.config.units.temperature_unit
 
