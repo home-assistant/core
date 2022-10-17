@@ -91,6 +91,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.VACUUM,
 ]
 
@@ -111,5 +112,6 @@ RELOADABLE_PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.VACUUM,
 ]
