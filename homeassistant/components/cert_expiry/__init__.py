@@ -69,6 +69,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[Optional[datetime]])
         self.port = port
         self.cert_error = None
         self.is_cert_valid = False
+        self.days_remaining = 0
 
         display_port = f":{port}" if port != DEFAULT_PORT else ""
         name = f"{self.host}{display_port}"
@@ -89,9 +90,11 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[Optional[datetime]])
         except ValidationFailure as err:
             self.cert_error = err
             self.is_cert_valid = False
+            self.days_remaining = 0
             _LOGGER.error("Certificate validation error: %s [%s]", self.host, err)
             return None
 
         self.cert_error = None
-        self.is_cert_valid = True
+        self.days_remaining = (timestamp.replace(tzinfo=None) - datetime.utcnow()).days
+        self.is_cert_valid = self.days_remaining > 0
         return timestamp
