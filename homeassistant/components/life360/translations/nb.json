@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "unknown": "Uventet feil"
-        },
         "error": {
             "unknown": "Uventet feil"
         }

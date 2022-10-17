@@ -1,43 +1,43 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Configure Life360 Account",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "title": "Configure Life360 Account"
+      }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Account Options",
         "data": {
+          "driving": "Show driving as state",
+          "driving_speed": "Driving speed",
           "limit_gps_acc": "Limit GPS accuracy",
           "max_gps_accuracy": "Max GPS accuracy (meters)",
-          "set_drive_speed": "Set driving speed threshold",
-          "driving_speed": "Driving speed",
-          "driving": "Show driving as state"
-        }
+          "set_drive_speed": "Set driving speed threshold"
+        },
+        "title": "Account Options"
       }
     }
   }
