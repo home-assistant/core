@@ -16,6 +16,9 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+MOCK_CLIENT_CERT = b"## mock client certificate file ##"
+MOCK_CLIENT_KEY = b"## mock key file ##"
+
 
 @pytest.fixture(autouse=True)
 def mock_finish_setup():
@@ -1099,10 +1102,11 @@ async def test_try_connection_with_advanced_parameters(
     mock_process_uploaded_file,
 ):
     """Test config flow with advanced parameters from config."""
+
     with open(tmp_path / "client.crt", "wb") as certfile:
-        certfile.write(b"## mock client certificate file ##")
+        certfile.write(MOCK_CLIENT_CERT)
     with open(tmp_path / "client.key", "wb") as keyfile:
-        keyfile.write(b"## mock key file ##")
+        keyfile.write(MOCK_CLIENT_KEY)
 
     config = {
         "certificate": "auto",
@@ -1115,32 +1119,32 @@ async def test_try_connection_with_advanced_parameters(
     new_yaml_config_file.write_text(new_yaml_config)
     assert new_yaml_config_file.read_text() == new_yaml_config
 
+    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    config_entry.add_to_hass(hass)
+    config_entry.data = {
+        mqtt.CONF_BROKER: "test-broker",
+        mqtt.CONF_PORT: 1234,
+        mqtt.CONF_USERNAME: "user",
+        mqtt.CONF_PASSWORD: "pass",
+        mqtt.CONF_KEEPALIVE: 30,
+        mqtt.CONF_DISCOVERY: True,
+        mqtt.CONF_BIRTH_MESSAGE: {
+            mqtt.ATTR_TOPIC: "ha_state/online",
+            mqtt.ATTR_PAYLOAD: "online",
+            mqtt.ATTR_QOS: 1,
+            mqtt.ATTR_RETAIN: True,
+        },
+        mqtt.CONF_WILL_MESSAGE: {
+            mqtt.ATTR_TOPIC: "ha_state/offline",
+            mqtt.ATTR_PAYLOAD: "offline",
+            mqtt.ATTR_QOS: 2,
+            mqtt.ATTR_RETAIN: False,
+        },
+    }
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
         await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
         await hass.async_block_till_done()
-        config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
-        config_entry.add_to_hass(hass)
-        config_entry.data = {
-            mqtt.CONF_BROKER: "test-broker",
-            mqtt.CONF_PORT: 1234,
-            mqtt.CONF_USERNAME: "user",
-            mqtt.CONF_PASSWORD: "pass",
-            mqtt.CONF_KEEPALIVE: 30,
-            mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_BIRTH_MESSAGE: {
-                mqtt.ATTR_TOPIC: "ha_state/online",
-                mqtt.ATTR_PAYLOAD: "online",
-                mqtt.ATTR_QOS: 1,
-                mqtt.ATTR_RETAIN: True,
-            },
-            mqtt.CONF_WILL_MESSAGE: {
-                mqtt.ATTR_TOPIC: "ha_state/offline",
-                mqtt.ATTR_PAYLOAD: "offline",
-                mqtt.ATTR_QOS: 2,
-                mqtt.ATTR_RETAIN: False,
-            },
-        }
-
         # Test default/suggested values from config
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -1162,43 +1166,18 @@ async def test_try_connection_with_advanced_parameters(
         for k, v in suggested.items():
             assert get_suggested(result["data_schema"].schema, k) == v
 
-        # test we cannot turn off the ca certificate if
-        # it is configured in configuration.yaml
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                mqtt.CONF_BROKER: "another-broker",
-                mqtt.CONF_PORT: 2345,
-                mqtt.CONF_USERNAME: "us3r",
-                mqtt.CONF_PASSWORD: "p4ss",
-                "set_ca_cert": "off",
-                "set_client_cert": True,
-                mqtt.CONF_TLS_INSECURE: True,
-            },
+        # test the client cert and key were migrated to the entry
+        assert config_entry.data[mqtt.CONF_CLIENT_CERT] == MOCK_CLIENT_CERT.decode(
+            "utf-8"
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["errors"]
-        assert result["step_id"] == "broker"
-
-        # test we cannot turn off the client certificate if
-        # it is configured in configuration.yaml
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                mqtt.CONF_BROKER: "another-broker",
-                mqtt.CONF_PORT: 2345,
-                mqtt.CONF_USERNAME: "us3r",
-                mqtt.CONF_PASSWORD: "p4ss",
-                "set_ca_cert": "auto",
-                "set_client_cert": False,
-                mqtt.CONF_TLS_INSECURE: True,
-            },
+        assert config_entry.data[mqtt.CONF_CLIENT_KEY] == MOCK_CLIENT_KEY.decode(
+            "utf-8"
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["errors"]
-        assert result["step_id"] == "broker"
+        assert config_entry.data[mqtt.CONF_CERTIFICATE] == "auto"
 
-        # Accept the settings including the imported certificates
+        # test we can chante username and password
+        # as it was configured as auto in configuration.yaml is is migrated now
+        mock_try_connection_success.reset_mock()
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
@@ -1212,25 +1191,33 @@ async def test_try_connection_with_advanced_parameters(
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert not result["errors"]
+        assert result["errors"] == {}
         assert result["step_id"] == "options"
+        await hass.async_block_till_done()
 
         # check if the username and password was set from config flow and not from configuration.yaml
         assert mock_try_connection_success.username_pw_set.mock_calls[0][1] == (
             "us3r",
             "p4ss",
         )
-
         # check if tls_insecure_set is called
         assert mock_try_connection_success.tls_insecure_set.mock_calls[0][1] == (True,)
 
-        # check if the certificate settings were set from configuration.yaml
+        # check if the ca certificate settings were not set during connection test
         assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
             "certfile"
         ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_CERT)
         assert mock_try_connection_success.tls_set.mock_calls[0].kwargs[
             "keyfile"
         ] == mqtt.util.get_file_path(mqtt.CONF_CLIENT_KEY)
+
+        # Accept default option
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
 
 
 async def test_setup_with_advanced_settings(

@@ -42,10 +42,9 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .client import MqttClientSetup
-from .config_integration import CONFIG_SCHEMA_ENTRY, DEPRECATED_CERTIFICATE_CONFIG_KEYS
+from .config_integration import CONFIG_SCHEMA_ENTRY
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -75,8 +74,6 @@ from .util import (
     MQTT_WILL_BIRTH_SCHEMA,
     async_create_certificate_temp_files,
     get_file_path,
-    get_mqtt_data,
-    migrate_certificate_file_to_content,
     valid_publish_topic,
 )
 
@@ -162,14 +159,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm the setup."""
-        yaml_config: ConfigType = get_mqtt_data(self.hass, True).config or {}
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
             self.hass,
             fields,
-            yaml_config,
             None,
             user_input,
             validated_user_input,
@@ -255,13 +250,11 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the MQTT broker configuration."""
         errors: dict[str, str] = {}
-        yaml_config: ConfigType = get_mqtt_data(self.hass, True).config or {}
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
             self.hass,
             fields,
-            yaml_config,
             self.config_entry.data,
             user_input,
             validated_user_input,
@@ -291,7 +284,6 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
-        yaml_config = get_mqtt_data(self.hass, True).config or {}
         options_config: dict[str, Any] = {}
         bad_input: bool = False
 
@@ -360,23 +352,14 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 
         birth = {
             **DEFAULT_BIRTH,
-            **current_config.get(
-                CONF_BIRTH_MESSAGE, yaml_config.get(CONF_BIRTH_MESSAGE, {})
-            ),
+            **current_config.get(CONF_BIRTH_MESSAGE, {}),
         }
         will = {
             **DEFAULT_WILL,
-            **current_config.get(
-                CONF_WILL_MESSAGE, yaml_config.get(CONF_WILL_MESSAGE, {})
-            ),
+            **current_config.get(CONF_WILL_MESSAGE, {}),
         }
-        discovery = current_config.get(
-            CONF_DISCOVERY, yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
-        )
-        discovery_prefix = current_config.get(
-            CONF_DISCOVERY_PREFIX,
-            yaml_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX),
-        )
+        discovery = current_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
+        discovery_prefix = current_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
 
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
@@ -442,7 +425,6 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 async def async_get_broker_settings(
     hass: HomeAssistant,
     fields: OrderedDict[Any, Any],
-    yaml_config: ConfigType,
     entry_config: MappingProxyType[str, Any] | None,
     user_input: dict[str, Any] | None,
     validated_user_input: dict[str, Any],
@@ -459,33 +441,14 @@ async def async_get_broker_settings(
     current_config: dict[str, Any] = (
         entry_config.copy() if entry_config is not None else {}
     )
-    # Migrate settings from configuration.yaml
-    for key in DEPRECATED_CERTIFICATE_CONFIG_KEYS:
-        if key in yaml_config and key not in current_config:
-            current_config[key] = await hass.async_add_executor_job(
-                migrate_certificate_file_to_content, yaml_config[key]
-            )
 
     async def _async_validate_broker_settings(
         config: dict[str, Any],
-        yaml_config: ConfigType,
         user_input: dict[str, Any],
         validated_user_input: dict[str, Any],
         errors: dict[str, str],
     ) -> bool:
         """Additional validation on broker settings for better error messages."""
-
-        # We can not change certificate settings with deprecated settings in yaml
-        if (
-            config.get(CONF_CERTIFICATE)
-            and user_input.get(SET_CA_CERT, "off") == "off"
-            and CONF_CERTIFICATE in yaml_config
-            or config.get(CONF_CLIENT_CERT)
-            and not user_input.get(SET_CLIENT_CERT)
-            and (CONF_CLIENT_CERT in yaml_config or CONF_CLIENT_KEY in yaml_config)
-        ):
-            errors["base"] = "remove_yaml_config"
-            return False
 
         # Get current certificate settings from config entry
         certificate: str | None = (
@@ -568,58 +531,34 @@ async def async_get_broker_settings(
         if ADVANCED_OPTIONS not in user_input or advanced_broker_options is False:
             if await _async_validate_broker_settings(
                 current_config,
-                yaml_config,
                 user_input_basic,
                 validated_user_input,
                 errors,
             ):
                 return True
         # Get defaults settings from previous post
-        current_broker = user_input_basic.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
-        current_port = user_input_basic.get(
-            CONF_PORT, yaml_config.get(CONF_PORT, DEFAULT_PORT)
-        )
-        current_user = user_input_basic.get(
-            CONF_USERNAME, yaml_config.get(CONF_USERNAME)
-        )
-        current_pass = user_input_basic.get(
-            CONF_PASSWORD, yaml_config.get(CONF_PASSWORD)
-        )
+        current_broker = user_input_basic.get(CONF_BROKER)
+        current_port = user_input_basic.get(CONF_PORT, DEFAULT_PORT)
+        current_user = user_input_basic.get(CONF_USERNAME)
+        current_pass = user_input_basic.get(CONF_PASSWORD)
     else:
         # Get default settings from entry or yaml (if any)
-        current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
-        current_port = current_config.get(
-            CONF_PORT, yaml_config.get(CONF_PORT, DEFAULT_PORT)
-        )
-        current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
-        current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
+        current_broker = current_config.get(CONF_BROKER)
+        current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
+        current_user = current_config.get(CONF_USERNAME)
+        current_pass = current_config.get(CONF_PASSWORD)
 
     # Treat the previous post as an update of the current settings (if there was a basic broker setup step)
     current_config.update(user_input_basic)
 
     # Get default settings for advanced broker options
-    current_client_id = current_config.get(
-        CONF_CLIENT_ID, yaml_config.get(CONF_CLIENT_ID)
-    )
-    current_keepalive = current_config.get(
-        CONF_KEEPALIVE, yaml_config.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE)
-    )
-    current_ca_certificate = current_config.get(
-        CONF_CERTIFICATE, yaml_config.get(CONF_CERTIFICATE)
-    )
-    current_client_certificate = current_config.get(
-        CONF_CLIENT_CERT, yaml_config.get(CONF_CLIENT_CERT)
-    )
-    current_client_key = current_config.get(
-        CONF_CLIENT_KEY, yaml_config.get(CONF_CLIENT_KEY)
-    )
-    current_tls_insecure = current_config.get(
-        CONF_TLS_INSECURE, yaml_config.get(CONF_TLS_INSECURE, False)
-    )
-    current_protocol = current_config.get(
-        CONF_PROTOCOL,
-        yaml_config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL),
-    )
+    current_client_id = current_config.get(CONF_CLIENT_ID)
+    current_keepalive = current_config.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE)
+    current_ca_certificate = current_config.get(CONF_CERTIFICATE)
+    current_client_certificate = current_config.get(CONF_CLIENT_CERT)
+    current_client_key = current_config.get(CONF_CLIENT_KEY)
+    current_tls_insecure = current_config.get(CONF_TLS_INSECURE, False)
+    current_protocol = current_config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
     advanced_broker_options |= bool(
         current_client_id
         or current_keepalive != DEFAULT_KEEPALIVE
@@ -676,8 +615,8 @@ async def async_get_broker_settings(
         )
     ] = BOOLEAN_SELECTOR
     if (
-        current_client_certificate is None
-        and current_config.get(SET_CLIENT_CERT) is True
+        current_client_certificate is not None
+        or current_config.get(SET_CLIENT_CERT) is True
     ):
         fields[
             vol.Optional(
@@ -704,7 +643,7 @@ async def async_get_broker_settings(
             default=verification_mode,
         )
     ] = BROKER_VERIFICATION_SELECTOR
-    if current_ca_certificate is None and verification_mode == "custom":
+    if current_ca_certificate is not None or verification_mode == "custom":
         fields[
             vol.Optional(
                 CONF_CERTIFICATE,
@@ -771,7 +710,7 @@ def check_certicate_chain() -> str | None:
         try:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
-        except ValueError:
+        except (TypeError, ValueError):
             return "bad_client_key"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS)

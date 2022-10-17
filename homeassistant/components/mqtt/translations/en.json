@@ -86,18 +86,17 @@
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_will": "Invalid will topic",
             "cannot_connect": "Failed to connect",
-            "invalid_inclusion": "The client certificate and private key must be configurered together",
-            "remove_yaml_config": "Deprecated settings from configuration.yaml must be removed first"
+            "invalid_inclusion": "The client certificate and private key must be configurered together"
         },
         "step": {
             "broker": {
                 "data": {
                     "advanced_options": "Advanced options",
                     "broker": "Broker",
-                    "certificate": "Path to custom CA certificate file",
+                    "certificate": "Upload custom CA certificate file",
                     "client_id": "Client ID (leave empty to randomly generated one)",
-                    "client_cert": "Path to a client certificate file",
-                    "client_key": "Path to a private key file",
+                    "client_cert": "Upload client certificate file",
+                    "client_key": "Upload private key file",
                     "keepalive": "The time between sending keep alive messages",
                     "password": "Password",
                     "port": "Port",
