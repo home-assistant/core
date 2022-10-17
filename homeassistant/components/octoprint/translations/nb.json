@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "unknown": "Uventet feil"
+        },
         "step": {
             "reauth_confirm": {
                 "data": {
