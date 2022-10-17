@@ -140,6 +140,7 @@ class LoggerSettings:
             self._stored_config["logs"].pop(domain, None)
         else:
             self._stored_config["logs"][domain] = settings
+
         self.async_save()
 
         if settings.type == "integration":
@@ -148,15 +149,15 @@ class LoggerSettings:
             loggers = [domain]
 
         combined_logs = {logger: LOGSEVERITY[settings.level] for logger in loggers}
-
+        logger_yaml_config = self._yaml_config.get(DOMAIN, {})
         # Consider potentially chattier log levels already set in configuration.yaml
-        if DOMAIN in self._yaml_config and LOGGER_LOGS in self._yaml_config[DOMAIN]:
-            yaml_log_settings = self._yaml_config[DOMAIN][LOGGER_LOGS]
+        if yaml_log_settings := logger_yaml_config.get(LOGGER_LOGS):
             for logger in loggers:
                 combined_logs[logger] = _chattiest_log_level(
                     combined_logs[logger],
                     yaml_log_settings.get(logger, logging.NOTSET),
                 )
+
         set_log_levels(hass, combined_logs)
 
     async def async_get_levels(self, hass: HomeAssistant) -> dict[str, int]:
