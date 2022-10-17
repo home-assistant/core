@@ -1,5 +1,7 @@
 """UniFi Network switch platform tests."""
+
 from copy import deepcopy
+from datetime import timedelta
 
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_DEVICE, MESSAGE_EVENT
 
@@ -8,6 +10,7 @@ from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchDeviceClass,
 )
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
@@ -18,10 +21,19 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.components.unifi.switch import POE_SWITCH
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryDisabler
+from homeassistant.util import dt
 
 from .test_controller import (
     CONTROLLER_HOST,
@@ -31,7 +43,7 @@ from .test_controller import (
     setup_unifi_integration,
 )
 
-from tests.common import mock_restore_cache
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 CLIENT_1 = {
     "hostname": "client_1",
@@ -1373,3 +1385,68 @@ async def test_restore_client_no_old_state(hass, aioclient_mock):
 
     poe_client = hass.states.get("switch.poe_client")
     assert poe_client.state == "unavailable"  # self.poe_mode is None
+
+
+async def test_poe_port_switches(hass, aioclient_mock):
+    """Test the update_items function with some clients."""
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, devices_response=[DEVICE_1]
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
+
+    ent_reg = er.async_get(hass)
+    ent_reg_entry = ent_reg.async_get("switch.mock_name_port_1_poe")
+    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert ent_reg_entry.entity_category is EntityCategory.CONFIG
+
+    # Enable entity
+
+    ent_reg.async_update_entity(
+        entity_id="switch.mock_name_port_1_poe", disabled_by=None
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # Validate state object
+    switch_1 = hass.states.get("switch.mock_name_port_1_poe")
+    assert switch_1 is not None
+    assert switch_1.state == "on"
+    assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET
+
+    # Turn off PoE
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{controller.host}:1234/api/s/{controller.site}/rest/device/mock-id",
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.mock_name_port_1_poe"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "port_overrides": [{"poe_mode": "off", "port_idx": 1, "portconf_id": "1a1"}]
+    }
+
+    # Turn on PoE
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": "switch.mock_name_port_1_poe"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.mock_calls[1][2] == {
+        "port_overrides": [{"poe_mode": "auto", "port_idx": 1, "portconf_id": "1a1"}]
+    }
