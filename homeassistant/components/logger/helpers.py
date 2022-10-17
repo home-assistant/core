@@ -126,17 +126,16 @@ class LoggerSettings:
 
     async def async_load(self) -> None:
         """Load stored settings."""
+        stored_config = await self._store.async_load()
+        if not stored_config:
+            self._stored_config = {STORAGE_LOG_KEY: {}}
+            return
 
         def reset_persistence(settings: LoggerSetting) -> LoggerSetting:
             """Reset persistence."""
             if settings.persistence == LogPersistance.ONCE:
                 settings.persistence = LogPersistance.NONE
             return settings
-
-        stored_config = await self._store.async_load()
-        if not stored_config:
-            self._stored_config = {STORAGE_LOG_KEY: {}}
-            return
 
         stored_log_config = stored_config[STORAGE_LOG_KEY]
         # Reset domains for which the overrides should only be applied once
