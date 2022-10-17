@@ -22,7 +22,12 @@ from .const import (
     SERVICE_SET_DEFAULT_LEVEL,
     SERVICE_SET_LEVEL,
 )
-from .helpers import LoggerSettings, set_default_log_level, set_log_levels
+from .helpers import (
+    LoggerDomainConfig,
+    LoggerSettings,
+    set_default_log_level,
+    set_log_levels,
+)
 
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY), LOGSEVERITY.__getitem__)
 
@@ -50,8 +55,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     settings = LoggerSettings(hass, config)
 
-    domain_config = hass.data[DOMAIN] = {"overrides": {}, "settings": settings}
-    logging.setLoggerClass(_get_logger_class(domain_config["overrides"]))
+    domain_config = hass.data[DOMAIN] = LoggerDomainConfig({}, settings)
+    logging.setLoggerClass(_get_logger_class(domain_config.overrides))
 
     websocket_api.async_load_websocket_api(hass)
 

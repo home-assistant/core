@@ -6,8 +6,9 @@ from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
 import logging
-from typing import Any
+from typing import Any, cast
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -22,7 +23,12 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .models import LogPersistance
+
+
+@callback
+def async_get_domain_config(hass: HomeAssistant) -> LoggerDomainConfig:
+    """Return the domain config."""
+    return cast(LoggerDomainConfig, hass.data[DOMAIN])
 
 
 @callback
@@ -35,7 +41,7 @@ def set_default_log_level(hass: HomeAssistant, level: int) -> None:
 @callback
 def set_log_levels(hass: HomeAssistant, logpoints: Mapping[str, int]) -> None:
     """Set the specified log levels."""
-    hass.data[DOMAIN]["overrides"].update(logpoints)
+    async_get_domain_config(hass).overrides.update(logpoints)
     for key, value in logpoints.items():
         _set_log_level(logging.getLogger(key), value)
     hass.bus.async_fire(EVENT_LOGGING_CHANGED)
@@ -75,6 +81,22 @@ class LoggerSetting:
     level: str
     persistence: str
     type: str
+
+
+@dataclass
+class LoggerDomainConfig:
+    """Logger domain config."""
+
+    overrides: dict[str, Any]
+    settings: LoggerSettings
+
+
+class LogPersistance(StrEnum):
+    """Log persistence."""
+
+    NONE = "none"
+    ONCE = "once"
+    PERMANENT = "permanent"
 
 
 class LoggerSettings:
