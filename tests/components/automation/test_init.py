@@ -739,7 +739,7 @@ async def test_automation_stops(hass, calls, service):
 
 
 async def test_reload_unchanged_does_not_stop(hass, calls):
-    """Test that turning off / reloading stops any running actions as appropriate."""
+    """Test that reloading stops any running actions as appropriate."""
     test_entity = "test.entity"
 
     config = {
@@ -766,6 +766,7 @@ async def test_reload_unchanged_does_not_stop(hass, calls):
 
     hass.bus.async_fire("test_event")
     await running.wait()
+    assert len(calls) == 0
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
