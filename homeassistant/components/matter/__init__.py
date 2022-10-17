@@ -191,14 +191,20 @@ def _async_init_services(hass: HomeAssistant) -> None:
         if device is None:
             return None
 
-        matter_iden = [iden for iden in device.identifiers if iden[0] == DOMAIN]
+        matter_id = next(
+            (
+                identifier for identifier in device.identifiers
+                if identifier[0] == DOMAIN
+            ),
+            None
+        )
 
-        if not matter_iden:
+        if not matter_id:
             return None
 
-        unique_id = matter_iden[0][1]
+        unique_id = matter_id[1]
 
-        matter: Matter = list(hass.data[DOMAIN].values())[0]
+        matter: Matter = next(iter(hass.data[DOMAIN].values()))
 
         # This could be more efficient
         for node in matter.get_nodes():
