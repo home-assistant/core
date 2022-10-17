@@ -8,7 +8,7 @@ Support for controlling deep packet inspection (DPI) restriction groups.
 import asyncio
 from typing import Any
 
-from aiounifi.interfaces.api_handlers import SOURCE_EVENT
+from aiounifi.interfaces.api_handlers import SOURCE_EVENT, ItemEvent
 from aiounifi.models.client import ClientBlockRequest
 from aiounifi.models.device import (
     DeviceSetOutletRelayRequest,
@@ -34,6 +34,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
+
+# if TYPE_CHECKING:
+#     from .controller import UniFiController
 
 BLOCK_SWITCH = "block"
 DPI_SWITCH = "dpi"
@@ -110,6 +113,18 @@ async def async_setup_entry(
 
     items_added()
     known_poe_clients.clear()
+
+    @callback
+    def async_add_poe_switch(_: ItemEvent, obj_id: str) -> None:
+        """Add port PoE switch from UniFi controller."""
+        if not controller.api.ports[obj_id].port_poe:
+            return
+        async_add_entities([UnifiPoePortSwitch(obj_id, controller)])
+
+    controller.api.ports.subscribe(async_add_poe_switch, ItemEvent.ADDED)
+
+    for port_idx in controller.api.ports:
+        async_add_poe_switch(ItemEvent.ADDED, port_idx)
 
 
 @callback
@@ -550,3 +565,72 @@ class UniFiOutletSwitch(UniFiBase, SwitchEntity):
 
     async def options_updated(self) -> None:
         """Config entry options are updated, no options to act on."""
+
+
+class UnifiPoePortSwitch(SwitchEntity):
+    """UniFi PoE port switch entity."""
+
+    _attr_should_poll = False
+    _attr_entity_registry_enabled_default = False
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_device_class = SwitchDeviceClass.OUTLET
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:ethernet"
+
+    # def __init__(self, obj_id: str, controller: UniFiController) -> None:
+    def __init__(self, obj_id: str, controller) -> None:
+        """Set up UniFi Network entity base."""
+        self._attr_unique_id = f"{obj_id}-PoE"
+        self._device_id, port_idx = obj_id.split("_", 1)
+        self._port_idx = int(port_idx)
+        self._device = controller.api.devices[self._device_id]
+        self._attr_name = f"PoE port {self._port_idx}"
+        self._obj_id = obj_id
+        self.controller = controller
+
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._device_id)}
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        self.async_on_remove(
+            self.controller.api.ports.subscribe(self.async_signalling_callback)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self.controller.signal_reachable,
+                self.async_signal_reachable_callback,
+            )
+        )
+
+    @callback
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
+        """Object has new event."""
+        port = self.controller.api.ports[obj_id]
+        if event == ItemEvent.CHANGED:
+            self._attr_is_on = port.poe_mode != "off"
+        self.async_write_ha_state()
+
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        port = self.controller.api.ports[self._obj_id]
+        self._attr_available = (
+            self.controller.available and not self._device.disabled and port.up
+        )
+        # self.async_update_callback()
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable POE for client."""
+        await self.controller.api.request(
+            DeviceSetPoePortModeRequest.create(self._device, self._port_idx, "auto")
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable POE for client."""
+        await self.controller.api.request(
+            DeviceSetPoePortModeRequest.create(self._device, self._port_idx, "off")
+        )
