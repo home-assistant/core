@@ -1,7 +1,7 @@
 """Tests for Logger Websocket API commands."""
 import logging
 
-from homeassistant.components.logger.const import DOMAIN
+from homeassistant.components.logger.helpers import async_get_domain_config
 from homeassistant.components.websocket_api import const
 from homeassistant.setup import async_setup_component
 
@@ -66,7 +66,7 @@ async def test_integration_log_level(hass, hass_ws_client, hass_admin_user):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    assert hass.data[DOMAIN]["overrides"] == {
+    assert async_get_domain_config(hass).overrides == {
         "homeassistant.components.websocket_api": logging.DEBUG
     }
 
@@ -118,7 +118,7 @@ async def test_module_log_level(hass, hass_ws_client, hass_admin_user):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    assert hass.data[DOMAIN]["overrides"] == {
+    assert async_get_domain_config(hass).overrides == {
         "homeassistant.components.websocket_api": logging.DEBUG,
         "homeassistant.components.other_component": logging.WARNING,
     }
@@ -133,7 +133,7 @@ async def test_module_log_level_override(hass, hass_ws_client, hass_admin_user):
         {"logger": {"logs": {"homeassistant.components.websocket_api": "warning"}}},
     )
 
-    assert hass.data[DOMAIN]["overrides"] == {
+    assert async_get_domain_config(hass).overrides == {
         "homeassistant.components.websocket_api": logging.WARNING
     }
 
@@ -152,7 +152,7 @@ async def test_module_log_level_override(hass, hass_ws_client, hass_admin_user):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    assert hass.data[DOMAIN]["overrides"] == {
+    assert async_get_domain_config(hass).overrides == {
         "homeassistant.components.websocket_api": logging.WARNING
     }
 
@@ -171,7 +171,7 @@ async def test_module_log_level_override(hass, hass_ws_client, hass_admin_user):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    assert hass.data[DOMAIN]["overrides"] == {
+    assert async_get_domain_config(hass).overrides == {
         "homeassistant.components.websocket_api": logging.DEBUG
     }
 
@@ -190,6 +190,6 @@ async def test_module_log_level_override(hass, hass_ws_client, hass_admin_user):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
 
-    assert hass.data[DOMAIN]["overrides"] == {
+    assert async_get_domain_config(hass).overrides == {
         "homeassistant.components.websocket_api": logging.WARNING
     }
