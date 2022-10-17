@@ -29,4 +29,5 @@ ATTR_LEVEL = "level"
 EVENT_LOGGING_CHANGED = "logging_changed"
 
 STORAGE_KEY = "core.logger"
+STORAGE_LOG_KEY = "logs"
 STORAGE_VERSION = 1

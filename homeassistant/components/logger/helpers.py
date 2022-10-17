@@ -21,6 +21,7 @@ from .const import (
     LOGGER_LOGS,
     LOGSEVERITY,
     STORAGE_KEY,
+    STORAGE_LOG_KEY,
     STORAGE_VERSION,
 )
 
@@ -126,24 +127,26 @@ class LoggerSettings:
 
         stored_config = await self._store.async_load()
         if stored_config:
+            stored_log_config = stored_config[STORAGE_LOG_KEY]
             # Reset domains for which the overrides should only be applied once
             self._stored_config = {
-                "logs": {
+                STORAGE_LOG_KEY: {
                     domain: reset_persistence(LoggerSetting(**settings))
-                    for domain, settings in stored_config["logs"].items()
+                    for domain, settings in stored_log_config.items()
                 }
             }
             await self._store.async_save(self._async_data_to_save())
         else:
-            self._stored_config = {"logs": {}}
+            self._stored_config = {STORAGE_LOG_KEY: {}}
 
     @callback
     def _async_data_to_save(self) -> dict[str, dict[str, dict[str, str]]]:
         """Generate data to be saved."""
+        stored_log_config = self._stored_config[STORAGE_LOG_KEY]
         return {
-            "logs": {
+            STORAGE_LOG_KEY: {
                 domain: asdict(settings)
-                for domain, settings in self._stored_config["logs"].items()
+                for domain, settings in stored_log_config.items()
                 if settings.persistence
                 in (LogPersistance.ONCE, LogPersistance.PERMANENT)
             }
@@ -154,14 +157,23 @@ class LoggerSettings:
         """Save settings."""
         self._store.async_delay_save(self._async_data_to_save, 15)
 
+    @callback
+    def _async_get_logger_logs(self) -> dict[str, int]:
+        """Get the logger logs."""
+        logger_logs: dict[str, int] = self._yaml_config.get(DOMAIN, {}).get(
+            LOGGER_LOGS, {}
+        )
+        return logger_logs
+
     async def async_update(
         self, hass: HomeAssistant, domain: str, settings: LoggerSetting
     ) -> None:
         """Update settings."""
+        stored_log_config = self._stored_config[STORAGE_LOG_KEY]
         if settings.level == "NOTSET":
-            self._stored_config["logs"].pop(domain, None)
+            stored_log_config.pop(domain, None)
         else:
-            self._stored_config["logs"][domain] = settings
+            stored_log_config[domain] = settings
 
         self.async_save()
 
@@ -171,9 +183,8 @@ class LoggerSettings:
             loggers = [domain]
 
         combined_logs = {logger: LOGSEVERITY[settings.level] for logger in loggers}
-        logger_yaml_config = self._yaml_config.get(DOMAIN, {})
         # Consider potentially chattier log levels already set in configuration.yaml
-        if yaml_log_settings := logger_yaml_config.get(LOGGER_LOGS):
+        if yaml_log_settings := self._async_get_logger_logs():
             for logger in loggers:
                 combined_logs[logger] = _chattiest_log_level(
                     combined_logs[logger],
@@ -185,7 +196,7 @@ class LoggerSettings:
     async def async_get_levels(self, hass: HomeAssistant) -> dict[str, int]:
         """Get combination of levels from yaml and storage."""
         combined_logs = defaultdict(lambda: logging.CRITICAL)
-        for domain, settings in self._stored_config["logs"].items():
+        for domain, settings in self._stored_config[STORAGE_LOG_KEY].items():
             if settings.type == "integration":
                 loggers = await get_integration_loggers(hass, domain)
             else:
@@ -194,8 +205,8 @@ class LoggerSettings:
             for logger in loggers:
                 combined_logs[logger] = LOGSEVERITY[settings.level]
 
-        if DOMAIN in self._yaml_config and LOGGER_LOGS in self._yaml_config[DOMAIN]:
-            for domain, level in self._yaml_config[DOMAIN][LOGGER_LOGS].items():
+        if yaml_log_settings := self._async_get_logger_logs():
+            for domain, level in yaml_log_settings.items():
                 combined_logs[domain] = _chattiest_log_level(
                     combined_logs[domain], level
                 )
