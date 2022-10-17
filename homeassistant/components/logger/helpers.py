@@ -147,9 +147,7 @@ class LoggerSettings:
         else:
             loggers = [domain]
 
-        combined_logs = {}
-        for logger in loggers:
-            combined_logs[logger] = LOGSEVERITY[settings.level]
+        combined_logs = {logger: LOGSEVERITY[settings.level] for logger in loggers}
 
         # Consider potentially chattier log levels already set in configuration.yaml
         if DOMAIN in self._yaml_config and LOGGER_LOGS in self._yaml_config[DOMAIN]:
