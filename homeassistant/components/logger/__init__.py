@@ -69,19 +69,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Combine log levels configured in configuration.yaml with log levels set by frontend
     combined_logs = await settings.async_get_levels(hass)
     set_log_levels(hass, combined_logs)
-    # Set default log severity
-    logger_config = config.get(DOMAIN, {})
-
-    if LOGGER_DEFAULT in logger_config:
-        set_default_log_level(hass, logger_config[LOGGER_DEFAULT])
-
-    if LOGGER_LOGS in logger_config:
-        set_log_levels(hass, domain_config[LOGGER_LOGS])
-
-    if LOGGER_FILTERS in logger_config:
-        for key, value in logger_config[LOGGER_FILTERS].items():
-            logger = logging.getLogger(key)
-            _add_log_filter(logger, value)
 
     @callback
     def async_service_handler(service: ServiceCall) -> None:
