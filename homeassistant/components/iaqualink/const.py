@@ -2,4 +2,4 @@
 from datetime import timedelta
 
 DOMAIN = "iaqualink"
-UPDATE_INTERVAL = timedelta(seconds=30)
+UPDATE_INTERVAL = timedelta(seconds=15)

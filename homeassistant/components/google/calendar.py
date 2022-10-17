@@ -359,7 +359,8 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     def _apply_coordinator_update(self) -> None:
         """Copy state from the coordinator to this entity."""
         events = self.coordinator.data
-        self._event = _get_calendar_event(next(iter(events))) if events else None
+        api_event = next(filter(self._event_filter, iter(events)), None)
+        self._event = _get_calendar_event(api_event) if api_event else None
         if self._event:
             (self._event.summary, self._offset_value) = extract_offset(
                 self._event.summary, self._offset

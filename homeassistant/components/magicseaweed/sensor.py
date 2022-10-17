@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +93,7 @@ def setup_platform(
 
     if CONF_UNITS in config:
         units = config.get(CONF_UNITS)
-    elif hass.config.units.is_metric:
+    elif hass.config.units is METRIC_SYSTEM:
         units = UNITS[0]
     else:
         units = UNITS[2]

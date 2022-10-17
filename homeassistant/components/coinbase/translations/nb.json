@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Uventet feil"
+        }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "Konfigurering av Coinbase med YAML er fjernet.\n\nDin eksisterende YAML-konfigurasjon brukes ikke av Home Assistant.\n\nFjern YAML-konfigurasjonen fra configuration.yaml-filen og start Home Assistant p\u00e5 nytt for \u00e5 l\u00f8se dette problemet."
+        }
+    },
+    "options": {
+        "error": {
+            "unknown": "Uventet feil"
+        }
+    }
+}

@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MODE,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_METERS,
     LENGTH_MILES,
     Platform,
@@ -45,6 +44,7 @@ from .const import (
     CONF_ROUTE_MODE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    IMPERIAL_UNITS,
     NO_ROUTE_ERROR_MESSAGE,
     TRAFFIC_MODE_ENABLED,
     TRAVEL_MODES_VEHICLE,
@@ -178,7 +178,7 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
             traffic_time: float = summary["baseTime"]
             if self.config.travel_mode in TRAVEL_MODES_VEHICLE:
                 traffic_time = summary["trafficTime"]
-            if self.config.units == CONF_UNIT_SYSTEM_IMPERIAL:
+            if self.config.units == IMPERIAL_UNITS:
                 # Convert to miles.
                 distance = DistanceConverter.convert(
                     distance, LENGTH_METERS, LENGTH_MILES

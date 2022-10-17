@@ -20,6 +20,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ def setup_platform(
 
     if CONF_UNIT_SYSTEM in config:
         unit_system = config[CONF_UNIT_SYSTEM]
-    elif hass.config.units.is_metric:
+    elif hass.config.units is METRIC_SYSTEM:
         unit_system = UNIT_SYSTEMS[1]
     else:
         unit_system = UNIT_SYSTEMS[0]
