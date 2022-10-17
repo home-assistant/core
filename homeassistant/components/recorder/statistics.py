@@ -2200,13 +2200,13 @@ def async_change_statistics_unit(
 
 
 def _validate_db_schema_utf8(
-    engine: Engine, session_maker: Callable[[], Session]
+    instance: Recorder, session_maker: Callable[[], Session]
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
 
     # Lack of full utf8 support is only an issue for MySQL / MariaDB
-    if engine.dialect.name != SupportedDialect.MYSQL:
+    if instance.dialect_name != SupportedDialect.MYSQL:
         return schema_errors
 
     # This name can't be represented unless 4-byte UTF-8 unicode is supported
@@ -2246,13 +2246,16 @@ def _validate_db_schema_utf8(
 
 
 def _validate_db_schema(
-    hass: HomeAssistant, engine: Engine, session_maker: Callable[[], Session]
+    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
 
     # Wrong precision is only an issue for MySQL / MariaDB / PostgreSQL
-    if engine.dialect.name not in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+    if instance.dialect_name not in (
+        SupportedDialect.MYSQL,
+        SupportedDialect.POSTGRESQL,
+    ):
         return schema_errors
 
     # This number can't be accurately represented as a 32-bit float
@@ -2354,14 +2357,16 @@ def _validate_db_schema(
 
 
 def validate_db_schema(
-    hass: HomeAssistant, engine: Engine, session_maker: Callable[[], Session]
+    hass: HomeAssistant, instance: Recorder, session_maker: Callable[[], Session]
 ) -> set[str]:
     """Do some basic checks for common schema errors caused by manual migration."""
     schema_errors: set[str] = set()
-    schema_errors |= _validate_db_schema_utf8(engine, session_maker)
-    schema_errors |= _validate_db_schema(hass, engine, session_maker)
+    schema_errors |= _validate_db_schema_utf8(instance, session_maker)
+    schema_errors |= _validate_db_schema(hass, instance, session_maker)
     if schema_errors:
-        _LOGGER.debug("Detected statistics schema errors: %s", schema_errors)
+        _LOGGER.debug(
+            "Detected statistics schema errors: %s", ", ".join(sorted(schema_errors))
+        )
     return schema_errors
 
 

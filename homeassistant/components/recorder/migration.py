@@ -158,7 +158,8 @@ def migrate_schema(
 
     if schema_errors := schema_status.statistics_schema_errors:
         _LOGGER.warning(
-            "Database is about to correct DB schema errors: %s", schema_errors
+            "Database is about to correct DB schema errors: %s",
+            ", ".join(sorted(schema_errors)),
         )
         statistics_correct_db_schema(engine, session_maker, schema_errors)
 
