@@ -1838,6 +1838,7 @@
     },
     "geo_json_events": {
       "name": "GeoJSON",
+      "config_flow": true,
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
