@@ -10,7 +10,10 @@ from aiohomekit.model.characteristics import Characteristic, CharacteristicsType
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_last_service_info,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -30,6 +33,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -556,17 +560,22 @@ class RSSISensor(HomeKitEntity, SensorEntity):
         return "Signal strength"
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this device."""
+    def old_unique_id(self) -> str:
+        """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-rssi"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        return f"{self._accessory.unique_id}_rssi"
 
     @property
     def native_value(self) -> int | None:
         """Return the current rssi value."""
         address = self._accessory.pairing_data["AccessoryAddress"]
-        ble_device = async_ble_device_from_address(self.hass, address)
-        return ble_device.rssi if ble_device else None
+        last_service_info = async_last_service_info(self.hass, address)
+        return last_service_info.rssi if last_service_info else None
 
 
 async def async_setup_entry(
@@ -587,7 +596,11 @@ async def async_setup_entry(
         ) and not service.has(required_char):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([entity_class(conn, info)])
+        entity: HomeKitSensor = entity_class(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.SENSOR
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)
@@ -599,7 +612,11 @@ async def async_setup_entry(
         if description.probe and not description.probe(char):
             return False
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        async_add_entities([SimpleSensor(conn, info, char, description)])
+        entity = SimpleSensor(conn, info, char, description)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.SENSOR
+        )
+        async_add_entities([entity])
 
         return True
 
@@ -614,7 +631,11 @@ async def async_setup_entry(
             service_type=ServicesTypes.ACCESSORY_INFORMATION
         )
         info = {"aid": accessory.aid, "iid": accessory_info.iid}
-        async_add_entities([RSSISensor(conn, info)])
+        entity = RSSISensor(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.SENSOR
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_accessory_factory(async_add_accessory)

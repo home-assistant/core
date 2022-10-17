@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
             "kamereon_no_account": "Finner ikke Kamereon-konto",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "invalid_credentials": "Ugyldig godkjenning"

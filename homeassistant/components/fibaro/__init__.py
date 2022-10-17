@@ -650,8 +650,14 @@ class FibaroDevice(Entity):
                 attr[ATTR_BATTERY_LEVEL] = int(
                     self.fibaro_device.properties.batteryLevel
                 )
-            if "fibaroAlarmArm" in self.fibaro_device.interfaces:
-                attr[ATTR_ARMED] = bool(self.fibaro_device.properties.armed)
+            if "armed" in self.fibaro_device.properties:
+                armed = self.fibaro_device.properties.armed
+                if isinstance(armed, bool):
+                    attr[ATTR_ARMED] = armed
+                elif isinstance(armed, str) and armed.lower() in ("true", "false"):
+                    attr[ATTR_ARMED] = armed.lower() == "true"
+                else:
+                    attr[ATTR_ARMED] = None
         except (ValueError, KeyError):
             pass
 

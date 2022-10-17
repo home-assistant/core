@@ -29,6 +29,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import disconnect_client
 from .addon import AddonError, AddonInfo, AddonManager, AddonState, get_addon_manager
 from .const import (
+    ADDON_SLUG,
     CONF_ADDON_DEVICE,
     CONF_ADDON_EMULATE_HARDWARE,
     CONF_ADDON_LOG_LEVEL,
@@ -491,6 +492,9 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
+
+        if discovery_info.slug != ADDON_SLUG:
+            return self.async_abort(reason="not_zwave_js_addon")
 
         self.ws_address = (
             f"ws://{discovery_info.config['host']}:{discovery_info.config['port']}"

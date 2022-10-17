@@ -55,15 +55,15 @@
         },
         "trigger_type": {
             "double_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
-            "initial_press": "przycisk \"{subtype}\" zostanie lekko naci\u015bni\u0119ty",
-            "long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
-            "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "initial_press": "\"{subtype}\" zostanie lekko naci\u015bni\u0119ty",
+            "long_release": "\"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_long_release": "\"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "remote_button_short_release": "\"{subtype}\" zostanie zwolniony",
             "remote_double_button_long_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione po d\u0142ugim naci\u015bni\u0119ciu",
             "remote_double_button_short_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione",
-            "repeat": "przycisk \"{subtype}\" zostanie przytrzymany",
-            "short_release": "przycisk \"{subtype}\" zostanie zwolniony po kr\u00f3tkim naci\u015bni\u0119ciu",
+            "repeat": "\"{subtype}\" zostanie przytrzymany",
+            "short_release": "\"{subtype}\" zostanie zwolniony po kr\u00f3tkim naci\u015bni\u0119ciu",
             "start": "\"{subtype}\" zostanie lekko naci\u015bni\u0119ty"
         }
     },
