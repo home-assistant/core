@@ -21,6 +21,7 @@ from .const import (
     LOGSEVERITY,
     STORAGE_KEY,
     STORAGE_VERSION,
+    LogPersistance,
 )
 
 
@@ -88,15 +89,15 @@ class LoggerSettings:
         self._default_level = logging.INFO
         if DOMAIN in yaml_config:
             self._default_level = yaml_config[DOMAIN][LOGGER_DEFAULT]
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
     async def async_load(self) -> None:
         """Load stored settings."""
 
         def reset_persistence(settings: LoggerSetting) -> LoggerSetting:
             """Reset persistence."""
-            if settings.persistence == "once":
-                settings.persistence = "none"
+            if settings.persistence == LogPersistance.ONCE:
+                settings.persistence = LogPersistance.NONE
             return settings
 
         stored_config = await self._store.async_load()
@@ -119,7 +120,8 @@ class LoggerSettings:
             "logs": {
                 domain: asdict(settings)
                 for domain, settings in self._stored_config["logs"].items()
-                if settings.persistence in ("once", "permanent")
+                if settings.persistence
+                in (LogPersistance.ONCE, LogPersistance.PERMANENT)
             }
         }
 
