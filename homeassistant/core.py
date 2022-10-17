@@ -88,7 +88,6 @@ if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
-    from .helpers.storage import Store
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -1961,25 +1960,9 @@ class Config:
         await self.async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
-    @callback
-    def _get_store(self) -> Store[dict[str, Any]]:
-        # Circular dep
-        # pylint: disable-next=import-outside-toplevel
-        from .helpers.storage import Store
-
-        store = Store[dict[str, Any]](
-            self.hass,
-            CORE_STORAGE_VERSION,
-            CORE_STORAGE_KEY,
-            private=True,
-            atomic_writes=True,
-        )
-
-        return store
-
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        store = self._get_store()
+        store = self._ConfigStore(self.hass)
 
         if not (data := await store.async_load()):
             return
@@ -2027,5 +2010,22 @@ class Config:
             "currency": self.currency,
         }
 
-        store = self._get_store()
+        store = self._ConfigStore(self.hass)
         await store.async_save(data)
+
+    # Circular dependency prevents us from generating the class at top level
+    # pylint: disable-next=import-outside-toplevel
+    from .helpers.storage import Store
+
+    class _ConfigStore(Store[dict[str, Any]]):
+        """Class to help storing Config data."""
+
+        def __init__(self, hass: HomeAssistant) -> None:
+            """Initialize storage class."""
+            super().__init__(
+                hass,
+                CORE_STORAGE_VERSION,
+                CORE_STORAGE_KEY,
+                private=True,
+                atomic_writes=True,
+            )
