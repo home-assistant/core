@@ -1789,6 +1789,8 @@ class Config:
         """Initialize a new config object."""
         self.hass = hass
 
+        self._store = self._ConfigStore(self.hass)
+
         self.latitude: float = 0
         self.longitude: float = 0
         self.elevation: int = 0
@@ -1957,14 +1959,12 @@ class Config:
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
         self._update(source=ConfigSource.STORAGE, **kwargs)
-        await self.async_store()
+        await self._async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        store = self._ConfigStore(self.hass)
-
-        if not (data := await store.async_load()):
+        if not (data := await self._store.async_load()):
             return
 
         # In 2021.9 we fixed validation to disallow a path (because that's never correct)
@@ -1994,7 +1994,7 @@ class Config:
             currency=data.get("currency"),
         )
 
-    async def async_store(self) -> None:
+    async def _async_store(self) -> None:
         """Store [homeassistant] core config."""
         data = {
             "latitude": self.latitude,
@@ -2010,8 +2010,7 @@ class Config:
             "currency": self.currency,
         }
 
-        store = self._ConfigStore(self.hass)
-        await store.async_save(data)
+        await self._store.async_save(data)
 
     # Circular dependency prevents us from generating the class at top level
     # pylint: disable-next=import-outside-toplevel
