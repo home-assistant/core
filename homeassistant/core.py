@@ -1804,7 +1804,6 @@ class Config:
         self.location_name: str = "Home"
         self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
-        self._original_unit_system: str | None = None  # from old store 1.1
         self.internal_url: str | None = None
         self.external_url: str | None = None
         self.currency: str = "EUR"
@@ -1975,10 +1974,6 @@ class Config:
         if not (data := await self._store.async_load()):
             return
 
-        # In 2022.11 (store 1.2) we migrated the unit system to a new key
-        # we need to keep a backup of the original
-        self._original_unit_system = data.get("unit_system")
-
         # In 2021.9 we fixed validation to disallow a path (because that's never correct)
         # but this data still lives in storage, so we print a warning.
         if data.get("external_url") and urlparse(data["external_url"]).path not in (
@@ -2021,8 +2016,6 @@ class Config:
             "internal_url": self.internal_url,
             "currency": self.currency,
         }
-        if self._original_unit_system:
-            data["unit_system"] = self._original_unit_system
 
         await self._store.async_save(data)
 
@@ -2043,6 +2036,7 @@ class Config:
                 atomic_writes=True,
                 minor_version=CORE_STORAGE_MINOR_VERSION,
             )
+            self._original_unit_system: str | None = None  # from old store 1.1
 
         async def _async_migrate_func(
             self,
@@ -2055,9 +2049,15 @@ class Config:
             if old_major_version == 1 and old_minor_version < 2:
                 # In 1.2, we remove support for "imperial", replaced by "us_customary"
                 # Using a new key to allow rollback
-                data["unit_system_v2"] = data.get("unit_system")
+                self._original_unit_system = data.get("unit_system")
+                data["unit_system_v2"] = self._original_unit_system
                 if data["unit_system_v2"] == _CONF_UNIT_SYSTEM_IMPERIAL:
                     data["unit_system_v2"] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
             if old_major_version > 1:
                 raise NotImplementedError
             return data
+
+        async def async_save(self, data: dict[str, Any]) -> None:
+            if self._original_unit_system:
+                data["unit_system"] = self._original_unit_system
+            return await super().async_save(data)
