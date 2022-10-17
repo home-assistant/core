@@ -3040,6 +3040,11 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "matter": {
+      "config_flow": true,
+      "iot_class": "local_push",
+      "name": "Matter"
+    },
     "mazda": {
       "name": "Mazda Connected Services",
       "integration_type": "hub",
