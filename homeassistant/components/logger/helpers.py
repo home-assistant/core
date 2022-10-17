@@ -20,6 +20,7 @@ from .const import (
     LOGGER_DEFAULT,
     LOGGER_LOGS,
     LOGSEVERITY,
+    LOGSEVERITY_NOTSET,
     STORAGE_KEY,
     STORAGE_LOG_KEY,
     STORAGE_VERSION,
@@ -177,7 +178,7 @@ class LoggerSettings:
     ) -> None:
         """Update settings."""
         stored_log_config = self._stored_config[STORAGE_LOG_KEY]
-        if settings.level == "NOTSET":
+        if settings.level == LOGSEVERITY_NOTSET:
             stored_log_config.pop(domain, None)
         else:
             stored_log_config[domain] = settings
