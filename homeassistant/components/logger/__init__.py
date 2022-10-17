@@ -47,6 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the logger component."""
+
     settings = LoggerSettings(hass, config)
 
     domain_config = hass.data[DOMAIN] = {"overrides": {}, "settings": settings}
@@ -57,14 +58,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await settings.async_load()
 
     # Set default log severity and filter
-    if DOMAIN in config:
-        set_default_log_level(hass, domain_config[LOGGER_DEFAULT])
+    logger_config = config.get(DOMAIN, {})
 
-        if LOGGER_FILTERS in domain_config:
-            filters: dict[str, list[re.Pattern]] = domain_config[LOGGER_FILTERS]
-            for key, value in filters.items():
-                logger = logging.getLogger(key)
-                _add_log_filter(logger, value)
+    if LOGGER_DEFAULT in logger_config:
+        set_default_log_level(hass, logger_config[LOGGER_DEFAULT])
+
+    if LOGGER_FILTERS in logger_config:
+        log_filters: dict[str, list[re.Pattern]] = logger_config[LOGGER_FILTERS]
+        for key, value in log_filters.items():
+            _add_log_filter(logging.getLogger(key), value)
 
     # Combine log levels configured in configuration.yaml with log levels set by frontend
     combined_logs = await settings.async_get_levels(hass)
