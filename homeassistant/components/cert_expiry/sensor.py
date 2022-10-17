@@ -83,6 +83,7 @@ class CertExpiryEntity(CoordinatorEntity):
         return {
             "is_valid": self.coordinator.is_cert_valid,
             "error": str(self.coordinator.cert_error),
+            "days_remaining": int(self.coordinator.days_remaining),
         }
 
 
