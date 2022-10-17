@@ -78,7 +78,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIWidget.STATEFUL_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.STATELESS_EXTERIOR_HEATING: Platform.SWITCH,  # widgetName, uiClass is ExteriorHeatingSystem (not supported)
     UIWidget.TSKALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
-    UIWidget.ATLANTIC_PASS_APC_DHW: Platform.WATER_HEATER,  # widgetName, uiClass is Water heater (not supported)
+    UIWidget.ATLANTIC_PASS_APC_DHW: Platform.WATER_HEATER,  # widgetName, uiClass is WaterHeatingSystem (not supported)
 }
 
 # Map Overkiz camelCase to Home Assistant snake_case for translation
