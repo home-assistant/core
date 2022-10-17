@@ -38,7 +38,12 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import Unauthorized, UnknownUser
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    Unauthorized,
+    UnknownUser,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -318,21 +323,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
 
     name = entry.data[CONF_NAME]
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     api = AmcrestChecker(
         hass,
         name=name,
-        host=entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
+        host=host,
+        port=port,
         user=username,
         password=password,
     )
 
     try:
         serial_number = await api.async_serial_number
-    except AmcrestError:
-        return False
+    except LoginError as err:
+        raise ConfigEntryAuthFailed(f"Invalid authentication for {name}") from err
+    except AmcrestError as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {name} at {host}:{port}"
+        ) from err
 
     if (
         entry.options.get(CONF_AUTHENTICATION, DEFAULT_AUTHENTICATION)
