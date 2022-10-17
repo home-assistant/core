@@ -88,6 +88,7 @@ if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
+    from .helpers.storage import Store
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -1960,10 +1961,10 @@ class Config:
         await self.async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
-    async def async_load(self) -> None:
-        """Load [homeassistant] core config."""
+    @callback
+    def _get_store(self) -> Store[dict[str, Any]]:
         # Circular dep
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
         from .helpers.storage import Store
 
         store = Store[dict[str, Any]](
@@ -1973,6 +1974,12 @@ class Config:
             private=True,
             atomic_writes=True,
         )
+
+        return store
+
+    async def async_load(self) -> None:
+        """Load [homeassistant] core config."""
+        store = self._get_store()
 
         if not (data := await store.async_load()):
             return
@@ -2006,10 +2013,6 @@ class Config:
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
-        # Circular dep
-        # pylint: disable=import-outside-toplevel
-        from .helpers.storage import Store
-
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -2024,11 +2027,5 @@ class Config:
             "currency": self.currency,
         }
 
-        store: Store[dict[str, Any]] = Store(
-            self.hass,
-            CORE_STORAGE_VERSION,
-            CORE_STORAGE_KEY,
-            private=True,
-            atomic_writes=True,
-        )
+        store = self._get_store()
         await store.async_save(data)
