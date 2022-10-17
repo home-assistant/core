@@ -116,11 +116,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
             if self._input_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
                 self._attr_is_on = bool(result.bits[0] & 1)
             else:
-                value = int(result.registers[0])
-                if value > 0:
-                    self._attr_is_on = True
-                else:
-                    self._attr_is_on = False
+                self._attr_is_on = bool(result.registers[0] & 1)
 
         self.async_write_ha_state()
         if self._coordinator:
