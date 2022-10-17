@@ -21,11 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import (
-    CALL_TYPE_COIL,
-    CALL_TYPE_DISCRETE,
-    CALL_TYPE_REGISTER_HOLDING
-)
+from .const import CALL_TYPE_COIL, CALL_TYPE_DISCRETE, CALL_TYPE_REGISTER_HOLDING
 
 from . import get_hub
 from .base_platform import BasePlatform
