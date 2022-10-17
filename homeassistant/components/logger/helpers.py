@@ -100,6 +100,13 @@ class LogPersistance(StrEnum):
     PERMANENT = "permanent"
 
 
+class LogSettingsType(StrEnum):
+    """Log settings type."""
+
+    INTEGRATION = "integration"
+    MODULE = "module"
+
+
 class LoggerSettings:
     """Manage log settings."""
 
@@ -177,7 +184,7 @@ class LoggerSettings:
 
         self.async_save()
 
-        if settings.type == "integration":
+        if settings.type == LogSettingsType.INTEGRATION:
             loggers = await get_integration_loggers(hass, domain)
         else:
             loggers = [domain]
@@ -197,7 +204,7 @@ class LoggerSettings:
         """Get combination of levels from yaml and storage."""
         combined_logs = defaultdict(lambda: logging.CRITICAL)
         for domain, settings in self._stored_config[STORAGE_LOG_KEY].items():
-            if settings.type == "integration":
+            if settings.type == LogSettingsType.INTEGRATION:
                 loggers = await get_integration_loggers(hass, domain)
             else:
                 loggers = [domain]

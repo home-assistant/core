@@ -11,7 +11,12 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.setup import async_get_loaded_integrations
 
 from .const import LOGSEVERITY
-from .helpers import LoggerSetting, LogPersistance, async_get_domain_config
+from .helpers import (
+    LoggerSetting,
+    LogPersistance,
+    LogSettingsType,
+    async_get_domain_config,
+)
 
 
 @callback
@@ -70,7 +75,7 @@ async def handle_integration_log_level(
         LoggerSetting(
             level=msg["level"],
             persistence=msg["persistence"],
-            type="integration",
+            type=LogSettingsType.INTEGRATION,
         ),
     )
     connection.send_message(websocket_api.messages.result_message(msg["id"]))
@@ -81,7 +86,9 @@ async def handle_integration_log_level(
         vol.Required("type"): "logger/log_level",
         vol.Required("module"): str,
         vol.Required("level"): vol.In(LOGSEVERITY),
-        vol.Required("persistence"): vol.In(["none", "once", "permanent"]),
+        vol.Required("persistence"): vol.In(
+            [LogPersistance.NONE, LogPersistance.ONCE, LogPersistance.PERMANENT]
+        ),
     }
 )
 @websocket_api.async_response
@@ -95,7 +102,7 @@ async def handle_module_log_level(
         LoggerSetting(
             level=msg["level"],
             persistence=msg["persistence"],
-            type="module",
+            type=LogSettingsType.MODULE,
         ),
     )
     connection.send_message(websocket_api.messages.result_message(msg["id"]))
