@@ -14,9 +14,9 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
 )
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from ...data_entry_flow import FlowResult
 from .const import DEFAULT_RADIUS_IN_KM, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

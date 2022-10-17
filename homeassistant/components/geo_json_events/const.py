@@ -23,3 +23,5 @@ FEED = "feed"
 SOURCE = "geo_json_events"
 
 PLATFORMS = [Platform.SENSOR, Platform.GEO_LOCATION]
+
+IMPERIAL_UNITS = "imperial"

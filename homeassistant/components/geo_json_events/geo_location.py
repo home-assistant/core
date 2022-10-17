@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_URL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -23,18 +22,19 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from . import GeoJsonEventsFeedEntityCoordinator
-from ...helpers.entity_registry import async_get_registry
-from ...util.unit_system import IMPERIAL_SYSTEM
 from .const import (
     ATTR_EXTERNAL_ID,
     DEFAULT_FORCE_UPDATE,
     DEFAULT_RADIUS_IN_KM,
     DOMAIN,
     FEED,
+    IMPERIAL_UNITS,
     SOURCE,
 )
 
@@ -145,7 +145,7 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
             self._attr_name = entry.title
             self._attr_distance = entry.distance_to_home
             # Convert distance if not metric system.
-            if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+            if self.hass.config.units.name == IMPERIAL_UNITS:
                 self._attr_distance = IMPERIAL_SYSTEM.length(
                     entry.distance_to_home, LENGTH_KILOMETERS
                 )
@@ -168,6 +168,6 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self.hass.config.units.name == IMPERIAL_UNITS:
             return LENGTH_MILES
         return LENGTH_KILOMETERS

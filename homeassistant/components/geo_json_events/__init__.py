@@ -8,29 +8,28 @@ import logging
 from aio_geojson_generic_client import GenericFeedManager
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_URL,
     LENGTH_MILES,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import ConfigType
-
-from ...config_entries import SOURCE_IMPORT, ConfigEntry
-from ...helpers.dispatcher import async_dispatcher_send
-from ...helpers.entity_registry import (
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get_registry,
 )
-from ...helpers.update_coordinator import DataUpdateCoordinator
-from ...util.unit_system import METRIC_SYSTEM
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED, PLATFORMS
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.unit_system import METRIC_SYSTEM
+
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED, IMPERIAL_UNITS, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
     feeds = hass.data[DOMAIN].setdefault(FEED, {})
     radius = config_entry.data[CONF_RADIUS]
-    if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+    if hass.config.units.name == IMPERIAL_UNITS:
         radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
     # Create feed entity coordinator for all platforms.
     coordinator = GeoJsonEventsFeedEntityCoordinator(hass, config_entry, radius)

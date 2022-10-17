@@ -6,13 +6,13 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
 from . import GeoJsonEventsFeedEntityCoordinator
-from ...helpers.device_registry import DeviceEntryType
-from ...helpers.entity import DeviceInfo, EntityCategory
-from ...helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_CREATED,
     ATTR_LAST_TIMESTAMP,
