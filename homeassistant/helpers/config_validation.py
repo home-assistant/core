@@ -63,14 +63,14 @@ from homeassistant.const import (
     CONF_SCENE,
     CONF_SEQUENCE,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
     CONF_STATE,
     CONF_STOP,
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
@@ -584,11 +584,6 @@ def temperature_unit(value: Any) -> str:
     if value == "F":
         return TEMP_FAHRENHEIT
     raise vol.Invalid("invalid temperature unit (expected C or F)")
-
-
-unit_system = vol.All(
-    vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)
-)
 
 
 def template(value: Any | None) -> template_helper.Template:
@@ -1119,8 +1114,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
-            vol.Optional("data_template"): vol.Any(
+            vol.Optional(CONF_SERVICE_DATA): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
+            vol.Optional(CONF_SERVICE_DATA_TEMPLATE): vol.Any(
                 template, vol.All(dict, template_complex)
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,

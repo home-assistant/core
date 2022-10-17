@@ -14,8 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VelbusEntity
 from .const import DOMAIN
+from .entity import VelbusEntity
 
 
 async def async_setup_entry(
@@ -66,7 +66,10 @@ class VelbusCover(VelbusEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open
         Velbus: 100 = closed, 0 = open
         """
-        return 100 - self._channel.get_position()
+        pos = self._channel.get_position()
+        if pos is not None:
+            return 100 - pos
+        return None
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
