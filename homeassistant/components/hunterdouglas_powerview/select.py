@@ -1,7 +1,8 @@
 """Support for hunterdouglass_powerview settings."""
+from __future__ import annotations
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any, Final
 
 from aiopvapi.resources.shade import BaseShade, factory as PvShade
@@ -24,8 +25,6 @@ from .const import (
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -111,7 +110,7 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.entity_description.current_fn(self._shade)
 
