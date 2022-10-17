@@ -284,7 +284,7 @@ amberelectric==1.0.4
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.67
+androidtv[async]==0.0.69
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
@@ -584,7 +584,7 @@ goalzero==0.2.1
 goodwe==0.2.18
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.11.0
+google-cloud-pubsub==2.13.10
 
 # homeassistant.components.nest
 google-nest-sdm==2.0.0
@@ -675,7 +675,7 @@ huawei-lte-api==1.6.3
 hyperion-py==0.7.5
 
 # homeassistant.components.iaqualink
-iaqualink==0.4.1
+iaqualink==0.5.0
 
 # homeassistant.components.ibeacon
 ibeacon_ble==0.7.4

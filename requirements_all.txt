@@ -315,7 +315,7 @@ ambiclimate==0.2.1
 amcrest==1.9.7
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.67
+androidtv[async]==0.0.69
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -774,7 +774,7 @@ goalzero==0.2.1
 goodwe==0.2.18
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.11.0
+google-cloud-pubsub==2.13.10
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==2.12.3
@@ -904,7 +904,7 @@ hyperion-py==0.7.5
 iammeter==0.1.7
 
 # homeassistant.components.iaqualink
-iaqualink==0.4.1
+iaqualink==0.5.0
 
 # homeassistant.components.ibeacon
 ibeacon_ble==0.7.4
@@ -1481,7 +1481,7 @@ pycarwings2==2.13
 pycfdns==1.2.2
 
 # homeassistant.components.channels
-pychannels==1.0.0
+pychannels==1.2.3
 
 # homeassistant.components.cast
 pychromecast==12.1.4
