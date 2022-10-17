@@ -23,6 +23,27 @@ from .const import (
     SERVICE_SET_LEVEL,
 )
 from .helpers import LoggerSettings, set_default_log_level, set_log_levels
+DOMAIN = "logger"
+
+SERVICE_SET_DEFAULT_LEVEL = "set_default_level"
+SERVICE_SET_LEVEL = "set_level"
+
+LOGSEVERITY = {
+    "CRITICAL": 50,
+    "FATAL": 50,
+    "ERROR": 40,
+    "WARNING": 30,
+    "WARN": 30,
+    "INFO": 20,
+    "DEBUG": 10,
+    "NOTSET": 0,
+}
+
+LOGGER_DEFAULT = "default"
+LOGGER_LOGS = "logs"
+LOGGER_FILTERS = "filters"
+
+ATTR_LEVEL = "level"
 
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY), LOGSEVERITY.__getitem__)
 
@@ -68,6 +89,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Combine log levels configured in configuration.yaml with log levels set by frontend
     combined_logs = await settings.async_get_levels(hass)
     set_log_levels(hass, combined_logs)
+    # Set default log severity
+    logger_config = config.get(DOMAIN, {})
+
+    if LOGGER_DEFAULT in logger_config:
+        set_default_log_level(logger_config[LOGGER_DEFAULT])
+
+    if LOGGER_LOGS in logger_config:
+        set_log_levels(config[DOMAIN][LOGGER_LOGS])
+
+    if LOGGER_FILTERS in logger_config:
+        for key, value in logger_config[LOGGER_FILTERS].items():
+            logger = logging.getLogger(key)
+            _add_log_filter(logger, value)
 
     @callback
     def async_service_handler(service: ServiceCall) -> None:

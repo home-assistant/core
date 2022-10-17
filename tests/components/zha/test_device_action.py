@@ -183,7 +183,7 @@ async def test_get_inovelli_actions(hass, device_inovelli):
         {
             "device_id": inovelli_reg_device.id,
             "domain": Platform.BUTTON,
-            "entity_id": "button.inovelli_vzm31_sn_identifybutton",
+            "entity_id": "button.inovelli_vzm31_sn_identify",
             "metadata": {"secondary": True},
             "type": "press",
         },

@@ -1,9 +1,10 @@
 """Tests for the BTHome integration."""
 
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+
+from tests.components.bluetooth import generate_advertisement_data
 
 TEMP_HUMI_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="ATC 8D18B2",
@@ -16,7 +17,7 @@ TEMP_HUMI_SERVICE_INFO = BluetoothServiceInfoBleak(
     },
     service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -32,7 +33,7 @@ TEMP_HUMI_ENCRYPTED_SERVICE_INFO = BluetoothServiceInfoBleak(
     },
     service_uuids=["0000181e-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -48,7 +49,7 @@ PRST_SERVICE_INFO = BluetoothServiceInfoBleak(
     },
     service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="prst"),
+    advertisement=generate_advertisement_data(local_name="prst"),
     time=0,
     connectable=False,
 )
@@ -64,7 +65,7 @@ INVALID_PAYLOAD = BluetoothServiceInfoBleak(
     },
     service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -78,7 +79,7 @@ NOT_BTHOME_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_data={},
     service_uuids=[],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -97,7 +98,7 @@ def make_advertisement(address: str, payload: bytes) -> BluetoothServiceInfoBlea
         },
         service_uuids=["0000181c-0000-1000-8000-00805f9b34fb"],
         source="local",
-        advertisement=AdvertisementData(local_name="Test Device"),
+        advertisement=generate_advertisement_data(local_name="Test Device"),
         time=0,
         connectable=False,
     )
@@ -118,7 +119,7 @@ def make_encrypted_advertisement(
         },
         service_uuids=["0000181e-0000-1000-8000-00805f9b34fb"],
         source="local",
-        advertisement=AdvertisementData(local_name="ATC 8F80A5"),
+        advertisement=generate_advertisement_data(local_name="ATC 8F80A5"),
         time=0,
         connectable=False,
     )
