@@ -52,7 +52,6 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_logout(self, _event: Event) -> None:
         """Logout from Verisure."""
-        await self.hass.async_add_executor_job(self.verisure.logout)
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
