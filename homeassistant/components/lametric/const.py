@@ -23,3 +23,6 @@ CONF_ICON_TYPE: Final = "icon_type"
 CONF_LIFETIME: Final = "lifetime"
 CONF_PRIORITY: Final = "priority"
 CONF_SOUND: Final = "sound"
+CONF_MESSAGE: Final = "message"
+
+SERVICE_MESSAGE: Final = "message"
