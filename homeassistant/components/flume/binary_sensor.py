@@ -122,8 +122,7 @@ async def async_setup_entry(
             ]
         )
 
-    if flume_entity_list:
-        async_add_entities(flume_entity_list)
+    async_add_entities(flume_entity_list)
 
 
 class FlumeNotificationBinarySensor(FlumeEntity, BinarySensorEntity):

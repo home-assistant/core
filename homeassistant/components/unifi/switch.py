@@ -124,8 +124,7 @@ def add_block_entities(controller, async_add_entities, clients):
         client = controller.api.clients[mac]
         switches.append(UniFiBlockClientSwitch(client, controller))
 
-    if switches:
-        async_add_entities(switches)
+    async_add_entities(switches)
 
 
 @callback
@@ -175,8 +174,7 @@ def add_poe_entities(controller, async_add_entities, clients, known_poe_clients)
 
         switches.append(UniFiPOEClientSwitch(client, controller))
 
-    if switches:
-        async_add_entities(switches)
+    async_add_entities(switches)
 
 
 @callback
@@ -193,8 +191,7 @@ def add_dpi_entities(controller, async_add_entities, dpi_groups):
 
         switches.append(UniFiDPIRestrictionSwitch(dpi_groups[group], controller))
 
-    if switches:
-        async_add_entities(switches)
+    async_add_entities(switches)
 
 
 @callback
@@ -213,8 +210,7 @@ def add_outlet_entities(controller, async_add_entities, devices):
             if outlet.has_relay:
                 switches.append(UniFiOutletSwitch(device, controller, outlet.index))
 
-    if switches:
-        async_add_entities(switches)
+    async_add_entities(switches)
 
 
 class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):

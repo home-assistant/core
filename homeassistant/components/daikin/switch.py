@@ -50,8 +50,7 @@ async def async_setup_entry(
         # device supports the streamer, so assume so if it does support
         # advanced modes.
         switches.append(DaikinStreamerSwitch(daikin_api))
-    if switches:
-        async_add_entities(switches)
+    async_add_entities(switches)
 
 
 class DaikinZoneSwitch(SwitchEntity):

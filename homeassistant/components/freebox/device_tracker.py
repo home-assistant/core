@@ -48,8 +48,7 @@ def add_entities(
         new_tracked.append(FreeboxDevice(router, device))
         tracked.add(mac)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    async_add_entities(new_tracked, True)
 
 
 class FreeboxDevice(ScannerEntity):

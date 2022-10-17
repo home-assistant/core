@@ -392,5 +392,4 @@ def async_add_insteon_entities(
         groups = get_platform_groups(device, platform)
         for group in groups:
             new_entities.append(entity_type(device, group))
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
