@@ -6,76 +6,58 @@ from aiolivisi import errors as livisi_errors
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.livisi.const import CONF_HOST, CONF_PASSWORD, DOMAIN
+from homeassistant.components.livisi.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_NAME
 
-from tests.common import MockConfigEntry
-
-VALID_CONFIG = {
-    CONF_HOST: "1.1.1.1",
-    CONF_PASSWORD: "test",
-}
-
-DEVICE_CONFIG = {CONF_NAME: "foo"}
-
-
-@pytest.fixture(name="config")
-def config_fixture(hass):
-    """Define a config entry data fixture."""
-    return {
-        CONF_HOST: "1.1.1.1",
-        CONF_PASSWORD: "test",
-    }
-
-
-@pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config):
-    """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, data=config)
-    entry.add_to_hass(hass)
-    return entry
+from . import VALID_CONFIG, mocked_livisi_controller, mocked_livisi_login
 
 
 async def test_create_entry(hass):
-    """Test that the user step works."""
-    with patch("homeassistant.components.livisi.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=DEVICE_CONFIG
+    """Test create LIVISI entity."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with mocked_livisi_login(), mocked_livisi_controller():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEVICE_CONFIG[CONF_NAME]
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["title"] == "SHC Classic"
+        assert result["data"]["host"] == "1.1.1.1"
+        assert result["data"]["os_version"] == "1234"
 
 
-async def test_api_error(hass):
-    """Test API error."""
+@pytest.mark.parametrize(
+    "exception,expected_reason",
+    [
+        (livisi_errors.ShcUnreachableException(), "shc_unreachable"),
+        (livisi_errors.IncorrectIpAddressException(), "wrong_ip_address"),
+        (livisi_errors.WrongCredentialException(), "wrong_password"),
+    ],
+)
+async def test_create_entity_after_login_error(
+    hass, exception: livisi_errors.LivisiException, expected_reason: str
+):
+    """Test the LIVISI integration can create an entity after the user had login errors."""
     with patch(
-        "homeassistant.components.livisi.config_flow",
-        side_effect=livisi_errors.ShcUnreachableException(),
+        "homeassistant.components.livisi.config_flow.AioLivisi.async_set_token",
+        side_effect=exception,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
         )
-
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "shc_unreachable"
-
-
-async def test_integration_already_exists(hass):
-    """Test we only allow a single config flow."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="123456",
-        data=VALID_CONFIG,
-    ).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], VALID_CONFIG
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"]["base"] == expected_reason
+    with mocked_livisi_login(), mocked_livisi_controller():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=VALID_CONFIG,
+        )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY

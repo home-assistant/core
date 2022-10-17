@@ -15,10 +15,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     AVATAR_PORT,
     CLASSIC_PORT,
+    CONF_HOST,
+    CONF_OS_VERSION,
+    CONF_PASSWORD,
     DEVICE_POLLING_DELAY,
+    ID,
+    IS_REACHABLE,
     LIVISI_REACHABILITY_CHANGE,
     LIVISI_STATE_CHANGE,
     LOGGER,
+    STATE,
 )
 
 
@@ -60,15 +66,15 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Set up the Livisi Smart Home Controller."""
         if not self.aiolivisi.livisi_connection_data:
             livisi_connection_data = {
-                "ip_address": self.config_entry.data["host"],
-                "password": self.config_entry.data["password"],
+                "ip_address": self.config_entry.data[CONF_HOST],
+                "password": self.config_entry.data[CONF_PASSWORD],
             }
 
             await self.aiolivisi.async_set_token(
                 livisi_connection_data=livisi_connection_data
             )
         controller_data = await self.aiolivisi.async_get_controller()
-        if controller_data.get("controllerType") == "Avatar":
+        if controller_data["controllerType"] == "Avatar":
             self.port = AVATAR_PORT
             self.is_avatar = True
         else:
@@ -76,7 +82,7 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             self.is_avatar = False
         self.serial_number = controller_data["serialNumber"]
         self.controller_type = controller_data["controllerType"]
-        self.os_version = controller_data["osVersion"]
+        self.os_version = self.config_entry.data[CONF_OS_VERSION]
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
         """Set the discovered devices list."""
@@ -104,14 +110,14 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         """Define a handler to fire when the data is received."""
         if event_data.onState is not None:
             device_id_state: dict = {
-                "id": event_data.source,
-                "state": event_data.onState,
+                ID: event_data.source,
+                STATE: event_data.onState,
             }
             async_dispatcher_send(self.hass, LIVISI_STATE_CHANGE, device_id_state)
         if event_data.isReachable is not None:
             device_id_reachability: dict = {
-                "id": event_data.source,
-                "is_reachable": event_data.isReachable,
+                ID: event_data.source,
+                IS_REACHABLE: event_data.isReachable,
             }
             async_dispatcher_send(
                 self.hass, LIVISI_REACHABILITY_CHANGE, device_id_reachability

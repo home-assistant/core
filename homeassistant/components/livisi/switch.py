@@ -14,10 +14,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
+    ID,
+    IS_REACHABLE,
     LIVISI_REACHABILITY_CHANGE,
     LIVISI_STATE_CHANGE,
     LOGGER,
     PSS_DEVICE_TYPE,
+    STATE,
 )
 from .coordinator import LivisiDataUpdateCoordinator
 
@@ -34,15 +37,17 @@ async def async_setup_entry(
     def handle_coordinator_update() -> None:
         """Add switch."""
         shc_devices: list[dict[str, Any]] = coordinator.data
+        switch_devices: list[SwitchEntity] = []
         for device in shc_devices:
             if device["type"] == PSS_DEVICE_TYPE:
                 if device["id"] not in coordinator.devices:
                     livisi_switch: SwitchEntity = create_entity(
                         config_entry, device, coordinator
                     )
-                    LOGGER.debug("Include device type: %s", device.get("type"))
+                    LOGGER.debug("Include device type: %s", device["type"])
                     coordinator.devices.add(device["id"])
-                    async_add_entities([livisi_switch])
+                    switch_devices.append(livisi_switch)
+        async_add_entities(switch_devices)
 
     config_entry.async_on_unload(
         coordinator.async_add_listener(handle_coordinator_update)
@@ -112,6 +117,7 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
             name=self._attr_name,
             suggested_area=self._room,
             sw_version=self._version,
+            via_device=(DOMAIN, config_entry.entry_id),
         )
         super().__init__(coordinator)
 
@@ -153,11 +159,9 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
     @callback
     def update_states(self, device_id_state) -> None:
         """Update the states of the switch device."""
-        if device_id_state is None:
+        if device_id_state[ID] != self._capability_id:
             return
-        if device_id_state.get("id") != self._capability_id:
-            return
-        on_state = device_id_state["state"]
+        on_state = device_id_state[STATE]
         if on_state is None:
             return
         if on_state is True:
@@ -169,11 +173,9 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
     @callback
     def update_reachability(self, device_id_reachability) -> None:
         """Update the reachability of the switch device."""
-        if device_id_reachability is None:
+        if device_id_reachability[ID] != self.unique_id:
             return
-        if device_id_reachability.get("id") != self.unique_id:
-            return
-        if device_id_reachability["is_reachable"] is False:
+        if device_id_reachability[IS_REACHABLE] is False:
             self._attr_available = False
         else:
             self._attr_available = True
