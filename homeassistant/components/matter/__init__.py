@@ -193,10 +193,11 @@ def _async_init_services(hass: HomeAssistant) -> None:
 
         matter_id = next(
             (
-                identifier for identifier in device.identifiers
+                identifier
+                for identifier in device.identifiers
                 if identifier[0] == DOMAIN
             ),
-            None
+            None,
         )
 
         if not matter_id:
