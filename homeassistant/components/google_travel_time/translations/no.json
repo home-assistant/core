@@ -4,7 +4,8 @@
             "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {

@@ -48,6 +48,13 @@ BUTTONS: Final = [
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda shade: shade.jog(),
     ),
+    PowerviewButtonDescription(
+        key="favorite",
+        name="Favorite",
+        icon="mdi:heart",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        press_action=lambda shade: shade.favorite(),
+    ),
 ]
 
 

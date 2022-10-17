@@ -7,7 +7,10 @@
             "link_local_address": "Lokale koblingsadresser st\u00f8ttes ikke",
             "missing_configuration": "LaMetric-integrasjonen er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
             "no_devices": "Den autoriserte brukeren har ingen LaMetric-enheter",
-            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})"
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})",
+            "reauth_device_not_found": "Enheten du pr\u00f8ver \u00e5 re-autentisere ble ikke funnet i denne LaMetric-kontoen",
+            "reauth_successful": "Re-autentisering var vellykket",
+            "unknown": "Uventet feil"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",

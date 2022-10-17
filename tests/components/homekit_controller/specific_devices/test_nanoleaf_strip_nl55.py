@@ -2,7 +2,7 @@
 
 from homeassistant.helpers.entity import EntityCategory
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -34,9 +34,11 @@ async def test_nanoleaf_nl55_setup(hass):
                 EntityTestInfo(
                     entity_id="light.nanoleaf_strip_3b32_nanoleaf_light_strip",
                     friendly_name="Nanoleaf Strip 3B32 Nanoleaf Light Strip",
-                    unique_id="homekit-AAAA011111111111-19",
+                    unique_id="00:00:00:00:00:00_1_19",
                     supported_features=0,
                     capabilities={
+                        "max_color_temp_kelvin": 6535,
+                        "min_color_temp_kelvin": 2127,
                         "max_mireds": 470,
                         "min_mireds": 153,
                         "supported_color_modes": ["color_temp", "hs"],
@@ -46,21 +48,21 @@ async def test_nanoleaf_nl55_setup(hass):
                 EntityTestInfo(
                     entity_id="button.nanoleaf_strip_3b32_identify",
                     friendly_name="Nanoleaf Strip 3B32 Identify",
-                    unique_id="homekit-AAAA011111111111-aid:1-sid:1-cid:2",
+                    unique_id="00:00:00:00:00:00_1_1_2",
                     entity_category=EntityCategory.DIAGNOSTIC,
                     state="unknown",
                 ),
                 EntityTestInfo(
                     entity_id="sensor.nanoleaf_strip_3b32_thread_capabilities",
                     friendly_name="Nanoleaf Strip 3B32 Thread Capabilities",
-                    unique_id="homekit-AAAA011111111111-aid:1-sid:31-cid:115",
+                    unique_id="00:00:00:00:00:00_1_31_115",
                     entity_category=EntityCategory.DIAGNOSTIC,
                     state="border_router_capable",
                 ),
                 EntityTestInfo(
                     entity_id="sensor.nanoleaf_strip_3b32_thread_status",
                     friendly_name="Nanoleaf Strip 3B32 Thread Status",
-                    unique_id="homekit-AAAA011111111111-aid:1-sid:31-cid:117",
+                    unique_id="00:00:00:00:00:00_1_31_117",
                     entity_category=EntityCategory.DIAGNOSTIC,
                     state="border_router",
                 ),

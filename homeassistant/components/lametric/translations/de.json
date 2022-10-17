@@ -7,7 +7,10 @@
             "link_local_address": "Lokale Linkadressen werden nicht unterst\u00fctzt",
             "missing_configuration": "Die LaMetric-Integration ist nicht konfiguriert. Bitte folge der Dokumentation.",
             "no_devices": "Der autorisierte Benutzer hat keine LaMetric Ger\u00e4te",
-            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url})."
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url}).",
+            "reauth_device_not_found": "Das Ger\u00e4t, das du erneut authentifizieren m\u00f6chtest, wird in diesem LaMetric-Konto nicht gefunden",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

@@ -1,7 +1,7 @@
 """Make sure that Schlage Sense is enumerated properly."""
 
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -31,7 +31,7 @@ async def test_schlage_sense_setup(hass):
                 EntityTestInfo(
                     entity_id="lock.sense_lock_mechanism",
                     friendly_name="SENSE   Lock Mechanism",
-                    unique_id="homekit-AAAAAAA000-30",
+                    unique_id="00:00:00:00:00:00_1_30",
                     supported_features=0,
                     state="unknown",
                 ),

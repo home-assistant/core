@@ -36,7 +36,7 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
         """Return a set of selectable options."""
         return self._static_info.options
 
-    @property  # type: ignore[misc]
+    @property
     @esphome_state_property
     def current_option(self) -> str | None:
         """Return the state of the entity."""

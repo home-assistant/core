@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven"
+        },
         "step": {
             "user": {
                 "data": {

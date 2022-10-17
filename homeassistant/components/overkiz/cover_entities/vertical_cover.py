@@ -152,7 +152,7 @@ class LowSpeedCover(VerticalCover):
     ) -> None:
         """Initialize the device."""
         super().__init__(device_url, coordinator)
-        self._attr_name = f"{self._attr_name} Low Speed"
+        self._attr_name = "Low speed"
         self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:

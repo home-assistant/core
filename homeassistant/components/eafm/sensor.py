@@ -5,7 +5,7 @@ import logging
 from aioeafm import get_station
 import async_timeout
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS
 from homeassistant.core import HomeAssistant
@@ -91,6 +91,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
     """A gauge at a flood monitoring station."""
 
     attribution = "This uses Environment Agency flood and river level data from the real-time data API"
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator, key):
         """Initialise the gauge with a data instance and station."""

@@ -23,5 +23,10 @@
                 }
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Open Exchange Rates a \u00e9t\u00e9 supprim\u00e9e"
+        }
     }
 }

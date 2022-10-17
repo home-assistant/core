@@ -111,7 +111,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[Plant](_LOGGER, DOMAIN, hass)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():

@@ -19,7 +19,6 @@ from homeassistant.const import LENGTH, PERCENTAGE, VOLUME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_system import UnitSystem
 
 from . import BMWBaseEntity
 from .const import DOMAIN, UNIT_MAP
@@ -137,7 +136,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW sensors from config entry."""
-    unit_system = hass.config.units
     coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[BMWSensor] = []
@@ -145,7 +143,7 @@ async def async_setup_entry(
     for vehicle in coordinator.account.vehicles:
         entities.extend(
             [
-                BMWSensor(coordinator, vehicle, description, unit_system)
+                BMWSensor(coordinator, vehicle, description)
                 for attribute_name in vehicle.available_attributes
                 if (description := SENSOR_TYPES.get(attribute_name))
             ]
@@ -164,7 +162,6 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         coordinator: BMWDataUpdateCoordinator,
         vehicle: MyBMWVehicle,
         description: BMWSensorEntityDescription,
-        unit_system: UnitSystem,
     ) -> None:
         """Initialize BMW vehicle sensor."""
         super().__init__(coordinator, vehicle)

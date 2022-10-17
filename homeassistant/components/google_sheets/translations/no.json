@@ -1,0 +1,35 @@
+{
+    "application_credentials": {
+        "description": "F\u00f8lg [instruksjonene]({more_info_url}) for [OAuth-samtykkeskjermen]({oauth_consent_url}) for \u00e5 gi Home Assistant tilgang til Google Regneark. Du m\u00e5 ogs\u00e5 opprette programlegitimasjon som er koblet til kontoen din:\n1. G\u00e5 til [Legitimasjon]({oauth_creds_url}) og klikk **Opprett legitimasjon**.\n1. Velg **OAuth-klient-ID** fra rullegardinlisten.\n1. Velg **Webprogram** for applikasjonstypen.\n\n"
+    },
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes",
+            "create_spreadsheet_failure": "Feil under oppretting av regneark, se feillogg for detaljer",
+            "invalid_access_token": "Ugyldig tilgangstoken",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "oauth_error": "Mottatt ugyldige token data.",
+            "open_spreadsheet_failure": "Feil under \u00e5pning av regnearket, se feillogg for detaljer",
+            "reauth_successful": "Re-autentisering var vellykket",
+            "timeout_connect": "Tidsavbrudd oppretter forbindelse",
+            "unknown": "Uventet feil"
+        },
+        "create_entry": {
+            "default": "Vellykket autentisert og regneark opprettet p\u00e5: {url}"
+        },
+        "step": {
+            "auth": {
+                "title": "Koble til Google-kontoen"
+            },
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            },
+            "reauth_confirm": {
+                "description": "Google Regneark-integreringen m\u00e5 godkjenne kontoen din p\u00e5 nytt",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            }
+        }
+    }
+}

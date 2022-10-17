@@ -16,6 +16,11 @@
                 "data": {
                     "name": "Jm\u00e9no"
                 }
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP adresa"
+                }
             }
         }
     }

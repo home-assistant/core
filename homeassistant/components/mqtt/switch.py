@@ -42,12 +42,12 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate
+from .util import get_mqtt_data
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -101,9 +101,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT switch through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    await async_discover_yaml_entities(hass, switch.DOMAIN)
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -172,7 +169,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             elif payload == PAYLOAD_NONE:
                 self._state = None
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.

@@ -1,7 +1,7 @@
 """Component to interface with various sensors that can be monitored."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
@@ -57,10 +57,15 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util import (
-    dt as dt_util,
-    pressure as pressure_util,
-    temperature as temperature_util,
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import (
+    BaseUnitConverter,
+    DistanceConverter,
+    MassConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
+    VolumeConverter,
 )
 
 from .const import CONF_STATE_CLASS  # noqa: F401
@@ -80,101 +85,244 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 class SensorDeviceClass(StrEnum):
     """Device class for sensors."""
 
-    # apparent power (VA)
     APPARENT_POWER = "apparent_power"
+    """Apparent power.
 
-    # Air Quality Index
+    Unit of measurement: `VA`
+    """
+
     AQI = "aqi"
+    """Air Quality Index.
 
-    # % of battery that is left
+    Unit of measurement: `None`
+    """
+
     BATTERY = "battery"
+    """Percentage of battery that is left.
 
-    # ppm (parts per million) Carbon Monoxide gas concentration
+    Unit of measurement: `%`
+    """
+
     CO = "carbon_monoxide"
+    """Carbon Monoxide gas concentration.
 
-    # ppm (parts per million) Carbon Dioxide gas concentration
+    Unit of measurement: `ppm` (parts per million)
+    """
+
     CO2 = "carbon_dioxide"
+    """Carbon Dioxide gas concentration.
 
-    # current (A)
+    Unit of measurement: `ppm` (parts per million)
+    """
+
     CURRENT = "current"
+    """Current.
 
-    # date (ISO8601)
+    Unit of measurement: `A`
+    """
+
     DATE = "date"
+    """Date.
 
-    # fixed duration (TIME_DAYS, TIME_HOURS, TIME_MINUTES, TIME_SECONDS)
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
+    DISTANCE = "distance"
+    """Generic distance.
+
+    Unit of measurement: `LENGTH_*` units
+    - SI /metric: `mm`, `cm`, `m`, `km`
+    - USCS / imperial: `in`, `ft`, `yd`, `mi`
+    """
+
     DURATION = "duration"
+    """Fixed duration.
 
-    # energy (Wh, kWh, MWh)
+    Unit of measurement: `d`, `h`, `min`, `s`
+    """
+
     ENERGY = "energy"
+    """Energy.
 
-    # frequency (Hz, kHz, MHz, GHz)
+    Unit of measurement: `Wh`, `kWh`, `MWh`
+    """
+
     FREQUENCY = "frequency"
+    """Frequency.
 
-    # gas (m³ or ft³)
+    Unit of measurement: `Hz`, `kHz`, `MHz`, `GHz`
+    """
+
     GAS = "gas"
+    """Gas.
 
-    # Relative humidity (%)
+    Unit of measurement: `m³`, `ft³`
+    """
+
     HUMIDITY = "humidity"
+    """Relative humidity.
 
-    # current light level (lx/lm)
+    Unit of measurement: `%`
+    """
+
     ILLUMINANCE = "illuminance"
+    """Illuminance.
 
-    # moisture (%)
+    Unit of measurement: `lx`, `lm`
+    """
+
     MOISTURE = "moisture"
+    """Moisture.
 
-    # Amount of money (currency)
+    Unit of measurement: `%`
+    """
+
     MONETARY = "monetary"
+    """Amount of money.
 
-    # Amount of NO2 (µg/m³)
+    Unit of measurement: ISO4217 currency code
+
+    See https://en.wikipedia.org/wiki/ISO_4217#Active_codes for active codes
+    """
+
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
+    """Amount of NO2.
 
-    # Amount of NO (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
+    """Amount of NO.
 
-    # Amount of N2O  (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     NITROUS_OXIDE = "nitrous_oxide"
+    """Amount of N2O.
 
-    # Amount of O3 (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     OZONE = "ozone"
+    """Amount of O3.
 
-    # Particulate matter <= 0.1 μm (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     PM1 = "pm1"
+    """Particulate matter <= 0.1 μm.
 
-    # Particulate matter <= 10 μm (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     PM10 = "pm10"
+    """Particulate matter <= 10 μm.
 
-    # Particulate matter <= 2.5 μm (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     PM25 = "pm25"
+    """Particulate matter <= 2.5 μm.
 
-    # power factor (%)
+    Unit of measurement: `µg/m³`
+    """
+
     POWER_FACTOR = "power_factor"
+    """Power factor.
 
-    # power (W/kW)
+    Unit of measurement: `%`
+    """
+
     POWER = "power"
+    """Power.
 
-    # pressure (hPa/mbar)
+    Unit of measurement: `W`, `kW`
+    """
+
     PRESSURE = "pressure"
+    """Pressure.
 
-    # reactive power (var)
+    Unit of measurement:
+    - `mbar`, `cbar`, `bar`
+    - `Pa`, `hPa`, `kPa`
+    - `inHg`
+    - `psi`
+    """
+
     REACTIVE_POWER = "reactive_power"
+    """Reactive power.
 
-    # signal strength (dB/dBm)
+    Unit of measurement: `var`
+    """
+
     SIGNAL_STRENGTH = "signal_strength"
+    """Signal strength.
 
-    # Amount of SO2 (µg/m³)
+    Unit of measurement: `dB`, `dBm`
+    """
+
+    SPEED = "speed"
+    """Generic speed.
+
+    Unit of measurement: `SPEED_*` units
+    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
+    - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
+    - Nautical: `kn`
+    """
+
     SULPHUR_DIOXIDE = "sulphur_dioxide"
+    """Amount of SO2.
 
-    # temperature (C/F)
+    Unit of measurement: `µg/m³`
+    """
+
     TEMPERATURE = "temperature"
+    """Temperature.
 
-    # timestamp (ISO8601)
+    Unit of measurement: `°C`, `°F`
+    """
+
     TIMESTAMP = "timestamp"
+    """Timestamp.
 
-    # Amount of VOC (µg/m³)
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
+    """Amount of VOC.
 
-    # voltage (V)
+    Unit of measurement: `µg/m³`
+    """
+
     VOLTAGE = "voltage"
+    """Voltage.
+
+    Unit of measurement: `V`
+    """
+
+    VOLUME = "volume"
+    """Generic volume.
+
+    Unit of measurement: `VOLUME_*` units
+    - SI / metric: `mL`, `L`, `m³`
+    - USCS / imperial: `fl. oz.`, `gal`, `ft³` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
+
+    # weight/mass (g, kg, mg, µg, oz, lb)
+    WEIGHT = "weight"
+    """Generic weight, represents a measurement of an object's mass.
+
+    Weight is used instead of mass to fit with every day language.
+
+    Unit of measurement: `MASS_*` units
+    - SI / metric: `µg`, `mg`, `g`, `kg`
+    - USCS / imperial: `oz`, `lb`
+    """
 
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
@@ -187,14 +335,18 @@ DEVICE_CLASSES: Final[list[str]] = [cls.value for cls in SensorDeviceClass]
 class SensorStateClass(StrEnum):
     """State class for sensors."""
 
-    # The state represents a measurement in present time
     MEASUREMENT = "measurement"
+    """The state represents a measurement in present time."""
 
-    # The state represents a total amount, e.g. net energy consumption
     TOTAL = "total"
+    """The state represents a total amount.
 
-    # The state represents a monotonically increasing total, e.g. an amount of consumed gas
+    For example: net energy consumption"""
+
     TOTAL_INCREASING = "total_increasing"
+    """The state represents a monotonically increasing total.
+
+    For example: an amount of consumed gas"""
 
 
 STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
@@ -207,29 +359,21 @@ STATE_CLASS_TOTAL: Final = "total"
 STATE_CLASS_TOTAL_INCREASING: Final = "total_increasing"
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
-UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    SensorDeviceClass.PRESSURE: pressure_util.convert,
-    SensorDeviceClass.TEMPERATURE: temperature_util.convert,
+UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
+    SensorDeviceClass.DISTANCE: DistanceConverter,
+    SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.SPEED: SpeedConverter,
+    SensorDeviceClass.TEMPERATURE: TemperatureConverter,
+    SensorDeviceClass.VOLUME: VolumeConverter,
+    SensorDeviceClass.WEIGHT: MassConverter,
 }
 
-UNIT_RATIOS: dict[str, dict[str, float]] = {
-    SensorDeviceClass.PRESSURE: pressure_util.UNIT_CONVERSION,
-    SensorDeviceClass.TEMPERATURE: {
-        TEMP_CELSIUS: 1.0,
-        TEMP_FAHRENHEIT: 1.8,
-        TEMP_KELVIN: 1.0,
-    },
-}
-
-VALID_UNITS: dict[str, tuple[str, ...]] = {
-    SensorDeviceClass.PRESSURE: pressure_util.VALID_UNITS,
-    SensorDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
-}
+# mypy: disallow-any-generics
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[SensorEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -239,13 +383,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component = cast(EntityComponent, hass.data[DOMAIN])
+    component: EntityComponent[SensorEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component = cast(EntityComponent, hass.data[DOMAIN])
+    component: EntityComponent[SensorEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -429,10 +573,11 @@ class SensorEntity(Entity):
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERTERS
         ):
             assert unit_of_measurement
             assert native_unit_of_measurement
+            converter = UNIT_CONVERTERS[device_class]
 
             value_s = str(value)
             prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
@@ -442,8 +587,9 @@ class SensorEntity(Entity):
             ratio_log = max(
                 0,
                 log10(
-                    UNIT_RATIOS[device_class][native_unit_of_measurement]
-                    / UNIT_RATIOS[device_class][unit_of_measurement]
+                    converter.get_unit_ratio(
+                        native_unit_of_measurement, unit_of_measurement
+                    )
                 ),
             )
             prec = prec + floor(ratio_log)
@@ -451,7 +597,7 @@ class SensorEntity(Entity):
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 value_f = float(value)  # type: ignore[arg-type]
-                value_f_new = UNIT_CONVERSIONS[device_class](
+                value_f_new = converter.convert(
                     value_f,
                     native_unit_of_measurement,
                     unit_of_measurement,
@@ -480,9 +626,10 @@ class SensorEntity(Entity):
         if (
             (sensor_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := sensor_options.get(CONF_UNIT_OF_MEASUREMENT))
-            and (device_class := self.device_class) in UNIT_CONVERSIONS
-            and self.native_unit_of_measurement in VALID_UNITS[device_class]
-            and custom_unit in VALID_UNITS[device_class]
+            and (device_class := self.device_class) in UNIT_CONVERTERS
+            and self.native_unit_of_measurement
+            in UNIT_CONVERTERS[device_class].VALID_UNITS
+            and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
             self._sensor_option_unit_of_measurement = custom_unit
             return

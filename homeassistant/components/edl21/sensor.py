@@ -223,9 +223,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     # C=81: Angles
     # D=7: Instantaneous value
+    # E=1:  U(L2) x U(L1)
+    # E=2:  U(L3) x U(L1)
     # E=4:  U(L1) x I(L1)
     # E=15: U(L2) x I(L2)
     # E=26: U(L3) x I(L3)
+    SensorEntityDescription(
+        key="1-0:81.7.1*255", name="U(L2)/U(L1) phase angle", icon="mdi:sine-wave"
+    ),
+    SensorEntityDescription(
+        key="1-0:81.7.2*255", name="U(L3)/U(L1) phase angle", icon="mdi:sine-wave"
+    ),
     SensorEntityDescription(
         key="1-0:81.7.4*255", name="U(L1)/I(L1) phase angle", icon="mdi:sine-wave"
     ),
@@ -273,9 +281,13 @@ class EDL21:
 
     _OBIS_BLACKLIST = {
         # C=96: Electricity-related service entries
-        "1-0:96.50.1*1",  # Manufacturer specific
-        "1-0:96.90.2*1",  # Manufacturer specific
-        "1-0:96.90.2*2",  # Manufacturer specific
+        "1-0:96.50.1*1",  # Manufacturer specific EFR SGM-C4 Hardware version
+        "1-0:96.50.1*4",  # Manufacturer specific EFR SGM-C4 Hardware version
+        "1-0:96.50.4*4",  # Manufacturer specific EFR SGM-C4 Parameters version
+        "1-0:96.90.2*1",  # Manufacturer specific EFR SGM-C4 Firmware Checksum
+        "1-0:96.90.2*2",  # Manufacturer specific EFR SGM-C4 Firmware Checksum
+        # C=97: Electricity-related service entries
+        "1-0:97.97.0*0",  # Manufacturer specific EFR SGM-C4 Error register
         # A=129: Manufacturer specific
         "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
         "129-129:199.130.5*255",  # Iskraemeco: Public Key

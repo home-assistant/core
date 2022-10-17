@@ -14,8 +14,8 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MODE,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_METERS,
+    LENGTH_MILES,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     ATTR_DESTINATION,
@@ -33,7 +33,6 @@ from .const import (
     ATTR_DURATION_IN_TRAFFIC,
     ATTR_ORIGIN,
     ATTR_ORIGIN_NAME,
-    ATTR_ROUTE,
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION_ENTITY_ID,
@@ -45,6 +44,7 @@ from .const import (
     CONF_ROUTE_MODE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    IMPERIAL_UNITS,
     NO_ROUTE_ERROR_MESSAGE,
     TRAFFIC_MODE_ENABLED,
     TRAVEL_MODES_VEHICLE,
@@ -178,9 +178,11 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
             traffic_time: float = summary["baseTime"]
             if self.config.travel_mode in TRAVEL_MODES_VEHICLE:
                 traffic_time = summary["trafficTime"]
-            if self.config.units == CONF_UNIT_SYSTEM_IMPERIAL:
+            if self.config.units == IMPERIAL_UNITS:
                 # Convert to miles.
-                distance = IMPERIAL_SYSTEM.length(distance, LENGTH_METERS)
+                distance = DistanceConverter.convert(
+                    distance, LENGTH_METERS, LENGTH_MILES
+                )
             else:
                 # Convert to kilometers
                 distance = distance / 1000
@@ -190,7 +192,6 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_DURATION: round(summary["baseTime"] / 60),  # type: ignore[misc]
                     ATTR_DURATION_IN_TRAFFIC: round(traffic_time / 60),
                     ATTR_DISTANCE: distance,
-                    ATTR_ROUTE: response.route_short,
                     ATTR_ORIGIN: ",".join(origin),
                     ATTR_DESTINATION: ",".join(destination),
                     ATTR_ORIGIN_NAME: waypoint[0]["mappedRoadName"],

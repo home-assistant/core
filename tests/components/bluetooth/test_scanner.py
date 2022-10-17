@@ -1,12 +1,10 @@
 """Tests for the Bluetooth integration scanners."""
+from datetime import timedelta
+import time
 from unittest.mock import MagicMock, patch
 
 from bleak import BleakError
-from bleak.backends.scanner import (
-    AdvertisementData,
-    AdvertisementDataCallback,
-    BLEDevice,
-)
+from bleak.backends.scanner import AdvertisementDataCallback, BLEDevice
 from dbus_fast import InvalidMessageError
 import pytest
 
@@ -20,7 +18,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
-from . import _get_manager, async_setup_with_one_adapter
+from . import _get_manager, async_setup_with_one_adapter, generate_advertisement_data
 
 from tests.common import async_fire_time_changed
 
@@ -172,6 +170,10 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     mock_discovered = []
 
     class MockBleakScanner:
+        def __init__(self, detection_callback, *args, **kwargs):
+            nonlocal _callback
+            _callback = detection_callback
+
         async def start(self, *args, **kwargs):
             """Mock Start."""
             nonlocal called_start
@@ -188,23 +190,15 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
             nonlocal mock_discovered
             return mock_discovered
 
-        def register_detection_callback(self, callback: AdvertisementDataCallback):
-            """Mock Register Detection Callback."""
-            nonlocal _callback
-            _callback = callback
-
-    scanner = MockBleakScanner()
-
     with patch(
         "homeassistant.components.bluetooth.scanner.OriginalBleakScanner",
-        return_value=scanner,
+        MockBleakScanner,
     ):
         await async_setup_with_one_adapter(hass)
 
         assert called_start == 1
 
-    start_time_monotonic = 1000
-    scanner = _get_manager()
+    start_time_monotonic = time.monotonic()
     mock_discovered = [MagicMock()]
 
     # Ensure we don't restart the scanner if we don't need to
@@ -224,7 +218,7 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     ):
         _callback(
             BLEDevice("44:44:33:11:23:42", "any_name"),
-            AdvertisementData(local_name="any_name"),
+            generate_advertisement_data(local_name="any_name"),
         )
 
     # Ensure we don't restart the scanner if we don't need to
@@ -240,9 +234,11 @@ async def test_recovery_from_dbus_restart(hass, one_adapter):
     # We hit the timer, so we restart the scanner
     with patch(
         "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT,
+        return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT + 20,
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL + timedelta(seconds=20)
+        )
         await hass.async_block_till_done()
 
     assert called_start == 2
@@ -279,7 +275,7 @@ async def test_adapter_recovery(hass, one_adapter):
             _callback = callback
 
     scanner = MockBleakScanner()
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
 
     with patch(
         "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
@@ -366,7 +362,7 @@ async def test_adapter_scanner_fails_to_start_first_time(hass, one_adapter):
             _callback = callback
 
     scanner = MockBleakScanner()
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
 
     with patch(
         "homeassistant.components.bluetooth.scanner.MONOTONIC_TIME",
@@ -471,7 +467,7 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
             _callback = callback
 
     scanner = MockBleakScanner()
-    start_time_monotonic = 1000
+    start_time_monotonic = time.monotonic()
 
     with patch(
         "homeassistant.components.bluetooth.scanner.ADAPTER_INIT_TIME",

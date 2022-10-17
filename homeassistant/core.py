@@ -49,7 +49,6 @@ from .const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -82,7 +81,7 @@ from .util.async_ import (
 )
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
-from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from .util.unit_system import METRIC_SYSTEM, UnitSystem, get_unit_system
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -649,7 +648,7 @@ class HomeAssistant:
             else:
                 await asyncio.sleep(0)
 
-    async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
+    async def _await_and_log_pending(self, pending: Collection[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
         wait_time = 0
         while pending:
@@ -1940,9 +1939,9 @@ class Config:
         if elevation is not None:
             self.elevation = elevation
         if unit_system is not None:
-            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-                self.units = IMPERIAL_SYSTEM
-            else:
+            try:
+                self.units = get_unit_system(unit_system)
+            except ValueError:
                 self.units = METRIC_SYSTEM
         if location_name is not None:
             self.location_name = location_name
@@ -1963,17 +1962,7 @@ class Config:
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
-        # Circular dep
-        # pylint: disable=import-outside-toplevel
-        from .helpers.storage import Store
-
-        store = Store[dict[str, Any]](
-            self.hass,
-            CORE_STORAGE_VERSION,
-            CORE_STORAGE_KEY,
-            private=True,
-            atomic_writes=True,
-        )
+        store = self._ConfigStore(self.hass)
 
         if not (data := await store.async_load()):
             return
@@ -2007,15 +1996,13 @@ class Config:
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
-        # Circular dep
-        # pylint: disable=import-outside-toplevel
-        from .helpers.storage import Store
-
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
-            "unit_system": self.units.name,
+            # We don't want any integrations to use the name of the unit system
+            # so we are using the private attribute here
+            "unit_system": self.units._name,  # pylint: disable=protected-access
             "location_name": self.location_name,
             "time_zone": self.time_zone,
             "external_url": self.external_url,
@@ -2023,11 +2010,22 @@ class Config:
             "currency": self.currency,
         }
 
-        store: Store[dict[str, Any]] = Store(
-            self.hass,
-            CORE_STORAGE_VERSION,
-            CORE_STORAGE_KEY,
-            private=True,
-            atomic_writes=True,
-        )
+        store = self._ConfigStore(self.hass)
         await store.async_save(data)
+
+    # Circular dependency prevents us from generating the class at top level
+    # pylint: disable-next=import-outside-toplevel
+    from .helpers.storage import Store
+
+    class _ConfigStore(Store[dict[str, Any]]):
+        """Class to help storing Config data."""
+
+        def __init__(self, hass: HomeAssistant) -> None:
+            """Initialize storage class."""
+            super().__init__(
+                hass,
+                CORE_STORAGE_VERSION,
+                CORE_STORAGE_KEY,
+                private=True,
+                atomic_writes=True,
+            )

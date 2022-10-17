@@ -41,4 +41,5 @@ class IPPEntity(CoordinatorEntity[IPPDataUpdateCoordinator]):
             model=self.coordinator.data.info.model,
             name=self.coordinator.data.info.name,
             sw_version=self.coordinator.data.info.version,
+            configuration_url=self.coordinator.data.info.more_info,
         )

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Account is al geconfigureerd",
             "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
@@ -11,6 +12,7 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
+                    "region": "Regio",
                     "username": "Gebruikersnaam"
                 }
             }

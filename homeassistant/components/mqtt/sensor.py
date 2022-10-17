@@ -1,7 +1,7 @@
 """Support for MQTT sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools
 import logging
 
@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
@@ -41,13 +41,12 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
-    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate
-from .util import valid_subscribe_topic
+from .util import get_mqtt_data, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,9 +145,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT sensor through configuration.yaml and dynamically through MQTT discovery."""
-    # load and initialize platform config from configuration.yaml
-    await async_discover_yaml_entities(hass, sensor.DOMAIN)
-    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -275,8 +271,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
                     )
                 elif self.device_class == SensorDeviceClass.DATE:
                     payload = payload.date()
-
-            self._state = payload
+            if payload != "":
+                self._state = payload
 
         def _update_last_reset(msg):
             payload = self._last_reset_template(msg.payload)
@@ -304,7 +300,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 or self._config[CONF_LAST_RESET_TOPIC] == self._config[CONF_STATE_TOPIC]
             ):
                 _update_last_reset(msg)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],
@@ -318,7 +314,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         def last_reset_message_received(msg):
             """Handle new last_reset messages."""
             _update_last_reset(msg)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if (
             CONF_LAST_RESET_TOPIC in self._config
@@ -347,12 +343,12 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self.async_write_ha_state()
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | datetime:
         """Return the state of the entity."""
         return self._state
 

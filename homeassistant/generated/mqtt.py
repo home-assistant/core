@@ -3,13 +3,14 @@
 To update, run python3 -m script.hassfest
 """
 
-# fmt: off
-
 MQTT = {
     "inels": [
-        "inels/status/#"
+        "inels/status/#",
+    ],
+    "dsmr_reader": [
+        "dsmr/#",
     ],
     "tasmota": [
-        "tasmota/discovery/#"
-    ]
+        "tasmota/discovery/#",
+    ],
 }
