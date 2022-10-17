@@ -237,7 +237,7 @@ class TuyaPowerOnState(types.enum8):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names=CHANNEL_ON_OFF,
-    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004", "TS004F"},
+    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
 )
 class TuyaPowerOnStateSelectEntity(ZCLEnumSelectEntity, id_suffix="power_on_state"):
     """Representation of a ZHA power on state select entity."""

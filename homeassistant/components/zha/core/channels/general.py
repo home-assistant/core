@@ -338,7 +338,6 @@ class OnOffChannel(ZigbeeChannel):
             "TS0002",
             "TS0003",
             "TS0004",
-            "TS004F",
         ):
             self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
                 self.ZCL_INIT_ATTRS.copy()
