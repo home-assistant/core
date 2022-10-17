@@ -19,6 +19,7 @@ from homeassistant.const import (
     LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_HPA,
+    PRESSURE_PSI,
     TEMP_CELSIUS,
     VOLUME_GALLONS,
     VOLUME_LITERS,
@@ -29,8 +30,12 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util.unit_conversion import DistanceConverter, VolumeConverter
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, LENGTH_UNITS, PRESSURE_UNITS
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    VolumeConverter,
+)
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from . import get_device_info
 from .const import (
@@ -215,29 +220,23 @@ class SubaruSensor(
         vehicle_data = self.coordinator.data[self.vin]
         current_value = vehicle_data[VEHICLE_STATUS].get(self.entity_description.key)
         unit = self.entity_description.native_unit_of_measurement
-        unit_system = self.hass.config.units
 
         if current_value is None:
             return None
 
-        if unit in LENGTH_UNITS:
-            return round(unit_system.length(current_value, unit), 1)
+        if self.hass.config.units is IMPERIAL_SYSTEM:
+            if unit == LENGTH_KILOMETERS:
+                return round(
+                    DistanceConverter.convert(current_value, unit, LENGTH_MILES), 1
+                )
 
-        if unit in PRESSURE_UNITS and unit_system == IMPERIAL_SYSTEM:
-            return round(
-                unit_system.pressure(current_value, unit),
-                1,
-            )
+            if unit == PRESSURE_HPA:
+                return round(
+                    PressureConverter.convert(current_value, unit, PRESSURE_PSI), 1
+                )
 
-        if (
-            unit
-            in [
-                FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
-                FUEL_CONSUMPTION_MILES_PER_GALLON,
-            ]
-            and unit_system == IMPERIAL_SYSTEM
-        ):
-            return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)
+            if unit == FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS:
+                return round((100.0 * L_PER_GAL) / (KM_PER_MI * current_value), 1)
 
         return current_value
 
@@ -246,18 +245,14 @@ class SubaruSensor(
         """Return the unit_of_measurement of the device."""
         unit = self.entity_description.native_unit_of_measurement
 
-        if unit in LENGTH_UNITS:
-            return self.hass.config.units.length_unit
+        if self.hass.config.units is IMPERIAL_SYSTEM:
+            if unit == LENGTH_KILOMETERS:
+                return LENGTH_MILES
 
-        if unit in PRESSURE_UNITS:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
-                return self.hass.config.units.pressure_unit
+            if unit == PRESSURE_HPA:
+                return PRESSURE_PSI
 
-        if unit in [
-            FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS,
-            FUEL_CONSUMPTION_MILES_PER_GALLON,
-        ]:
-            if self.hass.config.units == IMPERIAL_SYSTEM:
+            if unit == FUEL_CONSUMPTION_LITERS_PER_HUNDRED_KILOMETERS:
                 return FUEL_CONSUMPTION_MILES_PER_GALLON
 
         return unit
