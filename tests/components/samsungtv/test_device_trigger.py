@@ -7,6 +7,8 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.samsungtv.const import DOMAIN
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
@@ -23,25 +25,25 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 
 
 @pytest.fixture
-def device_reg(hass):
+def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def entity_reg(hass):
+def entity_reg(hass) -> entity_registry.EntityRegistry:
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.mark.usefixtures("rest_api")
-async def test_get_triggers(hass, device_reg, entity_reg):
+async def test_get_triggers(hass, device_reg, entity_reg) -> None:
     """Test we get the expected triggers from a samsungtv."""
     entity_id = f"{MP_DOMAIN}.{DOMAIN}_fake"
     config_entry = MockConfigEntry(
@@ -78,7 +80,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
 
 
 @pytest.mark.usefixtures("rest_api")
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass, calls) -> None:
     """Test for turn_on and turn_off triggers firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS_WITH_MAC)
     entity_id = f"{MP_DOMAIN}.fake"

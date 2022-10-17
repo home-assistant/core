@@ -133,9 +133,6 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._app_list_event: asyncio.Event = asyncio.Event()
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
-        if self._on_script or self._mac:
-            # Add turn-on if on_script or mac is available
-            self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 

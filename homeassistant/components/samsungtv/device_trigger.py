@@ -34,7 +34,7 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers for Samsung TVs."""
     registry = entity_registry.async_get(hass)
-    triggers = []
+    triggers: list[dict[str, str]] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
@@ -79,6 +79,7 @@ def _attach_trigger(
                 job,
                 {
                     "trigger": {
+                        # https://github.com/python/mypy/issues/9117
                         **trigger_data,  # type: ignore[arg-type]
                         **config,
                         "description": event_type,
