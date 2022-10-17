@@ -134,18 +134,19 @@ class LoggerSettings:
             return settings
 
         stored_config = await self._store.async_load()
-        if stored_config:
-            stored_log_config = stored_config[STORAGE_LOG_KEY]
-            # Reset domains for which the overrides should only be applied once
-            self._stored_config = {
-                STORAGE_LOG_KEY: {
-                    domain: reset_persistence(LoggerSetting(**settings))
-                    for domain, settings in stored_log_config.items()
-                }
-            }
-            await self._store.async_save(self._async_data_to_save())
-        else:
+        if not stored_config:
             self._stored_config = {STORAGE_LOG_KEY: {}}
+            return
+
+        stored_log_config = stored_config[STORAGE_LOG_KEY]
+        # Reset domains for which the overrides should only be applied once
+        self._stored_config = {
+            STORAGE_LOG_KEY: {
+                domain: reset_persistence(LoggerSetting(**settings))
+                for domain, settings in stored_log_config.items()
+            }
+        }
+        await self._store.async_save(self._async_data_to_save())
 
     @callback
     def _async_data_to_save(self) -> dict[str, dict[str, dict[str, str]]]:
