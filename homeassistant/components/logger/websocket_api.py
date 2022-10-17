@@ -1,4 +1,4 @@
-"""Websocekt API handlers for the hassio integration."""
+"""Websocket API handlers for the logger integration."""
 import logging
 from typing import Any
 
