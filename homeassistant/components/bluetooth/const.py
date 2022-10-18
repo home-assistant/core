@@ -51,9 +51,9 @@ FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS: Final = 60 * 15
 # to be
 # 180s Time when device is removed from stack
 # - 30s check interval
-# - 20s scanner restart time * 2
+# - 30s scanner restart time * 2
 #
-SCANNER_WATCHDOG_TIMEOUT: Final = 110
+SCANNER_WATCHDOG_TIMEOUT: Final = 90
 # How often to check if the scanner has reached
 # the SCANNER_WATCHDOG_TIMEOUT without seeing anything
 SCANNER_WATCHDOG_INTERVAL: Final = timedelta(seconds=30)
