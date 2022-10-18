@@ -23,11 +23,24 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     entry: config_entries.ConfigEntry | None
 
-    async def validate_input(self, sensor_api: str, location: str) -> None:
+    async def validate_input(self, sensor_api: str, location: str) -> dict[str, str]:
         """Validate input from user input."""
+        errors: dict[str, str] = {}
+
         web_session = async_get_clientsession(self.hass)
         camera_api = TrafikverketCamera(web_session, sensor_api)
-        await camera_api.async_get_camera(location)
+        try:
+            await camera_api.async_get_camera(location)
+        except ValueError as error:
+            errors["base"] = "cannot_connect"
+            if "Invalid authentication" in str(error):
+                errors["base"] = "invalid_auth"
+            if "Could not find a camera with the specified name" in str(error):
+                errors["base"] = "invalid_location"
+            if "Found multiple camera with the specified name" in str(error):
+                errors["base"] = "more_locations"
+
+        return errors
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Trafikverket."""
@@ -39,23 +52,15 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm re-authentication with Trafikverket."""
-        errors: dict[str, str] = {}
+        errors = {}
 
         if user_input:
             api_key = user_input[CONF_API_KEY]
 
             assert self.entry is not None
-            try:
-                await self.validate_input(api_key, self.entry.data[CONF_LOCATION])
-            except ValueError as error:
-                errors["base"] = "cannot_connect"
-                if "Invalid authentication" in str(error):
-                    errors["base"] = "invalid_auth"
-                if "Could not find a camera with the specified name" in str(error):
-                    errors["base"] = "invalid_location"
-                if "Found multiple camera with the specified name" in str(error):
-                    errors["base"] = "more_locations"
-            else:
+            errors = await self.validate_input(api_key, self.entry.data[CONF_LOCATION])
+
+            if not errors:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
@@ -86,18 +91,9 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_key = user_input[CONF_API_KEY]
             location = user_input[CONF_LOCATION]
 
-            try:
-                await self.validate_input(api_key, location)
-            except ValueError as error:
-                errors["base"] = "cannot_connect"
-                if "Invalid authentication" in str(error):
-                    errors["base"] = "invalid_auth"
-                if "Could not find a camera with the specified name" in str(error):
-                    errors["base"] = "invalid_location"
-                if "Found multiple camera with the specified name" in str(error):
-                    errors["base"] = "more_locations"
+            errors = await self.validate_input(api_key, location)
 
-            else:
+            if not errors:
                 await self.async_set_unique_id(f"{DOMAIN}-{location}")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
