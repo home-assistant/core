@@ -11,6 +11,7 @@ import time
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
+from bleak_retry_connector import NO_RSSI_VALUE, RSSI_SWITCH_THRESHOLD
 
 from homeassistant import config_entries
 from homeassistant.core import (
@@ -27,7 +28,6 @@ from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-    NO_RSSI_VALUE,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
 )
@@ -66,8 +66,6 @@ APPLE_START_BYTES_WANTED: Final = {
     APPLE_HOMEKIT_START_BYTE,
     APPLE_DEVICE_ID_START_BYTE,
 }
-
-RSSI_SWITCH_THRESHOLD = 6
 
 MONOTONIC_TIME: Final = time.monotonic
 
