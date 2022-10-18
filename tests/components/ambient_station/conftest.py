@@ -48,7 +48,7 @@ async def setup_ambient_station_fixture(hass, config, devices):
         yield
 
 
-@pytest.fixture(name="station_data")
+@pytest.fixture(name="station_data", scope="package")
 def station_data_fixture():
     """Define devices data."""
     return json.loads(load_fixture("station_data.json", "ambient_station"))

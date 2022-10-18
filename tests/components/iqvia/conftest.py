@@ -26,43 +26,43 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_allergy_forecast")
+@pytest.fixture(name="data_allergy_forecast", scope="package")
 def data_allergy_forecast_fixture():
     """Define allergy forecast data."""
     return json.loads(load_fixture("allergy_forecast_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_allergy_index")
+@pytest.fixture(name="data_allergy_index", scope="package")
 def data_allergy_index_fixture():
     """Define allergy index data."""
     return json.loads(load_fixture("allergy_index_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_allergy_outlook")
+@pytest.fixture(name="data_allergy_outlook", scope="package")
 def data_allergy_outlook_fixture():
     """Define allergy outlook data."""
     return json.loads(load_fixture("allergy_outlook_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_asthma_forecast")
+@pytest.fixture(name="data_asthma_forecast", scope="package")
 def data_asthma_forecast_fixture():
     """Define asthma forecast data."""
     return json.loads(load_fixture("asthma_forecast_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_asthma_index")
+@pytest.fixture(name="data_asthma_index", scope="package")
 def data_asthma_index_fixture():
     """Define asthma index data."""
     return json.loads(load_fixture("asthma_index_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_disease_forecast")
+@pytest.fixture(name="data_disease_forecast", scope="package")
 def data_disease_forecast_fixture():
     """Define disease forecast data."""
     return json.loads(load_fixture("disease_forecast_data.json", "iqvia"))
 
 
-@pytest.fixture(name="data_disease_index")
+@pytest.fixture(name="data_disease_index", scope="package")
 def data_disease_index_fixture():
     """Define disease index data."""
     return json.loads(load_fixture("disease_index_data.json", "iqvia"))
