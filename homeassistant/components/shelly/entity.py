@@ -14,11 +14,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry, entity, entity_registry
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, LOGGER
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, LOGGER
 from .coordinator import (
     ShellyBlockCoordinator,
     ShellyRpcCoordinator,
@@ -40,9 +41,7 @@ def async_setup_entry_attribute_entities(
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
     sensor_class: Callable,
-    description_class: Callable[
-        [entity_registry.RegistryEntry], BlockEntityDescription
-    ],
+    description_class: Callable[[RegistryEntry], BlockEntityDescription],
 ) -> None:
     """Set up entities for attributes."""
     coordinator = get_entry_data(hass)[config_entry.entry_id].block
@@ -115,9 +114,7 @@ def async_restore_block_attribute_entities(
     coordinator: ShellyBlockCoordinator,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
     sensor_class: Callable,
-    description_class: Callable[
-        [entity_registry.RegistryEntry], BlockEntityDescription
-    ],
+    description_class: Callable[[RegistryEntry], BlockEntityDescription],
 ) -> None:
     """Restore block attributes entities."""
     entities = []
@@ -154,11 +151,35 @@ def async_setup_entry_rpc(
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
 ) -> None:
-    """Set up entities for REST sensors."""
+    """Set up entities for RPC sensors."""
     coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     assert coordinator
-    polling_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc_poll
-    assert polling_coordinator
+
+    if coordinator.device.initialized:
+        async_setup_rpc_attribute_entities(
+            hass, config_entry, async_add_entities, sensors, sensor_class
+        )
+    else:
+        async_restore_rpc_attribute_entities(
+            hass, config_entry, async_add_entities, coordinator, sensors, sensor_class
+        )
+
+
+@callback
+def async_setup_rpc_attribute_entities(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    sensors: Mapping[str, RpcEntityDescription],
+    sensor_class: Callable,
+) -> None:
+    """Set up entities for RPC attributes."""
+    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    assert coordinator
+
+    if not (sleep_period := config_entry.data[CONF_SLEEP_PERIOD]):
+        polling_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc_poll
+        assert polling_coordinator
 
     entities = []
     for sensor_id in sensors:
@@ -183,13 +204,52 @@ def async_setup_entry_rpc(
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
                 if description.use_polling_coordinator:
-                    entities.append(
-                        sensor_class(polling_coordinator, key, sensor_id, description)
-                    )
+                    if not sleep_period:
+                        entities.append(
+                            sensor_class(
+                                polling_coordinator, key, sensor_id, description
+                            )
+                        )
                 else:
                     entities.append(
                         sensor_class(coordinator, key, sensor_id, description)
                     )
+    if not entities:
+        return
+
+    async_add_entities(entities)
+
+
+@callback
+def async_restore_rpc_attribute_entities(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    coordinator: ShellyRpcCoordinator,
+    sensors: Mapping[str, RpcEntityDescription],
+    sensor_class: Callable,
+) -> None:
+    """Restore block attributes entities."""
+    entities = []
+
+    ent_reg = entity_registry.async_get(hass)
+    entries = entity_registry.async_entries_for_config_entry(
+        ent_reg, config_entry.entry_id
+    )
+
+    domain = sensor_class.__module__.split(".")[-1]
+
+    for entry in entries:
+        if entry.domain != domain:
+            continue
+
+        key = entry.unique_id.split("-")[-2]
+        attribute = entry.unique_id.split("-")[-1]
+
+        if description := sensors.get(attribute):
+            entities.append(
+                sensor_class(coordinator, key, attribute, description, entry)
+            )
 
     if not entities:
         return
@@ -336,7 +396,7 @@ class ShellyRpcEntity(entity.Entity):
     @property
     def available(self) -> bool:
         """Available."""
-        return self.coordinator.device.connected
+        return self.coordinator.last_update_success
 
     @property
     def status(self) -> dict:
@@ -552,7 +612,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         block: Block | None,
         attribute: str,
         description: BlockEntityDescription,
-        entry: entity_registry.RegistryEntry | None = None,
+        entry: RegistryEntry | None = None,
         sensors: Mapping[tuple[str, str], BlockEntityDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
@@ -621,3 +681,50 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
                 LOGGER.debug("Entity %s attached to block", self.name)
                 super()._update_callback()
                 return
+
+
+class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity, RestoreEntity):
+    """Helper class to represent a sleeping rpc attribute."""
+
+    entity_description: RpcEntityDescription
+
+    # pylint: disable=super-init-not-called
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        self.last_state: StateType = None
+        self.coordinator = coordinator
+        self.key = key
+        self.attribute = attribute
+        self.entity_description = description
+
+        self._attr_should_poll = False
+        self._attr_device_info = DeviceInfo(
+            connections={(device_registry.CONNECTION_NETWORK_MAC, coordinator.mac)}
+        )
+        self._attr_unique_id = (
+            self._attr_unique_id
+        ) = f"{coordinator.mac}-{key}-{attribute}"
+        self._last_value = None
+
+        if coordinator.device.initialized:
+            self._attr_name = get_rpc_entity_name(
+                coordinator.device, key, description.name
+            )
+        elif entry is not None:
+            self._attr_name = cast(str, entry.original_name)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+
+        if last_state is not None:
+            self.last_state = last_state.state
