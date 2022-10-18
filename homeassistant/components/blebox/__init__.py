@@ -74,9 +74,8 @@ def get_blebox_features(
     """Get features from a BleBox product matching the feature type."""
 
     product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-
-    if features := product.features.get(entity_type):
-        return features
+    if entity_type in product.features:
+        return product.features[entity_type]
     return []
 
 
