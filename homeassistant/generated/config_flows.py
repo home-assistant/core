@@ -331,7 +331,6 @@ FLOWS = {
         "ruckus_unleashed",
         "sabnzbd",
         "samsungtv",
-        "scrape",
         "screenlogic",
         "season",
         "sense",

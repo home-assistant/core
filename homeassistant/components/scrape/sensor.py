@@ -1,7 +1,7 @@
 """Support for getting data from websites with scraping."""
 from __future__ import annotations
-
 from datetime import timedelta
+
 import logging
 from typing import Any
 
@@ -34,8 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
@@ -49,10 +47,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
 from .coordinator import ScrapeCoordinator
 
-SCAN_INTERVAL = timedelta(minutes=10)
-
 _LOGGER = logging.getLogger(__name__)
 ICON = "mdi:web"
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -141,7 +139,6 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
     """Representation of a web scrape sensor."""
 
     _attr_icon = ICON
-    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -1,6 +1,10 @@
 """The scrape component."""
 from __future__ import annotations
 
+from datetime import timedelta
+import logging
+from typing import Any
+
 import httpx
 import voluptuous as vol
 
@@ -10,7 +14,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
@@ -30,19 +33,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONF_INDEX,
-    CONF_SELECT,
-    DEFAULT_NAME,
-    DEFAULT_VERIFY_SSL,
-    DOMAIN,
-    PLATFORMS,
-)
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 SCRAPE_CONFIG = vol.Schema(
     {
@@ -63,7 +61,7 @@ SCRAPE_CONFIG = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
+        vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
     }
 )
 
@@ -78,80 +76,66 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is None:
         return True
 
-    for sensor_conf in conf:
-        discovery.load_platform(hass, Platform.SENSOR, DOMAIN, sensor_conf, config)
+    sensor_conf: dict[str, Any]
+    for sensor_id, sensor_conf in enumerate(conf):
+        resource: str = sensor_conf[CONF_RESOURCE]
+        method: str = "GET"
+        payload: str | None = None
+        headers: str | None = sensor_conf.get(CONF_HEADERS)
+        verify_ssl: bool = sensor_conf[CONF_VERIFY_SSL]
+        username: str | None = sensor_conf.get(CONF_USERNAME)
+        password: str | None = sensor_conf.get(CONF_PASSWORD)
+        authentication = sensor_conf.get(CONF_AUTHENTICATION)
+        update_interval = sensor_conf.get(CONF_SCAN_INTERVAL, 10 * 60)
+        auth: httpx.DigestAuth | tuple[str, str] | None = None
+        if username and password:
+            if authentication == HTTP_DIGEST_AUTHENTICATION:
+                auth = httpx.DigestAuth(username, password)
+            else:
+                auth = (username, password)
+        rest = RestData(
+            hass, method, resource, auth, headers, None, payload, verify_ssl
+        )
+
+        coordinator = await get_coordinator(hass, rest, update_interval)
+        hass.data.setdefault(DOMAIN, {})[sensor_id] = coordinator
+
+        discovery.load_platform(
+            hass,
+            Platform.SENSOR,
+            DOMAIN,
+            {"id": sensor_id, "config": sensor_conf},
+            config,
+        )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Scrape from a config entry."""
+async def get_coordinator(
+    hass: HomeAssistant, rest: RestData, update_interval: int
+) -> ScrapeCoordinator:
+    """Get Scrape Coordinator."""
 
-    resource: str = entry.options[CONF_RESOURCE]
-    method: str = "GET"
-    payload: str | None = None
-    headers: str | None = entry.options.get(CONF_HEADERS)
-    verify_ssl: bool = entry.options[CONF_VERIFY_SSL]
-    username: str | None = entry.options.get(CONF_USERNAME)
-    password: str | None = entry.options.get(CONF_PASSWORD)
-    authentication = entry.options.get(CONF_AUTHENTICATION)
-
-    rest = await load_rest_data(
-        hass,
-        resource,
-        method,
-        payload,
-        headers,
-        verify_ssl,
-        username,
-        password,
-        authentication,
-    )
-
-    if rest.data is None:
-        raise ConfigEntryNotReady
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = rest
-
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
+    coordinator = ScrapeCoordinator(hass, rest, update_interval)
+    await coordinator.async_config_entry_first_refresh()
+    return coordinator
 
 
-async def load_rest_data(
-    hass: HomeAssistant,
-    resource: str,
-    method: str,
-    payload: str | None,
-    headers: str | None,
-    verify_ssl: bool,
-    username: str | None,
-    password: str | None,
-    authentication: str | None,
-) -> RestData:
-    """Load rest data."""
+class ScrapeCoordinator(DataUpdateCoordinator[RestData]):
+    """Scrape Coordinator."""
 
-    auth: httpx.DigestAuth | tuple[str, str] | None = None
-    if username and password:
-        if authentication == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
-        else:
-            auth = (username, password)
+    def __init__(
+        self, hass: HomeAssistant, rest: RestData, update_intervall: int
+    ) -> None:
+        """Initialize Scrape coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="Scrape Coordinator",
+            update_interval=timedelta(seconds=update_intervall),
+        )
+        self.rest = rest
 
-    rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
-    await rest.async_update()
-
-    return rest
-
-
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener for options."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Scrape config entry."""
-
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    async def _async_update_data(self):
+        """Fetch data from Rest."""
+        await self.rest.async_update()
