@@ -450,7 +450,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return format_mac(self._sync_status.get("@mac"))
+        return f"{format_mac(self._sync_status.get('@mac'))}-{self.port}"
 
     @property
     def device_info(self):
