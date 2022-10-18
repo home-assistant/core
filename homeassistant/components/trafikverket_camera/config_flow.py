@@ -82,7 +82,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
 
-        if user_input is not None:
+        if user_input:
             api_key = user_input[CONF_API_KEY]
             location = user_input[CONF_LOCATION]
 
