@@ -236,7 +236,7 @@ def _merge_basic_config(
         hass.config_entries.async_update_entry(entry, data=entry_config)
 
 
-def _merge_extended_config(entry, conf):
+def _merge_extended_config(entry: ConfigEntry, conf: ConfigType) -> dict[str, Any]:
     """Merge advanced options in configuration.yaml config with config entry."""
     # Add default values
     conf = {**DEFAULT_VALUES, **conf}
@@ -251,7 +251,9 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_fetch_config(hass: HomeAssistant, entry: ConfigEntry) -> dict | None:
+async def async_fetch_config(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> dict[str, Any] | None:
     """Fetch fresh MQTT yaml config from the hass config when (re)loading the entry."""
     mqtt_data = get_mqtt_data(hass)
     if mqtt_data.reload_entry:
@@ -366,20 +368,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_dump_service(call: ServiceCall) -> None:
         """Handle MQTT dump service calls."""
-        messages = []
+        messages: list[tuple[str, str]] = []
 
         @callback
-        def collect_msg(msg):
-            messages.append((msg.topic, msg.payload.replace("\n", "")))
+        def collect_msg(msg: ReceiveMessage) -> None:
+            messages.append((msg.topic, str(msg.payload).replace("\n", "")))
 
         unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
 
-        def write_dump():
+        def write_dump() -> None:
             with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf8") as fp:
                 for msg in messages:
                     fp.write(",".join(msg) + "\n")
 
-        async def finish_dump(_):
+        async def finish_dump(_) -> None:
             """Write dump to file."""
             unsub()
             await hass.async_add_executor_job(write_dump)
@@ -439,7 +441,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
-    async def async_forward_entry_setup_and_setup_discovery(config_entry):
+    async def async_forward_entry_setup_and_setup_discovery(
+        config_entry: ConfigEntry,
+    ) -> None:
         """Forward the config entry setup to the platforms and set up discovery."""
         reload_manual_setup: bool = False
         # Local import to avoid circular dependencies
@@ -460,6 +464,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
         # Setup discovery
+        assert conf
         if conf.get(CONF_DISCOVERY):
             await _async_setup_discovery(hass, conf, entry)
         # Setup reload service after all platforms have loaded
@@ -497,9 +502,7 @@ async def async_reload_manual_mqtt_items(hass: HomeAssistant) -> None:
 )
 @callback
 def websocket_mqtt_info(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get MQTT debug info for device."""
     device_id = msg["device_id"]
@@ -516,15 +519,13 @@ def websocket_mqtt_info(
 )
 @websocket_api.async_response
 async def websocket_subscribe(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Subscribe to a MQTT topic."""
     if not connection.user.is_admin:
         raise Unauthorized
 
-    async def forward_messages(mqttmsg: ReceiveMessage):
+    async def forward_messages(mqttmsg: ReceiveMessage) -> None:
         """Forward events to websocket."""
         try:
             payload = cast(bytes, mqttmsg.payload).decode(
