@@ -81,14 +81,11 @@ class TVCamera(CoordinatorEntity[TVDataUpdateCoordinator], Camera):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         return {
-            "deleted": self.coordinator.data.data.deleted,
             "description": self.coordinator.data.data.description,
             "direction": self.coordinator.data.data.direction,
             "full_size_photo": self.coordinator.data.data.fullsizephoto,
-            "last_modified": self.coordinator.data.data.modified,
             "location": self.coordinator.data.data.location,
-            "photo time": self.coordinator.data.data.phototime,
-            "photo url": self.coordinator.data.data.photourl,
+            "photo_url": self.coordinator.data.data.photourl,
             "status": self.coordinator.data.data.status,
             "type": self.coordinator.data.data.camera_type,
         }
