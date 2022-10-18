@@ -4,7 +4,11 @@ from __future__ import annotations
 from datetime import timedelta
 from time import sleep
 
-from verisure import LoginError as VerisureLoginError, Session as Verisure
+from verisure import (
+    LoginError as VerisureLoginError,
+    ResponseError as VerisureResponseError,
+    Session as Verisure,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -41,7 +45,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         """Login to Verisure."""
         try:
             await self.hass.async_add_executor_job(self.verisure.login_cookie)
-        except VerisureLoginError as ex:
+        except (VerisureLoginError, VerisureResponseError) as ex:
             LOGGER.error("Could not log in to verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
 
@@ -58,7 +62,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Verisure."""
         try:
             await self.hass.async_add_executor_job(self.verisure.login_cookie)
-        except VerisureLoginError as ex:
+        except (VerisureLoginError, VerisureResponseError) as ex:
             LOGGER.error("Could not log in to Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         try:
