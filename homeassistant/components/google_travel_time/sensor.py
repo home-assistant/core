@@ -10,7 +10,6 @@ from googlemaps.distance_matrix import distance_matrix
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_MODE,
     CONF_NAME,
@@ -104,6 +103,8 @@ async def async_setup_entry(
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(self, config_entry, name, api_key, origin, destination, client):
         """Initialize the sensor."""
         self._name = name
@@ -178,7 +179,6 @@ class GoogleTravelTimeSensor(SensorEntity):
             res["distance"] = _data["distance"]["text"]
         res["origin"] = self._resolved_origin
         res["destination"] = self._resolved_destination
-        res[ATTR_ATTRIBUTION] = ATTRIBUTION
         return res
 
     @property

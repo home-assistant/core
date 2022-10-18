@@ -6,7 +6,6 @@ import logging
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     LENGTH_KILOMETERS,
@@ -124,7 +123,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
             self._distance = round(feed_entry.distance_to_home, 1)
         self._latitude = round(feed_entry.coordinates[0], 5)
         self._longitude = round(feed_entry.coordinates[1], 5)
-        self._attribution = feed_entry.attribution
+        self._attr_attribution = feed_entry.attribution
         self._alert_level = feed_entry.alert_level
         self._activity = feed_entry.activity
         self._hazards = feed_entry.hazards
@@ -159,7 +158,6 @@ class GeonetnzVolcanoSensor(SensorEntity):
         attributes = {}
         for key, value in (
             (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_ATTRIBUTION, self._attribution),
             (ATTR_ACTIVITY, self._activity),
             (ATTR_HAZARDS, self._hazards),
             (ATTR_LONGITUDE, self._longitude),

@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     LENGTH_KILOMETERS,
     PERCENTAGE,
     SPEED_MILES_PER_HOUR,
@@ -180,6 +179,7 @@ class MetOfficeCurrentSensor(
 ):
     """Implementation of a Met Office current weather condition sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
     def __init__(
@@ -258,7 +258,6 @@ class MetOfficeCurrentSensor(
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_LAST_UPDATE: self.coordinator.data.now.date,
             ATTR_SENSOR_ID: self.entity_description.key,
             ATTR_SITE_ID: self.coordinator.data.site.id,
