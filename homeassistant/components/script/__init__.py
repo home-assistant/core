@@ -356,8 +356,7 @@ async def _async_process_config(hass, config, component) -> None:
         config for idx, config in enumerate(script_configs) if idx not in config_matches
     ]
     entities = await _create_script_entities(hass, updated_script_configs)
-    if entities:
-        await component.async_add_entities(entities)
+    await component.async_add_entities(entities)
 
 
 class ScriptEntity(ToggleEntity, RestoreEntity):
