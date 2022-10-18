@@ -516,7 +516,7 @@
     "bsblan": {
       "config_flow": true,
       "iot_class": "local_polling",
-      "name": "BSBLAN"
+      "name": "BSB-Lan"
     },
     "bt_home_hub_5": {
       "config_flow": false,

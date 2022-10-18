@@ -1,6 +1,6 @@
 {
   "domain": "bsblan",
-  "name": "BSBLAN",
+  "name": "BSB-Lan",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bsblan",
   "requirements": ["python-bsblan==0.5.5"],
