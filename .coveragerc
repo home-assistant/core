@@ -161,6 +161,8 @@ omit =
     homeassistant/components/brunt/const.py
     homeassistant/components/brunt/cover.py
     homeassistant/components/bsblan/climate.py
+    homeassistant/components/bsblan/const.py
+    homeassistant/components/bsblan/entity.py
     homeassistant/components/bt_home_hub_5/device_tracker.py
     homeassistant/components/bt_smarthub/device_tracker.py
     homeassistant/components/buienradar/sensor.py
