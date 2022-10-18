@@ -188,7 +188,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         )
         self._set_modes_and_presets()
         self._attr_supported_features = 0
-        if len(self._hvac_presets) > 1:
+        if self._current_mode and len(self._hvac_presets) > 1:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         # If any setpoint value exists, we can assume temperature
         # can be set
@@ -428,9 +428,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if not self._fan_mode:
-            return
-
+        assert self._fan_mode is not None
         try:
             new_state = int(
                 next(
@@ -484,9 +482,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
-        if self._current_mode is None:
-            # Thermostat(valve) has no support for setting a mode, so we make it a no-op
-            return
+        assert self._current_mode is not None
         if preset_mode == PRESET_NONE:
             # try to restore to the (translated) main hvac mode
             await self.async_set_hvac_mode(self.hvac_mode)
