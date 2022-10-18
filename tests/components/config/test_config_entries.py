@@ -1500,7 +1500,7 @@ async def test_get_entries_ws(hass, hass_ws_client, clear_handlers):
             {
                 "id": 10,
                 "type": "config_entries/get",
-                "type_filter": "integration",
+                "type_filter": ["device", "hub", "service"],
             }
         )
         response = await ws_client.receive_json()
