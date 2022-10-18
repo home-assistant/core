@@ -9,5 +9,6 @@
   "codeowners": ["@OttoWinter", "@jesserockz"],
   "after_dependencies": ["bluetooth", "zeroconf", "tag"],
   "iot_class": "local_push",
+  "integration_type": "device",
   "loggers": ["aioesphomeapi", "noiseprotocol"]
 }
