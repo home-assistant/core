@@ -123,7 +123,6 @@ async def ws_save_blueprint(
 
     try:
         yaml_data = cast(dict[str, Any], yaml.parse_yaml(msg["yaml"]))
-        assert isinstance(yaml_data, dict)
         blueprint = models.Blueprint(yaml_data, expected_domain=domain)
         if "source_url" in msg:
             blueprint.update_metadata(source_url=msg["source_url"])
