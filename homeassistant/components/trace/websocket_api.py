@@ -1,5 +1,6 @@
 """Websocket API for automation."""
 import json
+from typing import Any
 
 import voluptuous as vol
 
@@ -54,7 +55,11 @@ def async_setup(hass: HomeAssistant) -> None:
     }
 )
 @websocket_api.async_response
-async def websocket_trace_get(hass, connection, msg):
+async def websocket_trace_get(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Get a script or automation trace."""
     key = f"{msg['domain']}.{msg['item_id']}"
     run_id = msg["run_id"]
@@ -83,7 +88,11 @@ async def websocket_trace_get(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_trace_list(hass, connection, msg):
+async def websocket_trace_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Summarize script and automation traces."""
     wanted_domain = msg["domain"]
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
@@ -102,7 +111,11 @@ async def websocket_trace_list(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_trace_contexts(hass, connection, msg):
+async def websocket_trace_contexts(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Retrieve contexts we have traces for."""
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
