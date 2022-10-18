@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_NAME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
@@ -154,6 +153,7 @@ async def async_setup_entry(
 class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     """Define an GIOS sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
     entity_description: GiosSensorEntityDescription
 
@@ -174,7 +174,6 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
         )
         self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
         self._attrs: dict[str, Any] = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_STATION: self.coordinator.gios.station_name,
         }
         self.entity_description = description

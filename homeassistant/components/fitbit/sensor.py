@@ -19,12 +19,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_UNIT_SYSTEM,
-)
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_UNIT_SYSTEM
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -345,6 +340,7 @@ class FitbitSensor(SensorEntity):
     """Implementation of a Fitbit sensor."""
 
     entity_description: FitbitSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -396,7 +392,7 @@ class FitbitSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        attrs: dict[str, str | None] = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attrs: dict[str, str | None] = {}
 
         if self.extra is not None:
             attrs["model"] = self.extra.get("deviceVersion")
