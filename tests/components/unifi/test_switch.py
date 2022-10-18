@@ -1495,25 +1495,3 @@ async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
     )
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
-
-    # Port gets disabled
-    device_1["port_table"][0]["up"] = False
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.DEVICE.value},
-            "data": [device_1],
-        }
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
-
-    # Port gets re-enabled
-    device_1["port_table"][0]["up"] = True
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.DEVICE.value},
-            "data": [device_1],
-        }
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF

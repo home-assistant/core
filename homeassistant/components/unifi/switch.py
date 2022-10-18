@@ -613,9 +613,7 @@ class UnifiPoePortSwitch(SwitchEntity):
         """Object has new event."""
         device = self.controller.api.devices[self._device_mac]
         port = self.controller.api.ports[self._obj_id]
-        self._attr_available = (
-            self.controller.available and not device.disabled and port.up
-        )
+        self._attr_available = self.controller.available and not device.disabled
         self._attr_is_on = port.poe_mode != "off"
         self.async_write_ha_state()
 
