@@ -1102,7 +1102,7 @@ pyflic==2.0.3
 pyflume==0.6.5
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.11
+pyforked-daapd==0.1.14
 
 # homeassistant.components.freedompro
 pyfreedompro==1.1.0
