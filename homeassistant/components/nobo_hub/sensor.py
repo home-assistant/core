@@ -41,8 +41,7 @@ async def async_setup_entry(
             NoboTemperatureSensor(component["serial"], hub)
             for component in hub.components.values()
             if component[ATTR_MODEL].has_temp_sensor
-        ],
-        True,
+        ]
     )
 
 
@@ -77,17 +76,16 @@ class NoboTemperatureSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callback from hub."""
         self._nobo.register_callback(self._after_update)
+        # Read state after registering callback to avoid race condition.
+        self._read_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """Deregister callback from hub."""
         self._nobo.deregister_callback(self._after_update)
 
-    async def async_update(self) -> None:
-        """Fetch new state data for this zone."""
-        self._read_state()
-
     @callback
     def _read_state(self) -> None:
+        """Read the current state from the hub. This is a local call."""
         value = self._nobo.get_current_component_temperature(self._id)
         if value is None:
             self._attr_native_value = None
