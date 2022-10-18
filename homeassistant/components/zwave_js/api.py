@@ -448,7 +448,7 @@ def async_register_api(hass: HomeAssistant) -> None:
 )
 @websocket_api.async_response
 async def websocket_network_status(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get the status of the Z-Wave JS network."""
     if ENTRY_ID in msg:
@@ -518,7 +518,7 @@ async def websocket_network_status(
 async def websocket_subscribe_node_status(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Subscribe to node status update events of a Z-Wave JS node."""
@@ -559,7 +559,7 @@ async def websocket_subscribe_node_status(
 async def websocket_node_status(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Get the status of a Z-Wave JS node."""
@@ -577,7 +577,7 @@ async def websocket_node_status(
 async def websocket_node_metadata(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Get the metadata of a Z-Wave JS node."""
@@ -607,7 +607,7 @@ async def websocket_node_metadata(
 async def websocket_node_comments(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Get the comments of a Z-Wave JS node."""
@@ -648,7 +648,7 @@ async def websocket_node_comments(
 async def websocket_add_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -791,7 +791,7 @@ async def websocket_add_node(
 async def websocket_grant_security_classes(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -819,7 +819,7 @@ async def websocket_grant_security_classes(
 async def websocket_validate_dsk_and_enter_pin(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -849,7 +849,7 @@ async def websocket_validate_dsk_and_enter_pin(
 async def websocket_provision_smart_start_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -902,7 +902,7 @@ async def websocket_provision_smart_start_node(
 async def websocket_unprovision_smart_start_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -935,7 +935,7 @@ async def websocket_unprovision_smart_start_node(
 async def websocket_get_provisioning_entries(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -961,7 +961,7 @@ async def websocket_get_provisioning_entries(
 async def websocket_parse_qr_code_string(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -987,7 +987,7 @@ async def websocket_parse_qr_code_string(
 async def websocket_supports_feature(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1013,7 +1013,7 @@ async def websocket_supports_feature(
 async def websocket_stop_inclusion(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1040,7 +1040,7 @@ async def websocket_stop_inclusion(
 async def websocket_stop_exclusion(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1068,7 +1068,7 @@ async def websocket_stop_exclusion(
 async def websocket_remove_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1147,7 +1147,7 @@ async def websocket_remove_node(
 async def websocket_replace_failed_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Replace a failed node with a new node."""
@@ -1298,7 +1298,7 @@ async def websocket_replace_failed_node(
 async def websocket_remove_failed_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Remove a failed node from the Z-Wave network."""
@@ -1342,7 +1342,7 @@ async def websocket_remove_failed_node(
 async def websocket_begin_healing_network(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1369,7 +1369,7 @@ async def websocket_begin_healing_network(
 async def websocket_subscribe_heal_network_progress(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1413,7 +1413,7 @@ async def websocket_subscribe_heal_network_progress(
 async def websocket_stop_healing_network(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1440,7 +1440,7 @@ async def websocket_stop_healing_network(
 async def websocket_heal_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Heal a node on the Z-Wave network."""
@@ -1468,7 +1468,7 @@ async def websocket_heal_node(
 async def websocket_refresh_node_info(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Re-interview a node."""
@@ -1518,7 +1518,7 @@ async def websocket_refresh_node_info(
 async def websocket_refresh_node_values(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Refresh node values."""
@@ -1540,7 +1540,7 @@ async def websocket_refresh_node_values(
 async def websocket_refresh_node_cc_values(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Refresh node values for a particular CommandClass."""
@@ -1574,7 +1574,7 @@ async def websocket_refresh_node_cc_values(
 async def websocket_set_config_parameter(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Set a config parameter value for a Z-Wave node."""
@@ -1619,7 +1619,7 @@ async def websocket_set_config_parameter(
 @websocket_api.async_response
 @async_get_node
 async def websocket_get_config_parameters(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict, node: Node
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any], node: Node
 ) -> None:
     """Get a list of configuration parameters for a Z-Wave node."""
     values = node.get_configuration_values()
@@ -1671,7 +1671,7 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
 async def websocket_subscribe_log_updates(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1758,7 +1758,7 @@ async def websocket_subscribe_log_updates(
 async def websocket_update_log_config(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1782,7 +1782,7 @@ async def websocket_update_log_config(
 async def websocket_get_log_config(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1809,7 +1809,7 @@ async def websocket_get_log_config(
 async def websocket_update_data_collection_preference(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1841,7 +1841,7 @@ async def websocket_update_data_collection_preference(
 async def websocket_data_collection_status(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -1868,7 +1868,7 @@ async def websocket_data_collection_status(
 async def websocket_abort_firmware_update(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Abort a firmware update."""
@@ -1889,7 +1889,7 @@ async def websocket_abort_firmware_update(
 async def websocket_is_node_firmware_update_in_progress(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Get whether firmware update is in progress for given node."""
@@ -1921,7 +1921,7 @@ def _get_firmware_update_progress_dict(
 async def websocket_subscribe_firmware_update_status(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Subscribe to the status of a firmware update."""
@@ -1994,7 +1994,7 @@ async def websocket_subscribe_firmware_update_status(
 async def websocket_get_firmware_update_capabilities(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Abort a firmware update."""
@@ -2015,7 +2015,7 @@ async def websocket_get_firmware_update_capabilities(
 async def websocket_is_any_ota_firmware_update_in_progress(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -2092,7 +2092,7 @@ class FirmwareUploadView(HomeAssistantView):
 async def websocket_check_for_config_updates(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -2121,7 +2121,7 @@ async def websocket_check_for_config_updates(
 async def websocket_install_config_update(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -2160,7 +2160,7 @@ def _get_controller_statistics_dict(
 async def websocket_subscribe_controller_statistics(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     entry: ConfigEntry,
     client: Client,
     driver: Driver,
@@ -2257,7 +2257,7 @@ def _get_node_statistics_dict(
 async def websocket_subscribe_node_statistics(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     node: Node,
 ) -> None:
     """Subsribe to the statistics updates for a node."""

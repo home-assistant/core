@@ -673,7 +673,7 @@ def websocket_get_themes(
 )
 @websocket_api.async_response
 async def websocket_get_translations(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get translations command."""
     resources = await async_get_translations(
@@ -691,7 +691,7 @@ async def websocket_get_translations(
 @websocket_api.websocket_command({"type": "frontend/get_version"})
 @websocket_api.async_response
 async def websocket_get_version(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get version command."""
     integration = await async_get_integration(hass, "frontend")

@@ -1,6 +1,7 @@
 """Support to manage a shopping list."""
 from http import HTTPStatus
 import logging
+from typing import Any
 import uuid
 
 import voluptuous as vol
@@ -372,7 +373,7 @@ def websocket_handle_items(
 async def websocket_handle_add(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Handle add item to shopping_list."""
     item = await hass.data[DOMAIN].async_add(msg["name"], connection.context(msg))
@@ -383,7 +384,7 @@ async def websocket_handle_add(
 async def websocket_handle_update(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Handle update shopping_list item."""
     msg_id = msg.pop("id")
@@ -406,7 +407,7 @@ async def websocket_handle_update(
 async def websocket_handle_clear(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Handle clearing shopping_list items."""
     await hass.data[DOMAIN].async_clear_completed(connection.context(msg))

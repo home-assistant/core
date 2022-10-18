@@ -82,7 +82,9 @@ def _ws_with_manager(
     @websocket_api.async_response
     @functools.wraps(func)
     async def with_manager(
-        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
     ) -> None:
         manager = await async_get_manager(hass)
 
@@ -146,7 +148,7 @@ async def ws_save_prefs(
 async def ws_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Handle get info command."""
     forecast_platforms = await async_get_energy_platforms(hass)
@@ -168,7 +170,7 @@ async def ws_info(
 async def ws_validate(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Handle validate command."""
     connection.send_result(msg["id"], (await async_validate(hass)).as_dict())
@@ -239,7 +241,9 @@ async def ws_solar_forecast(
 )
 @websocket_api.async_response
 async def ws_get_fossil_energy_consumption(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
 ) -> None:
     """Calculate amount of fossil based energy."""
     start_time_str = msg["start_time"]
