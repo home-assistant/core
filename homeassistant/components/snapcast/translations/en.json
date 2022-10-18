@@ -2,7 +2,7 @@
   "config": {
     "error": {
       "cannot_connect": "Failed to connect",
-      "unknown": "Unexpected error"
+      "invalid_host": "Host name or IP address is not valid"
     },
     "step": {
       "user": {

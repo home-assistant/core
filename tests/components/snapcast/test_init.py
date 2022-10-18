@@ -58,7 +58,7 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] == "form"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": "invalid_host"}
 
 
 async def test_connection_error(hass: HomeAssistant) -> None:

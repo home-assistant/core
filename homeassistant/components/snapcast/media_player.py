@@ -65,23 +65,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the snapcast config entry."""
-    the_server: Snapserver = hass.data[DOMAIN][config_entry.entry_id]
-    _LOGGER.debug(the_server)
+    the_server: Snapserver = hass.data[DOMAIN][config_entry.entry_id].server
 
     register_services()
 
-    host = config_entry.data["host"]
-    port = config_entry.data["port"]
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
     hpid = f"{host}:{port}"
 
     groups: list[MediaPlayerEntity] = [
         SnapcastGroupDevice(group, hpid) for group in the_server.groups
     ]
     clients: list[MediaPlayerEntity] = [
-        SnapcastClientDevice(client, hpid) for client in the_server.clients
+        SnapcastClientDevice(client, hpid, config_entry.entry_id)
+        for client in the_server.clients
     ]
-    hass.data[DOMAIN]["clients"] = clients
-    hass.data[DOMAIN]["groups"] = groups
+    hass.data[DOMAIN][config_entry.entry_id].clients = clients
+    hass.data[DOMAIN][config_entry.entry_id].groups = groups
     async_add_entities(clients + groups)
 
 
@@ -237,10 +237,11 @@ class SnapcastClientDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, client, uid_part):
+    def __init__(self, client, uid_part, entry_id):
         """Initialize the Snapcast client device."""
         self._client = client
         self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
+        self.entry_id = entry_id
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to client events."""
@@ -332,7 +333,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
         """Join the group of the master player."""
         master_entity = next(
             entity
-            for entity in self.hass.data[DOMAIN]["clients"]
+            for entity in self.hass.data[DOMAIN][self.entry_id].clients
             if entity.entity_id == master
         )
         if not isinstance(master_entity, SnapcastClientDevice):
