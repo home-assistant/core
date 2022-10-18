@@ -28,14 +28,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up a BleBox entry."""
 
-    create_blebox_entities(
-        hass,
-        config_entry,
-        async_add_entities,
-        BleBoxBinarySensorEntity,
-        "binary_sensors",
-        BINARY_SENSOR_TYPES,
-    )
+    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
+    entities: list[BleBoxBinarySensorEntity] = []
+
+    if "binary_sensors" in product.features:
+        for feature in product.features["binary_sensors"]:
+            for description in BINARY_SENSOR_TYPES:
+                if description.key == feature.device_class:
+                    entities.append(entity_klass(feature, description))
+                    break
+    async_add_entities(entities, True)
 
 
 class BleBoxBinarySensorEntity(BleBoxEntity, BinarySensorEntity):
