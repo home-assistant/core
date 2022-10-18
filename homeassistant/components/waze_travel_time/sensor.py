@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STARTED,
@@ -115,6 +114,7 @@ async def async_setup_entry(
 class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
+    _attr_attribution = "Powered by Waze"
     _attr_native_unit_of_measurement = TIME_MINUTES
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -159,7 +159,6 @@ class WazeTravelTime(SensorEntity):
             return None
 
         return {
-            ATTR_ATTRIBUTION: "Powered by Waze",
             "duration": self._waze_data.duration,
             "distance": self._waze_data.distance,
             "route": self._waze_data.route,
