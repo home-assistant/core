@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
@@ -326,7 +325,6 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         self._attr_unique_id = (
             f"{self._config_entry.unique_id}_{slugify(description.name)}"
         )
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
         if self.entity_description.native_unit_of_measurement is None:
             self._attr_native_unit_of_measurement = description.unit_metric
             if hass.config.units is IMPERIAL_SYSTEM:
