@@ -9,7 +9,7 @@ from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -65,18 +65,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-@callback
-def get_blebox_features(
-    hass: HomeAssistant, config_entry: ConfigEntry, entity_type: str
-) -> list[Feature]:
-    """Get features from a BleBox product matching the feature type."""
-
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    if entity_type in product.features:
-        return product.features[entity_type]
-    return []
 
 
 class BleBoxEntity(Entity, Generic[_FeatureT]):
