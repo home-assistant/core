@@ -21,11 +21,9 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CALL_TYPE_COIL, CALL_TYPE_DISCRETE
-
 from . import get_hub
 from .base_platform import BasePlatform
-from .const import CONF_SLAVE_COUNT
+from .const import CALL_TYPE_COIL, CALL_TYPE_DISCRETE, CONF_SLAVE_COUNT
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
