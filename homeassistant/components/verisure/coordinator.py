@@ -9,6 +9,7 @@ from verisure import LoginError as VerisureLoginError, Session as Verisure
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import Throttle
@@ -55,7 +56,11 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
-        await self.hass.async_add_executor_job(self.verisure.login_cookie)
+        try:
+            await self.hass.async_add_executor_job(self.verisure.login_cookie)
+        except VerisureLoginError as ex:
+            LOGGER.error("Could not log in to Verisure, %s", ex)
+            raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         try:
             overview = await self.hass.async_add_executor_job(
                 self.verisure.request,
