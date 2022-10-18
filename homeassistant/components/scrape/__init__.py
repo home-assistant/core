@@ -34,6 +34,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_INDEX, CONF_SELECT, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import ScrapeCoordinator
@@ -94,74 +95,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Scrape from a config entry."""
+async def get_coordinator(
+    hass: HomeAssistant, rest: RestData, update_interval: int
+) -> ScrapeCoordinator:
+    """Get Scrape Coordinator."""
 
-    resource: str = entry.options[CONF_RESOURCE]
-    method: str = "GET"
-    payload: str | None = None
-    headers: str | None = entry.options.get(CONF_HEADERS)
-    verify_ssl: bool = entry.options[CONF_VERIFY_SSL]
-    username: str | None = entry.options.get(CONF_USERNAME)
-    password: str | None = entry.options.get(CONF_PASSWORD)
-    authentication = entry.options.get(CONF_AUTHENTICATION)
-
-    rest = await load_rest_data(
-        hass,
-        resource,
-        method,
-        payload,
-        headers,
-        verify_ssl,
-        username,
-        password,
-        authentication,
-    )
-
-    if rest.data is None:
-        raise ConfigEntryNotReady
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = rest
-
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
+    coordinator = ScrapeCoordinator(hass, rest, update_interval)
+    await coordinator.async_config_entry_first_refresh()
+    return coordinator
 
 
-async def load_rest_data(
-    hass: HomeAssistant,
-    resource: str,
-    method: str,
-    payload: str | None,
-    headers: str | None,
-    verify_ssl: bool,
-    username: str | None,
-    password: str | None,
-    authentication: str | None,
-) -> RestData:
-    """Load rest data."""
+class ScrapeCoordinator(DataUpdateCoordinator[RestData]):
+    """Scrape Coordinator."""
 
-    auth: httpx.DigestAuth | tuple[str, str] | None = None
-    if username and password:
-        if authentication == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
-        else:
-            auth = (username, password)
+    def __init__(
+        self, hass: HomeAssistant, rest: RestData, update_intervall: int
+    ) -> None:
+        """Initialize Scrape coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="Scrape Coordinator",
+            update_interval=timedelta(seconds=update_intervall),
+        )
+        self.rest = rest
 
-    rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
-    await rest.async_update()
-
-    return rest
-
-
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener for options."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Scrape config entry."""
-
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    async def _async_update_data(self):
+        """Fetch data from Rest."""
+        await self.rest.async_update()

@@ -347,7 +347,6 @@ FLOWS = {
         "ruuvitag_ble",
         "sabnzbd",
         "samsungtv",
-        "scrape",
         "screenlogic",
         "season",
         "sense",
