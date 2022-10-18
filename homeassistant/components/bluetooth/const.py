@@ -72,6 +72,3 @@ ADAPTER_ADDRESS: Final = "address"
 ADAPTER_SW_VERSION: Final = "sw_version"
 ADAPTER_HW_VERSION: Final = "hw_version"
 ADAPTER_PASSIVE_SCAN: Final = "passive_scan"
-
-
-NO_RSSI_VALUE: Final = -127
