@@ -28,7 +28,7 @@ def config_entry_fixture(hass, config):
     return entry
 
 
-@pytest.fixture(name="devices")
+@pytest.fixture(name="devices", scope="package")
 def devices_fixture():
     """Define devices data."""
     return json.loads(load_fixture("devices.json", "ambient_station"))
