@@ -8,12 +8,20 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from . import FoscamCoordinator
+from .const import (
+    CONF_RTSP_PORT,
+    CONF_STREAM,
+    DOMAIN,
+    LOGGER,
+    SERVICE_PTZ,
+    SERVICE_PTZ_PRESET,
+)
+from .entity import FoscamEntity
 
 DIR_UP = "up"
 DIR_DOWN = "down"
@@ -80,30 +88,32 @@ async def async_setup_entry(
         "async_perform_ptz_preset",
     )
 
-    camera = FoscamCamera(
-        config_entry.data[CONF_HOST],
-        config_entry.data[CONF_PORT],
-        config_entry.data[CONF_USERNAME],
-        config_entry.data[CONF_PASSWORD],
-        verbose=False,
-    )
+    session: FoscamCamera = hass.data[DOMAIN][config_entry.entry_id]["session"]
+    coordinator: FoscamCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        "coordinator"
+    ]
 
-    async_add_entities([HassFoscamCamera(camera, config_entry)])
+    await coordinator.async_config_entry_first_refresh()
+
+    async_add_entities([HassFoscamCamera(session, coordinator, config_entry)])
 
 
-class HassFoscamCamera(Camera):
+class HassFoscamCamera(FoscamEntity, Camera):  # type: ignore[misc]
     """An implementation of a Foscam IP camera."""
 
-    def __init__(self, camera: FoscamCamera, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        session: FoscamCamera,
+        coordinator: FoscamCoordinator,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize a Foscam camera."""
-        super().__init__()
+        super().__init__(session, coordinator, config_entry)
 
-        self._foscam_session = camera
         self._attr_name = config_entry.title
-        self._username = config_entry.data[CONF_USERNAME]
-        self._password = config_entry.data[CONF_PASSWORD]
-        self._stream = config_entry.data[CONF_STREAM]
         self._attr_unique_id = config_entry.entry_id
+
+        self._stream = config_entry.data[CONF_STREAM]
         self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
         if self._rtsp_port:
             self._attr_supported_features = CameraEntityFeature.STREAM
