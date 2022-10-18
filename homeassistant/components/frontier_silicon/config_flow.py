@@ -91,8 +91,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step of manual configuration."""
         errors = {}
-        if user_input is not None:
 
+        if user_input:
             device_url = (
                 f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/device"
             )
