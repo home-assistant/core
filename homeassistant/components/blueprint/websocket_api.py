@@ -1,7 +1,7 @@
 """Websocket API for blueprint."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import async_timeout
 import voluptuous as vol
@@ -122,7 +122,7 @@ async def ws_save_blueprint(
         )
 
     try:
-        yaml_data = yaml.parse_yaml(msg["yaml"])
+        yaml_data = cast(dict[str, Any], yaml.parse_yaml(msg["yaml"]))
         assert isinstance(yaml_data, dict)
         blueprint = models.Blueprint(yaml_data, expected_domain=domain)
         if "source_url" in msg:
