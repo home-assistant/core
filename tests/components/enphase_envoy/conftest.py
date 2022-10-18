@@ -36,13 +36,13 @@ def config_fixture():
     }
 
 
-@pytest.fixture(name="gateway_data")
+@pytest.fixture(name="gateway_data", scope="package")
 def gateway_data_fixture():
     """Define a fixture to return gateway data."""
     return json.loads(load_fixture("data.json", "enphase_envoy"))
 
 
-@pytest.fixture(name="inverters_production_data")
+@pytest.fixture(name="inverters_production_data", scope="package")
 def inverters_production_data_fixture():
     """Define a fixture to return inverter production data."""
     return json.loads(load_fixture("inverters_production.json", "enphase_envoy"))
