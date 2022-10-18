@@ -14,7 +14,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -78,7 +77,6 @@ async def async_setup_entry(
                         "button_type": elevator.get("buttonType"),
                         "cause": elevator.get("cause"),
                         "lines": lines,
-                        ATTR_ATTRIBUTION: ATTRIBUTION,
                     },
                 }
         return elevators
@@ -125,6 +123,8 @@ async def async_setup_entry(
 
 class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """HVVDepartureBinarySensor class."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, coordinator, idx, config_entry):
         """Initialize."""
