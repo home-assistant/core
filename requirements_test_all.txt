@@ -1180,7 +1180,7 @@ pylast==4.2.1
 pylaunches==1.3.0
 
 # homeassistant.components.forked_daapd
-pylibrespot-java==0.1.0
+pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
 pylitejet==0.3.0
