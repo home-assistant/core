@@ -1,10 +1,13 @@
 """Component to interact with Hassbian tools."""
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config import async_check_ha_config_file
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location, unit_system
@@ -49,7 +52,11 @@ class CheckConfigView(HomeAssistantView):
     }
 )
 @websocket_api.async_response
-async def websocket_update_config(hass, connection, msg):
+async def websocket_update_config(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle update core config command."""
     data = dict(msg)
     data.pop("id")
@@ -65,12 +72,16 @@ async def websocket_update_config(hass, connection, msg):
 @websocket_api.require_admin
 @websocket_api.websocket_command({"type": "config/core/detect"})
 @websocket_api.async_response
-async def websocket_detect_config(hass, connection, msg):
+async def websocket_detect_config(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Detect core config."""
     session = async_get_clientsession(hass)
     location_info = await location.async_detect_location_info(session)
 
-    info = {}
+    info: dict[str, Any] = {}
 
     if location_info is None:
         connection.send_result(msg["id"], info)
