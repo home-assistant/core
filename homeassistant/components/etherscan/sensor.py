@@ -7,13 +7,11 @@ from pyetherscan import get_balance
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-ATTRIBUTION = "Data provided by etherscan.io"
 
 CONF_TOKEN_ADDRESS = "token_address"
 
@@ -54,6 +52,8 @@ def setup_platform(
 class EtherscanSensor(SensorEntity):
     """Representation of an Etherscan.io sensor."""
 
+    _attr_attribution = "Data provided by etherscan.io"
+
     def __init__(self, name, address, token, token_address):
         """Initialize the sensor."""
         self._name = name
@@ -77,11 +77,6 @@ class EtherscanSensor(SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self) -> None:
         """Get the latest state of the sensor."""
