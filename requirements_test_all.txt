@@ -155,7 +155,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.1.0
+aiohomekit==2.1.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -242,7 +242,7 @@ aioslimproto==2.1.1
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.0.3
+aioswitcher==3.1.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -1718,7 +1718,7 @@ vallox-websocket-api==2.12.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.10.3
+velbus-aio==2022.10.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.18
