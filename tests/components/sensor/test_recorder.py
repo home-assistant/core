@@ -430,9 +430,9 @@ def test_compile_hourly_statistics_wrong_unit(hass_recorder, caplog, attributes)
     ],
 )
 async def test_compile_hourly_sum_statistics_amount(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     caplog,
     units,
     state_class,
@@ -3328,7 +3328,7 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
     ],
 )
 async def test_validate_unit_change_convertible(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit, unit2, supported_unit
+    recorder_mock, hass, hass_ws_client, units, attributes, unit, unit2, supported_unit
 ):
     """Test validate_statistics.
 
@@ -3443,7 +3443,7 @@ async def test_validate_unit_change_convertible(
     ],
 )
 async def test_validate_statistics_unit_ignore_device_class(
-    hass, hass_ws_client, recorder_mock, units, attributes
+    recorder_mock, hass, hass_ws_client, units, attributes
 ):
     """Test validate_statistics.
 
@@ -3514,7 +3514,7 @@ async def test_validate_statistics_unit_ignore_device_class(
     ],
 )
 async def test_validate_statistics_unit_change_no_device_class(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit, unit2, supported_unit
+    recorder_mock, hass, hass_ws_client, units, attributes, unit, unit2, supported_unit
 ):
     """Test validate_statistics.
 
@@ -3629,7 +3629,7 @@ async def test_validate_statistics_unit_change_no_device_class(
     ],
 )
 async def test_validate_statistics_unsupported_state_class(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit
+    recorder_mock, hass, hass_ws_client, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -3693,7 +3693,7 @@ async def test_validate_statistics_unsupported_state_class(
     ],
 )
 async def test_validate_statistics_sensor_no_longer_recorded(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit
+    recorder_mock, hass, hass_ws_client, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -3754,7 +3754,7 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     ],
 )
 async def test_validate_statistics_sensor_not_recorded(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit
+    recorder_mock, hass, hass_ws_client, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -3812,7 +3812,7 @@ async def test_validate_statistics_sensor_not_recorded(
     ],
 )
 async def test_validate_statistics_sensor_removed(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit
+    recorder_mock, hass, hass_ws_client, units, attributes, unit
 ):
     """Test validate_statistics."""
     id = 1
@@ -3871,7 +3871,7 @@ async def test_validate_statistics_sensor_removed(
     ],
 )
 async def test_validate_statistics_unit_change_no_conversion(
-    hass, recorder_mock, hass_ws_client, attributes, unit1, unit2
+    recorder_mock, hass, hass_ws_client, attributes, unit1, unit2
 ):
     """Test validate_statistics."""
     id = 1
@@ -3988,7 +3988,7 @@ async def test_validate_statistics_unit_change_no_conversion(
     await assert_validation_result(client, expected)
 
 
-async def test_validate_statistics_other_domain(hass, hass_ws_client, recorder_mock):
+async def test_validate_statistics_other_domain(recorder_mock, hass, hass_ws_client):
     """Test sensor does not raise issues for statistics for other domains."""
     id = 1
 

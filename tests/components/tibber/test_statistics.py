@@ -10,7 +10,7 @@ from .test_common import CONSUMPTION_DATA_1, PRODUCTION_DATA_1, mock_get_homes
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_async_setup_entry(hass, recorder_mock):
+async def test_async_setup_entry(recorder_mock, hass):
     """Test setup Tibber."""
     tibber_connection = AsyncMock()
     tibber_connection.name = "tibber"

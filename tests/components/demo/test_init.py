@@ -52,7 +52,7 @@ async def test_setting_up_demo(hass):
         )
 
 
-async def test_demo_statistics(hass, recorder_mock):
+async def test_demo_statistics(recorder_mock, hass):
     """Test that the demo components makes some statistics available."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -82,7 +82,7 @@ async def test_demo_statistics(hass, recorder_mock):
     } in statistic_ids
 
 
-async def test_demo_statistics_growth(hass, recorder_mock):
+async def test_demo_statistics_growth(recorder_mock, hass):
     """Test that the demo sum statistics adds to the previous state."""
     hass.config.units = IMPERIAL_SYSTEM
 
