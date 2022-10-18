@@ -5,12 +5,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CURRENCY_EURO,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CURRENCY_EURO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -62,6 +57,7 @@ async def async_setup_entry(
 class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
     """Contains prices for fuel in a given station."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:gas-station"
 
@@ -74,7 +70,6 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = CURRENCY_EURO
         self._attr_unique_id = f"{station['id']}_{fuel_type}"
         attrs = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_BRAND: station["brand"],
             ATTR_FUEL_TYPE: fuel_type,
             ATTR_STATION_NAME: station["name"],
