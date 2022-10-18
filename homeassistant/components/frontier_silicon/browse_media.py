@@ -3,30 +3,30 @@ import logging
 
 from afsapi import AFSAPI, FSApiException, OutOfRangeException, Preset
 
-from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_TYPE_CHANNEL,
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
 )
 
-from .const import MEDIA_TYPE_PRESET
+from .const import MEDIA_CONTENT_ID_CHANNELS, MEDIA_CONTENT_ID_PRESET
 
-MEDIA_TYPE_TITLES = {
-    MEDIA_TYPE_CHANNEL: "Channels",
-    MEDIA_TYPE_PRESET: "Presets",
+TOP_LEVEL_DIRECTORIES = {
+    MEDIA_CONTENT_ID_CHANNELS: "Channels",
+    MEDIA_CONTENT_ID_PRESET: "Presets",
 }
 
 FSAPI_ITEM_TYPE_TO_MEDIA_CLASS = {
-    0: MEDIA_CLASS_DIRECTORY,
-    1: MEDIA_CLASS_CHANNEL,
-    2: MEDIA_CLASS_CHANNEL,
+    0: MediaClass.DIRECTORY,
+    1: MediaClass.CHANNEL,
+    2: MediaClass.CHANNEL,
 }
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _item_preset_payload(preset: Preset, parent_key=None) -> BrowseMedia:
+def _item_preset_payload(preset: Preset, player_mode: str) -> BrowseMedia:
     """
     Create response payload for a single media item.
 
@@ -34,17 +34,19 @@ def _item_preset_payload(preset: Preset, parent_key=None) -> BrowseMedia:
     """
     return BrowseMedia(
         title=preset.name,
-        media_class=MEDIA_CLASS_CHANNEL,
-        media_content_type=MEDIA_TYPE_PRESET,
+        media_class=MediaClass.CHANNEL,
+        media_content_type=MediaType.CHANNEL,
         # We add 1 to the preset key to keep it in sync with the numbering shown
         # on the interface of the device
-        media_content_id=f"{parent_key}/{int(preset.key)+1}",
+        media_content_id=f"{player_mode}/{MEDIA_CONTENT_ID_PRESET}/{int(preset.key)+1}",
         can_play=True,
         can_expand=False,
     )
 
 
-def _item_payload(key, item: dict[str, str], parent_key=None) -> BrowseMedia:
+def _item_payload(
+    key, item: dict[str, str], player_mode: str, parent_keys: list[str]
+) -> BrowseMedia:
     """
     Create response payload for a single media item.
 
@@ -56,18 +58,20 @@ def _item_payload(key, item: dict[str, str], parent_key=None) -> BrowseMedia:
     title = item.get("label") or item.get("name") or "Unknown"
     title = title.strip()
 
-    media_content_id = f"{parent_key}/{key}" if parent_key else key
+    media_content_id = "/".join(
+        [player_mode, MEDIA_CONTENT_ID_CHANNELS, *parent_keys, key]
+    )
     media_class = (
-        FSAPI_ITEM_TYPE_TO_MEDIA_CLASS.get(int(item["type"])) or MEDIA_CLASS_CHANNEL
+        FSAPI_ITEM_TYPE_TO_MEDIA_CLASS.get(int(item["type"])) or MediaClass.CHANNEL
     )
 
     return BrowseMedia(
         title=title,
         media_class=media_class,
-        media_content_type=MEDIA_TYPE_CHANNEL,
+        media_content_type=MediaClass.CHANNEL,
         media_content_id=media_content_id,
-        can_play=(media_class != MEDIA_CLASS_DIRECTORY),
-        can_expand=(media_class == MEDIA_CLASS_DIRECTORY),
+        can_play=(media_class != MediaClass.DIRECTORY),
+        can_expand=(media_class == MediaClass.DIRECTORY),
     )
 
 
@@ -81,25 +85,24 @@ async def browse_top_level(current_mode, afsapi: AFSAPI):
     children = [
         BrowseMedia(
             title=name,
-            media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_type=type_,
-            # latter can happen if initialisation has not been fully done yet.
-            media_content_id=current_mode or "unknown",
+            media_class=MediaClass.DIRECTORY,
+            media_content_type=MediaType.CHANNELS,
+            media_content_id=f"{current_mode or 'unknown'}/{top_level_media_content_id}",
             can_play=False,
             can_expand=True,
         )
-        for type_, name in MEDIA_TYPE_TITLES.items()
+        for top_level_media_content_id, name in TOP_LEVEL_DIRECTORIES.items()
     ]
 
     library_info = BrowseMedia(
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="library",
-        media_content_type="library",
+        media_content_type=MediaType.CHANNELS,
         title="Media Library",
         can_play=False,
         can_expand=True,
         children=children,
-        children_media_class=MEDIA_CLASS_DIRECTORY,
+        children_media_class=MediaClass.DIRECTORY,
     )
 
     return library_info
@@ -112,27 +115,27 @@ async def browse_node(
 ):
     """List the contents of a navigation directory (or preset list) on a Frontier Silicon device."""
 
-    title = MEDIA_TYPE_TITLES.get(media_content_type, "Unknown")
-    parent_key = media_content_id
+    player_mode, browse_type, *parent_keys = media_content_id.split("/")
+
+    title = TOP_LEVEL_DIRECTORIES.get(browse_type, "Unknown")
 
     children = []
     try:
-        if media_content_type == MEDIA_TYPE_PRESET:
+        if browse_type == MEDIA_CONTENT_ID_PRESET:
             # Return the presets
 
             children = [
-                _item_preset_payload(preset, parent_key=parent_key)
+                _item_preset_payload(preset, player_mode=player_mode)
                 for preset in await afsapi.get_presets()
             ]
 
         else:
             # Browse to correct folder
-            keys = media_content_id.split("/")
-            await afsapi.nav_select_folder_via_path(keys[1:])
+            await afsapi.nav_select_folder_via_path(parent_keys)
 
             # Return items in this folder
             children = [
-                _item_payload(key, item, parent_key=parent_key)
+                _item_payload(key, item, player_mode, parent_keys=parent_keys)
                 async for key, item in await afsapi.nav_list()
             ]
     except OutOfRangeException as err:
@@ -143,10 +146,10 @@ async def browse_node(
     return BrowseMedia(
         title=title,
         media_content_id=media_content_id,
-        media_content_type=MEDIA_TYPE_CHANNEL,
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_type=MediaType.CHANNELS,
+        media_class=MediaClass.DIRECTORY,
         can_play=False,
         can_expand=True,
         children=children,
-        children_media_class=MEDIA_CLASS_CHANNEL,
+        children_media_class=MediaType.CHANNEL,
     )
