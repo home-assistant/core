@@ -1,13 +1,11 @@
 """Climate support for Shelly."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.exceptions import AuthRequired
-import async_timeout
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
@@ -20,13 +18,14 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, LOGGER, SHTRV_01_TEMPERATURE_SETTINGS
+from .const import LOGGER, SHTRV_01_TEMPERATURE_SETTINGS
 from .coordinator import ShellyBlockCoordinator, get_entry_data
 from .utils import get_device_entry_gen
 
@@ -238,19 +237,17 @@ class BlockSleepingClimate(
         """Set block state (HTTP request)."""
         LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                return await self.coordinator.device.http_request(
-                    "get", f"thermostat/{self._channel}", kwargs
-                )
-        except (asyncio.TimeoutError, OSError) as err:
-            LOGGER.error(
-                "Setting state for entity %s failed, state: %s, error: %s",
-                self.name,
-                kwargs,
-                repr(err),
+            return await self.coordinator.device.http_request(
+                "get", f"thermostat/{self._channel}", kwargs
             )
-            self.coordinator.last_update_success = False
-            return None
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(
+                f"Setting state for entity {self.name} failed, state: {kwargs}, error: {repr(err)}"
+            ) from err
+        except InvalidAuthError:
+            self.coordinator.entry.async_start_reauth(self.hass)
+
+        return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -327,7 +324,7 @@ class BlockSleepingClimate(
                         int(self.block.channel)
                     ]["schedule_profile_names"],
                 ]
-            except AuthRequired:
+            except InvalidAuthError:
                 self.coordinator.entry.async_start_reauth(self.hass)
             else:
                 self.async_write_ha_state()

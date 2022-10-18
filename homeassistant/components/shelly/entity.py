@@ -1,16 +1,16 @@
 """Shelly entity helper."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-import async_timeout
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry, entity, entity_registry
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,7 +19,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, LOGGER
+from .const import CONF_SLEEP_PERIOD, LOGGER
 from .coordinator import (
     ShellyBlockCoordinator,
     ShellyRpcCoordinator,
@@ -362,17 +362,15 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         """Set block state (HTTP request)."""
         LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                return await self.block.set_state(**kwargs)
-        except (asyncio.TimeoutError, OSError) as err:
-            LOGGER.error(
-                "Setting state for entity %s failed, state: %s, error: %s",
-                self.name,
-                kwargs,
-                repr(err),
-            )
-            self.coordinator.last_update_success = False
-            return None
+            return await self.block.set_state(**kwargs)
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(
+                f"Setting state for entity {self.name} failed, state: {kwargs}, error: {repr(err)}"
+            ) from err
+        except InvalidAuthError:
+            self.coordinator.entry.async_start_reauth(self.hass)
+
+        return None
 
 
 class ShellyRpcEntity(entity.Entity):
@@ -425,18 +423,15 @@ class ShellyRpcEntity(entity.Entity):
             params,
         )
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                return await self.coordinator.device.call_rpc(method, params)
-        except asyncio.TimeoutError as err:
-            LOGGER.error(
-                "Call RPC for entity %s failed, method: %s, params: %s, error: %s",
-                self.name,
-                method,
-                params,
-                repr(err),
-            )
-            self.coordinator.last_update_success = False
-            return None
+            return await self.coordinator.device.call_rpc(method, params)
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(
+                f"Call RPC for entity {self.name} failed, method: {method}, params: {params}, error: {repr(err)}"
+            ) from err
+        except InvalidAuthError:
+            self.coordinator.entry.async_start_reauth(self.hass)
+
+        return None
 
 
 class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
