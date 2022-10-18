@@ -8,7 +8,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_location": "Could not find a camera location with the specified name",
-      "more_locations": "Found multiple camera location with the specified name"
+      "more_locations": "Found multiple camera locations with the specified name"
     },
     "step": {
       "user": {

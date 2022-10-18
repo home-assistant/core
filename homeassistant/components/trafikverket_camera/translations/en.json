@@ -8,7 +8,7 @@
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "invalid_location": "Could not find a camera location with the specified name",
-            "more_locations": "Found multiple camera location with the specified name"
+            "more_locations": "Found multiple camera locations with the specified name"
         },
         "step": {
             "user": {
