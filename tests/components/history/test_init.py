@@ -587,7 +587,7 @@ def record_states(hass):
     return zero, four, states
 
 
-async def test_fetch_period_api(hass, hass_client, recorder_mock):
+async def test_fetch_period_api(recorder_mock, hass, hass_client):
     """Test the fetch period view for history."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
@@ -596,7 +596,7 @@ async def test_fetch_period_api(hass, hass_client, recorder_mock):
 
 
 async def test_fetch_period_api_with_use_include_order(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history with include order."""
     await async_setup_component(
@@ -647,7 +647,7 @@ async def test_fetch_period_api_with_minimal_response(recorder_mock, hass, hass_
     ).replace('"', "")
 
 
-async def test_fetch_period_api_with_no_timestamp(hass, hass_client, recorder_mock):
+async def test_fetch_period_api_with_no_timestamp(recorder_mock, hass, hass_client):
     """Test the fetch period view for history with no timestamp."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
@@ -655,7 +655,7 @@ async def test_fetch_period_api_with_no_timestamp(hass, hass_client, recorder_mo
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_include_order(hass, hass_client, recorder_mock):
+async def test_fetch_period_api_with_include_order(recorder_mock, hass, hass_client):
     """Test the fetch period view for history."""
     await async_setup_component(
         hass,
@@ -676,7 +676,7 @@ async def test_fetch_period_api_with_include_order(hass, hass_client, recorder_m
 
 
 async def test_fetch_period_api_with_entity_glob_include(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -704,7 +704,7 @@ async def test_fetch_period_api_with_entity_glob_include(
 
 
 async def test_fetch_period_api_with_entity_glob_exclude(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -744,7 +744,7 @@ async def test_fetch_period_api_with_entity_glob_exclude(
 
 
 async def test_fetch_period_api_with_entity_glob_include_and_exclude(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -786,7 +786,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     assert response_json[3][0]["entity_id"] == "switch.match"
 
 
-async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
+async def test_entity_ids_limit_via_api(recorder_mock, hass, hass_client):
     """Test limiting history to entity_ids."""
     await async_setup_component(
         hass,
@@ -811,7 +811,7 @@ async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
 
 
 async def test_entity_ids_limit_via_api_with_skip_initial_state(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test limiting history to entity_ids with skip_initial_state."""
     await async_setup_component(

@@ -22,20 +22,20 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 from tests.components.recorder.common import async_wait_recording_done
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_history(hass):
     """Mock history component loaded."""
     hass.config.components.add("history")
 
 
 @pytest.fixture(autouse=True)
-def mock_device_tracker_update_config(hass):
+def mock_device_tracker_update_config():
     """Prevent device tracker from creating known devices file."""
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
         yield
 
 
-async def test_setting_up_demo(hass):
+async def test_setting_up_demo(mock_history, hass):
     """Test if we can set up the demo and dump it to JSON."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -52,7 +52,7 @@ async def test_setting_up_demo(hass):
         )
 
 
-async def test_demo_statistics(recorder_mock, hass):
+async def test_demo_statistics(recorder_mock, mock_history, hass):
     """Test that the demo components makes some statistics available."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -82,7 +82,7 @@ async def test_demo_statistics(recorder_mock, hass):
     } in statistic_ids
 
 
-async def test_demo_statistics_growth(recorder_mock, hass):
+async def test_demo_statistics_growth(recorder_mock, mock_history, hass):
     """Test that the demo sum statistics adds to the previous state."""
     hass.config.units = IMPERIAL_SYSTEM
 
@@ -120,7 +120,7 @@ async def test_demo_statistics_growth(recorder_mock, hass):
     assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)
 
 
-async def test_issues_created(hass, hass_client, hass_ws_client):
+async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
     """Test issues are created and can be fixed."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})

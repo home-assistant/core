@@ -602,8 +602,8 @@ async def test_async_off_entire_period(recorder_mock, hass):
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_single(
-    hass,
     recorder_mock,
+    hass,
 ):
     """Test we startup from history and switch to watching state changes."""
     hass.config.set_time_zone("UTC")
@@ -702,8 +702,8 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_single_expanding_window(
-    hass,
     recorder_mock,
+    hass,
 ):
     """Test we startup from history and switch to watching state changes with an expanding end time."""
     hass.config.set_time_zone("UTC")
@@ -801,8 +801,8 @@ async def test_async_start_from_history_and_switch_to_watching_state_changes_sin
 
 
 async def test_async_start_from_history_and_switch_to_watching_state_changes_multiple(
-    hass,
     recorder_mock,
+    hass,
 ):
     """Test we startup from history and switch to watching state changes."""
     hass.config.set_time_zone("UTC")
