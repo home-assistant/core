@@ -1,6 +1,7 @@
 """BleBox binary sensor entities."""
 
 from blebox_uniapi.binary_sensor import BinarySensor as BinarySensorFeature
+from blebox_uniapi.box import Box
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -11,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity, create_blebox_entities
+from . import DOMAIN, PRODUCT, BleBoxEntity
 
 BINARY_SENSOR_TYPES = (
     BinarySensorEntityDescription(
@@ -35,7 +36,7 @@ async def async_setup_entry(
         for feature in product.features["binary_sensors"]:
             for description in BINARY_SENSOR_TYPES:
                 if description.key == feature.device_class:
-                    entities.append(entity_klass(feature, description))
+                    entities.append(BleBoxBinarySensorEntity(feature, description))
                     break
     async_add_entities(entities, True)
 
