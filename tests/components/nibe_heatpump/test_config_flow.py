@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from nibe.coil import Coil
 from nibe.connection import Connection
 from nibe.exceptions import CoilNotFoundException, CoilReadException, CoilWriteException
+import pytest
 from pytest import fixture
 
 from homeassistant import config_entries
@@ -29,18 +30,26 @@ MOCK_FLOW_MODBUS_USERDATA = {
 }
 
 
-@fixture(autouse=True, name="mock_connection")
-async def fixture_mock_connection():
+@fixture(autouse=True, name="mock_connection_constructor")
+async def fixture_mock_connection_constructor():
     """Make sure we have a dummy connection."""
-    mock_connection = AsyncMock(spec=Connection)
+    mock_constructor = Mock()
     with patch(
         "homeassistant.components.nibe_heatpump.config_flow.NibeGW",
-        return_value=mock_connection,
+        new=mock_constructor,
     ), patch(
         "homeassistant.components.nibe_heatpump.config_flow.Modbus",
-        return_value=mock_connection,
+        new=mock_constructor,
     ):
-        yield mock_connection
+        yield mock_constructor
+
+
+@fixture(name="mock_connection")
+def fixture_mock_connection(mock_connection_constructor: Mock):
+    """Make sure we have a dummy connection."""
+    mock_connection = AsyncMock(spec=Connection)
+    mock_connection_constructor.return_value = mock_connection
+    return mock_connection
 
 
 @fixture(autouse=True, name="mock_setup_entry")
@@ -129,6 +138,21 @@ async def test_modbus_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_modbus_invalid_url(
+    hass: HomeAssistant, mock_connection_constructor: Mock
+) -> None:
+    """Test we handle invalid auth."""
+    result = await _get_connection_form(hass, "modbus")
+
+    mock_connection_constructor.side_effect = ValueError()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**MOCK_FLOW_MODBUS_USERDATA, "modbus_url": "invalid://url"}
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"modbus_url": "url"}
+
+
 async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) -> None:
     """Test we handle invalid auth."""
     result = await _get_connection_form(hass, "nibegw")
@@ -145,7 +169,7 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
     assert result2["errors"] == {"listening_port": "address_in_use"}
 
     error.errno = errno.EACCES
-    mock_connection.return_value.start.side_effect = error
+    mock_connection.start.side_effect = error
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], MOCK_FLOW_NIBEGW_USERDATA
@@ -155,43 +179,64 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_read_timeout(hass: HomeAssistant, mock_connection: Mock) -> None:
+@pytest.mark.parametrize(
+    "connection_type,data",
+    (
+        ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
+        ("modbus", MOCK_FLOW_MODBUS_USERDATA),
+    ),
+)
+async def test_read_timeout(
+    hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
+) -> None:
     """Test we handle cannot connect error."""
-    result = await _get_connection_form(hass, "nibegw")
+    result = await _get_connection_form(hass, connection_type)
 
     mock_connection.read_coil.side_effect = CoilReadException()
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], MOCK_FLOW_NIBEGW_USERDATA
-    )
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "read"}
 
 
-async def test_write_timeout(hass: HomeAssistant, mock_connection: Mock) -> None:
+@pytest.mark.parametrize(
+    "connection_type,data",
+    (
+        ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
+        ("modbus", MOCK_FLOW_MODBUS_USERDATA),
+    ),
+)
+async def test_write_timeout(
+    hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
+) -> None:
     """Test we handle cannot connect error."""
-    result = await _get_connection_form(hass, "nibegw")
+    result = await _get_connection_form(hass, connection_type)
 
     mock_connection.write_coil.side_effect = CoilWriteException()
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], MOCK_FLOW_NIBEGW_USERDATA
-    )
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "write"}
 
 
-async def test_unexpected_exception(hass: HomeAssistant, mock_connection: Mock) -> None:
+@pytest.mark.parametrize(
+    "connection_type,data",
+    (
+        ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
+        ("modbus", MOCK_FLOW_MODBUS_USERDATA),
+    ),
+)
+async def test_unexpected_exception(
+    hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
+) -> None:
     """Test we handle cannot connect error."""
-    result = await _get_connection_form(hass, "nibegw")
+    result = await _get_connection_form(hass, connection_type)
 
     mock_connection.read_coil.side_effect = Exception()
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], MOCK_FLOW_NIBEGW_USERDATA
-    )
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
@@ -211,15 +256,22 @@ async def test_nibegw_invalid_host(hass: HomeAssistant, mock_connection: Mock) -
     assert result2["errors"] == {"ip_address": "address"}
 
 
-async def test_model_missing_coil(hass: HomeAssistant, mock_connection: Mock) -> None:
+@pytest.mark.parametrize(
+    "connection_type,data",
+    (
+        ("nibegw", MOCK_FLOW_NIBEGW_USERDATA),
+        ("modbus", MOCK_FLOW_MODBUS_USERDATA),
+    ),
+)
+async def test_model_missing_coil(
+    hass: HomeAssistant, mock_connection: Mock, connection_type: str, data: dict
+) -> None:
     """Test we handle cannot connect error."""
-    result = await _get_connection_form(hass, "nibegw")
+    result = await _get_connection_form(hass, connection_type)
 
     mock_connection.read_coil.side_effect = CoilNotFoundException()
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**MOCK_FLOW_NIBEGW_USERDATA}
-    )
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "model"}

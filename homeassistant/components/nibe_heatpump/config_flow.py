@@ -145,14 +145,7 @@ async def validate_modbus_input(
     except ValueError as exc:
         raise FieldError("Not a valid modbus url", CONF_MODBUS_URL, "url") from exc
 
-    try:
-        await connection.start()
-    except OSError as exception:
-        if exception.errno == errno.EADDRINUSE:
-            raise FieldError(
-                "Address already in use", "listening_port", "address_in_use"
-            ) from exception
-        raise
+    await connection.start()
 
     try:
         coil = heatpump.get_coil_by_name("reset-alarm-40022")
