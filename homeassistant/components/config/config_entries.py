@@ -484,6 +484,10 @@ async def async_matching_config_entries(
         elif not isinstance(integration_or_exc, IntegrationNotFound):
             raise integration_or_exc
 
+    # Filter out entries that don't match the type filter
+    # when only helpers are requested, also filter out entries
+    # from unknown integrations. This prevent them from showing
+    # up in the helpers UI.
     entries = [
         entry
         for entry in entries
