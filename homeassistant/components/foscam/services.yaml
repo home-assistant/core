@@ -20,6 +20,8 @@ ptz:
             - "top_left"
             - "top_right"
             - "up"
+            - "sleep"
+            - "wake_up"
     travel_time:
       description: "Travel time in seconds."
       default: 0.125

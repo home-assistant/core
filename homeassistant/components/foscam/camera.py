@@ -25,6 +25,9 @@ DIR_TOPRIGHT = "top_right"
 DIR_BOTTOMLEFT = "bottom_left"
 DIR_BOTTOMRIGHT = "bottom_right"
 
+DIR_SLEEP = "sleep"
+DIR_WAKE_UP = "wake_up"
+
 MOVEMENT_ATTRS = {
     DIR_UP: "ptz_move_up",
     DIR_DOWN: "ptz_move_down",
@@ -34,6 +37,8 @@ MOVEMENT_ATTRS = {
     DIR_TOPRIGHT: "ptz_move_top_right",
     DIR_BOTTOMLEFT: "ptz_move_bottom_left",
     DIR_BOTTOMRIGHT: "ptz_move_bottom_right",
+    DIR_SLEEP: "ptz_sleep",
+    DIR_WAKE_UP: "ptz_wake_up",
 }
 
 DEFAULT_TRAVELTIME = 0.125
@@ -65,6 +70,8 @@ async def async_setup_entry(
                     DIR_TOPRIGHT,
                     DIR_BOTTOMLEFT,
                     DIR_BOTTOMRIGHT,
+                    DIR_SLEEP,
+                    DIR_WAKE_UP,
                 ]
             ),
             vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
