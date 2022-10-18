@@ -90,23 +90,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step of manual configuration."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
         errors = {}
+        if user_input is not None:
 
-        device_url = f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/device"
-        try:
-            self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
-        except FSConnectionError:
-            errors["base"] = "cannot_connect"
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.exception(exception)
-            errors["base"] = "unknown"
-        else:
-            return await self._async_step_device_config_if_needed()
+            device_url = (
+                f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/device"
+            )
+            try:
+                self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
+            except FSConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception as exception:  # pylint: disable=broad-except
+                _LOGGER.exception(exception)
+                errors["base"] = "unknown"
+            else:
+                return await self._async_step_device_config_if_needed()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

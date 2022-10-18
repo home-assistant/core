@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, PlatformNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PIN, CONF_WEBFSAPI_URL, DEFAULT_PIN, DEFAULT_PORT, DOMAIN
@@ -41,14 +42,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             },
         )
 
-        _LOGGER.warning(
-            "Configuration of the Frontier Silicon integration in YAML is deprecated and "
-            "will be removed in Home Assistant 2022.12; Your existing configuration "
-            "has been imported into the UI automatically and can be safely removed "
-            "from your configuration.yaml file"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "remove_yaml",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="removed_yaml",
         )
 
-    for entry_to_migrate in config.get("media_player", []):
+    for entry_to_migrate in config.get(Platform.MEDIA_PLAYER, []):
         if entry_to_migrate.get(CONF_PLATFORM) == DOMAIN:
             hass.async_create_task(_migrate_entry(entry_to_migrate))
 
@@ -70,8 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidPinException as exception:
         raise ConfigEntryAuthFailed(exception) from exception
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = afsapi
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = afsapi
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
