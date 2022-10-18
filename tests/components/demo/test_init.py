@@ -63,7 +63,6 @@ async def test_demo_statistics(hass, recorder_mock):
         list_statistic_ids, hass
     )
     assert {
-        "display_unit_of_measurement": "°C",
         "has_mean": True,
         "has_sum": False,
         "name": "Outdoor temperature",
@@ -73,7 +72,6 @@ async def test_demo_statistics(hass, recorder_mock):
         "unit_class": "temperature",
     } in statistic_ids
     assert {
-        "display_unit_of_measurement": "kWh",
         "has_mean": False,
         "has_sum": True,
         "name": "Energy consumption 1",
@@ -96,7 +94,6 @@ async def test_demo_statistics_growth(hass, recorder_mock):
     metadata = {
         "source": DOMAIN,
         "name": "Energy consumption 1",
-        "state_unit_of_measurement": "m³",
         "statistic_id": statistic_id,
         "unit_of_measurement": "m³",
         "has_mean": False,

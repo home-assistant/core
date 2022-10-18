@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import logging
-from typing import Any, TypeVar, Union, cast
+from typing import Any, TypeVar, Union
 
 from switchbee.api import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.device import (
@@ -23,8 +22,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 _DeviceTypeT = TypeVar(
     "_DeviceTypeT",
@@ -69,12 +66,6 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
         """Initialize the Switchbee switch."""
         super().__init__(device, coordinator)
         self._attr_is_on = False
-        self._is_online = True
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._is_online and super().available
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -85,50 +76,14 @@ class SwitchBeeSwitchEntity(SwitchBeeDeviceEntity[_DeviceTypeT], SwitchEntity):
     def _update_from_coordinator(self) -> None:
         """Update the entity attributes from the coordinator data."""
 
-        async def async_refresh_state() -> None:
-            """Refresh the device state in the Central Unit.
-
-            This function addresses issue of a device that came online back but still report
-            unavailable state (-1).
-            Such device (offline device) will keep reporting unavailable state (-1)
-            until it has been actuated by the user (state changed to on/off).
-
-            With this code we keep trying setting dummy state for the device
-            in order for it to start reporting its real state back (assuming it came back online)
-
-            """
-
-            try:
-                await self.coordinator.api.set_state(self._device.id, "dummy")
-            except SwitchBeeDeviceOfflineError:
-                return
-            except SwitchBeeError:
-                return
-
-        coordinator_device = cast(_DeviceTypeT, self.coordinator.data[self._device.id])
+        coordinator_device = self._get_coordinator_device()
 
         if coordinator_device.state == -1:
 
-            # This specific call will refresh the state of the device in the CU
-            self.hass.async_create_task(async_refresh_state())
-
-            # if the device was online (now offline), log message and mark it as Unavailable
-            if self._is_online:
-                _LOGGER.error(
-                    "%s switch is not responding, check the status in the SwitchBee mobile app",
-                    self.name,
-                )
-                self._is_online = False
-
+            self._check_if_became_offline()
             return
 
-        # check if the device was offline (now online) and bring it back
-        if not self._is_online:
-            _LOGGER.info(
-                "%s switch is now responding",
-                self.name,
-            )
-            self._is_online = True
+        self._check_if_became_online()
 
         # timed power switch state is an integer representing the number of minutes left until it goes off
         # regulare switches state is ON/OFF (1/0 respectively)

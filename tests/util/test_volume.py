@@ -17,6 +17,12 @@ INVALID_SYMBOL = "bob"
 VALID_SYMBOL = VOLUME_LITERS
 
 
+def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert volume_util.convert(2, VOLUME_LITERS, VOLUME_LITERS) == 2
+    assert "use unit_conversion.VolumeConverter instead" in caplog.text
+
+
 @pytest.mark.parametrize(
     "function_name, value, expected",
     [

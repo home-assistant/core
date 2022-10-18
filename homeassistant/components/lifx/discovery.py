@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 
 from aiolifx.aiolifx import LifxDiscovery, Light, ScanManager
 
@@ -17,7 +17,7 @@ from .const import CONF_SERIAL, DOMAIN
 DEFAULT_TIMEOUT = 8.5
 
 
-async def async_discover_devices(hass: HomeAssistant) -> Iterable[Light]:
+async def async_discover_devices(hass: HomeAssistant) -> Collection[Light]:
     """Discover lifx devices."""
     all_lights: dict[str, Light] = {}
     broadcast_addrs = await network.async_get_ipv4_broadcast_addresses(hass)

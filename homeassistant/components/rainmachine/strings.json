@@ -27,18 +27,5 @@
         }
       }
     }
-  },
-  "issues": {
-    "replaced_old_entity": {
-      "title": "The {old_entity_id} entity will be removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The {old_entity_id} entity will be removed",
-            "description": "Update any automations or scripts that use this entity to instead use `{replacement_entity_id}`."
-          }
-        }
-      }
-    }
   }
 }

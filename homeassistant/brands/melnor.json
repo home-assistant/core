@@ -1,0 +1,5 @@
+{
+  "domain": "melnor",
+  "name": "Melnor",
+  "integrations": ["melnor", "raincloud"]
+}

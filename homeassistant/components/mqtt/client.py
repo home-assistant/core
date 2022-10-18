@@ -54,6 +54,7 @@ from .const import (
     CONF_TLS_INSECURE,
     CONF_WILL_MESSAGE,
     DEFAULT_ENCODING,
+    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
@@ -272,7 +273,7 @@ class MqttClientSetup:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-        if config[CONF_PROTOCOL] == PROTOCOL_31:
+        if config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_31:
             proto = mqtt.MQTTv31
         else:
             proto = mqtt.MQTTv311
@@ -658,6 +659,7 @@ class MQTT:
                     timestamp,
                 ),
             )
+        self._mqtt_data.state_write_requests.process_write_state_requests()
 
     def _mqtt_on_callback(self, _mqttc, _userdata, mid, _granted_qos=None) -> None:
         """Publish / Subscribe / Unsubscribe callback."""

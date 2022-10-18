@@ -20,7 +20,7 @@ from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
 from ..models import MqttValueTemplate
-from ..util import valid_publish_topic
+from ..util import get_mqtt_data, valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -320,7 +320,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 if fan_speed:
                     self._fan_speed = fan_speed
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         topics_list = {topic for topic in self._state_topics.values() if topic}
         self._sub_state = subscription.async_prepare_subscribe_topics(

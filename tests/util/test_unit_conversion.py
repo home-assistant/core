@@ -361,14 +361,14 @@ def test_power_convert(
         (30, PRESSURE_INHG, pytest.approx(101591.67), PRESSURE_PA),
         (30, PRESSURE_INHG, pytest.approx(1015.9167), PRESSURE_MBAR),
         (30, PRESSURE_INHG, pytest.approx(101.59167), PRESSURE_CBAR),
-        (30, PRESSURE_INHG, pytest.approx(762.002), PRESSURE_MMHG),
-        (30, PRESSURE_MMHG, pytest.approx(0.580102), PRESSURE_PSI),
-        (30, PRESSURE_MMHG, pytest.approx(3.99966), PRESSURE_KPA),
-        (30, PRESSURE_MMHG, pytest.approx(39.9966), PRESSURE_HPA),
-        (30, PRESSURE_MMHG, pytest.approx(3999.66), PRESSURE_PA),
-        (30, PRESSURE_MMHG, pytest.approx(39.9966), PRESSURE_MBAR),
-        (30, PRESSURE_MMHG, pytest.approx(3.99966), PRESSURE_CBAR),
-        (30, PRESSURE_MMHG, pytest.approx(1.181099), PRESSURE_INHG),
+        (30, PRESSURE_INHG, pytest.approx(762), PRESSURE_MMHG),
+        (30, PRESSURE_MMHG, pytest.approx(0.580103), PRESSURE_PSI),
+        (30, PRESSURE_MMHG, pytest.approx(3.99967), PRESSURE_KPA),
+        (30, PRESSURE_MMHG, pytest.approx(39.9967), PRESSURE_HPA),
+        (30, PRESSURE_MMHG, pytest.approx(3999.67), PRESSURE_PA),
+        (30, PRESSURE_MMHG, pytest.approx(39.9967), PRESSURE_MBAR),
+        (30, PRESSURE_MMHG, pytest.approx(3.99967), PRESSURE_CBAR),
+        (30, PRESSURE_MMHG, pytest.approx(1.181102), PRESSURE_INHG),
     ],
 )
 def test_pressure_convert(
@@ -452,10 +452,7 @@ def test_temperature_convert_with_interval(
     value: float, from_unit: str, expected: float, to_unit: str
 ) -> None:
     """Test conversion to other units."""
-    assert (
-        TemperatureConverter.convert(value, from_unit, to_unit, interval=True)
-        == expected
-    )
+    assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
 
 
 @pytest.mark.parametrize(

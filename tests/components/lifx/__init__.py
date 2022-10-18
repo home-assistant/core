@@ -151,7 +151,17 @@ def _mocked_light_strip() -> Light:
     bulb.set_color_zones = MockLifxCommand(bulb)
     bulb.get_multizone_effect = MockLifxCommand(bulb)
     bulb.set_multizone_effect = MockLifxCommand(bulb)
+    bulb.get_extended_color_zones = MockLifxCommand(bulb)
+    bulb.set_extended_color_zones = MockLifxCommand(bulb)
+    return bulb
 
+
+def _mocked_tile() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 55  # LIFX Tile
+    bulb.effect = {"effect": "OFF"}
+    bulb.get_tile_effect = MockLifxCommand(bulb)
+    bulb.set_tile_effect = MockLifxCommand(bulb)
     return bulb
 
 

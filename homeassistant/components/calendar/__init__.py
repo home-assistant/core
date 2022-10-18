@@ -133,32 +133,6 @@ def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
     return {"date": dt_or_d.isoformat()}
 
 
-def normalize_event(event: dict[str, Any]) -> dict[str, Any]:
-    """Normalize a calendar event."""
-    normalized_event: dict[str, Any] = {}
-
-    start = event.get("start")
-    end = event.get("end")
-    start = get_date(start) if start is not None else None
-    end = get_date(end) if end is not None else None
-    normalized_event["dt_start"] = start
-    normalized_event["dt_end"] = end
-
-    start = start.strftime(DATE_STR_FORMAT) if start is not None else None
-    end = end.strftime(DATE_STR_FORMAT) if end is not None else None
-    normalized_event["start"] = start
-    normalized_event["end"] = end
-
-    # cleanup the string so we don't have a bunch of double+ spaces
-    summary = event.get("summary", "")
-    normalized_event["message"] = re.sub("  +", "", summary).strip()
-    normalized_event["location"] = event.get("location", "")
-    normalized_event["description"] = event.get("description", "")
-    normalized_event["all_day"] = "date" in event["start"]
-
-    return normalized_event
-
-
 def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.timedelta]:
     """Extract the offset from the event summary.
 

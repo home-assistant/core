@@ -109,9 +109,9 @@ class FullySwitchEntity(FullyKioskEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
-        if self.entity_description.is_on_fn(self.coordinator.data) is not None:
-            return bool(self.entity_description.is_on_fn(self.coordinator.data))
-        return None
+        if (is_on := self.entity_description.is_on_fn(self.coordinator.data)) is None:
+            return None
+        return bool(is_on)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

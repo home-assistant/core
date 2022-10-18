@@ -25,7 +25,7 @@ from tests.common import async_capture_events, async_fire_time_changed
 async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
     """Test setup with webhook."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -132,7 +132,7 @@ IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 async def test_camera_image_local(hass, config_entry, requests_mock, netatmo_auth):
     """Test retrieval or local camera image."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -158,7 +158,7 @@ async def test_camera_image_local(hass, config_entry, requests_mock, netatmo_aut
 async def test_camera_image_vpn(hass, config_entry, requests_mock, netatmo_auth):
     """Test retrieval of remote camera image."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -182,7 +182,7 @@ async def test_camera_image_vpn(hass, config_entry, requests_mock, netatmo_auth)
 async def test_service_set_person_away(hass, config_entry, netatmo_auth):
     """Test service to set person as away."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -219,7 +219,7 @@ async def test_service_set_person_away(hass, config_entry, netatmo_auth):
 async def test_service_set_person_away_invalid_person(hass, config_entry, netatmo_auth):
     """Test service to set invalid person as away."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -247,7 +247,7 @@ async def test_service_set_persons_home_invalid_person(
 ):
     """Test service to set invalid persons as home."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -273,7 +273,7 @@ async def test_service_set_persons_home_invalid_person(
 async def test_service_set_persons_home(hass, config_entry, netatmo_auth):
     """Test service to set persons as home."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -297,7 +297,7 @@ async def test_service_set_persons_home(hass, config_entry, netatmo_auth):
 async def test_service_set_camera_light(hass, config_entry, netatmo_auth):
     """Test service to set the outdoor camera light mode."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -327,7 +327,7 @@ async def test_service_set_camera_light(hass, config_entry, netatmo_auth):
 async def test_service_set_camera_light_invalid_type(hass, config_entry, netatmo_auth):
     """Test service to set the indoor camera light mode."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -377,7 +377,7 @@ async def test_camera_reconnect_webhook(hass, config_entry):
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         mock_webhook.return_value = "https://example.com"
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -412,7 +412,7 @@ async def test_camera_reconnect_webhook(hass, config_entry):
 async def test_webhook_person_event(hass, config_entry, netatmo_auth):
     """Test that person events are handled."""
     with selected_platforms(["camera"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -469,7 +469,7 @@ async def test_setup_component_no_devices(hass, config_entry):
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
 
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         assert fake_post_hits == 9
@@ -508,7 +508,7 @@ async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
 
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     camera_entity_indoor = "camera.hall"

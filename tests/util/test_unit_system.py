@@ -19,7 +19,14 @@ from homeassistant.const import (
     WIND_SPEED,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_METRIC,
+    IMPERIAL_SYSTEM,
+    METRIC_SYSTEM,
+    UnitSystem,
+    get_unit_system,
+)
 
 SYSTEM_NAME = "TEST"
 INVALID_UNIT = "INVALID"
@@ -294,7 +301,56 @@ def test_properties():
     assert METRIC_SYSTEM.accumulated_precipitation_unit == LENGTH_MILLIMETERS
 
 
-def test_is_metric():
+@pytest.mark.parametrize(
+    "unit_system, expected_flag",
+    [
+        (METRIC_SYSTEM, True),
+        (IMPERIAL_SYSTEM, False),
+    ],
+)
+def test_is_metric(
+    caplog: pytest.LogCaptureFixture, unit_system: UnitSystem, expected_flag: bool
+):
     """Test the is metric flag."""
-    assert METRIC_SYSTEM.is_metric
-    assert not IMPERIAL_SYSTEM.is_metric
+    assert unit_system.is_metric == expected_flag
+    assert (
+        "Detected code that accesses the `is_metric` property of the unit system."
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "unit_system, expected_name",
+    [
+        (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC),
+        (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL),
+    ],
+)
+def test_deprecated_name(
+    caplog: pytest.LogCaptureFixture, unit_system: UnitSystem, expected_name: str
+) -> None:
+    """Test the name is deprecated."""
+    assert unit_system.name == expected_name
+    assert (
+        "Detected code that accesses the `name` property of the unit system."
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "key, expected_system",
+    [
+        (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
+        (_CONF_UNIT_SYSTEM_IMPERIAL, IMPERIAL_SYSTEM),
+    ],
+)
+def test_get_unit_system(key: str, expected_system: UnitSystem) -> None:
+    """Test get_unit_system."""
+    assert get_unit_system(key) is expected_system
+
+
+@pytest.mark.parametrize("key", [None, "", "invalid_custom"])
+def test_get_unit_system_invalid(key: str) -> None:
+    """Test get_unit_system with an invalid key."""
+    with pytest.raises(ValueError, match=f"`{key}` is not a valid unit system key"):
+        _ = get_unit_system(key)

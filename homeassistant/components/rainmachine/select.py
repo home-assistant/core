@@ -7,10 +7,11 @@ from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, UnitSystem
 
 from . import RainMachineData, RainMachineEntity
 from .const import DATA_RESTRICTIONS_UNIVERSAL, DOMAIN
@@ -43,7 +44,7 @@ class FreezeProtectionSelectOption:
 class FreezeProtectionTemperatureMixin:
     """Define an entity description mixin to include an options list."""
 
-    options: list[FreezeProtectionSelectOption]
+    extended_options: list[FreezeProtectionSelectOption]
 
 
 @dataclass
@@ -63,7 +64,7 @@ SELECT_DESCRIPTIONS = (
         entity_category=EntityCategory.CONFIG,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="freezeProtectTemp",
-        options=[
+        extended_options=[
             FreezeProtectionSelectOption(
                 api_value=0.0,
                 imperial_label="32°F",
@@ -100,7 +101,7 @@ async def async_setup_entry(
     }
 
     async_add_entities(
-        entity_map[description.key](entry, data, description, hass.config.units.name)
+        entity_map[description.key](entry, data, description, hass.config.units)
         for description in SELECT_DESCRIPTIONS
         if (
             (coordinator := data.coordinators[description.api_category]) is not None
@@ -120,7 +121,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
         entry: ConfigEntry,
         data: RainMachineData,
         description: FreezeProtectionSelectDescription,
-        unit_system: str,
+        unit_system: UnitSystem,
     ) -> None:
         """Initialize."""
         super().__init__(entry, data, description)
@@ -128,8 +129,8 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
         self._api_value_to_label_map = {}
         self._label_to_api_value_map = {}
 
-        for option in description.options:
-            if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        for option in description.extended_options:
+            if unit_system is IMPERIAL_SYSTEM:
                 label = option.imperial_label
             else:
                 label = option.metric_label
@@ -145,7 +146,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
                 {self.entity_description.data_key: self._label_to_api_value_map[option]}
             )
         except RainMachineError as err:
-            raise ValueError(f"Error while setting {self.name}: {err}") from err
+            raise HomeAssistantError(f"Error while setting {self.name}: {err}") from err
 
     @callback
     def update_from_latest_data(self) -> None:

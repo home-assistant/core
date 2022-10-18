@@ -81,6 +81,7 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
         key="mileage",
         name_="Mileage",
         native_unit_of_measurement=LENGTH_KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:counter",
     ),
 )

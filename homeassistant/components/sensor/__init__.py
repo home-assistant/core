@@ -85,116 +85,243 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 class SensorDeviceClass(StrEnum):
     """Device class for sensors."""
 
-    # apparent power (VA)
     APPARENT_POWER = "apparent_power"
+    """Apparent power.
 
-    # Air Quality Index
+    Unit of measurement: `VA`
+    """
+
     AQI = "aqi"
+    """Air Quality Index.
 
-    # % of battery that is left
+    Unit of measurement: `None`
+    """
+
     BATTERY = "battery"
+    """Percentage of battery that is left.
 
-    # ppm (parts per million) Carbon Monoxide gas concentration
+    Unit of measurement: `%`
+    """
+
     CO = "carbon_monoxide"
+    """Carbon Monoxide gas concentration.
 
-    # ppm (parts per million) Carbon Dioxide gas concentration
+    Unit of measurement: `ppm` (parts per million)
+    """
+
     CO2 = "carbon_dioxide"
+    """Carbon Dioxide gas concentration.
 
-    # current (A)
+    Unit of measurement: `ppm` (parts per million)
+    """
+
     CURRENT = "current"
+    """Current.
 
-    # date (ISO8601)
+    Unit of measurement: `A`
+    """
+
     DATE = "date"
+    """Date.
 
-    # distance (LENGTH_*)
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
     DISTANCE = "distance"
+    """Generic distance.
 
-    # fixed duration (TIME_DAYS, TIME_HOURS, TIME_MINUTES, TIME_SECONDS)
+    Unit of measurement: `LENGTH_*` units
+    - SI /metric: `mm`, `cm`, `m`, `km`
+    - USCS / imperial: `in`, `ft`, `yd`, `mi`
+    """
+
     DURATION = "duration"
+    """Fixed duration.
 
-    # energy (Wh, kWh, MWh)
+    Unit of measurement: `d`, `h`, `min`, `s`
+    """
+
     ENERGY = "energy"
+    """Energy.
 
-    # frequency (Hz, kHz, MHz, GHz)
+    Unit of measurement: `Wh`, `kWh`, `MWh`
+    """
+
     FREQUENCY = "frequency"
+    """Frequency.
 
-    # gas (m³ or ft³)
+    Unit of measurement: `Hz`, `kHz`, `MHz`, `GHz`
+    """
+
     GAS = "gas"
+    """Gas.
 
-    # Relative humidity (%)
+    Unit of measurement: `m³`, `ft³`
+    """
+
     HUMIDITY = "humidity"
+    """Relative humidity.
 
-    # current light level (lx/lm)
+    Unit of measurement: `%`
+    """
+
     ILLUMINANCE = "illuminance"
+    """Illuminance.
 
-    # moisture (%)
+    Unit of measurement: `lx`, `lm`
+    """
+
     MOISTURE = "moisture"
+    """Moisture.
 
-    # Amount of money (currency)
+    Unit of measurement: `%`
+    """
+
     MONETARY = "monetary"
+    """Amount of money.
 
-    # Amount of NO2 (µg/m³)
+    Unit of measurement: ISO4217 currency code
+
+    See https://en.wikipedia.org/wiki/ISO_4217#Active_codes for active codes
+    """
+
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
+    """Amount of NO2.
 
-    # Amount of NO (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
+    """Amount of NO.
 
-    # Amount of N2O  (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     NITROUS_OXIDE = "nitrous_oxide"
+    """Amount of N2O.
 
-    # Amount of O3 (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     OZONE = "ozone"
+    """Amount of O3.
 
-    # Particulate matter <= 0.1 μm (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     PM1 = "pm1"
+    """Particulate matter <= 0.1 μm.
 
-    # Particulate matter <= 10 μm (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     PM10 = "pm10"
+    """Particulate matter <= 10 μm.
 
-    # Particulate matter <= 2.5 μm (µg/m³)
+    Unit of measurement: `µg/m³`
+    """
+
     PM25 = "pm25"
+    """Particulate matter <= 2.5 μm.
 
-    # power factor (%)
+    Unit of measurement: `µg/m³`
+    """
+
     POWER_FACTOR = "power_factor"
+    """Power factor.
 
-    # power (W/kW)
+    Unit of measurement: `%`
+    """
+
     POWER = "power"
+    """Power.
 
-    # pressure (hPa/mbar)
+    Unit of measurement: `W`, `kW`
+    """
+
     PRESSURE = "pressure"
+    """Pressure.
 
-    # reactive power (var)
+    Unit of measurement:
+    - `mbar`, `cbar`, `bar`
+    - `Pa`, `hPa`, `kPa`
+    - `inHg`
+    - `psi`
+    """
+
     REACTIVE_POWER = "reactive_power"
+    """Reactive power.
 
-    # signal strength (dB/dBm)
+    Unit of measurement: `var`
+    """
+
     SIGNAL_STRENGTH = "signal_strength"
+    """Signal strength.
 
-    # speed (SPEED_*)
+    Unit of measurement: `dB`, `dBm`
+    """
+
     SPEED = "speed"
+    """Generic speed.
 
-    # Amount of SO2 (µg/m³)
+    Unit of measurement: `SPEED_*` units
+    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
+    - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
+    - Nautical: `kn`
+    """
+
     SULPHUR_DIOXIDE = "sulphur_dioxide"
+    """Amount of SO2.
 
-    # temperature (C/F)
+    Unit of measurement: `µg/m³`
+    """
+
     TEMPERATURE = "temperature"
+    """Temperature.
 
-    # timestamp (ISO8601)
+    Unit of measurement: `°C`, `°F`
+    """
+
     TIMESTAMP = "timestamp"
+    """Timestamp.
 
-    # Amount of VOC (µg/m³)
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
+    """Amount of VOC.
 
-    # voltage (V)
+    Unit of measurement: `µg/m³`
+    """
+
     VOLTAGE = "voltage"
+    """Voltage.
 
-    # volume (VOLUME_*)
+    Unit of measurement: `V`
+    """
+
     VOLUME = "volume"
+    """Generic volume.
+
+    Unit of measurement: `VOLUME_*` units
+    - SI / metric: `mL`, `L`, `m³`
+    - USCS / imperial: `fl. oz.`, `gal`, `ft³` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be US volumes)
+    """
 
     # weight/mass (g, kg, mg, µg, oz, lb)
     WEIGHT = "weight"
-    """Represent a measurement of an object's mass.
+    """Generic weight, represents a measurement of an object's mass.
 
     Weight is used instead of mass to fit with every day language.
+
+    Unit of measurement: `MASS_*` units
+    - SI / metric: `µg`, `mg`, `g`, `kg`
+    - USCS / imperial: `oz`, `lb`
     """
 
 
@@ -208,14 +335,18 @@ DEVICE_CLASSES: Final[list[str]] = [cls.value for cls in SensorDeviceClass]
 class SensorStateClass(StrEnum):
     """State class for sensors."""
 
-    # The state represents a measurement in present time
     MEASUREMENT = "measurement"
+    """The state represents a measurement in present time."""
 
-    # The state represents a total amount, e.g. net energy consumption
     TOTAL = "total"
+    """The state represents a total amount.
 
-    # The state represents a monotonically increasing total, e.g. an amount of consumed gas
+    For example: net energy consumption"""
+
     TOTAL_INCREASING = "total_increasing"
+    """The state represents a monotonically increasing total.
+
+    For example: an amount of consumed gas"""
 
 
 STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
@@ -287,11 +418,7 @@ class SensorEntity(Entity):
         None  # Subclasses of SensorEntity should not set this
     )
     _last_reset_reported = False
-    _temperature_conversion_reported = False
     _sensor_option_unit_of_measurement: str | None = None
-
-    # Temporary private attribute to track if deprecation has been logged.
-    __datetime_as_string_deprecation_logged = False
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""

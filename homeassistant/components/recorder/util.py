@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -180,7 +180,7 @@ def execute_stmt_lambda_element(
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
-) -> Iterable[Row]:
+) -> list[Row]:
     """Execute a StatementLambdaElement.
 
     If the time window passed is greater than one day

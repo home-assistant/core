@@ -200,6 +200,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="wind_strength",
         entity_registry_enabled_default=True,
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -225,6 +226,7 @@ SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
         netatmo_name="gust_strength",
         entity_registry_enabled_default=False,
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -397,8 +399,7 @@ async def async_setup_entry(
         for device_id in entities.values():
             device_registry.async_remove_device(device_id)
 
-        if new_entities:
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     async_dispatcher_connect(
         hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities

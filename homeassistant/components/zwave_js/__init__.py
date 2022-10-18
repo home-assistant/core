@@ -88,6 +88,7 @@ from .const import (
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
+    USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
@@ -129,7 +130,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
 
-    client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
+    client = ZwaveClient(
+        entry.data[CONF_URL],
+        async_get_clientsession(hass),
+        additional_user_agent_components=USER_AGENT,
+    )
 
     # connect and throw error if connection failed
     try:
@@ -137,7 +142,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await client.connect()
     except InvalidServerVersion as err:
         if use_addon:
-            async_ensure_addon_updated(hass)
+            addon_manager = _get_addon_manager(hass)
+            addon_manager.async_schedule_update_addon(catch_error=True)
         else:
             async_create_issue(
                 hass,
@@ -200,8 +206,7 @@ async def start_client(
 
     LOGGER.info("Connection to Zwave JS Server initialized")
 
-    if client.driver is None:
-        raise RuntimeError("Driver not ready.")
+    assert client.driver
 
     await driver_events.setup(client.driver)
 
@@ -784,17 +789,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     info = hass.data[DOMAIN][entry.entry_id]
     driver_events: DriverEvents = info[DATA_DRIVER_EVENTS]
 
-    tasks: list[asyncio.Task | Coroutine] = []
-    for platform, task in driver_events.platform_setup_tasks.items():
-        if task.done():
-            tasks.append(
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-            )
-        else:
-            task.cancel()
-            tasks.append(task)
+    tasks: list[Coroutine] = [
+        hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform, task in driver_events.platform_setup_tasks.items()
+        if not task.cancel()
+    ]
 
-    unload_ok = all(await asyncio.gather(*tasks))
+    unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
 
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(hass, entry)
@@ -837,9 +838,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Ensure that Z-Wave JS add-on is installed and running."""
-    addon_manager: AddonManager = get_addon_manager(hass)
-    if addon_manager.task_in_progress():
-        raise ConfigEntryNotReady
+    addon_manager = _get_addon_manager(hass)
     try:
         addon_info = await addon_manager.async_get_addon_info()
     except AddonError as err:
@@ -906,9 +905,9 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
 
 
 @callback
-def async_ensure_addon_updated(hass: HomeAssistant) -> None:
+def _get_addon_manager(hass: HomeAssistant) -> AddonManager:
     """Ensure that Z-Wave JS add-on is updated and running."""
     addon_manager: AddonManager = get_addon_manager(hass)
     if addon_manager.task_in_progress():
         raise ConfigEntryNotReady
-    addon_manager.async_schedule_update_addon(catch_error=True)
+    return addon_manager

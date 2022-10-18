@@ -64,8 +64,7 @@ def add_device_update_entities(controller, async_add_entities, devices):
         device = controller.api.devices[mac]
         entities.append(UniFiDeviceUpdateEntity(device, controller))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):

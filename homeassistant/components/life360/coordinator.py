@@ -21,8 +21,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.distance import convert
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     COMM_TIMEOUT,
@@ -206,8 +207,10 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
                     address = address1 or address2
 
                 speed = max(0, float(loc["speed"]) * SPEED_FACTOR_MPH)
-                if self._hass.config.units.is_metric:
-                    speed = convert(speed, LENGTH_MILES, LENGTH_KILOMETERS)
+                if self._hass.config.units is METRIC_SYSTEM:
+                    speed = DistanceConverter.convert(
+                        speed, LENGTH_MILES, LENGTH_KILOMETERS
+                    )
 
                 data.members[member_id] = Life360Member(
                     address,
@@ -218,7 +221,11 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
                     member["avatar"],
                     # Life360 reports accuracy in feet, but Device Tracker expects
                     # gps_accuracy in meters.
-                    round(convert(float(loc["accuracy"]), LENGTH_FEET, LENGTH_METERS)),
+                    round(
+                        DistanceConverter.convert(
+                            float(loc["accuracy"]), LENGTH_FEET, LENGTH_METERS
+                        )
+                    ),
                     dt_util.utc_from_timestamp(int(loc["timestamp"])),
                     float(loc["latitude"]),
                     float(loc["longitude"]),

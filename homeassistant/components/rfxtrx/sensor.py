@@ -206,12 +206,14 @@ SENSOR_TYPES = (
         name="Wind average speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind gust",
         name="Wind gust",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
     ),
     RfxtrxSensorEntityDescription(
         key="Rain total",

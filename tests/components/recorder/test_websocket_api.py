@@ -591,26 +591,26 @@ async def test_statistics_during_period_bad_end_time(
     [
         (IMPERIAL_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
         (METRIC_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
-        (IMPERIAL_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "m", "distance"),
-        (METRIC_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "m", "distance"),
-        (IMPERIAL_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
-        (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
-        (IMPERIAL_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
-        (METRIC_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
-        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W", "power"),
-        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W", "power"),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
-        (IMPERIAL_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "m/s", "speed"),
-        (METRIC_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "m/s", "speed"),
+        (IMPERIAL_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "ft", "distance"),
+        (METRIC_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "ft", "distance"),
+        (IMPERIAL_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "Wh", "energy"),
+        (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "Wh", "energy"),
+        (IMPERIAL_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (METRIC_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "kW", "power"),
+        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "kW", "power"),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "hPa", "pressure"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "hPa", "pressure"),
+        (IMPERIAL_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "km/h", "speed"),
+        (METRIC_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "km/h", "speed"),
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
-        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
-        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
-        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "m³", "volume"),
-        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "m³", "volume"),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°F", "temperature"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°F", "temperature"),
+        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "ft³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "ft³", "volume"),
     ],
 )
 async def test_list_statistic_ids(
@@ -651,7 +651,6 @@ async def test_list_statistic_ids(
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "display_unit_of_measurement": display_unit,
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
         }
@@ -673,7 +672,6 @@ async def test_list_statistic_ids(
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "display_unit_of_measurement": display_unit,
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
         }
@@ -698,7 +696,6 @@ async def test_list_statistic_ids(
                 "has_sum": has_sum,
                 "name": None,
                 "source": "recorder",
-                "display_unit_of_measurement": display_unit,
                 "statistics_unit_of_measurement": statistics_unit,
                 "unit_class": unit_class,
             }
@@ -719,7 +716,6 @@ async def test_list_statistic_ids(
                 "has_sum": has_sum,
                 "name": None,
                 "source": "recorder",
-                "display_unit_of_measurement": display_unit,
                 "statistics_unit_of_measurement": statistics_unit,
                 "unit_class": unit_class,
             }
@@ -903,13 +899,12 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "kW",
-            "unit_class": None,
+            "unit_class": "power",
         }
     ]
 
@@ -931,7 +926,6 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -995,13 +989,12 @@ async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "kW",
-            "unit_class": None,
+            "unit_class": "power",
         }
     ]
 
@@ -1051,7 +1044,6 @@ async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1104,13 +1096,12 @@ async def test_change_statistics_unit_errors(
     expected_statistic_ids = [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "kW",
-            "unit_class": None,
+            "unit_class": "power",
         }
     ]
 
@@ -1461,7 +1452,6 @@ async def test_get_statistics_metadata(
         "has_sum": has_sum,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": unit,
         "statistic_id": "test:total_gas",
         "unit_of_measurement": unit,
     }
@@ -1483,7 +1473,6 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "test:total_gas",
-            "display_unit_of_measurement": unit,
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": "Total imported energy",
@@ -1511,12 +1500,11 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": unit,
+            "statistics_unit_of_measurement": attributes["unit_of_measurement"],
             "unit_class": unit_class,
         }
     ]
@@ -1539,12 +1527,11 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": unit,
+            "statistics_unit_of_measurement": attributes["unit_of_measurement"],
             "unit_class": unit_class,
         }
     ]
@@ -1635,7 +1622,6 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -1654,7 +1640,6 @@ async def test_import_statistics(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
@@ -1864,7 +1849,6 @@ async def test_adjust_sum_statistics_energy(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -1883,7 +1867,6 @@ async def test_adjust_sum_statistics_energy(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
@@ -1898,7 +1881,7 @@ async def test_adjust_sum_statistics_energy(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
-            "display_unit": "kWh",
+            "adjustment_unit_of_measurement": "kWh",
         }
     )
     response = await client.receive_json()
@@ -1941,7 +1924,7 @@ async def test_adjust_sum_statistics_energy(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 2.0,
-            "display_unit": "MWh",
+            "adjustment_unit_of_measurement": "MWh",
         }
     )
     response = await client.receive_json()
@@ -2062,7 +2045,6 @@ async def test_adjust_sum_statistics_gas(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "m³",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -2081,7 +2063,6 @@ async def test_adjust_sum_statistics_gas(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "m³",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "m³",
             },
@@ -2096,7 +2077,7 @@ async def test_adjust_sum_statistics_gas(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
-            "display_unit": "m³",
+            "adjustment_unit_of_measurement": "m³",
         }
     )
     response = await client.receive_json()
@@ -2139,7 +2120,7 @@ async def test_adjust_sum_statistics_gas(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 35.3147,  # ~1 m³
-            "display_unit": "ft³",
+            "adjustment_unit_of_measurement": "ft³",
         }
     )
     response = await client.receive_json()
@@ -2179,9 +2160,9 @@ async def test_adjust_sum_statistics_gas(
     "state_unit, statistic_unit, unit_class, factor, valid_units, invalid_units",
     (
         ("kWh", "kWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
-        ("MWh", "MWh", None, 1, ("MWh",), ("Wh", "kWh", "ft³", "m³", "cats", None)),
+        ("MWh", "MWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
         ("m³", "m³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
-        ("ft³", "ft³", None, 1, ("ft³",), ("m³", "Wh", "kWh", "MWh", "cats", None)),
+        ("ft³", "ft³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("dogs", "dogs", None, 1, ("dogs",), ("cats", None)),
         (None, None, None, 1, (None,), ("cats",)),
     ),
@@ -2276,13 +2257,12 @@ async def test_adjust_sum_statistics_errors(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": state_unit,
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "statistics_unit_of_measurement": statistic_unit,
+            "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
         }
     ]
@@ -2295,9 +2275,8 @@ async def test_adjust_sum_statistics_errors(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": state_unit,
                 "statistic_id": statistic_id,
-                "unit_of_measurement": statistic_unit,
+                "unit_of_measurement": state_unit,
             },
         )
     }
@@ -2311,7 +2290,7 @@ async def test_adjust_sum_statistics_errors(
             "statistic_id": "sensor.does_not_exist",
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
-            "display_unit": statistic_unit,
+            "adjustment_unit_of_measurement": statistic_unit,
         }
     )
     response = await client.receive_json()
@@ -2331,7 +2310,7 @@ async def test_adjust_sum_statistics_errors(
                 "statistic_id": statistic_id,
                 "start_time": period2.isoformat(),
                 "adjustment": 1000.0,
-                "display_unit": unit,
+                "adjustment_unit_of_measurement": unit,
             }
         )
         response = await client.receive_json()
@@ -2351,7 +2330,7 @@ async def test_adjust_sum_statistics_errors(
                 "statistic_id": statistic_id,
                 "start_time": period2.isoformat(),
                 "adjustment": 1000.0,
-                "display_unit": unit,
+                "adjustment_unit_of_measurement": unit,
             }
         )
         response = await client.receive_json()

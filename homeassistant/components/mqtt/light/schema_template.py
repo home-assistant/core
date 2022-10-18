@@ -41,6 +41,7 @@ from ..const import (
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from ..models import MqttValueTemplate
+from ..util import get_mqtt_data
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -256,7 +257,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 else:
                     _LOGGER.warning("Unsupported effect value received")
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topics[CONF_STATE_TOPIC] is not None:
             self._sub_state = subscription.async_prepare_subscribe_topics(

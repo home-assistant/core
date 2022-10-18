@@ -278,7 +278,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = self.entry.data[CONF_HOST]
 
         if user_input is not None:
-            info = await self._async_get_info(host)
+            try:
+                info = await self._async_get_info(host)
+            except (
+                asyncio.TimeoutError,
+                aiohttp.ClientError,
+                aioshelly.exceptions.FirmwareUnsupported,
+            ):
+                return self.async_abort(reason="reauth_unsuccessful")
+
             if self.entry.data.get("gen", 1) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:

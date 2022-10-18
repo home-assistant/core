@@ -1084,6 +1084,7 @@ async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
 
     hass.services.async_register("test", "script", record_call)
 
+    # Make sure the service of a script with overridden entity_id works
     assert await async_setup_component(
         hass,
         "script",
@@ -1105,3 +1106,16 @@ async def test_script_service_changed_entity_id(hass: HomeAssistant) -> None:
 
     assert len(calls) == 1
     assert calls[0].data["entity_id"] == "script.custom_entity_id"
+
+    # Change entity while the script entity is loaded, and make sure the service still works
+    entry = entity_reg.async_update_entity(
+        entry.entity_id, new_entity_id="script.custom_entity_id_2"
+    )
+    assert entry.entity_id == "script.custom_entity_id_2"
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(DOMAIN, "test", {"greeting": "world"})
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[1].data["entity_id"] == "script.custom_entity_id_2"

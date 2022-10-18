@@ -229,6 +229,10 @@ def create_browse_media_response(
     if not children:  # Directory searches will pass in subdirectories as children
         children = []
     for item in result:
+        if item.get("data_kind") == "spotify" or (
+            "path" in item and cast(str, item["path"]).startswith("spotify")
+        ):  # Exclude spotify data from Owntone library
+            continue
         assert isinstance(item["uri"], str)
         media_type = OWNTONE_TYPE_TO_MEDIA_TYPE[item["uri"].split(":")[1]]
         title = item.get("name") or item.get("title")  # only tracks use title

@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from numbers import Number
+from typing import Final
+
+import voluptuous as vol
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     LENGTH,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
@@ -31,6 +32,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
     WIND_SPEED,
 )
+from homeassistant.helpers.frame import report
 
 from .unit_conversion import (
     DistanceConverter,
@@ -39,6 +41,9 @@ from .unit_conversion import (
     TemperatureConverter,
     VolumeConverter,
 )
+
+_CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
+_CONF_UNIT_SYSTEM_METRIC: Final = "metric"
 
 LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
@@ -107,7 +112,7 @@ class UnitSystem:
         if errors:
             raise ValueError(errors)
 
-        self.name = name
+        self._name = name
         self.accumulated_precipitation_unit = accumulated_precipitation
         self.temperature_unit = temperature
         self.length_unit = length
@@ -117,9 +122,26 @@ class UnitSystem:
         self.wind_speed_unit = wind_speed
 
     @property
+    def name(self) -> str:
+        """Return the name of the unit system."""
+        report(
+            "accesses the `name` property of the unit system. "
+            "This is deprecated and will stop working in Home Assistant 2023.1. "
+            "Please adjust to use instance check instead.",
+            error_if_core=False,
+        )
+        return self._name
+
+    @property
     def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
-        return self.name == CONF_UNIT_SYSTEM_METRIC
+        report(
+            "accesses the `is_metric` property of the unit system. "
+            "This is deprecated and will stop working in Home Assistant 2023.1. "
+            "Please adjust to use instance check instead.",
+            error_if_core=False,
+        )
+        return self is METRIC_SYSTEM
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
@@ -189,8 +211,21 @@ class UnitSystem:
         }
 
 
+def get_unit_system(key: str) -> UnitSystem:
+    """Get unit system based on key."""
+    if key == _CONF_UNIT_SYSTEM_IMPERIAL:
+        return IMPERIAL_SYSTEM
+    if key == _CONF_UNIT_SYSTEM_METRIC:
+        return METRIC_SYSTEM
+    raise ValueError(f"`{key}` is not a valid unit system key")
+
+
+validate_unit_system = vol.All(
+    vol.Lower, vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_IMPERIAL)
+)
+
 METRIC_SYSTEM = UnitSystem(
-    CONF_UNIT_SYSTEM_METRIC,
+    _CONF_UNIT_SYSTEM_METRIC,
     TEMP_CELSIUS,
     LENGTH_KILOMETERS,
     SPEED_METERS_PER_SECOND,
@@ -201,7 +236,7 @@ METRIC_SYSTEM = UnitSystem(
 )
 
 IMPERIAL_SYSTEM = UnitSystem(
-    CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_IMPERIAL,
     TEMP_FAHRENHEIT,
     LENGTH_MILES,
     SPEED_MILES_PER_HOUR,

@@ -19,6 +19,12 @@ INVALID_SYMBOL = "bob"
 VALID_SYMBOL = LENGTH_KILOMETERS
 
 
+def test_raise_deprecation_warning(caplog: pytest.LogCaptureFixture) -> None:
+    """Ensure that a warning is raised on use of convert."""
+    assert distance_util.convert(2, LENGTH_METERS, LENGTH_METERS) == 2
+    assert "use unit_conversion.DistanceConverter instead" in caplog.text
+
+
 def test_convert_same_unit():
     """Test conversion from any unit to same unit."""
     assert distance_util.convert(5, LENGTH_KILOMETERS, LENGTH_KILOMETERS) == 5

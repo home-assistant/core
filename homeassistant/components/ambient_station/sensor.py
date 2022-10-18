@@ -308,6 +308,7 @@ SENSOR_DESCRIPTIONS = (
         name="Max gust",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -631,6 +632,7 @@ SENSOR_DESCRIPTIONS = (
         name="Wind gust",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -638,18 +640,21 @@ SENSOR_DESCRIPTIONS = (
         name="Wind avg 10m",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG2M,
         name="Wind avg 2m",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPEEDMPH,
         name="Wind speed",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

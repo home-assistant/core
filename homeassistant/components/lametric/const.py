@@ -7,7 +7,13 @@ from typing import Final
 from homeassistant.const import Platform
 
 DOMAIN: Final = "lametric"
-PLATFORMS = [Platform.BUTTON, Platform.NUMBER]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -17,3 +23,6 @@ CONF_ICON_TYPE: Final = "icon_type"
 CONF_LIFETIME: Final = "lifetime"
 CONF_PRIORITY: Final = "priority"
 CONF_SOUND: Final = "sound"
+CONF_MESSAGE: Final = "message"
+
+SERVICE_MESSAGE: Final = "message"

@@ -52,6 +52,7 @@ SELECT_TYPES = (
         command=lambda api, loc, opt: api.set_regulation_mode(opt),
         current_option_key="regulation_mode",
         options_key="regulation_modes",
+        device_class="plugwise__regulation_mode",
     ),
 )
 

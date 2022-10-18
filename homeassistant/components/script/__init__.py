@@ -29,7 +29,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import entity_registry as er, extract_domain_configs
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
@@ -168,17 +168,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # we will create entities before firing EVENT_COMPONENT_LOADED
     await async_process_integration_platform_for_component(hass, DOMAIN)
 
-    # To register scripts as valid domain for Blueprint
+    # Register script as valid domain for Blueprint
     async_get_blueprints(hass)
 
-    if not await _async_process_config(hass, config, component):
-        await async_get_blueprints(hass).async_populate()
+    await _async_process_config(hass, config, component)
+
+    # Add some default blueprints to blueprints/script, does nothing
+    # if blueprints/script already exists
+    await async_get_blueprints(hass).async_populate()
 
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
+        await async_get_blueprints(hass).async_reset_cache()
         if (conf := await component.async_prepare_reload()) is None:
             return
-        async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
 
     async def turn_on_service(service: ServiceCall) -> None:
@@ -228,74 +231,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _async_process_config(hass, config, component) -> bool:
+async def _async_process_config(hass, config, component) -> None:
     """Process script configuration.
 
     Return true, if Blueprints were used.
     """
     entities = []
-    blueprints_used = False
 
-    for config_key in extract_domain_configs(config, DOMAIN):
-        conf: dict[str, dict[str, Any] | BlueprintInputs] = config[config_key]
+    conf: dict[str, dict[str, Any] | BlueprintInputs] = config[DOMAIN]
 
-        for key, config_block in conf.items():
-            raw_blueprint_inputs = None
-            raw_config = None
+    for key, config_block in conf.items():
+        raw_blueprint_inputs = None
+        raw_config = None
 
-            if isinstance(config_block, BlueprintInputs):
-                blueprints_used = True
-                blueprint_inputs = config_block
-                raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+        if isinstance(config_block, BlueprintInputs):
+            blueprint_inputs = config_block
+            raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
-                try:
-                    raw_config = blueprint_inputs.async_substitute()
-                    config_block = cast(
-                        dict[str, Any],
-                        await async_validate_config_item(hass, raw_config),
-                    )
-                except vol.Invalid as err:
-                    LOGGER.error(
-                        "Blueprint %s generated invalid script with input %s: %s",
-                        blueprint_inputs.blueprint.name,
-                        blueprint_inputs.inputs,
-                        humanize_error(config_block, err),
-                    )
-                    continue
-            else:
-                raw_config = cast(ScriptConfig, config_block).raw_config
+            try:
+                raw_config = blueprint_inputs.async_substitute()
+                config_block = cast(
+                    dict[str, Any],
+                    await async_validate_config_item(hass, raw_config),
+                )
+            except vol.Invalid as err:
+                LOGGER.error(
+                    "Blueprint %s generated invalid script with input %s: %s",
+                    blueprint_inputs.blueprint.name,
+                    blueprint_inputs.inputs,
+                    humanize_error(config_block, err),
+                )
+                continue
+        else:
+            raw_config = cast(ScriptConfig, config_block).raw_config
 
-            entities.append(
-                ScriptEntity(hass, key, config_block, raw_config, raw_blueprint_inputs)
-            )
+        entities.append(
+            ScriptEntity(hass, key, config_block, raw_config, raw_blueprint_inputs)
+        )
 
     await component.async_add_entities(entities)
-
-    async def service_handler(service: ServiceCall) -> None:
-        """Execute a service call to script.<script name>."""
-        entity_registry = er.async_get(hass)
-        entity_id = entity_registry.async_get_entity_id(DOMAIN, DOMAIN, service.service)
-        script_entity = component.get_entity(entity_id)
-        await script_entity.async_turn_on(
-            variables=service.data, context=service.context
-        )
-
-    # Register services for all entities that were created successfully.
-    for entity in entities:
-        hass.services.async_register(
-            DOMAIN, entity.unique_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
-        )
-
-        # Register the service description
-        service_desc = {
-            CONF_NAME: entity.name,
-            CONF_DESCRIPTION: entity.description,
-            CONF_FIELDS: entity.fields,
-        }
-        unique_id = cast(str, entity.unique_id)
-        async_set_service_schema(hass, DOMAIN, unique_id, service_desc)
-
-    return blueprints_used
 
 
 class ScriptEntity(ToggleEntity, RestoreEntity):
@@ -429,8 +403,26 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         """
         await self.script.async_stop()
 
+    async def _service_handler(self, service: ServiceCall) -> None:
+        """Execute a service call to script.<script name>."""
+        await self.async_turn_on(variables=service.data, context=service.context)
+
     async def async_added_to_hass(self) -> None:
-        """Restore last triggered on startup."""
+        """Restore last triggered on startup and register service."""
+
+        unique_id = cast(str, self.unique_id)
+        self.hass.services.async_register(
+            DOMAIN, unique_id, self._service_handler, schema=SCRIPT_SERVICE_SCHEMA
+        )
+
+        # Register the service description
+        service_desc = {
+            CONF_NAME: cast(er.RegistryEntry, self.registry_entry).name or self.name,
+            CONF_DESCRIPTION: self.description,
+            CONF_FIELDS: self.fields,
+        }
+        async_set_service_schema(self.hass, DOMAIN, unique_id, service_desc)
+
         if state := await self.async_get_last_state():
             if last_triggered := state.attributes.get("last_triggered"):
                 self.script.last_triggered = parse_datetime(last_triggered)

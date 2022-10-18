@@ -159,7 +159,6 @@ def mock_sensor_statistics():
                 "has_mean": True,
                 "has_sum": False,
                 "name": None,
-                "state_unit_of_measurement": "dogs",
                 "statistic_id": entity_id,
                 "unit_of_measurement": "dogs",
             },
@@ -488,7 +487,6 @@ async def test_import_statistics(
         "has_sum": True,
         "name": "Total imported energy",
         "source": source,
-        "state_unit_of_measurement": "kWh",
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
     }
@@ -525,7 +523,6 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -544,7 +541,6 @@ async def test_import_statistics(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
@@ -604,7 +600,7 @@ async def test_import_statistics(
         ]
     }
 
-    # Update the previously inserted statistics + rename and change display unit
+    # Update the previously inserted statistics + rename
     external_statistics = {
         "start": period1,
         "max": 1,
@@ -615,13 +611,11 @@ async def test_import_statistics(
         "sum": 5,
     }
     external_metadata["name"] = "Total imported energy renamed"
-    external_metadata["state_unit_of_measurement"] = "MWh"
     import_fn(hass, external_metadata, (external_statistics,))
     await async_wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "MWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -640,7 +634,6 @@ async def test_import_statistics(
                 "has_sum": True,
                 "name": "Total imported energy renamed",
                 "source": source,
-                "state_unit_of_measurement": "MWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
@@ -653,12 +646,12 @@ async def test_import_statistics(
                 "statistic_id": statistic_id,
                 "start": period1.isoformat(),
                 "end": (period1 + timedelta(hours=1)).isoformat(),
-                "max": approx(1.0 / 1000),
-                "mean": approx(2.0 / 1000),
-                "min": approx(3.0 / 1000),
+                "max": approx(1.0),
+                "mean": approx(2.0),
+                "min": approx(3.0),
                 "last_reset": last_reset_utc_str,
-                "state": approx(4.0 / 1000),
-                "sum": approx(5.0 / 1000),
+                "state": approx(4.0),
+                "sum": approx(5.0),
             },
             {
                 "statistic_id": statistic_id,
@@ -668,13 +661,13 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc_str,
-                "state": approx(1.0 / 1000),
-                "sum": approx(3.0 / 1000),
+                "state": approx(1.0),
+                "sum": approx(3.0),
             },
         ]
     }
 
-    # Adjust the statistics
+    # Adjust the statistics in a different unit
     await client.send_json(
         {
             "id": 1,
@@ -682,7 +675,7 @@ async def test_import_statistics(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
-            "display_unit": "MWh",
+            "adjustment_unit_of_measurement": "MWh",
         }
     )
     response = await client.receive_json()
@@ -696,12 +689,12 @@ async def test_import_statistics(
                 "statistic_id": statistic_id,
                 "start": period1.isoformat(),
                 "end": (period1 + timedelta(hours=1)).isoformat(),
-                "max": approx(1.0 / 1000),
-                "mean": approx(2.0 / 1000),
-                "min": approx(3.0 / 1000),
+                "max": approx(1.0),
+                "mean": approx(2.0),
+                "min": approx(3.0),
                 "last_reset": last_reset_utc_str,
-                "state": approx(4.0 / 1000),
-                "sum": approx(5.0 / 1000),
+                "state": approx(4.0),
+                "sum": approx(5.0),
             },
             {
                 "statistic_id": statistic_id,
@@ -711,8 +704,8 @@ async def test_import_statistics(
                 "mean": None,
                 "min": None,
                 "last_reset": last_reset_utc_str,
-                "state": approx(1.0 / 1000),
-                "sum": approx(1000 + 3.0 / 1000),
+                "state": approx(1.0),
+                "sum": approx(1000 * 1000 + 3.0),
             },
         ]
     }
@@ -741,7 +734,6 @@ def test_external_statistics_errors(hass_recorder, caplog):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
     }
@@ -805,16 +797,6 @@ def test_external_statistics_errors(hass_recorder, caplog):
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
 
-    # Attempt to insert statistics with an invalid unit combination
-    external_metadata = {**_external_metadata, "state_unit_of_measurement": "cats"}
-    external_statistics = {**_external_statistics}
-    with pytest.raises(HomeAssistantError):
-        async_add_external_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
-    assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
-
 
 def test_import_statistics_errors(hass_recorder, caplog):
     """Test validation of imported statistics."""
@@ -839,7 +821,6 @@ def test_import_statistics_errors(hass_recorder, caplog):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "recorder",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "sensor.total_energy_import",
         "unit_of_measurement": "kWh",
     }
@@ -903,16 +884,6 @@ def test_import_statistics_errors(hass_recorder, caplog):
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
 
-    # Attempt to insert statistics with an invalid unit combination
-    external_metadata = {**_external_metadata, "state_unit_of_measurement": "cats"}
-    external_statistics = {**_external_statistics}
-    with pytest.raises(HomeAssistantError):
-        async_import_statistics(hass, external_metadata, (external_statistics,))
-    wait_recording_done(hass)
-    assert statistics_during_period(hass, zero, period="hour") == {}
-    assert list_statistic_ids(hass) == []
-    assert get_metadata(hass, statistic_ids=("sensor.total_energy_import",)) == {}
-
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
@@ -962,7 +933,6 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
     }
@@ -1081,7 +1051,6 @@ def test_duplicate_statistics_handle_integrity_error(hass_recorder, caplog):
         "has_sum": True,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": "kWh",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }

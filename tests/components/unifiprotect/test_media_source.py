@@ -711,19 +711,18 @@ async def test_browse_media_eventthumb(
 
 @freeze_time("2022-09-15 03:00:00-07:00")
 async def test_browse_media_day(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test browsing day selector level media."""
 
     start = datetime.fromisoformat("2022-09-03 03:00:00-07:00")
+    end = datetime.fromisoformat("2022-09-15 03:00:00-07:00")
     ufp.api.bootstrap._recording_start = dt_util.as_utc(start)
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
-    base_id = (
-        f"test_id:browse:{doorbell.id}:all:range:{fixed_now.year}:{fixed_now.month}"
-    )
+    base_id = f"test_id:browse:{doorbell.id}:all:range:{end.year}:{end.month}"
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -731,7 +730,7 @@ async def test_browse_media_day(
 
     assert (
         browse.title
-        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')}"
+        == f"UnifiProtect > {doorbell.name} > All Events > {end.strftime('%B %Y')}"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 14

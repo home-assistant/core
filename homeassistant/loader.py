@@ -23,6 +23,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
+from . import generated
 from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.dhcp import DHCP
@@ -248,6 +249,44 @@ async def async_get_config_flows(
     )
 
     return flows
+
+
+async def async_get_integration_descriptions(
+    hass: HomeAssistant,
+) -> dict[str, Any]:
+    """Return cached list of integrations."""
+    base = generated.__path__[0]
+    config_flow_path = pathlib.Path(base) / "integrations.json"
+
+    flow = await hass.async_add_executor_job(config_flow_path.read_text)
+    core_flows: dict[str, Any] = json_loads(flow)
+    custom_integrations = await async_get_custom_components(hass)
+    custom_flows: dict[str, Any] = {
+        "integration": {},
+        "hardware": {},
+        "helper": {},
+    }
+
+    for integration in custom_integrations.values():
+        # Remove core integration with same domain as the custom integration
+        if integration.integration_type in ("entity", "system"):
+            continue
+
+        for integration_type in ("integration", "hardware", "helper"):
+            if integration.domain not in core_flows[integration_type]:
+                continue
+            del core_flows[integration_type][integration.domain]
+        if integration.domain in core_flows["translated_name"]:
+            core_flows["translated_name"].remove(integration.domain)
+
+        metadata = {
+            "config_flow": integration.config_flow,
+            "iot_class": integration.iot_class,
+            "name": integration.name,
+        }
+        custom_flows[integration.integration_type][integration.domain] = metadata
+
+    return {"core": core_flows, "custom": custom_flows}
 
 
 async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
