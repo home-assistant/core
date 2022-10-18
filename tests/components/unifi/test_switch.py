@@ -4,6 +4,8 @@ from copy import deepcopy
 from datetime import timedelta
 
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_DEVICE, MESSAGE_EVENT
+from aiounifi.models.message import MessageKey
+from aiounifi.websocket import WebsocketState
 
 from homeassistant import config_entries, core
 from homeassistant.components.switch import (
@@ -1387,7 +1389,7 @@ async def test_restore_client_no_old_state(hass, aioclient_mock):
     assert poe_client.state == "unavailable"  # self.poe_mode is None
 
 
-async def test_poe_port_switches(hass, aioclient_mock):
+async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[DEVICE_1]
@@ -1402,7 +1404,6 @@ async def test_poe_port_switches(hass, aioclient_mock):
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
     # Enable entity
-
     ent_reg.async_update_entity(
         entity_id="switch.mock_name_port_1_poe", disabled_by=None
     )
@@ -1417,11 +1418,22 @@ async def test_poe_port_switches(hass, aioclient_mock):
     # Validate state object
     switch_1 = hass.states.get("switch.mock_name_port_1_poe")
     assert switch_1 is not None
-    assert switch_1.state == "on"
+    assert switch_1.state == STATE_ON
     assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET
 
-    # Turn off PoE
+    # Update state object
+    device_1 = deepcopy(DEVICE_1)
+    device_1["port_table"][0]["poe_mode"] = "off"
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MessageKey.DEVICE.value},
+            "data": [device_1],
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
 
+    # Turn off PoE
     aioclient_mock.clear_requests()
     aioclient_mock.put(
         f"https://{controller.host}:1234/api/s/{controller.site}/rest/device/mock-id",
@@ -1439,7 +1451,6 @@ async def test_poe_port_switches(hass, aioclient_mock):
     }
 
     # Turn on PoE
-
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
@@ -1450,3 +1461,59 @@ async def test_poe_port_switches(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[1][2] == {
         "port_overrides": [{"poe_mode": "auto", "port_idx": 1, "portconf_id": "1a1"}]
     }
+
+    # Availability signalling
+
+    # Controller disconnects
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
+
+    # Controller reconnects
+    mock_unifi_websocket(state=WebsocketState.RUNNING)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
+
+    # Device gets disabled
+    device_1["disabled"] = True
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MessageKey.DEVICE.value},
+            "data": [device_1],
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
+
+    # Device gets re-enabled
+    device_1["disabled"] = False
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MessageKey.DEVICE.value},
+            "data": [device_1],
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
+
+    # Port gets disabled
+    device_1["port_table"][0]["up"] = False
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MessageKey.DEVICE.value},
+            "data": [device_1],
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
+
+    # Port gets re-enabled
+    device_1["port_table"][0]["up"] = True
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MessageKey.DEVICE.value},
+            "data": [device_1],
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
