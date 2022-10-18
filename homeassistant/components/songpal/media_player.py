@@ -43,6 +43,8 @@ PARAM_VALUE = "value"
 
 INITIAL_RETRY_DELAY = 10
 
+ERROR_REQUEST_RETRY = 40000
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -331,11 +333,27 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-        return await self._dev.set_power(True)
+        try:
+            return await self._dev.set_power(True)
+        except SongpalException as ex:
+            if ex.code == ERROR_REQUEST_RETRY:
+                _LOGGER.debug(
+                    "Swallowing %s, the device might be already in the wanted state", ex
+                )
+                return
+            raise
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-        return await self._dev.set_power(False)
+        try:
+            return await self._dev.set_power(False)
+        except SongpalException as ex:
+            if ex.code == ERROR_REQUEST_RETRY:
+                _LOGGER.debug(
+                    "Swallowing %s, the device might be already in the wanted state", ex
+                )
+                return
+            raise
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the device."""
