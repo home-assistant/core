@@ -53,12 +53,9 @@ SENSOR_TYPES: tuple[QNapSensorEntityDescription, ...] = (
     QNapSensorEntityDescription(
         stype="basic",
         key="status",
-        name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        name="Health",
         icon="mdi:checkbox-marked-circle-outline",
         entity_registry_enabled_default=True,
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     QNapSensorEntityDescription(
         stype="basic",
