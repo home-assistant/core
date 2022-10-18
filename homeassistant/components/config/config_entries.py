@@ -487,7 +487,7 @@ async def async_matching_config_entries(
     entries = [
         entry
         for entry in entries
-        if entry.domain not in integrations
+        if (type_filter != ["helper"] and entry.domain not in integrations)
         or (
             entry.domain in integrations
             and integrations[entry.domain].integration_type in type_filter

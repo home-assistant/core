@@ -1490,6 +1490,23 @@ async def test_get_entries_ws(hass, hass_ws_client, clear_handlers):
         },
     ]
 
+    # Verify we don't send config entries when only helpers are requested
+    with patch(
+        "homeassistant.components.config.config_entries.async_get_integration",
+        side_effect=IntegrationNotFound("any"),
+    ):
+        await ws_client.send_json(
+            {
+                "id": 10,
+                "type": "config_entries/get",
+                "type_filter": ["helper"],
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["id"] == 10
+    assert response["result"] == []
+
     # Verify we raise if something really goes wrong
 
     with patch(
@@ -1498,14 +1515,14 @@ async def test_get_entries_ws(hass, hass_ws_client, clear_handlers):
     ):
         await ws_client.send_json(
             {
-                "id": 10,
+                "id": 11,
                 "type": "config_entries/get",
                 "type_filter": ["device", "hub", "service"],
             }
         )
         response = await ws_client.receive_json()
 
-    assert response["id"] == 10
+    assert response["id"] == 11
     assert response["success"] is False
 
 
