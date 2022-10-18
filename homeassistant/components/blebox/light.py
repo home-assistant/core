@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity, create_blebox_entities
+from . import BleBoxEntity, get_blebox_features
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +36,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
+    entities: list[BleBoxLightEntity] = []
 
-    create_blebox_entities(
-        hass, config_entry, async_add_entities, BleBoxLightEntity, "lights"
-    )
+    for feature in get_blebox_features(hass, config_entry, "lights"):
+        entities.append(BleBoxLightEntity(feature))
+
+    async_add_entities(entities, True)
 
 
 COLOR_MODE_MAP = {
@@ -53,10 +55,8 @@ COLOR_MODE_MAP = {
 }
 
 
-class BleBoxLightEntity(BleBoxEntity, LightEntity):
+class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     """Representation of BleBox lights."""
-
-    _feature: blebox_uniapi.light.Light
 
     def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""

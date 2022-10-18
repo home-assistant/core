@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import blebox_uniapi.cover
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverDeviceClass,
@@ -14,7 +16,7 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_O
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity, create_blebox_entities
+from . import BleBoxEntity, get_blebox_features
 
 BLEBOX_TO_COVER_DEVICE_CLASSES = {
     "gate": CoverDeviceClass.GATE,
@@ -44,16 +46,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
+    entities: list[BleBoxCoverEntity] = []
 
-    create_blebox_entities(
-        hass, config_entry, async_add_entities, BleBoxCoverEntity, "covers"
-    )
+    for feature in get_blebox_features(hass, config_entry, "covers"):
+        entities.append(BleBoxCoverEntity(feature))
+
+    async_add_entities(entities, True)
 
 
-class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
+class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
     """Representation of a BleBox cover feature."""
 
-    def __init__(self, feature):
+    def __init__(self, feature: blebox_uniapi.cover.Cover) -> None:
         """Initialize a BleBox cover feature."""
         super().__init__(feature)
         self._attr_device_class = BLEBOX_TO_COVER_DEVICE_CLASSES[feature.device_class]

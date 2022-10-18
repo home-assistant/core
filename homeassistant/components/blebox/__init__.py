@@ -1,5 +1,6 @@
 """The BleBox devices integration."""
 import logging
+from typing import Generic, TypeVar
 
 from blebox_uniapi.box import Box
 from blebox_uniapi.error import Error
@@ -27,6 +28,8 @@ PLATFORMS = [
 ]
 
 PARALLEL_UPDATES = 0
+
+_FeatureT = TypeVar("_FeatureT", bound=Feature)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -65,25 +68,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-def create_blebox_entities(
-    hass, config_entry, async_add_entities, entity_klass, entity_type
-):
-    """Create entities from a BleBox product's features."""
+def get_blebox_features(
+    hass: HomeAssistant, config_entry: ConfigEntry, entity_type: str
+) -> list[Feature]:
+    """Get features from a BleBox product matching the feature type."""
 
-    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    entities = []
+    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
 
-    if entity_type in product.features:
-        for feature in product.features[entity_type]:
-            entities.append(entity_klass(feature))
-
-    async_add_entities(entities, True)
+    if features := product.features.get(entity_type):
+        return features
+    return []
 
 
-class BleBoxEntity(Entity):
+class BleBoxEntity(Entity, Generic[_FeatureT]):
     """Implements a common class for entities representing a BleBox feature."""
 
-    def __init__(self, feature: Feature) -> None:
+    def __init__(self, feature: _FeatureT) -> None:
         """Initialize a BleBox entity."""
         self._feature = feature
         self._attr_name = feature.full_name

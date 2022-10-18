@@ -2,6 +2,8 @@
 from datetime import timedelta
 from typing import Any
 
+import blebox_uniapi.climate
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -13,7 +15,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity, create_blebox_entities
+from . import BleBoxEntity, get_blebox_features
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -24,13 +26,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox climate entity."""
+    entities: list[BleBoxClimateEntity] = []
 
-    create_blebox_entities(
-        hass, config_entry, async_add_entities, BleBoxClimateEntity, "climates"
-    )
+    for feature in get_blebox_features(hass, config_entry, "climates"):
+        entities.append(BleBoxClimateEntity(feature))
+
+    async_add_entities(entities, True)
 
 
-class BleBoxClimateEntity(BleBoxEntity, ClimateEntity):
+class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEntity):
     """Representation of a BleBox climate feature (saunaBox)."""
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE

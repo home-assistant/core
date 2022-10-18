@@ -1,6 +1,8 @@
 """BleBox sensor entities."""
 from dataclasses import dataclass
 
+import blebox_uniapi.sensor
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -11,7 +13,7 @@ from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, TEMP_C
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity, create_blebox_entities
+from . import BleBoxEntity, get_blebox_features
 
 
 @dataclass
@@ -49,16 +51,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
+    entities: list[BleBoxSensorEntity] = []
 
-    create_blebox_entities(
-        hass, config_entry, async_add_entities, BleBoxSensorEntity, "sensors"
-    )
+    for feature in get_blebox_features(hass, config_entry, "sensors"):
+        entities.append(BleBoxSensorEntity(feature))
+
+    async_add_entities(entities, True)
 
 
-class BleBoxSensorEntity(BleBoxEntity, SensorEntity):
+class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEntity):
     """Representation of a BleBox sensor feature."""
 
-    def __init__(self, feature):
+    def __init__(self, feature: blebox_uniapi.sensor.BaseSensor) -> None:
         """Initialize a BleBox sensor feature."""
         super().__init__(feature)
 
