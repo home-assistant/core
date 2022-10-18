@@ -83,7 +83,6 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            name = user_input[CONF_LOCATION]
             api_key = user_input[CONF_API_KEY]
             location = user_input[CONF_LOCATION]
 
@@ -102,7 +101,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(f"{DOMAIN}-{location}")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=name,
+                    title=user_input[CONF_LOCATION],
                     data={
                         CONF_API_KEY: api_key,
                         CONF_LOCATION: location,
