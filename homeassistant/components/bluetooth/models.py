@@ -18,13 +18,11 @@ from bleak.backends.scanner import (
     AdvertisementDataCallback,
     BaseBleakScanner,
 )
-from bleak_retry_connector import freshen_ble_device
+from bleak_retry_connector import NO_RSSI_VALUE, freshen_ble_device
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from .const import NO_RSSI_VALUE
 
 if TYPE_CHECKING:
 
