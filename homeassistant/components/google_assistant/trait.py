@@ -843,7 +843,7 @@ class TemperatureControlTrait(_Trait):
         response = {}
         unit = self.hass.config.units.temperature_unit
         current_temp = self.state.state
-        if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE, None):
             temp = round(
                 TemperatureConverter.convert(float(current_temp), unit, TEMP_CELSIUS), 1
             )
