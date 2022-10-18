@@ -9,7 +9,7 @@ import MVGLive
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, TIME_MINUTES
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -89,6 +89,8 @@ def setup_platform(
 
 class MVGLiveSensor(SensorEntity):
     """Implementation of an MVG Live sensor."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -210,7 +212,7 @@ class MVGLiveData:
                 continue
 
             # now select the relevant data
-            _nextdep = {ATTR_ATTRIBUTION: ATTRIBUTION}
+            _nextdep = {}
             for k in ("destination", "linename", "time", "direction", "product"):
                 _nextdep[k] = _departure.get(k, "")
             _nextdep["time"] = int(_nextdep["time"])
