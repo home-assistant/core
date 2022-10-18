@@ -63,7 +63,7 @@ class RestData:
                 headers=rendered_headers,
                 params=rendered_params,
                 auth=self._auth,
-                data=self._request_data,
+                content=self._request_data,
                 timeout=self._timeout,
                 follow_redirects=True,
             )
