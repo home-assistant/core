@@ -372,9 +372,6 @@ brother==2.0.0
 # homeassistant.components.brunt
 brunt==1.2.0
 
-# homeassistant.components.bsblan
-bsblan==0.5.0
-
 # homeassistant.components.bthome
 bthome-ble==1.2.2
 
@@ -1368,6 +1365,9 @@ pytankerkoenig==0.0.6
 
 # homeassistant.components.tautulli
 pytautulli==21.11.0
+
+# homeassistant.components.bsblan
+python-bsblan==0.5.5
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.14
