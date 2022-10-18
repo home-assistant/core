@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "no_selection": "V\u00e4lj minst en stad/l\u00e4n",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "_a_to_d": "Stad/l\u00e4n (A-D)",
+                    "_e_to_h": "Stad/l\u00e4n (E-H)",
+                    "_i_to_l": "Stad/l\u00e4n (I-L)",
+                    "_m_to_q": "Stad/l\u00e4n (M-Q)",
+                    "_r_to_u": "Stad/l\u00e4n (R-U)",
+                    "_v_to_z": "Stad/l\u00e4n (V-Z)",
+                    "corona_filter": "Ta bort Corona-varningar",
+                    "slots": "Maximala varningar per stad/l\u00e4n"
+                },
+                "title": "V\u00e4lj stad/l\u00e4n"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Misslyckades att ansluta",
+            "no_selection": "V\u00e4lj minst en stad/l\u00e4n",
+            "unknown": "Ov\u00e4ntatn fel"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_a_to_d": "Stad/l\u00e4n (AD)",
+                    "_e_to_h": "Stad/l\u00e4n (EH)",
+                    "_i_to_l": "Stad/l\u00e4n (I-L)",
+                    "_m_to_q": "Stad/l\u00e4n (M-Q)",
+                    "_r_to_u": "Stad/l\u00e4n (R-U)",
+                    "_v_to_z": "Stad/l\u00e4n (V-Z)",
+                    "corona_filter": "Ta bort Corona-varningar",
+                    "slots": "Maximala varningar per stad/l\u00e4n"
+                },
+                "title": "Alternativ"
+            }
+        }
+    }
+}

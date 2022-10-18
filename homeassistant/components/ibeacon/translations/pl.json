@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "bluetooth_not_available": "Co najmniej jeden adapter lub pilot Bluetooth musi by\u0107 skonfigurowany do korzystania z iBeacon Tracker.",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "step": {
+            "user": {
+                "description": "Chcesz skonfigurowa\u0107 iBeacon Tracker?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "min_rssi": "Minimalny RSSI"
+                },
+                "description": "Sygna\u0142y iBeacon o warto\u015bci RSSI ni\u017cszej ni\u017c Minimalny RSSI b\u0119d\u0105 ignorowane. Je\u015bli integracja widzi s\u0105siednie iBeacons, zwi\u0119kszenie tej warto\u015bci mo\u017ce pom\u00f3c."
+            }
+        }
+    }
+}

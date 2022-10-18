@@ -6,7 +6,7 @@
             "webhook_not_internet_accessible": "Tu instancia de Home Assistant debe estar accesible desde Internet para recibir mensajes webhook."
         },
         "create_entry": {
-            "default": "Para enviar eventos a Home Assistant, necesitar\u00e1s configurar la funci\u00f3n de webhook en GPSLogger.\n\nRellena la siguiente informaci\u00f3n:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nEcha un vistazo a [la documentaci\u00f3n]({docs_url}) para m\u00e1s detalles."
+            "default": "Para enviar eventos a Home Assistant, necesitar\u00e1s configurar la funci\u00f3n de webhook en GPSLogger.\n\nCompleta la siguiente informaci\u00f3n:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nConsulta [la documentaci\u00f3n]({docs_url}) para m\u00e1s detalles."
         },
         "step": {
             "user": {

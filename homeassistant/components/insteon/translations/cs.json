@@ -9,6 +9,9 @@
             "select_single": "Vyberte jednu mo\u017enost."
         },
         "step": {
+            "confirm_usb": {
+                "description": "Chcete nastavit {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP adresa",

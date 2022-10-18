@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "decryption_failed": "La clau d'enlla\u00e7 proporcionada no ha funcionat, les dades del sensor no s'han pogut desxifrar. Comprova-la i torna-ho a provar.",
+            "expected_24_characters": "S'espera una clau d'enlla\u00e7 de 24 car\u00e0cters hexadecimals.",
+            "expected_32_characters": "S'espera una clau d'enlla\u00e7 de 32 car\u00e0cters hexadecimals.",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "decryption_failed": "La clau d'enlla\u00e7 proporcionada no ha funcionat, les dades del sensor no s'han pogut desxifrar. Comprova-la i torna-ho a provar.",
+            "expected_24_characters": "S'espera una clau d'enlla\u00e7 de 24 car\u00e0cters hexadecimals.",
+            "expected_32_characters": "S'espera una clau d'enlla\u00e7 de 32 car\u00e0cters hexadecimals."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vols configurar {name}?"
+            },
+            "confirm_slow": {
+                "description": "No s'ha em\u00e8s cap 'broadcast' des d'aquest dispositiu durant l'\u00faltim minut, per tant no estem segurs de si aquest dispositiu utilitza encriptaci\u00f3 o no. Aix\u00f2 pot ser perqu\u00e8 el dispositiu utilitza un interval de 'broadcast' lent. Confirma per afegir aquest dispositiu de totes maneres, i la pr\u00f2xima vegada que rebi un 'broadcast' se't demanar\u00e0 que introdueixis la seva clau d'enlla\u00e7 si \u00e9s necessari."
+            },
+            "get_encryption_key_4_5": {
+                "data": {
+                    "bindkey": "Clau d'enlla\u00e7 (bindkey)"
+                },
+                "description": "Les dades del sensor emeses estan xifrades. Per desxifrar-les necessites una clau d'enlla\u00e7 de 32 car\u00e0cters hexadecimals."
+            },
+            "get_encryption_key_legacy": {
+                "data": {
+                    "bindkey": "Clau d'enlla\u00e7 (bindkey)"
+                },
+                "description": "Les dades del sensor emeses estan xifrades. Per desxifrar-les necessites una clau d'enlla\u00e7 de 24 car\u00e0cters hexadecimals."
+            },
+            "slow_confirm": {
+                "description": "No s'ha em\u00e8s cap 'broadcast' des d'aquest dispositiu durant l'\u00faltim minut, per tant no estem segurs de si aquest dispositiu utilitza encriptaci\u00f3 o no. Aix\u00f2 pot ser perqu\u00e8 el dispositiu utilitza un interval de 'broadcast' lent. Confirma per afegir aquest dispositiu de totes maneres, i la pr\u00f2xima vegada que rebi un 'broadcast' se't demanar\u00e0 que introdueixis la seva clau d'enlla\u00e7 si \u00e9s necessari."
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositiu"
+                },
+                "description": "Tria un dispositiu a configurar"
+            }
+        }
+    }
+}

@@ -10,8 +10,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.util.dt import utcnow
 
+from . import init_integration
+
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
-from tests.components.accuweather import init_integration
 
 
 async def test_async_setup_entry(hass):

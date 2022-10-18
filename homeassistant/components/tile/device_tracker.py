@@ -1,13 +1,12 @@
 """Support for Tile device trackers."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 import logging
 
 from pytile.tile import Tile
 
+from homeassistant.components.device_tracker import AsyncSeeCallback, SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -18,7 +17,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DATA_COORDINATOR, DATA_TILE, DOMAIN
+from . import TileData
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,14 +38,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tile device trackers."""
+    data: TileData = hass.data[DOMAIN][entry.entry_id]
+
     async_add_entities(
         [
-            TileDeviceTracker(
-                entry,
-                hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR][tile_uuid],
-                tile,
-            )
-            for tile_uuid, tile in hass.data[DOMAIN][entry.entry_id][DATA_TILE].items()
+            TileDeviceTracker(entry, data.coordinators[tile_uuid], tile)
+            for tile_uuid, tile in data.tiles.items()
         ]
     )
 
@@ -53,7 +51,7 @@ async def async_setup_entry(
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Detect a legacy configuration and import it."""
@@ -123,9 +121,9 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
         return self._tile.longitude
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
     @callback
     def _handle_coordinator_update(self) -> None:

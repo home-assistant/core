@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Atualize quaisquer automa\u00e7\u00f5es ou scripts que usam este servi\u00e7o para usar o servi\u00e7o `{alternate_service}` com um destes IDs de entidade como destino: `{alternate_targets}`.",
+            "title": "O servi\u00e7o {deprecated_service} est\u00e1 sendo removido"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Atualize quaisquer automa\u00e7\u00f5es ou scripts que usam este servi\u00e7o para usar o servi\u00e7o `{alternate_service}` com `{alternate_targets}` como destino.",
+            "title": "O servi\u00e7o {deprecated_service} est\u00e1 sendo removido"
+        }
+    },
     "options": {
         "step": {
             "init": {

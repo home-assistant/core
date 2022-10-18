@@ -37,13 +37,8 @@ class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntit
             icon=ICON_STATUS,
             device_class=BinarySensorDeviceClass.CONNECTIVITY,
         )
-        self._is_on = False
-
-    @property
-    def is_on(self) -> bool:
-        """Return binary state."""
-        return self._is_on
+        self._attr_is_on = False
 
     async def async_update(self) -> None:
         """Update status."""
-        self._is_on = self._server.online
+        self._attr_is_on = self._server.online

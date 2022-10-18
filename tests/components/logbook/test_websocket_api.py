@@ -11,6 +11,7 @@ from homeassistant import core
 from homeassistant.components import logbook, recorder
 from homeassistant.components.automation import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook import websocket_api
+from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
@@ -27,7 +28,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
@@ -51,7 +52,6 @@ def set_utc(hass):
     hass.config.set_time_zone("UTC")
 
 
-@callback
 async def _async_mock_logbook_platform(hass: HomeAssistant) -> None:
     class MockLogbookPlatform:
         """Mock a logbook platform."""
@@ -528,7 +528,6 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
         },
     )
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
 
     hass.states.async_set("light.exc", STATE_ON)
     hass.states.async_set("light.exc", STATE_OFF)
@@ -544,6 +543,7 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )
@@ -567,6 +567,15 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
     assert msg["event"]["end_time"] > msg["event"]["start_time"]
     assert msg["event"]["partial"] is True
 
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == []
+
     hass.states.async_set("light.exc", STATE_ON)
     hass.states.async_set("light.exc", STATE_OFF)
     hass.states.async_set("switch.any", STATE_ON)
@@ -589,12 +598,8 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
     await hass.async_block_till_done()
 
     hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert "partial" not in msg["event"]["events"]
-    assert msg["event"]["events"] == []
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -679,7 +684,7 @@ async def test_subscribe_unsubscribe_logbook_stream_excluded_entities(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -717,7 +722,6 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
         },
     )
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
 
     for entity_id in test_entities:
         hass.states.async_set(entity_id, STATE_ON)
@@ -727,6 +731,7 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )
@@ -748,6 +753,13 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
     assert msg["event"]["end_time"] > msg["event"]["start_time"]
     assert msg["event"]["partial"] is True
 
+    await hass.async_block_till_done()
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == []
+
     for entity_id in test_entities:
         hass.states.async_set(entity_id, STATE_ON)
         hass.states.async_set(entity_id, STATE_OFF)
@@ -757,12 +769,7 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
     await hass.async_block_till_done()
 
     hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert "partial" not in msg["event"]["events"]
-    assert msg["event"]["events"] == []
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -885,7 +892,7 @@ async def test_subscribe_unsubscribe_logbook_stream_included_entities(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -919,7 +926,6 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
         },
     )
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
 
     hass.states.async_set("light.exc", STATE_ON)
     hass.states.async_set("light.exc", STATE_OFF)
@@ -936,6 +942,7 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )
@@ -958,6 +965,14 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
     assert msg["event"]["start_time"] == now.timestamp()
     assert msg["event"]["end_time"] > msg["event"]["start_time"]
     assert msg["event"]["partial"] is True
+
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == []
 
     hass.states.async_set("light.exc", STATE_ON)
     hass.states.async_set("light.exc", STATE_OFF)
@@ -983,12 +998,7 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
     await hass.async_block_till_done()
 
     hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert "partial" not in msg["event"]["events"]
-    assert msg["event"]["events"] == []
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -1073,7 +1083,7 @@ async def test_logbook_stream_excluded_entities_inherits_filters_from_recorder(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -1090,7 +1100,6 @@ async def test_subscribe_unsubscribe_logbook_stream(
     )
 
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
 
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
@@ -1099,6 +1108,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )
@@ -1122,6 +1132,14 @@ async def test_subscribe_unsubscribe_logbook_stream(
     assert msg["event"]["end_time"] > msg["event"]["start_time"]
     assert msg["event"]["partial"] is True
 
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]["events"]
+    assert msg["event"]["events"] == []
+
     hass.states.async_set("light.alpha", "on")
     hass.states.async_set("light.alpha", "off")
     alpha_off_state: State = hass.states.get("light.alpha")
@@ -1138,12 +1156,6 @@ async def test_subscribe_unsubscribe_logbook_stream(
     await hass.async_block_till_done()
 
     hass.states.async_set("light.zulu", "on", {"effect": "help", "color": "blue"})
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert "partial" not in msg["event"]["events"]
-    assert msg["event"]["events"] == []
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -1374,7 +1386,7 @@ async def test_subscribe_unsubscribe_logbook_stream(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -1391,7 +1403,6 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
     )
 
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
     hass.states.async_set("light.small", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
@@ -1400,6 +1411,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {
             "id": 7,
@@ -1428,12 +1440,8 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
         }
     ]
 
-    hass.states.async_set("light.alpha", STATE_ON)
-    hass.states.async_set("light.alpha", STATE_OFF)
-    hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
-
+    await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
-
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
@@ -1441,6 +1449,13 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
     assert "end_time" in msg["event"]
     assert "partial" not in msg["event"]
     assert msg["event"]["events"] == []
+
+    hass.states.async_set("light.alpha", STATE_ON)
+    hass.states.async_set("light.alpha", STATE_OFF)
+    hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
+
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -1456,6 +1471,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
 
     hass.states.async_remove("light.alpha")
     hass.states.async_remove("light.small")
+    await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     await websocket_client.send_json(
@@ -1468,7 +1484,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -1485,7 +1501,6 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     )
 
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
     hass.states.async_set("light.small", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
@@ -1494,6 +1509,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {
             "id": 7,
@@ -1521,10 +1537,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
         }
     ]
 
-    hass.states.async_set("light.alpha", STATE_ON)
-    hass.states.async_set("light.alpha", STATE_OFF)
-    hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
-
+    await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -1532,6 +1545,12 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     assert msg["type"] == "event"
     assert "partial" not in msg["event"]
     assert msg["event"]["events"] == []
+
+    hass.states.async_set("light.alpha", STATE_ON)
+    hass.states.async_set("light.alpha", STATE_OFF)
+    hass.states.async_set("light.small", STATE_OFF, {"effect": "help", "color": "blue"})
+
+    await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
@@ -1567,7 +1586,12 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_with_end_time(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) <= init_count
+    listeners = hass.bus.async_listeners()
+    # The async_fire_time_changed above triggers unsubscribe from
+    # homeassistant_final_write, don't worry about those
+    init_listeners.pop("homeassistant_final_write")
+    listeners.pop("homeassistant_final_write")
+    assert listeners == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -1584,7 +1608,6 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
     )
 
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
     hass.states.async_set("light.small", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
@@ -1593,6 +1616,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {
             "id": 7,
@@ -1635,7 +1659,7 @@ async def test_subscribe_unsubscribe_logbook_stream_entities_past_only(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -1656,7 +1680,6 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
     )
 
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
     four_days_ago = now - timedelta(days=4)
     five_days_ago = now - timedelta(days=5)
 
@@ -1680,6 +1703,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
     await async_wait_recording_done(hass)
 
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {
             "id": 7,
@@ -1735,7 +1759,7 @@ async def test_subscribe_unsubscribe_logbook_stream_big_query(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -1755,10 +1779,10 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
     device2 = devices[1]
 
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {
             "id": 7,
@@ -1829,7 +1853,7 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 async def test_event_stream_bad_start_time(hass, hass_ws_client, recorder_mock):
@@ -1867,10 +1891,10 @@ async def test_logbook_stream_match_multiple_entities(
     hass.states.async_set(entity_id, STATE_ON)
 
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {
             "id": 7,
@@ -1944,7 +1968,7 @@ async def test_logbook_stream_match_multiple_entities(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 async def test_event_stream_bad_end_time(hass, hass_ws_client, recorder_mock):
@@ -1998,7 +2022,6 @@ async def test_live_stream_with_one_second_commit_interval(
     device = devices[0]
 
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
 
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "1"})
 
@@ -2011,6 +2034,7 @@ async def test_live_stream_with_one_second_commit_interval(
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "3"})
 
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {
             "id": 7,
@@ -2067,7 +2091,7 @@ async def test_live_stream_with_one_second_commit_interval(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -2082,7 +2106,6 @@ async def test_subscribe_disconnected(hass, recorder_mock, hass_ws_client):
     )
     await async_wait_recording_done(hass)
 
-    init_count = sum(hass.bus.async_listeners().values())
     hass.states.async_set("light.small", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
@@ -2090,6 +2113,9 @@ async def test_subscribe_disconnected(hass, recorder_mock, hass_ws_client):
     await hass.async_block_till_done()
 
     await async_wait_recording_done(hass)
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
+    init_listeners = hass.bus.async_listeners()
     websocket_client = await hass_ws_client()
     await websocket_client.send_json(
         {
@@ -2120,7 +2146,7 @@ async def test_subscribe_disconnected(hass, recorder_mock, hass_ws_client):
     await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -2134,7 +2160,7 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
         ]
     )
     await async_wait_recording_done(hass)
-    init_count = sum(hass.bus.async_listeners().values())
+    init_listeners = hass.bus.async_listeners()
     hass.states.async_set("light.small", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
@@ -2143,7 +2169,7 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
 
-    after_ws_created_count = sum(hass.bus.async_listeners().values())
+    after_ws_created_listeners = hass.bus.async_listeners()
 
     with patch.object(websocket_api, "MAX_PENDING_LOGBOOK_EVENTS", 5), patch.object(
         websocket_api, "_async_events_consumer"
@@ -2163,7 +2189,7 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    assert sum(hass.bus.async_listeners().values()) != init_count
+    assert hass.bus.async_listeners() != init_listeners
     for _ in range(5):
         hass.states.async_set("binary_sensor.is_light", STATE_ON)
         hass.states.async_set("binary_sensor.is_light", STATE_OFF)
@@ -2171,13 +2197,12 @@ async def test_stream_consumer_stop_processing(hass, recorder_mock, hass_ws_clie
 
     # Check our listener got unsubscribed because
     # the queue got full and the overload safety tripped
-    assert sum(hass.bus.async_listeners().values()) == after_ws_created_count
+    assert hass.bus.async_listeners() == after_ws_created_listeners
     await websocket_client.close()
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
-@patch("homeassistant.components.logbook.websocket_api.MAX_RECORDER_WAIT", 0.15)
 async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplog):
     """Test we still start live streaming if the recorder is far behind."""
     now = dt_util.utcnow()
@@ -2251,8 +2276,6 @@ async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplo
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    assert "Recorder is behind" in caplog.text
-
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_all_entities_are_continuous(
@@ -2278,7 +2301,9 @@ async def test_subscribe_all_entities_are_continuous(
                 hass.states.async_set("counter.any", state)
                 hass.states.async_set("proximity.any", state)
 
-    init_count = sum(hass.bus.async_listeners().values())
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
+    init_listeners = hass.bus.async_listeners()
     _cycle_entities()
 
     await async_wait_recording_done(hass)
@@ -2307,7 +2332,7 @@ async def test_subscribe_all_entities_are_continuous(
     await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -2332,7 +2357,9 @@ async def test_subscribe_all_entities_have_uom_multiple(
                     entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
                 )
 
-    init_count = sum(hass.bus.async_listeners().values())
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
+    init_listeners = hass.bus.async_listeners()
     _cycle_entities()
 
     await async_wait_recording_done(hass)
@@ -2362,14 +2389,14 @@ async def test_subscribe_all_entities_have_uom_multiple(
     await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
 async def test_subscribe_entities_some_have_uom_multiple(
     hass, recorder_mock, hass_ws_client
 ):
-    """Test logbook stream with uom filtered entities and non-fitlered entities."""
+    """Test logbook stream with uom filtered entities and non-filtered entities."""
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
@@ -2391,7 +2418,9 @@ async def test_subscribe_entities_some_have_uom_multiple(
             for state in (STATE_ON, STATE_OFF):
                 hass.states.async_set(entity_id, state)
 
-    init_count = sum(hass.bus.async_listeners().values())
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
+    init_listeners = hass.bus.async_listeners()
     _cycle_entities()
 
     await async_wait_recording_done(hass)
@@ -2410,24 +2439,43 @@ async def test_subscribe_entities_some_have_uom_multiple(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
 
-    _cycle_entities()
-
-    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
-    assert msg["id"] == 7
-    assert msg["type"] == "event"
-    assert msg["event"]["partial"] is True
-    assert msg["event"]["events"] == [
-        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
-        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
-    ]
-
-    _cycle_entities()
+    await get_instance(hass).async_block_till_done()
     await hass.async_block_till_done()
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
+        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
+    ]
+    assert msg["event"]["partial"] is True
+
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert "partial" not in msg["event"]
     assert msg["event"]["events"] == []
+
+    _cycle_entities()
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+    _cycle_entities()
+    await get_instance(hass).async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {"entity_id": "sensor.keep", "state": "on", "when": ANY},
+        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
+        {"entity_id": "sensor.keep_two", "state": "on", "when": ANY},
+        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
+    ]
     assert "partial" not in msg["event"]
 
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
@@ -2438,18 +2486,15 @@ async def test_subscribe_entities_some_have_uom_multiple(
         {"entity_id": "sensor.keep", "state": "off", "when": ANY},
         {"entity_id": "sensor.keep_two", "state": "on", "when": ANY},
         {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
-        {"entity_id": "sensor.keep", "state": "on", "when": ANY},
-        {"entity_id": "sensor.keep", "state": "off", "when": ANY},
-        {"entity_id": "sensor.keep_two", "state": "on", "when": ANY},
-        {"entity_id": "sensor.keep_two", "state": "off", "when": ANY},
     ]
+
     assert "partial" not in msg["event"]
 
     await websocket_client.close()
     await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -2466,7 +2511,6 @@ async def test_logbook_stream_ignores_forced_updates(
     )
 
     await hass.async_block_till_done()
-    init_count = sum(hass.bus.async_listeners().values())
 
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
     hass.states.async_set("binary_sensor.is_light", STATE_OFF)
@@ -2475,6 +2519,7 @@ async def test_logbook_stream_ignores_forced_updates(
 
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
+    init_listeners = hass.bus.async_listeners()
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )
@@ -2563,7 +2608,7 @@ async def test_logbook_stream_ignores_forced_updates(
     assert msg["success"]
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -2596,7 +2641,9 @@ async def test_subscribe_all_entities_are_continuous_with_device(
         hass.bus.async_fire("mock_event", {"device_id": device.id})
         hass.bus.async_fire("mock_event", {"device_id": device2.id})
 
-    init_count = sum(hass.bus.async_listeners().values())
+    # We will compare event subscriptions after closing the websocket connection,
+    # count the listeners before setting it up
+    init_listeners = hass.bus.async_listeners()
     _create_events()
 
     await async_wait_recording_done(hass)
@@ -2656,4 +2703,4 @@ async def test_subscribe_all_entities_are_continuous_with_device(
     await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
-    assert sum(hass.bus.async_listeners().values()) == init_count
+    assert hass.bus.async_listeners() == init_listeners

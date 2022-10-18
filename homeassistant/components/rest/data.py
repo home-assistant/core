@@ -63,12 +63,18 @@ class RestData:
                 headers=rendered_headers,
                 params=rendered_params,
                 auth=self._auth,
-                data=self._request_data,
+                content=self._request_data,
                 timeout=self._timeout,
                 follow_redirects=True,
             )
             self.data = response.text
             self.headers = response.headers
+        except httpx.TimeoutException as ex:
+            if log_errors:
+                _LOGGER.error("Timeout while fetching data: %s", self._resource)
+            self.last_exception = ex
+            self.data = None
+            self.headers = None
         except httpx.RequestError as ex:
             if log_errors:
                 _LOGGER.error(

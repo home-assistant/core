@@ -10,8 +10,9 @@ from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
     TEMP_CELSIUS,
     ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
@@ -88,7 +89,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
         """Return the target temperature."""
         return self._value
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Do nothing as devolo devices do not support changing the hvac mode."""
 
     def set_temperature(self, **kwargs: Any) -> None:

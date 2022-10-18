@@ -9,20 +9,35 @@
       },
       "authorize": {
         "title": "Authorize Sony Bravia TV",
-        "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Unregister remote device.",
+        "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Deregister remote device. \n\nYou can use PSK (Pre-Shared-Key) instead of PIN. PSK is a user-defined secret key used for access control. This authentication method is recommended as more stable. To enable PSK on your TV, go to: Settings -> Network -> Home Network Setup -> IP Control. Then check «Use PSK authentication» box and enter your PSK instead of PIN.",
         "data": {
-          "pin": "[%key:common::config_flow::data::pin%]"
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "use_psk": "Use PSK authentication"
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "reauth_confirm": {
+        "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Deregister remote device. \n\nYou can use PSK (Pre-Shared-Key) instead of PIN. PSK is a user-defined secret key used for access control. This authentication method is recommended as more stable. To enable PSK on your TV, go to: Settings -> Network -> Home Network Setup -> IP Control. Then check «Use PSK authentication» box and enter your PSK instead of PIN.",
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]",
+          "use_psk": "Use PSK authentication"
         }
       }
     },
     "error": {
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unsupported_model": "Your TV model is not supported."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_ip_control": "IP Control is disabled on your TV or the TV is not supported."
+      "no_ip_control": "IP Control is disabled on your TV or the TV is not supported.",
+      "not_bravia_device": "The device is not a Bravia TV.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
     }
   },
   "options": {

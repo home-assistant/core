@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
+
+from aiounifi.models.device import DeviceUpgradeRequest
 
 from homeassistant.components.update import (
     DOMAIN,
@@ -61,8 +64,7 @@ def add_device_update_entities(controller, async_add_entities, devices):
         device = controller.api.devices[mac]
         entities.append(UniFiDeviceUpdateEntity(device, controller))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
@@ -71,13 +73,17 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
     DOMAIN = DOMAIN
     TYPE = DEVICE_UPDATE
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     def __init__(self, device, controller):
         """Set up device update entity."""
         super().__init__(device, controller)
 
         self.device = self._item
+
+        self._attr_supported_features = UpdateEntityFeature.PROGRESS
+
+        if self.controller.site_role == "admin":
+            self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
     @property
     def name(self) -> str:
@@ -126,3 +132,9 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
 
     async def options_updated(self) -> None:
         """No action needed."""
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        await self.controller.api.request(DeviceUpgradeRequest.create(self.device.mac))

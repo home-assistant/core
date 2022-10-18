@@ -7,10 +7,20 @@
             "switchbot_unsupported_type": "Toetamata Switchboti t\u00fc\u00fcp.",
             "unknown": "Ootamatu t\u00f5rge"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({address})",
         "step": {
+            "confirm": {
+                "description": "Kas seadistada {name} ?"
+            },
+            "password": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Seade {name} n\u00f5uab salas\u00f5na"
+            },
             "user": {
                 "data": {
+                    "address": "Seadme aadress",
                     "mac": "Seadme MAC-aadress",
                     "name": "Nimi",
                     "password": "Salas\u00f5na"

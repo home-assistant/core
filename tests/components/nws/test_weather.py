@@ -17,8 +17,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.nws.const import (
+from .const import (
     EXPECTED_FORECAST_IMPERIAL,
     EXPECTED_FORECAST_METRIC,
     NONE_FORECAST,
@@ -27,6 +26,8 @@ from tests.components.nws.const import (
     WEATHER_EXPECTED_OBSERVATION_IMPERIAL,
     WEATHER_EXPECTED_OBSERVATION_METRIC,
 )
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

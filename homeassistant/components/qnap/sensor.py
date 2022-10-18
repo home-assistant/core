@@ -330,7 +330,7 @@ class QNAPSensor(SensorEntity):
             )
         return f"{server_name} {self.entity_description.name}"
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data for the states."""
         self._api.update()
 

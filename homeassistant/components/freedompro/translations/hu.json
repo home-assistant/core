@@ -12,7 +12,7 @@
                 "data": {
                     "api_key": "API kulcs"
                 },
-                "description": "K\u00e9rj\u00fck, adja meg a https://home.freedompro.eu webhelyr\u0151l kapott API-kulcsot",
+                "description": "K\u00e9rem, adja meg a https://home.freedompro.eu webhelyr\u0151l kapott API-kulcsot",
                 "title": "Freedompro API kulcs"
             }
         }

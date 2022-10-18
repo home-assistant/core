@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_device": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_configured_local_device": "A helyi eszk\u00f6z\u00f6k m\u00e1r konfigur\u00e1lva vannak. K\u00e9rj\u00fck, el\u0151sz\u00f6r t\u00e1vol\u00edtsa el ezeket, miel\u0151tt konfigur\u00e1lja a felh\u0151alap\u00fa eszk\u00f6zt.",
+            "already_configured_local_device": "A helyi eszk\u00f6z\u00f6k m\u00e1r konfigur\u00e1lva vannak. K\u00e9rem, el\u0151sz\u00f6r t\u00e1vol\u00edtsa el ezeket a rendszerb\u0151l, miel\u0151tt bekonfigur\u00e1lja \u0151ket felh\u0151 alapon.",
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a hiteles\u00edt\u00e9si URL gener\u00e1l\u00e1sa sor\u00e1n.",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_mdns": "Nem t\u00e1mogatott eszk\u00f6z a Smappee integr\u00e1ci\u00f3hoz.",

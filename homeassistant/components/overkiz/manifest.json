@@ -1,9 +1,9 @@
 {
   "domain": "overkiz",
-  "name": "Overkiz (by Somfy)",
+  "name": "Overkiz",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/overkiz",
-  "requirements": ["pyoverkiz==1.4.2"],
+  "requirements": ["pyoverkiz==1.5.5"],
   "zeroconf": [
     {
       "type": "_kizbox._tcp.local.",

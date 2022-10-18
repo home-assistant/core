@@ -17,5 +17,11 @@
                 "title": "Az integr\u00e1ci\u00f3 \u00fajb\u00f3li azonos\u00edt\u00e1sa"
             }
         }
+    },
+    "issues": {
+        "removed_yaml": {
+            "description": "A Honeywell Lyric YAML-ben megadott konfigur\u00e1ci\u00f3ja elt\u00e1vol\u00edt\u00e1sra ker\u00fcl.\n\nA megl\u00e9v\u0151 YAML konfigur\u00e1ci\u00f3t a Home Assistant nem haszn\u00e1lja.\n\nA probl\u00e9ma megold\u00e1s\u00e1hoz t\u00e1vol\u00edtsa el a YAML konfigur\u00e1ci\u00f3t a configuration.yaml f\u00e1jlb\u00f3l, \u00e9s ind\u00edtsa \u00fajra a Home Assistantot.",
+            "title": "A Honeywell Lyric YAML konfigur\u00e1ci\u00f3 elt\u00e1vol\u00edt\u00e1sra ker\u00fcl"
+        }
     }
 }

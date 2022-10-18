@@ -27,8 +27,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
+from . import init_integration
+
 from tests.common import async_fire_time_changed, load_fixture
-from tests.components.accuweather import init_integration
 
 
 async def test_weather_without_forecast(hass):

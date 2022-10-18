@@ -3,7 +3,7 @@
   "name": "Nettigo Air Monitor",
   "documentation": "https://www.home-assistant.io/integrations/nam",
   "codeowners": ["@bieniu"],
-  "requirements": ["nettigo-air-monitor==1.3.0"],
+  "requirements": ["nettigo-air-monitor==1.4.2"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

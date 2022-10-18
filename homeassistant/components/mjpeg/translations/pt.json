@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nome",
+                    "password": "Palavra-passe"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador",
+                    "verify_ssl": "Verificar o certificado SSL"
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
             "no_units": "Det gick inte att hitta n\u00e5gra HVAC-enheter i CoolMasterNet-v\u00e4rden."
         },
         "step": {

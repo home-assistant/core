@@ -12,7 +12,7 @@ MODEL = "yellow"
 
 
 @callback
-def async_info(hass: HomeAssistant) -> HardwareInfo:
+def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
     if (os_info := get_os_info(hass)) is None:
         raise HomeAssistantError
@@ -22,13 +22,16 @@ def async_info(hass: HomeAssistant) -> HardwareInfo:
     if not board == "yellow":
         raise HomeAssistantError
 
-    return HardwareInfo(
-        board=BoardInfo(
-            hassio_board_id=board,
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            revision=None,
-        ),
-        name=BOARD_NAME,
-        url=None,
-    )
+    return [
+        HardwareInfo(
+            board=BoardInfo(
+                hassio_board_id=board,
+                manufacturer=MANUFACTURER,
+                model=MODEL,
+                revision=None,
+            ),
+            dongle=None,
+            name=BOARD_NAME,
+            url=None,
+        )
+    ]

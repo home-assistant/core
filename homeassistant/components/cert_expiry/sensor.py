@@ -19,6 +19,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import CertExpiryDataUpdateCoordinator
 from .const import DEFAULT_PORT, DOMAIN
 
 SCAN_INTERVAL = timedelta(hours=12)
@@ -57,7 +58,9 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add cert-expiry entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -88,7 +91,10 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    def __init__(self, coordinator) -> None:
+    def __init__(
+        self,
+        coordinator: CertExpiryDataUpdateCoordinator,
+    ) -> None:
         """Initialize a Cert Expiry timestamp sensor."""
         super().__init__(coordinator)
         self._attr_name = f"Cert Expiry Timestamp ({coordinator.name})"

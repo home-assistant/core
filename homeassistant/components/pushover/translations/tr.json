@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131",
+            "invalid_user_key": "Ge\u00e7ersiz kullan\u0131c\u0131 anahtar\u0131"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
+                "title": "Entegrasyonu Yeniden Do\u011frula"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "name": "Ad",
+                    "user_key": "Kullan\u0131c\u0131 anahtar\u0131"
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "YAML kullanarak Pushover'\u0131 yap\u0131land\u0131rma kald\u0131r\u0131l\u0131yor. \n\n Mevcut YAML yap\u0131land\u0131rman\u0131z otomatik olarak kullan\u0131c\u0131 aray\u00fcz\u00fcne aktar\u0131ld\u0131. \n\n Pushover YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu gidermek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "Pushover YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131l\u0131yor"
+        }
+    }
+}

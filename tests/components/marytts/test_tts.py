@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import media_source, tts
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,

@@ -21,7 +21,6 @@ from .const import (
     DEFAULT_COAP_PORT,
     DOMAIN,
     LOGGER,
-    MAX_RPC_KEY_INSTANCES,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
@@ -271,7 +270,9 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
         entity_name = device.config[key].get("name", device_name)
 
     if entity_name is None:
-        return f"{device_name} {key.replace(':', '_')}"
+        if [k for k in key if k.startswith(("input", "switch"))]:
+            return f"{device_name} {key.replace(':', '_')}"
+        return device_name
 
     return entity_name
 
@@ -301,31 +302,17 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
 
-    keys_list: list[str] = []
-    for i in range(MAX_RPC_KEY_INSTANCES):
-        key_inst = f"{key}:{i}"
-        if key_inst not in keys_dict:
-            return keys_list
-
-        keys_list.append(key_inst)
-
-    return keys_list
+    return [k for k in keys_dict if k.startswith(key)]
 
 
 def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     """Return list of key ids for RPC device from a dict."""
-    key_ids: list[int] = []
-    for i in range(MAX_RPC_KEY_INSTANCES):
-        key_inst = f"{key}:{i}"
-        if key_inst not in keys_dict:
-            return key_ids
-
-        key_ids.append(i)
-
-    return key_ids
+    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(key)]
 
 
-def is_rpc_momentary_input(config: dict[str, Any], key: str) -> bool:
+def is_rpc_momentary_input(
+    config: dict[str, Any], status: dict[str, Any], key: str
+) -> bool:
     """Return true if rpc input button settings is set to a momentary type."""
     return cast(bool, config[key]["type"] == "button")
 
@@ -342,6 +329,13 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return con_types is not None and con_types[channel].lower().startswith("light")
 
 
+def is_rpc_device_externally_powered(
+    config: dict[str, Any], status: dict[str, Any], key: str
+) -> bool:
+    """Return true if device has external power instead of battery."""
+    return cast(bool, status[key]["external"]["present"])
+
+
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
     """Return list of input triggers for RPC device."""
     triggers = []
@@ -350,7 +344,7 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
     for id_ in key_ids:
         key = f"input:{id_}"
-        if not is_rpc_momentary_input(device.config, key):
+        if not is_rpc_momentary_input(device.config, device.status, key):
             continue
 
         for trigger_type in RPC_INPUTS_EVENTS_TYPES:

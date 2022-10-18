@@ -105,6 +105,7 @@ refresh_value:
       selector:
         entity:
           integration: zwave_js
+          multiple: true
     refresh_all_values:
       name: Refresh all values?
       description: Whether to refresh all values (true) or just the primary value (false)

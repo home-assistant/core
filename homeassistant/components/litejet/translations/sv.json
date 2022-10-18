@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+        },
+        "error": {
+            "open_failed": "Kan inte \u00f6ppna den angivna seriella porten."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Anslut LiteJets RS232-2-port till din dator och ange s\u00f6kv\u00e4gen till den seriella portenheten. \n\n LiteJet MCP m\u00e5ste konfigureras f\u00f6r 19,2 K baud, 8 databitar, 1 stoppbit, ingen paritet och att s\u00e4nda ett \"CR\" efter varje svar.",
+                "title": "Anslut till LiteJet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Standard\u00f6verg\u00e5ng (sekunder)"
+                },
+                "title": "Konfigurera LiteJet"
+            }
+        }
+    }
+}

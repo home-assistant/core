@@ -50,11 +50,12 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
@@ -63,6 +64,7 @@ from .const import (
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_FANS,
+    CONF_HUB,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
@@ -266,7 +268,7 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
-            [CALL_TYPE_COIL, CALL_TYPE_DISCRETE]
+            [CALL_TYPE_COIL, CALL_TYPE_DISCRETE, CALL_TYPE_REGISTER_HOLDING]
         ),
         vol.Optional(CONF_SLAVE_COUNT, default=0): cv.positive_int,
     }

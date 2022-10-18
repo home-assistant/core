@@ -1,7 +1,7 @@
 {
     "state": {
         "wled__live_override": {
-            "0": "Izklju\u010den",
+            "0": "Izklopljen",
             "1": "Vklopljen",
             "2": "Dokler se naprava znova ne za\u017eene"
         }

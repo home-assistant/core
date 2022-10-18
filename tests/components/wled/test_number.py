@@ -5,10 +5,12 @@ from unittest.mock import MagicMock
 import pytest
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
-from homeassistant.components.number import ATTR_MAX, ATTR_MIN, DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
+    ATTR_MAX,
+    ATTR_MIN,
     ATTR_STEP,
     ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.wled.const import SCAN_INTERVAL

@@ -4,7 +4,9 @@
             "address_already_configured": "ElkM1 s touto adresou je ji\u017e nastaven",
             "already_configured": "ElkM1 s t\u00edmto prefixem je ji\u017e nastaven",
             "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",

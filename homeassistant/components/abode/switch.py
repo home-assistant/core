@@ -25,14 +25,16 @@ async def async_setup_entry(
     """Set up Abode switch devices."""
     data: AbodeSystem = hass.data[DOMAIN]
 
-    entities: list[SwitchEntity] = []
+    entities: list[SwitchEntity] = [
+        AbodeSwitch(data, device)
+        for device_type in DEVICE_TYPES
+        for device in data.abode.get_devices(generic_type=device_type)
+    ]
 
-    for device_type in DEVICE_TYPES:
-        for device in data.abode.get_devices(generic_type=device_type):
-            entities.append(AbodeSwitch(data, device))
-
-    for automation in data.abode.get_automations():
-        entities.append(AbodeAutomationSwitch(data, automation))
+    entities.extend(
+        AbodeAutomationSwitch(data, automation)
+        for automation in data.abode.get_automations()
+    )
 
     async_add_entities(entities)
 

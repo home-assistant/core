@@ -3,6 +3,7 @@ import logging
 
 from blebox_uniapi.box import Box
 from blebox_uniapi.error import Error
+from blebox_uniapi.feature import Feature
 from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +18,6 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.AIR_QUALITY,
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
@@ -83,7 +83,7 @@ def create_blebox_entities(
 class BleBoxEntity(Entity):
     """Implements a common class for entities representing a BleBox feature."""
 
-    def __init__(self, feature):
+    def __init__(self, feature: Feature) -> None:
         """Initialize a BleBox entity."""
         self._feature = feature
         self._attr_name = feature.full_name
@@ -97,7 +97,7 @@ class BleBoxEntity(Entity):
             sw_version=product.firmware_version,
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity state."""
         try:
             await self._feature.async_update()

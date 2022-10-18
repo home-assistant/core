@@ -26,7 +26,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.6.0"]
+REQUIREMENTS = ["pyotp==2.7.0"]
 
 CONF_MESSAGE = "message"
 
@@ -320,6 +320,7 @@ class NotifySetupFlow(SetupFlow):
         errors: dict[str, str] = {}
 
         hass = self._auth_module.hass
+        assert self._secret and self._count
         if user_input:
             verified = await hass.async_add_executor_job(
                 _verify_otp, self._secret, user_input["code"], self._count
@@ -334,7 +335,6 @@ class NotifySetupFlow(SetupFlow):
             errors["base"] = "invalid_code"
 
         # generate code every time, no retry logic
-        assert self._secret and self._count
         code = await hass.async_add_executor_job(
             _generate_otp, self._secret, self._count
         )

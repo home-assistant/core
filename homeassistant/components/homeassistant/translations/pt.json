@@ -10,6 +10,7 @@
             "os_version": "Vers\u00e3o do Sistema Operativo",
             "python_version": "Vers\u00e3o Python",
             "timezone": "Fuso hor\u00e1rio",
+            "user": "Utilizador",
             "version": "Vers\u00e3o",
             "virtualenv": "Ambiente Virtual"
         }

@@ -11,7 +11,9 @@
             "user": {
                 "data": {
                     "host": "IP-adress"
-                }
+                },
+                "description": "Anslut till v\u00e4xelriktare",
+                "title": "GoodWe v\u00e4xelriktare"
             }
         }
     }

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nome",
+                    "tariffs": "Tarifas suportadas"
+                },
+                "description": "Criar um sensor que monitorize o consumo de v\u00e1rias utilidades (por exemplo, energia, g\u00e1s, \u00e1gua, aquecimento) durante um per\u00edodo configurado, tipicamente mensal. O sensor de contador de utilidades (utility_meter) suporta opcionalmente a divis\u00e3o do consumo por tarifas; nesse caso \u00e9 criado um sensor para cada tarifa, bem como uma entidade selecionada para escolher a tarifa atual."
+            }
+        }
+    }
+}

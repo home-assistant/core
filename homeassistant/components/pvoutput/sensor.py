@@ -47,7 +47,7 @@ class PVOutputSensorEntityDescription(
 SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="energy_consumption",
-        name="Energy Consumed",
+        name="Energy consumed",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -55,7 +55,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     ),
     PVOutputSensorEntityDescription(
         key="energy_generation",
-        name="Energy Generated",
+        name="Energy generated",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -70,7 +70,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     ),
     PVOutputSensorEntityDescription(
         key="power_consumption",
-        name="Power Consumed",
+        name="Power consumed",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -78,7 +78,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     ),
     PVOutputSensorEntityDescription(
         key="power_generation",
-        name="Power Generated",
+        name="Power generated",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -129,6 +129,7 @@ class PVOutputSensorEntity(
     """Representation of a PVOutput sensor."""
 
     entity_description: PVOutputSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,

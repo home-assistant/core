@@ -4,15 +4,15 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.31.0",
+    "bellows==0.34.2",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.77",
-    "zigpy-deconz==0.18.0",
-    "zigpy==0.47.2",
-    "zigpy-xbee==0.15.0",
-    "zigpy-zigate==0.9.0",
-    "zigpy-znp==0.8.0"
+    "zha-quirks==0.0.83",
+    "zigpy-deconz==0.19.0",
+    "zigpy==0.51.3",
+    "zigpy-xbee==0.16.2",
+    "zigpy-zigate==0.10.2",
+    "zigpy-znp==0.9.1"
   ],
   "usb": [
     {
@@ -20,6 +20,12 @@
       "pid": "EA60",
       "description": "*2652*",
       "known_devices": ["slae.sh cc2652rb stick"]
+    },
+    {
+      "vid": "1A86",
+      "pid": "55D4",
+      "description": "*sonoff*plus*",
+      "known_devices": ["sonoff zigbee dongle plus v2"]
     },
     {
       "vid": "10C4",
@@ -85,8 +91,13 @@
     {
       "type": "_zigate-zigbee-gateway._tcp.local.",
       "name": "*zigate*"
+    },
+    {
+      "type": "_zigstar_gw._tcp.local.",
+      "name": "*zigstar*"
     }
   ],
+  "dependencies": ["file_upload"],
   "after_dependencies": ["onboarding", "usb", "zeroconf"],
   "iot_class": "local_polling",
   "loggers": [

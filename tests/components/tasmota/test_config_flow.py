@@ -1,6 +1,6 @@
 """Test config flow."""
 from homeassistant import config_entries
-from homeassistant.components import mqtt
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -19,7 +19,7 @@ async def test_mqtt_abort_if_existing_entry(hass, mqtt_mock):
 
 async def test_mqtt_abort_invalid_topic(hass, mqtt_mock):
     """Check MQTT flow aborts if discovery topic is invalid."""
-    discovery_info = mqtt.MqttServiceInfo(
+    discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/bla",
         payload=(
             '{"ip":"192.168.0.136","dn":"Tasmota","fn":["Tasmota",null,null,null,null,'
@@ -42,7 +42,7 @@ async def test_mqtt_abort_invalid_topic(hass, mqtt_mock):
     assert result["type"] == "abort"
     assert result["reason"] == "invalid_discovery_info"
 
-    discovery_info = mqtt.MqttServiceInfo(
+    discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/config",
         payload="",
         qos=0,
@@ -56,7 +56,7 @@ async def test_mqtt_abort_invalid_topic(hass, mqtt_mock):
     assert result["type"] == "abort"
     assert result["reason"] == "invalid_discovery_info"
 
-    discovery_info = mqtt.MqttServiceInfo(
+    discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/config",
         payload=(
             '{"ip":"192.168.0.136","dn":"Tasmota","fn":["Tasmota",null,null,null,null,'
@@ -81,7 +81,7 @@ async def test_mqtt_abort_invalid_topic(hass, mqtt_mock):
 
 async def test_mqtt_setup(hass, mqtt_mock) -> None:
     """Test we can finish a config flow through MQTT with custom prefix."""
-    discovery_info = mqtt.MqttServiceInfo(
+    discovery_info = MqttServiceInfo(
         topic="tasmota/discovery/DC4F220848A2/config",
         payload=(
             '{"ip":"192.168.0.136","dn":"Tasmota","fn":["Tasmota",null,null,null,null,'

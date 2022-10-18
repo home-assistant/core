@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "name": "Nome"
+                },
+                "title": "Localiza\u00e7\u00e3o"
+            }
+        }
+    }
+}

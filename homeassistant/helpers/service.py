@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
 from typing_extensions import TypeGuard
 import voluptuous as vol
@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
     ENTITY_MATCH_ALL,
@@ -31,13 +32,7 @@ from homeassistant.exceptions import (
     Unauthorized,
     UnknownUser,
 )
-from homeassistant.loader import (
-    MAX_LOAD_CONCURRENTLY,
-    Integration,
-    async_get_integration,
-    bind_hass,
-)
-from homeassistant.util.async_ import gather_with_concurrency
+from homeassistant.loader import Integration, async_get_integrations, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -54,9 +49,10 @@ if TYPE_CHECKING:
     from .entity import Entity
     from .entity_platform import EntityPlatform
 
+    _EntityT = TypeVar("_EntityT", bound=Entity)
+
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
-CONF_SERVICE_DATA_TEMPLATE = "data_template"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -282,10 +278,10 @@ def extract_entity_ids(
 @bind_hass
 async def async_extract_entities(
     hass: HomeAssistant,
-    entities: Iterable[Entity],
+    entities: Iterable[_EntityT],
     service_call: ServiceCall,
     expand_group: bool = True,
-) -> list[Entity]:
+) -> list[_EntityT]:
     """Extract a list of entity objects from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -467,10 +463,12 @@ async def async_get_all_descriptions(
     loaded = {}
 
     if missing:
-        integrations = await gather_with_concurrency(
-            MAX_LOAD_CONCURRENTLY,
-            *(async_get_integration(hass, domain) for domain in missing),
-        )
+        ints_or_excs = await async_get_integrations(hass, missing)
+        integrations = [
+            int_or_exc
+            for int_or_exc in ints_or_excs.values()
+            if isinstance(int_or_exc, Integration)
+        ]
 
         contents = await hass.async_add_executor_job(
             _load_services_files, hass, integrations

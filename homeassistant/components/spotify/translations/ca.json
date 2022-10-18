@@ -19,6 +19,12 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "La configuraci\u00f3 de Spotify mitjan\u00e7ant YAML s'ha eliminat de Home Assistant.\n\nHome Assistant ja no utilitza la configuraci\u00f3 YAML existent.\n\nElimina la configuraci\u00f3 YAML corresponent del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "S'ha eliminat la configuraci\u00f3 YAML de Spotify"
+        }
+    },
     "system_health": {
         "info": {
             "api_endpoint_reachable": "Endpoint de l'API d'Spotify accessible"

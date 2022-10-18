@@ -192,7 +192,6 @@ async def async_setup_entry(
                 calendar_id,
                 data.get(CONF_SEARCH),
             )
-            await coordinator.async_config_entry_first_refresh()
             entities.append(
                 GoogleCalendarEntity(
                     coordinator,
@@ -342,6 +341,9 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+        # We do not ask for an update with async_add_entities()
+        # because it will update disabled entities
+        await self.coordinator.async_request_refresh()
         self._apply_coordinator_update()
 
     async def async_get_events(
@@ -357,7 +359,8 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     def _apply_coordinator_update(self) -> None:
         """Copy state from the coordinator to this entity."""
         events = self.coordinator.data
-        self._event = _get_calendar_event(next(iter(events))) if events else None
+        api_event = next(filter(self._event_filter, iter(events)), None)
+        self._event = _get_calendar_event(api_event) if api_event else None
         if self._event:
             (self._event.summary, self._offset_value) = extract_offset(
                 self._event.summary, self._offset

@@ -30,7 +30,6 @@ COMMENT_REQUIREMENTS = (
     "opencv-python-headless",
     "pybluez",
     "pycups",
-    "pySwitchmate",
     "python-eq3bt",
     "python-gammu",
     "python-lirc",
@@ -69,8 +68,8 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.46.1
-grpcio-status==1.46.1
+grpcio==1.48.0
+grpcio-status==1.48.0
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -106,7 +105,7 @@ httpcore==0.15.0
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.23.1
+numpy==1.23.2
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
@@ -125,13 +124,23 @@ multidict>=6.0.2
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
 
-# Pin backoff for compatibility until most libraries have been updated
-# https://github.com/home-assistant/core/pull/70817
-backoff<2.0
+# Version 2.0 added typing, prevent accidental fallbacks
+backoff>=2.0
 
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
 pydantic!=1.9.1
+
+# Breaks asyncio
+# https://github.com/pubnub/python/issues/130
+pubnub!=6.4.0
+
+# Package's __init__.pyi stub has invalid syntax and breaks mypy
+# https://github.com/dahlia/iso4217/issues/16
+iso4217!=1.10.20220401
+
+# Pandas 1.4.4 has issues with wheels om armhf + Py3.10
+pandas==1.4.3
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

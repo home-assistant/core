@@ -110,11 +110,11 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
                     self._evo_device.set_dhw_off(until=until)
                 )
 
-    async def async_turn_away_mode_on(self):
+    async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
 
-    async def async_turn_away_mode_off(self):
+    async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
 

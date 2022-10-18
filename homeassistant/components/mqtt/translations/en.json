@@ -49,6 +49,12 @@
             "button_triple_press": "\"{subtype}\" triple clicked"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Manually configured MQTT {platform}(s) found under platform key `{platform}`.\n\nPlease move the configuration to the `mqtt` integration key and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information.",
+            "title": "Your manually configured MQTT {platform}(s) needs attention"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Invalid birth topic.",

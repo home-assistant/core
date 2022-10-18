@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "Identyfikator projektu dost\u0119pu do urz\u0105dzenia"
                 },
-                "description": "Utw\u00f3rz projekt dost\u0119pu do urz\u0105dzenia Nest, kt\u00f3rego konfiguracja **wymaga op\u0142aty w wysoko\u015bci 5 dolar\u00f3w**.\n1. Przejd\u017a do [Konsoli dost\u0119pu do urz\u0105dzenia]({device_access_console_url}) i przejd\u017a przez proces p\u0142atno\u015bci.\n2. Kliknij **Utw\u00f3rz projekt**.\n3. Nadaj projektowi dost\u0119pu do urz\u0105dzenia nazw\u0119 i kliknij **Dalej**.\n4. Wprowad\u017a sw\u00f3j identyfikator klienta OAuth\n5. W\u0142\u0105cz wydarzenia, klikaj\u0105c **W\u0142\u0105cz** i **Utw\u00f3rz projekt**. \n\nPod ([wi\u0119cej informacji]({more_info_url})) wpisz sw\u00f3j identyfikator projektu dost\u0119pu do urz\u0105dzenia.\n",
+                "description": "Utw\u00f3rz projekt dost\u0119pu do urz\u0105dzenia Nest, kt\u00f3rego konfiguracja **wymaga op\u0142aty w Google w wysoko\u015bci 5 dolar\u00f3w**.\n1. Przejd\u017a do [Konsoli dost\u0119pu do urz\u0105dzenia]({device_access_console_url}) i przejd\u017a przez proces p\u0142atno\u015bci.\n2. Kliknij **Utw\u00f3rz projekt**.\n3. Nadaj projektowi dost\u0119pu do urz\u0105dzenia nazw\u0119 i kliknij **Dalej**.\n4. Wprowad\u017a sw\u00f3j identyfikator klienta OAuth\n5. W\u0142\u0105cz wydarzenia, klikaj\u0105c **W\u0142\u0105cz** i **Utw\u00f3rz projekt**. \n\nPod ([wi\u0119cej informacji]({more_info_url})) wpisz sw\u00f3j identyfikator projektu dost\u0119pu do urz\u0105dzenia.\n",
                 "title": "Nest: Utw\u00f3rz projekt dost\u0119pu do urz\u0105dzenia"
             },
             "device_project_upgrade": {
@@ -95,6 +95,16 @@
             "camera_person": "nast\u0105pi wykrycie osoby",
             "camera_sound": "nast\u0105pi wykrycie d\u017awi\u0119ku",
             "doorbell_chime": "dzwonek zostanie wci\u015bni\u0119ty"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Konfiguracja Nest w configuration.yaml zostanie usuni\u0119ta w Home Assistant 2022.10. \n\nTwoje istniej\u0105ce po\u015bwiadczenia aplikacji OAuth i ustawienia dost\u0119pu zosta\u0142y automatycznie zaimportowane do interfejsu u\u017cytkownika. Usu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Konfiguracja YAML dla Nest zostanie usuni\u0119ta"
+        },
+        "removed_app_auth": {
+            "description": "Aby poprawi\u0107 bezpiecze\u0144stwo i zmniejszy\u0107 ryzyko phishingu, Google wycofa\u0142o metod\u0119 uwierzytelniania u\u017cywan\u0105 przez Home Assistanta.\n\n **Wymaga to podj\u0119cia przez Ciebie dzia\u0142ania** ([wi\u0119cej informacji]({more_info_url})) \n\n1. Odwied\u017a stron\u0119 integracji\n2. Kliknij Zmie\u0144 konfiguracj\u0119 w integracji Nest.\n3. Home Assistant przeprowadzi Ci\u0119 przez kolejne etapy aktualizacji do uwierzytelniania internetowego. \n\nZobacz [instrukcj\u0119 integracji] Nest ({documentation_url}), aby uzyska\u0107 informacje na temat rozwi\u0105zywania problem\u00f3w.",
+            "title": "Dane uwierzytelniaj\u0105ce Nest musz\u0105 zosta\u0107 zaktualizowane"
         }
     }
 }

@@ -1,6 +1,8 @@
 """Support for XS1 switches."""
 from __future__ import annotations
 
+from typing import Any
+
 from xs1_api_client.api_constants import ActuatorType
 
 from homeassistant.components.switch import SwitchEntity
@@ -43,10 +45,10 @@ class XS1SwitchEntity(XS1DeviceEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.device.value() == 100
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self.device.turn_on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self.device.turn_off()

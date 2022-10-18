@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete",
+            "no_unconfigured_devices": "Nessun dispositivo non configurato trovato."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_key_format": "La chiave offline deve essere una stringa esadecimale di 32 byte.",
+            "invalid_key_index": "Lo slot della chiave offline deve essere un numero intero compreso tra 0 e 255.",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "integration_discovery_confirm": {
+                "description": "Vuoi configurare {name} tramite Bluetooth con l'indirizzo {address}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Indirizzo Bluetooth",
+                    "key": "Chiave offline (stringa esadecimale a 32 byte)",
+                    "slot": "Slot chiave offline (numero intero compreso tra 0 e 255)"
+                },
+                "description": "Controlla la documentazione su come trovare la chiave offline"
+            }
+        }
+    }
+}

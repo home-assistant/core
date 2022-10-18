@@ -63,7 +63,7 @@ async def test_sensors(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:speedometer"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
-    assert state.state == "2796"
+    assert state.state == "2795"
     entry = entity_registry.async_get("sensor.my_mazda3_odometer")
     assert entry
     assert entry.unique_id == "JM000000000000000_odometer"

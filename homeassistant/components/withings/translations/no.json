@@ -27,6 +27,10 @@
             "reauth": {
                 "description": "Profilen {profile} m\u00e5 godkjennes p\u00e5 nytt for \u00e5 kunne fortsette \u00e5 motta Withings-data.",
                 "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "reauth_confirm": {
+                "description": "Profilen {profile} m\u00e5 godkjennes p\u00e5 nytt for \u00e5 kunne fortsette \u00e5 motta Withings-data.",
+                "title": "Re-autentiser integrasjon"
             }
         }
     }

@@ -48,15 +48,16 @@ async def async_setup_entry(
 
     device.events.async_add_listener(async_check_entities)
 
-    return True
-
 
 class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
     """Representation of a binary ONVIF event."""
 
     _attr_should_poll = False
+    _attr_unique_id: str
 
-    def __init__(self, uid, device: ONVIFDevice, entry: er.RegistryEntry | None = None):
+    def __init__(
+        self, uid: str, device: ONVIFDevice, entry: er.RegistryEntry | None = None
+    ) -> None:
         """Initialize the ONVIF binary sensor."""
         self._attr_unique_id = uid
         if entry is not None:
@@ -65,6 +66,7 @@ class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
             self._attr_name = entry.name
         else:
             event = device.events.get_uid(uid)
+            assert event
             self._attr_device_class = event.device_class
             self._attr_entity_category = event.entity_category
             self._attr_entity_registry_enabled_default = event.entity_enabled
@@ -80,7 +82,7 @@ class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
             return event.value
         return self._attr_is_on
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
             self.device.events.async_add_listener(self.async_write_ha_state)

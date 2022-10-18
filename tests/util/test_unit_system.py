@@ -18,7 +18,15 @@ from homeassistant.const import (
     VOLUME_LITERS,
     WIND_SPEED,
 )
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.unit_system import (
+    _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_METRIC,
+    IMPERIAL_SYSTEM,
+    METRIC_SYSTEM,
+    UnitSystem,
+    get_unit_system,
+)
 
 SYSTEM_NAME = "TEST"
 INVALID_UNIT = "INVALID"
@@ -149,7 +157,7 @@ def test_temperature_same_unit():
 
 def test_temperature_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.temperature(5, "abc")
 
 
@@ -170,25 +178,29 @@ def test_temperature_to_imperial():
 
 def test_length_unknown_unit():
     """Test length conversion with unknown from unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.length(5, "fr")
 
 
 def test_length_to_metric():
     """Test length conversion to metric system."""
     assert METRIC_SYSTEM.length(100, METRIC_SYSTEM.length_unit) == 100
-    assert METRIC_SYSTEM.length(5, IMPERIAL_SYSTEM.length_unit) == 8.04672
+    assert METRIC_SYSTEM.length(5, IMPERIAL_SYSTEM.length_unit) == pytest.approx(
+        8.04672
+    )
 
 
 def test_length_to_imperial():
     """Test length conversion to imperial system."""
     assert IMPERIAL_SYSTEM.length(100, IMPERIAL_SYSTEM.length_unit) == 100
-    assert IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit) == 3.106855
+    assert IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit) == pytest.approx(
+        3.106855
+    )
 
 
 def test_wind_speed_unknown_unit():
     """Test wind_speed conversion with unknown from unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.length(5, "turtles")
 
 
@@ -216,7 +228,7 @@ def test_pressure_same_unit():
 
 def test_pressure_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.pressure(5, "K")
 
 
@@ -248,7 +260,7 @@ def test_accumulated_precipitation_same_unit():
 
 def test_accumulated_precipitation_unknown_unit():
     """Test no conversion happens if unknown unit."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         METRIC_SYSTEM.accumulated_precipitation(5, "K")
 
 
@@ -289,7 +301,56 @@ def test_properties():
     assert METRIC_SYSTEM.accumulated_precipitation_unit == LENGTH_MILLIMETERS
 
 
-def test_is_metric():
+@pytest.mark.parametrize(
+    "unit_system, expected_flag",
+    [
+        (METRIC_SYSTEM, True),
+        (IMPERIAL_SYSTEM, False),
+    ],
+)
+def test_is_metric(
+    caplog: pytest.LogCaptureFixture, unit_system: UnitSystem, expected_flag: bool
+):
     """Test the is metric flag."""
-    assert METRIC_SYSTEM.is_metric
-    assert not IMPERIAL_SYSTEM.is_metric
+    assert unit_system.is_metric == expected_flag
+    assert (
+        "Detected code that accesses the `is_metric` property of the unit system."
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "unit_system, expected_name",
+    [
+        (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC),
+        (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL),
+    ],
+)
+def test_deprecated_name(
+    caplog: pytest.LogCaptureFixture, unit_system: UnitSystem, expected_name: str
+) -> None:
+    """Test the name is deprecated."""
+    assert unit_system.name == expected_name
+    assert (
+        "Detected code that accesses the `name` property of the unit system."
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "key, expected_system",
+    [
+        (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
+        (_CONF_UNIT_SYSTEM_IMPERIAL, IMPERIAL_SYSTEM),
+    ],
+)
+def test_get_unit_system(key: str, expected_system: UnitSystem) -> None:
+    """Test get_unit_system."""
+    assert get_unit_system(key) is expected_system
+
+
+@pytest.mark.parametrize("key", [None, "", "invalid_custom"])
+def test_get_unit_system_invalid(key: str) -> None:
+    """Test get_unit_system with an invalid key."""
+    with pytest.raises(ValueError, match=f"`{key}` is not a valid unit system key"):
+        _ = get_unit_system(key)

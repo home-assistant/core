@@ -12,14 +12,14 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Tekan dan tahan tombol Home pada {name} hingga perangkat mengeluarkan suara (sekitar dua detik), lalu kirim dalam waktu 30 detik.",
+                "description": "Pastikan aplikasi iRobot tidak berjalan pada semua perangkat. Tekan dan tahan tombol Home pada {name} hingga perangkat mengeluarkan suara (sekitar dua detik), lalu klik KIRIM dalam waktu 30 detik.",
                 "title": "Ambil Kata Sandi"
             },
             "link_manual": {
                 "data": {
                     "password": "Kata Sandi"
                 },
-                "description": "Kata sandi tidak dapat diambil dari perangkat secara otomatis. Ikuti langkah-langkah yang diuraikan dalam dokumentasi di: {auth_help_url}",
+                "description": "Kata sandi tidak dapat diambil dari perangkat secara otomatis. Pastikan aplikasi iRobot tidak terbuka di semua perangkat saat mencoba mengambil kata sandi. Ikuti langkah-langkah yang diuraikan dalam dokumentasi di: {auth_help_url}",
                 "title": "Masukkan Kata Sandi"
             },
             "manual": {

@@ -31,7 +31,6 @@ INTEGRATION_PLUGINS = [
     application_credentials,
     bluetooth,
     codeowners,
-    config_flow,
     dependencies,
     dhcp,
     json,
@@ -44,6 +43,7 @@ INTEGRATION_PLUGINS = [
     translations,
     usb,
     zeroconf,
+    config_flow,
 ]
 HASS_PLUGINS = [
     coverage,

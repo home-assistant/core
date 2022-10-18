@@ -163,6 +163,7 @@ class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
 
     coordinator: BMWDataUpdateCoordinator
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -182,7 +183,7 @@ class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
             identifiers={(DOMAIN, self.vehicle.vin)},
             manufacturer=vehicle.brand.name,
             model=vehicle.name,
-            name=f"{vehicle.brand.name} {vehicle.name}",
+            name=vehicle.name,
         )
 
     async def async_added_to_hass(self) -> None:

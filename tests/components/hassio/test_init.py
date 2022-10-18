@@ -8,7 +8,12 @@ import pytest
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.hassio import ADDONS_COORDINATOR, DOMAIN, STORAGE_KEY
+from homeassistant.components.hassio import (
+    ADDONS_COORDINATOR,
+    DOMAIN,
+    STORAGE_KEY,
+    async_get_addon_store_info,
+)
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers.device_registry import async_get
@@ -87,7 +92,11 @@ def mock_all(aioclient_mock, request, os_info):
         "http://127.0.0.1/supervisor/info",
         json={
             "result": "ok",
-            "data": {"version_latest": "1.0.0", "version": "1.0.0"},
+            "data": {
+                "version_latest": "1.0.0",
+                "version": "1.0.0",
+                "auto_update": True,
+            },
             "addons": [
                 {
                     "name": "test",
@@ -531,6 +540,7 @@ async def test_device_registry_calls(hass):
     supervisor_mock_data = {
         "version": "1.0.0",
         "version_latest": "1.0.0",
+        "auto_update": True,
         "addons": [
             {
                 "name": "test",
@@ -581,6 +591,7 @@ async def test_device_registry_calls(hass):
     supervisor_mock_data = {
         "version": "1.0.0",
         "version_latest": "1.0.0",
+        "auto_update": True,
         "addons": [
             {
                 "name": "test2",
@@ -615,6 +626,7 @@ async def test_device_registry_calls(hass):
     supervisor_mock_data = {
         "version": "1.0.0",
         "version_latest": "1.0.0",
+        "auto_update": True,
         "addons": [
             {
                 "name": "test2",
@@ -748,3 +760,16 @@ async def test_setup_hardware_integration(hass, aioclient_mock, integration):
 
     assert aioclient_mock.call_count == 15
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_get_store_addon_info(hass, hassio_stubs, aioclient_mock):
+    """Test get store add-on info from Supervisor API."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://127.0.0.1/store/addons/test",
+        json={"result": "ok", "data": {"name": "bla"}},
+    )
+
+    data = await async_get_addon_store_info(hass, "test")
+    assert data["name"] == "bla"
+    assert aioclient_mock.call_count == 1

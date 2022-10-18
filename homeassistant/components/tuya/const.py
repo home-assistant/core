@@ -433,7 +433,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=PERCENTAGE,
-        aliases={"pct", "percent"},
+        aliases={"pct", "percent", "% RH"},
         device_classes={
             SensorDeviceClass.BATTERY,
             SensorDeviceClass.HUMIDITY,

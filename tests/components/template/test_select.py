@@ -7,7 +7,7 @@ from homeassistant.components.input_select import (
     SERVICE_SELECT_OPTION as INPUT_SELECT_SERVICE_SELECT_OPTION,
     SERVICE_SET_OPTIONS,
 )
-from homeassistant.components.select.const import (
+from homeassistant.components.select import (
     ATTR_OPTION as SELECT_ATTR_OPTION,
     ATTR_OPTIONS as SELECT_ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,

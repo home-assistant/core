@@ -18,7 +18,6 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -31,11 +30,10 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import AccuWeatherDataUpdateCoordinator
 from .const import (
@@ -45,8 +43,6 @@ from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
     DOMAIN,
-    MANUFACTURER,
-    NAME,
 )
 
 PARALLEL_UPDATES = 1
@@ -56,11 +52,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add a AccuWeather weather entity from a config_entry."""
-    name: str = entry.data[CONF_NAME]
 
     coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([AccuWeatherEntity(name, coordinator)])
+    async_add_entities([AccuWeatherEntity(coordinator)])
 
 
 class AccuWeatherEntity(
@@ -68,15 +63,15 @@ class AccuWeatherEntity(
 ):
     """Define an AccuWeather entity."""
 
-    def __init__(
-        self, name: str, coordinator: AccuWeatherDataUpdateCoordinator
-    ) -> None:
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: AccuWeatherDataUpdateCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
         # Coordinator data is used also for sensors which don't have units automatically
         # converted, hence the weather entity's native units follow the configured unit
         # system
-        if coordinator.is_metric:
+        if coordinator.hass.config.units is METRIC_SYSTEM:
             self._attr_native_precipitation_unit = LENGTH_MILLIMETERS
             self._attr_native_pressure_unit = PRESSURE_HPA
             self._attr_native_temperature_unit = TEMP_CELSIUS
@@ -90,21 +85,9 @@ class AccuWeatherEntity(
             self._attr_native_temperature_unit = TEMP_FAHRENHEIT
             self._attr_native_visibility_unit = LENGTH_MILES
             self._attr_native_wind_speed_unit = SPEED_MILES_PER_HOUR
-        self._attr_name = name
         self._attr_unique_id = coordinator.location_key
         self._attr_attribution = ATTRIBUTION
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.location_key)},
-            manufacturer=MANUFACTURER,
-            name=NAME,
-            # You don't need to provide specific details for the URL,
-            # so passing in _ characters is fine if the location key
-            # is correct
-            configuration_url="http://accuweather.com/en/"
-            f"_/_/{coordinator.location_key}/"
-            f"weather-forecast/{coordinator.location_key}/",
-        )
+        self._attr_device_info = coordinator.device_info
 
     @property
     def condition(self) -> str | None:

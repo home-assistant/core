@@ -3,18 +3,20 @@ from __future__ import annotations
 
 from datetime import datetime as dt
 import logging
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.const import PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -93,9 +95,8 @@ async def async_setup_platform(
         broker.params[CONF_LOCATION_IDX],
     )
 
-    controller = EvoController(broker, broker.tcs)
+    entities: list[EvoClimateEntity] = [EvoController(broker, broker.tcs)]
 
-    zones = []
     for zone in broker.tcs.zones.values():
         if zone.modelType == "HeatingZone" or zone.zoneType == "Thermostat":
             _LOGGER.debug(
@@ -107,7 +108,7 @@ async def async_setup_platform(
             )
 
             new_entity = EvoZone(broker, zone)
-            zones.append(new_entity)
+            entities.append(new_entity)
 
         else:
             _LOGGER.warning(
@@ -119,31 +120,24 @@ async def async_setup_platform(
                 zone.name,
             )
 
-    async_add_entities([controller] + zones, update_before_add=True)
+    async_add_entities(entities, update_before_add=True)
 
 
 class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
-    def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a Climate device."""
-        super().__init__(evo_broker, evo_device)
-
-        self._preset_modes = None
+    _attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def hvac_modes(self) -> list[str]:
         """Return a list of available hvac operation modes."""
         return list(HA_HVAC_TO_TCS)
 
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        return self._preset_modes
-
 
 class EvoZone(EvoChild, EvoClimateEntity):
     """Base for a Honeywell TCC Zone."""
+
+    _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Honeywell TCC Zone."""
@@ -168,7 +162,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
         )
 
-    async def async_zone_svc_request(self, service: dict, data: dict) -> None:
+    async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (setpoint override) for a zone."""
         if service == SVC_RESET_ZONE_OVERRIDE:
             await self._evo_broker.call_client_api(
@@ -230,7 +224,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         """
         return self._evo_device.setpointCapabilities["maxHeatSetpoint"]
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         temperature = kwargs["temperature"]
 
@@ -246,7 +240,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             self._evo_device.set_temperature(temperature, until=until)
         )
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a Zone to one of its native EVO_* operating modes.
 
         Zones inherit their _effective_ operating mode from their Controller.
@@ -272,7 +266,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
                 self._evo_device.cancel_temp_override()
             )
 
-    async def async_set_preset_mode(self, preset_mode: str | None) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to following the schedule."""
         evo_preset_mode = HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW)
 
@@ -315,7 +309,6 @@ class EvoController(EvoClimateEntity):
 
     _attr_icon = "mdi:thermostat"
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
@@ -332,7 +325,7 @@ class EvoController(EvoClimateEntity):
             ClimateEntityFeature.PRESET_MODE if self._attr_preset_modes else 0
         )
 
-    async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
+    async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller.
 
         Data validation is not required, it will have been done upstream.
@@ -385,25 +378,17 @@ class EvoController(EvoClimateEntity):
         """Return the current preset mode, e.g., home, away, temp."""
         return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
 
-    @property
-    def min_temp(self) -> float:
-        """Return None as Controllers don't have a target temperature."""
-        return None
-
-    @property
-    def max_temp(self) -> float:
-        """Return None as Controllers don't have a target temperature."""
-        return None
-
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Raise exception as Controllers don't have a target temperature."""
         raise NotImplementedError("Evohome Controllers don't have target temperatures.")
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set an operating mode for a Controller."""
-        await self._set_tcs_mode(HA_HVAC_TO_TCS.get(hvac_mode))
+        if not (tcs_mode := HA_HVAC_TO_TCS.get(hvac_mode)):
+            raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
+        await self._set_tcs_mode(tcs_mode)
 
-    async def async_set_preset_mode(self, preset_mode: str | None) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
         await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
 

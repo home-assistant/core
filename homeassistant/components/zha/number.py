@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_OUTPUT,
+    CHANNEL_INOVELLI,
     CHANNEL_LEVEL,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
@@ -32,6 +33,10 @@ if TYPE_CHECKING:
     from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
+
+_ZHANumberConfigurationEntitySelfT = TypeVar(
+    "_ZHANumberConfigurationEntitySelfT", bound="ZHANumberConfigurationEntity"
+)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -247,6 +252,8 @@ ICONS = {
     12: "mdi:counter",
     13: "mdi:thermometer-lines",
     14: "mdi:timer",
+    15: "mdi:palette",
+    16: "mdi:brightness-percent",
 }
 
 
@@ -274,12 +281,18 @@ async def async_setup_entry(
 class ZhaNumber(ZhaEntity, NumberEntity):
     """Representation of a ZHA Number entity."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
         """Init this entity."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._analog_output_channel = self.cluster_channels.get(CHANNEL_ANALOG_OUTPUT)
+        self._analog_output_channel = self.cluster_channels[CHANNEL_ANALOG_OUTPUT]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -287,12 +300,12 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the current value."""
         return self._analog_output_channel.present_value
 
     @property
-    def native_min_value(self):
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         min_present_value = self._analog_output_channel.min_present_value
         if min_present_value is not None:
@@ -300,7 +313,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return 0
 
     @property
-    def native_max_value(self):
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         max_present_value = self._analog_output_channel.max_present_value
         if max_present_value is not None:
@@ -308,7 +321,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return 1023
 
     @property
-    def native_step(self):
+    def native_step(self) -> float | None:
         """Return the value step."""
         resolution = self._analog_output_channel.resolution
         if resolution is not None:
@@ -316,7 +329,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().native_step
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the number entity."""
         description = self._analog_output_channel.description
         if description is not None and len(description) > 0:
@@ -324,7 +337,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().name
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         application_type = self._analog_output_channel.application_type
         if application_type is not None:
@@ -332,7 +345,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         return super().icon
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         engineering_units = self._analog_output_channel.engineering_units
         return UNITS.get(engineering_units)
@@ -342,13 +355,13 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         """Handle value update from channel."""
         self.async_write_ha_state()
 
-    async def async_set_native_value(self, value):
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         num_value = float(value)
         if await self._analog_output_channel.async_set_present_value(num_value):
             self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
         await super().async_update()
         _LOGGER.debug("polling current state")
@@ -368,12 +381,12 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
 
     @classmethod
     def create_entity(
-        cls,
+        cls: type[_ZHANumberConfigurationEntitySelfT],
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
-    ) -> ZhaEntity | None:
+        **kwargs: Any,
+    ) -> _ZHANumberConfigurationEntitySelfT | None:
         """Entity Factory.
 
         Return entity if it is a supported configuration, otherwise return None
@@ -397,7 +410,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this number configuration entity."""
         self._channel: ZigbeeChannel = channels[0]
@@ -442,6 +455,7 @@ class AqaraMotionDetectionInterval(
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 65535
     _zcl_attribute: str = "detection_interval"
+    _attr_name = "Detection interval"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -453,6 +467,7 @@ class OnOffTransitionTimeConfigurationEntity(
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFF
     _zcl_attribute: str = "on_off_transition_time"
+    _attr_name = "On/Off transition time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -462,6 +477,7 @@ class OnLevelConfigurationEntity(ZHANumberConfigurationEntity, id_suffix="on_lev
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "on_level"
+    _attr_name = "On level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -473,6 +489,7 @@ class OnTransitionTimeConfigurationEntity(
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "on_transition_time"
+    _attr_name = "On transition time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -484,6 +501,7 @@ class OffTransitionTimeConfigurationEntity(
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "off_transition_time"
+    _attr_name = "Off transition time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -495,6 +513,7 @@ class DefaultMoveRateConfigurationEntity(
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFE
     _zcl_attribute: str = "default_move_rate"
+    _attr_name = "Default move rate"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_LEVEL)
@@ -506,6 +525,7 @@ class StartUpCurrentLevelConfigurationEntity(
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "start_up_current_level"
+    _attr_name = "Start-up current level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -523,6 +543,7 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
     _attr_native_max_value: float = 0x257
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "timer_duration"
+    _attr_name = "Timer duration"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="ikea_airpurifier")
@@ -535,3 +556,240 @@ class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time")
     _attr_native_max_value: float = 0xFFFFFFFF
     _attr_native_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "filter_life_time"
+    _attr_name = "Filter life time"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliRemoteDimmingUpSpeed(
+    ZHANumberConfigurationEntity, id_suffix="dimming_speed_up_remote"
+):
+    """Inovelli remote dimming up speed configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 126
+    _zcl_attribute: str = "dimming_speed_up_remote"
+    _attr_name: str = "Remote dimming up speed"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliButtonDelay(ZHANumberConfigurationEntity, id_suffix="button_delay"):
+    """Inovelli button delay configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 9
+    _zcl_attribute: str = "button_delay"
+    _attr_name: str = "Button delay"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliLocalDimmingUpSpeed(
+    ZHANumberConfigurationEntity, id_suffix="dimming_speed_up_local"
+):
+    """Inovelli local dimming up speed configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 127
+    _zcl_attribute: str = "dimming_speed_up_local"
+    _attr_name: str = "Local dimming up speed"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliLocalRampRateOffToOn(
+    ZHANumberConfigurationEntity, id_suffix="ramp_rate_off_to_on_local"
+):
+    """Inovelli off to on local ramp rate configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 127
+    _zcl_attribute: str = "ramp_rate_off_to_on_local"
+    _attr_name: str = "Local ramp rate off to on"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliRemoteDimmingSpeedOffToOn(
+    ZHANumberConfigurationEntity, id_suffix="ramp_rate_off_to_on_remote"
+):
+    """Inovelli off to on remote ramp rate configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 127
+    _zcl_attribute: str = "ramp_rate_off_to_on_remote"
+    _attr_name: str = "Remote ramp rate off to on"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliRemoteDimmingDownSpeed(
+    ZHANumberConfigurationEntity, id_suffix="dimming_speed_down_remote"
+):
+    """Inovelli remote dimming down speed configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 127
+    _zcl_attribute: str = "dimming_speed_down_remote"
+    _attr_name: str = "Remote dimming down speed"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliLocalDimmingDownSpeed(
+    ZHANumberConfigurationEntity, id_suffix="dimming_speed_down_local"
+):
+    """Inovelli local dimming down speed configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 127
+    _zcl_attribute: str = "dimming_speed_down_local"
+    _attr_name: str = "Local dimming down speed"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliLocalRampRateOnToOff(
+    ZHANumberConfigurationEntity, id_suffix="ramp_rate_on_to_off_local"
+):
+    """Inovelli local on to off ramp rate configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 127
+    _zcl_attribute: str = "ramp_rate_on_to_off_local"
+    _attr_name: str = "Local ramp rate on to off"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliRemoteDimmingSpeedOnToOff(
+    ZHANumberConfigurationEntity, id_suffix="ramp_rate_on_to_off_remote"
+):
+    """Inovelli remote on to off ramp rate configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 127
+    _zcl_attribute: str = "ramp_rate_on_to_off_remote"
+    _attr_name: str = "Remote ramp rate on to off"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliMinimumLoadDimmingLevel(
+    ZHANumberConfigurationEntity, id_suffix="minimum_level"
+):
+    """Inovelli minimum load dimming level configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[16]
+    _attr_native_min_value: float = 1
+    _attr_native_max_value: float = 254
+    _zcl_attribute: str = "minimum_level"
+    _attr_name: str = "Minimum load dimming level"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliMaximumLoadDimmingLevel(
+    ZHANumberConfigurationEntity, id_suffix="maximum_level"
+):
+    """Inovelli maximum load dimming level configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[16]
+    _attr_native_min_value: float = 2
+    _attr_native_max_value: float = 255
+    _zcl_attribute: str = "maximum_level"
+    _attr_name: str = "Maximum load dimming level"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliAutoShutoffTimer(
+    ZHANumberConfigurationEntity, id_suffix="auto_off_timer"
+):
+    """Inovelli automatic switch shutoff timer configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[14]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 32767
+    _zcl_attribute: str = "auto_off_timer"
+    _attr_name: str = "Automatic switch shutoff timer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliLoadLevelIndicatorTimeout(
+    ZHANumberConfigurationEntity, id_suffix="load_level_indicator_timeout"
+):
+    """Inovelli load level indicator timeout configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[14]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 11
+    _zcl_attribute: str = "load_level_indicator_timeout"
+    _attr_name: str = "Load level indicator timeout"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliDefaultAllLEDOnColor(
+    ZHANumberConfigurationEntity, id_suffix="led_color_when_on"
+):
+    """Inovelli default all led color when on configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[15]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 255
+    _zcl_attribute: str = "led_color_when_on"
+    _attr_name: str = "Default all LED on color"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliDefaultAllLEDOffColor(
+    ZHANumberConfigurationEntity, id_suffix="led_color_when_off"
+):
+    """Inovelli default all led color when off configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[15]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 255
+    _zcl_attribute: str = "led_color_when_off"
+    _attr_name: str = "Default all LED off color"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliDefaultAllLEDOnIntensity(
+    ZHANumberConfigurationEntity, id_suffix="led_intensity_when_on"
+):
+    """Inovelli default all led intensity when on configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[16]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 100
+    _zcl_attribute: str = "led_intensity_when_on"
+    _attr_name: str = "Default all LED on intensity"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_INOVELLI)
+class InovelliDefaultAllLEDOffIntensity(
+    ZHANumberConfigurationEntity, id_suffix="led_intensity_when_off"
+):
+    """Inovelli default all led intensity when off configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[16]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 100
+    _zcl_attribute: str = "led_intensity_when_off"
+    _attr_name: str = "Default all LED off intensity"

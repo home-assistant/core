@@ -1,6 +1,8 @@
 """Support for Aqualink pool feature switches."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -52,11 +54,11 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
         return self.dev.is_on
 
     @refresh_system
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await await_or_reraise(self.dev.turn_on())
 
     @refresh_system
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await await_or_reraise(self.dev.turn_off())

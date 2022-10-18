@@ -22,8 +22,8 @@
             },
             "destination_menu": {
                 "menu_options": {
-                    "destination_coordinates": "Utilizzando una posizione sulla mappa",
-                    "destination_entity": "Utilizzando un'entit\u00e0"
+                    "destination_coordinates": "Utilizzo di una posizione sulla mappa",
+                    "destination_entity": "Utilizzo di un'entit\u00e0"
                 },
                 "title": "Scegli la destinazione"
             },
@@ -36,6 +36,13 @@
             "origin_entity_id": {
                 "data": {
                     "origin_entity_id": "Partenza utilizzando un'entit\u00e0"
+                },
+                "title": "Scegli la partenza"
+            },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "Utilizzo di una posizione sulla mappa",
+                    "origin_entity": "Utilizzo di un'entit\u00e0"
                 },
                 "title": "Scegli la partenza"
             },

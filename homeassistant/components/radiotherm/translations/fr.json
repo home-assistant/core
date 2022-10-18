@@ -19,6 +19,11 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Radio\u00a0Thermostat sera bient\u00f4t supprim\u00e9e"
+        }
+    },
     "options": {
         "step": {
             "init": {

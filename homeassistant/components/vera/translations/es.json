@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "No se pudo conectar con el controlador con url {base_url}"
+            "cannot_connect": "No se pudo conectar al controlador con URL {base_url}"
         },
         "step": {
             "user": {
                 "data": {
-                    "exclude": "Identificadores de dispositivos Vera a excluir de Home Assistant",
-                    "lights": "Identificadores de interruptores Vera que deben ser tratados como luces en Home Assistant",
+                    "exclude": "IDs de dispositivos Vera para excluir de Home Assistant.",
+                    "lights": "IDs de dispositivos interruptores Vera para tratarlos como luces en Home Assistant.",
                     "vera_controller_url": "URL del controlador"
                 },
                 "data_description": {
@@ -20,10 +20,10 @@
         "step": {
             "init": {
                 "data": {
-                    "exclude": "Identificadores de dispositivos Vera a excluir de Home Assistant",
+                    "exclude": "IDs de dispositivos Vera para excluir de Home Assistant.",
                     "lights": "Identificadores de interruptores Vera que deben ser tratados como luces en Home Assistant"
                 },
-                "description": "Consulte la documentaci\u00f3n de Vera para obtener detalles sobre los par\u00e1metros opcionales: https://www.home-assistant.io/integrations/vera/. Nota: Cualquier cambio aqu\u00ed necesitar\u00e1 un reinicio del servidor de Home Assistant. Para borrar valores, introduce un espacio.",
+                "description": "Consulta la documentaci\u00f3n de vera para obtener detalles sobre los par\u00e1metros opcionales: https://www.home-assistant.io/integrations/vera/. Nota: Cualquier cambio aqu\u00ed necesitar\u00e1 un reinicio en el servidor Home Assistant. Para borrar valores, proporciona un espacio.",
                 "title": "Opciones del controlador Vera"
             }
         }

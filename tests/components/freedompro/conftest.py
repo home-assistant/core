@@ -9,8 +9,9 @@ import pytest
 
 from homeassistant.components.freedompro.const import DOMAIN
 
+from .const import DEVICES, DEVICES_STATE
+
 from tests.common import MockConfigEntry
-from tests.components.freedompro.const import DEVICES, DEVICES_STATE
 
 
 @pytest.fixture(autouse=True)
