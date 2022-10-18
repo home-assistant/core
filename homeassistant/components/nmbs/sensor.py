@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_NAME,
@@ -100,6 +99,8 @@ def setup_platform(
 class NMBSLiveBoard(SensorEntity):
     """Get the next train from a station's liveboard."""
 
+    _attr_attribution = "https://api.irail.be/"
+
     def __init__(self, api_client, live_station, station_from, station_to):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
@@ -149,7 +150,6 @@ class NMBSLiveBoard(SensorEntity):
             "extra_train": int(self._attrs["isExtra"]) > 0,
             "vehicle_id": self._attrs["vehicle"],
             "monitored_station": self._station,
-            ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
         if delay > 0:
@@ -176,6 +176,7 @@ class NMBSLiveBoard(SensorEntity):
 class NMBSSensor(SensorEntity):
     """Get the the total travel time for a given connection."""
 
+    _attr_attribution = "https://api.irail.be/"
     _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(
@@ -223,7 +224,6 @@ class NMBSSensor(SensorEntity):
             "platform_arriving": self._attrs["arrival"]["platform"],
             "platform_departing": self._attrs["departure"]["platform"],
             "vehicle_id": self._attrs["departure"]["vehicle"],
-            ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
         if canceled != 1:
