@@ -10,6 +10,9 @@ from homeassistant.components.google_travel_time.const import (
     CONF_TRAVEL_MODE,
     DOMAIN,
 )
+from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
+from homeassistant.core import HomeAssistant
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 from .const import MOCK_CONFIG
 
@@ -218,3 +221,35 @@ async def test_sensor_deprecation_warning(hass, caplog):
         "add mode to the options dictionary instead!"
     )
     assert wstr in caplog.text
+
+
+@pytest.mark.parametrize(
+    "unit_system, expected_unit_option",
+    [
+        (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
+        (IMPERIAL_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
+    ],
+)
+async def test_sensor_unit_system(
+    hass: HomeAssistant,
+    unit_system: UnitSystem,
+    expected_unit_option: str,
+) -> None:
+    """Test that sensor works."""
+    hass.config.units = unit_system
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        options={},
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.google_travel_time.sensor.Client"), patch(
+        "homeassistant.components.google_travel_time.sensor.distance_matrix"
+    ) as distance_matrix_mock:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    distance_matrix_mock.assert_called_once()
+    assert distance_matrix_mock.call_args.kwargs["units"] == expected_unit_option

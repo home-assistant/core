@@ -1,13 +1,12 @@
 """Config flow for Google Maps Travel Time integration."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -36,9 +35,7 @@ from .const import (
     TRAVEL_MODEL,
     UNITS,
 )
-from .helpers import is_valid_config_entry
-
-_LOGGER = logging.getLogger(__name__)
+from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
 
 
 class GoogleOptionsFlow(config_entries.OptionsFlow):
@@ -48,7 +45,7 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
         """Initialize google options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
             time_type = user_input.pop(CONF_TIME_TYPE)
@@ -122,25 +119,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GoogleOptionsFlow(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         user_input = user_input or {}
         if user_input:
-            if await self.hass.async_add_executor_job(
-                is_valid_config_entry,
-                self.hass,
-                user_input[CONF_API_KEY],
-                user_input[CONF_ORIGIN],
-                user_input[CONF_DESTINATION],
-            ):
+            try:
+                await self.hass.async_add_executor_job(
+                    validate_config_entry,
+                    self.hass,
+                    user_input[CONF_API_KEY],
+                    user_input[CONF_ORIGIN],
+                    user_input[CONF_DESTINATION],
+                )
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data=user_input,
                 )
-
-            # If we get here, it's because we couldn't connect
-            errors["base"] = "cannot_connect"
+            except InvalidApiKeyException:
+                errors["base"] = "invalid_auth"
+            except UnknownException:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",

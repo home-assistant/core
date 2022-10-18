@@ -1002,54 +1002,48 @@ def test_statistics_runs_initiated(hass_recorder):
             ) - timedelta(minutes=5)
 
 
-def test_compile_missing_statistics(tmpdir):
+@pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
+def test_compile_missing_statistics(tmpdir, freezer):
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
-    ):
+    hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
 
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-        hass.start()
-        wait_recording_done(hass)
-        wait_recording_done(hass)
+    with session_scope(hass=hass) as session:
+        statistics_runs = list(session.query(StatisticsRuns))
+        assert len(statistics_runs) == 1
+        last_run = process_timestamp(statistics_runs[0].start)
+        assert last_run == now - timedelta(minutes=5)
 
-        with session_scope(hass=hass) as session:
-            statistics_runs = list(session.query(StatisticsRuns))
-            assert len(statistics_runs) == 1
-            last_run = process_timestamp(statistics_runs[0].start)
-            assert last_run == now - timedelta(minutes=5)
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
 
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-        hass.stop()
+    # Start Home Assistant one hour later
+    freezer.tick(timedelta(hours=1))
+    hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=now + timedelta(hours=1),
-    ):
+    with session_scope(hass=hass) as session:
+        statistics_runs = list(session.query(StatisticsRuns))
+        assert len(statistics_runs) == 13  # 12 5-minute runs
+        last_run = process_timestamp(statistics_runs[1].start)
+        assert last_run == now
 
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-        hass.start()
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-
-        with session_scope(hass=hass) as session:
-            statistics_runs = list(session.query(StatisticsRuns))
-            assert len(statistics_runs) == 13  # 12 5-minute runs
-            last_run = process_timestamp(statistics_runs[1].start)
-            assert last_run == now
-
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-        hass.stop()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
 
 
 def test_saving_sets_old_state(hass_recorder):

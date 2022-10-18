@@ -20,6 +20,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
@@ -108,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly block based device from a config entry."""
-    temperature_unit = "C" if hass.config.units.is_metric else "F"
+    temperature_unit = "C" if hass.config.units is METRIC_SYSTEM else "F"
 
     options = aioshelly.common.ConnectionOptions(
         entry.data[CONF_HOST],

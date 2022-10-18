@@ -144,7 +144,7 @@ SENSORS: Final = {
         key="emeter|powerFactor",
         name="Power Factor",
         native_unit_of_measurement=PERCENTAGE,
-        value=lambda value: round(value * 100, 1),
+        value=lambda value: abs(round(value * 100, 1)),
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -348,7 +348,7 @@ RPC_SENSORS: Final = {
     "temperature": RpcSensorDescription(
         key="switch",
         sub_key="temperature",
-        name="Temperature",
+        name="Device Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda status, _: round(status["tC"], 1),
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -358,7 +358,7 @@ RPC_SENSORS: Final = {
         use_polling_coordinator=True,
     ),
     "temperature_0": RpcSensorDescription(
-        key="temperature:0",
+        key="temperature",
         sub_key="tC",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
@@ -389,7 +389,7 @@ RPC_SENSORS: Final = {
         use_polling_coordinator=True,
     ),
     "humidity_0": RpcSensorDescription(
-        key="humidity:0",
+        key="humidity",
         sub_key="rh",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
@@ -409,6 +409,26 @@ RPC_SENSORS: Final = {
         removal_condition=is_rpc_device_externally_powered,
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "voltmeter": RpcSensorDescription(
+        key="voltmeter",
+        sub_key="voltage",
+        name="Voltmeter",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        value=lambda status, _: round(float(status), 2),
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=True,
+        available=lambda status: status is not None,
+    ),
+    "analoginput": RpcSensorDescription(
+        key="analoginput",
+        sub_key="percent",
+        name="Analog Input",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=True,
     ),
 }
 

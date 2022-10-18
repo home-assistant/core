@@ -61,7 +61,9 @@ from .db_schema import (
     Events,
     StateAttributes,
     States,
+    Statistics,
     StatisticsRuns,
+    StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
@@ -534,10 +536,13 @@ class Recorder(threading.Thread):
 
     @callback
     def async_import_statistics(
-        self, metadata: StatisticMetaData, stats: Iterable[StatisticData]
+        self,
+        metadata: StatisticMetaData,
+        stats: Iterable[StatisticData],
+        table: type[Statistics | StatisticsShortTerm],
     ) -> None:
         """Schedule import of statistics."""
-        self.queue_task(ImportStatisticsTask(metadata, stats))
+        self.queue_task(ImportStatisticsTask(metadata, stats, table))
 
     @callback
     def _async_setup_periodic_tasks(self) -> None:

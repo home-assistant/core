@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
 )
@@ -21,6 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
     CONF_CATEGORIES,
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     feeds = hass.data[DOMAIN].setdefault(FEED, {})
 
     radius = config_entry.data[CONF_RADIUS]
-    if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+    if hass.config.units is IMPERIAL_SYSTEM:
         radius = DistanceConverter.convert(radius, LENGTH_MILES, LENGTH_KILOMETERS)
     # Create feed entity manager for all platforms.
     manager = GdacsFeedEntityManager(hass, config_entry, radius)

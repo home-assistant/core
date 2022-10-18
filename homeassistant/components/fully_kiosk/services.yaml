@@ -12,3 +12,18 @@ load_url:
       required: true
       selector:
         text:
+
+start_application:
+  name: Start Application
+  description: Start an application on the device running Fully Kiosk Browser.
+  target:
+    device:
+      integration: fully_kiosk
+  fields:
+    url:
+      name: Application
+      description: Package name of the application to start.
+      example: "de.ozerov.fully"
+      required: true
+      selector:
+        text:
