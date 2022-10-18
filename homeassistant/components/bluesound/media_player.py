@@ -211,7 +211,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._polling_task = None  # The actual polling task.
         self._name = name
         self._id = None
-        self._icon = None
         self._capture_items = []
         self._services_items = []
         self._preset_items = []
@@ -259,8 +258,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._id = self._sync_status.get("@id", None)
         if not self._bluesound_device_name:
             self._bluesound_device_name = self._sync_status.get("@name", self.host)
-        if not self._icon:
-            self._icon = self._sync_status.get("@icon", self.host)
 
         if (master := self._sync_status.get("master")) is not None:
             self._is_master = False
@@ -694,11 +691,6 @@ class BluesoundPlayer(MediaPlayerEntity):
     def bluesound_device_name(self):
         """Return the device name as returned by the device."""
         return self._bluesound_device_name
-
-    @property
-    def icon(self):
-        """Return the icon of the device."""
-        return self._icon
 
     @property
     def source_list(self):
