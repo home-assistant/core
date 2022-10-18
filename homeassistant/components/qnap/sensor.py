@@ -119,6 +119,7 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
         self.coordinator = coordinator
         self.entity_description = description
         self.uid = uid
+        self.device_name = self.coordinator.data["system_stats"]["system"]["name"]
         self.monitor_device = monitor_device
         self.monitor_subdevice = monitor_subdevice
 
@@ -135,15 +136,15 @@ class QNAPSensor(CoordinatorEntity, SensorEntity):
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
-            return f"{self.monitor_device} - {self.entity_description.name}"
-        return f"{self.entity_description.name}"
+            return f"{self.device_name} {self.monitor_device} - {self.entity_description.name}"
+        return f"{self.device_name} {self.entity_description.name}"
 
     @property
     def device_info(self):
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self.uid)},
-            "name": self.coordinator.data["system_stats"]["system"]["name"],
+            "name": self.device_name,
             "model": self.coordinator.data["system_stats"]["system"]["model"],
             "sw_version": self.coordinator.data["system_stats"]["firmware"]["version"],
             "manufacturer": DEFAULT_NAME,
@@ -258,7 +259,7 @@ class QNAPDriveSensor(QNAPSensor):
     @property
     def name(self):
         """Return the name of the sensor, if any."""
-        return f"Drive {self.monitor_device} - {self.entity_description.name}"
+        return f"{self.device_name} Drive {self.monitor_device} - {self.entity_description.name}"
 
     @property
     def native_value(self):
@@ -321,7 +322,7 @@ class QNAPFolderSensor(QNAPSensor):
     @property
     def name(self):
         """Return the name of the sensor, if any."""
-        return f"Folder {self.monitor_subdevice} - {self.entity_description.name}"
+        return f"{self.device_name} Folder {self.monitor_subdevice} - {self.entity_description.name}"
 
     @property
     def native_value(self):
