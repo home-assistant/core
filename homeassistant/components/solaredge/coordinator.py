@@ -287,7 +287,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
             if key in ["STORAGE"]:
                 charge = key.lower() in power_to
-                self.data[key]:
+                if self.data[key]:
                     self.data[key] *= -1 if charge else 1
                 self.attributes[key]["flow"] = "charge" if charge else "discharge"
                 self.attributes[key]["soc"] = value["chargeLevel"]
