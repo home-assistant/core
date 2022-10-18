@@ -823,7 +823,7 @@ ha-HAP-python==4.5.2
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-ha-av==10.0.0b5
+ha-av==10.0.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2
