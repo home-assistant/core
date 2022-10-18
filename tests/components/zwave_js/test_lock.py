@@ -170,7 +170,7 @@ async def test_only_one_lock(hass, client, lock_home_connect_620, integration):
 
 
 async def test_door_lock_no_value(hass, client, lock_schlage_be469_state, integration):
-    """Test a lock entity with door lock command class."""
+    """Test a lock entity with door lock command class that has no value for mode."""
     node_state = replace_value_of_zwave_value(
         lock_schlage_be469_state,
         [
