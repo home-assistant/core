@@ -651,8 +651,8 @@ def test_periodic_db_cleanups(hass_recorder):
 @patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
     skip_check_loop,
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     tmp_path,
 ):
     """Test database write lock."""

@@ -650,8 +650,8 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
 
 
 async def test_state_changes_during_period_query_during_migration_to_schema_25(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
     instance = await async_setup_recorder_instance(hass, {})
@@ -700,8 +700,8 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
 
 
 async def test_get_states_query_during_migration_to_schema_25(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
     instance = await async_setup_recorder_instance(hass, {})
@@ -746,8 +746,8 @@ async def test_get_states_query_during_migration_to_schema_25(
 
 
 async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
 ):
     """Test we can query data prior to schema 25 and during migration to schema 25."""
     instance = await async_setup_recorder_instance(hass, {})
@@ -795,8 +795,8 @@ async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
 
 
 async def test_get_full_significant_states_handles_empty_last_changed(
-    hass: ha.HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: ha.HomeAssistant,
 ):
     """Test getting states when last_changed is null."""
     await async_setup_recorder_instance(hass, {})

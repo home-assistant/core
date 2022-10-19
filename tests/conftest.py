@@ -312,8 +312,16 @@ def aiohttp_client(
 
 
 @pytest.fixture
-def hass(loop, load_registries, hass_storage, request):
+def hass_fixture_setup():
+    """Fixture whichis truthy if the hass fixture has been setup."""
+    return []
+
+
+@pytest.fixture
+def hass(hass_fixture_setup, loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
+
+    hass_fixture_setup.append(True)
 
     orig_tz = dt_util.DEFAULT_TIME_ZONE
 
@@ -912,9 +920,10 @@ async def _async_init_recorder_component(hass, add_config=None):
 
 @pytest.fixture
 async def async_setup_recorder_instance(
-    enable_nightly_purge, enable_statistics
+    hass_fixture_setup, enable_nightly_purge, enable_statistics
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
+    assert not hass_fixture_setup
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
