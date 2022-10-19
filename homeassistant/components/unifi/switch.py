@@ -8,7 +8,8 @@ Support for controlling deep packet inspection (DPI) restriction groups.
 import asyncio
 from typing import Any
 
-from aiounifi.interfaces.api_handlers import SOURCE_EVENT, ItemEvent
+from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.models.api import SOURCE_EVENT
 from aiounifi.models.client import ClientBlockRequest
 from aiounifi.models.device import (
     DeviceSetOutletRelayRequest,

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from aiounifi.websocket import SIGNAL_CONNECTION_STATE, SIGNAL_DATA
+from aiounifi.websocket import WebsocketSignal
 import pytest
 
 from homeassistant.helpers import device_registry as dr
@@ -20,10 +20,10 @@ def mock_unifi_websocket():
             """Generate a websocket call."""
             if data:
                 mock.return_value.data = data
-                mock.call_args[1]["callback"](SIGNAL_DATA)
+                mock.call_args[1]["callback"](WebsocketSignal.DATA)
             elif state:
                 mock.return_value.state = state
-                mock.call_args[1]["callback"](SIGNAL_CONNECTION_STATE)
+                mock.call_args[1]["callback"](WebsocketSignal.CONNECTION_STATE)
             else:
                 raise NotImplementedError
 
