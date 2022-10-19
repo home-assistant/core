@@ -19,7 +19,6 @@ CONF_SSDP_MAIN_TV_AGENT_LOCATION = "ssdp_main_tv_agent_location"
 CONF_ON_ACTION = "turn_on_action"
 CONF_SESSION_ID = "session_id"
 
-EVENT_TURN_OFF = "samsungtv.turn_off"
 EVENT_TURN_ON = "samsungtv.turn_on"
 
 RESULT_AUTH_MISSING = "auth_missing"

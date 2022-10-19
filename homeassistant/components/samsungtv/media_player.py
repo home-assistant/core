@@ -54,7 +54,6 @@ from .const import (
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DEFAULT_NAME,
     DOMAIN,
-    EVENT_TURN_OFF,
     EVENT_TURN_ON,
     LOGGER,
 )
@@ -366,7 +365,6 @@ class SamsungTVDevice(MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         self._end_of_power_off = dt_util.utcnow() + SCAN_INTERVAL_PLUS_OFF_TIME
-        self.hass.bus.async_fire(EVENT_TURN_OFF, {ATTR_ENTITY_ID: self.entity_id})
         await self._bridge.async_power_off()
 
     async def async_set_volume_level(self, volume: float) -> None:
