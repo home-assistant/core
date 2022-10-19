@@ -81,6 +81,7 @@ def build_schema(user_input: Mapping[str, Any], is_options_flow: bool = False):
     spec = {
         vol.Optional(
             CONF_NAME,
+            default=DEFAULT_NAME,
             description={"suggested_value": user_input.get(CONF_NAME, DEFAULT_NAME)},
         ): TextSelector(),
         vol.Required(
@@ -113,6 +114,7 @@ def build_schema(user_input: Mapping[str, Any], is_options_flow: bool = False):
         ): TimeSelector(),
         vol.Optional(
             CONF_COLD_TOLERANCE,
+            default=DEFAULT_TOLERANCE,
             description={
                 "suggested_value": user_input.get(
                     CONF_COLD_TOLERANCE, DEFAULT_TOLERANCE
