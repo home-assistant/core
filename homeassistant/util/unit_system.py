@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import voluptuous as vol
 
@@ -41,6 +41,9 @@ from .unit_conversion import (
     TemperatureConverter,
     VolumeConverter,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.sensor import SensorDeviceClass
 
 _CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
 _CONF_UNIT_SYSTEM_METRIC: Final = "metric"
@@ -121,7 +124,7 @@ class UnitSystem:
         self.pressure_unit = pressure
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
-        self.length_conversions = length_conversions
+        self._length_conversions = length_conversions
 
     @property
     def name(self) -> str:
@@ -211,6 +214,17 @@ class UnitSystem:
             VOLUME: self.volume_unit,
             WIND_SPEED: self.wind_speed_unit,
         }
+
+    def get_converted_unit(
+        self,
+        device_class: SensorDeviceClass | str | None,
+        original_unit: str | None,
+    ) -> str | None:
+        """Return converted unit given a device class or an original unit."""
+        if device_class == "distance":
+            return self._length_conversions.get(original_unit)
+
+        return None
 
 
 def get_unit_system(key: str) -> UnitSystem:
