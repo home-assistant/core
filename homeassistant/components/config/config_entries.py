@@ -13,7 +13,6 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
 from homeassistant.helpers.data_entry_flow import (
@@ -291,7 +290,11 @@ def get_entry(
     }
 )
 @websocket_api.async_response
-async def config_entry_update(hass, connection, msg):
+async def config_entry_update(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Update config entry."""
     changes = dict(msg)
     changes.pop("id")
@@ -311,9 +314,10 @@ async def config_entry_update(hass, connection, msg):
         "require_restart": False,
     }
 
+    initial_state = entry.state
     if (
         old_disable_polling != entry.pref_disable_polling
-        and entry.state is config_entries.ConfigEntryState.LOADED
+        and initial_state is config_entries.ConfigEntryState.LOADED
     ):
         if not await hass.config_entries.async_reload(entry.entry_id):
             result["require_restart"] = (
@@ -334,14 +338,18 @@ async def config_entry_update(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def config_entry_disable(hass, connection, msg):
+async def config_entry_disable(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Disable config entry."""
     if (disabled_by := msg["disabled_by"]) is not None:
         disabled_by = config_entries.ConfigEntryDisabler(disabled_by)
 
-    result = False
+    success = False
     try:
-        result = await hass.config_entries.async_set_disabled_by(
+        success = await hass.config_entries.async_set_disabled_by(
             msg["entry_id"], disabled_by
         )
     except config_entries.OperationNotAllowed:
@@ -351,7 +359,7 @@ async def config_entry_disable(hass, connection, msg):
         send_entry_not_found(connection, msg["id"])
         return
 
-    result = {"require_restart": not result}
+    result = {"require_restart": not success}
 
     connection.send_result(msg["id"], result)
 
@@ -361,7 +369,11 @@ async def config_entry_disable(hass, connection, msg):
     {"type": "config_entries/ignore_flow", "flow_id": str, "title": str}
 )
 @websocket_api.async_response
-async def ignore_config_flow(hass, connection, msg):
+async def ignore_config_flow(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Ignore a config flow."""
     flow = next(
         (
@@ -399,7 +411,9 @@ async def ignore_config_flow(hass, connection, msg):
 )
 @websocket_api.async_response
 async def config_entries_get(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
 ) -> None:
     """Return matching config entries by type and/or domain."""
     connection.send_result(
@@ -418,7 +432,9 @@ async def config_entries_get(
 )
 @websocket_api.async_response
 async def config_entries_subscribe(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
 ) -> None:
     """Subscribe to config entry updates."""
     type_filter = msg.get("type_filter")
