@@ -397,8 +397,9 @@ class EntityRegistry:
         # To disable or hide an entity if it gets created
         disabled_by: RegistryEntryDisabler | None = None,
         hidden_by: RegistryEntryHider | None = None,
-        # Initial entity options if it gets created
-        initial_options: Mapping[str, Mapping[str, Any]] | None = None,
+        # Function to generate initial entity options if it gets created
+        get_initial_options: Callable[[], Mapping[str, Mapping[str, Any]] | None]
+        | None = None,
         # Data that we want entry to have
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry: ConfigEntry | None | UndefinedType = UNDEFINED,
@@ -476,7 +477,7 @@ class EntityRegistry:
             entity_id=entity_id,
             hidden_by=hidden_by,
             has_entity_name=none_if_undefined(has_entity_name) or False,
-            options=initial_options,
+            options=get_initial_options,
             original_device_class=none_if_undefined(original_device_class),
             original_icon=none_if_undefined(original_icon),
             original_name=none_if_undefined(original_name),

@@ -473,8 +473,7 @@ class SensorEntity(Entity):
 
         return None
 
-    @property
-    def initial_entity_options(self) -> Mapping[str, Mapping[str, Any]] | None:
+    def get_initial_entity_options(self) -> Mapping[str, Mapping[str, Any]] | None:
         """Return initial entity options.
 
         These will be stored in the entity registry the first time the  entity is seen,
