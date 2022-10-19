@@ -13,7 +13,6 @@ from ical.store import EventStore
 from ical.types import Range, Recur
 
 from homeassistant.components.calendar import (
-    ENTITY_ID_FORMAT,
     EVENT_DESCRIPTION,
     EVENT_END,
     EVENT_RRULE,
@@ -26,7 +25,6 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -47,10 +45,7 @@ async def async_setup_entry(
     calendar = IcsCalendarStream.calendar_from_ics(ics)
 
     name = config_entry.data[CONF_CALENDAR_NAME]
-    entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
-    entity = LocalCalendarEntity(
-        store, calendar, name, entity_id, unique_id=config_entry.entry_id
-    )
+    entity = LocalCalendarEntity(store, calendar, name, unique_id=config_entry.entry_id)
     async_add_entities([entity], True)
 
 
@@ -65,7 +60,6 @@ class LocalCalendarEntity(CalendarEntity):
         store: LocalCalendarStore,
         calendar: Calendar,
         name: str,
-        entity_id: str,
         unique_id: str,
     ) -> None:
         """Initialize LocalCalendarEntity."""
@@ -73,7 +67,6 @@ class LocalCalendarEntity(CalendarEntity):
         self._calendar = calendar
         self._event: CalendarEvent | None = None
         self._attr_name = name.capitalize()
-        self.entity_id = entity_id
         self._attr_unique_id = unique_id
 
     @property
