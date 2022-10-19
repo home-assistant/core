@@ -282,12 +282,11 @@ def _area_name_from_id(areas: dict[str, dict], area_id: str) -> str:
         return UNASSIGNED_AREA
 
     area = areas[area_id]
-    if "parent_id" in area:
-        parent_area = area["parent_id"]
-        if parent_area is not None:
-            return f"{_area_name_from_id(areas, parent_area)} {area['name']}"
+    if (parent_area := area["parent_id"]) is None:
+        # This is the root area, we should ignore it
+        return ""
 
-    return area["name"]
+    return f"{_area_name_from_id(areas, parent_area)} {area['name']}"
 
 
 @callback
