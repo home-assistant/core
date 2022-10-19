@@ -1073,6 +1073,7 @@ jobs:
     needs:
       - info
       - pytest
+      - pytest-postgres
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
