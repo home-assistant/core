@@ -1,8 +1,11 @@
 """Support for system log."""
+from __future__ import annotations
+
 from collections import OrderedDict, deque
 import logging
 import re
 import traceback
+from typing import cast
 
 import voluptuous as vol
 
@@ -55,7 +58,9 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 )
 
 
-def _figure_out_source(record, call_stack, paths_re):
+def _figure_out_source(
+    record: logging.LogRecord, call_stack: list[tuple[str, int]], paths_re: re.Pattern
+) -> tuple[str, int]:
 
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
@@ -80,20 +85,32 @@ def _figure_out_source(record, call_stack, paths_re):
 
         # Try to match with a file within Home Assistant
         if match := paths_re.match(pathname[0]):
-            return [match.group(1), pathname[1]]
+            return (cast(str, match.group(1)), pathname[1])
     # Ok, we don't know what this is
     return (record.pathname, record.lineno)
+
+
+def _safe_get_message(record: logging.LogRecord) -> str:
+    """Get message from record.
+
+    This code will be unreachable during a pytest run
+    because pytest monkeypatches logging.
+    """
+    try:
+        return record.getMessage()
+    except Exception:  # pylint: disable=broad-except
+        return f"Bad logger message: {record.msg} ({record.args})"
 
 
 class LogEntry:
     """Store HA log entries."""
 
-    def __init__(self, record, stack, source):
+    def __init__(self, record: logging.LogRecord, source: tuple[str, int]) -> None:
         """Initialize a log entry."""
         self.first_occurred = self.timestamp = record.created
         self.name = record.name
         self.level = record.levelname
-        self.message = deque([record.getMessage()], maxlen=5)
+        self.message = deque([_safe_get_message(record)], maxlen=5)
         self.exception = ""
         self.root_cause = None
         if record.exc_info:
@@ -128,7 +145,7 @@ class DedupStore(OrderedDict):
         super().__init__()
         self.maxlen = maxlen
 
-    def add_entry(self, entry):
+    def add_entry(self, entry: LogEntry) -> None:
         """Add a new entry."""
         key = entry.hash
 
@@ -157,7 +174,9 @@ class DedupStore(OrderedDict):
 class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
-    def __init__(self, hass, maxlen, fire_event, paths_re):
+    def __init__(
+        self, hass: HomeAssistant, maxlen: int, fire_event: bool, paths_re: re.Pattern
+    ) -> None:
         """Initialize a new LogErrorHandler."""
         super().__init__()
         self.hass = hass
@@ -165,7 +184,7 @@ class LogErrorHandler(logging.Handler):
         self.fire_event = fire_event
         self.paths_re = paths_re
 
-    def emit(self, record):
+    def emit(self, record: logging.LogRecord) -> None:
         """Save error and warning logs.
 
         Everything logged with error or warning is saved in local buffer. A
@@ -176,9 +195,7 @@ class LogErrorHandler(logging.Handler):
         if not record.exc_info:
             stack = [(f[0], f[1]) for f in traceback.extract_stack()]
 
-        entry = LogEntry(
-            record, stack, _figure_out_source(record, stack, self.paths_re)
-        )
+        entry = LogEntry(record, _figure_out_source(record, stack, self.paths_re))
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
