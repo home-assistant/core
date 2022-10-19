@@ -31,19 +31,23 @@ def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
 
 
 @pytest.fixture
-def entity_reg(hass) -> entity_registry.EntityRegistry:
+def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
 @pytest.fixture
-def calls(hass) -> list[ServiceCall]:
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.mark.usefixtures("rest_api")
-async def test_get_triggers(hass, device_reg, entity_reg) -> None:
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_reg: device_registry.DeviceRegistry,
+    entity_reg: entity_registry.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a samsungtv."""
     entity_id = f"{MP_DOMAIN}.{DOMAIN}_fake"
     config_entry = MockConfigEntry(
@@ -80,7 +84,9 @@ async def test_get_triggers(hass, device_reg, entity_reg) -> None:
 
 
 @pytest.mark.usefixtures("rest_api")
-async def test_if_fires_on_state_change(hass, calls) -> None:
+async def test_if_fires_on_state_change(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS_WITH_MAC)
     entity_id = f"{MP_DOMAIN}.fake"
