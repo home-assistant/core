@@ -1056,7 +1056,7 @@ jobs:
             --durations=0 \
             --durations-min=10 \
             -p no:sugar \
-            --dburl=postgresql://postgres:root_password@127.0.0.1/homeassistant-test \
+            --dburl=postgresql://postgres:password@127.0.0.1/homeassistant-test \
             tests/components/recorder
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
