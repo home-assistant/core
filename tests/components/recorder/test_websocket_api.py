@@ -1329,9 +1329,13 @@ async def test_backup_start_no_recorder(
 
 
 async def test_backup_start_timeout(
-    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
 ):
     """Test getting backup start when recorder is not present."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: Locking is not implemented for other engines
+        return
+
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     # Ensure there are no queued events
@@ -1366,9 +1370,13 @@ async def test_backup_end(
 
 
 async def test_backup_end_without_start(
-    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
 ):
     """Test backup start."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: Locking is not implemented for other engines
+        return
+
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     # Ensure there are no queued events

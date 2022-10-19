@@ -135,9 +135,16 @@ async def test_purge_old_states(
 
 
 async def test_purge_old_states_encouters_database_corruption(
-    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
+    recorder_db_url: str,
 ):
     """Test database image image is malformed while deleting old states."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite, wiping the database on error only happens
+        # with SQLite.
+        return
+
     await async_setup_recorder_instance(hass)
 
     await _add_test_states(hass)
@@ -364,7 +371,7 @@ async def test_purge_method(
         assert recorder_runs.count() == 7
         runs_before_purge = recorder_runs.all()
 
-        statistics_runs = session.query(StatisticsRuns)
+        statistics_runs = session.query(StatisticsRuns).order_by(StatisticsRuns.run_id)
         assert statistics_runs.count() == 7
         statistic_runs_before_purge = statistics_runs.all()
 
@@ -431,7 +438,10 @@ async def test_purge_method(
     await hass.services.async_call("recorder", "purge", service_data=service_data)
     await hass.async_block_till_done()
     await async_wait_purge_done(hass)
-    assert "Vacuuming SQL DB to free space" in caplog.text
+    assert (
+        "Vacuuming SQL DB to free space" in caplog.text
+        or "Optimizing SQL DB to free space" in caplog.text
+    )
 
 
 @pytest.mark.parametrize("use_sqlite", (True, False), indirect=True)
