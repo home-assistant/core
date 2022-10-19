@@ -44,6 +44,7 @@ from .unit_conversion import (
 
 _CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
 _CONF_UNIT_SYSTEM_METRIC: Final = "metric"
+_CONF_UNIT_SYSTEM_US_CUSTOMARY: Final = "us_customary"
 
 LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
@@ -130,6 +131,9 @@ class UnitSystem:
             "Please adjust to use instance check instead.",
             error_if_core=False,
         )
+        if self is IMPERIAL_SYSTEM:
+            # kept for compatibility reasons, with associated warning above
+            return _CONF_UNIT_SYSTEM_IMPERIAL
         return self._name
 
     @property
@@ -213,15 +217,26 @@ class UnitSystem:
 
 def get_unit_system(key: str) -> UnitSystem:
     """Get unit system based on key."""
-    if key == _CONF_UNIT_SYSTEM_IMPERIAL:
-        return IMPERIAL_SYSTEM
+    if key == _CONF_UNIT_SYSTEM_US_CUSTOMARY:
+        return US_CUSTOMARY_SYSTEM
     if key == _CONF_UNIT_SYSTEM_METRIC:
         return METRIC_SYSTEM
     raise ValueError(f"`{key}` is not a valid unit system key")
 
 
+def _deprecated_unit_system(value: str) -> str:
+    """Convert deprecated unit system."""
+
+    if value == _CONF_UNIT_SYSTEM_IMPERIAL:
+        # need to add warning in 2023.1
+        return _CONF_UNIT_SYSTEM_US_CUSTOMARY
+    return value
+
+
 validate_unit_system = vol.All(
-    vol.Lower, vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_IMPERIAL)
+    vol.Lower,
+    _deprecated_unit_system,
+    vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
 )
 
 METRIC_SYSTEM = UnitSystem(
@@ -235,8 +250,8 @@ METRIC_SYSTEM = UnitSystem(
     LENGTH_MILLIMETERS,
 )
 
-IMPERIAL_SYSTEM = UnitSystem(
-    _CONF_UNIT_SYSTEM_IMPERIAL,
+US_CUSTOMARY_SYSTEM = UnitSystem(
+    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     TEMP_FAHRENHEIT,
     LENGTH_MILES,
     SPEED_MILES_PER_HOUR,
@@ -245,3 +260,6 @@ IMPERIAL_SYSTEM = UnitSystem(
     PRESSURE_PSI,
     LENGTH_INCHES,
 )
+
+IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM
+"""IMPERIAL_SYSTEM is deprecated. Please use US_CUSTOMARY_SYSTEM instead."""
