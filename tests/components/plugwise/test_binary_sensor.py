@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry
@@ -53,7 +54,20 @@ async def test_adam_climate_binary_sensor_change(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
     """Test change of climate related binary_sensor entities."""
-    state = hass.states.get("binary_sensor.adam_plugwise_notification")
+    entity_id = "binary_sensor.adam_plugwise_notification"
+    # Test disabled_by default entry
+    assert hass.states.get(entity_id) is None
+
+    # Enable entry
+    init_integration.add_to_hass(hass)
+    registry = er.async_get(hass)
+    registry.async_update_entity(
+        "binary_sensor.adam_plugwise_notification", disabled_by=None
+    )
+    await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
     assert "warning_msg" in state.attributes
