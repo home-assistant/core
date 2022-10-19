@@ -53,19 +53,6 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 # mypy: disallow-any-generics
 
 
-CALENDAR_EVENT_SCHEMA = vol.Schema(
-    {
-        vol.Optional(EVENT_UID): cv.string,
-        vol.Optional(EVENT_RECURRENCE_ID): cv.string,
-        vol.Optional(EVENT_START): vol.Any(cv.date, cv.datetime),
-        vol.Optional(EVENT_END): vol.Any(cv.date, cv.datetime),
-        vol.Optional(EVENT_SUMMARY): cv.string,
-        vol.Optional(EVENT_DESCRIPTION): cv.string,
-        vol.Optional(EVENT_RRULE): cv.string,
-    }
-)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
     component = hass.data[DOMAIN] = EntityComponent[CalendarEntity](
@@ -364,7 +351,13 @@ def _get_calendar_entity(hass: HomeAssistant, entity_id: str) -> CalendarEntity:
     {
         vol.Required("type"): "calendar/event/create",
         vol.Required("entity_id"): cv.entity_id,
-        vol.Required(CONF_EVENT): CALENDAR_EVENT_SCHEMA,
+        vol.Required(CONF_EVENT): {
+            vol.Required(EVENT_START): vol.Any(cv.date, cv.datetime),
+            vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
+            vol.Required(EVENT_SUMMARY): cv.string,
+            vol.Optional(EVENT_DESCRIPTION): cv.string,
+            vol.Optional(EVENT_RRULE): cv.string,
+        },
     }
 )
 @websocket_api.async_response
