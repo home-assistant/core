@@ -195,7 +195,11 @@ def websocket_list(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_handle(hass, connection, msg):
+async def websocket_handle(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle an incoming webhook via the WS API."""
     request = MockRequest(
         content=msg["body"].encode("utf-8"),
