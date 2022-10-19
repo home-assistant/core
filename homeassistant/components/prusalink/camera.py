@@ -23,7 +23,7 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
     """Defines a PrusaLink camera."""
 
     last_path = ""
-    last_image: bytes
+    prusa_last_image: bytes
     _attr_name = "Job Preview"
 
     def __init__(self, coordinator: JobUpdateCoordinator) -> None:
@@ -47,8 +47,8 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         path = self.coordinator.data["job"]["file"]["path"]
 
         if self.last_path == path:
-            return self.last_image
+            return self.prusa_last_image
 
-        self.last_image = await self.coordinator.api.get_large_thumbnail(path)
+        self.prusa_last_image = await self.coordinator.api.get_large_thumbnail(path)
         self.last_path = path
-        return self.last_image
+        return self.prusa_last_image
