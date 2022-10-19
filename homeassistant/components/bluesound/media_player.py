@@ -451,16 +451,16 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return f"{format_mac(self._sync_status.get('@mac'))}-{self.port}"
+        return f"{format_mac(self._sync_status['@mac'])}-{self.port}"
 
     @property
     def device_info(self):
         """Return a device description for device registry."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self._sync_status.get("@name"),
-            manufacturer=self._sync_status.get("@brand"),
-            model=f"{self._sync_status.get('@modelName')} {self._sync_status.get('@model')}",
+            name=self._name,
+            manufacturer=self._sync_status.get("@brand", "Bluesound"),
+            model=f"{self._sync_status['@modelName']} {self._sync_status['@model']}",
             sw_version=self._sync_status.get("@schemaVersion"),
         )
 
