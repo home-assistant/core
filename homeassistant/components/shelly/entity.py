@@ -364,13 +364,12 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         try:
             return await self.block.set_state(**kwargs)
         except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Setting state for entity {self.name} failed, state: {kwargs}, error: {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)
-
-        return None
 
 
 class ShellyRpcEntity(entity.Entity):
@@ -425,13 +424,12 @@ class ShellyRpcEntity(entity.Entity):
         try:
             return await self.coordinator.device.call_rpc(method, params)
         except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Call RPC for entity {self.name} failed, method: {method}, params: {params}, error: {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)
-
-        return None
 
 
 class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
