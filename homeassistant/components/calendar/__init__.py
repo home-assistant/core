@@ -337,12 +337,8 @@ class CalendarListView(http.HomeAssistantView):
 
 
 def _get_calendar_entity(hass: HomeAssistant, entity_id: str) -> CalendarEntity:
-    if (component := hass.data.get("calendar")) is None:
-        raise HomeAssistantError("Calendar integration not set up")
-
-    if (entity := component.get_entity(entity_id)) is None or not isinstance(
-        entity, CalendarEntity
-    ):
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
+    if not (entity := component.get_entity(entity_id)):
         raise HomeAssistantError(f"Calendar entity not found: {entity_id}")
     return entity
 
