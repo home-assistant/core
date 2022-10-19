@@ -13,7 +13,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
-from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -336,13 +336,6 @@ class CalendarListView(http.HomeAssistantView):
         return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))
 
 
-def _get_calendar_entity(hass: HomeAssistant, entity_id: str) -> CalendarEntity:
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(entity_id)):
-        raise HomeAssistantError(f"Calendar entity not found: {entity_id}")
-    return entity
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "calendar/event/create",
@@ -361,10 +354,9 @@ async def handle_calendar_event_create(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle creation of a calendar event."""
-    try:
-        entity = _get_calendar_entity(hass, msg["entity_id"])
-    except HomeAssistantError as ex:
-        connection.send_error(msg["id"], "failed", str(ex))
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
+    if not (entity := component.get_entity(msg["entity_id"])):
+        connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
     if (
@@ -401,10 +393,9 @@ async def handle_calendar_event_delete(
 ) -> None:
     """Handle delete of a calendar event."""
 
-    try:
-        entity = _get_calendar_entity(hass, msg["entity_id"])
-    except HomeAssistantError as ex:
-        connection.send_error(msg["id"], "failed", str(ex))
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
+    if not (entity := component.get_entity(msg["entity_id"])):
+        connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
     if (
