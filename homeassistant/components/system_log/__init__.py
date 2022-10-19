@@ -176,9 +176,17 @@ class LogErrorHandler(logging.Handler):
         if not record.exc_info:
             stack = [(f[0], f[1]) for f in traceback.extract_stack()]
 
-        entry = LogEntry(
-            record, stack, _figure_out_source(record, stack, self.paths_re)
-        )
+        try:
+            entry = LogEntry(
+                record, stack, _figure_out_source(record, stack, self.paths_re)
+            )
+        except Exception:  # pylint: disable=broad-except
+            # If we fail to create a log entry, we don't want to raise here
+            # as it will have unexpected side effects.
+            #
+            # The other log handlers will log a better error so just continue on.
+            #
+            return
         self.records.add_entry(entry)
         if self.fire_event:
             self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
