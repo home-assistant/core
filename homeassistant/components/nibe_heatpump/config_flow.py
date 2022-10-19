@@ -148,7 +148,7 @@ async def validate_modbus_input(
     await connection.start()
 
     try:
-        coil = heatpump.get_coil_by_name("reset-alarm-40022")
+        coil = heatpump.get_coil_by_name("reset-alarm-40023")
         coil = await connection.read_coil(coil)
         value: str | int = 0
         if coil.mappings:
