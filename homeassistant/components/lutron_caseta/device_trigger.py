@@ -43,6 +43,13 @@ LUTRON_MODEL_TO_TYPE = {
     "RRST-W2B-XX": "SunnataKeypad_2Button",
     "RRST-W3RL-XX": "SunnataKeypad_3ButtonRaiseLower",
     "RRST-W4B-XX": "SunnataKeypad_4Button",
+    "RRD-HN1RLD-XX": "SeeTouchHybridKeypad_DualGroupRaiseLower",
+    "RRD-HN2RLD-XX": "SeeTouchHybridKeypad_DualGroupDualRaiseLower",
+    "RRD-HN3BSRL-XX": "SeeTouchHybridKeypad_3ButtonRaiseLower",
+    "RRD-HN3S-XX": "SeeTouchHybridKeypad_3SceneRaiseLower",
+    "RRD-HN4S-XX": "SeeTouchHybridKeypad_4SceneRaiseLower",
+    "RRD-HN5BRL-XX": "SeeTouchHybridKeypad_5ButtonRaiseLower",
+    "RRD-HN6BRL-XX": "SeeTouchHybridKeypad_6ButtonRaiseLower",
 }
 
 
@@ -337,6 +344,65 @@ PHANTOM_KEYPAD_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     }
 )
 
+SEETOUCHHYBRID_KEYPAD_DUAL_GROUP_RAISE_LOWER_BUTTON_TYPES_TO_LEAP = {
+    "group_1_button_1": 1,
+    "group_1_button_2": 2,
+    "group_1_button_3": 3,
+    "group_2_button_1": 5,
+    "group_2_button_2": 6,
+    "lower": 18,
+    "raise": 19,
+}
+SEETOUCHHYBRID_KEYPAD_DUAL_GROUP_RAISE_LOWER_BUTTON_TRIGGER_SCHEMA = (
+    LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+        {
+            vol.Required(CONF_SUBTYPE): vol.In(
+                SEETOUCHHYBRID_KEYPAD_DUAL_GROUP_RAISE_LOWER_BUTTON_TYPES_TO_LEAP
+            ),
+        }
+    )
+)
+
+SEETOUCHHYBRID_KEYPAD_5_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP = {
+    "button_1": 1,
+    "button_2": 2,
+    "button_3": 3,
+    "button_4": 4,
+    "button_5": 5,
+    "lower": 18,
+    "raise": 19,
+}
+SEETOUCHHYBRID_KEYPAD_5_BUTTON_RAISE_LOWER_BUTTON_TRIGGER_SCHEMA = (
+    LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+        {
+            vol.Required(CONF_SUBTYPE): vol.In(
+                SEETOUCHHYBRID_KEYPAD_5_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP
+            ),
+        }
+    )
+)
+
+SEETOUCHHYBRID_KEYPAD_6_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP = {
+    "button_1": 1,
+    "button_2": 2,
+    "button_3": 3,
+    "button_4": 4,
+    "button_5": 5,
+    "button_6": 6,
+    "lower": 18,
+    "raise": 19,
+}
+SEETOUCHHYBRID_KEYPAD_6_BUTTON_RAISE_LOWER_BUTTON_TRIGGER_SCHEMA = (
+    LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+        {
+            vol.Required(CONF_SUBTYPE): vol.In(
+                SEETOUCHHYBRID_KEYPAD_6_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP
+            ),
+        }
+    )
+)
+
+
 DEVICE_TYPE_SCHEMA_MAP = {
     "Pico2Button": PICO_2_BUTTON_TRIGGER_SCHEMA,
     "Pico2ButtonRaiseLower": PICO_2_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA,
@@ -352,6 +418,9 @@ DEVICE_TYPE_SCHEMA_MAP = {
     "SunnataKeypad_4Button": SUNNATA_KEYPAD_4_BUTTON_TRIGGER_SCHEMA,
     "HomeownerKeypad": HOMEOWNER_KEYPAD_BUTTON_TRIGGER_SCHEMA,
     "PhantomKeypad": PHANTOM_KEYPAD_BUTTON_TRIGGER_SCHEMA,
+    "SeeTouchHybridKeypad_6ButtonRaiseLower": SEETOUCHHYBRID_KEYPAD_6_BUTTON_RAISE_LOWER_BUTTON_TRIGGER_SCHEMA,
+    "SeeTouchHybridKeypad_5ButtonRaiseLower": SEETOUCHHYBRID_KEYPAD_5_BUTTON_RAISE_LOWER_BUTTON_TRIGGER_SCHEMA,
+    "SeeTouchHybridKeypad_DualGroupRaiseLower": SEETOUCHHYBRID_KEYPAD_DUAL_GROUP_RAISE_LOWER_BUTTON_TRIGGER_SCHEMA,
 }
 
 DEVICE_TYPE_SUBTYPE_MAP_TO_LIP = {
@@ -381,6 +450,9 @@ DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP = {
     "SunnataKeypad_4Button": SUNNATA_KEYPAD_4_BUTTON_BUTTON_TYPES_TO_LEAP,
     "HomeownerKeypad": HOMEOWNER_KEYPAD_BUTTON_TYPES_TO_LEAP,
     "PhantomKeypad": PHANTOM_KEYPAD_BUTTON_TYPES_TO_LEAP,
+    "SeeTouchHybridKeypad_6ButtonRaiseLower": SEETOUCHHYBRID_KEYPAD_6_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP,
+    "SeeTouchHybridKeypad_5ButtonRaiseLower": SEETOUCHHYBRID_KEYPAD_5_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP,
+    "SeeTouchHybridKeypad_DualGroupRaiseLower": SEETOUCHHYBRID_KEYPAD_DUAL_GROUP_RAISE_LOWER_BUTTON_TYPES_TO_LEAP,
 }
 
 LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP = {
