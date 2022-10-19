@@ -61,9 +61,9 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
         try:
-            await self.hass.async_add_executor_job(self.verisure.login_cookie)
+            await self.hass.async_add_executor_job(self.verisure.update_cookie)
         except (VerisureLoginError, VerisureResponseError) as ex:
-            LOGGER.error("Could not log in to Verisure, %s", ex)
+            LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         try:
             overview = await self.hass.async_add_executor_job(
