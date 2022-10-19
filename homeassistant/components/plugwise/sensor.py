@@ -31,6 +31,21 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="setpoint_high",
+        name="Cooling setpoint",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="setpoint_low",
+        name="Heating setpoint",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="temperature",
@@ -52,6 +67,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="outdoor_temperature",
@@ -94,6 +110,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="electricity_consumed_interval",
@@ -101,6 +118,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="electricity_consumed_peak_interval",
@@ -313,6 +331,7 @@ class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
         """Initialise the sensor."""
         super().__init__(coordinator, device_id)
         self.entity_description = description
+
         self._attr_unique_id = f"{device_id}-{description.key}"
 
     @property
