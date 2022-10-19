@@ -1,7 +1,7 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
 import logging
 
-from serial import SerialException
+from pymonoprice import Monoprice
 
 from homeassistant import core
 from homeassistant.components.media_player import (
@@ -11,19 +11,23 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_SOURCES,
+    COORDINATOR_OBJECT,
     DOMAIN,
     FIRST_RUN,
     MONOPRICE_OBJECT,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
+    ZONE_IDS,
 )
+from .coordinator import MonopriceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +35,7 @@ PARALLEL_UPDATES = 1
 
 
 @core.callback
-def _get_sources_from_dict(data):
+def _get_sources_from_dict(data) -> tuple[dict[int, str], dict[str, int], list[str]]:
     sources_config = data[CONF_SOURCES]
 
     source_id_name = {int(index): name for index, name in sources_config.items()}
@@ -40,7 +44,7 @@ def _get_sources_from_dict(data):
 
     source_names = sorted(source_name_id.keys(), key=lambda v: source_name_id[v])
 
-    return [source_id_name, source_name_id, source_names]
+    return source_id_name, source_name_id, source_names
 
 
 @core.callback
@@ -61,17 +65,19 @@ async def async_setup_entry(
     port = config_entry.data[CONF_PORT]
 
     monoprice = hass.data[DOMAIN][config_entry.entry_id][MONOPRICE_OBJECT]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR_OBJECT]
+    zone_ids = hass.data[DOMAIN][config_entry.entry_id][ZONE_IDS]
 
     sources = _get_sources(config_entry)
 
     entities = []
-    for i in range(1, 4):
-        for j in range(1, 7):
-            zone_id = (i * 10) + j
-            _LOGGER.info("Adding zone %d for port %s", zone_id, port)
-            entities.append(
-                MonopriceZone(monoprice, sources, config_entry.entry_id, zone_id)
+    for zone_id in zone_ids:
+        _LOGGER.info("Adding zone %d for port %s", zone_id, port)
+        entities.append(
+            MonopriceZone(
+                monoprice, coordinator, sources, config_entry.entry_id, zone_id
             )
+        )
 
     # only call update before add if it's the first run so we can try to detect zones
     first_run = hass.data[DOMAIN][config_entry.entry_id][FIRST_RUN]
@@ -111,7 +117,9 @@ async def async_setup_entry(
     )
 
 
-class MonopriceZone(MediaPlayerEntity):
+class MonopriceZone(
+    CoordinatorEntity[MonopriceDataUpdateCoordinator], MediaPlayerEntity
+):
     """Representation of a Monoprice amplifier zone."""
 
     _attr_supported_features = (
@@ -123,9 +131,18 @@ class MonopriceZone(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, monoprice, sources, namespace, zone_id):
+    def __init__(
+        self,
+        monoprice: Monoprice,
+        coordinator: MonopriceDataUpdateCoordinator,
+        sources,
+        namespace,
+        zone_id,
+    ) -> None:
         """Initialize new zone."""
+        super().__init__(coordinator)
         self._monoprice = monoprice
+
         # dict source_id -> source name
         self._source_id_name = sources[0]
         # dict source name -> source_id
@@ -143,19 +160,20 @@ class MonopriceZone(MediaPlayerEntity):
         self._mute = None
         self._update_success = True
 
-    def update(self) -> None:
-        """Retrieve latest state."""
-        try:
-            state = self._monoprice.zone_status(self._zone_id)
-        except SerialException:
-            self._update_success = False
-            _LOGGER.warning("Could not update zone %d", self._zone_id)
-            return
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self._zone_id in self.coordinator.data
+        )
 
-        if not state:
-            self._update_success = False
-            return
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        if self._zone_id not in self.coordinator.data:
+            return None
 
+        state = self.coordinator.data[self._zone_id]
         self._state = MediaPlayerState.ON if state.power else MediaPlayerState.OFF
         self._volume = state.volume
         self._mute = state.mute
@@ -168,7 +186,7 @@ class MonopriceZone(MediaPlayerEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._zone_id < 20 or self._update_success
+        return self._zone_id in self.coordinator.data
 
     @property
     def device_info(self) -> DeviceInfo:

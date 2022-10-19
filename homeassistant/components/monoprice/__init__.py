@@ -11,11 +11,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     CONF_NOT_FIRST_RUN,
+    COORDINATOR_OBJECT,
     DOMAIN,
     FIRST_RUN,
     MONOPRICE_OBJECT,
     UNDO_UPDATE_LISTENER,
+    ZONE_IDS,
 )
+from .coordinator import MonopriceDataUpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -32,6 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Error connecting to Monoprice controller at %s", port)
         raise ConfigEntryNotReady from err
 
+    zone_ids = [i * 10 + j for i in range(1, 4) for j in range(1, 7)]
+    coordinator = MonopriceDataUpdateCoordinator(hass, monoprice, zone_ids)
+
+    await coordinator.async_config_entry_first_refresh()
+
     # double negative to handle absence of value
     first_run = not bool(entry.data.get(CONF_NOT_FIRST_RUN))
 
@@ -44,6 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         MONOPRICE_OBJECT: monoprice,
+        COORDINATOR_OBJECT: coordinator,
+        ZONE_IDS: zone_ids,
         UNDO_UPDATE_LISTENER: undo_listener,
         FIRST_RUN: first_run,
     }

@@ -16,6 +16,8 @@ CONF_NOT_FIRST_RUN = "not_first_run"
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
 
+COORDINATOR_OBJECT = "coordinator_object"
 FIRST_RUN = "first_run"
 MONOPRICE_OBJECT = "monoprice_object"
 UNDO_UPDATE_LISTENER = "update_update_listener"
+ZONE_IDS = "zone_ids"
