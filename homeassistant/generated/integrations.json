@@ -445,7 +445,7 @@
     "axis": {
       "config_flow": true,
       "iot_class": "local_push",
-      "integration_type": "hub",
+      "integration_type": "device",
       "name": "Axis"
     },
     "baf": {

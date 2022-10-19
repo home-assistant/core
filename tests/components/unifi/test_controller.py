@@ -7,7 +7,8 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import aiounifi
-from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
+from aiounifi.models.event import EventKey
+from aiounifi.websocket import WebsocketState
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -359,13 +360,13 @@ async def test_connection_state_signalling(
     # Controller is connected
     assert hass.states.get("device_tracker.client").state == "home"
 
-    mock_unifi_websocket(state=STATE_DISCONNECTED)
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     # Controller is disconnected
     assert hass.states.get("device_tracker.client").state == "unavailable"
 
-    mock_unifi_websocket(state=STATE_RUNNING)
+    mock_unifi_websocket(state=WebsocketState.RUNNING)
     await hass.async_block_till_done()
 
     # Controller is once again connected
@@ -403,7 +404,7 @@ async def test_wireless_client_event_calls_update_wireless_devices(
                     {
                         "datetime": "2020-01-20T19:37:04Z",
                         "user": "00:00:00:00:00:01",
-                        "key": aiounifi.events.WIRELESS_CLIENT_CONNECTED,
+                        "key": EventKey.WIRELESS_CLIENT_CONNECTED.value,
                         "msg": "User[11:22:33:44:55:66] has connected to WLAN",
                         "time": 1579549024893,
                     }
@@ -423,7 +424,7 @@ async def test_reconnect_mechanism(hass, aioclient_mock, mock_unifi_websocket):
         f"https://{DEFAULT_HOST}:1234/api/login", status=HTTPStatus.BAD_GATEWAY
     )
 
-    mock_unifi_websocket(state=STATE_DISCONNECTED)
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 0
@@ -459,7 +460,7 @@ async def test_reconnect_mechanism_exceptions(
     with patch("aiounifi.Controller.login", side_effect=exception), patch(
         "homeassistant.components.unifi.controller.UniFiController.reconnect"
     ) as mock_reconnect:
-        mock_unifi_websocket(state=STATE_DISCONNECTED)
+        mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
         await hass.async_block_till_done()
 
         new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
