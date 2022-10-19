@@ -74,9 +74,6 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
         self.entity_description = description
-        self._attr_entity_registry_enabled_default = (
-            description.entity_registry_enabled_default
-        )
         self._attr_unique_id = f"{device_id}-{description.key}"
 
     @property
