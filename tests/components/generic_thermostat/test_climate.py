@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config as hass_config
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -18,12 +17,8 @@ from homeassistant.components.climate import (
     PRESET_SLEEP,
     HVACMode,
 )
-from homeassistant.components.generic_thermostat.consts import (
-    DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
-)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    SERVICE_RELOAD,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -43,7 +38,6 @@ from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
-    get_fixture_path,
     mock_restore_cache,
 )
 from tests.components.climate import common
@@ -1510,38 +1504,3 @@ def _mock_restore_cache(hass, temperature=20, hvac_mode=HVACMode.OFF):
             ),
         ),
     )
-
-
-async def test_reload(hass):
-    """Test we can reload."""
-
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            "climate": {
-                "platform": "generic_thermostat",
-                "name": "test",
-                "heater": "switch.any",
-                "target_sensor": "sensor.any",
-            }
-        },
-    )
-
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("climate.test") is not None
-
-    yaml_path = get_fixture_path("configuration.yaml", "generic_thermostat")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(
-            GENERIC_THERMOSTAT_DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 1
-    assert hass.states.get("climate.test") is None
-    assert hass.states.get("climate.reload")
