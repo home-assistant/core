@@ -230,7 +230,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==2.0.2
+aioshelly==3.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -437,7 +437,7 @@ defusedxml==0.7.1
 deluge-client==1.7.1
 
 # homeassistant.components.lametric
-demetriek==0.3.0
+demetriek==0.4.0
 
 # homeassistant.components.denonavr
 denonavr==0.10.11

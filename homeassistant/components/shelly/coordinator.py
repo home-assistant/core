@@ -53,7 +53,7 @@ class ShellyEntryData:
     """Class for sharing data within a given config entry."""
 
     block: ShellyBlockCoordinator | None = None
-    device: BlockDevice | None = None
+    device: BlockDevice | RpcDevice | None = None
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
     rpc_poll: ShellyRpcPollingCoordinator | None = None
@@ -353,12 +353,16 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         """Initialize the Shelly RPC device coordinator."""
         self.device_id: str | None = None
 
+        if sleep_period := entry.data[CONF_SLEEP_PERIOD]:
+            update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
+        else:
+            update_interval = RPC_RECONNECT_INTERVAL
         device_name = get_rpc_device_name(device) if device.initialized else entry.title
         super().__init__(
             hass,
             LOGGER,
             name=device_name,
-            update_interval=timedelta(seconds=RPC_RECONNECT_INTERVAL),
+            update_interval=timedelta(seconds=update_interval),
         )
         self.entry = entry
         self.device = device
@@ -424,6 +428,11 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
+        if sleep_period := self.entry.data.get(CONF_SLEEP_PERIOD):
+            # Sleeping device, no point polling it, just mark it unavailable
+            raise UpdateFailed(
+                f"Sleeping device did not update within {sleep_period} seconds interval"
+            )
         if self.device.connected:
             return
 
