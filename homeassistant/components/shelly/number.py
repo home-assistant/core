@@ -119,6 +119,7 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
         try:
             return await self.coordinator.device.http_request("get", path, params)
         except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Setting state for entity {self.name} failed, state: {params}, error: {repr(err)}"
             ) from err

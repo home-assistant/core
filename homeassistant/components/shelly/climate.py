@@ -241,13 +241,12 @@ class BlockSleepingClimate(
                 "get", f"thermostat/{self._channel}", kwargs
             )
         except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Setting state for entity {self.name} failed, state: {kwargs}, error: {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)
-
-        return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
