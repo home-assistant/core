@@ -93,6 +93,7 @@ class UnitSystem:
         mass: str,
         pressure: str,
         accumulated_precipitation: str,
+        length_conversions: dict[str | None, str],
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
@@ -120,6 +121,7 @@ class UnitSystem:
         self.pressure_unit = pressure
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
+        self.length_conversions = length_conversions
 
     @property
     def name(self) -> str:
@@ -233,6 +235,7 @@ METRIC_SYSTEM = UnitSystem(
     MASS_GRAMS,
     PRESSURE_PA,
     LENGTH_MILLIMETERS,
+    {LENGTH_MILES: LENGTH_KILOMETERS},
 )
 
 IMPERIAL_SYSTEM = UnitSystem(
@@ -244,4 +247,5 @@ IMPERIAL_SYSTEM = UnitSystem(
     MASS_POUNDS,
     PRESSURE_PSI,
     LENGTH_INCHES,
+    {LENGTH_KILOMETERS: LENGTH_MILES},
 )

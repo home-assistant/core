@@ -462,6 +462,26 @@ class SensorEntity(Entity):
 
         return None
 
+    @property
+    def initial_entity_options(self) -> Mapping[str, Mapping[str, Any]] | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the  entity is seen,
+        and then never updated.
+        """
+        initial_unit_of_measurement: str | None = None
+        native_unit_of_measurement = self.native_unit_of_measurement
+
+        if self.device_class == SensorDeviceClass.DISTANCE:
+            initial_unit_of_measurement = self.hass.config.units.length_conversions.get(
+                native_unit_of_measurement
+            )
+
+        if initial_unit_of_measurement is None:
+            return None
+
+        return {DOMAIN: {"initial_unit_of_measurement": initial_unit_of_measurement}}
+
     @final
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -511,6 +531,13 @@ class SensorEntity(Entity):
         """Return the unit of measurement of the entity, after unit conversion."""
         if self._sensor_option_unit_of_measurement:
             return self._sensor_option_unit_of_measurement
+
+        if (
+            self.registry_entry
+            and (sensor_options := self.registry_entry.options.get(DOMAIN))
+            and (display_unit := sensor_options.get("initial_unit_of_measurement"))
+        ):
+            return cast(str, display_unit)
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
