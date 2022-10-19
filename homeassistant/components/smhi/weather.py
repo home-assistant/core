@@ -46,7 +46,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     LENGTH_KILOMETERS,
-    LENGTH_MILLIMETERS,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
@@ -123,7 +123,7 @@ class SmhiWeather(WeatherEntity):
     _attr_attribution = "Swedish weather institute (SMHI)"
     _attr_native_temperature_unit = TEMP_CELSIUS
     _attr_native_visibility_unit = LENGTH_KILOMETERS
-    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_precipitation_unit = PRECIPITATION_MILLIMETERS
     _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
     _attr_native_pressure_unit = PRESSURE_HPA
 

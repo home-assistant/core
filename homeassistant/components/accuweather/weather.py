@@ -18,10 +18,10 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-    LENGTH_MILLIMETERS,
+    PRECIPITATION_INCHES,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE_HPA,
     PRESSURE_INHG,
     SPEED_KILOMETERS_PER_HOUR,
@@ -72,7 +72,7 @@ class AccuWeatherEntity(
         # converted, hence the weather entity's native units follow the configured unit
         # system
         if coordinator.hass.config.units is METRIC_SYSTEM:
-            self._attr_native_precipitation_unit = LENGTH_MILLIMETERS
+            self._attr_native_precipitation_unit = PRECIPITATION_MILLIMETERS
             self._attr_native_pressure_unit = PRESSURE_HPA
             self._attr_native_temperature_unit = TEMP_CELSIUS
             self._attr_native_visibility_unit = LENGTH_KILOMETERS
@@ -80,7 +80,7 @@ class AccuWeatherEntity(
             self._unit_system = API_METRIC
         else:
             self._unit_system = API_IMPERIAL
-            self._attr_native_precipitation_unit = LENGTH_INCHES
+            self._attr_native_precipitation_unit = PRECIPITATION_INCHES
             self._attr_native_pressure_unit = PRESSURE_INHG
             self._attr_native_temperature_unit = TEMP_FAHRENHEIT
             self._attr_native_visibility_unit = LENGTH_MILES

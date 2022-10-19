@@ -6,7 +6,7 @@ from open_meteo import Forecast as OpenMeteoForecast
 from homeassistant.components.weather import Forecast, WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_MILLIMETERS,
+    PRECIPITATION_MILLIMETERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
@@ -38,7 +38,7 @@ class OpenMeteoWeatherEntity(
     """Defines an Open-Meteo weather entity."""
 
     _attr_has_entity_name = True
-    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_precipitation_unit = PRECIPITATION_MILLIMETERS
     _attr_native_temperature_unit = TEMP_CELSIUS
     _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
 

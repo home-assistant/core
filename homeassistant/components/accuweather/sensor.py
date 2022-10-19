@@ -15,10 +15,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     LENGTH_FEET,
-    LENGTH_INCHES,
     LENGTH_METERS,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_INCHES,
+    PRECIPITATION_MILLIMETERS,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
@@ -295,7 +295,9 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         icon="mdi:weather-rainy",
         name="Precipitation",
         state_class=SensorStateClass.MEASUREMENT,
-        unit_fn=lambda metric: LENGTH_MILLIMETERS if metric else LENGTH_INCHES,
+        unit_fn=lambda metric: PRECIPITATION_MILLIMETERS
+        if metric
+        else PRECIPITATION_INCHES,
         value_fn=lambda data, unit: cast(float, data[unit][ATTR_VALUE]),
         attr_fn=lambda data: {"type": data["PrecipitationType"]},
     ),

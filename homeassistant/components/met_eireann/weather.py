@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_MILLIMETERS,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
@@ -55,7 +55,7 @@ async def async_setup_entry(
 class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met Éireann weather condition."""
 
-    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_precipitation_unit = PRECIPITATION_MILLIMETERS
     _attr_native_pressure_unit = PRESSURE_HPA
     _attr_native_temperature_unit = TEMP_CELSIUS
     _attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR

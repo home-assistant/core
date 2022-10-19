@@ -16,8 +16,8 @@ from homeassistant.const import (
     ATTR_LOCATION,
     DEGREE,
     LENGTH_KILOMETERS,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE_KPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
@@ -123,7 +123,7 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
     ECSensorEntityDescription(
         key="precip_yesterday",
         name="Precipitation yesterday",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.conditions.get("precip_yesterday", {}).get("value"),
     ),

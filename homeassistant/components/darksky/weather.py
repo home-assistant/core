@@ -37,7 +37,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     LENGTH_KILOMETERS,
-    LENGTH_MILLIMETERS,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE_MBAR,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
@@ -113,7 +113,7 @@ def setup_platform(
 class DarkSkyWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_precipitation_unit = PRECIPITATION_MILLIMETERS
     _attr_native_pressure_unit = PRESSURE_MBAR
     _attr_native_temperature_unit = TEMP_CELSIUS
     _attr_native_visibility_unit = LENGTH_KILOMETERS

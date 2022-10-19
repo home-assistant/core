@@ -35,10 +35,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
-    LENGTH_MILLIMETERS,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRECIPITATION_MILLIMETERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
@@ -390,7 +390,7 @@ class HomematicipTodayRainSensor(HomematicipGenericEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return LENGTH_MILLIMETERS
+        return PRECIPITATION_MILLIMETERS
 
 
 class HomematicpTemperatureExternalSensorCh1(HomematicipGenericEntity, SensorEntity):

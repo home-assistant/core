@@ -13,8 +13,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_MILLIMETERS,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
 )
@@ -117,7 +117,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="precipitation_amount",
         api_key="precipitation_amount",
         name="Precipitation amount",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
         icon="mdi:cup-water",
         state_class=SensorStateClass.MEASUREMENT,
     ),

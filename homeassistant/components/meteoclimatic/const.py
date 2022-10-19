@@ -25,8 +25,8 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     DEGREE,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
@@ -121,7 +121,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rain",
         name="Daily Precipitation",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
         device_class="mdi:cup-water",
     ),
 )

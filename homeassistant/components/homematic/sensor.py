@@ -19,10 +19,10 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
-    LENGTH_MILLIMETERS,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
@@ -165,7 +165,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     "RAIN_COUNTER": SensorEntityDescription(
         key="RAIN_COUNTER",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
     ),
     "WIND_SPEED": SensorEntityDescription(
         key="WIND_SPEED",

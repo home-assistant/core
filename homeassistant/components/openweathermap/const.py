@@ -25,8 +25,8 @@ from homeassistant.components.weather import (
 from homeassistant.const import (
     DEGREE,
     LENGTH_METERS,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
@@ -229,13 +229,13 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_RAIN,
         name="Rain",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_SNOW,
         name="Snow",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -271,7 +271,7 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_FORECAST_PRECIPITATION,
         name="Precipitation",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
     ),
     SensorEntityDescription(
         key=ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,

@@ -26,8 +26,8 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
 )
 from homeassistant.const import (
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
@@ -115,7 +115,7 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
     MeteoFranceSensorEntityDescription(
         key="precipitation",
         name="Daily precipitation",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
         icon="mdi:cup-water",
         data_path="today_forecast:precipitation:24h",
     ),

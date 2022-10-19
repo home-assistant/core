@@ -10,11 +10,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_MILLIMETERS,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
+    PRECIPITATION_MILLIMETERS,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UV_INDEX,
@@ -64,7 +64,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     SENSOR_TYPE_RAINTOTAL: SensorEntityDescription(
         key=SENSOR_TYPE_RAINTOTAL,
         name="Rain total",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS,
         icon="mdi:water",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
