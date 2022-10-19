@@ -6,9 +6,7 @@
         "cooling": "Cooling",
         "heating": "Heating",
         "off": "Off"
-      }
-    },
-    "state": {
+      },
       "plugwise__dhw_mode": {
         "off": "Off",
         "auto": "Auto",
