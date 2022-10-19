@@ -1450,8 +1450,12 @@ async def test_database_lock_and_overflow(
         assert not instance.unlock_database()
 
 
-async def test_database_lock_timeout(recorder_mock, hass):
+async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
     """Test locking database timeout when recorder stopped."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: Locking is not implemented for other engines
+        return
+
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
     instance = get_instance(hass)
@@ -1517,8 +1521,13 @@ async def test_database_connection_keep_alive_disabled_on_sqlite(
     async_setup_recorder_instance: SetupRecorderInstanceT,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    recorder_db_url: str,
 ):
     """Test we do not do keep alive for sqlite."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite, keepalive runs on other engines
+        return
+
     instance = await async_setup_recorder_instance(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await instance.async_recorder_ready.wait()
