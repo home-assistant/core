@@ -608,7 +608,6 @@ class Integration:
         "entity",
         "device",
         "hardware",
-        "integration",
         "helper",
         "hub",
         "service",
