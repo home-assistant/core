@@ -1875,3 +1875,102 @@ async def test_subscribe_entries_ws_filtered(hass, hass_ws_client, clear_handler
             "type": "added",
         }
     ]
+
+
+async def test_get_entries_ws_back_compat(hass, hass_ws_client, clear_handlers):
+    """Test get entries with the websocket api and integration is translated to new types."""
+    assert await async_setup_component(hass, "config", {})
+    mock_integration(hass, MockModule("comp1"))
+    mock_integration(
+        hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
+    )
+    mock_integration(
+        hass, MockModule("comp3", partial_manifest={"integration_type": "hub"})
+    )
+    mock_integration(
+        hass, MockModule("comp4", partial_manifest={"integration_type": "device"})
+    )
+    mock_integration(
+        hass, MockModule("comp5", partial_manifest={"integration_type": "service"})
+    )
+
+    for domain in ("comp1", "comp2", "comp3", "comp4", "comp5"):
+        entry = MockConfigEntry(
+            domain=domain,
+            title=f"Test {domain}",
+            source="bla",
+        )
+        entry.add_to_hass(hass)
+
+    ws_client = await hass_ws_client(hass)
+
+    # Verify backwards compatibility with asking for 'integration'
+    # since the cache will not be cleared on upgrade
+    await ws_client.send_json(
+        {
+            "id": 12,
+            "type": "config_entries/get",
+            "type_filter": "integration",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["id"] == 12
+    assert response["result"] == [
+        {
+            "disabled_by": None,
+            "domain": "comp1",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test comp1",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp3",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test comp3",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp4",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test comp4",
+        },
+        {
+            "disabled_by": None,
+            "domain": "comp5",
+            "entry_id": ANY,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "reason": None,
+            "source": "bla",
+            "state": "not_loaded",
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "title": "Test comp5",
+        },
+    ]
