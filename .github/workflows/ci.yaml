@@ -973,7 +973,7 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: password
-        options: --health-cmd="pg_isready -hlocalhost -upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
+        options: --health-cmd="pg_isready -hlocalhost -Upostgres" --health-interval=5s --health-timeout=2s --health-retries=3
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
