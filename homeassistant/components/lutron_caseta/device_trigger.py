@@ -43,13 +43,13 @@ LUTRON_MODEL_TO_TYPE = {
     "RRST-W2B-XX": "SunnataKeypad_2Button",
     "RRST-W3RL-XX": "SunnataKeypad_3ButtonRaiseLower",
     "RRST-W4B-XX": "SunnataKeypad_4Button",
-    "RRD-HN1RLD-XX": "SeeTouchHybridKeypad_DualGroupRaiseLower",
-    "RRD-HN2RLD-XX": "SeeTouchHybridKeypad_DualGroupDualRaiseLower",
-    "RRD-HN3BSRL-XX": "SeeTouchHybridKeypad_3ButtonRaiseLower",
-    "RRD-HN3S-XX": "SeeTouchHybridKeypad_3SceneRaiseLower",
-    "RRD-HN4S-XX": "SeeTouchHybridKeypad_4SceneRaiseLower",
-    "RRD-HN5BRL-XX": "SeeTouchHybridKeypad_5ButtonRaiseLower",
-    "RRD-HN6BRL-XX": "SeeTouchHybridKeypad_6ButtonRaiseLower",
+    "RRD-HN1RLD": "SeeTouchHybridKeypad_DualGroupRaiseLower",
+    "RRD-HN2RLD": "SeeTouchHybridKeypad_DualGroupDualRaiseLower",
+    "RRD-HN3BSRL": "SeeTouchHybridKeypad_3ButtonRaiseLower",
+    "RRD-HN3S": "SeeTouchHybridKeypad_3SceneRaiseLower",
+    "RRD-HN4S": "SeeTouchHybridKeypad_4SceneRaiseLower",
+    "RRD-HN5BRL": "SeeTouchHybridKeypad_5ButtonRaiseLower",
+    "RRD-HN6BRL": "SeeTouchHybridKeypad_6ButtonRaiseLower",
 }
 
 
