@@ -192,7 +192,6 @@ class FreeboxRouter:
         """Return the call."""
         return self._api.call
 
-
     @property
     def wifi(self) -> Wifi:
         """Return the wifi."""
