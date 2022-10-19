@@ -24,9 +24,9 @@ async def test_adam_climate_sensor_entities(
     assert state
     assert float(state.state) == 70.0
 
-    state = hass.states.get("sensor.cv_pomp_electricity_consumed_interval")
-    assert state
-    assert float(state.state) == 7.37
+    # Test disabled sensor
+    entity_id = "sensor.cv_pomp_electricity_consumed_interval"
+    assert hass.states.get(entity_id) is None
 
     await async_update_entity(hass, "sensor.zone_lisa_wk_battery")
 
