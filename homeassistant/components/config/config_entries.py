@@ -15,6 +15,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -64,7 +65,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
             domain = request.query["domain"]
         type_filter = None
         if "type" in request.query:
-            type_filter = request.query["type"]
+            type_filter = [request.query["type"]]
         return self.json(await async_matching_config_entries(hass, type_filter, domain))
 
 
@@ -405,7 +406,7 @@ async def ignore_config_flow(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "config_entries/get",
-        vol.Optional("type_filter"): str,
+        vol.Optional("type_filter"): vol.All(cv.ensure_list, [str]),
         vol.Optional("domain"): str,
     }
 )
@@ -427,7 +428,7 @@ async def config_entries_get(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "config_entries/subscribe",
-        vol.Optional("type_filter"): str,
+        vol.Optional("type_filter"): vol.All(cv.ensure_list, [str]),
     }
 )
 @websocket_api.async_response
@@ -445,7 +446,7 @@ async def config_entries_subscribe(
         """Forward config entry state events to websocket."""
         if type_filter:
             integration = await async_get_integration(hass, entry.domain)
-            if integration.integration_type != type_filter:
+            if integration.integration_type not in type_filter:
                 return
 
         connection.send_message(
@@ -475,7 +476,7 @@ async def config_entries_subscribe(
 
 
 async def async_matching_config_entries(
-    hass: HomeAssistant, type_filter: str | None, domain: str | None
+    hass: HomeAssistant, type_filter: list[str] | None, domain: str | None
 ) -> list[dict[str, Any]]:
     """Return matching config entries by type and/or domain."""
     kwargs = {}
@@ -483,7 +484,7 @@ async def async_matching_config_entries(
         kwargs["domain"] = domain
     entries = hass.config_entries.async_entries(**kwargs)
 
-    if type_filter is None:
+    if not type_filter:
         return [entry_json(entry) for entry in entries]
 
     integrations = {}
@@ -499,13 +500,17 @@ async def async_matching_config_entries(
         elif not isinstance(integration_or_exc, IntegrationNotFound):
             raise integration_or_exc
 
+    # Filter out entries that don't match the type filter
+    # when only helpers are requested, also filter out entries
+    # from unknown integrations. This prevent them from showing
+    # up in the helpers UI.
     entries = [
         entry
         for entry in entries
-        if (type_filter != "helper" and entry.domain not in integrations)
+        if (type_filter != ["helper"] and entry.domain not in integrations)
         or (
             entry.domain in integrations
-            and integrations[entry.domain].integration_type == type_filter
+            and integrations[entry.domain].integration_type in type_filter
         )
     ]
 
