@@ -1,6 +1,6 @@
-add_allow_url:
-  name: Add allow url
-  description: Add a new allowlist filter subscription to AdGuard Home.
+add_url:
+  name: Add url
+  description: Add a new allowlist/blocklist filter subscription to AdGuard Home.
   fields:
     name:
       name: Name
@@ -16,29 +16,16 @@ add_allow_url:
       example: https://www.example.com/filter/1.txt
       selector:
         text:
-
-add_block_url:
-  name: Add block url
-  description: Add a new blocklist filter subscription to AdGuard Home.
-  fields:
-    name:
-      name: Name
-      description: The name of the filter subscription.
-      required: true
-      example: Example
+    allow:
+      name: Allow
+      description: The filter you are adding is an allowlist filter. "true" for an allowlist, or "false" for a regular blocklist.
+      default: false
       selector:
-        text:
-    url:
-      name: Url
-      description: The filter URL to subscribe to, containing the filter rules.
-      required: true
-      example: https://www.example.com/filter/2.txt
-      selector:
-        text:
+        boolean:
 
-remove_allow_url:
-  name: Remove allow url
-  description: Removes an allowlist filter subscription from AdGuard Home.
+remove_url:
+  name: Remove url
+  description: Removes an allowlist/blocklist filter subscription from AdGuard Home.
   fields:
     url:
       name: Url
@@ -47,18 +34,12 @@ remove_allow_url:
       example: https://www.example.com/filter/1.txt
       selector:
         text:
-
-remove_block_url:
-  name: Remove block url
-  description: Removes a blocklist filter subscription from AdGuard Home.
-  fields:
-    url:
-      name: Url
-      description: The filter subscription URL to remove.
-      required: true
-      example: https://www.example.com/filter/2.txt
+    allow:
+      name: Allow
+      description: The filter you are removing is an allowlist filter. "true" for an allowlist, or "false" for a regular blocklist.
+      default: false
       selector:
-        text:
+        boolean:
 
 enable_url:
   name: Enable url
