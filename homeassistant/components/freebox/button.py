@@ -39,6 +39,11 @@ BUTTON_DESCRIPTIONS: tuple[FreeboxButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
         async_press=lambda router: router.reboot(),
     ),
+    FreeboxButtonEntityDescription(
+        key="mark_calls_as_read",
+        name="Mark missed calls as read",
+        async_press=lambda router: router.call.mark_calls_log_as_read(),
+    ),
 )
 
 
