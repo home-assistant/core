@@ -193,7 +193,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 username=self.email,
                 password=self.password,
                 cookie_file_name=self.hass.config.path(
-                    STORAGE_DIR, f"verisure-{user_input[CONF_EMAIL]}"
+                    STORAGE_DIR, f"verisure_{user_input[CONF_EMAIL]}"
                 ),
             )
 
