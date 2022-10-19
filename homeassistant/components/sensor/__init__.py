@@ -49,6 +49,7 @@ from homeassistant.const import (  # noqa: F401, pylint: disable=[hass-deprecate
     TEMP_KELVIN,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -473,7 +474,7 @@ class SensorEntity(Entity):
 
         return None
 
-    def get_initial_entity_options(self) -> Mapping[str, Mapping[str, Any]] | None:
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options.
 
         These will be stored in the entity registry the first time the  entity is seen,

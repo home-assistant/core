@@ -340,7 +340,7 @@ class Entity(ABC):
         """
         return self._attr_capability_attributes
 
-    def get_initial_entity_options(self) -> Mapping[str, Mapping[str, Any]] | None:
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options.
 
         These will be stored in the entity registry the first time the  entity is seen,

@@ -94,6 +94,9 @@ class RegistryEntryHider(StrEnum):
     USER = "user"
 
 
+EntityOptionsType = Mapping[str, Mapping[str, Any]]
+
+
 @attr.s(slots=True, frozen=True)
 class RegistryEntry:
     """Entity Registry Entry."""
@@ -114,7 +117,7 @@ class RegistryEntry:
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     has_entity_name: bool = attr.ib(default=False)
     name: str | None = attr.ib(default=None)
-    options: Mapping[str, Mapping[str, Any]] = attr.ib(
+    options: EntityOptionsType = attr.ib(
         default=None, converter=attr.converters.default_if_none(factory=dict)  # type: ignore[misc]
     )
     # As set by integration
@@ -398,8 +401,7 @@ class EntityRegistry:
         disabled_by: RegistryEntryDisabler | None = None,
         hidden_by: RegistryEntryHider | None = None,
         # Function to generate initial entity options if it gets created
-        get_initial_options: Callable[[], Mapping[str, Mapping[str, Any]] | None]
-        | None = None,
+        get_initial_options: Callable[[], EntityOptionsType | None] | None = None,
         # Data that we want entry to have
         capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         config_entry: ConfigEntry | None | UndefinedType = UNDEFINED,
@@ -594,7 +596,7 @@ class EntityRegistry:
         supported_features: int | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
         platform: str | None | UndefinedType = UNDEFINED,
-        options: Mapping[str, Mapping[str, Any]] | UndefinedType = UNDEFINED,
+        options: EntityOptionsType | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -783,7 +785,7 @@ class EntityRegistry:
     ) -> RegistryEntry:
         """Update entity options."""
         old = self.entities[entity_id]
-        new_options: Mapping[str, Mapping[str, Any]] = {**old.options, domain: options}
+        new_options: EntityOptionsType = {**old.options, domain: options}
         return self._async_update_entity(entity_id, options=new_options)
 
     async def async_load(self) -> None:
