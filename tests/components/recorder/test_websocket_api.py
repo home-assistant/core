@@ -122,7 +122,7 @@ VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
 }
 
 
-async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
+async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
@@ -200,9 +200,9 @@ async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
     ],
 )
 async def test_statistics_during_period_unit_conversion(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     attributes,
     state,
     value,
@@ -293,9 +293,9 @@ async def test_statistics_during_period_unit_conversion(
     ],
 )
 async def test_sum_statistics_during_period_unit_conversion(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     attributes,
     state,
     value,
@@ -386,7 +386,7 @@ async def test_sum_statistics_during_period_unit_conversion(
     ],
 )
 async def test_statistics_during_period_invalid_unit_conversion(
-    hass, hass_ws_client, recorder_mock, custom_units
+    recorder_mock, hass, hass_ws_client, custom_units
 ):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
@@ -425,7 +425,7 @@ async def test_statistics_during_period_invalid_unit_conversion(
 
 
 async def test_statistics_during_period_in_the_past(
-    hass, hass_ws_client, recorder_mock
+    recorder_mock, hass, hass_ws_client
 ):
     """Test statistics_during_period in the past."""
     hass.config.set_time_zone("UTC")
@@ -548,7 +548,7 @@ async def test_statistics_during_period_in_the_past(
 
 
 async def test_statistics_during_period_bad_start_time(
-    hass, hass_ws_client, recorder_mock
+    recorder_mock, hass, hass_ws_client
 ):
     """Test statistics_during_period."""
     client = await hass_ws_client()
@@ -566,7 +566,7 @@ async def test_statistics_during_period_bad_start_time(
 
 
 async def test_statistics_during_period_bad_end_time(
-    hass, hass_ws_client, recorder_mock
+    recorder_mock, hass, hass_ws_client
 ):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
@@ -614,9 +614,9 @@ async def test_statistics_during_period_bad_end_time(
     ],
 )
 async def test_list_statistic_ids(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     units,
     attributes,
     display_unit,
@@ -724,7 +724,7 @@ async def test_list_statistic_ids(
         assert response["result"] == []
 
 
-async def test_validate_statistics(hass, hass_ws_client, recorder_mock):
+async def test_validate_statistics(recorder_mock, hass, hass_ws_client):
     """Test validate_statistics can be called."""
     id = 1
 
@@ -746,7 +746,7 @@ async def test_validate_statistics(hass, hass_ws_client, recorder_mock):
     await assert_validation_result(client, {})
 
 
-async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
+async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
     """Test removing statistics."""
     now = dt_util.utcnow()
 
@@ -873,7 +873,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     "new_unit, new_unit_class", [("dogs", None), (None, None), ("W", "power")]
 )
 async def test_update_statistics_metadata(
-    hass, hass_ws_client, recorder_mock, new_unit, new_unit_class
+    recorder_mock, hass, hass_ws_client, new_unit, new_unit_class
 ):
     """Test removing statistics."""
     now = dt_util.utcnow()
@@ -964,7 +964,7 @@ async def test_update_statistics_metadata(
     }
 
 
-async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
+async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
     """Test change unit of recorded statistics."""
     now = dt_util.utcnow()
 
@@ -1083,7 +1083,7 @@ async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
 
 
 async def test_change_statistics_unit_errors(
-    hass, hass_ws_client, recorder_mock, caplog
+    recorder_mock, hass, hass_ws_client, caplog
 ):
     """Test change unit of recorded statistics."""
     now = dt_util.utcnow()
@@ -1200,7 +1200,7 @@ async def test_change_statistics_unit_errors(
     await assert_statistics(expected_statistics)
 
 
-async def test_recorder_info(hass, hass_ws_client, recorder_mock):
+async def test_recorder_info(recorder_mock, hass, hass_ws_client):
     """Test getting recorder status."""
     client = await hass_ws_client()
 
@@ -1329,7 +1329,7 @@ async def test_backup_start_no_recorder(
 
 
 async def test_backup_start_timeout(
-    hass, hass_ws_client, hass_supervisor_access_token, recorder_mock
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token
 ):
     """Test getting backup start when recorder is not present."""
     client = await hass_ws_client(hass, hass_supervisor_access_token)
@@ -1348,7 +1348,7 @@ async def test_backup_start_timeout(
 
 
 async def test_backup_end(
-    hass, hass_ws_client, hass_supervisor_access_token, recorder_mock
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token
 ):
     """Test backup start."""
     client = await hass_ws_client(hass, hass_supervisor_access_token)
@@ -1366,7 +1366,7 @@ async def test_backup_end(
 
 
 async def test_backup_end_without_start(
-    hass, hass_ws_client, hass_supervisor_access_token, recorder_mock
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token
 ):
     """Test backup start."""
     client = await hass_ws_client(hass, hass_supervisor_access_token)
@@ -1400,7 +1400,7 @@ async def test_backup_end_without_start(
     ],
 )
 async def test_get_statistics_metadata(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit, unit_class
+    recorder_mock, hass, hass_ws_client, units, attributes, unit, unit_class
 ):
     """Test get_statistics_metadata."""
     now = dt_util.utcnow()
@@ -1545,7 +1545,7 @@ async def test_get_statistics_metadata(
     ),
 )
 async def test_import_statistics(
-    hass, hass_ws_client, recorder_mock, caplog, source, statistic_id
+    recorder_mock, hass, hass_ws_client, caplog, source, statistic_id
 ):
     """Test importing statistics."""
     client = await hass_ws_client()
@@ -1772,7 +1772,7 @@ async def test_import_statistics(
     ),
 )
 async def test_adjust_sum_statistics_energy(
-    hass, hass_ws_client, recorder_mock, caplog, source, statistic_id
+    recorder_mock, hass, hass_ws_client, caplog, source, statistic_id
 ):
     """Test adjusting statistics."""
     client = await hass_ws_client()
@@ -1968,7 +1968,7 @@ async def test_adjust_sum_statistics_energy(
     ),
 )
 async def test_adjust_sum_statistics_gas(
-    hass, hass_ws_client, recorder_mock, caplog, source, statistic_id
+    recorder_mock, hass, hass_ws_client, caplog, source, statistic_id
 ):
     """Test adjusting statistics."""
     client = await hass_ws_client()
@@ -2168,9 +2168,9 @@ async def test_adjust_sum_statistics_gas(
     ),
 )
 async def test_adjust_sum_statistics_errors(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     caplog,
     state_unit,
     statistic_unit,
