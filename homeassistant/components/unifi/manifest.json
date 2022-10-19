@@ -21,5 +21,6 @@
     }
   ],
   "iot_class": "local_push",
+  "integration_type": "hub",
   "loggers": ["aiounifi"]
 }
