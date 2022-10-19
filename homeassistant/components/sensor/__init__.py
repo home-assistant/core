@@ -407,6 +407,7 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     device_class: SensorDeviceClass | str | None = None
+    suggested_unit_of_measurement: str | None = None
     last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     state_class: SensorStateClass | str | None = None
@@ -423,6 +424,7 @@ class SensorEntity(Entity):
     _attr_native_value: StateType | date | datetime | Decimal = None
     _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
+    _attr_suggested_unit_of_measurement: str | None
     _attr_unit_of_measurement: None = (
         None  # Subclasses of SensorEntity should not set this
     )
@@ -471,6 +473,28 @@ class SensorEntity(Entity):
 
         return None
 
+    @property
+    def initial_entity_options(self) -> Mapping[str, Mapping[str, Any]] | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the  entity is seen,
+        and then never updated.
+        """
+        suggested_unit_of_measurement = self.suggested_unit_of_measurement
+        native_unit_of_measurement = self.native_unit_of_measurement
+
+        if suggested_unit_of_measurement is None:
+            suggested_unit_of_measurement = self.hass.config.units.get_converted_unit(
+                self.device_class, native_unit_of_measurement
+            )
+
+        if suggested_unit_of_measurement is None:
+            return None
+
+        return {
+            DOMAIN: {"suggested_unit_of_measurement": suggested_unit_of_measurement}
+        }
+
     @final
     @property
     def state_attributes(self) -> dict[str, Any] | None:
@@ -514,13 +538,33 @@ class SensorEntity(Entity):
             return self.entity_description.native_unit_of_measurement
         return None
 
+    @property
+    def suggested_unit_of_measurement(self) -> str | None:
+        """Return the unit in which the sensor should be displayed.
+
+        Note:
+            suggested_unit_of_measurement is stored in the entity registry the first time
+            the entity is seen, and then never updated.
+        """
+        if hasattr(self, "_attr_suggested_unit_of_measurement"):
+            return self._attr_suggested_unit_of_measurement
+        if hasattr(self, "entity_description"):
+            return self.entity_description.suggested_unit_of_measurement
+        return None
+
     @final
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        # Highest priority: Unit set by user, with fallback to unit conversion rules
         if self._sensor_option_unit_of_measurement:
             return self._sensor_option_unit_of_measurement
 
+        # Second priority: Unit suggested by integration for non registered entities
+        if not self.registry_entry and self.suggested_unit_of_measurement:
+            return self.suggested_unit_of_measurement
+
+        # Third priority: Legacy temperature conversion
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
@@ -529,6 +573,7 @@ class SensorEntity(Entity):
         ):
             return self.hass.config.units.temperature_unit
 
+        # Fourth priority: Native unit
         return native_unit_of_measurement
 
     @final
@@ -624,22 +669,30 @@ class SensorEntity(Entity):
 
         return super().__repr__()
 
-    @callback
-    def async_registry_entry_updated(self) -> None:
-        """Run when the entity registry entry has been updated."""
+    def _custom_unit_or_none(self, registry_key: str) -> str | None:
+        """Return a custom unit, or None if it's not compatible with the native unit."""
         assert self.registry_entry
         if (
             (sensor_options := self.registry_entry.options.get(DOMAIN))
-            and (custom_unit := sensor_options.get(CONF_UNIT_OF_MEASUREMENT))
+            and (custom_unit := sensor_options.get(registry_key))
             and (device_class := self.device_class) in UNIT_CONVERTERS
             and self.native_unit_of_measurement
             in UNIT_CONVERTERS[device_class].VALID_UNITS
             and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
-            self._sensor_option_unit_of_measurement = custom_unit
-            return
+            return cast(str, custom_unit)
+        return None
 
-        self._sensor_option_unit_of_measurement = None
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._sensor_option_unit_of_measurement = self._custom_unit_or_none(
+            CONF_UNIT_OF_MEASUREMENT
+        )
+        if not self._sensor_option_unit_of_measurement:
+            self._sensor_option_unit_of_measurement = self._custom_unit_or_none(
+                "suggested_unit_of_measurement"
+            )
 
 
 @dataclass
