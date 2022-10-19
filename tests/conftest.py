@@ -891,9 +891,12 @@ def recorder_db_url(pytestconfig):
         assert not sqlalchemy_utils.database_exists(db_url)
         sqlalchemy_utils.create_database(db_url, encoding=charset)
     elif db_url.startswith("postgresql://"):
-        pass
+        import sqlalchemy_utils
+
+        assert not sqlalchemy_utils.database_exists(db_url)
+        sqlalchemy_utils.create_database(db_url, encoding="utf8")
     yield db_url
-    if db_url.startswith("mysql://"):
+    if db_url.startswith("mysql://") or db_url.startswith("postgresql://"):
         sqlalchemy_utils.drop_database(db_url)
 
 
