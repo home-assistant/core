@@ -63,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     heatpump.word_swap = entry.data[CONF_WORD_SWAP]
     await heatpump.initialize()
 
+    connection: Connection
     connection_type = entry.data[CONF_CONNECTION_TYPE]
 
     if connection_type == CONF_CONNECTION_TYPE_NIBEGW:
@@ -82,9 +83,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await connection.start()
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, connection.stop)
-    )
+    assert heatpump.model
+
+    async def _stop(_):
+        await connection.stop()
+
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop))
 
     coordinator = Coordinator(hass, heatpump, connection)
 
@@ -208,8 +212,8 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
 
     def get_coil_value(self, coil: Coil) -> int | str | float | None:
         """Return a coil with data and check for validity."""
-        if coil := self.data.get(coil.address):
-            return coil.value
+        if coil_with_data := self.data.get(coil.address):
+            return coil_with_data.value
         return None
 
     def get_coil_float(self, coil: Coil) -> float | None:

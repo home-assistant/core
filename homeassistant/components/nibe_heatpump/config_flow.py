@@ -150,9 +150,10 @@ async def validate_modbus_input(
     try:
         coil = heatpump.get_coil_by_name("reset-alarm-40022")
         coil = await connection.read_coil(coil)
-        value = 0
-        if coil.has_mappings:
+        value: str | int = 0
+        if coil.mappings:
             value = coil.mappings[str(value)]
+        coil.value = value
         coil = await connection.write_coil(coil)
     except CoilNotFoundException as exception:
         raise FieldError(
