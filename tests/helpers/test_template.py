@@ -50,6 +50,7 @@ def _set_up_units(hass):
         MASS_GRAMS,
         PRESSURE_PA,
         LENGTH_MILLIMETERS,
+        {},
     )
 
 
