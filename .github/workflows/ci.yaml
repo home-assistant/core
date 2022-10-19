@@ -931,7 +931,7 @@ jobs:
       - name: Register pytest slow test problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
-      - name: Install SQL Python librarie
+      - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
           pip install mysqlclient sqlalchemy_utils
@@ -945,14 +945,13 @@ jobs:
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --durations=10 \
             -n 1 \
             --cov="homeassistant.components.recorder" \
             --cov-report=xml \
             --cov-report=term-missing \
             -o console_output_style=count \
             --durations=0 \
-            --durations-min=1 \
+            --durations-min=10 \
             -p no:sugar \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
             tests/components/recorder
