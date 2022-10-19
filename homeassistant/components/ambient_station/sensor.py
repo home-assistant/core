@@ -197,6 +197,7 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,

@@ -173,6 +173,7 @@ SENSOR_TYPES = (
         name="Rain rate",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     RfxtrxSensorEntityDescription(
         key="Sound",
