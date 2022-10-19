@@ -1478,7 +1478,7 @@ def test_delete_metadata_duplicates_no_duplicates(hass_recorder, caplog):
 
 @pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
 async def test_validate_db_schema(
-    hass, async_setup_recorder_instance, caplog, db_engine
+    async_setup_recorder_instance, hass, caplog, db_engine
 ):
     """Test validating DB schema with MySQL and PostgreSQL.
 
@@ -1495,7 +1495,7 @@ async def test_validate_db_schema(
 
 
 async def test_validate_db_schema_fix_utf8_issue(
-    hass, async_setup_recorder_instance, caplog
+    async_setup_recorder_instance, hass, caplog
 ):
     """Test validating DB schema with MySQL.
 
@@ -1534,8 +1534,8 @@ async def test_validate_db_schema_fix_utf8_issue(
     (("max", 1.0), ("mean", 1.0), ("min", 1.0), ("state", 1.0), ("sum", 1.0)),
 )
 async def test_validate_db_schema_fix_float_issue(
-    hass,
     async_setup_recorder_instance,
+    hass,
     caplog,
     db_engine,
     table,
@@ -1607,8 +1607,8 @@ async def test_validate_db_schema_fix_float_issue(
     ),
 )
 async def test_validate_db_schema_fix_statistics_datetime_issue(
-    hass,
     async_setup_recorder_instance,
+    hass,
     caplog,
     db_engine,
     table,
