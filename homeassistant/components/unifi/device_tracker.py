@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from aiounifi.interfaces.api_handlers import SOURCE_DATA, SOURCE_EVENT
+from aiounifi.models.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.models.event import EventKey
 
 from homeassistant.components.device_tracker import DOMAIN, SourceType
