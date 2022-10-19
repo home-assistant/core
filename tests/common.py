@@ -933,11 +933,11 @@ def assert_setup_component(count, domain=None):
 SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
 
 
-def init_recorder_component(hass, add_config=None):
+def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        config[recorder.CONF_DB_URL] = db_url
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 

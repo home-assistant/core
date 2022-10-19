@@ -591,7 +591,7 @@ def record_states(hass):
     return zero, four, states
 
 
-async def test_fetch_period_api(hass, hass_client, recorder_mock):
+async def test_fetch_period_api(recorder_mock, hass, hass_client):
     """Test the fetch period view for history."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
@@ -600,7 +600,7 @@ async def test_fetch_period_api(hass, hass_client, recorder_mock):
 
 
 async def test_fetch_period_api_with_use_include_order(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history with include order."""
     await async_setup_component(
@@ -611,7 +611,7 @@ async def test_fetch_period_api_with_use_include_order(
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_client):
+async def test_fetch_period_api_with_minimal_response(recorder_mock, hass, hass_client):
     """Test the fetch period view for history with minimal_response."""
     now = dt_util.utcnow()
     await async_setup_component(hass, "history", {})
@@ -651,7 +651,7 @@ async def test_fetch_period_api_with_minimal_response(hass, recorder_mock, hass_
     ).replace('"', "")
 
 
-async def test_fetch_period_api_with_no_timestamp(hass, hass_client, recorder_mock):
+async def test_fetch_period_api_with_no_timestamp(recorder_mock, hass, hass_client):
     """Test the fetch period view for history with no timestamp."""
     await async_setup_component(hass, "history", {})
     client = await hass_client()
@@ -659,7 +659,7 @@ async def test_fetch_period_api_with_no_timestamp(hass, hass_client, recorder_mo
     assert response.status == HTTPStatus.OK
 
 
-async def test_fetch_period_api_with_include_order(hass, hass_client, recorder_mock):
+async def test_fetch_period_api_with_include_order(recorder_mock, hass, hass_client):
     """Test the fetch period view for history."""
     await async_setup_component(
         hass,
@@ -680,7 +680,7 @@ async def test_fetch_period_api_with_include_order(hass, hass_client, recorder_m
 
 
 async def test_fetch_period_api_with_entity_glob_include(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -708,7 +708,7 @@ async def test_fetch_period_api_with_entity_glob_include(
 
 
 async def test_fetch_period_api_with_entity_glob_exclude(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -748,7 +748,7 @@ async def test_fetch_period_api_with_entity_glob_exclude(
 
 
 async def test_fetch_period_api_with_entity_glob_include_and_exclude(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test the fetch period view for history."""
     await async_setup_component(
@@ -790,7 +790,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     assert response_json[3][0]["entity_id"] == "switch.match"
 
 
-async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
+async def test_entity_ids_limit_via_api(recorder_mock, hass, hass_client):
     """Test limiting history to entity_ids."""
     await async_setup_component(
         hass,
@@ -815,7 +815,7 @@ async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
 
 
 async def test_entity_ids_limit_via_api_with_skip_initial_state(
-    hass, hass_client, recorder_mock
+    recorder_mock, hass, hass_client
 ):
     """Test limiting history to entity_ids with skip_initial_state."""
     await async_setup_component(
@@ -848,7 +848,7 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(
     assert response_json[1][0]["entity_id"] == "light.cow"
 
 
-async def test_statistics_during_period(hass, hass_ws_client, recorder_mock, caplog):
+async def test_statistics_during_period(recorder_mock, hass, hass_ws_client, caplog):
     """Test history/statistics_during_period forwards to recorder."""
     now = dt_util.utcnow()
     await async_setup_component(hass, "history", {})
@@ -893,7 +893,7 @@ async def test_statistics_during_period(hass, hass_ws_client, recorder_mock, cap
         ws_mock.assert_awaited_once()
 
 
-async def test_list_statistic_ids(hass, hass_ws_client, recorder_mock, caplog):
+async def test_list_statistic_ids(recorder_mock, hass, hass_ws_client, caplog):
     """Test history/list_statistic_ids forwards to recorder."""
     await async_setup_component(hass, "history", {})
     client = await hass_ws_client()
@@ -918,7 +918,7 @@ async def test_list_statistic_ids(hass, hass_ws_client, recorder_mock, caplog):
         ws_mock.assert_called_once()
 
 
-async def test_history_during_period(hass, hass_ws_client, recorder_mock):
+async def test_history_during_period(recorder_mock, hass, hass_ws_client):
     """Test history_during_period."""
     now = dt_util.utcnow()
 
@@ -1051,7 +1051,7 @@ async def test_history_during_period(hass, hass_ws_client, recorder_mock):
 
 
 async def test_history_during_period_impossible_conditions(
-    hass, hass_ws_client, recorder_mock
+    recorder_mock, hass, hass_ws_client
 ):
     """Test history_during_period returns when condition cannot be true."""
     await async_setup_component(hass, "history", {})
@@ -1113,7 +1113,7 @@ async def test_history_during_period_impossible_conditions(
     "time_zone", ["UTC", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
 )
 async def test_history_during_period_significant_domain(
-    time_zone, hass, hass_ws_client, recorder_mock
+    time_zone, recorder_mock, hass, hass_ws_client
 ):
     """Test history_during_period with climate domain."""
     hass.config.set_time_zone(time_zone)
@@ -1278,7 +1278,7 @@ async def test_history_during_period_significant_domain(
 
 
 async def test_history_during_period_bad_start_time(
-    hass, hass_ws_client, recorder_mock
+    recorder_mock, hass, hass_ws_client
 ):
     """Test history_during_period bad state time."""
     await async_setup_component(
@@ -1300,7 +1300,7 @@ async def test_history_during_period_bad_start_time(
     assert response["error"]["code"] == "invalid_start_time"
 
 
-async def test_history_during_period_bad_end_time(hass, hass_ws_client, recorder_mock):
+async def test_history_during_period_bad_end_time(recorder_mock, hass, hass_ws_client):
     """Test history_during_period bad end time."""
     now = dt_util.utcnow()
 
@@ -1325,7 +1325,7 @@ async def test_history_during_period_bad_end_time(hass, hass_ws_client, recorder
 
 
 async def test_history_during_period_with_use_include_order(
-    hass, hass_ws_client, recorder_mock
+    recorder_mock, hass, hass_ws_client
 ):
     """Test history_during_period."""
     now = dt_util.utcnow()

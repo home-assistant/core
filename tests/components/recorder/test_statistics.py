@@ -448,9 +448,9 @@ def test_statistics_duplicated(hass_recorder, caplog):
     ),
 )
 async def test_import_statistics(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     caplog,
     source,
     statistic_id,

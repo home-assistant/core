@@ -276,7 +276,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.4
 
 # homeassistant.components.unifi
-aiounifi==39
+aiounifi==40
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -543,7 +543,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.45.0
+dbus-fast==1.46.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3

@@ -177,7 +177,7 @@ class Integration:
     @property
     def integration_type(self) -> str:
         """Get integration_type."""
-        return self.manifest.get("integration_type", "integration")
+        return self.manifest.get("integration_type", "hub")
 
     @property
     def iot_class(self) -> str | None:
