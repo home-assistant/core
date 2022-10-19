@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from bs4 import BeautifulSoup
 import httpx
 import voluptuous as vol
 
@@ -31,12 +30,15 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,15 +107,16 @@ async def async_setup_platform(
             auth = (username, password)
 
     rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
-    await rest.async_update()
 
-    if rest.data is None:
+    coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
+    await coordinator.async_refresh()
+    if coordinator.data is None:
         raise PlatformNotReady
 
     async_add_entities(
         [
             ScrapeSensor(
-                rest,
+                coordinator,
                 name,
                 select,
                 attr,
@@ -124,16 +127,15 @@ async def async_setup_platform(
                 state_class,
             )
         ],
-        True,
     )
 
 
-class ScrapeSensor(SensorEntity):
+class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], SensorEntity):
     """Representation of a web scrape sensor."""
 
     def __init__(
         self,
-        rest: RestData,
+        coordinator: ScrapeCoordinator,
         name: str,
         select: str | None,
         attr: str | None,
@@ -144,7 +146,7 @@ class ScrapeSensor(SensorEntity):
         state_class: str | None,
     ) -> None:
         """Initialize a web scrape sensor."""
-        self.rest = rest
+        super().__init__(coordinator)
         self._attr_native_value = None
         self._select = select
         self._attr = attr
@@ -157,9 +159,8 @@ class ScrapeSensor(SensorEntity):
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
-        raw_data = BeautifulSoup(self.rest.data, "lxml")
-        _LOGGER.debug(raw_data)
-
+        raw_data = self.coordinator.data
+        _LOGGER.debug("Raw beautiful soup: %s", raw_data)
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
@@ -177,25 +178,17 @@ class ScrapeSensor(SensorEntity):
                 "Attribute '%s' not found in %s", self._attr, self.entity_id
             )
             value = None
-        _LOGGER.debug(value)
+        _LOGGER.debug("Parsed value: %s", value)
         return value
-
-    async def async_update(self) -> None:
-        """Get the latest data from the source and updates the state."""
-        await self.rest.async_update()
-        await self._async_update_from_rest_data()
 
     async def async_added_to_hass(self) -> None:
         """Ensure the data from the initial update is reflected in the state."""
-        await self._async_update_from_rest_data()
+        await super().async_added_to_hass()
+        self._async_update_from_rest_data()
 
-    async def _async_update_from_rest_data(self) -> None:
+    def _async_update_from_rest_data(self) -> None:
         """Update state from the rest data."""
-        if self.rest.data is None:
-            _LOGGER.error("Unable to retrieve data for %s", self.name)
-            return
-
-        value = await self.hass.async_add_executor_job(self._extract_value)
+        value = self._extract_value()
 
         if self._value_template is not None:
             self._attr_native_value = (
@@ -203,3 +196,9 @@ class ScrapeSensor(SensorEntity):
             )
         else:
             self._attr_native_value = value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_from_rest_data()
+        super()._handle_coordinator_update()
