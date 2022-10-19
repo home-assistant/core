@@ -398,6 +398,7 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     device_class: SensorDeviceClass | str | None = None
+    display_unit_of_measurement: str | None = None
     last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     state_class: SensorStateClass | str | None = None
@@ -409,6 +410,7 @@ class SensorEntity(Entity):
 
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | str | None
+    _attr_display_unit_of_measurement: str | None = None
     _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime | Decimal = None
@@ -505,13 +507,33 @@ class SensorEntity(Entity):
             return self.entity_description.native_unit_of_measurement
         return None
 
+    @property
+    def display_unit_of_measurement(self) -> str | None:
+        """Return the unit in which the sensor should be displayed.
+
+        Note:
+            display_unit_of_measurement is stored in the entity registry the first time
+            the entity is seen, and then never updated.
+        """
+        if hasattr(self, "_attr_display_unit_of_measurement"):
+            return self._attr_display_unit_of_measurement
+        if hasattr(self, "entity_description"):
+            return self.entity_description.display_unit_of_measurement
+        return None
+
     @final
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        # Highest priority: Unit set by user
         if self._sensor_option_unit_of_measurement:
             return self._sensor_option_unit_of_measurement
 
+        # Second priority: Unit set by integration
+        if self.display_unit_of_measurement:
+            return self.display_unit_of_measurement
+
+        # Third priority: Unit conversion rules
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
@@ -520,6 +542,7 @@ class SensorEntity(Entity):
         ):
             return self.hass.config.units.temperature_unit
 
+        # Fourth priority: Native unit
         return native_unit_of_measurement
 
     @final
