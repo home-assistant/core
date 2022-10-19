@@ -9,15 +9,15 @@ import voluptuous as vol
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
-    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-    LENGTH_MILLIMETERS,
     MASS,
     MASS_GRAMS,
     MASS_KILOGRAMS,
     MASS_OUNCES,
     MASS_POUNDS,
+    PRECIPITATION_INCHES,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE,
     PRESSURE_PA,
     PRESSURE_PSI,
@@ -87,6 +87,7 @@ class UnitSystem:
     def __init__(
         self,
         name: str,
+        *,
         temperature: str,
         length: str,
         wind_speed: str,
@@ -241,24 +242,24 @@ validate_unit_system = vol.All(
 
 METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
-    TEMP_CELSIUS,
-    LENGTH_KILOMETERS,
-    SPEED_METERS_PER_SECOND,
-    VOLUME_LITERS,
-    MASS_GRAMS,
-    PRESSURE_PA,
-    LENGTH_MILLIMETERS,
+    temperature=TEMP_CELSIUS,
+    length=LENGTH_KILOMETERS,
+    wind_speed=SPEED_METERS_PER_SECOND,
+    volume=VOLUME_LITERS,
+    mass=MASS_GRAMS,
+    pressure=PRESSURE_PA,
+    accumulated_precipitation=PRECIPITATION_MILLIMETERS,
 )
 
 US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-    TEMP_FAHRENHEIT,
-    LENGTH_MILES,
-    SPEED_MILES_PER_HOUR,
-    VOLUME_GALLONS,
-    MASS_POUNDS,
-    PRESSURE_PSI,
-    LENGTH_INCHES,
+    temperature=TEMP_FAHRENHEIT,
+    length=LENGTH_MILES,
+    wind_speed=SPEED_MILES_PER_HOUR,
+    volume=VOLUME_GALLONS,
+    mass=MASS_POUNDS,
+    pressure=PRESSURE_PSI,
+    accumulated_precipitation=PRECIPITATION_INCHES,
 )
 
 IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM
