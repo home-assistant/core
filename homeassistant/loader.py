@@ -604,15 +604,7 @@ class Integration:
     @property
     def integration_type(
         self,
-    ) -> Literal[
-        "entity",
-        "device",
-        "hardware",
-        "helper",
-        "hub",
-        "service",
-        "system",
-    ]:
+    ) -> Literal["entity", "device", "hardware", "helper", "hub", "service", "system"]:
         """Return the integration type."""
         return self.manifest.get("integration_type", "hub")
 
