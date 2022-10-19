@@ -11,10 +11,10 @@ from typing import Any, Final, TypedDict, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-    LENGTH_MILLIMETERS,
+    PRECIPITATION_INCHES,
+    PRECIPITATION_MILLIMETERS,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -111,8 +111,8 @@ VALID_UNITS_TEMPERATURE: set[str] = {
     TEMP_FAHRENHEIT,
 }
 VALID_UNITS_PRECIPITATION: set[str] = {
-    LENGTH_MILLIMETERS,
-    LENGTH_INCHES,
+    PRECIPITATION_MILLIMETERS,
+    PRECIPITATION_INCHES,
 }
 VALID_UNITS_VISIBILITY: set[str] = {
     LENGTH_KILOMETERS,
