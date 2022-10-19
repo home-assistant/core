@@ -275,7 +275,7 @@ def test_join_lists_include_dir_merge_named(mock_walk, try_both_loaders):
         conf = "mqtt: !include_dir_merge_named /test"
         with io.StringIO(conf) as file:
             doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
-            assert doc["key"] == {
+            assert doc["mqtt"] == {
                 "sensor": [
                     {"name": "entity_1"},
                     {"name": "entity_2"},
