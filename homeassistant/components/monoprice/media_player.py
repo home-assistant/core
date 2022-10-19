@@ -1,4 +1,6 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
+from __future__ import annotations
+
 import logging
 
 from pymonoprice import Monoprice
@@ -154,7 +156,7 @@ class MonopriceZone(
         self._name = f"Zone {self._zone_id}"
 
         self._snapshot = None
-        self._state = None
+        self._state: MediaPlayerState | None = None
         self._volume = None
         self._source = None
         self._mute = None
