@@ -20,7 +20,7 @@ MOCK_DATA = {
     "keep_alive": "00:05:00",
     "initial_hvac_mode": "auto",
     "precision": 0.5,
-    "target_temp_step": 17.5,
+    "target_temp_step": 0.5,
 }
 
 
@@ -53,7 +53,7 @@ async def test_import(hass: HomeAssistant):
     assert result["options"]["name"] == "Generic Thermostat"
 
 
-async def test_form_already_configured(hass):
+async def test_form_already_configured(hass: HomeAssistant):
     """Test that an entry with unique id can only be added once."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -76,3 +76,35 @@ async def test_form_already_configured(hass):
 
     assert result_configure["type"] == data_entry_flow.FlowResultType.ABORT
     assert result_configure["reason"] == "already_configured"
+
+
+async def test_options_flow(hass: HomeAssistant):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"{DOMAIN}.generic_thermostat",
+        data={},
+        options=MOCK_DATA,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "heater": "switch.doe",
+            "target_sensor": "sensor.doe",
+            "target_temp": 5,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"]["target_temp"] == 5.0
