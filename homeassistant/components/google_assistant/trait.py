@@ -2414,20 +2414,20 @@ class SensorStateTrait(_Trait):
     commands: list[str] = []
 
     def _air_quality_description_for_aqi(self, aqi):
-        if (aqi is None or aqi.isnumeric() == False):
+        if aqi is None or aqi.isnumeric() is False:
             return "unknown"
-        elif (int(aqi) <= 50):
+        if int(aqi) <= 50:
             return "healthy"
-        elif (int(aqi) <= 100):
+        if int(aqi) <= 100:
             return "moderate"
-        elif (int(aqi) <= 150):
+        if int(aqi) <= 150:
             return "unhealthy for sensitive groups"
-        elif (int(aqi) <= 200):
+        if int(aqi) <= 200:
             return "unhealthy"
-        elif (int(aqi) <= 300):
+        if int(aqi) <= 300:
             return "very unhealthy"
-        else:
-            return "hazardous"
+
+        return "hazardous"
 
     @classmethod
     def supported(cls, domain, features, device_class, _):
@@ -2438,46 +2438,55 @@ class SensorStateTrait(_Trait):
         """Return attributes for a sync request."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
         data = self.sensor_types.get(device_class)
-        
-        if (data[0] == self.sensor_types.get(sensor.SensorDeviceClass.AQI)[0]):
+
+        if data[0] == self.sensor_types.get(sensor.SensorDeviceClass.AQI)[0]:
             return {
-                "sensorStatesSupported": [{
-                    "name": data[0],
-                    "numericCapabilities": {"rawValueUnit": data[1]},
-                    "descriptiveCapabilities": {
-                        "availableStates": [
-                            "healthy",
-                            "moderate",
-                            "unhealthy for sensitive groups",
-                            "unhealthy",
-                            "very unhealthy",
-                            "hazardous",
-                            "unknown"
-                        ],
-                    },
-                }]
+                "sensorStatesSupported": [
+                    {
+                        "name": data[0],
+                        "numericCapabilities": {"rawValueUnit": data[1]},
+                        "descriptiveCapabilities": {
+                            "availableStates": [
+                                "healthy",
+                                "moderate",
+                                "unhealthy for sensitive groups",
+                                "unhealthy",
+                                "very unhealthy",
+                                "hazardous",
+                                "unknown",
+                            ],
+                        },
+                    }
+                ]
             }
-        elif data is not None:
+        if data is not None:
             return {
-                "sensorStatesSupported": [{
-                    "name": data[0],
-                    "numericCapabilities": {"rawValueUnit": data[1]},
-                }]
+                "sensorStatesSupported": [
+                    {
+                        "name": data[0],
+                        "numericCapabilities": {"rawValueUnit": data[1]},
+                    }
+                ]
             }
 
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
         device_class = self.state.attributes.get(ATTR_DEVICE_CLASS)
         data = self.sensor_types.get(device_class)
-        
+
         if data[0] == self.sensor_types.get(sensor.SensorDeviceClass.AQI)[0]:
             return {
                 "currentSensorStateData": [
-                    {"name": data[0], "currentSensorState": self._air_quality_description_for_aqi(self.state.state)},
-                    {"name": data[1], "rawValue": self.state.state}
+                    {
+                        "name": data[0],
+                        "currentSensorState": self._air_quality_description_for_aqi(
+                            self.state.state
+                        ),
+                    },
+                    {"name": data[1], "rawValue": self.state.state},
                 ]
             }
-        elif data is not None:
+        if data is not None:
             return {
                 "currentSensorStateData": [
                     {"name": data[0], "rawValue": self.state.state}
