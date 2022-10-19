@@ -82,7 +82,7 @@ async def async_setup_platform(
     resource: str = config[CONF_RESOURCE]
     method: str = "GET"
     payload: str | None = None
-    headers: str | None = config.get(CONF_HEADERS)
+    headers: dict[str, str] | None = config.get(CONF_HEADERS)
     verify_ssl: bool = config[CONF_VERIFY_SSL]
     select: str | None = config.get(CONF_SELECT)
     attr: str | None = config.get(CONF_ATTR)
