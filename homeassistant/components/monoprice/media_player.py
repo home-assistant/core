@@ -160,7 +160,6 @@ class MonopriceZone(
         self._volume = None
         self._source = None
         self._mute = None
-        self._update_success = True
 
     @property
     def available(self) -> bool:
