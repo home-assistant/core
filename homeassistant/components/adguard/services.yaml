@@ -16,12 +16,12 @@ add_url:
       example: https://www.example.com/filter/1.txt
       selector:
         text:
-    allow:
-      name: Allow
-      description: The filter you are adding is an allowlist filter. "true" for an allowlist, or "false" for a regular blocklist.
-      default: false
+    list_type:
+      name: List type
+      description: The list type (blocklist/allowlist) of thefilter you are adding.
+      default: blocklist
       selector:
-        boolean:
+        text:
 
 remove_url:
   name: Remove url
@@ -34,12 +34,12 @@ remove_url:
       example: https://www.example.com/filter/1.txt
       selector:
         text:
-    allow:
-      name: Allow
-      description: The filter you are removing is an allowlist filter. "true" for an allowlist, or "false" for a regular blocklist.
-      default: false
+    list_type:
+      name: List type
+      description: The list type (blocklist/allowlist) of thefilter you are removing.
+      default: blocklist
       selector:
-        boolean:
+        text:
 
 enable_url:
   name: Enable url

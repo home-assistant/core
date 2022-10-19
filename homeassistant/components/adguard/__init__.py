@@ -22,10 +22,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CONF_ALLOW,
     CONF_FORCE,
+    CONF_LIST_TYPE,
     DATA_ADGUARD_CLIENT,
     DOMAIN,
+    LIST_TYPES,
     SERVICE_ADD_URL,
     SERVICE_DISABLE_URL,
     SERVICE_ENABLE_URL,
@@ -38,13 +39,13 @@ SERVICE_ADD_URL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_URL): cv.url,
-        vol.Optional(CONF_ALLOW, default=False): cv.boolean,
+        vol.Optional(CONF_LIST_TYPE, default="blocklist"): vol.In(LIST_TYPES),
     }
 )
 SERVICE_REMOVE_URL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.url,
-        vol.Optional(CONF_ALLOW, default=False): cv.boolean,
+        vol.Optional(CONF_LIST_TYPE, default="blocklist"): vol.In(LIST_TYPES),
     }
 )
 SERVICE_REFRESH_SCHEMA = vol.Schema(
@@ -78,17 +79,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def add_url(call: ServiceCall) -> None:
         """Service call to add a new filter subscription to AdGuard Home."""
-        await adguard.filtering.add_url(
-            allowlist=call.data[CONF_ALLOW],
-            name=call.data[CONF_NAME],
-            url=call.data[CONF_URL],
-        )
+        if call.data[CONF_LIST_TYPE] == "allowlist":
+            await adguard.filtering.add_url(
+                allowlist=True,
+                name=call.data[CONF_NAME],
+                url=call.data[CONF_URL],
+            )
+        else:
+            await adguard.filtering.add_url(
+                allowlist=False,
+                name=call.data[CONF_NAME],
+                url=call.data[CONF_URL],
+            )
 
     async def remove_url(call: ServiceCall) -> None:
         """Service call to remove a filter subscription from AdGuard Home."""
-        await adguard.filtering.remove_url(
-            allowlist=call.data[CONF_ALLOW], url=call.data[CONF_URL]
-        )
+        if call.data[CONF_LIST_TYPE] == "allowlist":
+            await adguard.filtering.remove_url(allowlist=True, url=call.data[CONF_URL])
+        else:
+            await adguard.filtering.remove_url(allowlist=False, url=call.data[CONF_URL])
 
     async def enable_url(call: ServiceCall) -> None:
         """Service call to enable a filter subscription in AdGuard Home."""
