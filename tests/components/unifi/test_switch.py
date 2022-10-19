@@ -3,7 +3,6 @@
 from copy import deepcopy
 from datetime import timedelta
 
-from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_DEVICE, MESSAGE_EVENT
 from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketState
 
@@ -745,7 +744,7 @@ async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     mock_unifi_websocket(
         data={
-            "meta": {"message": MESSAGE_CLIENT_REMOVED},
+            "meta": {"message": MessageKey.CLIENT_REMOVED.value},
             "data": [CLIENT_1, UNBLOCKED],
         }
     )
@@ -792,7 +791,7 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     mock_unifi_websocket(
         data={
-            "meta": {"message": MESSAGE_EVENT},
+            "meta": {"message": MessageKey.EVENT.value},
             "data": [EVENT_BLOCKED_CLIENT_UNBLOCKED],
         }
     )
@@ -805,7 +804,7 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     mock_unifi_websocket(
         data={
-            "meta": {"message": MESSAGE_EVENT},
+            "meta": {"message": MessageKey.EVENT.value},
             "data": [EVENT_BLOCKED_CLIENT_BLOCKED],
         }
     )
@@ -960,7 +959,7 @@ async def test_outlet_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     mock_unifi_websocket(
         data={
-            "meta": {"message": MESSAGE_DEVICE},
+            "meta": {"message": MessageKey.DEVICE.value},
             "data": [outlet_up1],
         }
     )
@@ -1048,7 +1047,7 @@ async def test_new_client_discovered_on_block_control(
 
     mock_unifi_websocket(
         data={
-            "meta": {"message": MESSAGE_EVENT},
+            "meta": {"message": MessageKey.EVENT.value},
             "data": [EVENT_BLOCKED_CLIENT_CONNECTED],
         }
     )
@@ -1154,7 +1153,7 @@ async def test_new_client_discovered_on_poe_control(
 
     mock_unifi_websocket(
         data={
-            "meta": {"message": MESSAGE_EVENT},
+            "meta": {"message": MessageKey.EVENT.value},
             "data": [EVENT_CLIENT_2_CONNECTED],
         }
     )

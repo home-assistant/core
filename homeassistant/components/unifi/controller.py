@@ -9,7 +9,7 @@ from typing import Any
 
 from aiohttp import CookieJar
 import aiounifi
-from aiounifi.controller import (
+from aiounifi.interfaces.messages import (
     DATA_CLIENT_REMOVED,
     DATA_DPI_GROUP,
     DATA_DPI_GROUP_REMOVED,

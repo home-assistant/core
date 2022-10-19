@@ -3,7 +3,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from aiounifi.controller import MESSAGE_CLIENT, MESSAGE_CLIENT_REMOVED
+from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -89,7 +89,7 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
     mock_unifi_websocket(
         data={
-            "meta": {"message": MESSAGE_CLIENT},
+            "meta": {"message": MessageKey.CLIENT.value},
             "data": [wireless_client],
         }
     )
@@ -201,7 +201,7 @@ async def test_uptime_sensors(
     with patch("homeassistant.util.dt.now", return_value=now):
         mock_unifi_websocket(
             data={
-                "meta": {"message": MESSAGE_CLIENT},
+                "meta": {"message": MessageKey.CLIENT.value},
                 "data": [uptime_client],
             }
         )
@@ -217,7 +217,7 @@ async def test_uptime_sensors(
     with patch("homeassistant.util.dt.now", return_value=now):
         mock_unifi_websocket(
             data={
-                "meta": {"message": MESSAGE_CLIENT},
+                "meta": {"message": MessageKey.CLIENT.value},
                 "data": [uptime_client],
             }
         )
@@ -310,7 +310,7 @@ async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
     mock_unifi_websocket(
         data={
-            "meta": {"message": MESSAGE_CLIENT_REMOVED},
+            "meta": {"message": MessageKey.CLIENT_REMOVED.value},
             "data": [wired_client],
         }
     )
