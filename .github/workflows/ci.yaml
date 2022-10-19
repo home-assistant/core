@@ -967,7 +967,7 @@ jobs:
   pytest-postgres:
     runs-on: ubuntu-20.04
     services:
-      mariadb:
+      postgres:
         image: postgres:15.0
         ports:
           - 5432:5432
@@ -992,7 +992,7 @@ jobs:
       matrix:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     name: >-
-      Run tests Python ${{ matrix.python-version }} (mariadb)
+      Run tests Python ${{ matrix.python-version }} (postgresql)
     steps:
       - name: Install additional OS dependencies
         run: |
@@ -1061,7 +1061,7 @@ jobs:
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: coverage-${{ matrix.python-version }}-mariadb
+          name: coverage-${{ matrix.python-version }}-postgresql
           path: coverage.xml
       - name: Check dirty
         run: |
