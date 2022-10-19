@@ -874,7 +874,7 @@ jobs:
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
-      && (needs.info.outputs.test_full_suite == 'true' || needs.info.outputs.tests_glob)
+      && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
       - base
