@@ -262,6 +262,29 @@ def test_include_dir_merge_named(mock_walk, try_both_loaders):
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
+def test_join_lists_include_dir_merge_named(mock_walk, try_both_loaders):
+    """Test joining mqtt entity lists with include dir merge named yaml."""
+    mock_walk.return_value = [["/test", [], ["first.yaml", "second.yaml"]]]
+
+    files = {
+        "/test/first.yaml": "sensor:\n  - name: entity_1",
+        "/test/second.yaml": "sensor:\n  - name: entity_2\n  - name: entity_3",
+    }
+
+    with patch_yaml_files(files):
+        conf = "mqtt: !include_dir_merge_named /test"
+        with io.StringIO(conf) as file:
+            doc = yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
+            assert doc["key"] == {
+                "sensor": [
+                    {"name": "entity_1"},
+                    {"name": "entity_2"},
+                    {"name": "entity_3"},
+                ]
+            }
+
+
+@patch("homeassistant.util.yaml.loader.os.walk")
 def test_include_dir_merge_named_recursive(mock_walk, try_both_loaders):
     """Test include dir merge named yaml."""
     mock_walk.return_value = [

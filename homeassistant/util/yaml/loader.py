@@ -280,7 +280,10 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> Ordere
 def _include_dir_merge_named_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> OrderedDict:
-    """Load multiple files from directory as a merged dictionary."""
+    """Load multiple files from directory as a merged dictionary.
+
+    Join lists on base level of the dictionary.
+    """
     mapping: OrderedDict = OrderedDict()
     loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
     for fname in _find_files(loc, "*.yaml"):
@@ -288,6 +291,11 @@ def _include_dir_merge_named_yaml(
             continue
         loaded_yaml = load_yaml(fname, loader.secrets)
         if isinstance(loaded_yaml, dict):
+            for key, value in loaded_yaml.items():
+                if key not in mapping:
+                    continue
+                if isinstance(value, list) and isinstance(mapping[key], list):
+                    loaded_yaml[key] = mapping[key] + loaded_yaml[key]
             mapping.update(loaded_yaml)
     return _add_reference(mapping, loader, node)
 
