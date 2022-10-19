@@ -47,7 +47,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if not integration.manifest:
+        if not integration.manifest or "codeowners" not in integration.manifest:
             continue
 
         codeowners = integration.manifest["codeowners"]

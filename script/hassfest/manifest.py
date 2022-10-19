@@ -158,7 +158,7 @@ def verify_wildcard(value: str):
     return value
 
 
-MANIFEST_SCHEMA = vol.Schema(
+INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
         vol.Required("name"): str,
@@ -254,14 +254,30 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
-        vol.Optional("supported_brands"): vol.Schema({str: str}),
     }
 )
 
-CUSTOM_INTEGRATION_MANIFEST_SCHEMA = MANIFEST_SCHEMA.extend(
+VIRTUAL_INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
+    {
+        vol.Required("domain"): str,
+        vol.Required("name"): str,
+        vol.Required("integration_type"): "virtual",
+        vol.Exclusive("iot_standard", "virtual_integration"): vol.Any(
+            "homekit", "zigbee", "zwave"
+        ),
+        vol.Exclusive("supported_by", "virtual_integration"): str,
+    }
+)
+
+MANIFEST_SCHEMA = vol.Any(
+    INTEGRATION_MANIFEST_SCHEMA,
+    VIRTUAL_INTEGRATION_MANIFEST_SCHEMA,
+    msg="should be either a virtual integration or integration manifest",
+)
+
+CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
         vol.Optional("version"): vol.All(str, verify_version),
-        vol.Remove("supported_brands"): dict,
     }
 )
 
@@ -312,15 +328,19 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
     if (
         integration.manifest["domain"] not in NO_IOT_CLASS
         and "iot_class" not in integration.manifest
+        and integration.manifest.get("integration_type") != "virtual"
     ):
         integration.add_error("manifest", "Domain is missing an IoT Class")
 
-    for domain, _name in integration.manifest.get("supported_brands", {}).items():
-        if (core_components_dir / domain).exists():
-            integration.add_warning(
-                "manifest",
-                f"Supported brand domain {domain} collides with built-in core integration",
-            )
+    if (
+        integration.manifest.get("integration_type") == "virtual"
+        and (supported_by := integration.manifest.get("supported_by"))
+        and not (core_components_dir / supported_by).exists()
+    ):
+        integration.add_error(
+            "manifest",
+            "Virtual integration points to non-existing supported_by integration",
+        )
 
     if not integration.core:
         validate_version(integration)
