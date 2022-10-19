@@ -170,7 +170,7 @@ async def test_form_default_pin(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with VALID_DEVICE_URL_PATCH, VALID_DEVICE_CONFIG_PATCH, patch(
         "homeassistant.components.frontier_silicon.async_setup_entry",
@@ -197,7 +197,7 @@ async def test_form_nondefault_pin(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with VALID_DEVICE_URL_PATCH, INVALID_PIN_PATCH:
         result2 = await hass.config_entries.flow.async_configure(
@@ -207,7 +207,7 @@ async def test_form_nondefault_pin(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] is None
+    assert result["errors"] == {}
 
     with VALID_DEVICE_CONFIG_PATCH, patch(
         "homeassistant.components.frontier_silicon.async_setup_entry",
@@ -234,7 +234,7 @@ async def test_form_nondefault_pin_invalid(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with VALID_DEVICE_URL_PATCH, INVALID_PIN_PATCH:
         result2 = await hass.config_entries.flow.async_configure(
@@ -244,7 +244,7 @@ async def test_form_nondefault_pin_invalid(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] is None
+    assert result["errors"] == {}
 
     with INVALID_PIN_PATCH:
         result3 = await hass.config_entries.flow.async_configure(
@@ -287,7 +287,7 @@ async def test_invalid_device_url(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with INVALID_DEVICE_URL_PATCH:
         result2 = await hass.config_entries.flow.async_configure(
@@ -306,7 +306,7 @@ async def test_device_url_unexpected_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with UNEXPECTED_ERROR_GET_WEBFSAPI_ENDPOINT_PATCH:
         result2 = await hass.config_entries.flow.async_configure(
