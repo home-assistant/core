@@ -70,7 +70,7 @@ async def test_get_triggers(
             "entity_id": entity_id,
             "metadata": {"secondary": False},
         }
-        for trigger in ["turn_off", "turn_on"]
+        for trigger in ["turn_on"]
     ]
 
     # Test triggers are either samsungtv specific triggers or media_player entity triggers
@@ -87,7 +87,7 @@ async def test_get_triggers(
 async def test_if_fires_on_state_change(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
-    """Test for turn_on and turn_off triggers firing."""
+    """Test for turn_on trigger firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRY_WS_WITH_MAC)
     entity_id = f"{MP_DOMAIN}.fake"
 
@@ -113,23 +113,6 @@ async def test_if_fires_on_state_change(
                         },
                     },
                 },
-                {
-                    "trigger": {
-                        "platform": "device",
-                        "domain": DOMAIN,
-                        "device_id": "",
-                        "entity_id": entity_id,
-                        "type": "turn_off",
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "turn_off - {{ trigger.entity_id }} - {{ trigger.id}}"
-                            )
-                        },
-                    },
-                },
             ]
         },
     )
@@ -149,14 +132,3 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == f"turn_on - {entity_id} - 0"
-
-    await hass.services.async_call(
-        MP_DOMAIN,
-        "turn_off",
-        {"entity_id": entity_id},
-        blocking=True,
-    )
-
-    await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == f"turn_off - {entity_id} - 0"

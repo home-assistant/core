@@ -17,9 +17,9 @@ from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, EVENT_TURN_OFF, EVENT_TURN_ON
+from .const import DOMAIN, EVENT_TURN_ON
 
-TRIGGER_TYPES = {"turn_on", "turn_off"}
+TRIGGER_TYPES = {"turn_on"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
@@ -46,15 +46,6 @@ async def async_get_triggers(
                     CONF_DOMAIN: DOMAIN,
                     CONF_ENTITY_ID: entry.entity_id,
                     CONF_TYPE: "turn_on",
-                }
-            )
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "turn_off",
                 }
             )
 
@@ -100,8 +91,5 @@ async def async_attach_trigger(
     """Attach a trigger."""
     if config[CONF_TYPE] == "turn_on":
         return _attach_trigger(hass, config, action, EVENT_TURN_ON, trigger_info)
-
-    if config[CONF_TYPE] == "turn_off":
-        return _attach_trigger(hass, config, action, EVENT_TURN_OFF, trigger_info)
 
     return lambda: None
