@@ -62,6 +62,7 @@ SELECT_TYPES = (
         command=lambda api, loc, opt: api.set_dhw_mode(opt),
         current_option_key="dhw_mode",
         options_key="dhw_modes",
+        device_class="plugwise__dhw_mode",
     ),
 )
 
