@@ -94,7 +94,7 @@ async def websocket_detect_config(
         info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_METRIC
     else:
         # pylint: disable-next=protected-access
-        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_IMPERIAL
+        info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_US_CUSTOMARY
 
     if location_info.latitude:
         info["latitude"] = location_info.latitude
