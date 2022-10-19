@@ -18,7 +18,7 @@ add_url:
         text:
     list_type:
       name: List type
-      description: The list type (blocklist/allowlist) of thefilter you are adding.
+      description: The list type (blocklist/allowlist) of the filter you are adding.
       default: blocklist
       selector:
         text:
@@ -36,7 +36,7 @@ remove_url:
         text:
     list_type:
       name: List type
-      description: The list type (blocklist/allowlist) of thefilter you are removing.
+      description: The list type (blocklist/allowlist) of the filter you are removing.
       default: blocklist
       selector:
         text:
