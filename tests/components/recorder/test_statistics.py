@@ -1476,6 +1476,7 @@ def test_delete_metadata_duplicates_no_duplicates(hass_recorder, caplog):
     assert "duplicated statistics_meta rows" not in caplog.text
 
 
+@pytest.mark.parametrize("enable_statistics_table_validation", [True])
 @pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
 async def test_validate_db_schema(
     async_setup_recorder_instance, hass, caplog, db_engine
@@ -1494,6 +1495,7 @@ async def test_validate_db_schema(
     assert "Database is about to correct DB schema errors" not in caplog.text
 
 
+@pytest.mark.parametrize("enable_statistics_table_validation", [True])
 async def test_validate_db_schema_fix_utf8_issue(
     async_setup_recorder_instance, hass, caplog
 ):
@@ -1525,6 +1527,7 @@ async def test_validate_db_schema_fix_utf8_issue(
     )
 
 
+@pytest.mark.parametrize("enable_statistics_table_validation", [True])
 @pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
 @pytest.mark.parametrize(
     "table, replace_index", (("statistics", 0), ("statistics_short_term", 1))
@@ -1595,6 +1598,7 @@ async def test_validate_db_schema_fix_float_issue(
     modify_columns_mock.assert_called_once_with(ANY, ANY, table, modification)
 
 
+@pytest.mark.parametrize("enable_statistics_table_validation", [True])
 @pytest.mark.parametrize("db_engine", ("mysql", "postgresql"))
 @pytest.mark.parametrize(
     "table, replace_index", (("statistics", 0), ("statistics_short_term", 1))
