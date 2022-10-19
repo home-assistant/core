@@ -794,7 +794,7 @@ async def test_durations(hass, worker_finished_stream):
             assert math.isclose(
                 (av_part.duration - av_part.start_time) / av.time_base,
                 part.duration,
-                abs_tol=2 / av_part.streams.video[0].rate + 1e-6,
+                abs_tol=2 / av_part.streams.video[0].average_rate + 1e-6,
             )
             # Also check that the sum of the durations so far matches the last dts
             # in the media.
