@@ -51,10 +51,12 @@ CONF_DEFAULT_LOCAL_IP: Final = "0.0.0.0"
 
 DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     individual_address=XKNX.DEFAULT_ADDRESS,
+    local_ip=None,
     multicast_group=DEFAULT_MCAST_GRP,
     multicast_port=DEFAULT_MCAST_PORT,
-    state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
     rate_limit=CONF_KNX_DEFAULT_RATE_LIMIT,
+    route_back=False,
+    state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
 )
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
@@ -62,6 +64,8 @@ CONF_KNX_LABEL_TUNNELING_TCP: Final = "TCP"
 CONF_KNX_LABEL_TUNNELING_TCP_SECURE: Final = "TCP with IP Secure"
 CONF_KNX_LABEL_TUNNELING_UDP: Final = "UDP"
 CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK: Final = "UDP with route back / NAT mode"
+
+OPTION_MANUAL_TUNNEL: Final = "Manual"
 
 _IA_SELECTOR = selector.TextSelector()
 _IP_SELECTOR = selector.TextSelector()
@@ -80,6 +84,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _found_gateways: list[GatewayDescriptor]
     _found_tunnels: list[GatewayDescriptor]
     _selected_tunnel: GatewayDescriptor | None
     _tunneling_config: KNXConfigEntryData | None
@@ -95,6 +100,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        self._found_gateways = []
         self._found_tunnels = []
         self._selected_tunnel = None
         self._tunneling_config = None
@@ -104,35 +110,41 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle connection type configuration."""
         if user_input is not None:
             connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
-            if connection_type == CONF_KNX_AUTOMATIC:
-                entry_data = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
-                    connection_type=CONF_KNX_AUTOMATIC
-                )
-                return self.async_create_entry(
-                    title=CONF_KNX_AUTOMATIC.capitalize(),
-                    data=entry_data,
-                )
-
             if connection_type == CONF_KNX_ROUTING:
                 return await self.async_step_routing()
 
-            if connection_type == CONF_KNX_TUNNELING and self._found_tunnels:
+            if connection_type == CONF_KNX_TUNNELING:
+                self._found_tunnels = [
+                    gateway
+                    for gateway in self._found_gateways
+                    if gateway.supports_tunnelling
+                ]
+                self._found_tunnels.sort(
+                    key=lambda tunnel: tunnel.individual_address.raw
+                    if tunnel.individual_address
+                    else 0
+                )
                 return await self.async_step_tunnel()
 
-            return await self.async_step_manual_tunnel()
+            # Automatic connection type
+            entry_data = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+                connection_type=CONF_KNX_AUTOMATIC
+            )
+            return self.async_create_entry(
+                title=CONF_KNX_AUTOMATIC.capitalize(),
+                data=entry_data,
+            )
 
         supported_connection_types = {
             CONF_KNX_TUNNELING: CONF_KNX_TUNNELING.capitalize(),
             CONF_KNX_ROUTING: CONF_KNX_ROUTING.capitalize(),
         }
-        if gateways := await scan_for_gateways():
+        self._found_gateways = await scan_for_gateways()
+        if self._found_gateways:
             # add automatic at first position only if a gateway responded
             supported_connection_types = {
                 CONF_KNX_AUTOMATIC: CONF_KNX_AUTOMATIC.capitalize()
             } | supported_connection_types
-            self._found_tunnels = [
-                gateway for gateway in gateways if gateway.supports_tunnelling
-            ]
 
         fields = {
             vol.Required(CONF_KNX_CONNECTION_TYPE): vol.In(supported_connection_types)
@@ -142,21 +154,46 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_tunnel(self, user_input: dict | None = None) -> FlowResult:
         """Select a tunnel from a list. Will be skipped if the gateway scan was unsuccessful or if only one gateway was found."""
         if user_input is not None:
+            if user_input[CONF_KNX_GATEWAY] == OPTION_MANUAL_TUNNEL:
+                if self._found_tunnels:
+                    self._selected_tunnel = self._found_tunnels[0]
+                return await self.async_step_manual_tunnel()
+
             self._selected_tunnel = next(
                 tunnel
                 for tunnel in self._found_tunnels
                 if user_input[CONF_KNX_GATEWAY] == str(tunnel)
             )
-            return await self.async_step_manual_tunnel()
+            connection_type = (
+                CONF_KNX_TUNNELING_TCP_SECURE
+                if self._selected_tunnel.tunnelling_requires_secure
+                else CONF_KNX_TUNNELING_TCP
+                if self._selected_tunnel.supports_tunnelling_tcp
+                else CONF_KNX_TUNNELING
+            )
+            self._tunneling_config = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+                host=self._selected_tunnel.ip_addr,
+                port=self._selected_tunnel.port,
+                route_back=False,
+                connection_type=connection_type,
+            )
+            if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
+                return self.async_show_menu(
+                    step_id="secure_tunneling",
+                    menu_options=["secure_knxkeys", "secure_manual"],
+                )
+            return self.async_create_entry(
+                title=f"Tunneling @ {self._selected_tunnel}",
+                data=self._tunneling_config,
+            )
 
-        #  skip this step if the user has only one unique gateway.
-        if len(self._found_tunnels) == 1:
-            self._selected_tunnel = self._found_tunnels[0]
+        if not self._found_tunnels:
             return await self.async_step_manual_tunnel()
 
         errors: dict = {}
-        tunnels_repr = {str(tunnel) for tunnel in self._found_tunnels}
-        fields = {vol.Required(CONF_KNX_GATEWAY): vol.In(tunnels_repr)}
+        tunnel_options = [str(tunnel) for tunnel in self._found_tunnels]
+        tunnel_options.append(OPTION_MANUAL_TUNNEL)
+        fields = {vol.Required(CONF_KNX_GATEWAY): vol.In(tunnel_options)}
 
         return self.async_show_form(
             step_id="tunnel", data_schema=vol.Schema(fields), errors=errors
@@ -181,23 +218,25 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             if not errors:
-                connection_type = user_input[CONF_KNX_TUNNELING_TYPE]
-                entry_data = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+                _user_tunnel_type = user_input[CONF_KNX_TUNNELING_TYPE]
+                connection_type = (
+                    CONF_KNX_TUNNELING_TCP_SECURE
+                    if _user_tunnel_type == CONF_KNX_LABEL_TUNNELING_TCP_SECURE
+                    else CONF_KNX_TUNNELING_TCP
+                    if _user_tunnel_type == CONF_KNX_LABEL_TUNNELING_TCP
+                    else CONF_KNX_TUNNELING
+                )
+                self._tunneling_config = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
                     host=_host,
                     port=user_input[CONF_PORT],
                     route_back=(
-                        connection_type == CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
+                        _user_tunnel_type == CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
                     ),
                     local_ip=_local_ip,
-                    connection_type=(
-                        CONF_KNX_TUNNELING_TCP
-                        if connection_type == CONF_KNX_LABEL_TUNNELING_TCP
-                        else CONF_KNX_TUNNELING
-                    ),
+                    connection_type=connection_type,
                 )
 
-                if connection_type == CONF_KNX_LABEL_TUNNELING_TCP_SECURE:
-                    self._tunneling_config = entry_data
+                if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
                     return self.async_show_menu(
                         step_id="secure_tunneling",
                         menu_options=["secure_knxkeys", "secure_manual"],
@@ -205,30 +244,40 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=f"Tunneling @ {_host}",
-                    data=entry_data,
+                    data=self._tunneling_config,
                 )
 
         connection_methods: list[str] = [
-            CONF_KNX_LABEL_TUNNELING_TCP,
             CONF_KNX_LABEL_TUNNELING_UDP,
-            CONF_KNX_LABEL_TUNNELING_TCP_SECURE,
             CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
+            CONF_KNX_LABEL_TUNNELING_TCP,
+            CONF_KNX_LABEL_TUNNELING_TCP_SECURE,
         ]
-        ip_address = ""
-        port = DEFAULT_MCAST_PORT
-        if self._selected_tunnel is not None:
+        ip_address = user_input[CONF_HOST] if user_input else ""
+        port = user_input[CONF_PORT] if user_input else DEFAULT_MCAST_PORT
+        default_type = (
+            user_input[CONF_KNX_TUNNELING_TYPE]
+            if user_input
+            # if no tunnel was found, default route_back to avoid NAT issues
+            else CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
+        )
+        if not user_input and self._selected_tunnel is not None:
+            # default to first found tunnel for first attempt
             ip_address = self._selected_tunnel.ip_addr
             port = self._selected_tunnel.port
-            if not self._selected_tunnel.supports_tunnelling_tcp:
-                connection_methods.remove(CONF_KNX_LABEL_TUNNELING_TCP)
-                connection_methods.remove(CONF_KNX_LABEL_TUNNELING_TCP_SECURE)
-
+            if self._selected_tunnel.tunnelling_requires_secure:
+                default_type = CONF_KNX_LABEL_TUNNELING_TCP_SECURE
+            elif self._selected_tunnel.supports_tunnelling_tcp:
+                default_type = CONF_KNX_LABEL_TUNNELING_TCP
+            else:
+                default_type = CONF_KNX_LABEL_TUNNELING_UDP
         fields = {
-            vol.Required(CONF_KNX_TUNNELING_TYPE): vol.In(connection_methods),
+            vol.Required(CONF_KNX_TUNNELING_TYPE, default=default_type): vol.In(
+                connection_methods
+            ),
             vol.Required(CONF_HOST, default=ip_address): _IP_SELECTOR,
             vol.Required(CONF_PORT, default=port): _PORT_SELECTOR,
         }
-
         if self.show_advanced_options:
             fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR
 
