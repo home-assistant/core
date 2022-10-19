@@ -137,17 +137,18 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Client]
+ClientFixture = Callable[[], Awaitable[Client]]
 
 
 @pytest.fixture
 async def ws_client(
-    hass_ws_client: Callable[[...], ClientWebSocketResponse]
+    hass: HomeAssistant,
+    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
 ) -> ClientFixture:
     """Fixture for creating the test websocket client."""
 
     async def create_client() -> Client:
-        ws_client = await hass_ws_client()
+        ws_client = await hass_ws_client(hass)
         return Client(ws_client)
 
     return create_client
