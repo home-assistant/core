@@ -39,10 +39,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up a BleBox entry."""
     product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    async_add_entities(
-        [BleBoxLightEntity(feature) for feature in product.features.get("lights", [])],
-        True,
-    )
+    entities = [
+        BleBoxLightEntity(feature) for feature in product.features.get("lights", [])
+    ]
+    async_add_entities(entities, True)
 
 
 COLOR_MODE_MAP = {

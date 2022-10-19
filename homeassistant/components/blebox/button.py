@@ -21,13 +21,10 @@ async def async_setup_entry(
     """Set up a BleBox button entry."""
     product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
 
-    async_add_entities(
-        [
-            BleBoxButtonEntity(feature)
-            for feature in product.features.get("buttons", [])
-        ],
-        True,
-    )
+    entities = [
+        BleBoxButtonEntity(feature) for feature in product.features.get("buttons", [])
+    ]
+    async_add_entities(entities, True)
 
 
 class BleBoxButtonEntity(BleBoxEntity[blebox_uniapi.button.Button], ButtonEntity):
