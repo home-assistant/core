@@ -130,7 +130,9 @@ class Manifest(TypedDict, total=False):
     name: str
     disabled: str
     domain: str
-    integration_type: Literal["entity", "integration", "hardware", "helper", "system"]
+    integration_type: Literal[
+        "entity", "device", "hardware", "helper", "hub", "service", "system"
+    ]
     dependencies: list[str]
     after_dependencies: list[str]
     requirements: list[str]
@@ -224,7 +226,7 @@ async def async_get_custom_components(
 
 async def async_get_config_flows(
     hass: HomeAssistant,
-    type_filter: Literal["helper", "integration"] | None = None,
+    type_filter: Literal["device", "helper", "hub", "service"] | None = None,
 ) -> set[str]:
     """Return cached list of config flows."""
     # pylint: disable=import-outside-toplevel
@@ -262,9 +264,11 @@ async def async_get_integration_descriptions(
     core_flows: dict[str, Any] = json_loads(flow)
     custom_integrations = await async_get_custom_components(hass)
     custom_flows: dict[str, Any] = {
-        "integration": {},
+        "device": {},
         "hardware": {},
         "helper": {},
+        "hub": {},
+        "service": {},
     }
 
     for integration in custom_integrations.values():
@@ -272,7 +276,7 @@ async def async_get_integration_descriptions(
         if integration.integration_type in ("entity", "system"):
             continue
 
-        for integration_type in ("integration", "hardware", "helper"):
+        for integration_type in ("device", "hardware", "helper", "hub", "service"):
             if integration.domain not in core_flows[integration_type]:
                 continue
             del core_flows[integration_type][integration.domain]
@@ -281,6 +285,7 @@ async def async_get_integration_descriptions(
 
         metadata = {
             "config_flow": integration.config_flow,
+            "integration_type": integration.integration_type,
             "iot_class": integration.iot_class,
             "name": integration.name,
         }
@@ -599,9 +604,9 @@ class Integration:
     @property
     def integration_type(
         self,
-    ) -> Literal["entity", "integration", "hardware", "helper", "system"]:
+    ) -> Literal["entity", "device", "hardware", "helper", "hub", "service", "system"]:
         """Return the integration type."""
-        return self.manifest.get("integration_type", "integration")
+        return self.manifest.get("integration_type", "hub")
 
     @property
     def mqtt(self) -> list[str] | None:

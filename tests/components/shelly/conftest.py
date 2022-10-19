@@ -146,6 +146,13 @@ def mock_coap():
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_ws_server():
+    """Mock out ws_server."""
+    with patch("homeassistant.components.shelly.utils.get_ws_context"):
+        yield
+
+
 @pytest.fixture
 def device_reg(hass):
     """Return an empty, loaded, registry."""
@@ -211,6 +218,7 @@ async def mock_rpc_device():
             update=AsyncMock(),
             trigger_ota_update=AsyncMock(),
             trigger_reboot=AsyncMock(),
+            initialize=AsyncMock(),
             initialized=True,
             shutdown=AsyncMock(),
         )

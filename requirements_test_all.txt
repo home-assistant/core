@@ -155,7 +155,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.1.0
+aiohomekit==2.1.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -230,7 +230,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==2.0.2
+aioshelly==3.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -242,7 +242,7 @@ aioslimproto==2.1.1
 aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.0.3
+aioswitcher==3.1.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -337,7 +337,7 @@ bellows==0.34.2
 bimmer_connected==0.10.4
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.3.0
+bleak-retry-connector==2.3.1
 
 # homeassistant.components.bluetooth
 bleak==0.19.0
@@ -434,7 +434,7 @@ defusedxml==0.7.1
 deluge-client==1.7.1
 
 # homeassistant.components.lametric
-demetriek==0.3.0
+demetriek==0.4.0
 
 # homeassistant.components.denonavr
 denonavr==0.10.11
@@ -1715,7 +1715,7 @@ vallox-websocket-api==2.12.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.10.3
+velbus-aio==2022.10.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.18

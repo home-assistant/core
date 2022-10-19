@@ -42,6 +42,7 @@ from .entity import (
     ShellyRestAttributeEntity,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
@@ -451,9 +452,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return async_setup_entry_rpc(
-            hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
-        )
+        if config_entry.data[CONF_SLEEP_PERIOD]:
+            async_setup_entry_rpc(
+                hass,
+                config_entry,
+                async_add_entities,
+                RPC_SENSORS,
+                RpcSleepingSensor,
+            )
+        else:
+            async_setup_entry_rpc(
+                hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
+            )
+        return
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
@@ -550,6 +561,20 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.block is not None:
+            return self.attribute_value
+
+        return self.last_state
+
+
+class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, SensorEntity):
+    """Represent a RPC sleeping sensor."""
+
+    entity_description: RpcSensorDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return value of sensor."""
+        if self.coordinator.device.initialized:
             return self.attribute_value
 
         return self.last_state

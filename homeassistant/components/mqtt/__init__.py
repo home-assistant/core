@@ -511,7 +511,11 @@ def websocket_mqtt_info(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_subscribe(hass, connection, msg):
+async def websocket_subscribe(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Subscribe to a MQTT topic."""
     if not connection.user.is_admin:
         raise Unauthorized
