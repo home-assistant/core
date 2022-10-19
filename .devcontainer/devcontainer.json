@@ -6,6 +6,11 @@
   "postStartCommand": "script/bootstrap",
   "containerEnv": { "DEVCONTAINER": "1" },
   "appPort": 8123,
+  "portsAttributes": {
+    "8123": {
+      "label": "Home Assistant"
+    }
+  },
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "extensions": [
     "ms-python.vscode-pylance",
@@ -16,6 +21,7 @@
   ],
   // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
   "settings": {
+    "remote.autoForwardPorts": false,
     "python.pythonPath": "/usr/local/bin/python",
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,

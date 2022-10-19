@@ -349,6 +349,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_CAMERA_PREFS] = prefs
 
     hass.http.register_view(CameraImageView(component))
+    hass.http.register_view(CameraLastImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
 
     websocket_api.async_register_command(hass, ws_camera_stream)
@@ -442,6 +443,7 @@ class Camera(Entity):
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
         self._rtsp_to_webrtc = False
+        self.last_image: Image | None = None
 
     @property
     def entity_picture(self) -> str:
@@ -746,7 +748,25 @@ class CameraImageView(CameraView):
         except (HomeAssistantError, ValueError) as ex:
             raise web.HTTPInternalServerError() from ex
         else:
+            # Save the image in the camera cache as the last image
+            camera.last_image = image
             return web.Response(body=image.content, content_type=image.content_type)
+
+
+class CameraLastImageView(CameraView):
+    """Camera view to serve the last image."""
+
+    url = "/api/camera_last_image/{entity_id}"
+    name = "api:camera:last_image"
+
+    async def handle(self, request: web.Request, camera: Camera) -> web.Response:
+        """Serve the last camera image."""
+        if camera.last_image is None:
+            raise web.HTTPNotFound()
+
+        return web.Response(
+            body=camera.last_image.content, content_type=camera.last_image.content_type
+        )
 
 
 class CameraMjpegStream(CameraView):
