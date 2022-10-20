@@ -6,6 +6,7 @@ import logging
 
 from coinbase.wallet.client import Client
 from coinbase.wallet.error import AuthenticationError
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
@@ -30,7 +31,7 @@ PLATFORMS = [Platform.SENSOR]
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = vol.Schema(cv.deprecated(DOMAIN), extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
