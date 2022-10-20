@@ -20,13 +20,11 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 1
-  PIP_CACHE_VERSION: 1
+  CACHE_VERSION: 2
+  PIP_CACHE_VERSION: 2
   HA_SHORT_VERSION: 2022.11
-  # Pin latest Python patch versions to avoid issues
-  # with runners using different versions.
-  DEFAULT_PYTHON: 3.9.14
-  ALL_PYTHON_VERSIONS: "['3.9.14', '3.10.7']"
+  DEFAULT_PYTHON: 3.9
+  ALL_PYTHON_VERSIONS: "['3.9', '3.10']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
@@ -69,10 +67,10 @@ jobs:
       - name: Generate partial pre-commit restore key
         id: generate_pre-commit_cache_key
         run: >-
-          echo "::set-output name=key::${{ env.CACHE_VERSION }}-${{ env.DEFAULT_PYTHON }}-${{
+          echo "::set-output name=key::pre-commit-${{ env.CACHE_VERSION }}-${{
             hashFiles('.pre-commit-config.yaml') }}"
       - name: Filter for core changes
-        uses: dorny/paths-filter@v2.10.2
+        uses: dorny/paths-filter@v2.11.1
         id: core
         with:
           filters: .core_files.yaml
@@ -87,7 +85,7 @@ jobs:
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
-        uses: dorny/paths-filter@v2.10.2
+        uses: dorny/paths-filter@v2.11.1
         id: integrations
         with:
           filters: .integration_paths.yaml
@@ -172,15 +170,18 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -193,7 +194,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Install pre-commit dependencies
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -210,16 +213,19 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -230,7 +236,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -259,16 +267,19 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -279,7 +290,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -311,16 +324,19 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -331,7 +347,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -352,16 +370,19 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
         with:
           path: venv
-          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-venv-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -372,7 +393,9 @@ jobs:
         uses: actions/cache@v3.0.10
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+              needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -475,9 +498,10 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ matrix.python-version }}
+          check-latest: true
       - name: Generate partial pip restore key
         id: generate-pip-key
         run: >-
@@ -538,9 +562,10 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
@@ -570,9 +595,10 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
@@ -603,9 +629,10 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
@@ -647,9 +674,10 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
@@ -695,9 +723,10 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ matrix.python-version }}
+          check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10
@@ -749,9 +778,10 @@ jobs:
         uses: actions/checkout@v3.1.0
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.1.0
+        uses: actions/setup-python@v4.3.0
         with:
           python-version: ${{ matrix.python-version }}
+          check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.10

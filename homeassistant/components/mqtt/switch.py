@@ -47,6 +47,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttValueTemplate
+from .util import get_mqtt_data
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -168,7 +169,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             elif payload == PAYLOAD_NONE:
                 self._state = None
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_STATE_TOPIC) is None:
             # Force into optimistic mode.

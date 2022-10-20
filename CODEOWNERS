@@ -57,8 +57,8 @@ build.json @home-assistant/supervisor
 /tests/components/aladdin_connect/ @mkmer
 /homeassistant/components/alarm_control_panel/ @home-assistant/core
 /tests/components/alarm_control_panel/ @home-assistant/core
-/homeassistant/components/alert/ @home-assistant/core
-/tests/components/alert/ @home-assistant/core
+/homeassistant/components/alert/ @home-assistant/core @frenck
+/tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy
 /homeassistant/components/almond/ @gcampax @balloob
@@ -1041,6 +1041,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/sms/ @ocalvo
+/homeassistant/components/snooz/ @AustinBrunkhorst
+/tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/solaredge/ @frenck
 /tests/components/solaredge/ @frenck
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
@@ -1200,8 +1202,8 @@ build.json @home-assistant/supervisor
 /tests/components/upcloud/ @scop
 /homeassistant/components/update/ @home-assistant/core
 /tests/components/update/ @home-assistant/core
-/homeassistant/components/upnp/ @StevenLooman @ehendrix23
-/tests/components/upnp/ @StevenLooman @ehendrix23
+/homeassistant/components/upnp/ @StevenLooman
+/tests/components/upnp/ @StevenLooman
 /homeassistant/components/uptime/ @frenck
 /tests/components/uptime/ @frenck
 /homeassistant/components/uptimerobot/ @ludeeus @chemelli74

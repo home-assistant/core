@@ -26,8 +26,8 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "Open Exchange Rates konfigureerimine YAML-i abil eemaldatakse.\n\nOlemasolev YAML-konfiguratsioon on automaatselt kasutajaliidesesse imporditud.\n\nEemalda Open Exchange Rates YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivita Home Assistant uuesti, et see probleem lahendada.",
-            "title": "Open Exchange Rates YAML-konfiguratsioon eemaldatakse"
+            "description": "Open Exchange Rates konfigureerimine YAML-i abil eemaldati.\n\nEemalda Open Exchange Rates YAML-konfiguratsioon oma configuration.yaml-failist ja k\u00e4ivita Home Assistant uuesti, et see probleem lahendada.",
+            "title": "Open Exchange Rates YAML-konfiguratsioon eemaldati"
         }
     }
 }

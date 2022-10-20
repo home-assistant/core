@@ -47,10 +47,10 @@ def calls(hass):
 @pytest.mark.parametrize(
     "platform,device_type,event_types",
     [
-        ("camera", "NOC", OUTDOOR_CAMERA_TRIGGERS),
-        ("camera", "NACamera", INDOOR_CAMERA_TRIGGERS),
-        ("climate", "NRV", CLIMATE_TRIGGERS),
-        ("climate", "NATherm1", CLIMATE_TRIGGERS),
+        ("camera", "Smart Outdoor Camera", OUTDOOR_CAMERA_TRIGGERS),
+        ("camera", "Smart Indoor Camera", INDOOR_CAMERA_TRIGGERS),
+        ("climate", "Smart Valve", CLIMATE_TRIGGERS),
+        ("climate", "Smart Thermostat", CLIMATE_TRIGGERS),
     ],
 )
 async def test_get_triggers(
@@ -105,15 +105,15 @@ async def test_get_triggers(
 
 @pytest.mark.parametrize(
     "platform,camera_type,event_type",
-    [("camera", "NOC", trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
-    + [("camera", "NACamera", trigger) for trigger in INDOOR_CAMERA_TRIGGERS]
+    [("camera", "Smart Outdoor Camera", trigger) for trigger in OUTDOOR_CAMERA_TRIGGERS]
+    + [("camera", "Smart Indoor Camera", trigger) for trigger in INDOOR_CAMERA_TRIGGERS]
     + [
-        ("climate", "NRV", trigger)
+        ("climate", "Smart Valve", trigger)
         for trigger in CLIMATE_TRIGGERS
         if trigger not in SUBTYPES
     ]
     + [
-        ("climate", "NATherm1", trigger)
+        ("climate", "Smart Thermostat", trigger)
         for trigger in CLIMATE_TRIGGERS
         if trigger not in SUBTYPES
     ],
@@ -183,12 +183,12 @@ async def test_if_fires_on_event(
 @pytest.mark.parametrize(
     "platform,camera_type,event_type,sub_type",
     [
-        ("climate", "NRV", trigger, subtype)
+        ("climate", "Smart Valve", trigger, subtype)
         for trigger in SUBTYPES
         for subtype in SUBTYPES[trigger]
     ]
     + [
-        ("climate", "NATherm1", trigger, subtype)
+        ("climate", "Smart Thermostat", trigger, subtype)
         for trigger in SUBTYPES
         for subtype in SUBTYPES[trigger]
     ],
@@ -262,7 +262,7 @@ async def test_if_fires_on_event_with_subtype(
 
 @pytest.mark.parametrize(
     "platform,device_type,event_type",
-    [("climate", "NAPLUG", trigger) for trigger in CLIMATE_TRIGGERS],
+    [("climate", "NAPlug", trigger) for trigger in CLIMATE_TRIGGERS],
 )
 async def test_if_invalid_device(
     hass, device_reg, entity_reg, platform, device_type, event_type

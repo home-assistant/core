@@ -7,7 +7,12 @@ from enum import IntEnum
 from functools import partial
 from typing import Any, cast
 
-from aiolifx.aiolifx import Light, MultiZoneDirection, MultiZoneEffectType
+from aiolifx.aiolifx import (
+    Light,
+    MultiZoneDirection,
+    MultiZoneEffectType,
+    TileEffectType,
+)
 from aiolifx.connection import LIFXConnection
 
 from homeassistant.const import Platform
@@ -279,7 +284,11 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
 
     async def async_set_multizone_effect(
-        self, effect: str, speed: float, direction: str, power_on: bool = True
+        self,
+        effect: str,
+        speed: float = 3,
+        direction: str = "RIGHT",
+        power_on: bool = True,
     ) -> None:
         """Control the firmware-based Move effect on a multizone device."""
         if lifx_features(self.device)["multizone"] is True:
@@ -292,6 +301,31 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                     effect=MultiZoneEffectType[effect.upper()].value,
                     speed=speed,
                     direction=MultiZoneDirection[direction.upper()].value,
+                )
+            )
+            self.active_effect = FirmwareEffect[effect.upper()]
+
+    async def async_set_matrix_effect(
+        self,
+        effect: str,
+        palette: list[tuple[int, int, int, int]] | None = None,
+        speed: float = 3,
+        power_on: bool = True,
+    ) -> None:
+        """Control the firmware-based effects on a matrix device."""
+        if lifx_features(self.device)["matrix"] is True:
+            if power_on and self.device.power_level == 0:
+                await self.async_set_power(True, 0)
+
+            if palette is None:
+                palette = []
+
+            await async_execute_lifx(
+                partial(
+                    self.device.set_tile_effect,
+                    effect=TileEffectType[effect.upper()].value,
+                    speed=speed,
+                    palette=palette,
                 )
             )
             self.active_effect = FirmwareEffect[effect.upper()]

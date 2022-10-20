@@ -36,7 +36,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.19.13
+PySwitchbot==0.19.15
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -176,6 +176,9 @@ aiolifx==0.8.6
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
 
+# homeassistant.components.lifx
+aiolifx_themes==0.1.1
+
 # homeassistant.components.lookin
 aiolookin==0.1.1
 
@@ -204,7 +207,7 @@ aioopenexchangerates==0.4.0
 aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==2.0.2
+aiopvapi==2.0.3
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==3.0.0
@@ -251,7 +254,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.4
 
 # homeassistant.components.unifi
-aiounifi==38
+aiounifi==39
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -293,7 +296,7 @@ anthemav==1.4.1
 apcaccess==0.0.13
 
 # homeassistant.components.apprise
-apprise==1.0.0
+apprise==1.1.0
 
 # homeassistant.components.aprs
 aprslib==0.7.0
@@ -423,7 +426,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.38.0
+dbus-fast==1.44.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -648,7 +651,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221006.0
+home-assistant-frontend==20221010.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -672,7 +675,7 @@ hyperion-py==0.7.5
 iaqualink==0.4.1
 
 # homeassistant.components.ibeacon
-ibeacon_ble==0.7.3
+ibeacon_ble==0.7.4
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -771,7 +774,7 @@ meater-python==0.0.8
 melnor-bluetooth==0.0.20
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.0.2
+meteofrance-api==1.1.0
 
 # homeassistant.components.mfi
 mficlient==0.3.0
@@ -804,7 +807,7 @@ motioneye-client==0.3.12
 mullvad-api==1.0.0
 
 # homeassistant.components.tts
-mutagen==1.45.1
+mutagen==1.46.0
 
 # homeassistant.components.mutesync
 mutesync==0.0.1
@@ -936,7 +939,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.21.4
+plugwise==0.25.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1126,7 +1129,7 @@ pyhaversion==22.8.0
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.13
+pyhiveapi==0.5.14
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1186,7 +1189,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.9.6
+pylitterbot==2022.10.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.16.0
@@ -1341,6 +1344,9 @@ pysmartthings==0.7.6
 
 # homeassistant.components.snmp
 pysnmplib==5.0.15
+
+# homeassistant.components.snooz
+pysnooz==0.8.2
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -1611,7 +1617,7 @@ stookalert==0.1.4
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.6.0
+subarulink==0.6.1
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
@@ -1781,7 +1787,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==1.9.2
 
 # homeassistant.components.august
-yalexs==1.2.4
+yalexs==1.2.6
 
 # homeassistant.components.yeelight
 yeelight==0.7.10
@@ -1802,10 +1808,10 @@ zha-quirks==0.0.82
 zigpy-deconz==0.19.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.16.1
+zigpy-xbee==0.16.2
 
 # homeassistant.components.zha
-zigpy-zigate==0.10.1
+zigpy-zigate==0.10.2
 
 # homeassistant.components.zha
 zigpy-znp==0.9.1

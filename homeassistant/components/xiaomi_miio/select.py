@@ -74,7 +74,6 @@ class XiaomiMiioSelectDescription(SelectEntityDescription):
     options_map: dict = field(default_factory=dict)
     set_method: str = ""
     set_method_error_message: str = ""
-    options: tuple = ()
 
 
 class AttributeEnumMapping(NamedTuple):
@@ -150,7 +149,7 @@ SELECTOR_TYPES = (
         set_method_error_message="Setting the display orientation failed.",
         icon="mdi:tablet",
         device_class="xiaomi_miio__display_orientation",
-        options=("forward", "left", "right"),
+        options=["forward", "left", "right"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
@@ -161,7 +160,7 @@ SELECTOR_TYPES = (
         set_method_error_message="Setting the led brightness failed.",
         icon="mdi:brightness-6",
         device_class="xiaomi_miio__led_brightness",
-        options=("bright", "dim", "off"),
+        options=["bright", "dim", "off"],
         entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSelectDescription(
@@ -172,7 +171,7 @@ SELECTOR_TYPES = (
         set_method_error_message="Setting the ptc level failed.",
         icon="mdi:fire-circle",
         device_class="xiaomi_miio__ptc_level",
-        options=("low", "medium", "high"),
+        options=["low", "medium", "high"],
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -220,7 +219,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
     def __init__(self, device, entry, unique_id, coordinator, description):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(device, entry, unique_id, coordinator)
-        self._attr_options = list(description.options)
         self.entity_description = description
 
 

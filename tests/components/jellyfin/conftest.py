@@ -12,6 +12,7 @@ import pytest
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from . import load_json_fixture
 from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
@@ -70,6 +71,7 @@ def mock_api() -> MagicMock:
     """Return a mocked API."""
     jf_api = create_autospec(API)
     jf_api.get_user_settings.return_value = load_json_fixture("get-user-settings.json")
+    jf_api.sessions.return_value = load_json_fixture("sessions.json")
 
     return jf_api
 
@@ -106,3 +108,16 @@ def mock_jellyfin(mock_client: MagicMock) -> Generator[None, MagicMock, None]:
         jf.get_client.return_value = mock_client
 
         yield jf
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_jellyfin: MagicMock
+) -> MockConfigEntry:
+    """Set up the Jellyfin integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry
