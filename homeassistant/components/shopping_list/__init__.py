@@ -361,7 +361,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
 def websocket_handle_items(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Handle get shopping_list items."""
     connection.send_message(
