@@ -23,6 +23,7 @@ from homeassistant.util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
     _CONF_UNIT_SYSTEM_METRIC,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+    IMPERIAL_SYSTEM,
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
@@ -166,17 +167,15 @@ def test_temperature_to_metric():
     """Test temperature conversion to metric system."""
     assert METRIC_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit) == 25
     assert (
-        round(METRIC_SYSTEM.temperature(80, US_CUSTOMARY_SYSTEM.temperature_unit), 1)
+        round(METRIC_SYSTEM.temperature(80, IMPERIAL_SYSTEM.temperature_unit), 1)
         == 26.7
     )
 
 
 def test_temperature_to_imperial():
     """Test temperature conversion to imperial system."""
-    assert (
-        US_CUSTOMARY_SYSTEM.temperature(77, US_CUSTOMARY_SYSTEM.temperature_unit) == 77
-    )
-    assert US_CUSTOMARY_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit) == 77
+    assert IMPERIAL_SYSTEM.temperature(77, IMPERIAL_SYSTEM.temperature_unit) == 77
+    assert IMPERIAL_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit) == 77
 
 
 def test_length_unknown_unit():
@@ -188,15 +187,15 @@ def test_length_unknown_unit():
 def test_length_to_metric():
     """Test length conversion to metric system."""
     assert METRIC_SYSTEM.length(100, METRIC_SYSTEM.length_unit) == 100
-    assert METRIC_SYSTEM.length(5, US_CUSTOMARY_SYSTEM.length_unit) == pytest.approx(
+    assert METRIC_SYSTEM.length(5, IMPERIAL_SYSTEM.length_unit) == pytest.approx(
         8.04672
     )
 
 
 def test_length_to_imperial():
     """Test length conversion to imperial system."""
-    assert US_CUSTOMARY_SYSTEM.length(100, US_CUSTOMARY_SYSTEM.length_unit) == 100
-    assert US_CUSTOMARY_SYSTEM.length(5, METRIC_SYSTEM.length_unit) == pytest.approx(
+    assert IMPERIAL_SYSTEM.length(100, IMPERIAL_SYSTEM.length_unit) == 100
+    assert IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit) == pytest.approx(
         3.106855
     )
 
@@ -212,16 +211,14 @@ def test_wind_speed_to_metric():
     assert METRIC_SYSTEM.wind_speed(100, METRIC_SYSTEM.wind_speed_unit) == 100
     # 1 m/s is about 2.237 mph
     assert METRIC_SYSTEM.wind_speed(
-        2237, US_CUSTOMARY_SYSTEM.wind_speed_unit
+        2237, IMPERIAL_SYSTEM.wind_speed_unit
     ) == pytest.approx(1000, abs=0.1)
 
 
 def test_wind_speed_to_imperial():
     """Test wind_speed conversion to imperial system."""
-    assert (
-        US_CUSTOMARY_SYSTEM.wind_speed(100, US_CUSTOMARY_SYSTEM.wind_speed_unit) == 100
-    )
-    assert US_CUSTOMARY_SYSTEM.wind_speed(
+    assert IMPERIAL_SYSTEM.wind_speed(100, IMPERIAL_SYSTEM.wind_speed_unit) == 100
+    assert IMPERIAL_SYSTEM.wind_speed(
         1000, METRIC_SYSTEM.wind_speed_unit
     ) == pytest.approx(2237, abs=0.1)
 
@@ -240,15 +237,15 @@ def test_pressure_unknown_unit():
 def test_pressure_to_metric():
     """Test pressure conversion to metric system."""
     assert METRIC_SYSTEM.pressure(25, METRIC_SYSTEM.pressure_unit) == 25
-    assert METRIC_SYSTEM.pressure(
-        14.7, US_CUSTOMARY_SYSTEM.pressure_unit
-    ) == pytest.approx(101352.932, abs=1e-1)
+    assert METRIC_SYSTEM.pressure(14.7, IMPERIAL_SYSTEM.pressure_unit) == pytest.approx(
+        101352.932, abs=1e-1
+    )
 
 
 def test_pressure_to_imperial():
     """Test pressure conversion to imperial system."""
-    assert US_CUSTOMARY_SYSTEM.pressure(77, US_CUSTOMARY_SYSTEM.pressure_unit) == 77
-    assert US_CUSTOMARY_SYSTEM.pressure(
+    assert IMPERIAL_SYSTEM.pressure(77, IMPERIAL_SYSTEM.pressure_unit) == 77
+    assert IMPERIAL_SYSTEM.pressure(
         101352.932, METRIC_SYSTEM.pressure_unit
     ) == pytest.approx(14.7, abs=1e-4)
 
@@ -278,19 +275,19 @@ def test_accumulated_precipitation_to_metric():
         == 25
     )
     assert METRIC_SYSTEM.accumulated_precipitation(
-        10, US_CUSTOMARY_SYSTEM.accumulated_precipitation_unit
+        10, IMPERIAL_SYSTEM.accumulated_precipitation_unit
     ) == pytest.approx(254, abs=1e-4)
 
 
 def test_accumulated_precipitation_to_imperial():
     """Test accumulated_precipitation conversion to imperial system."""
     assert (
-        US_CUSTOMARY_SYSTEM.accumulated_precipitation(
-            10, US_CUSTOMARY_SYSTEM.accumulated_precipitation_unit
+        IMPERIAL_SYSTEM.accumulated_precipitation(
+            10, IMPERIAL_SYSTEM.accumulated_precipitation_unit
         )
         == 10
     )
-    assert US_CUSTOMARY_SYSTEM.accumulated_precipitation(
+    assert IMPERIAL_SYSTEM.accumulated_precipitation(
         254, METRIC_SYSTEM.accumulated_precipitation_unit
     ) == pytest.approx(10, abs=1e-4)
 
@@ -310,7 +307,7 @@ def test_properties():
     "unit_system, expected_flag",
     [
         (METRIC_SYSTEM, True),
-        (US_CUSTOMARY_SYSTEM, False),
+        (IMPERIAL_SYSTEM, False),
     ],
 )
 def test_is_metric(
@@ -328,11 +325,7 @@ def test_is_metric(
     "unit_system, expected_name, expected_private_name",
     [
         (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_METRIC),
-        (
-            US_CUSTOMARY_SYSTEM,
-            _CONF_UNIT_SYSTEM_IMPERIAL,
-            _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-        ),
+        (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
         (
             US_CUSTOMARY_SYSTEM,
             _CONF_UNIT_SYSTEM_IMPERIAL,
