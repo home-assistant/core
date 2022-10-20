@@ -1135,6 +1135,7 @@ def statistic_during_period(
 
         metadata_id = metadata[statistic_id][0]
 
+        # Calculate max, mean, min
         stmt = lambda_stmt(
             lambda: select(
                 func.max(Statistics.max),
@@ -1146,10 +1147,50 @@ def statistic_during_period(
             stmt += lambda q: q.filter(Statistics.start >= start_time)
         if end_time is not None:
             stmt += lambda q: q.filter(Statistics.start < end_time)
-        stat = execute_stmt_lambda_element(session, stmt)
-        result["max"] = stat[0].max
-        result["mean"] = stat[0].avg
-        result["min"] = stat[0].min
+        stats = execute_stmt_lambda_element(session, stmt)
+        if stats:
+            stat = stats[0]
+            result["max"] = stat.max
+            result["mean"] = stat.avg
+            result["min"] = stat.min
+
+        # Calculate sum, first find the oldest non-NULL sum
+        stmt = lambda_stmt(
+            lambda: select(
+                Statistics.sum,
+            )
+            .filter(Statistics.metadata_id.__eq__(metadata_id))
+            .filter(Statistics.sum.is_not(None))
+            .order_by(Statistics.start.asc())
+            .limit(1)
+        )
+        if start_time is not None:
+            stmt += lambda q: q.filter(Statistics.start >= start_time)
+        if end_time is not None:
+            stmt += lambda q: q.filter(Statistics.start < end_time)
+        oldest_stats = execute_stmt_lambda_element(session, stmt)
+
+        # Then find the newest non-NULL sum
+        stmt = lambda_stmt(
+            lambda: select(
+                Statistics.sum,
+            )
+            .filter(Statistics.metadata_id.__eq__(metadata_id))
+            .filter(Statistics.sum.is_not(None))
+            .order_by(Statistics.start.desc())
+            .limit(1)
+        )
+        if start_time is not None:
+            stmt += lambda q: q.filter(Statistics.start >= start_time)
+        if end_time is not None:
+            stmt += lambda q: q.filter(Statistics.start < end_time)
+        newest_stats = execute_stmt_lambda_element(session, stmt)
+
+        # Calculate the difference
+        if oldest_stats and newest_stats:
+            oldest_stat = oldest_stats[0]
+            newest_stat = newest_stats[0]
+            result["sum"] = newest_stat.sum - oldest_stat.sum
 
     return result
 

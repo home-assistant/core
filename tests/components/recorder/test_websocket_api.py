@@ -202,12 +202,14 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": 20,
         "mean": 0,
         "min": -10,
+        "sum": 0,
     }
     imported_statistics2 = {
         "start": period2.isoformat(),
         "max": 10,
         "mean": 20,
         "min": -20,
+        "sum": 1,
     }
 
     imported_metadata = {
@@ -254,7 +256,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"max": 20, "mean": 10, "min": -20}
+    assert response["result"] == {"max": 20, "mean": 10, "min": -20, "sum": -1}
 
 
 @pytest.mark.parametrize(
