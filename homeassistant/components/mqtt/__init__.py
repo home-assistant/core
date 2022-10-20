@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from datetime import datetime
 import logging
 from typing import Any, cast
 
@@ -381,7 +382,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for msg in messages:
                     fp.write(",".join(msg) + "\n")
 
-        async def finish_dump(_) -> None:
+        async def finish_dump(_: datetime) -> None:
             """Write dump to file."""
             unsub()
             await hass.async_add_executor_job(write_dump)
@@ -443,6 +444,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_forward_entry_setup_and_setup_discovery(
         config_entry: ConfigEntry,
+        conf: ConfigType,
     ) -> None:
         """Forward the config entry setup to the platforms and set up discovery."""
         reload_manual_setup: bool = False
@@ -464,7 +466,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
         # Setup discovery
-        assert conf
         if conf.get(CONF_DISCOVERY):
             await _async_setup_discovery(hass, conf, entry)
         # Setup reload service after all platforms have loaded
@@ -482,7 +483,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if reload_manual_setup:
             await async_reload_manual_mqtt_items(hass)
 
-    await async_forward_entry_setup_and_setup_discovery(entry)
+    await async_forward_entry_setup_and_setup_discovery(entry, conf)
 
     return True
 
