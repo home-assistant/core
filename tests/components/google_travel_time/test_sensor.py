@@ -12,7 +12,11 @@ from homeassistant.components.google_travel_time.const import (
 )
 from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .const import MOCK_CONFIG
 
@@ -227,7 +231,7 @@ async def test_sensor_deprecation_warning(hass, caplog):
     "unit_system, expected_unit_option",
     [
         (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
-        (IMPERIAL_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
+        (US_CUSTOMARY_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
     ],
 )
 async def test_sensor_unit_system(
