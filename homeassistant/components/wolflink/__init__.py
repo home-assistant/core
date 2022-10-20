@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from httpx import ConnectError, ConnectTimeout
+from httpx import RequestError
 from wolf_smartset.token_auth import InvalidAuth
 from wolf_smartset.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for parameter in parameters
                 if parameter.value_id in values
             }
-        except ConnectError as exception:
+        except RequestError as exception:
             raise UpdateFailed(
                 f"Error communicating with API: {exception}"
             ) from exception
@@ -134,7 +134,7 @@ async def fetch_parameters_init(client: WolfClient, gateway_id: int, device_id: 
     """Fetch all available parameters with usage of WolfClient but handles all exceptions and results in ConfigEntryNotReady."""
     try:
         return await fetch_parameters(client, gateway_id, device_id)
-    except (ConnectError, ConnectTimeout, FetchFailed) as exception:
+    except (FetchFailed, RequestError) as exception:
         raise ConfigEntryNotReady(
             f"Error communicating with API: {exception}"
         ) from exception

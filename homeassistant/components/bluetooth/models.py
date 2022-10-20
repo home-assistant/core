@@ -279,6 +279,7 @@ class HaBleakClientWrapper(BleakClient):
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
         if not self._backend:
+            assert MANAGER is not None
             wrapped_backend = (
                 self._async_get_backend() or await self._async_get_fallback_backend()
             )
@@ -287,6 +288,7 @@ class HaBleakClientWrapper(BleakClient):
                 or wrapped_backend.device,
                 disconnected_callback=self.__disconnected_callback,
                 timeout=self.__timeout,
+                hass=MANAGER.hass,
             )
         return await super().connect(**kwargs)
 
