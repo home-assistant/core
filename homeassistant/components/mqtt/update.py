@@ -35,7 +35,7 @@ from .const import (
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,7 +151,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
                     DEFAULT_ENCODING
                 )
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_installed_version_received)
 
@@ -165,7 +165,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             else:
                 self._attr_latest_version = latest_version.decode(DEFAULT_ENCODING)
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(
             topics, CONF_LATEST_VERSION_TOPIC, handle_latest_version_received
@@ -193,7 +193,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
             self._config[CONF_ENCODING],
         )
 
-        self.async_write_ha_state()
+        get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
     @property
     def supported_features(self) -> int:
