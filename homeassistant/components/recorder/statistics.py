@@ -1113,6 +1113,47 @@ def _statistics_during_period_stmt_short_term(
     return stmt
 
 
+def statistic_during_period(
+    hass: HomeAssistant,
+    start_time: datetime | None,
+    end_time: datetime | None,
+    statistic_id: str,
+    types: list[str] | None,
+    units: dict[str, str] | None,
+) -> dict[str, Any]:
+    """Return a statistic data point for the UTC period start_time - end_time.
+
+    If end_time is omitted, include statistics newer than or equal to start_time.
+    """
+    metadata = None
+    result: dict[str, Any] = {}
+    with session_scope(hass=hass) as session:
+        # Fetch metadata for the given (or all) statistic_ids
+        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
+        if not metadata:
+            return result
+
+        metadata_id = metadata[statistic_id][0]
+
+        stmt = lambda_stmt(
+            lambda: select(
+                func.max(Statistics.max),
+                func.avg(Statistics.mean),
+                func.min(Statistics.min),
+            ).filter(Statistics.metadata_id.__eq__(metadata_id))
+        )
+        if start_time is not None:
+            stmt += lambda q: q.filter(Statistics.start >= start_time)
+        if end_time is not None:
+            stmt += lambda q: q.filter(Statistics.start < end_time)
+        stat = execute_stmt_lambda_element(session, stmt)
+        result["max"] = stat[0].max
+        result["mean"] = stat[0].avg
+        result["min"] = stat[0].min
+
+    return result
+
+
 def statistics_during_period(
     hass: HomeAssistant,
     start_time: datetime,
@@ -1122,7 +1163,7 @@ def statistics_during_period(
     start_time_as_datetime: bool = False,
     units: dict[str, str] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
-    """Return statistics during UTC period start_time - end_time for the statistic_ids.
+    """Return statistic data points during UTC period start_time - end_time.
 
     If end_time is omitted, returns statistics newer than or equal to start_time.
     If statistic_ids is omitted, returns statistics for all statistics ids.

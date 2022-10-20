@@ -178,6 +178,85 @@ async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
     }
 
 
+async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
+    """Test statistic_during_period."""
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set("sensor.test", 500, attributes=POWER_SENSOR_KW_ATTRIBUTES)
+    hass.states.async_set("sensor.test", -500, attributes=POWER_SENSOR_KW_ATTRIBUTES)
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+
+    zero = now
+    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-1)
+    period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-2)
+
+    imported_statistics1 = {
+        "start": period1.isoformat(),
+        "max": 20,
+        "mean": 0,
+        "min": -10,
+    }
+    imported_statistics2 = {
+        "start": period2.isoformat(),
+        "max": 10,
+        "mean": 20,
+        "min": -20,
+    }
+
+    imported_metadata = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "recorder",
+        "statistic_id": "sensor.test",
+        "unit_of_measurement": "kWh",
+    }
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "recorder/import_statistics",
+            "metadata": imported_metadata,
+            "stats": [imported_statistics1, imported_statistics2],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "recorder/statistic_during_period",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"max": None, "mean": None, "min": None}
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "recorder/statistic_during_period",
+            "start_time": period2.isoformat(),
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"max": 20, "mean": 10, "min": -20}
+
+
 @pytest.mark.parametrize(
     "attributes, state, value, custom_units, converted_value",
     [
