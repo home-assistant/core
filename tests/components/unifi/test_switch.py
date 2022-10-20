@@ -893,20 +893,17 @@ async def test_dpi_switches_add_second_app(hass, aioclient_mock, mock_unifi_webs
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
     second_app_event_enabled = {
-        "meta": {"rc": "ok", "message": "dpiapp:sync"},
-        "data": [
-            {
-                "apps": [524292],
-                "blocked": False,
-                "cats": [],
-                "enabled": True,
-                "log": False,
-                "site_id": "name",
-                "_id": "61783e89c1773a18c0c61f00",
-            }
-        ],
+        "apps": [524292],
+        "blocked": False,
+        "cats": [],
+        "enabled": True,
+        "log": False,
+        "site_id": "name",
+        "_id": "61783e89c1773a18c0c61f00",
     }
-    mock_unifi_websocket(data=second_app_event_enabled)
+    mock_unifi_websocket(
+        message=MessageKey.DPI_APP_UPDATED, data=second_app_event_enabled
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
