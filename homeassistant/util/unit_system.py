@@ -88,13 +88,13 @@ class UnitSystem:
         self,
         name: str,
         *,
-        temperature: str,
+        accumulated_precipitation: str,
         length: str,
-        wind_speed: str,
-        volume: str,
         mass: str,
         pressure: str,
-        accumulated_precipitation: str,
+        temperature: str,
+        volume: str,
+        wind_speed: str,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
@@ -242,24 +242,24 @@ validate_unit_system = vol.All(
 
 METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
-    temperature=TEMP_CELSIUS,
+    accumulated_precipitation=PRECIPITATION_MILLIMETERS,
     length=LENGTH_KILOMETERS,
-    wind_speed=SPEED_METERS_PER_SECOND,
-    volume=VOLUME_LITERS,
     mass=MASS_GRAMS,
     pressure=PRESSURE_PA,
-    accumulated_precipitation=PRECIPITATION_MILLIMETERS,
+    temperature=TEMP_CELSIUS,
+    volume=VOLUME_LITERS,
+    wind_speed=SPEED_METERS_PER_SECOND,
 )
 
 US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
-    temperature=TEMP_FAHRENHEIT,
+    accumulated_precipitation=PRECIPITATION_INCHES,
     length=LENGTH_MILES,
-    wind_speed=SPEED_MILES_PER_HOUR,
-    volume=VOLUME_GALLONS,
     mass=MASS_POUNDS,
     pressure=PRESSURE_PSI,
-    accumulated_precipitation=PRECIPITATION_INCHES,
+    temperature=TEMP_FAHRENHEIT,
+    volume=VOLUME_GALLONS,
+    wind_speed=SPEED_MILES_PER_HOUR,
 )
 
 IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM
