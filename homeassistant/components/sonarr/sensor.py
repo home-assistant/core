@@ -44,7 +44,7 @@ class SonarrSensorEntityDescription(
 
 def get_disk_space_attr(disks: list[Diskspace]) -> dict[str, str]:
     """Create the attributes for disk space."""
-    attrs = {}
+    attrs: dict[str, str] = {}
     for disk in disks:
         free = disk.freeSpace / 1024**3
         total = disk.totalSpace / 1024**3
@@ -55,7 +55,7 @@ def get_disk_space_attr(disks: list[Diskspace]) -> dict[str, str]:
 
 def get_queue_attr(queue: SonarrQueue) -> dict[str, str]:
     """Create the attributes for series queue."""
-    attrs = {}
+    attrs: dict[str, str] = {}
     for item in queue.records:
         remaining = 1 if item.size == 0 else item.sizeleft / item.size
         remaining_pct = 100 * (1 - remaining)
@@ -68,7 +68,7 @@ def get_queue_attr(queue: SonarrQueue) -> dict[str, str]:
 
 def get_wanted_attr(wanted: SonarrWantedMissing) -> dict[str, str]:
     """Create the attributes for missing series."""
-    attrs = {}
+    attrs: dict[str, str] = {}
     for item in wanted.records:
         identifier = f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}"
 
