@@ -30,7 +30,6 @@ SWITCHES: tuple[SwitchEntityDescription, ...] = (
         name="Lock",
         icon="mdi:lock",
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
     ),
     SwitchEntityDescription(
         key="relay",
