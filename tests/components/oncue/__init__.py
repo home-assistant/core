@@ -825,7 +825,7 @@ def _patch_login_and_data_offline_device():
 def _patch_login_and_data_unavailable():
     @contextmanager
     def _patcher():
-        with patch("homeassistant.components.oncue.Oncue.async_login",), patch(
+        with patch("homeassistant.components.oncue.Oncue.async_login"), patch(
             "homeassistant.components.oncue.Oncue.async_fetch_all",
             return_value=MOCK_ASYNC_FETCH_ALL_UNAVAILABLE_DEVICE,
         ):
