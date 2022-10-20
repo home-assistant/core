@@ -540,7 +540,11 @@ class SensorEntity(Entity):
 
     @property
     def suggested_unit_of_measurement(self) -> str | None:
-        """Return the unit in which the sensor should be displayed.
+        """Return the unit which should be used for the sensor's state.
+
+        This can be used by integrations to override automatic unit conversion rules,
+        for example to make a temperature sensor display in °C even if the configured
+        unit system prefers °F.
 
         Note:
             suggested_unit_of_measurement is stored in the entity registry the first time

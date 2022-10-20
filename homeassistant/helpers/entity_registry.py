@@ -470,6 +470,8 @@ class EntityRegistry:
             """Return None if value is UNDEFINED, otherwise return value."""
             return None if value is UNDEFINED else value
 
+        initial_options = get_initial_options() if get_initial_options else None
+
         entry = RegistryEntry(
             capabilities=none_if_undefined(capabilities),
             config_entry_id=none_if_undefined(config_entry_id),
@@ -479,7 +481,7 @@ class EntityRegistry:
             entity_id=entity_id,
             hidden_by=hidden_by,
             has_entity_name=none_if_undefined(has_entity_name) or False,
-            options=get_initial_options,
+            options=initial_options,
             original_device_class=none_if_undefined(original_device_class),
             original_icon=none_if_undefined(original_icon),
             original_name=none_if_undefined(original_name),
