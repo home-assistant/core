@@ -57,15 +57,19 @@ class OncueEntity(CoordinatorEntity, Entity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if self._oncue_value == VALUE_UNAVAILABLE:
-            return False
-        # If the cloud is reporting that the generator is not connected
-        # this also indicates the data is not available.
-        # The battery voltage sensor reports 0.0 rather than -- hence the purpose of this check.
-        # However, the binary sensor that tracks the connection should not go unavailable.
+        # The binary sensor that tracks the connection should not go unavailable.
         if self.entity_description.key != CONNECTION_ESTABLISHED_KEY:
+            # If Kohler returns -- the entity is unavailable.
+            if self._oncue_value == VALUE_UNAVAILABLE:
+                return False
+            # If the cloud is reporting that the generator is not connected
+            # this also indicates the data is not available.
+            # The battery voltage sensor reports 0.0 rather than -- hence the purpose of this check.
             device: OncueDevice = self.coordinator.data[self._device_id]
             conn_established: OncueSensor = device.sensors[CONNECTION_ESTABLISHED_KEY]
-            if conn_established is not None and conn_established.value == "false":
+            if (
+                conn_established is not None
+                and conn_established.value == VALUE_UNAVAILABLE
+            ):
                 return False
         return super().available

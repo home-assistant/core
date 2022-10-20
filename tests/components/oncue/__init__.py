@@ -593,7 +593,7 @@ MOCK_ASYNC_FETCH_ALL_UNAVAILABLE_DEVICE = {
             "BatteryVoltage": OncueSensor(
                 name="BatteryVoltage",
                 display_name="Battery Voltage",
-                value="--",
+                value="0.0",
                 display_value="13.4 V",
                 unit="V",
             ),
@@ -782,7 +782,7 @@ MOCK_ASYNC_FETCH_ALL_UNAVAILABLE_DEVICE = {
             "NetworkConnectionEstablished": OncueSensor(
                 name="NetworkConnectionEstablished",
                 display_name="Network Connection Established",
-                value="false",
+                value="--",
                 display_value="True",
                 unit=None,
             ),
