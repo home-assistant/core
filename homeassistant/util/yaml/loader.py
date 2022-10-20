@@ -291,10 +291,17 @@ def _include_dir_merge_named_yaml(
             continue
         loaded_yaml = load_yaml(fname, loader.secrets)
         if isinstance(loaded_yaml, dict):
+            # If the loaded_yaml contains keys that already have been set
+            # when updating a previous file, we do not want to overwrite the
+            # values of those keys in case they hold a list
             for key, value in loaded_yaml.items():
                 if key not in mapping:
+                    # We can update the key since there is no previous one
                     continue
                 if isinstance(value, list) and isinstance(mapping[key], list):
+                    # If we already have a list instance and the new instance
+                    # is also a list, we merge the list by appending them
+                    # This allows merging keyed entity lists over multiple files
                     loaded_yaml[key] = mapping[key] + loaded_yaml[key]
             mapping.update(loaded_yaml)
     return _add_reference(mapping, loader, node)
