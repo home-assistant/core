@@ -5,6 +5,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.starlink.patchers import COORDINATOR_SUCCESS_PATCHER
 
 
 async def test_successful_entry(hass: HomeAssistant) -> None:
@@ -13,13 +14,15 @@ async def test_successful_entry(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
     )
-    entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with COORDINATOR_SUCCESS_PATCHER:
+        entry.add_to_hass(hass)
 
-    assert entry.state == ConfigEntryState.LOADED
-    assert hass.data[DOMAIN]
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state == ConfigEntryState.LOADED
+        assert hass.data[DOMAIN]
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -28,13 +31,15 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
     )
-    entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with COORDINATOR_SUCCESS_PATCHER:
+        entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.NOT_LOADED
-    assert DOMAIN not in hass.data
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.NOT_LOADED
+        assert DOMAIN not in hass.data
