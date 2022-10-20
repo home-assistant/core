@@ -492,7 +492,9 @@ class SensorEntity(Entity):
             return None
 
         return {
-            DOMAIN: {"suggested_unit_of_measurement": suggested_unit_of_measurement}
+            f"{DOMAIN}.private": {
+                "suggested_unit_of_measurement": suggested_unit_of_measurement
+            }
         }
 
     @final
@@ -673,12 +675,12 @@ class SensorEntity(Entity):
 
         return super().__repr__()
 
-    def _custom_unit_or_none(self, registry_key: str) -> str | None:
+    def _custom_unit_or_none(self, primary_key: str, secondary_key: str) -> str | None:
         """Return a custom unit, or None if it's not compatible with the native unit."""
         assert self.registry_entry
         if (
-            (sensor_options := self.registry_entry.options.get(DOMAIN))
-            and (custom_unit := sensor_options.get(registry_key))
+            (sensor_options := self.registry_entry.options.get(primary_key))
+            and (custom_unit := sensor_options.get(secondary_key))
             and (device_class := self.device_class) in UNIT_CONVERTERS
             and self.native_unit_of_measurement
             in UNIT_CONVERTERS[device_class].VALID_UNITS
@@ -691,11 +693,11 @@ class SensorEntity(Entity):
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._sensor_option_unit_of_measurement = self._custom_unit_or_none(
-            CONF_UNIT_OF_MEASUREMENT
+            DOMAIN, CONF_UNIT_OF_MEASUREMENT
         )
         if not self._sensor_option_unit_of_measurement:
             self._sensor_option_unit_of_measurement = self._custom_unit_or_none(
-                "suggested_unit_of_measurement"
+                f"{DOMAIN}.private", "suggested_unit_of_measurement"
             )
 
 

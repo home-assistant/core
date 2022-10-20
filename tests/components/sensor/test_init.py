@@ -751,7 +751,7 @@ async def test_unit_conversion_priority(
     # Assert the automatic unit conversion is stored in the registry
     entry = entity_registry.async_get(entity0.entity_id)
     assert entry.options == {
-        "sensor": {"suggested_unit_of_measurement": automatic_unit}
+        "sensor.private": {"suggested_unit_of_measurement": automatic_unit}
     }
 
     # Unregistered entity -> Follow native unit
@@ -766,7 +766,7 @@ async def test_unit_conversion_priority(
     # Assert the suggested unit is stored in the registry
     entry = entity_registry.async_get(entity2.entity_id)
     assert entry.options == {
-        "sensor": {"suggested_unit_of_measurement": suggested_unit}
+        "sensor.private": {"suggested_unit_of_measurement": suggested_unit}
     }
 
     # Unregistered entity with suggested unit
@@ -831,11 +831,15 @@ async def test_unit_conversion_priority_suggested_unit_change(
     # Pre-register entities
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
     entity_registry.async_update_entity_options(
-        entry.entity_id, "sensor", {"suggested_unit_of_measurement": original_unit}
+        entry.entity_id,
+        "sensor.private",
+        {"suggested_unit_of_measurement": original_unit},
     )
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique_2")
     entity_registry.async_update_entity_options(
-        entry.entity_id, "sensor", {"suggested_unit_of_measurement": original_unit}
+        entry.entity_id,
+        "sensor.private",
+        {"suggested_unit_of_measurement": original_unit},
     )
 
     platform.ENTITIES["0"] = platform.MockSensor(
