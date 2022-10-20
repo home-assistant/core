@@ -1,16 +1,12 @@
 """The Shelly integration."""
 from __future__ import annotations
 
-import asyncio
-from http import HTTPStatus
 from typing import Any, Final
 
-from aiohttp import ClientResponseError
 import aioshelly
 from aioshelly.block_device import BlockDevice
-from aioshelly.exceptions import AuthRequired, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from aioshelly.rpc_device import RpcDevice
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +19,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
-    AIOSHELLY_DEVICE_TIMEOUT_SEC,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
@@ -185,20 +180,11 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         # Not a sleeping device, finish setup
         LOGGER.debug("Setting up online block device %s", entry.title)
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                await device.initialize()
-                await device.update_status()
-        except asyncio.TimeoutError as err:
-            raise ConfigEntryNotReady(
-                str(err) or "Timeout during device setup"
-            ) from err
-        except OSError as err:
-            raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
-        except AuthRequired as err:
-            raise ConfigEntryAuthFailed from err
-        except ClientResponseError as err:
-            if err.status == HTTPStatus.UNAUTHORIZED:
-                raise ConfigEntryAuthFailed from err
+            await device.initialize()
+        except DeviceConnectionError as err:
+            raise ConfigEntryNotReady(repr(err)) from err
+        except InvalidAuthError as err:
+            raise ConfigEntryAuthFailed(repr(err)) from err
 
         _async_block_device_setup()
     elif sleep_period is None or device_entry is None:
@@ -283,16 +269,12 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         # Not a sleeping device, finish setup
         LOGGER.debug("Setting up online RPC device %s", entry.title)
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                await device.initialize()
-        except asyncio.TimeoutError as err:
-            raise ConfigEntryNotReady(
-                str(err) or "Timeout during device setup"
-            ) from err
-        except OSError as err:
-            raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
-        except (AuthRequired, InvalidAuthError) as err:
-            raise ConfigEntryAuthFailed from err
+            await device.initialize()
+        except DeviceConnectionError as err:
+            raise ConfigEntryNotReady(repr(err)) from err
+        except InvalidAuthError as err:
+            raise ConfigEntryAuthFailed(repr(err)) from err
+
         _async_rpc_device_setup()
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
