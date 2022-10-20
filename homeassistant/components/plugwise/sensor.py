@@ -33,7 +33,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="setpoint_high",
@@ -42,7 +41,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="setpoint_low",
@@ -51,7 +49,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="temperature",
@@ -76,7 +73,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="outdoor_temperature",
@@ -130,7 +126,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="electricity_consumed_peak_interval",
