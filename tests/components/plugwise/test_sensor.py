@@ -98,8 +98,6 @@ async def test_stretch_sensor_entities(
     assert state
     assert float(state.state) == 50.5
 
-    # Test disabled sensor
-    entity_id = "sensor.droger_52559_electricity_consumed_interval"
-    assert hass.states.get(entity_id) is None
+    state = hass.states.get("sensor.droger_52559_electricity_consumed_interval")
     assert state
     assert float(state.state) == 0.0
