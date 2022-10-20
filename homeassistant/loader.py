@@ -264,11 +264,9 @@ async def async_get_integration_descriptions(
     core_flows: dict[str, Any] = json_loads(flow)
     custom_integrations = await async_get_custom_components(hass)
     custom_flows: dict[str, Any] = {
-        "device": {},
+        "integration": {},
         "hardware": {},
         "helper": {},
-        "hub": {},
-        "service": {},
     }
 
     for integration in custom_integrations.values():
@@ -276,12 +274,17 @@ async def async_get_integration_descriptions(
         if integration.integration_type in ("entity", "system"):
             continue
 
-        for integration_type in ("device", "hardware", "helper", "hub", "service"):
+        for integration_type in ("integration", "hardware", "helper"):
             if integration.domain not in core_flows[integration_type]:
                 continue
             del core_flows[integration_type][integration.domain]
         if integration.domain in core_flows["translated_name"]:
             core_flows["translated_name"].remove(integration.domain)
+
+        if integration.integration_type in ("hardware", "helper"):
+            integration_key: str = integration.integration_type
+        else:
+            integration_key = "integration"
 
         metadata = {
             "config_flow": integration.config_flow,
@@ -289,7 +292,7 @@ async def async_get_integration_descriptions(
             "iot_class": integration.iot_class,
             "name": integration.name,
         }
-        custom_flows[integration.integration_type][integration.domain] = metadata
+        custom_flows[integration_key][integration.domain] = metadata
 
     return {"core": core_flows, "custom": custom_flows}
 
