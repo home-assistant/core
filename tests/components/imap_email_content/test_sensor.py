@@ -145,14 +145,18 @@ async def test_multi_part_only_other_text(hass):
     assert sensor.extra_state_attributes["body"] == "Test Message"
 
 
-async def test_multi_part_with_text_base64_encoded(hass):
-    """Test multi part emails with text and html encoded in base64."""
+async def test_multi_part_with_text_and_html_base64_encoded_return_text_part(hass):
+    """
+    Test with multi part emails with text and html encoded in base64.
+
+    The sensor body will be the original text part.
+    """
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Link"
     msg["From"] = "sender@test.com"
 
-    text = "Test Message"
-    html = "<html><head></head><body>Test Message</body></html>"
+    text = "Test Message ✉"
+    html = "<html><head></head><body>Test Message ✉</body></html>"
 
     # with utf-8 charset, MIMEText créate an base64 encoded body
     textPart = MIMEText(text, "plain", _charset="utf-8")
@@ -179,12 +183,16 @@ async def test_multi_part_with_text_base64_encoded(hass):
 
 
 async def test_multi_part_only_html_base64_encoded(hass):
-    """Test multi part emails with only HTML encoded in base64."""
+    """
+    Test with multi part emails with only HTML encoded in base64.
+
+    The sensor body will be the original html part.
+    """
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Link"
     msg["From"] = "sender@test.com"
 
-    html = "<html><head></head><body>Test Message</body></html>"
+    html = "<html><head></head><body>Test Message ✉</body></html>"
 
     # with utf-8 charset, MIMEText créate an base64 encoded body
     htmlPart = MIMEText(html, "html", _charset="utf-8")
@@ -207,13 +215,18 @@ async def test_multi_part_only_html_base64_encoded(hass):
     assert sensor.extra_state_attributes["body"] == html
 
 
-async def test_multi_part_only_other_text_base64_encoded(hass):
-    """Test multi part emails with only untyped text encoded in base64."""
+async def test_multi_part_only_untyped_text_base64_encoded(hass):
+    """
+    Test with multi part emails with only untyped text encoded in base64.
+
+    The sensor body will be the untyped part.
+
+    """
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Link"
     msg["From"] = "sender@test.com"
 
-    untyped = "Test Message"
+    untyped = "Test Message ✉"
 
     # with utf-8 charset, MIMEText créate an base64 encoded body
     htmlPart = MIMEText(untyped, "text", _charset="utf-8")
@@ -237,12 +250,16 @@ async def test_multi_part_only_other_text_base64_encoded(hass):
 
 
 async def test_multi_part_only_plain_text_without_Content_Transfer_Encoding(hass):
-    """Test multi part emails with text but without header Content-Transfer-Encoding."""
+    """
+    Test with multi part emails with text encoded in base64, but without header Content-Transfer-Encoding.
+
+    The sensor body will be the text encoded in base64.
+    """
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Link"
     msg["From"] = "sender@test.com"
 
-    text = "Test Message"
+    text = "Test Message ✉"
 
     # with utf-8 charset, MIMEText créate an base64 encoded body
     htmlPart = MIMEText(text, "text", _charset="utf-8")
@@ -271,13 +288,17 @@ async def test_multi_part_only_plain_text_without_Content_Transfer_Encoding(hass
 
 
 async def test_multi_part_with_text_quoted_printable_encoded(hass):
-    """Test multi part emails with text and html encoded in quoted-printable."""
+    """
+    Test with multi part emails with text and html encoded in quoted-printable.
+
+    The sensor body will be the original text part.
+    """
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Link"
     msg["From"] = "sender@test.com"
 
-    text = "Test Message"
-    html = "<html><head></head><body>Test Message</body></html>"
+    text = "Test Message ✉"
+    html = "<html><head></head><body>Test Message ✉</body></html>"
 
     textPart = MIMEText("", "plain")
     htmlPart = MIMEText("", "html")
