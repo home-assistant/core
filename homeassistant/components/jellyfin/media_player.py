@@ -143,18 +143,17 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
             media_title = self.now_playing["Name"]
             media_duration = int(self.now_playing["RunTimeTicks"] / 10000000)
 
-        if self.now_playing is not None and media_content_type == MediaType.EPISODE:
-            # HA frontend does not display all info for episode content type
-            media_content_type = MediaType.TVSHOW
-            media_series_title = self.now_playing.get("SeriesName")
-            media_season = self.now_playing.get("ParentIndexNumber")
-            media_episode = self.now_playing.get("IndexNumber")
-        elif self.now_playing is not None and media_content_type == MediaType.MUSIC:
-            media_album_name = self.now_playing.get("Album")
-            media_album_artist = self.now_playing.get("AlbumArtist")
-            media_track = self.now_playing.get("IndexNumber")
-            if media_artists := self.now_playing.get("Artists"):
-                media_artist = str(media_artists[0])
+            if media_content_type == MediaType.EPISODE:
+                media_content_type = MediaType.TVSHOW
+                media_series_title = self.now_playing.get("SeriesName")
+                media_season = self.now_playing.get("ParentIndexNumber")
+                media_episode = self.now_playing.get("IndexNumber")
+            elif media_content_type == MediaType.MUSIC:
+                media_album_name = self.now_playing.get("Album")
+                media_album_artist = self.now_playing.get("AlbumArtist")
+                media_track = self.now_playing.get("IndexNumber")
+                if media_artists := self.now_playing.get("Artists"):
+                    media_artist = str(media_artists[0])
 
         if self.play_state is not None:
             if self.play_state.get("IsPaused"):
