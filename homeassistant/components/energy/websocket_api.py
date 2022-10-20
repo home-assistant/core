@@ -185,7 +185,7 @@ async def ws_validate(
 async def ws_solar_forecast(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
     manager: EnergyManager,
 ) -> None:
     """Handle solar forecast command."""
