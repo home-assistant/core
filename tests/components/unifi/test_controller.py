@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 
 import aiounifi
 from aiounifi.models.event import EventKey
+from aiounifi.models.message import MessageKey
 from aiounifi.websocket import WebsocketState
 import pytest
 
@@ -397,21 +398,14 @@ async def test_wireless_client_event_calls_update_wireless_devices(
         "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
         return_value=None,
     ) as wireless_clients_mock:
-        mock_unifi_websocket(
-            data={
-                "meta": {"rc": "ok", "message": "events"},
-                "data": [
-                    {
-                        "datetime": "2020-01-20T19:37:04Z",
-                        "user": "00:00:00:00:00:01",
-                        "key": EventKey.WIRELESS_CLIENT_CONNECTED.value,
-                        "msg": "User[11:22:33:44:55:66] has connected to WLAN",
-                        "time": 1579549024893,
-                    }
-                ],
-            },
-        )
-
+        event = {
+            "datetime": "2020-01-20T19:37:04Z",
+            "user": "00:00:00:00:00:01",
+            "key": EventKey.WIRELESS_CLIENT_CONNECTED.value,
+            "msg": "User[11:22:33:44:55:66] has connected to WLAN",
+            "time": 1579549024893,
+        }
+        mock_unifi_websocket(message=MessageKey.EVENT, data=event)
         assert wireless_clients_mock.assert_called_once
 
 
