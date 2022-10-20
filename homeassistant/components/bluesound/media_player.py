@@ -38,7 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
@@ -457,11 +457,12 @@ class BluesoundPlayer(MediaPlayerEntity):
     def device_info(self):
         """Return a device description for device registry."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self._sync_status["@mac"])},
             name=self._name,
             manufacturer=self._sync_status.get("@brand", "Bluesound"),
             model=f"{self._sync_status['@modelName']} {self._sync_status['@model']}",
             sw_version=self._sync_status.get("@schemaVersion"),
+            connections={(CONNECTION_NETWORK_MAC, self._sync_status["@mac"])},
         )
 
     async def async_trigger_sync_on_all(self):
