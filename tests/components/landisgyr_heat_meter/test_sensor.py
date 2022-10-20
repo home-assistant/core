@@ -30,6 +30,8 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
+NUMBER_AVAILABLE_ENTITIES = 27
+
 
 @dataclass
 class MockHeatMeterResponse:
@@ -152,7 +154,7 @@ async def test_mwh_is_supplied(mock_heat_meter, hass):
     await hass.async_block_till_done()
 
     # check if 26 attributes have been created
-    assert len(hass.states.async_all()) == 27
+    assert len(hass.states.async_all()) == NUMBER_AVAILABLE_ENTITIES
 
     state = hass.states.get("sensor.heat_meter_heat_usage")
     assert state
@@ -256,3 +258,41 @@ async def test_restore_state(mock_heat_meter, hass):
     assert state
     assert state.state == "devicenr_789"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
+
+
+@patch("homeassistant.components.landisgyr_heat_meter.HeatMeterService")
+async def test_no_data_from_api(mock_heat_meter, hass):
+    """Test sensor."""
+    entry_data = {
+        "device": "/dev/USB0",
+        "model": "LUGCUH50",
+        "device_number": "123456789",
+    }
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    mock_heat_meter_response = None  # testing handling of no response data
+    mock_heat_meter().read.return_value = mock_heat_meter_response
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "sensor.heat_meter_heat_usage"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # check if all attributes have been created
+    assert len(hass.states.async_all()) == NUMBER_AVAILABLE_ENTITIES
+
+    state = hass.states.get("sensor.heat_meter_heat_usage")
+    assert state
+    assert state.state == "unknown"
+
+    state = hass.states.get("sensor.heat_meter_heat_usage_previous_year")
+    assert state
+    assert state.state == "unknown"
