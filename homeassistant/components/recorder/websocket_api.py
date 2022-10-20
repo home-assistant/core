@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime as dt
 import logging
-from typing import Literal
+from typing import Any, Literal
 
 import voluptuous as vol
 
@@ -135,7 +135,7 @@ async def ws_handle_get_statistics_during_period(
 )
 @websocket_api.async_response
 async def ws_get_statistics_during_period(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle statistics websocket command."""
     await ws_handle_get_statistics_during_period(hass, connection, msg)
@@ -174,7 +174,7 @@ async def ws_handle_list_statistic_ids(
 )
 @websocket_api.async_response
 async def ws_list_statistic_ids(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fetch a list of available statistic_id."""
     await ws_handle_list_statistic_ids(hass, connection, msg)
@@ -187,7 +187,7 @@ async def ws_list_statistic_ids(
 )
 @websocket_api.async_response
 async def ws_validate_statistics(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fetch a list of available statistic_id."""
     instance = get_instance(hass)
@@ -207,7 +207,7 @@ async def ws_validate_statistics(
 )
 @callback
 def ws_clear_statistics(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Clear statistics for a list of statistic_ids.
 
@@ -226,7 +226,7 @@ def ws_clear_statistics(
 )
 @websocket_api.async_response
 async def ws_get_statistics_metadata(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get metadata for a list of statistic_ids."""
     instance = get_instance(hass)
@@ -246,7 +246,7 @@ async def ws_get_statistics_metadata(
 )
 @callback
 def ws_update_statistics_metadata(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Update statistics metadata for a statistic_id.
 
@@ -269,7 +269,7 @@ def ws_update_statistics_metadata(
 )
 @callback
 def ws_change_statistics_unit(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Change the unit_of_measurement for a statistic_id.
 
@@ -296,7 +296,7 @@ def ws_change_statistics_unit(
 )
 @websocket_api.async_response
 async def ws_adjust_sum_statistics(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Adjust sum statistics.
 
@@ -371,7 +371,7 @@ async def ws_adjust_sum_statistics(
 )
 @callback
 def ws_import_statistics(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Import statistics."""
     metadata = msg["metadata"]
@@ -391,7 +391,7 @@ def ws_import_statistics(
 )
 @callback
 def ws_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return status of the recorder."""
     instance = get_instance(hass)
@@ -417,7 +417,7 @@ def ws_info(
 @websocket_api.websocket_command({vol.Required("type"): "backup/start"})
 @websocket_api.async_response
 async def ws_backup_start(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Backup start notification."""
 
@@ -435,7 +435,7 @@ async def ws_backup_start(
 @websocket_api.websocket_command({vol.Required("type"): "backup/end"})
 @websocket_api.async_response
 async def ws_backup_end(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Backup end notification."""
 

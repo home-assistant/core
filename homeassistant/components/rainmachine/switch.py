@@ -34,7 +34,7 @@ from .model import (
     RainMachineEntityDescriptionMixinDataKey,
     RainMachineEntityDescriptionMixinUid,
 )
-from .util import RUN_STATE_MAP
+from .util import RUN_STATE_MAP, key_exists
 
 ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
@@ -237,6 +237,8 @@ async def async_setup_entry(
 
     # Add switches to control restrictions:
     for description in RESTRICTIONS_SWITCH_DESCRIPTIONS:
+        if not key_exists(coordinator.data, description.data_key):
+            continue
         entities.append(RainMachineRestrictionSwitch(entry, data, description))
 
     async_add_entities(entities)

@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_NAME,
     CONF_REGION,
     EVENT_HOMEASSISTANT_STARTED,
@@ -27,7 +26,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.util.unit_conversion import DistanceConverter
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     CONF_AVOID_FERRIES,
@@ -70,7 +69,7 @@ async def async_setup_entry(
         CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
         CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
     }
-    if hass.config.units is IMPERIAL_SYSTEM:
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
         defaults[CONF_UNITS] = IMPERIAL_UNITS
 
     if not config_entry.options:
@@ -115,6 +114,7 @@ async def async_setup_entry(
 class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
+    _attr_attribution = "Powered by Waze"
     _attr_native_unit_of_measurement = TIME_MINUTES
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -159,7 +159,6 @@ class WazeTravelTime(SensorEntity):
             return None
 
         return {
-            ATTR_ATTRIBUTION: "Powered by Waze",
             "duration": self._waze_data.duration,
             "distance": self._waze_data.distance,
             "route": self._waze_data.route,

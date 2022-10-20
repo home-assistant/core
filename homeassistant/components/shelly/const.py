@@ -46,17 +46,11 @@ DUAL_MODE_LIGHT_MODELS: Final = (
     "SHCB-1",
 )
 
-# Used in "_async_update_data" as timeout for polling data from devices.
-POLLING_TIMEOUT_SEC: Final = 18
-
 # Refresh interval for REST sensors
 REST_SENSORS_UPDATE_INTERVAL: Final = 60
 
 # Refresh interval for RPC polling sensors
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
-
-# Timeout used for aioshelly calls
-AIOSHELLY_DEVICE_TIMEOUT_SEC: Final = 10
 
 # Multiplier used to calculate the "update_interval" for sleeping devices.
 SLEEP_PERIOD_MULTIPLIER: Final = 1.2
