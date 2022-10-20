@@ -248,8 +248,6 @@ homeassistant.components.smhi.*
 homeassistant.components.snooz.*
 homeassistant.components.sonarr.*
 homeassistant.components.ssdp.*
-homeassistant.components.starlink.entity
-homeassistant.components.starlink.sensor
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*
