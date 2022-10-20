@@ -207,7 +207,7 @@ async def ws_validate_statistics(
 )
 @callback
 def ws_clear_statistics(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Clear statistics for a list of statistic_ids.
 
@@ -246,7 +246,7 @@ async def ws_get_statistics_metadata(
 )
 @callback
 def ws_update_statistics_metadata(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Update statistics metadata for a statistic_id.
 
@@ -269,7 +269,7 @@ def ws_update_statistics_metadata(
 )
 @callback
 def ws_change_statistics_unit(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Change the unit_of_measurement for a statistic_id.
 
@@ -371,7 +371,7 @@ async def ws_adjust_sum_statistics(
 )
 @callback
 def ws_import_statistics(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Import statistics."""
     metadata = msg["metadata"]
@@ -391,7 +391,7 @@ def ws_import_statistics(
 )
 @callback
 def ws_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return status of the recorder."""
     instance = get_instance(hass)

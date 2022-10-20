@@ -423,7 +423,7 @@ async def websocket_handle_clear(
 def websocket_handle_reorder(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Handle reordering shopping_list items."""
     msg_id = msg.pop("id")

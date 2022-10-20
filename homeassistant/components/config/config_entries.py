@@ -243,7 +243,11 @@ class OptionManagerFlowResourceView(FlowManagerResourceView):
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({"type": "config_entries/flow/progress"})
-def config_entries_progress(hass, connection, msg):
+def config_entries_progress(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """List flows that are in progress but not started by a user.
 
     Example of a non-user initiated flow is a discovered Hue hub that

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -546,8 +547,10 @@ class Person(collection.CollectionEntity, RestoreEntity):
 
 @websocket_api.websocket_command({vol.Required(CONF_TYPE): "person/list"})
 def ws_list_person(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
-):
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """List persons."""
     yaml, storage, _ = hass.data[DOMAIN]
     connection.send_result(
