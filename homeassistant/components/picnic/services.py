@@ -5,7 +5,6 @@ from python_picnic_api import PicnicAPI
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -54,7 +53,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
 async def get_api_client(hass: HomeAssistant, config_entry_id: str) -> PicnicAPI:
     """Get the right Picnic API client based on the device id, else get the default one."""
     if config_entry_id not in hass.data[DOMAIN]:
-        raise HomeAssistantError(f"Config entry with id {config_entry_id} not found!")
+        raise ValueError(f"Config entry with id {config_entry_id} not found!")
     return hass.data[DOMAIN][config_entry_id][CONF_API]
 
 
