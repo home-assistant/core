@@ -2277,7 +2277,7 @@ smart-meter-texas==0.4.7
 smhi-pkg==1.0.16
 
 # homeassistant.components.snapcast
-snapcast==2.1.3
+snapcast==2.3.0
 
 # homeassistant.components.sonos
 soco==0.28.0
@@ -2601,7 +2601,7 @@ youtube_dl==2021.12.17
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.39.1
+zeroconf==0.39.2
 
 # homeassistant.components.zha
 zha-quirks==0.0.83

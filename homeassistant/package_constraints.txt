@@ -42,7 +42,7 @@ typing-extensions>=4.4.0,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
 yarl==1.8.1
-zeroconf==0.39.1
+zeroconf==0.39.2
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -131,3 +131,6 @@ iso4217!=1.10.20220401
 
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
 pandas==1.4.3
+
+# uamqp 1.6.1, has 1 failing test during built on armv7/armhf
+uamqp==1.6.0
