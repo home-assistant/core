@@ -70,7 +70,11 @@ async def async_setup(hass: HomeAssistant) -> bool:
     }
 )
 @callback
-def websocket_get_entity(hass, connection, msg):
+def websocket_get_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle get entity registry entry command.
 
     Async friendly.
@@ -120,7 +124,11 @@ def websocket_get_entity(hass, connection, msg):
     }
 )
 @callback
-def websocket_update_entity(hass, connection, msg):
+def websocket_update_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle update entity websocket command.
 
     Async friendly.
@@ -153,7 +161,7 @@ def websocket_update_entity(hass, connection, msg):
         if entity_entry.device_id:
             device_registry = dr.async_get(hass)
             device = device_registry.async_get(entity_entry.device_id)
-            if device.disabled:
+            if device and not device.disabled:
                 connection.send_message(
                     websocket_api.error_message(
                         msg["id"], "invalid_info", "Device is disabled"
@@ -184,8 +192,12 @@ def websocket_update_entity(hass, connection, msg):
         )
         return
 
-    result = {"entity_entry": _entry_ext_dict(entity_entry)}
-    if "disabled_by" in changes and changes["disabled_by"] is None:
+    result: dict[str, Any] = {"entity_entry": _entry_ext_dict(entity_entry)}
+    if (
+        "disabled_by" in changes
+        and changes["disabled_by"] is None
+        and entity_entry.config_entry_id
+    ):
         # Enabling an entity requires a config entry reload, or HA restart
         config_entry = hass.config_entries.async_get_entry(entity_entry.config_entry_id)
         if config_entry and not config_entry.supports_unload:
@@ -203,7 +215,11 @@ def websocket_update_entity(hass, connection, msg):
     }
 )
 @callback
-def websocket_remove_entity(hass, connection, msg):
+def websocket_remove_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle remove entity websocket command.
 
     Async friendly.
