@@ -742,12 +742,7 @@ async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("switch.block_client_2") is not None
     assert hass.states.get("switch.block_media_streaming") is not None
 
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.CLIENT_REMOVED.value},
-            "data": [CLIENT_1, UNBLOCKED],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=[CLIENT_1, UNBLOCKED])
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -789,12 +784,7 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert unblocked is not None
     assert unblocked.state == "on"
 
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.EVENT.value},
-            "data": [EVENT_BLOCKED_CLIENT_UNBLOCKED],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.EVENT, data=EVENT_BLOCKED_CLIENT_UNBLOCKED)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -802,12 +792,7 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert blocked is not None
     assert blocked.state == "on"
 
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.EVENT.value},
-            "data": [EVENT_BLOCKED_CLIENT_BLOCKED],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.EVENT, data=EVENT_BLOCKED_CLIENT_BLOCKED)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -881,56 +866,44 @@ async def test_dpi_switches_add_second_app(hass, aioclient_mock, mock_unifi_webs
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
 
     second_app_event = {
-        "meta": {"rc": "ok", "message": "dpiapp:add"},
-        "data": [
-            {
-                "apps": [524292],
-                "blocked": False,
-                "cats": [],
-                "enabled": False,
-                "log": False,
-                "site_id": "name",
-                "_id": "61783e89c1773a18c0c61f00",
-            }
-        ],
+        "apps": [524292],
+        "blocked": False,
+        "cats": [],
+        "enabled": False,
+        "log": False,
+        "site_id": "name",
+        "_id": "61783e89c1773a18c0c61f00",
     }
-    mock_unifi_websocket(data=second_app_event)
+    mock_unifi_websocket(message=MessageKey.DPI_APP_ADDED, data=second_app_event)
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
 
     add_second_app_to_group = {
-        "meta": {"rc": "ok", "message": "dpigroup:sync"},
-        "data": [
-            {
-                "_id": "5f976f4ae3c58f018ec7dff6",
-                "name": "Block Media Streaming",
-                "site_id": "name",
-                "dpiapp_ids": ["5f976f62e3c58f018ec7e17d", "61783e89c1773a18c0c61f00"],
-            }
-        ],
+        "_id": "5f976f4ae3c58f018ec7dff6",
+        "name": "Block Media Streaming",
+        "site_id": "name",
+        "dpiapp_ids": ["5f976f62e3c58f018ec7e17d", "61783e89c1773a18c0c61f00"],
     }
-
-    mock_unifi_websocket(data=add_second_app_to_group)
+    mock_unifi_websocket(
+        message=MessageKey.DPI_GROUP_UPDATED, data=add_second_app_to_group
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
     second_app_event_enabled = {
-        "meta": {"rc": "ok", "message": "dpiapp:sync"},
-        "data": [
-            {
-                "apps": [524292],
-                "blocked": False,
-                "cats": [],
-                "enabled": True,
-                "log": False,
-                "site_id": "name",
-                "_id": "61783e89c1773a18c0c61f00",
-            }
-        ],
+        "apps": [524292],
+        "blocked": False,
+        "cats": [],
+        "enabled": True,
+        "log": False,
+        "site_id": "name",
+        "_id": "61783e89c1773a18c0c61f00",
     }
-    mock_unifi_websocket(data=second_app_event_enabled)
+    mock_unifi_websocket(
+        message=MessageKey.DPI_APP_UPDATED, data=second_app_event_enabled
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_ON
@@ -957,12 +930,7 @@ async def test_outlet_switches(hass, aioclient_mock, mock_unifi_websocket):
     outlet_up1 = deepcopy(OUTLET_UP1)
     outlet_up1["outlet_table"][0]["relay_state"] = True
 
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.DEVICE.value},
-            "data": [outlet_up1],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=outlet_up1)
     await hass.async_block_till_done()
 
     outlet = hass.states.get("switch.plug_outlet_1")
@@ -1035,22 +1003,12 @@ async def test_new_client_discovered_on_block_control(
     blocked = hass.states.get("switch.block_client_1")
     assert blocked is None
 
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": "sta:sync"},
-            "data": [BLOCKED],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.CLIENT, data=BLOCKED)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.EVENT.value},
-            "data": [EVENT_BLOCKED_CLIENT_CONNECTED],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.EVENT, data=EVENT_BLOCKED_CLIENT_CONNECTED)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -1141,22 +1099,12 @@ async def test_new_client_discovered_on_poe_control(
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": "sta:sync"},
-            "data": [CLIENT_2],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.CLIENT, data=CLIENT_2)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.EVENT.value},
-            "data": [EVENT_CLIENT_2_CONNECTED],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.EVENT, data=EVENT_CLIENT_2_CONNECTED)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -1423,12 +1371,7 @@ async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
     # Update state object
     device_1 = deepcopy(DEVICE_1)
     device_1["port_table"][0]["poe_mode"] = "off"
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.DEVICE.value},
-            "data": [device_1],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
 
@@ -1475,22 +1418,12 @@ async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     # Device gets disabled
     device_1["disabled"] = True
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.DEVICE.value},
-            "data": [device_1],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_UNAVAILABLE
 
     # Device gets re-enabled
     device_1["disabled"] = False
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.DEVICE.value},
-            "data": [device_1],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
