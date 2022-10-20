@@ -36,14 +36,18 @@ async def async_setup(hass: HomeAssistant) -> bool:
         {vol.Required("type"): "config/entity_registry/list"}
     )
     @callback
-    def websocket_list_entities(hass, connection, msg):
+    def websocket_list_entities(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
         """Handle list registry entries command."""
         nonlocal cached_list_entities
         if not cached_list_entities:
             registry = er.async_get(hass)
             cached_list_entities = message_to_json(
                 websocket_api.result_message(
-                    IDEN_TEMPLATE,
+                    IDEN_TEMPLATE,  # type: ignore[arg-type]
                     [_entry_dict(entry) for entry in registry.entities.values()],
                 )
             )
