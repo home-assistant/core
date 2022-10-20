@@ -20,7 +20,6 @@ from aiounifi.models.event import EventKey
 
 from homeassistant.components.switch import DOMAIN, SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -93,8 +92,6 @@ async def async_setup_entry(
         dpi_groups: set = controller.api.dpi_groups,
     ) -> None:
         """Update the values of the controller."""
-        add_outlet_entities(controller, async_add_entities, devices)
-
         if controller.option_block_clients:
             add_block_entities(controller, async_add_entities, clients)
 
@@ -111,6 +108,18 @@ async def async_setup_entry(
 
     items_added()
     known_poe_clients.clear()
+
+    @callback
+    def async_add_outlet_switch(_: ItemEvent, obj_id: str) -> None:
+        """Add power outlet switch from UniFi controller."""
+        if not controller.api.outlets[obj_id].has_relay:
+            return
+        async_add_entities([UnifiOutletSwitch(obj_id, controller)])
+
+    controller.api.ports.subscribe(async_add_outlet_switch, ItemEvent.ADDED)
+
+    for index in controller.api.outlets:
+        async_add_outlet_switch(ItemEvent.ADDED, index)
 
     @callback
     def async_add_poe_switch(_: ItemEvent, obj_id: str) -> None:
@@ -203,25 +212,6 @@ def add_dpi_entities(controller, async_add_entities, dpi_groups):
             continue
 
         switches.append(UniFiDPIRestrictionSwitch(dpi_groups[group], controller))
-
-    async_add_entities(switches)
-
-
-@callback
-def add_outlet_entities(controller, async_add_entities, devices):
-    """Add new switch entities from the controller."""
-    switches = []
-
-    for mac in devices:
-        if (
-            mac in controller.entities[DOMAIN][OUTLET_SWITCH]
-            or not (device := controller.api.devices[mac]).outlet_table
-        ):
-            continue
-
-        for outlet in device.outlets.values():
-            if outlet.has_relay:
-                switches.append(UniFiOutletSwitch(device, controller, outlet.index))
 
     async_add_entities(switches)
 
@@ -506,63 +496,76 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
         )
 
 
-class UniFiOutletSwitch(UniFiBase, SwitchEntity):
+class UnifiOutletSwitch(SwitchEntity):
     """Representation of a outlet relay."""
 
-    DOMAIN = DOMAIN
-    TYPE = OUTLET_SWITCH
-
     _attr_device_class = SwitchDeviceClass.OUTLET
+    _attr_has_entity_name = True
+    _attr_should_poll = False
 
-    def __init__(self, device, controller, index):
-        """Set up outlet switch."""
-        super().__init__(device, controller)
+    def __init__(self, obj_id: str, controller) -> None:
+        """Set up UniFi Network entity base."""
+        self._device_mac, index = obj_id.split("_", 1)
+        self._index = int(index)
+        self._obj_id = obj_id
+        self.controller = controller
 
-        self._outlet_index = index
+        outlet = self.controller.api.outlets[self._obj_id]
+        self._attr_name = outlet.name
+        self._attr_is_on = outlet.relay_state
+        self._attr_unique_id = f"{self._device_mac}-outlet-{index}"
 
-        self._attr_name = f"{device.name or device.model} {device.outlets[index].name}"
-        self._attr_unique_id = f"{device.mac}-outlet-{index}"
+        device = self.controller.api.devices[self._device_mac]
+        self._attr_available = controller.available and not device.disabled
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, device.mac)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=device.model,
+            name=device.name or None,
+            sw_version=device.version,
+            hw_version=device.board_revision,
+        )
 
-    @property
-    def is_on(self):
-        """Return true if outlet is active."""
-        return self._item.outlets[self._outlet_index].relay_state
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        self.async_on_remove(
+            self.controller.api.outlets.subscribe(self.async_signalling_callback)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self.controller.signal_reachable,
+                self.async_signal_reachable_callback,
+            )
+        )
 
-    @property
-    def available(self) -> bool:
-        """Return if switch is available."""
-        return not self._item.disabled and self.controller.available
+    @callback
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
+        """Object has new event."""
+        device = self.controller.api.devices[self._device_mac]
+        outlet = self.controller.api.outlets[self._obj_id]
+        self._attr_available = self.controller.available and not device.disabled
+        self._attr_is_on = outlet.relay_state
+        self.async_write_ha_state()
+
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable outlet relay."""
+        device = self.controller.api.devices[self._device_mac]
         await self.controller.api.request(
-            DeviceSetOutletRelayRequest.create(self._item, self._outlet_index, True)
+            DeviceSetOutletRelayRequest.create(device, self._index, True)
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable outlet relay."""
+        device = self.controller.api.devices[self._device_mac]
         await self.controller.api.request(
-            DeviceSetOutletRelayRequest.create(self._item, self._outlet_index, False)
+            DeviceSetOutletRelayRequest.create(device, self._index, False)
         )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._item.mac)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=self._item.model,
-            sw_version=self._item.version,
-            hw_version=self._item.board_revision,
-        )
-
-        if self._item.name:
-            info[ATTR_NAME] = self._item.name
-
-        return info
-
-    async def options_updated(self) -> None:
-        """Config entry options are updated, no options to act on."""
 
 
 class UnifiPoePortSwitch(SwitchEntity):
@@ -594,6 +597,7 @@ class UnifiPoePortSwitch(SwitchEntity):
             model=device.model,
             name=device.name or None,
             sw_version=device.version,
+            hw_version=device.board_revision,
         )
 
     async def async_added_to_hass(self) -> None:
