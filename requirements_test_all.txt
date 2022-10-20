@@ -349,7 +349,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.6.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.4
+bluetooth-auto-recovery==0.3.6
 
 # homeassistant.components.bond
 bond-async==0.1.22
