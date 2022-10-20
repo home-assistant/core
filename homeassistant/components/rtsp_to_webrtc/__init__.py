@@ -37,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "rtsp_to_webrtc"
 DATA_SERVER_URL = "server_url"
 DATA_UNSUB = "unsub"
-TIMEOUT = 10
+TIMEOUT = 30
 CONF_STUN_SERVER = "stun_server"
 
 
