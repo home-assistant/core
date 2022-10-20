@@ -180,6 +180,13 @@ async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
 
 async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
     """Test statistic_during_period."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
     now = dt_util.utcnow()
 
     await async_setup_component(hass, "sensor", {})
@@ -194,18 +201,34 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
     client = await hass_ws_client()
 
     zero = now
-    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-1)
-    period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-2)
+    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-4)
+    period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-3)
+    period3 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-2)
+    period4 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-1)
 
     imported_statistics1 = {
         "start": period1.isoformat(),
-        "max": 20,
-        "mean": 0,
+        "max": 40,
+        "mean": 20,
         "min": -10,
         "sum": 0,
     }
     imported_statistics2 = {
         "start": period2.isoformat(),
+        "max": 10,
+        "mean": 30,
+        "min": -40,
+        "sum": 1,
+    }
+    imported_statistics3 = {
+        "start": period3.isoformat(),
+        "max": 20,
+        "mean": 0,
+        "min": -10,
+        "sum": 2,
+    }
+    imported_statistics4 = {
+        "start": period4.isoformat(),
         "max": 10,
         "mean": 20,
         "min": -20,
@@ -223,19 +246,25 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
 
     await client.send_json(
         {
-            "id": 1,
+            "id": next_id(),
             "type": "recorder/import_statistics",
             "metadata": imported_metadata,
-            "stats": [imported_statistics1, imported_statistics2],
+            "stats": [
+                imported_statistics1,
+                imported_statistics2,
+                imported_statistics3,
+                imported_statistics4,
+            ],
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] is None
 
+    # No data for this period
     await client.send_json(
         {
-            "id": 2,
+            "id": next_id(),
             "type": "recorder/statistic_during_period",
             "start_time": now.isoformat(),
             "end_time": now.isoformat(),
@@ -244,19 +273,114 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"max": None, "mean": None, "min": None}
+    assert response["result"] == {"max": None, "mean": None, "min": None, "sum": None}
 
+    # This should include imported_statistics3 + imported_statistics4
     await client.send_json(
         {
-            "id": 3,
+            "id": next_id(),
             "type": "recorder/statistic_during_period",
-            "start_time": period2.isoformat(),
+            "start_time": period3.isoformat(),
             "statistic_id": "sensor.test",
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"max": 20, "mean": 10, "min": -20, "sum": -1}
+
+    # This should also include imported_statistics3 + imported_statistics4
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "duration": {"hours": 3},
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"max": 20, "mean": 10, "min": -20, "sum": -1}
+
+    # This should also include imported_statistics3 + imported_statistics4
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "duration": {"hours": 2},
+            "offset": {"hours": -1},
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"max": 20, "mean": 10, "min": -20, "sum": -1}
+
+    # This should also include imported_statistics3 + imported_statistics4
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "start_time": period3.isoformat(),
+            "end_time": zero.isoformat(),
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"max": 20, "mean": 10, "min": -20, "sum": -1}
+
+    # This should include imported_statistics1 + imported_statistics2
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "start_time": period1.isoformat(),
+            "end_time": period3.isoformat(),
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"max": 40, "mean": 25, "min": -40, "sum": 1}
+
+    # This should include everything
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "start_time": period1.isoformat(),
+            "end_time": zero.isoformat(),
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"max": 40, "mean": 17.5, "min": -40, "sum": 1}
+
+    # This should also include everything
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"max": 40, "mean": 17.5, "min": -40, "sum": 1}
+
+    # Get only selected types
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+            "types": ["max", "sum"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"max": 40, "sum": 1}
 
 
 @pytest.mark.parametrize(
@@ -1676,20 +1800,20 @@ async def test_import_statistics(
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
 
-    external_statistics1 = {
+    imported_statistics1 = {
         "start": period1.isoformat(),
         "last_reset": None,
         "state": 0,
         "sum": 2,
     }
-    external_statistics2 = {
+    imported_statistics2 = {
         "start": period2.isoformat(),
         "last_reset": None,
         "state": 1,
         "sum": 3,
     }
 
-    external_metadata = {
+    imported_metadata = {
         "has_mean": False,
         "has_sum": True,
         "name": "Total imported energy",
@@ -1702,8 +1826,8 @@ async def test_import_statistics(
         {
             "id": 1,
             "type": "recorder/import_statistics",
-            "metadata": external_metadata,
-            "stats": [external_statistics1, external_statistics2],
+            "metadata": imported_metadata,
+            "stats": [imported_statistics1, imported_statistics2],
         }
     )
     response = await client.receive_json()
@@ -1793,7 +1917,7 @@ async def test_import_statistics(
         {
             "id": 2,
             "type": "recorder/import_statistics",
-            "metadata": external_metadata,
+            "metadata": imported_metadata,
             "stats": [external_statistics],
         }
     )
@@ -1845,7 +1969,7 @@ async def test_import_statistics(
         {
             "id": 3,
             "type": "recorder/import_statistics",
-            "metadata": external_metadata,
+            "metadata": imported_metadata,
             "stats": [external_statistics],
         }
     )
@@ -1903,20 +2027,20 @@ async def test_adjust_sum_statistics_energy(
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
 
-    external_statistics1 = {
+    imported_statistics1 = {
         "start": period1.isoformat(),
         "last_reset": None,
         "state": 0,
         "sum": 2,
     }
-    external_statistics2 = {
+    imported_statistics2 = {
         "start": period2.isoformat(),
         "last_reset": None,
         "state": 1,
         "sum": 3,
     }
 
-    external_metadata = {
+    imported_metadata = {
         "has_mean": False,
         "has_sum": True,
         "name": "Total imported energy",
@@ -1929,8 +2053,8 @@ async def test_adjust_sum_statistics_energy(
         {
             "id": 1,
             "type": "recorder/import_statistics",
-            "metadata": external_metadata,
-            "stats": [external_statistics1, external_statistics2],
+            "metadata": imported_metadata,
+            "stats": [imported_statistics1, imported_statistics2],
         }
     )
     response = await client.receive_json()
@@ -2099,20 +2223,20 @@ async def test_adjust_sum_statistics_gas(
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
 
-    external_statistics1 = {
+    imported_statistics1 = {
         "start": period1.isoformat(),
         "last_reset": None,
         "state": 0,
         "sum": 2,
     }
-    external_statistics2 = {
+    imported_statistics2 = {
         "start": period2.isoformat(),
         "last_reset": None,
         "state": 1,
         "sum": 3,
     }
 
-    external_metadata = {
+    imported_metadata = {
         "has_mean": False,
         "has_sum": True,
         "name": "Total imported energy",
@@ -2125,8 +2249,8 @@ async def test_adjust_sum_statistics_gas(
         {
             "id": 1,
             "type": "recorder/import_statistics",
-            "metadata": external_metadata,
-            "stats": [external_statistics1, external_statistics2],
+            "metadata": imported_metadata,
+            "stats": [imported_statistics1, imported_statistics2],
         }
     )
     response = await client.receive_json()
@@ -2310,20 +2434,20 @@ async def test_adjust_sum_statistics_errors(
     period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=2)
 
-    external_statistics1 = {
+    imported_statistics1 = {
         "start": period1.isoformat(),
         "last_reset": None,
         "state": 0,
         "sum": 2,
     }
-    external_statistics2 = {
+    imported_statistics2 = {
         "start": period2.isoformat(),
         "last_reset": None,
         "state": 1,
         "sum": 3,
     }
 
-    external_metadata = {
+    imported_metadata = {
         "has_mean": False,
         "has_sum": True,
         "name": "Total imported energy",
@@ -2336,8 +2460,8 @@ async def test_adjust_sum_statistics_errors(
         {
             "id": 1,
             "type": "recorder/import_statistics",
-            "metadata": external_metadata,
-            "stats": [external_statistics1, external_statistics2],
+            "metadata": imported_metadata,
+            "stats": [imported_statistics1, imported_statistics2],
         }
     )
     response = await client.receive_json()

@@ -64,7 +64,7 @@ def _ws_get_statistic_during_period(
     start_time: dt | None,
     end_time: dt | None,
     statistic_id: str,
-    types: list[str] | None,
+    types: set[str] | None,
     units: dict[str, str],
 ) -> str:
     """Fetch statistics and convert them to json in the executor."""
@@ -81,10 +81,12 @@ def _ws_get_statistic_during_period(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/statistic_during_period",
+        vol.Optional("duration"): cv.time_period_dict,
+        vol.Optional("offset"): cv.time_period_dict,
         vol.Optional("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Optional("statistic_id"): str,
-        vol.Optional("types"): list[str],
+        vol.Optional("types"): vol.All([str], vol.Coerce(set)),
         vol.Optional("units"): vol.Schema(
             {
                 vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
@@ -104,26 +106,31 @@ async def ws_get_statistic_during_period(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle statistics websocket command."""
-    start_time_str = msg["start_time"]
-    end_time_str = msg.get("end_time")
+    start_time = None
+    end_time = None
 
-    if start_time_str:
+    if start_time_str := msg.get("start_time"):
         if start_time := dt_util.parse_datetime(start_time_str):
             start_time = dt_util.as_utc(start_time)
         else:
             connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
             return
-    else:
-        start_time = None
 
-    if end_time_str:
+    if end_time_str := msg.get("end_time"):
         if end_time := dt_util.parse_datetime(end_time_str):
             end_time = dt_util.as_utc(end_time)
         else:
             connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
             return
-    else:
-        end_time = None
+
+    if duration := msg.get("duration"):
+        now = dt_util.utcnow()
+        start_time = now - duration
+        end_time = now
+
+    if offset := msg.get("offset"):
+        start_time += offset
+        end_time += offset
 
     connection.send_message(
         await get_instance(hass).async_add_executor_job(

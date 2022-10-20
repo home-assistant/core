@@ -1118,7 +1118,7 @@ def statistic_during_period(
     start_time: datetime | None,
     end_time: datetime | None,
     statistic_id: str,
-    types: list[str] | None,
+    types: set[str] | None,
     units: dict[str, str] | None,
 ) -> dict[str, Any]:
     """Return a statistic data point for the UTC period start_time - end_time.
@@ -1136,61 +1136,69 @@ def statistic_during_period(
         metadata_id = metadata[statistic_id][0]
 
         # Calculate max, mean, min
-        stmt = lambda_stmt(
-            lambda: select(
-                func.max(Statistics.max),
-                func.avg(Statistics.mean),
-                func.min(Statistics.min),
-            ).filter(Statistics.metadata_id.__eq__(metadata_id))
-        )
-        if start_time is not None:
-            stmt += lambda q: q.filter(Statistics.start >= start_time)
-        if end_time is not None:
-            stmt += lambda q: q.filter(Statistics.start < end_time)
-        stats = execute_stmt_lambda_element(session, stmt)
-        if stats:
-            stat = stats[0]
-            result["max"] = stat.max
-            result["mean"] = stat.avg
-            result["min"] = stat.min
+        if not types or not types.isdisjoint({"max", "mean", "min"}):
+            columns = []
+            if not types or "max" in types:
+                columns.append(func.max(Statistics.max))
+            if not types or "mean" in types:
+                columns.append(func.avg(Statistics.mean))
+            if not types or "min" in types:
+                columns.append(func.min(Statistics.min))
+            stmt = lambda_stmt(
+                lambda: select(columns).filter(
+                    Statistics.metadata_id.__eq__(metadata_id)
+                )
+            )
+            if start_time is not None:
+                stmt += lambda q: q.filter(Statistics.start >= start_time)
+            if end_time is not None:
+                stmt += lambda q: q.filter(Statistics.start < end_time)
+            stats = execute_stmt_lambda_element(session, stmt)
+            if not types or "max" in types:
+                result["max"] = stats[0].max if stats else None
+            if not types or "mean" in types:
+                result["mean"] = stats[0].avg if stats else None
+            if not types or "min" in types:
+                result["min"] = stats[0].min if stats else None
 
         # Calculate sum, first find the oldest non-NULL sum
-        stmt = lambda_stmt(
-            lambda: select(
-                Statistics.sum,
+        if not types or "sum" in types:
+            stmt = lambda_stmt(
+                lambda: select(
+                    Statistics.sum,
+                )
+                .filter(Statistics.metadata_id.__eq__(metadata_id))
+                .filter(Statistics.sum.is_not(None))
+                .order_by(Statistics.start.asc())
+                .limit(1)
             )
-            .filter(Statistics.metadata_id.__eq__(metadata_id))
-            .filter(Statistics.sum.is_not(None))
-            .order_by(Statistics.start.asc())
-            .limit(1)
-        )
-        if start_time is not None:
-            stmt += lambda q: q.filter(Statistics.start >= start_time)
-        if end_time is not None:
-            stmt += lambda q: q.filter(Statistics.start < end_time)
-        oldest_stats = execute_stmt_lambda_element(session, stmt)
+            if start_time is not None:
+                stmt += lambda q: q.filter(Statistics.start >= start_time)
+            if end_time is not None:
+                stmt += lambda q: q.filter(Statistics.start < end_time)
+            oldest_stats = execute_stmt_lambda_element(session, stmt)
 
-        # Then find the newest non-NULL sum
-        stmt = lambda_stmt(
-            lambda: select(
-                Statistics.sum,
+            # Then find the newest non-NULL sum
+            stmt = lambda_stmt(
+                lambda: select(
+                    Statistics.sum,
+                )
+                .filter(Statistics.metadata_id.__eq__(metadata_id))
+                .filter(Statistics.sum.is_not(None))
+                .order_by(Statistics.start.desc())
+                .limit(1)
             )
-            .filter(Statistics.metadata_id.__eq__(metadata_id))
-            .filter(Statistics.sum.is_not(None))
-            .order_by(Statistics.start.desc())
-            .limit(1)
-        )
-        if start_time is not None:
-            stmt += lambda q: q.filter(Statistics.start >= start_time)
-        if end_time is not None:
-            stmt += lambda q: q.filter(Statistics.start < end_time)
-        newest_stats = execute_stmt_lambda_element(session, stmt)
+            if start_time is not None:
+                stmt += lambda q: q.filter(Statistics.start >= start_time)
+            if end_time is not None:
+                stmt += lambda q: q.filter(Statistics.start < end_time)
+            newest_stats = execute_stmt_lambda_element(session, stmt)
 
-        # Calculate the difference
-        if oldest_stats and newest_stats:
-            oldest_stat = oldest_stats[0]
-            newest_stat = newest_stats[0]
-            result["sum"] = newest_stat.sum - oldest_stat.sum
+            # Calculate the difference
+            if oldest_stats and newest_stats:
+                result["sum"] = newest_stats[0].sum - oldest_stats[0].sum
+            else:
+                result["sum"] = None
 
     return result
 
