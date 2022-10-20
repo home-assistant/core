@@ -11,7 +11,7 @@ async def test_successful_entry(hass: HomeAssistant) -> None:
     """Test configuring Starlink."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_IP_ADDRESS: "192.168.100.1:9200"},
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
     )
     entry.add_to_hass(hass)
 
@@ -26,7 +26,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test removing Starlink."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_IP_ADDRESS: "192.168.100.1:9200"},
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
     )
     entry.add_to_hass(hass)
 
