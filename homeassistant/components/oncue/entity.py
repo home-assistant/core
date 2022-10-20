@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from aiooncue import OncueDevice, OncueSensor
 
-from homeassistant.const import ATTR_CONNECTIONS
+from homeassistant.const import ATTR_CONNECTIONS, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import (
@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, VALUE_UNAVAILABLE
 
 
 class OncueEntity(CoordinatorEntity, Entity):
@@ -52,4 +52,6 @@ class OncueEntity(CoordinatorEntity, Entity):
         """Return the sensor value."""
         device: OncueDevice = self.coordinator.data[self._device_id]
         sensor: OncueSensor = device.sensors[self.entity_description.key]
+        if sensor.value == VALUE_UNAVAILABLE:
+            return STATE_UNAVAILABLE
         return sensor.value

@@ -7,3 +7,5 @@ import aiohttp
 DOMAIN = "oncue"
 
 CONNECTION_EXCEPTIONS = (asyncio.TimeoutError, aiohttp.ClientError)
+
+VALUE_UNAVAILABLE: str = "--"
