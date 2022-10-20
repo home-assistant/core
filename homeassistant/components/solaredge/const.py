@@ -2,8 +2,18 @@
 from datetime import timedelta
 import logging
 
+
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    ENERGY_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+    ENERGY_KILO_WATT_HOUR, 
+    POWER_KILO_WATT, 
+    ENERGY_MEGA_WATT_HOUR
+)
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import ENERGY_WATT_HOUR, PERCENTAGE, POWER_WATT
 
 from .models import SolarEdgeSensorEntityDescription
 
@@ -25,6 +35,8 @@ ENERGY_DETAILS_DELAY = timedelta(minutes=15)
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
+# Supported overview sensor types:
+# Key: ['json_key', 'name', unit, icon, default]
 
 # Supported overview sensors
 SENSOR_TYPES = [
@@ -34,7 +46,7 @@ SENSOR_TYPES = [
         name="Lifetime energy",
         icon="mdi:solar-power",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -43,7 +55,7 @@ SENSOR_TYPES = [
         name="Energy this year",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -52,7 +64,7 @@ SENSOR_TYPES = [
         name="Energy this month",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -61,7 +73,7 @@ SENSOR_TYPES = [
         name="Energy today",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
     SolarEdgeSensorEntityDescription(

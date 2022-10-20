@@ -80,6 +80,18 @@ STORAGE_FIELDS = {
     vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In([MODE_BOX, MODE_SLIDER]),
 }
 
+UPDATE_FIELDS = {
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_MIN): vol.Coerce(float),
+    vol.Optional(CONF_MAX): vol.Coerce(float),
+    vol.Optional(CONF_AREAID): vol.Coerce(int),
+    vol.Optional(CONF_INITIAL): vol.Coerce(float),
+    vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_MODE): vol.In([MODE_BOX, MODE_SLIDER]),
+}
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
@@ -208,7 +220,8 @@ class DBAccess:
 class NumberStorageCollection(collection.StorageCollection):
     """Input storage based collection."""
 
-    SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_number))
+    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, cv_input_numberd))
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
@@ -237,8 +250,8 @@ class NumberStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        update_data = self.SCHEMA(update_data)
-        return {CONF_ID: data[CONF_ID]} | update_data
+        update_data = self.UPDATE_SCHEMA(update_data)
+        return cv_input_numberd({**data, **update_data})
 
 
 class InputNumber(collection.CollectionEntity, RestoreEntity):
@@ -267,6 +280,11 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_num.editable = True
         return input_num
+
+    @property
+    def should_poll(self):
+        """If entity should be polled."""
+        return True
 
     @property
     def _minimum(self) -> float:

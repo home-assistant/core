@@ -362,6 +362,7 @@ FLOWS = {
         "somfy_mylink",
         "sonarr",
         "songpal",
+        "sonoff",
         "sonos",
         "soundtouch",
         "speedtestdotnet",
