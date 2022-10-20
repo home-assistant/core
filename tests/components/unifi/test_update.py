@@ -64,9 +64,7 @@ async def test_no_entities(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 0
 
 
-async def test_device_updates(
-    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
-):
+async def test_device_updates(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some devices."""
     device_1 = deepcopy(DEVICE_1)
     await setup_unifi_integration(
@@ -102,12 +100,7 @@ async def test_device_updates(
     # Simulate start of update
 
     device_1["state"] = 4
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.DEVICE.value},
-            "data": [device_1],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
     device_1_state = hass.states.get("update.device_1")
@@ -122,12 +115,7 @@ async def test_device_updates(
     device_1["version"] = "4.3.17.11279"
     device_1["upgradable"] = False
     del device_1["upgrade_to_firmware"]
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MessageKey.DEVICE.value},
-            "data": [device_1],
-        }
-    )
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
     device_1_state = hass.states.get("update.device_1")
