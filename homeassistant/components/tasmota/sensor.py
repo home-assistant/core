@@ -81,7 +81,6 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     },
     hc.SENSOR_CCT: {
         ICON: "mdi:temperature-kelvin",
-        DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_CO2: {
