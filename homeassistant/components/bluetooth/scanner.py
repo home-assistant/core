@@ -347,6 +347,12 @@ class HaScanner(BaseHaScanner):
         )
         if time_since_last_detection < SCANNER_WATCHDOG_TIMEOUT:
             return
+        if self._start_stop_lock.locked():
+            _LOGGER.debug(
+                "%s: Scanner is already restarting, deferring restart",
+                self.name,
+            )
+            return
         _LOGGER.info(
             "%s: Bluetooth scanner has gone quiet for %ss, restarting",
             self.name,
