@@ -18,6 +18,8 @@ DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 class OpenUvCoordinator(DataUpdateCoordinator):
     """Define an OpenUV data coordinator."""
 
+    update_method: Callable[[], Awaitable[dict[str, Any]]]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -46,7 +48,6 @@ class OpenUvCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from OpenUV."""
-        assert self.update_method
         try:
             data = await self.update_method()
         except OpenUvError as err:
