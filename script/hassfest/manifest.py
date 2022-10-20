@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 from awesomeversion import (
@@ -269,11 +270,13 @@ VIRTUAL_INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
     }
 )
 
-MANIFEST_SCHEMA = vol.Any(
-    INTEGRATION_MANIFEST_SCHEMA,
-    VIRTUAL_INTEGRATION_MANIFEST_SCHEMA,
-    msg="should be either a virtual integration or integration manifest",
-)
+
+def manifest_schema(value: dict[str, Any]) -> vol.Schema:
+    """Validate integration manifest."""
+    if value.get("integration_type") == "virtual":
+        return VIRTUAL_INTEGRATION_MANIFEST_SCHEMA(value)
+    return INTEGRATION_MANIFEST_SCHEMA(value)
+
 
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
@@ -300,7 +303,7 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
 
     try:
         if integration.core:
-            MANIFEST_SCHEMA(integration.manifest)
+            manifest_schema(integration.manifest)
         else:
             CUSTOM_INTEGRATION_MANIFEST_SCHEMA(integration.manifest)
     except vol.Invalid as err:
