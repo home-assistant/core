@@ -30,7 +30,6 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    DEFAULT_ENCODING,
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
@@ -144,14 +143,10 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         def handle_installed_version_received(msg: ReceiveMessage) -> None:
             """Handle receiving installed version via MQTT."""
             installed_version = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
-            if isinstance(installed_version, str):
-                self._attr_installed_version = installed_version
-            else:
-                self._attr_installed_version = installed_version.decode(
-                    DEFAULT_ENCODING
-                )
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            if isinstance(installed_version, str) and installed_version != "":
+                self._attr_installed_version = installed_version
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_installed_version_received)
 
@@ -160,12 +155,10 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         def handle_latest_version_received(msg: ReceiveMessage) -> None:
             """Handle receiving latest version via MQTT."""
             latest_version = self._templates[CONF_LATEST_VERSION_TEMPLATE](msg.payload)
-            if isinstance(latest_version, str):
-                self._attr_latest_version = latest_version
-            else:
-                self._attr_latest_version = latest_version.decode(DEFAULT_ENCODING)
 
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+            if isinstance(latest_version, str) and latest_version != "":
+                self._attr_latest_version = latest_version
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(
             topics, CONF_LATEST_VERSION_TOPIC, handle_latest_version_received
