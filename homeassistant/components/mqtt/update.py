@@ -14,7 +14,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,8 +22,14 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
-from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
+from .config import DEFAULT_RETAIN, MQTT_RO_SCHEMA
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+)
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 from .models import MqttValueTemplate
@@ -33,19 +39,15 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Update"
 
-CONF_INSTALLED_VERSION_TEMPLATE = "installed_version_template"
-CONF_INSTALLED_VERSION_TOPIC = "installed_version_topic"
 CONF_LATEST_VERSION_TEMPLATE = "latest_version_template"
 CONF_LATEST_VERSION_TOPIC = "latest_version_topic"
 CONF_PAYLOAD_INSTALL = "payload_install"
 
 
-PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_INSTALLED_VERSION_TEMPLATE): cv.template,
-        vol.Optional(CONF_INSTALLED_VERSION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Required(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -104,8 +106,8 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
         self._templates = {
-            CONF_INSTALLED_VERSION_TEMPLATE: MqttValueTemplate(
-                config.get(CONF_INSTALLED_VERSION_TEMPLATE),
+            CONF_VALUE_TEMPLATE: MqttValueTemplate(
+                config.get(CONF_VALUE_TEMPLATE),
                 entity=self,
             ).async_render_with_possible_json_value,
             CONF_LATEST_VERSION_TEMPLATE: MqttValueTemplate(
@@ -131,16 +133,12 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def handle_installed_version_received(msg):
             """Handle receiving installed version via MQTT."""
-            installed_version = self._templates[CONF_INSTALLED_VERSION_TEMPLATE](
-                msg.payload
-            )
+            installed_version = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
             self._attr_installed_version = installed_version
 
             self.async_write_ha_state()
 
-        add_subscription(
-            topics, CONF_INSTALLED_VERSION_TOPIC, handle_installed_version_received
-        )
+        add_subscription(topics, CONF_STATE_TOPIC, handle_installed_version_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)

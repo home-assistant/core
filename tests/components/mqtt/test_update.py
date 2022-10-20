@@ -1,5 +1,5 @@
 """The tests for mqtt update component."""
-import copy
+import json
 from unittest.mock import patch
 
 import pytest
@@ -9,24 +9,43 @@ from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.setup import async_setup_component
 
+from .test_common import (
+    help_test_availability_when_connection_lost,
+    help_test_availability_without_topic,
+    help_test_custom_availability_payload,
+    help_test_default_availability_payload,
+    help_test_discovery_broken,
+    help_test_discovery_removal,
+    help_test_discovery_update,
+    help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
+    help_test_entity_device_info_remove,
+    help_test_entity_device_info_update,
+    help_test_entity_device_info_with_connection,
+    help_test_entity_device_info_with_identifier,
+    help_test_entity_id_update_discovery_update,
+    help_test_setting_attribute_via_mqtt_json_message,
+    help_test_setting_attribute_with_template,
+    help_test_setup_manual_entity_from_yaml,
+    help_test_unique_id,
+    help_test_unload_config_entry_with_platform,
+    help_test_update_with_json_attrs_bad_json,
+    help_test_update_with_json_attrs_not_dict,
+)
+
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
     mqtt.DOMAIN: {
         update.DOMAIN: {
             "name": "test",
-            "installed_version_topic": "installed-version-topic",
-            "latest_version_topic": "installed-version-topic",
-            "command_topic": "command-topic",
+            "state_topic": "test-topic",
+            "latest_version_topic": "test-topic",
+            "command_topic": "test-topic",
             "payload_install": "install",
         }
     }
 }
-
-# Test deprecated YAML configuration under the platform key
-# Scheduled to be removed in HA core 2022.12
-DEFAULT_CONFIG_LEGACY = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN])
-DEFAULT_CONFIG_LEGACY[update.DOMAIN]["platform"] = mqtt.DOMAIN
 
 
 @pytest.fixture(autouse=True)
@@ -46,7 +65,7 @@ async def test_run_update_setup(hass, mqtt_mock_entry_with_yaml_config):
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "installed_version_topic": installed_version_topic,
+                    "state_topic": installed_version_topic,
                     "latest_version_topic": latest_version_topic,
                     "name": "Test Update",
                 }
@@ -86,8 +105,8 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "installed_version_topic": installed_version_topic,
-                    "installed_version_template": "{{ value_json.installed }}",
+                    "state_topic": installed_version_topic,
+                    "value_template": "{{ value_json.installed }}",
                     "latest_version_topic": latest_version_topic,
                     "latest_version_template": "{{ value_json.latest }}",
                     "name": "Test Update",
@@ -130,7 +149,7 @@ async def test_run_install_service(hass, mqtt_mock_entry_with_yaml_config):
         {
             mqtt.DOMAIN: {
                 update.DOMAIN: {
-                    "installed_version_topic": installed_version_topic,
+                    "state_topic": installed_version_topic,
                     "latest_version_topic": latest_version_topic,
                     "command_topic": command_topic,
                     "payload_install": "install",
@@ -158,3 +177,217 @@ async def test_run_install_service(hass, mqtt_mock_entry_with_yaml_config):
     )
 
     mqtt_mock.async_publish.assert_called_once_with(command_topic, "install", 0, False)
+
+
+async def test_availability_when_connection_lost(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test availability after MQTT disconnection."""
+    await help_test_availability_when_connection_lost(
+        hass, mqtt_mock_entry_with_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
+    """Test availability without defined availability topic."""
+    await help_test_availability_without_topic(
+        hass, mqtt_mock_entry_with_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_payload(
+        hass, mqtt_mock_entry_with_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
+    """Test availability by custom payload with defined topic."""
+    await help_test_custom_availability_payload(
+        hass, mqtt_mock_entry_with_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_attribute_via_mqtt_json_message(
+    hass, mqtt_mock_entry_with_yaml_config
+):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_attribute_via_mqtt_json_message(
+        hass, mqtt_mock_entry_with_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_attribute_with_template(
+        hass, mqtt_mock_entry_with_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_update_with_json_attrs_not_dict(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
+    """Test attributes get extracted from a JSON result."""
+    await help_test_update_with_json_attrs_not_dict(
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        update.DOMAIN,
+        DEFAULT_CONFIG,
+    )
+
+
+async def test_update_with_json_attrs_bad_json(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
+    """Test attributes get extracted from a JSON result."""
+    await help_test_update_with_json_attrs_bad_json(
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        caplog,
+        update.DOMAIN,
+        DEFAULT_CONFIG,
+    )
+
+
+async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
+    """Test update of discovered MQTTAttributes."""
+    await help_test_discovery_update_attr(
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        caplog,
+        update.DOMAIN,
+        DEFAULT_CONFIG,
+    )
+
+
+async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
+    """Test unique id option only creates one update per unique_id."""
+    config = {
+        mqtt.DOMAIN: {
+            update.DOMAIN: [
+                {
+                    "name": "Bear",
+                    "state_topic": "installed-topic",
+                    "latest_version_topic": "latest-topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+                {
+                    "name": "Milk",
+                    "state_topic": "installed-topic",
+                    "latest_version_topic": "latest-topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+            ]
+        }
+    }
+    await help_test_unique_id(
+        hass, mqtt_mock_entry_with_yaml_config, update.DOMAIN, config
+    )
+
+
+async def test_discovery_removal_update(hass, mqtt_mock_entry_no_yaml_config, caplog):
+    """Test removal of discovered update."""
+    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][update.DOMAIN])
+    await help_test_discovery_removal(
+        hass, mqtt_mock_entry_no_yaml_config, caplog, update.DOMAIN, data
+    )
+
+
+async def test_discovery_update_update(hass, mqtt_mock_entry_no_yaml_config, caplog):
+    """Test update of discovered update."""
+    config1 = {
+        "name": "Beer",
+        "state_topic": "installed-topic",
+        "latest_version_topic": "latest-topic",
+    }
+    config2 = {
+        "name": "Milk",
+        "state_topic": "installed-topic",
+        "latest_version_topic": "latest-topic",
+    }
+
+    await help_test_discovery_update(
+        hass, mqtt_mock_entry_no_yaml_config, caplog, update.DOMAIN, config1, config2
+    )
+
+
+async def test_discovery_update_unchanged_update(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
+    """Test update of discovered update."""
+    data1 = '{ "name": "Beer", "state_topic": "installed-topic", "latest_version_topic": "latest-topic"}'
+    with patch(
+        "homeassistant.components.mqtt.update.MqttUpdate.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass,
+            mqtt_mock_entry_no_yaml_config,
+            caplog,
+            update.DOMAIN,
+            data1,
+            discovery_update,
+        )
+
+
+@pytest.mark.no_fail_on_log_exception
+async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
+    """Test handling of bad discovery message."""
+    data1 = '{ "name": "Beer" }'
+    data2 = '{ "name": "Milk", "state_topic": "installed-topic", "latest_version_topic": "latest-topic" }'
+
+    await help_test_discovery_broken(
+        hass, mqtt_mock_entry_no_yaml_config, caplog, update.DOMAIN, data1, data2
+    )
+
+
+async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
+    """Test MQTT update device registry integration."""
+    await help_test_entity_device_info_with_connection(
+        hass, mqtt_mock_entry_no_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
+    """Test MQTT update device registry integration."""
+    await help_test_entity_device_info_with_identifier(
+        hass, mqtt_mock_entry_no_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
+    """Test device registry update."""
+    await help_test_entity_device_info_update(
+        hass, mqtt_mock_entry_no_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
+    """Test device registry remove."""
+    await help_test_entity_device_info_remove(
+        hass, mqtt_mock_entry_no_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
+    """Test MQTT discovery update when entity_id is updated."""
+    await help_test_entity_id_update_discovery_update(
+        hass, mqtt_mock_entry_no_yaml_config, update.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setup_manual_entity_from_yaml(hass):
+    """Test setup manual configured MQTT entity."""
+    platform = update.DOMAIN
+    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
+    assert hass.states.get(f"{platform}.test")
+
+
+async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
+    """Test unloading the config entry."""
+    domain = update.DOMAIN
+    config = DEFAULT_CONFIG
+    await help_test_unload_config_entry_with_platform(
+        hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
+    )

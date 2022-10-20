@@ -255,8 +255,6 @@ ABBREVIATIONS = {
     "xy_cmd_t": "xy_command_topic",
     "xy_stat_t": "xy_state_topic",
     "xy_val_tpl": "xy_value_template",
-    "i_ver_t": "installed_version_topic",
-    "i_ver_tpl": "installed_version_template",
     "l_ver_t": "latest_version_topic",
     "l_ver_tpl": "latest_version_template",
     "pl_inst": "payload_install",
