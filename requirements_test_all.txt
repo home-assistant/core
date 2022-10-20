@@ -230,7 +230,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==3.0.0
+aioshelly==4.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -651,7 +651,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221010.0
+home-assistant-frontend==20221020.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2

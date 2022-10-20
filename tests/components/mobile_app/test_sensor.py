@@ -13,14 +13,14 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 
 @pytest.mark.parametrize(
     "unit_system, state_unit, state1, state2",
     (
         (METRIC_SYSTEM, TEMP_CELSIUS, "100", "123"),
-        (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
+        (US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
     ),
 )
 async def test_sensor(
@@ -124,9 +124,9 @@ async def test_sensor(
     "unique_id, unit_system, state_unit, state1, state2",
     (
         ("battery_temperature", METRIC_SYSTEM, TEMP_CELSIUS, "100", "123"),
-        ("battery_temperature", IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
+        ("battery_temperature", US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, "212", "253"),
         # The unique_id doesn't match that of the mobile app's battery temperature sensor
-        ("battery_temp", IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, "212", "123"),
+        ("battery_temp", US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, "212", "123"),
     ),
 )
 async def test_sensor_migration(
