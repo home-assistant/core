@@ -158,7 +158,7 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         Clear = 0xFF
 
     REPORT_CONFIG = ()
-    ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+    ZCL_INIT_ATTRS = {
         "dimming_speed_up_remote": False,
         "dimming_speed_up_local": False,
         "ramp_rate_off_to_on_local": False,
