@@ -112,10 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await adguard.filtering.refresh(allowlist=False, force=call.data[CONF_FORCE])
 
     hass.services.async_register(
-        DOMAIN,
-        SERVICE_ADD_URL,
-        add_url,
-        schema=SERVICE_ADD_URL_SCHEMA,
+        DOMAIN, SERVICE_ADD_URL, add_url, schema=SERVICE_ADD_URL_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SERVICE_REMOVE_URL, remove_url, schema=SERVICE_REMOVE_URL_SCHEMA
