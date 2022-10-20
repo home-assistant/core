@@ -71,8 +71,6 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
@@ -586,11 +584,6 @@ def temperature_unit(value: Any) -> str:
     if value == "F":
         return TEMP_FAHRENHEIT
     raise vol.Invalid("invalid temperature unit (expected C or F)")
-
-
-unit_system = vol.All(
-    vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)
-)
 
 
 def template(value: Any | None) -> template_helper.Template:

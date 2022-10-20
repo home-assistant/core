@@ -30,6 +30,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import MetDataUpdateCoordinator
 from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
@@ -51,10 +52,13 @@ async def async_setup_entry(
     async_add_entities(
         [
             MetWeather(
-                coordinator, config_entry.data, hass.config.units.is_metric, False
+                coordinator,
+                config_entry.data,
+                hass.config.units is METRIC_SYSTEM,
+                False,
             ),
             MetWeather(
-                coordinator, config_entry.data, hass.config.units.is_metric, True
+                coordinator, config_entry.data, hass.config.units is METRIC_SYSTEM, True
             ),
         ]
     )

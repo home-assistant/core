@@ -6,7 +6,7 @@ from datetime import datetime as dt, timedelta
 from http import HTTPStatus
 import logging
 import time
-from typing import cast
+from typing import Any, cast
 
 from aiohttp import web
 import voluptuous as vol
@@ -79,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 )
 @websocket_api.async_response
 async def ws_get_statistics_during_period(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle statistics websocket command."""
     _LOGGER.warning(
@@ -97,7 +97,7 @@ async def ws_get_statistics_during_period(
 )
 @websocket_api.async_response
 async def ws_get_list_statistic_ids(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fetch a list of available statistic_id."""
     _LOGGER.warning(
@@ -164,7 +164,7 @@ def _ws_get_significant_states(
 )
 @websocket_api.async_response
 async def ws_get_history_during_period(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle history during period websocket command."""
     start_time_str = msg["start_time"]

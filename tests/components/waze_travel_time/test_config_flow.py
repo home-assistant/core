@@ -102,47 +102,6 @@ async def test_options(hass):
 
 
 @pytest.mark.usefixtures("validate_config_entry")
-async def test_import(hass):
-    """Test import for config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-            CONF_AVOID_FERRIES: True,
-            CONF_AVOID_SUBSCRIPTION_ROADS: True,
-            CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "exclude",
-            CONF_INCL_FILTER: "include",
-            CONF_REALTIME: False,
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-            CONF_VEHICLE_TYPE: "taxi",
-        },
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data == {
-        CONF_ORIGIN: "location1",
-        CONF_DESTINATION: "location2",
-        CONF_REGION: "US",
-    }
-    assert entry.options == {
-        CONF_AVOID_FERRIES: True,
-        CONF_AVOID_SUBSCRIPTION_ROADS: True,
-        CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: "exclude",
-        CONF_INCL_FILTER: "include",
-        CONF_REALTIME: False,
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-        CONF_VEHICLE_TYPE: "taxi",
-    }
-
-
-@pytest.mark.usefixtures("validate_config_entry")
 async def test_dupe(hass):
     """Test setting up the same entry data twice is OK."""
     result = await hass.config_entries.flow.async_init(

@@ -1,9 +1,10 @@
 """Tests for the SensorPush integration."""
 
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+
+from tests.components.bluetooth import generate_advertisement_data
 
 NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Not it",
@@ -14,7 +15,7 @@ NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfoBleak(
     service_data={},
     service_uuids=[],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -30,7 +31,7 @@ LYWSDCGQ_SERVICE_INFO = BluetoothServiceInfoBleak(
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -46,7 +47,7 @@ MMC_T201_1_SERVICE_INFO = BluetoothServiceInfoBleak(
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -62,7 +63,7 @@ JTYJGD03MI_SERVICE_INFO = BluetoothServiceInfoBleak(
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -78,7 +79,7 @@ YLKG07YL_SERVICE_INFO = BluetoothServiceInfoBleak(
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -94,7 +95,7 @@ MISSING_PAYLOAD_ENCRYPTED = BluetoothServiceInfoBleak(
     },
     service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
     source="local",
-    advertisement=AdvertisementData(local_name="Not it"),
+    advertisement=generate_advertisement_data(local_name="Not it"),
     time=0,
     connectable=False,
 )
@@ -115,7 +116,7 @@ def make_advertisement(
         },
         service_uuids=["0000fe95-0000-1000-8000-00805f9b34fb"],
         source="local",
-        advertisement=AdvertisementData(local_name="Test Device"),
+        advertisement=generate_advertisement_data(local_name="Test Device"),
         time=0,
         connectable=connectable,
     )

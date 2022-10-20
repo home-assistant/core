@@ -13,10 +13,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_NAME,
     CONF_REGION,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_STARTED,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -28,6 +26,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     CONF_AVOID_FERRIES,
@@ -47,6 +46,8 @@ from .const import (
     DEFAULT_REALTIME,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
+    IMPERIAL_UNITS,
+    METRIC_UNITS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,11 +64,13 @@ async def async_setup_entry(
     defaults = {
         CONF_REALTIME: DEFAULT_REALTIME,
         CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
-        CONF_UNITS: hass.config.units.name,
+        CONF_UNITS: METRIC_UNITS,
         CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
         CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
         CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
     }
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
+        defaults[CONF_UNITS] = IMPERIAL_UNITS
 
     if not config_entry.options:
         new_data = config_entry.data.copy()
@@ -111,6 +114,7 @@ async def async_setup_entry(
 class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
+    _attr_attribution = "Powered by Waze"
     _attr_native_unit_of_measurement = TIME_MINUTES
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -155,7 +159,6 @@ class WazeTravelTime(SensorEntity):
             return None
 
         return {
-            ATTR_ATTRIBUTION: "Powered by Waze",
             "duration": self._waze_data.duration,
             "distance": self._waze_data.distance,
             "route": self._waze_data.route,
@@ -244,7 +247,7 @@ class WazeTravelTimeData:
 
                 self.duration, distance = routes[route]
 
-                if units == CONF_UNIT_SYSTEM_IMPERIAL:
+                if units == IMPERIAL_UNITS:
                     # Convert to miles.
                     self.distance = DistanceConverter.convert(
                         distance, LENGTH_KILOMETERS, LENGTH_MILES

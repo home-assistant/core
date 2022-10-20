@@ -21,6 +21,12 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "\u4f7f\u7528 YAML \u8a2d\u5b9a Coinbase \u7684\u529f\u80fd\u5373\u5c07\u79fb\u9664\u3002\n\nHome Assistant \u5c07\u4e0d\u518d\u4f7f\u7528\u73fe\u6709\u7684 YAML \u8a2d\u5b9a\u3002\n\n\u7531 configuration.yaml \u6a94\u6848\u4e2d\u79fb\u9664 YAML \u8a2d\u5b9a\u4e26\u91cd\u555f Home Assistant \u4ee5\u4fee\u6b63\u6b64\u554f\u984c\u3002",
+            "title": "Coinbase YAML \u8a2d\u5b9a\u5373\u5c07\u79fb\u9664"
+        }
+    },
     "options": {
         "error": {
             "currency_unavailable": "Coinbase API \u672a\u63d0\u4f9b\u4e00\u500b\u6216\u591a\u500b\u6240\u8981\u6c42\u7684\u8ca8\u5e63\u9918\u984d\u3002",
