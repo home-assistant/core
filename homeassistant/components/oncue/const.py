@@ -8,4 +8,6 @@ DOMAIN = "oncue"
 
 CONNECTION_EXCEPTIONS = (asyncio.TimeoutError, aiohttp.ClientError)
 
+CONNECTION_ESTABLISHED_KEY: str = "NetworkConnectionEstablished"
+
 VALUE_UNAVAILABLE: str = "--"

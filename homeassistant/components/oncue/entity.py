@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from aiooncue import OncueDevice, OncueSensor
 
-from homeassistant.const import ATTR_CONNECTIONS, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import (
@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, VALUE_UNAVAILABLE
+from .const import CONNECTION_ESTABLISHED_KEY, DOMAIN, VALUE_UNAVAILABLE
 
 
 class OncueEntity(CoordinatorEntity, Entity):
@@ -52,6 +52,20 @@ class OncueEntity(CoordinatorEntity, Entity):
         """Return the sensor value."""
         device: OncueDevice = self.coordinator.data[self._device_id]
         sensor: OncueSensor = device.sensors[self.entity_description.key]
-        if sensor.value == VALUE_UNAVAILABLE:
-            return STATE_UNAVAILABLE
         return sensor.value
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if self._oncue_value == VALUE_UNAVAILABLE:
+            return False
+        # If the cloud is reporting that the generator is not connected
+        # this also indicates the data is not available.
+        # The battery voltage sensor reports 0.0 rather than -- hence the purpose of this check.
+        # However, the binary sensor that tracks the connection should not go unavailable.
+        if self.entity_description.key != CONNECTION_ESTABLISHED_KEY:
+            device: OncueDevice = self.coordinator.data[self._device_id]
+            conn_established: OncueSensor = device.sensors[CONNECTION_ESTABLISHED_KEY]
+            if conn_established is not None and conn_established.value == "false":
+                return False
+        return super().available

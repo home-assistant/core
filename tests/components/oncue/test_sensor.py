@@ -297,3 +297,8 @@ async def test_sensors_unavailable(hass: HomeAssistant, patcher, connections) ->
         hass.states.get("sensor.my_generator_generator_current_average").state
         == STATE_UNAVAILABLE
     )
+
+    assert (
+        hass.states.get("sensor.my_generator_battery_voltage").state
+        == STATE_UNAVAILABLE
+    )
