@@ -504,10 +504,6 @@ async def async_matching_config_entries(
         elif not isinstance(integration_or_exc, IntegrationNotFound):
             raise integration_or_exc
 
-    type_set = set(type_filter)
-    if "integration" in type_filter:
-        type_set |= {"device", "hub", "service"}
-
     # Filter out entries that don't match the type filter
     # when only helpers are requested, also filter out entries
     # from unknown integrations. This prevent them from showing
@@ -518,7 +514,7 @@ async def async_matching_config_entries(
         if (type_filter != ["helper"] and entry.domain not in integrations)
         or (
             entry.domain in integrations
-            and integrations[entry.domain].integration_type in type_set
+            and integrations[entry.domain].integration_type in type_filter
         )
     ]
 
