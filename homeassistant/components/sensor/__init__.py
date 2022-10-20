@@ -244,9 +244,9 @@ class SensorDeviceClass(StrEnum):
     PRECIPITATION_INTENSITY = "precipitation_intensity"
     """Precipitation intensity.
 
-    Unit of measurement:
-    - `in/d`, `in/h`
-    - `mm/d`, `mm/h`
+    Unit of measurement: PrecipitationIntensityUnit
+    - SI /metric: `mm/d`, `mm/h`
+    - USCS / imperial: `in/d`, `in/h`
     """
 
     PRESSURE = "pressure"
