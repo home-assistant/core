@@ -496,7 +496,11 @@ async def async_reload_manual_mqtt_items(hass: HomeAssistant) -> None:
     {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
 )
 @callback
-def websocket_mqtt_info(hass, connection, msg):
+def websocket_mqtt_info(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Get MQTT debug info for device."""
     device_id = msg["device_id"]
     mqtt_info = debug_info.info_for_device(hass, device_id)
