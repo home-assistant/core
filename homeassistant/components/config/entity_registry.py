@@ -165,7 +165,7 @@ def websocket_update_entity(
         if entity_entry.device_id:
             device_registry = dr.async_get(hass)
             device = device_registry.async_get(entity_entry.device_id)
-            if device and not device.disabled:
+            if device and device.disabled:
                 connection.send_message(
                     websocket_api.error_message(
                         msg["id"], "invalid_info", "Device is disabled"
