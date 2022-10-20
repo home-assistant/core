@@ -91,27 +91,28 @@ class PjLinkDevice(MediaPlayerEntity):
         self._attr_is_volume_muted = False
         self._attr_state = MediaPlayerState.OFF
         self._attr_source = None
-        self._attr_source_list = ()
-        self._attr_available = self._initialize()
+        self._attr_source_list = []
+        self._attr_available = False
 
     def _force_off(self):
         self._attr_state = MediaPlayerState.OFF
         self._attr_is_volume_muted = False
         self._attr_source = None
 
-    def _initialize(self):
+    def _setup_projector(self):
         try:
             with self.projector() as projector:
                 if not self._attr_name:
                     self._attr_name = projector.get_name()
                 inputs = projector.get_inputs()
-                self._source_name_mapping = {format_input_source(*x): x for x in inputs}
-                self._attr_source_list = sorted(self._source_name_mapping.keys())
-                return True
         except ProjectorError as err:
             if str(err) == ERR_PROJECTOR_UNAVAILABLE:
                 return False
             raise
+
+        self._source_name_mapping = {format_input_source(*x): x for x in inputs}
+        self._attr_source_list = sorted(self._source_name_mapping)
+        return True
 
     def projector(self):
         """Create PJLink Projector instance."""
@@ -119,16 +120,17 @@ class PjLinkDevice(MediaPlayerEntity):
         try:
             projector = Projector.from_address(self._host, self._port)
             projector.authenticate(self._password)
-            return projector
         except (socket.timeout, OSError) as err:
             self._attr_available = False
             raise ProjectorError(ERR_PROJECTOR_UNAVAILABLE) from err
+
+        return projector
 
     def update(self) -> None:
         """Get the latest state from the device."""
 
         if not self._attr_available:
-            self._attr_available = self._initialize()
+            self._attr_available = self._setup_projector()
 
         if not self._attr_available:
             self._force_off()
