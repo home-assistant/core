@@ -11,7 +11,7 @@ DATA_ADGUARD_VERSION = "adguard_version"
 CONF_FORCE = "force"
 CONF_LIST_TYPE = "list_type"
 
-LIST_TYPES = ["blocklist", "allowlist"]
+LIST_TYPES = {"allowlist", "blocklist"}
 
 SERVICE_ADD_URL = "add_url"
 SERVICE_DISABLE_URL = "disable_url"
