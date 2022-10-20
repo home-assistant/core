@@ -30,18 +30,16 @@ async def async_setup_entry(
     """Set up a BleBox entry."""
 
     product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    entities: list[BleBoxBinarySensorEntity] = []
-
-    if "binary_sensors" in product.features:
-        for feature in product.features["binary_sensors"]:
-            for description in BINARY_SENSOR_TYPES:
-                if description.key == feature.device_class:
-                    entities.append(BleBoxBinarySensorEntity(feature, description))
-                    break
+    entities: list[BleBoxBinarySensorEntity] = [
+        BleBoxBinarySensorEntity(feature, description)
+        for feature in product.features.get("binary_sensors", [])
+        for description in BINARY_SENSOR_TYPES
+        if description.key == feature.device_class
+    ]
     async_add_entities(entities, True)
 
 
-class BleBoxBinarySensorEntity(BleBoxEntity, BinarySensorEntity):
+class BleBoxBinarySensorEntity(BleBoxEntity[BinarySensorFeature], BinarySensorEntity):
     """Representation of a BleBox binary sensor feature."""
 
     def __init__(
