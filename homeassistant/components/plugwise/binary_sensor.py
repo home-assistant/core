@@ -70,7 +70,6 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
         icon="mdi:mailbox-up-outline",
         icon_off="mdi:mailbox-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
 )
 
