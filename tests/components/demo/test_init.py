@@ -17,7 +17,7 @@ from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
 
@@ -84,7 +84,7 @@ async def test_demo_statistics(recorder_mock, mock_history, hass):
 
 async def test_demo_statistics_growth(recorder_mock, mock_history, hass):
     """Test that the demo sum statistics adds to the previous state."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     now = dt_util.now()
     last_week = now - datetime.timedelta(days=7)

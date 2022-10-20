@@ -5,7 +5,7 @@ from collections import OrderedDict, deque
 import logging
 import re
 import traceback
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -257,8 +257,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 @websocket_api.websocket_command({vol.Required("type"): "system_log/list"})
 @callback
 def list_errors(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
-):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
     """List all possible diagnostic handlers."""
     connection.send_result(
         msg["id"],
