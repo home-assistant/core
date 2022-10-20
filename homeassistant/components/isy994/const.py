@@ -76,7 +76,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     Platform,
-    PrecipitationIntensityUnit,
+    UnitOfVolumetricFlux,
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -339,7 +339,7 @@ UOM_FRIENDLY_NAME = {
     "21": "%AH",
     "22": "%RH",
     "23": PRESSURE_INHG,
-    "24": PrecipitationIntensityUnit.INCHES_PER_HOUR,
+    "24": UnitOfVolumetricFlux.INCHES_PER_HOUR,
     UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value
     "26": TEMP_KELVIN,
     "27": "keyword",
@@ -361,7 +361,7 @@ UOM_FRIENDLY_NAME = {
     "43": ELECTRIC_POTENTIAL_MILLIVOLT,
     "44": TIME_MINUTES,
     "45": TIME_MINUTES,
-    "46": PrecipitationIntensityUnit.MILLIMETERS_PER_HOUR,
+    "46": UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     "47": TIME_MONTHS,
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
@@ -404,7 +404,7 @@ UOM_FRIENDLY_NAME = {
     "103": CURRENCY_DOLLAR,
     "104": CURRENCY_CENT,
     "105": LENGTH_INCHES,
-    "106": PrecipitationIntensityUnit.MILLIMETERS_PER_DAY,
+    "106": UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
     "107": "",  # raw 1-byte unsigned value
     "108": "",  # raw 2-byte unsigned value
     "109": "",  # raw 3-byte unsigned value
@@ -417,7 +417,7 @@ UOM_FRIENDLY_NAME = {
     "117": PRESSURE_MBAR,
     "118": PRESSURE_HPA,
     "119": ENERGY_WATT_HOUR,
-    "120": PrecipitationIntensityUnit.INCHES_PER_DAY,
+    "120": UnitOfVolumetricFlux.INCHES_PER_DAY,
 }
 
 UOM_TO_STATES = {

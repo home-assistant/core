@@ -34,7 +34,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UV_INDEX,
-    PrecipitationIntensityUnit,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -156,12 +156,12 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.RAIN_RATE_MM: SensorEntityDescription(
         key="RAIN_RATE_MM",
-        native_unit_of_measurement=PrecipitationIntensityUnit.MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.RAIN_RATE_INCHES: SensorEntityDescription(
         key="RAIN_RATE_INCHES",
-        native_unit_of_measurement=PrecipitationIntensityUnit.INCHES_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_KM: SensorEntityDescription(

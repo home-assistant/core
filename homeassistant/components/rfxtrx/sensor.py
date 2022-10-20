@@ -30,7 +30,7 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UV_INDEX,
-    PrecipitationIntensityUnit,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity, EntityCategory
@@ -172,7 +172,7 @@ SENSOR_TYPES = (
         key="Rain rate",
         name="Rain rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PrecipitationIntensityUnit.MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     ),
     RfxtrxSensorEntityDescription(
         key="Sound",
