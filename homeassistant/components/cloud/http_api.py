@@ -691,7 +691,7 @@ async def thingtalk_convert(
 @websocket_api.websocket_command({"type": "cloud/tts/info"})
 def tts_info(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Fetch available tts info."""

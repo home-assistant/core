@@ -59,7 +59,7 @@ def _ensure_webhook_access(func):
 )
 def handle_push_notification_confirm(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Confirm receipt of a push notification."""

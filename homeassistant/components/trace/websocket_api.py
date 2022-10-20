@@ -137,7 +137,7 @@ async def websocket_trace_contexts(
 )
 def websocket_breakpoint_set(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Set breakpoint."""
@@ -168,7 +168,7 @@ def websocket_breakpoint_set(
 )
 def websocket_breakpoint_clear(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Clear breakpoint."""
@@ -186,7 +186,7 @@ def websocket_breakpoint_clear(
 @websocket_api.websocket_command({vol.Required("type"): "trace/debug/breakpoint/list"})
 def websocket_breakpoint_list(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """List breakpoints."""
@@ -205,7 +205,7 @@ def websocket_breakpoint_list(
 )
 def websocket_subscribe_breakpoint_events(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Subscribe to breakpoint events."""
@@ -258,7 +258,7 @@ def websocket_subscribe_breakpoint_events(
 )
 def websocket_debug_continue(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Resume execution of halted script or automation."""
@@ -282,7 +282,7 @@ def websocket_debug_continue(
 )
 def websocket_debug_step(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Single step a halted script or automation."""
@@ -306,7 +306,7 @@ def websocket_debug_step(
 )
 def websocket_debug_stop(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Stop a halted script or automation."""

@@ -21,7 +21,7 @@ async def async_setup(hass):
 @callback
 def websocket_list_areas(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Handle list areas command."""
@@ -43,7 +43,7 @@ def websocket_list_areas(
 @callback
 def websocket_create_area(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Create area command."""
@@ -71,7 +71,7 @@ def websocket_create_area(
 @callback
 def websocket_delete_area(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Delete area command."""
@@ -97,7 +97,7 @@ def websocket_delete_area(
 @callback
 def websocket_update_area(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Handle update area websocket command."""

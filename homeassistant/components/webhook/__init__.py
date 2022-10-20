@@ -170,7 +170,7 @@ class WebhookView(HomeAssistantView):
 @callback
 def websocket_list(
     hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
+    connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
     """Return a list of webhooks."""
