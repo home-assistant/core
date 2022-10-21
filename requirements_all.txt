@@ -2253,7 +2253,7 @@ shodan==1.28.0
 simplehound==0.3
 
 # homeassistant.components.simplepush
-simplepush==2.1.0
+simplepush==2.1.1
 
 # homeassistant.components.simplisafe
 simplisafe-python==2022.07.1
