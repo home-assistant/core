@@ -100,28 +100,31 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
     except NextcloudMonitorError:
         _LOGGER.error("Nextcloud setup failed - Check configuration")
-
-    hass.data[DOMAIN] = get_data_points(ncm.data)
-    hass.data[DOMAIN]["instance"] = conf[CONF_URL]
-
-    def nextcloud_update(event_time):
-        """Update data from nextcloud api."""
-        try:
-            ncm.update()
-        except NextcloudMonitorError:
-            _LOGGER.error("Nextcloud update failed")
-            return False
-
+        result = False
+    else:
         hass.data[DOMAIN] = get_data_points(ncm.data)
         hass.data[DOMAIN]["instance"] = conf[CONF_URL]
 
-    # Update sensors on time interval
-    track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])
+        def nextcloud_update(event_time):
+            """Update data from nextcloud api."""
+            try:
+                ncm.update()
+            except NextcloudMonitorError:
+                _LOGGER.error("Nextcloud update failed")
+                return False
 
-    for platform in PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+            hass.data[DOMAIN] = get_data_points(ncm.data)
+            hass.data[DOMAIN]["instance"] = conf[CONF_URL]
 
-    return True
+        # Update sensors on time interval
+        track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])
+
+        for platform in PLATFORMS:
+            discovery.load_platform(hass, platform, DOMAIN, {}, config)
+
+        result = True
+    finally:
+        return result
 
 
 # Use recursion to create list of sensors & values based on nextcloud api data
