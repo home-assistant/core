@@ -1442,7 +1442,7 @@ pyalmond==0.0.2
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.1.1
+pyatmo==7.2.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -2241,7 +2241,7 @@ sensorpro-ble==0.5.0
 sensorpush-ble==1.5.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.9.10
+sentry-sdk==1.10.0
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
@@ -2256,7 +2256,7 @@ shodan==1.28.0
 simplehound==0.3
 
 # homeassistant.components.simplepush
-simplepush==1.1.4
+simplepush==2.1.1
 
 # homeassistant.components.simplisafe
 simplisafe-python==2022.07.1
