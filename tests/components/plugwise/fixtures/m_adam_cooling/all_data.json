@@ -14,7 +14,6 @@
       "name": "Anna",
       "vendor": "Plugwise",
       "thermostat": {
-        "setpoint": 20.0,
         "setpoint_low": 20.0,
         "setpoint_high": 23.5,
         "lower_bound": 1.0,
@@ -28,10 +27,9 @@
       "selected_schedule": "None",
       "last_used": "Weekschema",
       "control_state": "cooling",
-      "mode": "cool",
+      "mode": "heat_cool",
       "sensors": {
         "temperature": 25.8,
-        "setpoint": 20.0,
         "setpoint_low": 20.0,
         "setpoint_high": 23.5
       }
@@ -63,7 +61,6 @@
       "zigbee_mac_address": "ABCD012345670A04",
       "vendor": "Plugwise",
       "thermostat": {
-        "setpoint": 19.0,
         "setpoint_low": 19.0,
         "setpoint_high": 25.0,
         "lower_bound": 0.0,
@@ -81,7 +78,6 @@
       "sensors": {
         "temperature": 239,
         "battery": 56,
-        "setpoint": 20.0,
         "setpoint_low": 20.0,
         "setpoint_high": 23.5
       }

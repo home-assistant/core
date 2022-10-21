@@ -4,7 +4,8 @@
             "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "cannot_connect": "Csatlakoz\u00e1si hiba"
+            "cannot_connect": "Csatlakoz\u00e1si hiba",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
         "step": {
             "user": {

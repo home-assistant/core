@@ -29,7 +29,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import entity_registry as er, extract_domain_configs
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
@@ -168,17 +168,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # we will create entities before firing EVENT_COMPONENT_LOADED
     await async_process_integration_platform_for_component(hass, DOMAIN)
 
-    # To register scripts as valid domain for Blueprint
+    # Register script as valid domain for Blueprint
     async_get_blueprints(hass)
 
-    if not await _async_process_config(hass, config, component):
-        await async_get_blueprints(hass).async_populate()
+    await _async_process_config(hass, config, component)
+
+    # Add some default blueprints to blueprints/script, does nothing
+    # if blueprints/script already exists
+    await async_get_blueprints(hass).async_populate()
 
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
+        await async_get_blueprints(hass).async_reset_cache()
         if (conf := await component.async_prepare_reload()) is None:
             return
-        async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
 
     async def turn_on_service(service: ServiceCall) -> None:
@@ -228,50 +231,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _async_process_config(hass, config, component) -> bool:
+async def _async_process_config(hass, config, component) -> None:
     """Process script configuration.
 
     Return true, if Blueprints were used.
     """
     entities = []
-    blueprints_used = False
 
-    for config_key in extract_domain_configs(config, DOMAIN):
-        conf: dict[str, dict[str, Any] | BlueprintInputs] = config[config_key]
+    conf: dict[str, dict[str, Any] | BlueprintInputs] = config[DOMAIN]
 
-        for key, config_block in conf.items():
-            raw_blueprint_inputs = None
-            raw_config = None
+    for key, config_block in conf.items():
+        raw_blueprint_inputs = None
+        raw_config = None
 
-            if isinstance(config_block, BlueprintInputs):
-                blueprints_used = True
-                blueprint_inputs = config_block
-                raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+        if isinstance(config_block, BlueprintInputs):
+            blueprint_inputs = config_block
+            raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
-                try:
-                    raw_config = blueprint_inputs.async_substitute()
-                    config_block = cast(
-                        dict[str, Any],
-                        await async_validate_config_item(hass, raw_config),
-                    )
-                except vol.Invalid as err:
-                    LOGGER.error(
-                        "Blueprint %s generated invalid script with input %s: %s",
-                        blueprint_inputs.blueprint.name,
-                        blueprint_inputs.inputs,
-                        humanize_error(config_block, err),
-                    )
-                    continue
-            else:
-                raw_config = cast(ScriptConfig, config_block).raw_config
+            try:
+                raw_config = blueprint_inputs.async_substitute()
+                config_block = cast(
+                    dict[str, Any],
+                    await async_validate_config_item(hass, raw_config),
+                )
+            except vol.Invalid as err:
+                LOGGER.error(
+                    "Blueprint %s generated invalid script with input %s: %s",
+                    blueprint_inputs.blueprint.name,
+                    blueprint_inputs.inputs,
+                    humanize_error(config_block, err),
+                )
+                continue
+        else:
+            raw_config = cast(ScriptConfig, config_block).raw_config
 
-            entities.append(
-                ScriptEntity(hass, key, config_block, raw_config, raw_blueprint_inputs)
-            )
+        entities.append(
+            ScriptEntity(hass, key, config_block, raw_config, raw_blueprint_inputs)
+        )
 
     await component.async_add_entities(entities)
-
-    return blueprints_used
 
 
 class ScriptEntity(ToggleEntity, RestoreEntity):

@@ -1,7 +1,6 @@
 """Coordinators for the Shelly integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
@@ -9,18 +8,18 @@ from typing import Any, cast
 
 import aioshelly
 from aioshelly.block_device import BlockDevice
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from aioshelly.rpc_device import RpcDevice
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    AIOSHELLY_DEVICE_TIMEOUT_SEC,
     ATTR_BETA,
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -36,7 +35,6 @@ from .const import (
     INPUTS_EVENTS_DICT,
     LOGGER,
     MODELS_SUPPORTING_LIGHT_EFFECTS,
-    POLLING_TIMEOUT_SEC,
     REST_SENSORS_UPDATE_INTERVAL,
     RPC_INPUTS_EVENTS_TYPES,
     RPC_RECONNECT_INTERVAL,
@@ -53,7 +51,7 @@ class ShellyEntryData:
     """Class for sharing data within a given config entry."""
 
     block: ShellyBlockCoordinator | None = None
-    device: BlockDevice | None = None
+    device: BlockDevice | RpcDevice | None = None
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
     rpc_poll: ShellyRpcPollingCoordinator | None = None
@@ -212,11 +210,13 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
 
         LOGGER.debug("Polling Shelly Block Device - %s", self.name)
         try:
-            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
-                await self.device.update()
-                device_update_info(self.hass, self.device, self.entry)
-        except OSError as err:
-            raise UpdateFailed("Error fetching data") from err
+            await self.device.update()
+        except DeviceConnectionError as err:
+            raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+        except InvalidAuthError:
+            self.entry.async_start_reauth(self.hass)
+        else:
+            device_update_info(self.hass, self.device, self.entry)
 
     @property
     def model(self) -> str:
@@ -278,11 +278,13 @@ class ShellyBlockCoordinator(DataUpdateCoordinator):
             new_version,
         )
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                result = await self.device.trigger_ota_update(beta=beta)
-        except (asyncio.TimeoutError, OSError) as err:
-            LOGGER.exception("Error while perform ota update: %s", err)
-        LOGGER.debug("Result of OTA update call: %s", result)
+            result = await self.device.trigger_ota_update(beta=beta)
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(f"Error starting OTA update: {repr(err)}") from err
+        except InvalidAuthError:
+            self.entry.async_start_reauth(self.hass)
+        else:
+            LOGGER.debug("Result of OTA update call: %s", result)
 
     def shutdown(self) -> None:
         """Shutdown the coordinator."""
@@ -323,20 +325,22 @@ class ShellyRestCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
+        LOGGER.debug("REST update for %s", self.name)
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                LOGGER.debug("REST update for %s", self.name)
-                await self.device.update_status()
+            await self.device.update_status()
 
-                if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
-                    return
-                old_firmware = self.device.firmware_version
-                await self.device.update_shelly()
-                if self.device.firmware_version == old_firmware:
-                    return
-                device_update_info(self.hass, self.device, self.entry)
-        except OSError as err:
-            raise UpdateFailed("Error fetching data") from err
+            if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
+                return
+            old_firmware = self.device.firmware_version
+            await self.device.update_shelly()
+            if self.device.firmware_version == old_firmware:
+                return
+        except DeviceConnectionError as err:
+            raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+        except InvalidAuthError:
+            self.entry.async_start_reauth(self.hass)
+        else:
+            device_update_info(self.hass, self.device, self.entry)
 
     @property
     def mac(self) -> str:
@@ -353,12 +357,16 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         """Initialize the Shelly RPC device coordinator."""
         self.device_id: str | None = None
 
+        if sleep_period := entry.data[CONF_SLEEP_PERIOD]:
+            update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
+        else:
+            update_interval = RPC_RECONNECT_INTERVAL
         device_name = get_rpc_device_name(device) if device.initialized else entry.title
         super().__init__(
             hass,
             LOGGER,
             name=device_name,
-            update_interval=timedelta(seconds=RPC_RECONNECT_INTERVAL),
+            update_interval=timedelta(seconds=update_interval),
         )
         self.entry = entry
         self.device = device
@@ -424,16 +432,22 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
+        if sleep_period := self.entry.data.get(CONF_SLEEP_PERIOD):
+            # Sleeping device, no point polling it, just mark it unavailable
+            raise UpdateFailed(
+                f"Sleeping device did not update within {sleep_period} seconds interval"
+            )
         if self.device.connected:
             return
 
+        LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
         try:
-            LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                await self.device.initialize()
-                device_update_info(self.hass, self.device, self.entry)
-        except OSError as err:
-            raise UpdateFailed("Device disconnected") from err
+            await self.device.initialize()
+            device_update_info(self.hass, self.device, self.entry)
+        except DeviceConnectionError as err:
+            raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
+        except InvalidAuthError:
+            self.entry.async_start_reauth(self.hass)
 
     @property
     def model(self) -> str:
@@ -494,12 +508,13 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             new_version,
         )
         try:
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                await self.device.trigger_ota_update(beta=beta)
-        except (asyncio.TimeoutError, OSError) as err:
-            LOGGER.exception("Error while perform ota update: %s", err)
-
-        LOGGER.debug("OTA update call successful")
+            await self.device.trigger_ota_update(beta=beta)
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(f"Error starting OTA update: {repr(err)}") from err
+        except InvalidAuthError:
+            self.entry.async_start_reauth(self.hass)
+        else:
+            LOGGER.debug("OTA update call successful")
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
@@ -535,12 +550,13 @@ class ShellyRpcPollingCoordinator(DataUpdateCoordinator):
         if not self.device.connected:
             raise UpdateFailed("Device disconnected")
 
+        LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
-            LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
-            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                await self.device.update_status()
-        except (OSError, aioshelly.exceptions.RPCTimeout) as err:
-            raise UpdateFailed("Device disconnected") from err
+            await self.device.update_status()
+        except DeviceConnectionError as err:
+            raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
+        except InvalidAuthError:
+            self.entry.async_start_reauth(self.hass)
 
     @property
     def model(self) -> str:

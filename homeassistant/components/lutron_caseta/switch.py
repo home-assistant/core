@@ -33,6 +33,22 @@ async def async_setup_entry(
 class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, SwitchEntity):
     """Representation of a Lutron Caseta switch."""
 
+    def __init__(self, device, data):
+        """Init a button entity."""
+
+        super().__init__(device, data)
+        self._enabled_default = True
+
+        if "parent_device" not in device:
+            return
+
+        parent_device_info = data.device_info_by_device_id.get(device["parent_device"])
+        # Append the child device name to the end of the parent keypad name to create the entity name
+        self._attr_name = f'{parent_device_info["name"]} {device["device_name"]}'
+        # Set the device_info to the same as the Parent Keypad
+        # The entities will be nested inside the keypad device
+        self._attr_device_info = parent_device_info
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._smartbridge.turn_on(self.device_id)
