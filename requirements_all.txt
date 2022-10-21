@@ -1138,7 +1138,7 @@ neurio==0.3.1
 nexia==2.0.4
 
 # homeassistant.components.nextcloud
-nextcloudmonitor==1.1.0
+nextcloudmonitor==1.2.0
 
 # homeassistant.components.discord
 nextcord==2.0.0a8
