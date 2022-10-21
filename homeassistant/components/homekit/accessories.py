@@ -147,6 +147,11 @@ def get_accessory(  # noqa: C901
             and features & CoverEntityFeature.SET_POSITION
         ):
             a_type = "Window"
+        elif (
+            device_class == CoverDeviceClass.DOOR
+            and features & CoverEntityFeature.SET_POSITION
+        ):
+            a_type = "Door"
         elif features & CoverEntityFeature.SET_POSITION:
             a_type = "WindowCovering"
         elif features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):

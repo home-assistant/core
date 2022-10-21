@@ -2,6 +2,7 @@
 import logging
 
 from pyhap.const import (
+    CATEGORY_DOOR,
     CATEGORY_GARAGE_DOOR_OPENER,
     CATEGORY_WINDOW,
     CATEGORY_WINDOW_COVERING,
@@ -54,6 +55,7 @@ from .const import (
     HK_POSITION_STOPPED,
     PROP_MAX_VALUE,
     PROP_MIN_VALUE,
+    SERV_DOOR,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW,
     SERV_WINDOW_COVERING,
@@ -172,6 +174,110 @@ class GarageDoorOpener(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update cover state after state changed."""
+        hass_state = new_state.state
+        target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
+        current_door_state = DOOR_CURRENT_HASS_TO_HK.get(hass_state)
+
+        if ATTR_OBSTRUCTION_DETECTED in new_state.attributes:
+            obstruction_detected = (
+                new_state.attributes[ATTR_OBSTRUCTION_DETECTED] is True
+            )
+            self.char_obstruction_detected.set_value(obstruction_detected)
+
+        if target_door_state is not None:
+            self.char_target_state.set_value(target_door_state)
+        if current_door_state is not None:
+            self.char_current_state.set_value(current_door_state)
+
+
+@TYPES.register("Door")
+class Door(HomeAccessory):
+    """Generate a Door accessory for a cover entity.
+
+    The cover entity must be in the 'door' device class
+    and support no more than open, close, and stop.
+    """
+
+    def __init__(self, *args):
+        """Initialize a Door accessory object."""
+        super().__init__(*args, category=CATEGORY_DOOR)
+        state = self.hass.states.get(self.entity_id)
+
+        serv_door = self.add_preload_service(SERV_DOOR)
+        self.char_current_state = serv_door.configure_char(
+            CHAR_CURRENT_DOOR_STATE, value=0
+        )
+        self.char_target_state = serv_door.configure_char(
+            CHAR_TARGET_DOOR_STATE, value=0, setter_callback=self.set_state
+        )
+        self.char_obstruction_detected = serv_door.configure_char(
+            CHAR_OBSTRUCTION_DETECTED, value=False
+        )
+
+        self.linked_obstruction_sensor = self.config.get(CONF_LINKED_OBSTRUCTION_SENSOR)
+        if self.linked_obstruction_sensor:
+            self._async_update_obstruction_state(
+                self.hass.states.get(self.linked_obstruction_sensor)
+            )
+
+        self.async_update_state(state)
+
+    async def run(self):
+        """Handle accessory driver started event.
+
+        Run inside the Home Assistant event loop.
+        """
+        if self.linked_obstruction_sensor:
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.linked_obstruction_sensor],
+                    self._async_update_obstruction_event,
+                )
+            )
+
+        await super().run()
+
+    @callback
+    def _async_update_obstruction_event(self, event):
+        """Handle state change event listener callback."""
+        self._async_update_obstruction_state(event.data.get("new_state"))
+
+    @callback
+    def _async_update_obstruction_state(self, new_state):
+        """Handle linked obstruction sensor state change to update HomeKit value."""
+        if not new_state:
+            return
+
+        detected = new_state.state == STATE_ON
+        if self.char_obstruction_detected.value == detected:
+            return
+
+        self.char_obstruction_detected.set_value(detected)
+        _LOGGER.debug(
+            "%s: Set linked obstruction %s sensor to %d",
+            self.entity_id,
+            self.linked_obstruction_sensor,
+            detected,
+        )
+
+    def set_state(self, value):
+        """Change door state if call came from HomeKit."""
+        _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
+
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        if value == HK_DOOR_OPEN:
+            if self.char_current_state.value != value:
+                self.char_current_state.set_value(HK_DOOR_OPENING)
+            self.async_call_service(DOMAIN, SERVICE_OPEN_COVER, params)
+        elif value == HK_DOOR_CLOSED:
+            if self.char_current_state.value != value:
+                self.char_current_state.set_value(HK_DOOR_CLOSING)
+            self.async_call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update door state after state changed."""
         hass_state = new_state.state
         target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
         current_door_state = DOOR_CURRENT_HASS_TO_HK.get(hass_state)
