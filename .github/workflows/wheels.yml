@@ -140,7 +140,6 @@ jobs:
             sed -i "s|# pycups|pycups|g" ${requirement_file}
             sed -i "s|# homekit|homekit|g" ${requirement_file}
             sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
-            sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
             sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
             sed -i "s|# opencv-python-headless|opencv-python-headless|g" ${requirement_file}
           done
