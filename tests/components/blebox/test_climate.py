@@ -43,6 +43,8 @@ def saunabox_fixture():
         current=None,
         min_temp=-54.3,
         max_temp=124.3,
+        mode=None,
+        hvac_action=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My sauna")
@@ -63,7 +65,7 @@ async def test_init(saunabox, hass, config):
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
 
-    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.HEAT]
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, None]
 
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_HVAC_MODE not in state.attributes
