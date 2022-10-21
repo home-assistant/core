@@ -761,7 +761,6 @@ async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     mock_unifi_websocket(data=DPI_GROUP_REMOVED_EVENT)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming") is None
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -852,9 +851,20 @@ async def test_dpi_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
+    # Availability signalling
+
+    # Controller disconnects
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.block_media_streaming").state == STATE_UNAVAILABLE
+
+    # Controller reconnects
+    mock_unifi_websocket(state=WebsocketState.RUNNING)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
+
+    # Remove app
     mock_unifi_websocket(data=DPI_GROUP_REMOVE_APP)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.block_media_streaming") is None
