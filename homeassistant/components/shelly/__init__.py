@@ -143,6 +143,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
                 )
             },
         )
+    # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
@@ -231,6 +232,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
                 )
             },
         )
+    # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
@@ -295,9 +297,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     shelly_entry_data = get_entry_data(hass)[entry.entry_id]
 
-    if shelly_entry_data.device is not None:
-        # If device is present, block/rpc coordinator is not setup yet
-        shelly_entry_data.device.shutdown()
+    # If device is present, block/rpc coordinator is not setup yet
+    device = shelly_entry_data.device
+    if isinstance(device, RpcDevice):
+        await device.shutdown()
+        return True
+    if isinstance(device, BlockDevice):
+        device.shutdown()
         return True
 
     platforms = RPC_SLEEPING_PLATFORMS
