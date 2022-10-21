@@ -146,19 +146,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     }
 
-    async def async_update_data() -> None:
-        """Update all data from OpenUV."""
-        init_tasks = [
-            coordinator.async_config_entry_first_refresh()
-            for coordinator in coordinators.values()
-        ]
-        await asyncio.gather(*init_tasks)
-
     # We disable the client's request retry abilities here to avoid a lengthy (and
     # blocking) startup; then, if the initial update is successful, we re-enable client
     # request retries:
     client.disable_request_retries()
-    await async_update_data()
+    init_tasks = [
+        coordinator.async_config_entry_first_refresh()
+        for coordinator in coordinators.values()
+    ]
+    await asyncio.gather(*init_tasks)
     client.enable_request_retries()
 
     hass.data.setdefault(DOMAIN, {})
@@ -186,8 +182,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "2022.12.0",
         )
 
+        tasks = [coordinator.async_refresh() for coordinator in coordinators.values()]
         try:
-            await async_update_data()
+            await asyncio.gather(*tasks)
         except UpdateFailed as err:
             raise HomeAssistantError(err) from err
 
