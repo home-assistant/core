@@ -74,12 +74,14 @@ class ReauthFlowManager:
     def cancel_reauth(self) -> None:
         """Cancel a reauth flow (if appropriate)."""
         if reauth_flow := self._get_active_reauth_flow():
+            LOGGER.debug("API seems to have recovered; canceling reauth flow")
             self.hass.config_entries.flow.async_abort(reauth_flow["flow_id"])
 
     @callback
     def start_reauth(self) -> None:
         """Start a reauth flow (if appropriate)."""
         if not self._get_active_reauth_flow():
+            LOGGER.debug("Multiple API failures in a row; starting reauth flow")
             self.entry.async_start_reauth(self.hass)
 
 
