@@ -147,6 +147,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="electricity_produced_peak_interval",
