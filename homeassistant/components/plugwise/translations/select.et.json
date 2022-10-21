@@ -1,5 +1,11 @@
 {
     "state": {
+        "plugwise__dhw_mode": {
+            "auto": "Automaatne",
+            "boost": "Turbo",
+            "comfort": "Mugavus",
+            "off": "V\u00e4ljas"
+        },
         "plugwise__regulation_mode": {
             "bleeding_cold": "Jahutuseat soenemine",
             "bleeding_hot": "K\u00fcttest jahtumine",
