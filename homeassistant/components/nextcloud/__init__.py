@@ -100,7 +100,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
     except NextcloudMonitorError:
         _LOGGER.error("Nextcloud setup failed - Check configuration")
-        result = False
+        return False
     else:
         hass.data[DOMAIN] = get_data_points(ncm.data)
         hass.data[DOMAIN]["instance"] = conf[CONF_URL]
@@ -122,9 +122,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for platform in PLATFORMS:
             discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
-        result = True
-    finally:
-        return result
+    return True
 
 
 # Use recursion to create list of sensors & values based on nextcloud api data
