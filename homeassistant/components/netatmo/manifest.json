@@ -11,11 +11,5 @@
     "models": ["Healty Home Coach", "Netatmo Relay", "Presence", "Welcome"]
   },
   "iot_class": "cloud_polling",
-  "loggers": ["pyatmo"],
-  "supported_brands": {
-    "legrand": "Legrand",
-    "bubendorff": "Bubendorff",
-    "smarther": "Smarther",
-    "bticino": "BTicino"
-  }
+  "loggers": ["pyatmo"]
 }

@@ -171,13 +171,23 @@ def _generate_integrations(
             integration = integrations[domain]
             if integration.integration_type in ("entity", "system"):
                 continue
-            metadata["config_flow"] = integration.config_flow
-            metadata["iot_class"] = integration.iot_class
-            metadata["integration_type"] = integration.integration_type
+
             if integration.translated_name:
                 result["translated_name"].add(domain)
             else:
                 metadata["name"] = integration.name
+
+            metadata["integration_type"] = integration.integration_type
+
+            if integration.integration_type == "virtual":
+                if integration.supported_by:
+                    metadata["supported_by"] = integration.supported_by
+                if integration.iot_standard:
+                    metadata["iot_standard"] = integration.iot_standard
+            else:
+                metadata["config_flow"] = integration.config_flow
+                if integration.iot_class:
+                    metadata["iot_class"] = integration.iot_class
 
             if integration.integration_type == "helper":
                 result["helper"][domain] = metadata
