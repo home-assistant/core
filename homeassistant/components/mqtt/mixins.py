@@ -276,7 +276,7 @@ class SetupEntity(Protocol):
         async_add_entities: AddEntitiesCallback,
         config: ConfigType,
         config_entry: ConfigEntry | None = None,
-        discovery_data: dict[str, Any] | None = None,
+        discovery_data: DiscoveryInfoType | None = None,
     ) -> None:
         """Define setup_entities type."""
 
@@ -304,14 +304,6 @@ async def async_setup_entry_helper(
     discovery_schema: vol.Schema,
 ) -> None:
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
-    # _async_setup_entity, hass, async_add_entities, config_entry=config_entry
-    # _async_setup_entity(
-    #   hass: HomeAssistant,
-    #   async_add_entities: AddEntitiesCallback,
-    #   config: ConfigType,
-    #   config_entry: ConfigEntry | None = None,
-    #   discovery_data: dict | None = None,
-    # )
     mqtt_data = get_mqtt_data(hass)
 
     async def async_discover(discovery_payload: MQTTDiscoveryPayload) -> None:
@@ -326,7 +318,7 @@ async def async_setup_entry_helper(
             return
         discovery_data = discovery_payload.discovery_data
         try:
-            config: dict[str, Any] = discovery_schema(discovery_payload)
+            config: DiscoveryInfoType = discovery_schema(discovery_payload)
             await async_setup(config, discovery_data=discovery_data)
         except Exception:
             discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
@@ -371,7 +363,7 @@ async def async_setup_entry_helper(
 async def async_setup_platform_helper(
     hass: HomeAssistant,
     platform_domain: str,
-    config: ConfigType | DiscoveryInfoType,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     async_setup_entities: SetupEntity,
 ) -> None:
@@ -396,7 +388,7 @@ async def async_setup_platform_helper(
 
 
 def init_entity_id_from_config(
-    hass: HomeAssistant, entity: Entity, config: dict[str, Any], entity_id_format: str
+    hass: HomeAssistant, entity: Entity, config: ConfigType, entity_id_format: str
 ) -> None:
     """Set entity_id from object_id if defined in config."""
     if CONF_OBJECT_ID in config:
@@ -410,7 +402,7 @@ class MqttAttributes(Entity):
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
         self._attributes: dict[str, Any] | None = None
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
@@ -422,12 +414,12 @@ class MqttAttributes(Entity):
         self._attributes_prepare_subscribe_topics()
         await self._attributes_subscribe_topics()
 
-    def attributes_prepare_discovery_update(self, config: dict[str, Any]) -> None:
+    def attributes_prepare_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
         self._attributes_config = config
         self._attributes_prepare_subscribe_topics()
 
-    async def attributes_discovery_update(self, config: dict[str, Any]) -> None:
+    async def attributes_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
         await self._attributes_subscribe_topics()
 
@@ -493,7 +485,7 @@ class MqttAttributes(Entity):
 class MqttAvailability(Entity):
     """Mixin used for platforms that report availability."""
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state: dict[str, EntitySubscription] = {}
         self._available: dict[str, str | bool] = {}
@@ -514,16 +506,16 @@ class MqttAvailability(Entity):
             )
         )
 
-    def availability_prepare_discovery_update(self, config: dict[str, Any]) -> None:
+    def availability_prepare_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
         self._availability_setup_from_config(config)
         self._availability_prepare_subscribe_topics()
 
-    async def availability_discovery_update(self, config: dict[str, Any]) -> None:
+    async def availability_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
         await self._availability_subscribe_topics()
 
-    def _availability_setup_from_config(self, config: dict[str, Any]) -> None:
+    def _availability_setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup."""
         self._avail_topics: dict[str, dict[str, Any]] = {}
         if CONF_AVAILABILITY_TOPIC in config:
@@ -558,9 +550,8 @@ class MqttAvailability(Entity):
         def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
-            payload: ReceivePayloadType = self._avail_topics[topic][
-                CONF_AVAILABILITY_TEMPLATE
-            ](msg.payload)
+            payload: ReceivePayloadType
+            payload = self._avail_topics[topic][CONF_AVAILABILITY_TEMPLATE](msg.payload)
             if payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
                 self._available[topic] = True
                 self._available_latest = True
@@ -679,7 +670,7 @@ async def async_remove_discovery_payload(hass: HomeAssistant, discovery_data: di
 
 async def async_clear_discovery_topic_if_entity_removed(
     hass: HomeAssistant,
-    discovery_data: dict[str, Any],
+    discovery_data: DiscoveryInfoType,
     event: Event,
 ) -> None:
     """Clear the discovery topic if the entity is removed."""
@@ -830,7 +821,7 @@ class MqttDiscoveryUpdate(Entity):
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
         self._remove_discovery_updated: Callable | None = None
-        self._removed_from_hass: bool = False
+        self._removed_from_hass = False
         if discovery_data is None:
             return
         mqtt_data = get_mqtt_data(hass)
@@ -872,9 +863,8 @@ class MqttDiscoveryUpdate(Entity):
                 payload,
             )
             assert self._discovery_data
-            old_payload: DiscoveryInfoType = self._discovery_data[
-                ATTR_DISCOVERY_PAYLOAD
-            ]
+            old_payload: DiscoveryInfoType
+            old_payload = self._discovery_data[ATTR_DISCOVERY_PAYLOAD]
             debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
             if not payload:
                 # Empty payload: Remove component
@@ -948,7 +938,7 @@ class MqttDiscoveryUpdate(Entity):
             self._removed_from_hass = True
 
 
-def device_info_from_config(config: dict[str, Any] | None) -> DeviceInfo | None:
+def device_info_from_config(config: DiscoveryInfoType | None) -> DeviceInfo | None:
     """Return a device description for device registry."""
     if not config:
         return None
@@ -995,7 +985,7 @@ class MqttEntityDeviceInfo(Entity):
         self._device_config = device_config
         self._config_entry = config_entry
 
-    def device_info_discovery_update(self, config: dict[str, Any]) -> None:
+    def device_info_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
         self._device_config = config.get(CONF_DEVICE)
         device_registry = dr.async_get(self.hass)
@@ -1021,7 +1011,7 @@ class MqttEntity(
 ):
     """Representation of an MQTT entity."""
 
-    _attr_should_poll: bool = False
+    _attr_should_poll = False
     _entity_id_format: str
 
     def __init__(
@@ -1029,11 +1019,11 @@ class MqttEntity(
         hass: HomeAssistant,
         config: ConfigType,
         config_entry: ConfigEntry,
-        discovery_data: dict[str, Any],
+        discovery_data: DiscoveryInfoType,
     ) -> None:
         """Init the MQTT Entity."""
         self.hass = hass
-        self._config: dict[str, Any] = config
+        self._config: ConfigType = config
         self._unique_id: str | None = config.get(CONF_UNIQUE_ID)
         self._sub_state: dict[str, EntitySubscription] = {}
 
@@ -1073,7 +1063,7 @@ class MqttEntity(
 
     async def discovery_update(self, discovery_payload: MQTTDiscoveryPayload) -> None:
         """Handle updated discovery message."""
-        config: dict[str, Any] = self.config_schema()(discovery_payload)
+        config: DiscoveryInfoType = self.config_schema()(discovery_payload)
         self._config = config
         self._setup_from_config(self._config)
 
@@ -1123,7 +1113,7 @@ class MqttEntity(
     def config_schema() -> vol.Schema:
         """Return the config schema."""
 
-    def _setup_from_config(self, config: dict[str, Any]) -> None:
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
 
     @abstractmethod

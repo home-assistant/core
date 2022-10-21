@@ -7,6 +7,7 @@ import functools
 import logging
 import re
 import time
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
@@ -73,7 +74,7 @@ MQTT_DISCOVERY_DONE = "mqtt_discovery_done_{}"
 TOPIC_BASE = "~"
 
 
-class MQTTDiscoveryPayload(dict):
+class MQTTDiscoveryPayload(dict[str, Any]):
     """Class to hold and MQTT discovery payload and discovery data."""
 
     discovery_data: DiscoveryInfoType
