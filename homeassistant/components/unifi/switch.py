@@ -588,6 +588,7 @@ class UnifiPoePortSwitch(SwitchEntity):
         self._attr_unique_id = f"{self._device_mac}-poe-{index}"
 
         device = self.controller.api.devices[self._device_mac]
+        self._attr_available = controller.available and not device.disabled
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, device.mac)},
             manufacturer=ATTR_MANUFACTURER,
