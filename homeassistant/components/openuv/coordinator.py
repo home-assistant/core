@@ -97,7 +97,7 @@ class OpenUvCoordinator(DataUpdateCoordinator):
         latitude: str,
         longitude: str,
         update_method: Callable[[], Awaitable[dict[str, Any]]],
-        invalid_api_key_reauth_monitor: InvalidApiKeyMonitor,
+        invalid_api_key_monitor: InvalidApiKeyMonitor,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -113,7 +113,7 @@ class OpenUvCoordinator(DataUpdateCoordinator):
             ),
         )
 
-        self._invalid_api_key_reauth_monitor = invalid_api_key_reauth_monitor
+        self._invalid_api_key_monitor = invalid_api_key_monitor
         self.latitude = latitude
         self.longitude = longitude
 
@@ -122,9 +122,9 @@ class OpenUvCoordinator(DataUpdateCoordinator):
         try:
             data = await self.update_method()
         except InvalidApiKeyError:
-            await self._invalid_api_key_reauth_monitor.async_increment()
+            await self._invalid_api_key_monitor.async_increment()
         except OpenUvError as err:
             raise UpdateFailed(f"Error during protection data update: {err}") from err
 
-        await self._invalid_api_key_reauth_monitor.async_reset()
+        await self._invalid_api_key_monitor.async_reset()
         return cast(dict[str, Any], data["result"])
