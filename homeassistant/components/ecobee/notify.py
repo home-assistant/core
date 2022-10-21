@@ -23,7 +23,7 @@ class EcobeeNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message."""
-        targets = kwargs.get(ATTR_TARGET, None)
+        targets = kwargs.get(ATTR_TARGET)
 
         if not targets:
             raise ValueError("Missing required argument: target")

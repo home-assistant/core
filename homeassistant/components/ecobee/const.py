@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "ecobee"
 DATA_ECOBEE_CONFIG = "ecobee_config"
-DATA_HASS_CONFIG = "hass_config"
+DATA_HASS_CONFIG = "ecobee_hass_config"
 ATTR_CONFIG_ENTRY_ID = "entry_id"
 
 CONF_REFRESH_TOKEN = "refresh_token"
