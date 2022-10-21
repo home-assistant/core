@@ -30,6 +30,7 @@ from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
     "cold": HVACMode.COOL,
+    "eco": HVACMode.HEAT_COOL,
     "freeze": HVACMode.COOL,
     "heat": HVACMode.HEAT,
     "hot": HVACMode.HEAT,
