@@ -1550,7 +1550,7 @@ sharkiq==0.0.1
 simplehound==0.3
 
 # homeassistant.components.simplepush
-simplepush==1.1.4
+simplepush==2.1.1
 
 # homeassistant.components.simplisafe
 simplisafe-python==2022.07.1
