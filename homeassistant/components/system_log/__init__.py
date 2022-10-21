@@ -91,10 +91,20 @@ def _figure_out_source(
 
 
 def _safe_get_message(record: logging.LogRecord) -> str:
-    """Get message from record.
+    """Get message from record and handle exceptions.
 
     This code will be unreachable during a pytest run
-    because pytest monkeypatches logging.
+    because pytest installs a logging handler that
+    will prevent this code from being reached.
+
+    Calling record.getMessage() can raise an exception
+    if the log message does not contain sufficient arguments.
+
+    As there is no guarantees about which exceptions
+    that can be raised, we catch all exceptions and
+    return a generic message.
+
+    This must be manually tested when changing the code.
     """
     try:
         return record.getMessage()
@@ -110,6 +120,8 @@ class LogEntry:
         self.first_occurred = self.timestamp = record.created
         self.name = record.name
         self.level = record.levelname
+        # See the docstring of _safe_get_message for why we need to do this.
+        # This must be manually tested when changing the code.
         self.message = deque([_safe_get_message(record)], maxlen=5)
         self.exception = ""
         self.root_cause = None
