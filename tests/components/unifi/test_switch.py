@@ -128,6 +128,7 @@ POE_SWITCH_CLIENTS = [
 ]
 
 DEVICE_1 = {
+    "board_rev": 2,
     "device_id": "mock-id",
     "ip": "10.0.1.1",
     "mac": "00:00:00:00:01:01",
