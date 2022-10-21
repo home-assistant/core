@@ -46,7 +46,7 @@ def _base_gw_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
     base_gw_schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
     if not discovery_info:
-        base_gw_schema.extend(
+        base_gw_schema = base_gw_schema.extend(
             {
                 vol.Required(CONF_HOST): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
