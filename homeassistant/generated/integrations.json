@@ -1009,7 +1009,10 @@
           "integration_type": "hub",
           "name": "devolo Home Network"
         }
-      }
+      },
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "dexcom": {
       "name": "Dexcom",
