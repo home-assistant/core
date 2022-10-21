@@ -1,11 +1,10 @@
 """Support for GoodWe inverter via UDP."""
-import logging
-
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 from typing import Any, cast
 
 from goodwe import Inverter, Sensor, SensorKind
@@ -213,8 +212,10 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self._previous_value = 0
             self.coordinator.data[self._sensor.id_] = 0
             self.async_write_ha_state()
-            _LOGGER.debug(f"Goodwe reset {self.name} to 0")
-        next_midnight = dt_util.start_of_local_day(dt_util.now() + timedelta(days=1, minutes=1))
+            _LOGGER.debug("Goodwe reset %s to 0", self.name)
+        next_midnight = dt_util.start_of_local_day(
+            dt_util.now() + timedelta(days=1, minutes=1)
+        )
         self._stop_reset = async_track_point_in_time(
             self.hass, self.async_reset, next_midnight
         )
