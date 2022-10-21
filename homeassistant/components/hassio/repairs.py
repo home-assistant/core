@@ -1,0 +1,142 @@
+"""Supervisor events monitor."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
+
+from .const import (
+    ATTR_DATA,
+    ATTR_HEALTHY,
+    ATTR_SUPPORTED,
+    ATTR_UNHEALTHY,
+    ATTR_UNHEALTHY_REASONS,
+    ATTR_UNSUPPORTED,
+    ATTR_UNSUPPORTED_REASONS,
+    ATTR_UPDATE_KEY,
+    ATTR_WS_EVENT,
+    DOMAIN,
+    EVENT_HEALTH_CHANGED,
+    EVENT_SUPERVISOR_EVENT,
+    EVENT_SUPERVISOR_UPDATE,
+    EVENT_SUPPORTED_CHANGED,
+    INFO_URL_UNHEALTHY,
+    INFO_URL_UNSUPPORTED,
+    ISSUE_ID_UNHEALTHY,
+    ISSUE_ID_UNSUPPORTED,
+    UPDATE_KEY_SUPERVISOR,
+)
+from .handler import HassIO
+
+
+class SupervisorRepairs:
+    """Create repairs from supervisor events."""
+
+    def __init__(self, hass: HomeAssistant, client: HassIO) -> None:
+        """Initialize supervisor repairs."""
+        self._hass = hass
+        self._client = client
+        self._remove_dispatcher: Callable[[], None] | None = None
+        self._unsupported_reasons: set[str] = set()
+        self._unhealthy_reasons: set[str] = set()
+
+    @property
+    def unhealthy_reasons(self) -> set[str]:
+        """Get unhealthy reasons. Returns empty set if system is healthy."""
+        return self._unhealthy_reasons
+
+    @unhealthy_reasons.setter
+    def unhealthy_reasons(self, reasons: set[str]) -> None:
+        """Set unhealthy reasons. Create or delete repairs as necessary."""
+        if len(reasons) > len(self.unhealthy_reasons):
+            for unhealthy in reasons - self.unhealthy_reasons:
+                async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
+                    is_fixable=False,
+                    learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
+                    severity=IssueSeverity.CRITICAL,
+                    translation_key="unhealthy",
+                    translation_placeholders={"reason": unhealthy},
+                )
+        else:
+            for fixed in self.unhealthy_reasons - reasons:
+                async_delete_issue(self._hass, DOMAIN, f"{ISSUE_ID_UNHEALTHY}_{fixed}")
+
+        self._unhealthy_reasons = reasons
+
+    @property
+    def unsupported_reasons(self) -> set[str]:
+        """Get unsupported reasons. Returns empty set if system is supported."""
+        return self._unsupported_reasons
+
+    @unsupported_reasons.setter
+    def unsupported_reasons(self, reasons: set[str]) -> None:
+        """Set unsupported reasons. Create or delete repairs as necessary."""
+        if len(reasons) > len(self.unsupported_reasons):
+            for unsupported in reasons - self.unsupported_reasons:
+                async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
+                    is_fixable=False,
+                    learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
+                    severity=IssueSeverity.WARNING,
+                    translation_key="unsupported",
+                    translation_placeholders={"reason": unsupported},
+                )
+        else:
+            for fixed in self.unsupported_reasons - reasons:
+                async_delete_issue(
+                    self._hass, DOMAIN, f"{ISSUE_ID_UNSUPPORTED}_{fixed}"
+                )
+
+        self._unsupported_reasons = reasons
+
+    async def setup(self) -> None:
+        """Create supervisor events listener."""
+        await self.update()
+
+        self._remove_dispatcher = async_dispatcher_connect(
+            self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_repairs
+        )
+
+    async def update(self) -> None:
+        """Update repairs from Supervisor resolution center."""
+        data = await self._client.get_resolution_info()
+        self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
+        self.unsupported_reasons = set(data[ATTR_UNSUPPORTED])
+
+    @callback
+    def _supervisor_events_to_repairs(self, event: dict[str, Any]) -> None:
+        """Create repairs from supervisor events."""
+        if ATTR_WS_EVENT not in event:
+            return
+
+        if (
+            event[ATTR_WS_EVENT] == EVENT_SUPERVISOR_UPDATE
+            and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
+        ):
+            self._hass.async_create_task(self.update())
+
+        elif event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
+            self.unhealthy_reasons = (
+                set()
+                if event[ATTR_DATA][ATTR_HEALTHY]
+                else set(event[ATTR_DATA][ATTR_UNHEALTHY_REASONS])
+            )
+
+        elif event[ATTR_WS_EVENT] == EVENT_SUPPORTED_CHANGED:
+            self.unsupported_reasons = (
+                set()
+                if event[ATTR_DATA][ATTR_SUPPORTED]
+                else set(event[ATTR_DATA][ATTR_UNSUPPORTED_REASONS])
+            )
