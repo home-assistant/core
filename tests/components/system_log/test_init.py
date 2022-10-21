@@ -217,17 +217,6 @@ async def test_critical(hass, hass_ws_client):
     assert_log(log, "", "critical message", "CRITICAL")
 
 
-async def test_critical_with_missing_format_args(hass, hass_ws_client):
-    """Test that critical messages with missing format args are logged and retrieved correctly."""
-    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
-    await hass.async_block_till_done()
-
-    try:
-        _LOGGER.critical("critical message %s = %s", "one_but_needs_two")
-    except TypeError:
-        pass
-
-
 async def test_remove_older_logs(hass, hass_ws_client):
     """Test that older logs are rotated out."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
