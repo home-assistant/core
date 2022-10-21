@@ -22,8 +22,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
     _CONF_UNIT_SYSTEM_METRIC,
+    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     IMPERIAL_SYSTEM,
     METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
     UnitSystem,
     get_unit_system,
 )
@@ -37,85 +39,85 @@ def test_invalid_units():
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            INVALID_UNIT,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            temperature=INVALID_UNIT,
+            length=LENGTH_METERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
+            volume=VOLUME_LITERS,
+            mass=MASS_GRAMS,
+            pressure=PRESSURE_PA,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            INVALID_UNIT,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            temperature=TEMP_CELSIUS,
+            length=INVALID_UNIT,
+            wind_speed=SPEED_METERS_PER_SECOND,
+            volume=VOLUME_LITERS,
+            mass=MASS_GRAMS,
+            pressure=PRESSURE_PA,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            INVALID_UNIT,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            temperature=TEMP_CELSIUS,
+            length=LENGTH_METERS,
+            wind_speed=INVALID_UNIT,
+            volume=VOLUME_LITERS,
+            mass=MASS_GRAMS,
+            pressure=PRESSURE_PA,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            INVALID_UNIT,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            temperature=TEMP_CELSIUS,
+            length=LENGTH_METERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
+            volume=INVALID_UNIT,
+            mass=MASS_GRAMS,
+            pressure=PRESSURE_PA,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            INVALID_UNIT,
-            PRESSURE_PA,
-            LENGTH_MILLIMETERS,
+            temperature=TEMP_CELSIUS,
+            length=LENGTH_METERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
+            volume=VOLUME_LITERS,
+            mass=INVALID_UNIT,
+            pressure=PRESSURE_PA,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            INVALID_UNIT,
-            LENGTH_MILLIMETERS,
+            temperature=TEMP_CELSIUS,
+            length=LENGTH_METERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
+            volume=VOLUME_LITERS,
+            mass=MASS_GRAMS,
+            pressure=INVALID_UNIT,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            TEMP_CELSIUS,
-            LENGTH_METERS,
-            SPEED_METERS_PER_SECOND,
-            VOLUME_LITERS,
-            MASS_GRAMS,
-            PRESSURE_PA,
-            INVALID_UNIT,
+            temperature=TEMP_CELSIUS,
+            length=LENGTH_METERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
+            volume=VOLUME_LITERS,
+            mass=MASS_GRAMS,
+            pressure=PRESSURE_PA,
+            accumulated_precipitation=INVALID_UNIT,
         )
 
 
@@ -320,17 +322,26 @@ def test_is_metric(
 
 
 @pytest.mark.parametrize(
-    "unit_system, expected_name",
+    "unit_system, expected_name, expected_private_name",
     [
-        (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC),
-        (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL),
+        (METRIC_SYSTEM, _CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_METRIC),
+        (IMPERIAL_SYSTEM, _CONF_UNIT_SYSTEM_IMPERIAL, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
+        (
+            US_CUSTOMARY_SYSTEM,
+            _CONF_UNIT_SYSTEM_IMPERIAL,
+            _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+        ),
     ],
 )
 def test_deprecated_name(
-    caplog: pytest.LogCaptureFixture, unit_system: UnitSystem, expected_name: str
+    caplog: pytest.LogCaptureFixture,
+    unit_system: UnitSystem,
+    expected_name: str,
+    expected_private_name: str,
 ) -> None:
     """Test the name is deprecated."""
     assert unit_system.name == expected_name
+    assert unit_system._name == expected_private_name
     assert (
         "Detected code that accesses the `name` property of the unit system."
         in caplog.text
@@ -341,7 +352,7 @@ def test_deprecated_name(
     "key, expected_system",
     [
         (_CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
-        (_CONF_UNIT_SYSTEM_IMPERIAL, IMPERIAL_SYSTEM),
+        (_CONF_UNIT_SYSTEM_US_CUSTOMARY, US_CUSTOMARY_SYSTEM),
     ],
 )
 def test_get_unit_system(key: str, expected_system: UnitSystem) -> None:
@@ -349,7 +360,9 @@ def test_get_unit_system(key: str, expected_system: UnitSystem) -> None:
     assert get_unit_system(key) is expected_system
 
 
-@pytest.mark.parametrize("key", [None, "", "invalid_custom"])
+@pytest.mark.parametrize(
+    "key", [None, "", "invalid_custom", _CONF_UNIT_SYSTEM_IMPERIAL]
+)
 def test_get_unit_system_invalid(key: str) -> None:
     """Test get_unit_system with an invalid key."""
     with pytest.raises(ValueError, match=f"`{key}` is not a valid unit system key"):

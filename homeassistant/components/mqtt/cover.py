@@ -767,6 +767,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         return position
 
+    @callback
     def tilt_payload_received(self, _payload):
         """Set the tilt value."""
 
@@ -784,7 +785,7 @@ class MqttCover(MqttEntity, CoverEntity):
         ):
             level = self.find_percentage_in_range(payload)
             self._tilt_value = level
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
         else:
             _LOGGER.warning(
                 "Payload '%s' is out of range, must be between '%s' and '%s' inclusive",

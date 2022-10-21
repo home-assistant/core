@@ -19,7 +19,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import (
     async_recorder_block_till_done,
@@ -126,7 +126,7 @@ async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
@@ -431,7 +431,7 @@ async def test_statistics_during_period_in_the_past(
     hass.config.set_time_zone("UTC")
     now = dt_util.utcnow().replace()
 
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
 
@@ -589,27 +589,57 @@ async def test_statistics_during_period_bad_end_time(
 @pytest.mark.parametrize(
     "units, attributes, display_unit, statistics_unit, unit_class",
     [
-        (IMPERIAL_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
+        (US_CUSTOMARY_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
         (METRIC_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
-        (IMPERIAL_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "ft", "distance"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            DISTANCE_SENSOR_FT_ATTRIBUTES,
+            "ft",
+            "ft",
+            "distance",
+        ),
         (METRIC_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "ft", "distance"),
-        (IMPERIAL_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "Wh", "energy"),
+        (US_CUSTOMARY_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "Wh", "energy"),
         (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "Wh", "energy"),
-        (IMPERIAL_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (US_CUSTOMARY_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
         (METRIC_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
-        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "kW", "power"),
+        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "kW", "power"),
         (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "kW", "power"),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "hPa", "pressure"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            PRESSURE_SENSOR_HPA_ATTRIBUTES,
+            "hPa",
+            "hPa",
+            "pressure",
+        ),
         (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "hPa", "pressure"),
-        (IMPERIAL_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "km/h", "speed"),
+        (US_CUSTOMARY_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "km/h", "speed"),
         (METRIC_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "km/h", "speed"),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            TEMPERATURE_SENSOR_C_ATTRIBUTES,
+            "°C",
+            "°C",
+            "temperature",
+        ),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°F", "temperature"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            TEMPERATURE_SENSOR_F_ATTRIBUTES,
+            "°F",
+            "°F",
+            "temperature",
+        ),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°F", "temperature"),
-        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (US_CUSTOMARY_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
         (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
-        (IMPERIAL_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "ft³", "volume"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL,
+            "ft³",
+            "ft³",
+            "volume",
+        ),
         (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "ft³", "volume"),
     ],
 )
@@ -1329,9 +1359,13 @@ async def test_backup_start_no_recorder(
 
 
 async def test_backup_start_timeout(
-    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
 ):
     """Test getting backup start when recorder is not present."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: Locking is not implemented for other engines
+        return
+
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     # Ensure there are no queued events
@@ -1366,9 +1400,13 @@ async def test_backup_end(
 
 
 async def test_backup_end_without_start(
-    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
 ):
     """Test backup start."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: Locking is not implemented for other engines
+        return
+
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     # Ensure there are no queued events

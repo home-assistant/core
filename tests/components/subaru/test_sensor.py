@@ -7,7 +7,7 @@ from homeassistant.components.subaru.sensor import (
     SAFETY_SENSORS,
 )
 from homeassistant.util import slugify
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .api_responses import (
     EXPECTED_STATE_EV_IMPERIAL,
@@ -25,7 +25,7 @@ from .conftest import (
 
 async def test_sensors_ev_imperial(hass, ev_entry):
     """Test sensors supporting imperial units."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     with patch(MOCK_API_FETCH), patch(
         MOCK_API_GET_DATA, return_value=VEHICLE_STATUS_EV
