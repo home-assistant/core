@@ -21,7 +21,10 @@ add_url:
       description: The list type (blocklist/allowlist) of the filter you are adding.
       default: blocklist
       selector:
-        text:
+        select:
+          options:
+            - "allow"
+            - "block"
 
 remove_url:
   name: Remove url
@@ -39,7 +42,10 @@ remove_url:
       description: The list type (blocklist/allowlist) of the filter you are removing.
       default: blocklist
       selector:
-        text:
+        select:
+          options:
+            - "allow"
+            - "block"
 
 enable_url:
   name: Enable url
