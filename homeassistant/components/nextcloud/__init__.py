@@ -101,26 +101,26 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     except NextcloudMonitorError:
         _LOGGER.error("Nextcloud setup failed - Check configuration")
         return False
-    else:
+
+    hass.data[DOMAIN] = get_data_points(ncm.data)
+    hass.data[DOMAIN]["instance"] = conf[CONF_URL]
+
+    def nextcloud_update(event_time):
+        """Update data from nextcloud api."""
+        try:
+            ncm.update()
+        except NextcloudMonitorError:
+            _LOGGER.error("Nextcloud update failed")
+            return False
+
         hass.data[DOMAIN] = get_data_points(ncm.data)
         hass.data[DOMAIN]["instance"] = conf[CONF_URL]
 
-        def nextcloud_update(event_time):
-            """Update data from nextcloud api."""
-            try:
-                ncm.update()
-            except NextcloudMonitorError:
-                _LOGGER.error("Nextcloud update failed")
-                return False
+    # Update sensors on time interval
+    track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])
 
-            hass.data[DOMAIN] = get_data_points(ncm.data)
-            hass.data[DOMAIN]["instance"] = conf[CONF_URL]
-
-        # Update sensors on time interval
-        track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])
-
-        for platform in PLATFORMS:
-            discovery.load_platform(hass, platform, DOMAIN, {}, config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 
