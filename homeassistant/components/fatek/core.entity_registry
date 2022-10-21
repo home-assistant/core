@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "minor_version": 8,
+  "key": "core.entity_registry",
+  "data": {
+    "entities": [
+      {
+        "area_id": null,
+        "capabilities": null,
+        "config_entry_id": null,
+        "device_class": null,
+        "device_id": null,
+        "disabled_by": null,
+        "entity_category": null,
+        "entity_id": "person.marcin_ziarko",
+        "hidden_by": null,
+        "icon": null,
+        "id": "0fa03fbe073a63325a3af0ae10563f01",
+        "has_entity_name": false,
+        "name": null,
+        "options": {},
+        "original_device_class": null,
+        "original_icon": null,
+        "original_name": "Marcin Ziarko",
+        "platform": "person",
+        "supported_features": 0,
+        "unique_id": "marcin_ziarko",
+        "unit_of_measurement": null
+      },
+      {
+        "area_id": null,
+        "capabilities": {
+          "supported_color_modes": [
+            "onoff"
+          ]
+        },
+        "config_entry_id": null,
+        "device_class": null,
+        "device_id": null,
+        "disabled_by": null,
+        "entity_category": null,
+        "entity_id": "light.m878",
+        "hidden_by": null,
+        "icon": null,
+        "id": "379ff55d05771bf72f8ac457aa778ea3",
+        "has_entity_name": false,
+        "name": null,
+        "options": {},
+        "original_device_class": null,
+        "original_icon": null,
+        "original_name": "Poddasze TV",
+        "platform": "fatek",
+        "supported_features": 0,
+        "unique_id": "M878",
+        "unit_of_measurement": null
+      }
+    ]
+  }
+}

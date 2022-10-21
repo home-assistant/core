@@ -1199,6 +1199,11 @@
       "iot_class": "cloud_polling",
       "name": "Fast.com"
     },
+    "fatek": {
+      "config_flow": true,
+      "iot_class": "local_polling",
+      "name": "Fatek"
+    },
     "feedreader": {
       "config_flow": false,
       "iot_class": "cloud_polling",

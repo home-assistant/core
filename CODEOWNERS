@@ -334,6 +334,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/fan/ @home-assistant/core
 /tests/components/fan/ @home-assistant/core
 /homeassistant/components/fastdotcom/ @rohankapoorcom
+/homeassistant/components/fatek/ @marcinziarko
+/tests/components/fatek/ @marcinziarko
 /homeassistant/components/fibaro/ @rappenze
 /tests/components/fibaro/ @rappenze
 /homeassistant/components/file/ @fabaff
