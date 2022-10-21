@@ -21,11 +21,18 @@ async def async_get_config_entry_diagnostics(
             "title": entry.title,
             "data": dict(entry.data),
         },
-        "data": {
+        "bridge_data": {
             "devices": bridge.devices,
             "buttons": bridge.buttons,
             "scenes": bridge.scenes,
             "occupancy_groups": bridge.occupancy_groups,
             "areas": bridge.areas,
+        },
+        "integration_data": {
+            "keypads": data.keypads,
+            "keypad_buttons": data.keypad_buttons,
+            "keypad_button_maps": data.keypad_button_maps,
+            "keypad_trigger_schemas": data.keypad_trigger_schemas,
+            "dr_id_to_keypad_map": data.dr_id_to_keypad_map,
         },
     }

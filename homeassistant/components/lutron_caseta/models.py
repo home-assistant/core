@@ -7,8 +7,6 @@ from typing import Any
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
-from homeassistant.helpers.entity import DeviceInfo
-
 
 @dataclass
 class LutronCasetaData:
@@ -16,7 +14,8 @@ class LutronCasetaData:
 
     bridge: Smartbridge
     bridge_device: dict[str, Any]
-    button_devices: dict[str, dict]
-    device_info_by_device_id: dict[int, DeviceInfo]
-    keypad_button_types_to_leap_by_keypad_id: dict[str, dict[str, int]]
-    keypad_button_trigger_schema_by_keypad_id: dict[str, vol.Schema]
+    dr_id_to_keypad_map: dict[str, dict]
+    keypads: dict[int, Any]
+    keypad_buttons: dict[int, Any]
+    keypad_button_maps: dict[int, dict[str, int]]
+    keypad_trigger_schemas: dict[int, vol.Schema]

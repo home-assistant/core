@@ -42,17 +42,13 @@ def async_describe_events(
         leap_button_number = data[ATTR_LEAP_BUTTON_NUMBER]
         device_id = data[ATTR_DEVICE_ID]
         lutron_data = get_lutron_data_by_dr_id(hass, device_id)
-        keypad_device = lutron_data.button_devices.get(device_id)
+        keypad_device = lutron_data.dr_id_to_keypad_map.get(device_id)
         keypad_device_id = keypad_device["device_id"]
 
-        keypad_button_types_to_leap_by_keypad_id = (
-            lutron_data.keypad_button_types_to_leap_by_keypad_id
-        )
+        keypad_button_maps = lutron_data.keypad_button_maps
 
         if not (button_map := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)):
-            if fwd_button_map := keypad_button_types_to_leap_by_keypad_id.get(
-                keypad_device_id
-            ):
+            if fwd_button_map := keypad_button_maps.get(keypad_device_id):
                 button_map = _reverse_dict(fwd_button_map)
 
         if button_map is None:

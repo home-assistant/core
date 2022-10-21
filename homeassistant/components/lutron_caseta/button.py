@@ -28,12 +28,13 @@ async def async_setup_entry(
     bridge = data.bridge
     button_devices = bridge.get_buttons()
     all_devices = data.bridge.get_devices()
-    device_info_by_device_id = data.device_info_by_device_id
+    keypads = data.keypads
     entities: list[LutronCasetaButton] = []
 
     for device in button_devices.values():
 
-        parent_device_info = device_info_by_device_id[device["parent_device"]]
+        parent_keypad = keypads[device["parent_device"]]
+        parent_device_info = parent_keypad["device_info"]
 
         enabled_default = True
         if not (device_name := device.get("device_name")):
