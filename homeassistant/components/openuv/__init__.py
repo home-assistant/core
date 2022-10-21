@@ -310,10 +310,3 @@ class OpenUvEntity(CoordinatorEntity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._update_from_latest_data()
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()
