@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import (
@@ -15,7 +17,13 @@ from .const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
 )
-from .device_trigger import LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP
+from .device_trigger import (
+    LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
+    _reverse_dict,
+    get_lutron_data_by_dr_id,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -28,11 +36,32 @@ def async_describe_events(
     @callback
     def async_describe_button_event(event: Event) -> dict[str, str]:
         """Describe lutron_caseta_button_event logbook event."""
+
         data = event.data
         device_type = data[ATTR_TYPE]
         leap_button_number = data[ATTR_LEAP_BUTTON_NUMBER]
-        button_map = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP[device_type]
-        button_description = button_map[leap_button_number]
+        device_id = data[ATTR_DEVICE_ID]
+        lutron_data = get_lutron_data_by_dr_id(hass, device_id)
+        keypad_device = lutron_data.button_devices.get(device_id)
+        keypad_device_id = keypad_device["device_id"]
+
+        keypad_button_types_to_leap_by_keypad_id = (
+            lutron_data.keypad_button_types_to_leap_by_keypad_id
+        )
+
+        if not (button_map := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)):
+            if fwd_button_map := keypad_button_types_to_leap_by_keypad_id.get(
+                keypad_device_id
+            ):
+                button_map = _reverse_dict(fwd_button_map)
+
+        if button_map is None:
+            return {
+                LOGBOOK_ENTRY_NAME: f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
+                LOGBOOK_ENTRY_MESSAGE: f"{data[ATTR_ACTION]} Error retrieving button description",
+            }
+
+        button_description = button_map.get(leap_button_number)
         return {
             LOGBOOK_ENTRY_NAME: f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
             LOGBOOK_ENTRY_MESSAGE: f"{data[ATTR_ACTION]} {button_description}",

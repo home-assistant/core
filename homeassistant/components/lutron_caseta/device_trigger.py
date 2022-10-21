@@ -1,6 +1,8 @@
 """Provides device triggers for lutron caseta."""
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -33,6 +35,8 @@ from .const import (
 )
 from .models import LutronCasetaData
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def _reverse_dict(forward_dict: dict) -> dict:
     """Reverse a dictionary."""
@@ -45,6 +49,18 @@ LUTRON_MODEL_TO_TYPE = {
     "RRST-W4B-XX": "SunnataKeypad_4Button",
 }
 
+KEYPAD_LEAP_BUTTON_NAME_OVERRIDE = {
+    "RRD-W2RLD": {
+        17: "raise_1",
+        16: "lower_1",
+        19: "raise_2",
+        18: "lower_2",
+    },
+    "RRD-W1RLD": {
+        19: "raise",
+        18: "lower",
+    },
+}
 
 SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_PRESS, ACTION_RELEASE]
 
@@ -54,6 +70,9 @@ LUTRON_BUTTON_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
+# Define Variables
+KEYPAD_BUTTON_TYPES_TO_LEAP: dict[str, dict[str, int]] = {}
+KEYPAD_BUTTON_TRIGGER_SCHEMA: dict[str, vol.Schema] = {}
 
 PICO_2_BUTTON_BUTTON_TYPES_TO_LIP = {
     "on": 2,
@@ -337,6 +356,7 @@ PHANTOM_KEYPAD_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     }
 )
 
+
 DEVICE_TYPE_SCHEMA_MAP = {
     "Pico2Button": PICO_2_BUTTON_TRIGGER_SCHEMA,
     "Pico2ButtonRaiseLower": PICO_2_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA,
@@ -408,19 +428,26 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate config."""
     # if device is available verify parameters against device capabilities
-    device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
+    data = get_lutron_data_by_dr_id(hass, config[CONF_DEVICE_ID])
 
-    if not device:
+    if not data or not (device := data.button_devices.get(config[CONF_DEVICE_ID])):
         return config
+
+    keypad_button_trigger_schema_by_keypad_id = (
+        data.keypad_button_trigger_schema_by_keypad_id
+    )
 
     if not (
         schema := DEVICE_TYPE_SCHEMA_MAP.get(
             _lutron_model_to_device_type(device["model"], device["type"])
         )
     ):
-        raise InvalidDeviceAutomationConfig(
-            f"Device model {device['model']} with type {device['type']} not supported: {config[CONF_DEVICE_ID]}"
-        )
+        if not (
+            schema := keypad_button_trigger_schema_by_keypad_id.get(device["device_id"])
+        ):
+            raise InvalidDeviceAutomationConfig(
+                f"Device model {device['model']} with type {device['type']} not supported: {config[CONF_DEVICE_ID]}"
+            )
 
     return schema(config)
 
@@ -431,12 +458,19 @@ async def async_get_triggers(
     """List device triggers for lutron caseta devices."""
     triggers = []
 
-    if not (device := get_button_device_by_dr_id(hass, device_id)):
+    data = get_lutron_data_by_dr_id(hass, device_id)
+
+    if not data or not (device := data.button_devices.get(device_id)):
         # Check if device is a valid button device.  Return empty if not.
         return []
 
+    keypad_button_types_to_leap_by_keypad_id = (
+        data.keypad_button_types_to_leap_by_keypad_id
+    )
+
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
-        _lutron_model_to_device_type(device["model"], device["type"]), {}
+        _lutron_model_to_device_type(device["model"], device["type"]),
+        keypad_button_types_to_leap_by_keypad_id.get(device["device_id"], {}),
     )
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
@@ -476,15 +510,33 @@ async def async_attach_trigger(
     device_registry = dr.async_get(hass)
     if (
         not (device := device_registry.async_get(config[CONF_DEVICE_ID]))
+        or not (data := get_lutron_data_by_dr_id(hass, config[CONF_DEVICE_ID]))
         or not device.model
     ):
         raise HomeAssistantError(
             f"Cannot attach trigger {config} because device with id {config[CONF_DEVICE_ID]} is missing or invalid"
         )
+
+    keypad_button_trigger_schema_by_keypad_id = (
+        data.keypad_button_trigger_schema_by_keypad_id
+    )
+    keypad_button_types_to_leap_by_keypad_id = (
+        data.keypad_button_types_to_leap_by_keypad_id
+    )
+
     device_type = _device_model_to_type(device.model)
     _, serial = list(device.identifiers)[0]
-    schema = DEVICE_TYPE_SCHEMA_MAP[device_type]
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP[device_type]
+
+    button_device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
+    if not (schema := DEVICE_TYPE_SCHEMA_MAP.get(device_type)):
+        schema = keypad_button_trigger_schema_by_keypad_id.get(
+            button_device["device_id"]
+        )
+
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
+        device_type,
+        keypad_button_types_to_leap_by_keypad_id.get(button_device["device_id"], {}),
+    )
     config = schema(config)
     event_config = {
         event_trigger.CONF_PLATFORM: CONF_EVENT,
@@ -511,4 +563,16 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
         if device := data.button_devices.get(device_id):
             return device
 
+    return None
+
+
+def get_lutron_data_by_dr_id(hass: HomeAssistant, device_id: str):
+    """Get a lutron device for the given device id."""
+    if DOMAIN not in hass.data:
+        return None
+
+    for entry_id in hass.data[DOMAIN]:
+        data: LutronCasetaData = hass.data[DOMAIN][entry_id]
+        if data.button_devices.get(device_id):
+            return data
     return None

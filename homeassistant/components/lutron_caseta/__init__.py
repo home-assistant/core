@@ -37,6 +37,7 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    CONF_SUBTYPE,
     CONFIG_URL,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
@@ -45,7 +46,9 @@ from .const import (
 )
 from .device_trigger import (
     DEVICE_TYPE_SUBTYPE_MAP_TO_LIP,
+    KEYPAD_LEAP_BUTTON_NAME_OVERRIDE,
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
+    LUTRON_BUTTON_TRIGGER_SCHEMA,
     _lutron_model_to_device_type,
 )
 from .models import LutronCasetaData
@@ -145,6 +148,9 @@ async def async_setup_entry(
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
     bridge = None
 
+    keypad_button_types_to_leap_by_keypad_id: dict[str, dict[str, int]] = {}
+    keypad_button_trigger_schema_by_keypad_id: dict[str, vol.Schema] = {}
+
     try:
         bridge = Smartbridge.create_tls(
             hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
@@ -181,12 +187,21 @@ async def async_setup_entry(
     button_devices, device_info_by_device_id = _async_register_button_devices(
         hass, entry_id, bridge, bridge_device, buttons
     )
+    (
+        keypad_button_types_to_leap_by_keypad_id,
+        keypad_button_trigger_schema_by_keypad_id,
+    ) = _async_build_device_triggers(buttons)
     _async_subscribe_pico_remote_events(hass, bridge, buttons)
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
     hass.data[DOMAIN][entry_id] = LutronCasetaData(
-        bridge, bridge_device, button_devices, device_info_by_device_id
+        bridge,
+        bridge_device,
+        button_devices,
+        device_info_by_device_id,
+        keypad_button_types_to_leap_by_keypad_id,
+        keypad_button_trigger_schema_by_keypad_id,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -269,6 +284,50 @@ def _async_register_button_devices(
         device_info_by_device_id.setdefault(ha_device["device_id"], device_args)
 
     return button_devices_by_dr_id, device_info_by_device_id
+
+
+@callback
+def _async_build_device_triggers(buttons):
+    """Dynamically build device trigger scemas and button lists from bridge buttons."""
+    keypad_button_types_to_leap_by_keypad_id: dict[str, dict[str, int]] = {}
+    keypad_button_trigger_schema_by_keypad_id: dict[str, vol.Schema] = {}
+
+    for button in buttons.values():
+        if "device_name" in button:
+            keypad_button_types_to_leap_by_keypad_id.setdefault(
+                button["parent_device"], {}
+            ).update(
+                {
+                    _get_button_name(
+                        button["model"], button["button_number"], button["device_name"]
+                    ): int(button["button_number"])
+                },
+            )
+
+    for keypad, _ in keypad_button_types_to_leap_by_keypad_id.items():
+        keypad_button_trigger_schema_by_keypad_id.setdefault(
+            keypad,
+            LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+                {
+                    vol.Required(CONF_SUBTYPE): vol.In(
+                        keypad_button_types_to_leap_by_keypad_id.get(keypad)
+                    ),
+                }
+            ),
+        )
+
+    return (
+        keypad_button_types_to_leap_by_keypad_id,
+        keypad_button_trigger_schema_by_keypad_id,
+    )
+
+
+def _get_button_name(device_model: str, button_number: int, button_name: str) -> str:
+    """Get the LEAP button name, checking for override."""
+    if keypad_model_override := KEYPAD_LEAP_BUTTON_NAME_OVERRIDE.get(device_model):
+        if alt_button_name := keypad_model_override.get(button_number):
+            return alt_button_name
+    return button_name
 
 
 def _handle_none_keypad_serial(keypad_device: dict, bridge_serial: int) -> str:
