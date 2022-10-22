@@ -2500,9 +2500,8 @@
       "iot_class": "cloud_polling"
     },
     "ihc": {
-      "name": "IHC Controller",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ikea": {
@@ -6663,6 +6662,7 @@
     "group",
     "growatt_server",
     "homekit_controller",
+    "ihc",
     "input_boolean",
     "input_button",
     "input_datetime",

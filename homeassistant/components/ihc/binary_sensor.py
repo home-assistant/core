@@ -1,5 +1,7 @@
 """Support for IHC binary sensors."""
 
+from __future__ import annotations
+
 from ihcsdk.ihccontroller import IHCController
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -59,6 +61,16 @@ class IHCBinarySensor(IHCDevice, BinarySensorEntity):
         super().__init__(ihc_controller, controller_id, name, ihc_id, product)
         self._attr_device_class = try_parse_enum(BinarySensorDeviceClass, sensor_type)
         self.inverting = inverting
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return self._sensor_type
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on/open."""
+        return self._state
 
     def on_ihc_change(self, ihc_id, value):
         """IHC resource has changed."""
