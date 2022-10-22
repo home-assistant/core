@@ -31,5 +31,10 @@ MAX_IDS = 10
 # we will add it to the ignore list since its garbage data.
 MAX_IDS_PER_UUID = 50
 
+# Number of times a beacon must be seen before it is added to the system
+# This is to prevent devices that are just passing by from being added
+# to the system.
+MIN_SEEN_TRANSIENT_NEW = 10
+
 CONF_IGNORE_ADDRESSES = "ignore_addresses"
 CONF_IGNORE_UUIDS = "ignore_uuids"
