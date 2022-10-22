@@ -10,6 +10,7 @@ import re
 from typing import Any, cast, final
 
 from aiohttp import web
+from dateutil.rrule import rrulestr
 import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
@@ -49,6 +50,10 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "calendar"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
+
+# Don't support rrules more often than daily
+VALID_FREQS = {"DAILY", "WEEKLY", "MONTHLY", "YEARLY"}
+
 
 # mypy: disallow-any-generics
 
@@ -207,6 +212,30 @@ def is_offset_reached(
     return start + offset_time <= dt.now(start.tzinfo)
 
 
+def _validate_rrule(value: Any) -> str:
+    """Validate a recurrence rule string."""
+    if value is None:
+        raise vol.Invalid("rrule value is None")
+
+    if not isinstance(value, str):
+        raise vol.Invalid("rrule value expected a string")
+
+    try:
+        rrulestr(value)
+    except ValueError as err:
+        raise vol.Invalid(f"Invalid rrule: {str(err)}") from err
+
+    # Example format: FREQ=DAILY;UNTIL=...
+    rule_parts = dict(s.split("=", 1) for s in value.split(";"))
+    if not (freq := rule_parts.get("FREQ")):
+        raise vol.Invalid("rrule did not contain FREQ")
+
+    if freq not in VALID_FREQS:
+        raise vol.Invalid(f"Invalid frequency for rule: {value}")
+
+    return str(value)
+
+
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
@@ -345,7 +374,7 @@ class CalendarListView(http.HomeAssistantView):
             vol.Required(EVENT_END): vol.Any(cv.date, cv.datetime),
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION): cv.string,
-            vol.Optional(EVENT_RRULE): cv.string,
+            vol.Optional(EVENT_RRULE): _validate_rrule,
         },
     }
 )

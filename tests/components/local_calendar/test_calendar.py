@@ -514,3 +514,39 @@ async def test_websocket_delete_recurring(
             "recurrence_id": "20220822T083000",
         },
     ]
+
+
+@pytest.mark.parametrize(
+    "rrule",
+    [
+        "FREQ=SECONDLY",
+        "FREQ=MINUTELY",
+        "FREQ=HOURLY",
+        "invalid",
+        "",
+    ],
+)
+async def test_invalid_rrule(
+    ws_client: ClientFixture,
+    setup_integration: None,
+    hass: HomeAssistant,
+    get_events: GetEventsFn,
+    rrule: str,
+):
+    """Test an event with a recurrence rule."""
+    client = await ws_client()
+    resp = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Monday meeting",
+                "dtstart": "2022-08-29T09:00:00",
+                "dtend": "2022-08-29T10:00:00",
+                "rrule": rrule,
+            },
+        },
+    )
+    assert not resp.get("success")
+    assert "error" in resp
+    assert resp.get("error").get("code") == "invalid_format"
