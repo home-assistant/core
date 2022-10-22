@@ -871,7 +871,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221020.0
+home-assistant-frontend==20221021.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1574,7 +1574,7 @@ pyflume==0.6.5
 pyfnip==0.2
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.11
+pyforked-daapd==0.1.14
 
 # homeassistant.components.freedompro
 pyfreedompro==1.1.0
@@ -1682,7 +1682,7 @@ pylaunches==1.3.0
 pylgnetcast==0.3.7
 
 # homeassistant.components.forked_daapd
-pylibrespot-java==0.1.0
+pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
 pylitejet==0.3.0
