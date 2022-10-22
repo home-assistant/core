@@ -241,6 +241,14 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `W`, `kW`
     """
 
+    PRECIPITATION_INTENSITY = "precipitation_intensity"
+    """Precipitation intensity.
+
+    Unit of measurement:
+    - `in/d`, `in/h`
+    - `mm/d`, `mm/h`
+    """
+
     PRESSURE = "pressure"
     """Pressure.
 
@@ -266,7 +274,7 @@ class SensorDeviceClass(StrEnum):
     SPEED = "speed"
     """Generic speed.
 
-    Unit of measurement: `SPEED_*` units
+    Unit of measurement: `SPEED_*` or `PRECIPITATION_INTENSITY_*` units
     - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
     - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
     - Nautical: `kn`
@@ -361,6 +369,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[str, type[BaseUnitConverter]] = {
     SensorDeviceClass.DISTANCE: DistanceConverter,
+    SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
@@ -418,11 +427,7 @@ class SensorEntity(Entity):
         None  # Subclasses of SensorEntity should not set this
     )
     _last_reset_reported = False
-    _temperature_conversion_reported = False
     _sensor_option_unit_of_measurement: str | None = None
-
-    # Temporary private attribute to track if deprecation has been logged.
-    __datetime_as_string_deprecation_logged = False
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
