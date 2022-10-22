@@ -1,8 +1,6 @@
 """Provides device triggers for lutron caseta."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -33,8 +31,6 @@ from .const import (
     LUTRON_CASETA_BUTTON_EVENT,
 )
 from .models import LutronCasetaData
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _reverse_dict(forward_dict: dict) -> dict:
@@ -337,19 +333,24 @@ async def async_validate_trigger_config(
 ) -> ConfigType:
     """Validate trigger config."""
 
-    data = get_lutron_data_by_dr_id(hass, config[CONF_DEVICE_ID])
-    if not data or not (keypad := data.dr_id_to_keypad_map.get(config[CONF_DEVICE_ID])):
+    if not (data := get_lutron_data_by_dr_id(hass, config[CONF_DEVICE_ID])) or not (
+        keypad := data.dr_id_to_keypad_map.get(config[CONF_DEVICE_ID])
+    ):
         return config
 
-    # First try and validate trigger to hard-coded entries in device_trigger.py:
-    if not (schema := DEVICE_TYPE_SCHEMA_MAP.get(keypad["type"])):
-        # Then try and validate trigger against dynamically generated triggers:
-        keypad_trigger_schemas = data.keypad_trigger_schemas
-        if not (schema := keypad_trigger_schemas.get(keypad["lutron_device_id"])):
-            # Trigger is invalid - raise error
-            raise InvalidDeviceAutomationConfig(
-                f"Device model {keypad['model']} with type {keypad['type']} not supported: {config[CONF_DEVICE_ID]}"
-            )
+    keypad_trigger_schemas = data.keypad_trigger_schemas
+
+    # Retrieve trigger schema, preferring hard-coded triggers from device_trigger.py
+    if not (
+        schema := DEVICE_TYPE_SCHEMA_MAP.get(
+            keypad["type"],
+            keypad_trigger_schemas.get(keypad["lutron_device_id"]),
+        )
+    ):
+        # Trigger is invalid - raise error
+        raise InvalidDeviceAutomationConfig(
+            f"Device model {keypad['model']} with type {keypad['type']} not supported: {config[CONF_DEVICE_ID]}"
+        )
 
     return schema(config)
 
@@ -360,10 +361,10 @@ async def async_get_triggers(
     """List device triggers for lutron caseta devices."""
     triggers = []
 
-    data = get_lutron_data_by_dr_id(hass, device_id)
-
     # Check if device is a valid keypad.  Return empty if not.
-    if not data or not (keypad := data.dr_id_to_keypad_map.get(device_id)):
+    if not (data := get_lutron_data_by_dr_id(hass, device_id)) or not (
+        keypad := data.dr_id_to_keypad_map.get(device_id)
+    ):
         return []
 
     keypad_button_maps = data.keypad_button_maps
@@ -396,6 +397,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
+
     if not (data := get_lutron_data_by_dr_id(hass, config[CONF_DEVICE_ID])) or not (
         keypad := data.dr_id_to_keypad_map[config[CONF_DEVICE_ID]]
     ):
@@ -409,13 +411,16 @@ async def async_attach_trigger(
     device_type = keypad["type"]
     serial = keypad["serial"]
 
-    if not (schema := DEVICE_TYPE_SCHEMA_MAP.get(device_type)):
-        schema = keypad_trigger_schemas.get(keypad["lutron_device_id"])
+    # Retrieve trigger schema, preferring hard-coded triggers from device_trigger.py
+    schema = DEVICE_TYPE_SCHEMA_MAP.get(
+        device_type,
+        keypad_trigger_schemas.get(keypad["lutron_device_id"]),
+    )
 
     # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
         device_type,
-        keypad_button_maps.get(keypad["lutron_device_id"], {}),
+        keypad_button_maps.get(keypad["lutron_device_id"]),
     )
 
     config = schema(config)
@@ -433,19 +438,6 @@ async def async_attach_trigger(
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, trigger_info, platform_type="device"
     )
-
-
-def get_keypad_by_dr_id(hass: HomeAssistant, device_id: str):
-    """Get lutron keypad for the given device registry device id."""
-    if DOMAIN not in hass.data:
-        return None
-
-    for entry_id in hass.data[DOMAIN]:
-        data: LutronCasetaData = hass.data[DOMAIN][entry_id]
-        if device := data.dr_id_to_keypad_map.get(device_id):
-            return device
-
-    return None
 
 
 def get_lutron_data_by_dr_id(hass: HomeAssistant, device_id: str):
