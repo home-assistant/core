@@ -1,5 +1,5 @@
 """The test for the sql sensor platform."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
@@ -16,7 +16,7 @@ from . import YAML_CONFIG, init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_query(hass: HomeAssistant) -> None:
+async def test_query(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
     """Test the SQL sensor."""
     config = {
         "db_url": "sqlite://",
@@ -31,7 +31,9 @@ async def test_query(hass: HomeAssistant) -> None:
     assert state.attributes["value"] == 5
 
 
-async def test_query_value_template(hass: HomeAssistant) -> None:
+async def test_query_value_template(
+    recorder_mock: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test the SQL sensor."""
     config = {
         "db_url": "sqlite://",
@@ -46,7 +48,9 @@ async def test_query_value_template(hass: HomeAssistant) -> None:
     assert state.state == "5"
 
 
-async def test_query_value_template_invalid(hass: HomeAssistant) -> None:
+async def test_query_value_template_invalid(
+    recorder_mock: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test the SQL sensor."""
     config = {
         "db_url": "sqlite://",
@@ -61,7 +65,7 @@ async def test_query_value_template_invalid(hass: HomeAssistant) -> None:
     assert state.state == "5.01"
 
 
-async def test_query_limit(hass: HomeAssistant) -> None:
+async def test_query_limit(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
     """Test the SQL sensor with a query containing 'LIMIT' in lowercase."""
     config = {
         "db_url": "sqlite://",
@@ -77,7 +81,7 @@ async def test_query_limit(hass: HomeAssistant) -> None:
 
 
 async def test_query_no_value(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    recorder_mock: AsyncMock, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
     config = {
@@ -96,7 +100,7 @@ async def test_query_no_value(
 
 
 async def test_query_mssql_no_result(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    recorder_mock: AsyncMock, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
     config = {
@@ -134,6 +138,7 @@ async def test_query_mssql_no_result(
     ],
 )
 async def test_invalid_url_setup(
+    recorder_mock: AsyncMock,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     url: str,
@@ -171,6 +176,7 @@ async def test_invalid_url_setup(
 
 
 async def test_invalid_url_on_update(
+    recorder_mock: AsyncMock,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
@@ -206,7 +212,7 @@ async def test_invalid_url_on_update(
     assert "sqlite://****:****@homeassistant.local" in caplog.text
 
 
-async def test_query_from_yaml(hass: HomeAssistant, recorder_mock) -> None:
+async def test_query_from_yaml(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
     """Test the SQL sensor from yaml config."""
 
     assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
@@ -216,7 +222,9 @@ async def test_query_from_yaml(hass: HomeAssistant, recorder_mock) -> None:
     assert state.state == "5"
 
 
-async def test_config_from_old_yaml(hass: HomeAssistant, recorder_mock) -> None:
+async def test_config_from_old_yaml(
+    recorder_mock: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test the SQL sensor from old yaml config does not create any entity."""
     config = {
         "sensor": {
@@ -254,6 +262,7 @@ async def test_config_from_old_yaml(hass: HomeAssistant, recorder_mock) -> None:
     ],
 )
 async def test_invalid_url_setup_from_yaml(
+    recorder_mock: AsyncMock,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     url: str,

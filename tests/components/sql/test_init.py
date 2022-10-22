@@ -1,7 +1,7 @@
 """Test for SQL component Init."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -15,13 +15,13 @@ from homeassistant.setup import async_setup_component
 from . import YAML_CONFIG_INVALID, YAML_CONFIG_NO_DB, init_integration
 
 
-async def test_setup_entry(hass: HomeAssistant, recorder_mock) -> None:
+async def test_setup_entry(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
     """Test setup entry."""
     config_entry = await init_integration(hass)
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
 
 
-async def test_unload_entry(hass: HomeAssistant, recorder_mock) -> None:
+async def test_unload_entry(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
     """Test unload an entry."""
     config_entry = await init_integration(hass)
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
@@ -31,7 +31,7 @@ async def test_unload_entry(hass: HomeAssistant, recorder_mock) -> None:
     assert config_entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_config(hass: HomeAssistant, recorder_mock) -> None:
+async def test_setup_config(recorder_mock: AsyncMock, hass: HomeAssistant) -> None:
     """Test setup from yaml config."""
     with patch(
         "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
@@ -40,7 +40,9 @@ async def test_setup_config(hass: HomeAssistant, recorder_mock) -> None:
         await hass.async_block_till_done()
 
 
-async def test_setup_invalid_config(hass: HomeAssistant, recorder_mock) -> None:
+async def test_setup_invalid_config(
+    recorder_mock: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test setup from yaml with invalid config."""
     with patch(
         "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
