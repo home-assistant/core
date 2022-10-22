@@ -125,9 +125,10 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         key = self.entity_description.key
         val = self.entity_description.write_value
         _LOGGER.warning(
-            "Process button for %s with service %s",
+            "Process button for %s with service %s - char services %s",
             self.entity_description.key,
             self.service.type,
+            self._char.service.type,
         )
 
         await self.async_put_characteristics({key: val})
