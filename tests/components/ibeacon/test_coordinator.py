@@ -234,7 +234,7 @@ async def test_ignore_transient_devices_unless_we_see_them_a_few_times(hass):
 
     assert len(hass.states.async_entity_ids()) == before_entity_count
 
-    for i in range(3, 11):
+    for i in range(3, 17):
         with patch_all_discovered_devices([TESLA_TRANSIENT_BLE_DEVICE]):
             async_fire_time_changed(
                 hass,

@@ -2,6 +2,9 @@
 
 from datetime import timedelta
 
+from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+)
 from homeassistant.const import Platform
 
 DOMAIN = "ibeacon"
@@ -34,7 +37,12 @@ MAX_IDS_PER_UUID = 50
 # Number of times a beacon must be seen before it is added to the system
 # This is to prevent devices that are just passing by from being added
 # to the system.
-MIN_SEEN_TRANSIENT_NEW = 10
+MIN_SEEN_TRANSIENT_NEW = (
+    round(
+        FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS / UPDATE_INTERVAL.total_seconds()
+    )
+    + 1
+)
 
 CONF_IGNORE_ADDRESSES = "ignore_addresses"
 CONF_IGNORE_UUIDS = "ignore_uuids"
