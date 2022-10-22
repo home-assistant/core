@@ -79,7 +79,8 @@ class LocalCalendarEntity(CalendarEntity):
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         events = self._calendar.timeline_tz(dt_util.DEFAULT_TIME_ZONE).overlapping(
-            start_date, end_date
+            dt_util.as_local(start_date),
+            dt_util.as_local(end_date),
         )
         return [_get_calendar_event(event) for event in events]
 
