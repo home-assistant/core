@@ -1565,7 +1565,7 @@ smart-meter-texas==0.4.7
 smhi-pkg==1.0.16
 
 # homeassistant.components.sonos
-soco==0.28.0
+soco==0.28.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
