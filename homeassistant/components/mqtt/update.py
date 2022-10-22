@@ -85,7 +85,7 @@ async def _async_setup_entity(
 
 
 class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
-    """representation of an MQTT update."""
+    """Representation of the MQTT update entity."""
 
     _entity_id_format = update.ENTITY_ID_FORMAT
 
