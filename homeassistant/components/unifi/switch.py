@@ -87,7 +87,7 @@ async def async_setup_entry(
     @callback
     def items_added(
         clients: set = controller.api.clients,
-        dpi_groups: set = controller.api.dpi_groups,
+        devices: set = controller.api.devices,
     ) -> None:
         """Update the values of the controller."""
         if controller.option_block_clients:
