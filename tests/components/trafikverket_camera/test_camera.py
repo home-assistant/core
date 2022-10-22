@@ -1,7 +1,7 @@
 """The test for the Trafikverket camera platform."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -28,18 +28,11 @@ async def test_camera(
     """Test the Trafikverket Camera sensor."""
     state1 = hass.states.get("camera.test_location")
     assert state1.state == "idle"
-    assert state1.attributes["deleted"] is False
     assert state1.attributes["description"] == "Test Camera for testing"
     assert state1.attributes["direction"] == "180"
     assert state1.attributes["full_size_photo"] is True
-    assert state1.attributes["last_modified"] == datetime(
-        2022, 4, 4, 4, 4, 4, tzinfo=dt.UTC
-    )
     assert state1.attributes["location"] == "Test location"
-    assert state1.attributes["photo time"] == datetime(
-        2022, 4, 4, 4, 4, 4, tzinfo=dt.UTC
-    )
-    assert state1.attributes["photo url"] == "https://www.testurl.com/test_photo.jpg"
+    assert state1.attributes["photo_url"] == "https://www.testurl.com/test_photo.jpg"
     assert state1.attributes["status"] == "Running"
     assert state1.attributes["type"] == "Road"
 
