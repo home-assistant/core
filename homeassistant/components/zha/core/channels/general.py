@@ -331,6 +331,19 @@ class OnOffChannel(ZigbeeChannel):
         super().__init__(cluster, ch_pool)
         self._off_listener = None
 
+        if self.cluster.endpoint.model in (
+            "TS011F",
+            "TS0121",
+            "TS0001",
+            "TS0002",
+            "TS0003",
+            "TS0004",
+        ):
+            self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
+                self.ZCL_INIT_ATTRS.copy()
+            )
+            self.ZCL_INIT_ATTRS["power_on_state"] = True
+
     @property
     def on_off(self) -> bool | None:
         """Return cached value of on/off attribute."""
