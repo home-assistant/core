@@ -18,7 +18,6 @@ from homeassistant.components.calendar import (
     EVENT_RRULE,
     EVENT_START,
     EVENT_SUMMARY,
-    EVENT_UID,
     CalendarEntity,
     CalendarEntityFeature,
     CalendarEvent,
@@ -99,7 +98,7 @@ class LocalCalendarEntity(CalendarEntity):
         content = IcsCalendarStream.calendar_to_ics(self._calendar)
         await self._store.async_store(content)
 
-    async def async_create_event(self, **kwargs: Any) -> dict[str, Any]:
+    async def async_create_event(self, **kwargs: Any) -> str:
         """Add a new event to calendar."""
         event = Event.parse_obj(
             {
@@ -115,7 +114,7 @@ class LocalCalendarEntity(CalendarEntity):
         new_event = EventStore(self._calendar).add(event)
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
-        return {EVENT_UID: new_event.uid}
+        return new_event.uid
 
     async def async_delete_event(
         self,
