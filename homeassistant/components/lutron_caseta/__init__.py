@@ -50,7 +50,7 @@ from .device_trigger import (
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
     LUTRON_BUTTON_TRIGGER_SCHEMA,
 )
-from .models import LutronCasetaData
+from .models import LutronCasetaData, LutronKeypadData
 from .util import serial_to_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -200,14 +200,17 @@ async def async_setup_entry(
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
+
     hass.data[DOMAIN][entry_id] = LutronCasetaData(
         bridge,
         bridge_device,
-        dr_device_id_to_keypad,
-        keypads,
-        keypad_buttons,
-        keypad_button_names_to_leap,
-        keypad_trigger_schemas,
+        LutronKeypadData(
+            dr_device_id_to_keypad,
+            keypads,
+            keypad_buttons,
+            keypad_button_names_to_leap,
+            keypad_trigger_schemas,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

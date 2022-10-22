@@ -139,7 +139,7 @@ async def test_get_triggers(hass, device_reg):
     """Test we get the expected triggers from a lutron pico."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
     data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
-    keypads = data.keypads
+    keypads = data.keypad_data.keypads
     device_id = keypads[list(keypads)[0]]["dr_device_id"]
 
     expected_triggers = [
@@ -349,7 +349,7 @@ async def test_validate_trigger_config_unknown_device(hass, calls, device_reg):
 
     config_entry_id = await _async_setup_lutron_with_picos(hass)
     data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
-    keypads = data.keypads
+    keypads = data.keypad_data.keypads
     lutron_device_id = list(keypads)[0]
     keypad = keypads[lutron_device_id]
     device_id = keypad["dr_device_id"]
@@ -394,7 +394,7 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
     """Test for click_event with invalid triggers."""
     config_entry_id = await _async_setup_lutron_with_picos(hass)
     data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
-    keypads = data.keypads
+    keypads = data.keypad_data.keypads
     lutron_device_id = list(keypads)[0]
     keypad = keypads[lutron_device_id]
     device_id = keypad["dr_device_id"]

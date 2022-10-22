@@ -25,7 +25,7 @@ async def async_setup_entry(
     bridge = data.bridge
     button_devices = bridge.get_buttons()
     all_devices = data.bridge.get_devices()
-    keypads = data.keypads
+    keypads = data.keypad_data.keypads
     entities: list[LutronCasetaButton] = []
 
     for device in button_devices.values():

@@ -14,6 +14,13 @@ class LutronCasetaData:
 
     bridge: Smartbridge
     bridge_device: dict[str, Any]
+    keypad_data: LutronKeypadData
+
+
+@dataclass
+class LutronKeypadData:
+    """Data for the lutron_caseta  integration keypads."""
+
     dr_device_id_to_keypad: dict[str, dict]
     keypads: dict[int, Any]
     keypad_buttons: dict[int, Any]

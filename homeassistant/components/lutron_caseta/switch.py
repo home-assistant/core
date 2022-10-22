@@ -42,7 +42,7 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, SwitchEntity):
         if "parent_device" not in device:
             return
 
-        keypads = data.keypads
+        keypads = data.keypad_data.keypads
         parent_keypad = keypads[device["parent_device"]]
         parent_device_info = parent_keypad["device_info"]
         # Append the child device name to the end of the parent keypad name to create the entity name

@@ -51,7 +51,7 @@ async def test_humanify_lutron_caseta_button_event(hass):
     await hass.async_block_till_done()
 
     data: LutronCasetaData = hass.data[DOMAIN][config_entry.entry_id]
-    keypads = data.keypads
+    keypads = data.keypad_data.keypads
     keypad = keypads["9"]
     dr_device_id = keypad["dr_device_id"]
 
