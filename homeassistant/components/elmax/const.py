@@ -8,6 +8,13 @@ CONF_ELMAX_PANEL_ID = "panel_id"
 CONF_ELMAX_PANEL_PIN = "panel_pin"
 CONF_ELMAX_PANEL_NAME = "panel_name"
 
+CONF_ELMAX_MODE = "mode"
+CONF_ELMAX_MODE_CLOUD = "cloud"
+CONF_ELMAX_MODE_DIRECT = "direct"
+CONF_ELMAX_MODE_DIRECT_URI = "panel_uri"
+
+ELMAX_LOCAL_API_PATH = "api/v2"
+
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 CONF_ENDPOINT_ID = "endpoint_id"
 

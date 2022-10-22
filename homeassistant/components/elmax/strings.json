@@ -1,11 +1,24 @@
 {
   "config": {
     "step": {
-      "user": {
+      "choose_mode": {
+        "description": "Please choose the connection mode to Elmax panels.",
+        "data": {
+          "mode": "Connection Mode"
+        }
+      },
+      "cloud_setup": {
         "description": "Please login to the Elmax cloud using your credentials",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "direct_setup": {
+        "description": "Specify the Elmax panel connection parameters below.",
+        "data": {
+          "panel_uri": "Panel API base URL",
+          "panel_pin": "Panel PIN code"
         }
       },
       "panels": {

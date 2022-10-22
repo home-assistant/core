@@ -11,6 +11,26 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "choose_mode": {
+                "data": {
+                    "mode": "Connection Mode"
+                },
+                "description": "Please choose the connection mode to Elmax panels."
+            },
+            "cloud_setup": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please login to the Elmax cloud using your credentials"
+            },
+            "direct_setup": {
+                "data": {
+                    "panel_pin": "Panel PIN code",
+                    "panel_uri": "Panel API base URL"
+                },
+                "description": "Specify the Elmax panel connection parameters below."
+            },
             "panels": {
                 "data": {
                     "panel_id": "Panel ID",
@@ -18,13 +38,6 @@
                     "panel_pin": "PIN Code"
                 },
                 "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured."
-            },
-            "user": {
-                "data": {
-                    "password": "Password",
-                    "username": "Username"
-                },
-                "description": "Please login to the Elmax cloud using your credentials"
             }
         }
     }

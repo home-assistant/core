@@ -9,6 +9,10 @@ from homeassistant.core import HomeAssistant
 
 from .common import ElmaxCoordinator
 from .const import (
+    CONF_ELMAX_MODE,
+    CONF_ELMAX_MODE_CLOUD,
+    CONF_ELMAX_MODE_DIRECT,
+    CONF_ELMAX_MODE_DIRECT_URI,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_PIN,
     CONF_ELMAX_PASSWORD,
@@ -23,6 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up elmax-cloud from a config entry."""
+    # Use a null-safe getter for the mode, as this attribute has been
+    # added later than first revisions. When null, assume cloud.
+
     # Create the API client object and attempt a login, so that we immediately know
     # if there is something wrong with user credentials
     coordinator = ElmaxCoordinator(
