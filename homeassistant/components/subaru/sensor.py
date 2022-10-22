@@ -298,27 +298,29 @@ async def _async_migrate_entries(
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, Any] | None:
         id_split = entry.unique_id.split("_")
+        key = id_split[1].upper() if len(id_split) == 2 else None
 
-        if len(id_split) == 2 and (key := id_split[1].upper()) in replacements:
-            new_unique_id = entry.unique_id.replace(id_split[1], replacements[key])
+        if key not in replacements:
+            return None
+
+        new_unique_id = entry.unique_id.replace(id_split[1], replacements[key])
+        _LOGGER.debug(
+            "Migrating entity '%s' unique_id from '%s' to '%s'",
+            entry.entity_id,
+            entry.unique_id,
+            new_unique_id,
+        )
+        if existing_entity_id := entity_registry.async_get_entity_id(
+            entry.domain, entry.platform, new_unique_id
+        ):
             _LOGGER.debug(
-                "Migrating entity '%s' unique_id from '%s' to '%s'",
-                entry.entity_id,
-                entry.unique_id,
+                "Cannot migrate to unique_id '%s', already exists for '%s'",
                 new_unique_id,
+                existing_entity_id,
             )
-            if existing_entity_id := entity_registry.async_get_entity_id(
-                entry.domain, entry.platform, new_unique_id
-            ):
-                _LOGGER.debug(
-                    "Cannot migrate to unique_id '%s', already exists for '%s'",
-                    new_unique_id,
-                    existing_entity_id,
-                )
-                return None
-            return {
-                "new_unique_id": new_unique_id,
-            }
-        return None
+            return None
+        return {
+            "new_unique_id": new_unique_id,
+        }
 
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)

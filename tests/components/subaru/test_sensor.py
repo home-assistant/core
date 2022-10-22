@@ -19,19 +19,15 @@ from .api_responses import (
     EXPECTED_STATE_EV_METRIC,
     EXPECTED_STATE_EV_UNAVAILABLE,
     TEST_VIN_2_EV,
-    VEHICLE_DATA,
     VEHICLE_STATUS_EV,
 )
 from .conftest import (
     MOCK_API_FETCH,
     MOCK_API_GET_DATA,
-    TEST_CONFIG_ENTRY,
     TEST_DEVICE_NAME,
     advance_time_to_next_fetch,
-    setup_subaru_integration,
+    setup_subaru_config_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_sensors_ev_imperial(hass, ev_entry):
@@ -76,29 +72,17 @@ async def test_sensors_missing_vin_data(hass, ev_entry):
     ],
 )
 async def test_sensor_migrate_unique_ids(
-    hass,
-    entitydata,
-    old_unique_id,
-    new_unique_id,
+    hass, entitydata, old_unique_id, new_unique_id, subaru_config_entry
 ) -> None:
     """Test successful migration of entity unique_ids."""
-    mock_config_entry = MockConfigEntry(**TEST_CONFIG_ENTRY)
-    mock_config_entry.add_to_hass(hass)
-
     entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
-        config_entry=mock_config_entry,
+        config_entry=subaru_config_entry,
     )
     assert entity.unique_id == old_unique_id
 
-    await setup_subaru_integration(
-        hass,
-        mock_config_entry=mock_config_entry,
-        vehicle_list=[TEST_VIN_2_EV],
-        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
-        vehicle_status=VEHICLE_STATUS_EV,
-    )
+    await setup_subaru_config_entry(hass, subaru_config_entry)
 
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
@@ -120,19 +104,13 @@ async def test_sensor_migrate_unique_ids(
     ],
 )
 async def test_sensor_migrate_unique_ids_duplicate(
-    hass,
-    entitydata,
-    old_unique_id,
-    new_unique_id,
+    hass, entitydata, old_unique_id, new_unique_id, subaru_config_entry
 ) -> None:
     """Test unsuccessful migration of entity unique_ids due to duplicate."""
-    mock_config_entry = MockConfigEntry(**TEST_CONFIG_ENTRY)
-    mock_config_entry.add_to_hass(hass)
-
     entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
-        config_entry=mock_config_entry,
+        config_entry=subaru_config_entry,
     )
     assert entity.unique_id == old_unique_id
 
@@ -141,16 +119,10 @@ async def test_sensor_migrate_unique_ids_duplicate(
         SENSOR_DOMAIN,
         SUBARU_DOMAIN,
         unique_id=new_unique_id,
-        config_entry=mock_config_entry,
+        config_entry=subaru_config_entry,
     )
 
-    await setup_subaru_integration(
-        hass,
-        mock_config_entry=mock_config_entry,
-        vehicle_list=[TEST_VIN_2_EV],
-        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
-        vehicle_status=VEHICLE_STATUS_EV,
-    )
+    await setup_subaru_config_entry(hass, subaru_config_entry)
 
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
