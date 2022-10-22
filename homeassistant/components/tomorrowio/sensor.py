@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
@@ -39,7 +38,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
@@ -326,10 +325,9 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         self._attr_unique_id = (
             f"{self._config_entry.unique_id}_{slugify(description.name)}"
         )
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: self.attribution}
         if self.entity_description.native_unit_of_measurement is None:
             self._attr_native_unit_of_measurement = description.unit_metric
-            if hass.config.units is IMPERIAL_SYSTEM:
+            if hass.config.units is US_CUSTOMARY_SYSTEM:
                 self._attr_native_unit_of_measurement = description.unit_imperial
 
     @property
@@ -358,7 +356,7 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
             desc.imperial_conversion
             and desc.unit_imperial is not None
             and desc.unit_imperial != desc.unit_metric
-            and self.hass.config.units is IMPERIAL_SYSTEM
+            and self.hass.config.units is US_CUSTOMARY_SYSTEM
         ):
             return handle_conversion(state, desc.imperial_conversion)
 

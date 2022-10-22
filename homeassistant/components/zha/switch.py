@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CHANNEL_BASIC,
     CHANNEL_INOVELLI,
     CHANNEL_ON_OFF,
     DATA_ZHA,
@@ -285,6 +286,32 @@ class OnOffWindowDetectionFunctionConfigurationEntity(
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
 class P1MotionTriggerIndicatorSwitch(
+    ZHASwitchConfigurationEntity, id_suffix="trigger_indicator"
+):
+    """Representation of a ZHA motion triggering configuration entity."""
+
+    _zcl_attribute: str = "trigger_indicator"
+    _attr_name = "LED trigger indicator"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.plug.mmeu01", "lumi.plug.maeu01"}
+)
+class XiaomiPlugPowerOutageMemorySwitch(
+    ZHASwitchConfigurationEntity, id_suffix="power_outage_memory"
+):
+    """Representation of a ZHA power outage memory configuration entity."""
+
+    _zcl_attribute: str = "power_outage_memory"
+    _attr_name = "Power outage memory"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_BASIC,
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML001", "SML002", "SML003", "SML004"},
+)
+class HueMotionTriggerIndicatorSwitch(
     ZHASwitchConfigurationEntity, id_suffix="trigger_indicator"
 ):
     """Representation of a ZHA motion triggering configuration entity."""

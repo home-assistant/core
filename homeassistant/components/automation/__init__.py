@@ -53,7 +53,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     TemplateError,
 )
-from homeassistant.helpers import condition, extract_domain_configs
+from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -670,7 +670,6 @@ class AutomationEntityConfig:
     """Container for prepared automation entity configuration."""
 
     config_block: ConfigType
-    config_key: str
     list_no: int
     raw_blueprint_inputs: ConfigType | None
     raw_config: ConfigType | None
@@ -683,38 +682,37 @@ async def _prepare_automation_config(
     """Parse configuration and prepare automation entity configuration."""
     automation_configs: list[AutomationEntityConfig] = []
 
-    for config_key in extract_domain_configs(config, DOMAIN):
-        conf: list[ConfigType | blueprint.BlueprintInputs] = config[config_key]
+    conf: list[ConfigType | blueprint.BlueprintInputs] = config[DOMAIN]
 
-        for list_no, config_block in enumerate(conf):
-            raw_blueprint_inputs = None
-            raw_config = None
-            if isinstance(config_block, blueprint.BlueprintInputs):
-                blueprint_inputs = config_block
-                raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+    for list_no, config_block in enumerate(conf):
+        raw_blueprint_inputs = None
+        raw_config = None
+        if isinstance(config_block, blueprint.BlueprintInputs):
+            blueprint_inputs = config_block
+            raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
-                try:
-                    raw_config = blueprint_inputs.async_substitute()
-                    config_block = cast(
-                        dict[str, Any],
-                        await async_validate_config_item(hass, raw_config),
-                    )
-                except vol.Invalid as err:
-                    LOGGER.error(
-                        "Blueprint %s generated invalid automation with inputs %s: %s",
-                        blueprint_inputs.blueprint.name,
-                        blueprint_inputs.inputs,
-                        humanize_error(config_block, err),
-                    )
-                    continue
-            else:
-                raw_config = cast(AutomationConfig, config_block).raw_config
-
-            automation_configs.append(
-                AutomationEntityConfig(
-                    config_block, config_key, list_no, raw_blueprint_inputs, raw_config
+            try:
+                raw_config = blueprint_inputs.async_substitute()
+                config_block = cast(
+                    dict[str, Any],
+                    await async_validate_config_item(hass, raw_config),
                 )
+            except vol.Invalid as err:
+                LOGGER.error(
+                    "Blueprint %s generated invalid automation with inputs %s: %s",
+                    blueprint_inputs.blueprint.name,
+                    blueprint_inputs.inputs,
+                    humanize_error(config_block, err),
+                )
+                continue
+        else:
+            raw_config = cast(AutomationConfig, config_block).raw_config
+
+        automation_configs.append(
+            AutomationEntityConfig(
+                config_block, list_no, raw_blueprint_inputs, raw_config
             )
+        )
 
     return automation_configs
 
@@ -722,9 +720,8 @@ async def _prepare_automation_config(
 def _automation_name(automation_config: AutomationEntityConfig) -> str:
     """Return the configured name of an automation."""
     config_block = automation_config.config_block
-    config_key = automation_config.config_key
     list_no = automation_config.list_no
-    return config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
+    return config_block.get(CONF_ALIAS) or f"{DOMAIN} {list_no}"
 
 
 async def _create_automation_entities(
@@ -855,8 +852,7 @@ async def _async_process_config(
         if idx not in config_matches
     ]
     entities = await _create_automation_entities(hass, updated_automation_configs)
-    if entities:
-        await component.async_add_entities(entities)
+    await component.async_add_entities(entities)
 
     return
 

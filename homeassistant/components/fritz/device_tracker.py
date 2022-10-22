@@ -65,8 +65,7 @@ def _async_add_entities(
         new_tracked.append(FritzBoxTracker(avm_wrapper, device))
         data_fritz.tracked[avm_wrapper.unique_id].add(mac)
 
-    if new_tracked:
-        async_add_entities(new_tracked)
+    async_add_entities(new_tracked)
 
 
 class FritzBoxTracker(FritzDeviceBase, ScannerEntity):

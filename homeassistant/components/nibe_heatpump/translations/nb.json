@@ -2,6 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "unknown": "Uventet feil"
         }
     }
 }

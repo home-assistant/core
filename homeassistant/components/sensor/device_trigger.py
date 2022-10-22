@@ -51,6 +51,7 @@ CONF_PM10 = "pm10"
 CONF_PM25 = "pm25"
 CONF_POWER = "power"
 CONF_POWER_FACTOR = "power_factor"
+CONF_PRECIPITATION_INTENSITY = "precipitation_intensity"
 CONF_PRESSURE = "pressure"
 CONF_REACTIVE_POWER = "reactive_power"
 CONF_SIGNAL_STRENGTH = "signal_strength"
@@ -85,6 +86,9 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_PM25}],
     SensorDeviceClass.POWER: [{CONF_TYPE: CONF_POWER}],
     SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_POWER_FACTOR}],
+    SensorDeviceClass.PRECIPITATION_INTENSITY: [
+        {CONF_TYPE: CONF_PRECIPITATION_INTENSITY}
+    ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_PRESSURE}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_SIGNAL_STRENGTH}],
