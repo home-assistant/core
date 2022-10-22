@@ -11,8 +11,10 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.components.climate.const import ATTR_FAN_MODE, ATTR_SWING_MODE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_MODE,
     ATTR_STATE,
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
@@ -34,6 +36,7 @@ SERVICE_ENABLE_TIMER = "enable_timer"
 ATTR_MINUTES = "minutes"
 SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
 SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
+SERVICE_FULL_AC_STATE = "full_ac_state"
 
 ATTR_AC_INTEGRATION = "ac_integration"
 ATTR_GEO_INTEGRATION = "geo_integration"
@@ -115,6 +118,21 @@ async def async_setup_entry(
             vol.Required(ATTR_INDOOR_INTEGRATION): bool,
             vol.Required(ATTR_OUTDOOR_INTEGRATION): bool,
             vol.Required(ATTR_SENSITIVITY): vol.In(["Normal", "Sensitive"]),
+        },
+        "async_enable_pure_boost",
+    )
+    platform.async_register_entity_service(
+        SERVICE_FULL_AC_STATE,
+        {
+            vol.Required(ATTR_ON): bool,
+            vol.Required(ATTR_TARGET_TEMPERATURE): bool,
+            vol.Required(ATTR_TEMPERATURE_UNIT): bool,
+            vol.Required(ATTR_MODE): bool,
+            vol.Required(ATTR_FAN_MODE): bool,
+            vol.Required(ATTR_SWING_MODE): bool,
+            vol.Required(ATTR_HORIZONTAL_SWING): bool,
+            vol.Required(ATTR_LIGHT): bool,
+            vol.Required(ATTR_MODE): bool,
         },
         "async_enable_pure_boost",
     )
@@ -419,3 +437,15 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         result = {}
         result = await self._client.async_set_pureboost(self._device_id, data)
         return bool(result.get("status") == "success")
+
+    @async_handle_api_call
+    async def api_call_custom_service_full_ac_state(
+        self,
+        key: str,
+        value: Any,
+        data: dict,
+    ) -> bool:
+        """Make service call to api."""
+        result = {}
+        result = await self._client.async_set_ac_states(self._device_id, data)
+        return bool(result.get("result", {}).get("status") == "Success")
