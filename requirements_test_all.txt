@@ -675,7 +675,7 @@ hyperion-py==0.7.5
 iaqualink==0.5.0
 
 # homeassistant.components.ibeacon
-ibeacon_ble==1.0.0
+ibeacon_ble==1.0.1
 
 # homeassistant.components.ping
 icmplib==3.0
