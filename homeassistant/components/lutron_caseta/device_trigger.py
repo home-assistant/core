@@ -436,7 +436,7 @@ async def async_attach_trigger(
 
 
 def get_keypad_by_dr_id(hass: HomeAssistant, device_id: str):
-    """Get lutron integration data for the given device registry device id."""
+    """Get lutron keypad for the given device registry device id."""
     if DOMAIN not in hass.data:
         return None
 
@@ -449,7 +449,7 @@ def get_keypad_by_dr_id(hass: HomeAssistant, device_id: str):
 
 
 def get_lutron_data_by_dr_id(hass: HomeAssistant, device_id: str):
-    """Get a lutron keypad device for the given device registry device id."""
+    """Get a lutron integration data for the given device registry device id."""
     if DOMAIN not in hass.data:
         return None
 
