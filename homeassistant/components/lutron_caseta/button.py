@@ -11,10 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDevice
 from .const import DOMAIN as CASETA_DOMAIN
-from .device_trigger import (
-    LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
-    _lutron_model_to_device_type,
-)
+from .device_trigger import LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP
 from .models import LutronCasetaData
 
 
@@ -44,9 +41,7 @@ async def async_setup_entry(
             enabled_default = False
             keypad_device = all_devices[device["parent_device"]]
             button_numbers = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
-                _lutron_model_to_device_type(
-                    keypad_device["model"], keypad_device["type"]
-                ),
+                keypad_device["type"],
                 {},
             )
             device_name = (

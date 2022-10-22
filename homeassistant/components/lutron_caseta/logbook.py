@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import logging
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_DEVICE_ID
@@ -23,8 +22,6 @@ from .device_trigger import (
     get_lutron_data_by_dr_id,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @callback
 def async_describe_events(
@@ -40,24 +37,24 @@ def async_describe_events(
         data = event.data
         device_type = data[ATTR_TYPE]
         leap_button_number = data[ATTR_LEAP_BUTTON_NUMBER]
-        device_id = data[ATTR_DEVICE_ID]
-        lutron_data = get_lutron_data_by_dr_id(hass, device_id)
-        keypad_device = lutron_data.dr_id_to_keypad_map.get(device_id)
-        keypad_device_id = keypad_device["device_id"]
+        dr_device_id = data[ATTR_DEVICE_ID]
+        lutron_data = get_lutron_data_by_dr_id(hass, dr_device_id)
+        keypad = lutron_data.dr_id_to_keypad_map.get(dr_device_id)
+        keypad_id = keypad["lutron_device_id"]
 
         keypad_button_maps = lutron_data.keypad_button_maps
 
-        if not (button_map := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)):
-            if fwd_button_map := keypad_button_maps.get(keypad_device_id):
-                button_map = _reverse_dict(fwd_button_map)
+        if not (rev_button_map := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)):
+            if fwd_button_map := keypad_button_maps.get(keypad_id):
+                rev_button_map = _reverse_dict(fwd_button_map)
 
-        if button_map is None:
+        if rev_button_map is None:
             return {
                 LOGBOOK_ENTRY_NAME: f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
                 LOGBOOK_ENTRY_MESSAGE: f"{data[ATTR_ACTION]} Error retrieving button description",
             }
 
-        button_description = button_map.get(leap_button_number)
+        button_description = rev_button_map.get(leap_button_number)
         return {
             LOGBOOK_ENTRY_NAME: f"{data[ATTR_AREA_NAME]} {data[ATTR_DEVICE_NAME]}",
             LOGBOOK_ENTRY_MESSAGE: f"{data[ATTR_ACTION]} {button_description}",

@@ -49,7 +49,6 @@ from .device_trigger import (
     KEYPAD_LEAP_BUTTON_NAME_OVERRIDE,
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
     LUTRON_BUTTON_TRIGGER_SCHEMA,
-    _lutron_model_to_device_type,
 )
 from .models import LutronCasetaData
 from .util import serial_to_unique_id
@@ -373,10 +372,7 @@ def _get_button_name(keypad: dict[str, Any], bridge_button: dict[str, Any]) -> s
 
 def _get_button_name_from_triggers(keypad: dict[str, Any], button_number: int) -> str:
     """Retrieve the caseta button name from device triggers."""
-    button_number_map = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
-        _lutron_model_to_device_type(keypad["model"], keypad["type"]),
-        {},
-    )
+    button_number_map = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(keypad["type"], {})
     return (
         button_number_map.get(
             button_number,
@@ -448,7 +444,7 @@ def _async_subscribe_pico_remote_events(
             ha_device, bridge_devices[BRIDGE_DEVICE_ID]["serial"]
         )
 
-        type_ = _lutron_model_to_device_type(ha_device["model"], ha_device["type"])
+        type_ = ha_device["type"]
         area = _area_name_from_id(bridge_device.areas, ha_device["area"])
         name = ha_device["name"].split("_")[-1]
         leap_button_number = device["button_number"]
