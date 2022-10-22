@@ -33,6 +33,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -76,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is None:
         return True
 
-    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN] = {}
 
     sensor_conf: dict[str, Any]
     for sensor_id, sensor_conf in enumerate(conf):
@@ -100,13 +101,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass, method, resource, auth, headers, None, payload, verify_ssl
         )
 
-        coordinator: ScrapeCoordinator
-        for coordinator in hass.data[DOMAIN].values():
-            if rest == coordinator.rest:
-                hass.data[DOMAIN][sensor_id] = coordinator
-            else:
-                coordinator = await get_coordinator(hass, rest, update_interval)
-                hass.data[DOMAIN][sensor_id] = coordinator
+        get_coordinator: ScrapeCoordinator
+        new_coordinator = None
+        for get_coordinator in hass.data[DOMAIN].values():
+            if rest == get_coordinator.rest:
+                new_coordinator = get_coordinator
+        hass.data[DOMAIN][sensor_id] = (
+            new_coordinator
+            if new_coordinator
+            else await create_coordinator(hass, rest, update_interval)
+        )
 
         discovery.load_platform(
             hass,
@@ -119,11 +123,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def get_coordinator(
+async def create_coordinator(
     hass: HomeAssistant, rest: RestData, update_interval: int
 ) -> ScrapeCoordinator:
     """Get Scrape Coordinator."""
 
     coordinator = ScrapeCoordinator(hass, rest, timedelta(seconds=update_interval))
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
+    if coordinator.data is None:
+        raise PlatformNotReady
     return coordinator

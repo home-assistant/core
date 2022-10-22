@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -22,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import MockRestData, init_integration, return_config
+from . import MockRestData, return_config
 
 from tests.common import async_fire_time_changed
 
@@ -49,6 +50,40 @@ async def test_scrape_sensor(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
+
+
+async def test_scrape_sensor_platform_yaml(hass: HomeAssistant) -> None:
+    """Test Scrape sensor load from sensor platform."""
+    config = {
+        SENSOR_DOMAIN: [
+            return_config(
+                select=".return",
+                name="Auth page",
+                username="user@secret.com",
+                password="12345678",
+                authentication="digest",
+            ),
+            return_config(
+                select=".return",
+                name="Auth page2",
+                username="user@secret.com",
+                password="12345678",
+            ),
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor_authentication")
+    with patch(
+        "homeassistant.components.scrape.sensor.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.auth_page")
+    assert state.state == "secret text"
+    state2 = hass.states.get("sensor.auth_page2")
+    assert state2.state == "secret text"
 
 
 async def test_scrape_sensor_value_template(hass: HomeAssistant) -> None:
@@ -184,7 +219,7 @@ async def test_scrape_sensor_no_data(hass: HomeAssistant) -> None:
         "homeassistant.components.scrape.RestData",
         return_value=mocker,
     ):
-        assert await async_setup_component(hass, DOMAIN, config)
+        assert not await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
@@ -300,6 +335,9 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
+        "homeassistant.components.scrape.coordinator.RestData",
+        return_value=mocker,
+    ), patch(
         "homeassistant.components.scrape.RestData",
         return_value=mocker,
     ):
@@ -313,20 +351,3 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     entity = entity_reg.async_get("sensor.ha_version")
 
     assert entity.unique_id == "ha_version_unique_id"
-
-
-async def test_scrape_sensor_config_entry(hass: HomeAssistant) -> None:
-    """Test Scrape sensor minimal."""
-    entry = await init_integration(
-        hass,
-        return_config(select=".current-version h1", name="HA version"),
-        "test_scrape_sensor",
-    )
-
-    state = hass.states.get("sensor.ha_version")
-    assert state.state == "Current Version: 2021.12.10"
-
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.ha_version")
-
-    assert entity.unique_id == entry.entry_id
