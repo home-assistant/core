@@ -62,7 +62,7 @@ class PhillipsRemote(ZigbeeChannel):
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFCC0)
 class OppleRemote(ZigbeeChannel):
-    """Opple button channel."""
+    """Opple channel."""
 
     REPORT_CONFIG = ()
 
@@ -81,6 +81,10 @@ class OppleRemote(ZigbeeChannel):
                 "monitoring_mode": True,
                 "motion_sensitivity": True,
                 "approach_distance": True,
+            }
+        elif self.cluster.endpoint.model in ("lumi.plug.mmeu01", "lumi.plug.maeu01"):
+            self.ZCL_INIT_ATTRS = {
+                "power_outage_memory": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
