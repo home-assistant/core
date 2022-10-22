@@ -98,7 +98,7 @@ class LocalCalendarEntity(CalendarEntity):
         content = IcsCalendarStream.calendar_to_ics(self._calendar)
         await self._store.async_store(content)
 
-    async def async_create_event(self, **kwargs: Any) -> str:
+    async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
         event = Event.parse_obj(
             {
@@ -111,10 +111,9 @@ class LocalCalendarEntity(CalendarEntity):
         if rrule := kwargs.get(EVENT_RRULE):
             event.rrule = Recur.from_rrule(rrule)
 
-        new_event = EventStore(self._calendar).add(event)
+        EventStore(self._calendar).add(event)
         await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
-        return new_event.uid
 
     async def async_delete_event(
         self,

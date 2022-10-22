@@ -283,7 +283,7 @@ class CalendarEntity(Entity):
         """Return calendar events within a datetime range."""
         raise NotImplementedError()
 
-    async def async_create_event(self, **kwargs: Any) -> str:
+    async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
         raise NotImplementedError()
 
@@ -400,11 +400,11 @@ async def handle_calendar_event_create(
         return
 
     try:
-        uid = await entity.async_create_event(**msg[CONF_EVENT])
+        await entity.async_create_event(**msg[CONF_EVENT])
     except HomeAssistantError as ex:
         connection.send_error(msg["id"], "failed", str(ex))
     else:
-        connection.send_result(msg["id"], {EVENT_UID: uid})
+        connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(

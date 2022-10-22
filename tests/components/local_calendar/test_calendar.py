@@ -388,7 +388,7 @@ async def test_websocket_delete(
 ):
     """Test websocket delete command."""
     client = await ws_client()
-    result = await client.cmd_result(
+    await client.cmd_result(
         "create",
         {
             "entity_id": TEST_ENTITY,
@@ -399,8 +399,6 @@ async def test_websocket_delete(
             },
         },
     )
-    assert "uid" in result
-    uid = result["uid"]
 
     events = await get_events("1997-07-14T00:00:00", "1997-07-16T00:00:00")
     assert list(map(event_fields, events)) == [
@@ -410,9 +408,10 @@ async def test_websocket_delete(
             "end": {"dateTime": "1997-07-14T22:00:00-06:00"},
         }
     ]
+    uid = events[0]["uid"]
 
     # Delete the event
-    result = await client.cmd_result(
+    await client.cmd_result(
         "delete",
         {
             "entity_id": TEST_ENTITY,
@@ -428,7 +427,7 @@ async def test_websocket_delete_recurring(
 ):
     """Test deleting a recurring event."""
     client = await ws_client()
-    result = await client.cmd_result(
+    await client.cmd_result(
         "create",
         {
             "entity_id": TEST_ENTITY,
@@ -440,8 +439,6 @@ async def test_websocket_delete_recurring(
             },
         },
     )
-    assert "uid" in result
-    uid = result["uid"]
 
     events = await get_events("2022-08-22T00:00:00", "2022-08-26T00:00:00")
     assert list(map(event_fields, events)) == [
@@ -470,6 +467,8 @@ async def test_websocket_delete_recurring(
             "recurrence_id": "20220825T083000",
         },
     ]
+    uid = events[0]["uid"]
+    assert [event["uid"] for event in events] == [uid] * 4
 
     # Cancel a single instance and confirm it was removed
     await client.cmd_result(
