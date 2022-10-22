@@ -147,12 +147,6 @@ async def async_setup_entry(
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
     bridge = None
 
-    dr_device_id_to_keypad: dict[str, dict] = {}
-    keypads: dict[int, Any] = {}
-    keypad_buttons: dict[int, Any] = {}
-    keypad_button_names_to_leap: dict[int, dict[str, int]] = {}
-    keypad_trigger_schemas: dict[int, vol.Schema] = {}
-
     try:
         bridge = Smartbridge.create_tls(
             hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
@@ -187,16 +181,7 @@ async def async_setup_entry(
 
     _async_register_bridge_device(hass, entry_id, bridge_device, bridge)
 
-    (
-        keypads,
-        keypad_buttons,
-        keypad_button_names_to_leap,
-        dr_device_id_to_keypad,
-    ) = _async_register_keypads(hass, entry_id, bridge, bridge_device)
-
-    keypad_trigger_schemas = _async_build_trigger_schemas(keypad_button_names_to_leap)
-
-    _async_subscribe_keypad_events(hass, bridge, keypads, keypad_buttons)
+    keypad_data = _async_setup_keypads(hass, entry_id, bridge, bridge_device)
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
@@ -204,13 +189,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry_id] = LutronCasetaData(
         bridge,
         bridge_device,
-        LutronKeypadData(
-            dr_device_id_to_keypad,
-            keypads,
-            keypad_buttons,
-            keypad_button_names_to_leap,
-            keypad_trigger_schemas,
-        ),
+        keypad_data,
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -242,14 +221,12 @@ def _async_register_bridge_device(
 
 
 @callback
-def _async_register_keypads(
+def _async_setup_keypads(
     hass: HomeAssistant,
     config_entry_id: str,
     bridge: Smartbridge,
     bridge_device: dict[str, Any],
-) -> tuple[
-    dict[int, Any], dict[int, Any], dict[int, dict[str, int]], dict[str, dict[Any, Any]]
-]:
+) -> LutronKeypadData:
     """Register keypad devices (Keypads and Pico Remotes) in the device registry."""
 
     device_registry = dr.async_get(hass)
@@ -324,7 +301,17 @@ def _async_register_keypads(
             {button["button_name"]: int(button["leap_button_number"])}
         )
 
-    return keypads, keypad_buttons, keypad_button_names_to_leap, dr_device_id_to_keypad
+    keypad_trigger_schemas = _async_build_trigger_schemas(keypad_button_names_to_leap)
+
+    _async_subscribe_keypad_events(hass, bridge, keypads, keypad_buttons)
+
+    return LutronKeypadData(
+        dr_device_id_to_keypad,
+        keypads,
+        keypad_buttons,
+        keypad_button_names_to_leap,
+        keypad_trigger_schemas,
+    )
 
 
 @callback
