@@ -5589,9 +5589,14 @@
     },
     "u_tec": {
       "name": "U-tec",
-      "iot_standards": [
-        "zwave"
-      ]
+      "integrations": {
+        "ultraloq": {
+          "config_flow": false,
+          "iot_class": null,
+          "integration_type": "virtual",
+          "name": "Ultraloq"
+        }
+      }
     },
     "ubiquiti": {
       "name": "Ubiquiti",
