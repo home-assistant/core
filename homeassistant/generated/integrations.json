@@ -13,7 +13,7 @@
     },
     "accuweather": {
       "name": "AccuWeather",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -79,7 +79,7 @@
     },
     "airly": {
       "name": "Airly",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -609,7 +609,7 @@
     },
     "brother": {
       "name": "Brother Printer",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1844,7 +1844,7 @@
     },
     "gios": {
       "name": "GIO\u015a",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3362,7 +3362,7 @@
     },
     "nam": {
       "name": "Nettigo Air Monitor",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3461,7 +3461,7 @@
     },
     "nextdns": {
       "name": "NextDNS",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4639,7 +4639,7 @@
     },
     "shelly": {
       "name": "Shelly",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4915,7 +4915,7 @@
       "name": "Sony",
       "integrations": {
         "braviatv": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Sony Bravia TV"
@@ -5479,7 +5479,7 @@
     },
     "tractive": {
       "name": "Tractive",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
