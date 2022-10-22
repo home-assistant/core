@@ -275,7 +275,7 @@ class SetupEntity(Protocol):
         hass: HomeAssistant,
         async_add_entities: AddEntitiesCallback,
         config: ConfigType,
-        config_entry: ConfigEntry | None = None,
+        config_entry: ConfigEntry,
         discovery_data: DiscoveryInfoType | None = None,
     ) -> None:
         """Define setup_entities type."""
