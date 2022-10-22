@@ -28,12 +28,14 @@ class MockConfig(helpers.AbstractConfig):
         should_2fa=None,
         should_expose=None,
         should_report_state=False,
+        should_ignore_secure_device_pin=False,
     ):
         """Initialize config."""
         super().__init__(hass)
         self._enabled = enabled
         self._entity_config = entity_config or {}
         self._secure_devices_pin = secure_devices_pin
+        self._should_ignore_secure_device_pin = should_ignore_secure_device_pin
         self._should_2fa = should_2fa
         self._should_expose = should_expose
         self._should_report_state = should_report_state

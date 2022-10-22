@@ -74,6 +74,11 @@ PIN_DATA = helpers.RequestData(
     PIN_CONFIG, "test-agent", const.SOURCE_CLOUD, REQ_ID, None
 )
 
+ARMDISARM_CONFIG = MockConfig(
+    secure_devices_pin="1234",
+    entity_config={"alarm_control_panel.alarm": {"ignore_secure_device_pin": False}},
+)
+
 
 @pytest.mark.parametrize(
     "supported_color_modes", [["brightness"], ["hs"], ["color_temp"]]
@@ -1213,8 +1218,13 @@ async def test_lock_unlock_unlock(hass):
     assert helpers.get_google_type(lock.DOMAIN, None) is not None
     assert trait.LockUnlockTrait.supported(lock.DOMAIN, lock.SUPPORT_OPEN, None, None)
 
+    unlock_config = MockConfig(
+        secure_devices_pin="1234",
+        entity_config={"lock.front_door": {"ignore_secure_device_pin": False}},
+    )
+
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), PIN_CONFIG
+        hass, State("lock.front_door", lock.STATE_LOCKED), unlock_config
     )
 
     assert trt.sync_attributes() == {}
@@ -1285,7 +1295,7 @@ async def test_arm_disarm_arm_away(hass):
                 | alarm_control_panel.const.SUPPORT_ALARM_ARM_AWAY,
             },
         ),
-        PIN_CONFIG,
+        ARMDISARM_CONFIG,
     )
     assert trt.sync_attributes() == {
         "availableArmLevels": {
@@ -1348,7 +1358,7 @@ async def test_arm_disarm_arm_away(hass):
             STATE_ALARM_DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
-        PIN_CONFIG,
+        ARMDISARM_CONFIG,
     )
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
@@ -1393,7 +1403,7 @@ async def test_arm_disarm_arm_away(hass):
                 STATE_ALARM_ARMED_AWAY,
                 {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
             ),
-            PIN_CONFIG,
+            ARMDISARM_CONFIG,
         )
         await trt.execute(
             trait.COMMAND_ARMDISARM,
@@ -1448,7 +1458,7 @@ async def test_arm_disarm_disarm(hass):
                 | alarm_control_panel.const.SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
             },
         ),
-        PIN_CONFIG,
+        ARMDISARM_CONFIG,
     )
     assert trt.sync_attributes() == {
         "availableArmLevels": {
@@ -1537,7 +1547,7 @@ async def test_arm_disarm_disarm(hass):
                 STATE_ALARM_DISARMED,
                 {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
             ),
-            PIN_CONFIG,
+            ARMDISARM_CONFIG,
         )
         await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
     assert len(calls) == 1
@@ -1552,7 +1562,7 @@ async def test_arm_disarm_disarm(hass):
                 STATE_ALARM_ARMED_AWAY,
                 {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
             ),
-            PIN_CONFIG,
+            ARMDISARM_CONFIG,
         )
         await trt.execute(
             trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
