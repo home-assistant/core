@@ -1102,7 +1102,7 @@ pyflic==2.0.3
 pyflume==0.6.5
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.11
+pyforked-daapd==0.1.14
 
 # homeassistant.components.freedompro
 pyfreedompro==1.1.0
@@ -1180,7 +1180,7 @@ pylast==4.2.1
 pylaunches==1.3.0
 
 # homeassistant.components.forked_daapd
-pylibrespot-java==0.1.0
+pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
 pylitejet==0.3.0
