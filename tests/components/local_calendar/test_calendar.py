@@ -56,12 +56,20 @@ def mock_store() -> None:
         yield
 
 
+@pytest.fixture(name="time_zone")
+def mock_time_zone() -> str:
+    """Fixture for time zone to use in tests."""
+    # Set our timezone to CST/Regina so we can check calculations
+    # This keeps UTC-6 all year round
+    return "America/Regina"
+
+
 @pytest.fixture(autouse=True)
-def set_time_zone(hass: HomeAssistant):
+def set_time_zone(hass: HomeAssistant, time_zone: str):
     """Set the time zone for the tests."""
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round
-    hass.config.set_time_zone("America/Regina")
+    hass.config.set_time_zone(time_zone)
 
 
 @pytest.fixture(name="config_entry")
@@ -282,7 +290,6 @@ async def test_active_event(
         "all_day": False,
         "description": "",
         "location": "",
-        "message": "Evening lights",
         "start_time": start.strftime(DATE_STR_FORMAT),
         "end_time": end.strftime(DATE_STR_FORMAT),
         "supported_features": 1,
@@ -550,3 +557,59 @@ async def test_invalid_rrule(
     assert not resp.get("success")
     assert "error" in resp
     assert resp.get("error").get("code") == "invalid_format"
+
+
+@pytest.mark.parametrize(
+    "time_zone,event_order",
+    [
+        ("America/Los_Angeles", ["One", "Two", "All Day Event"]),
+        ("America/Regina", ["One", "Two", "All Day Event"]),
+        ("UTC", ["One", "All Day Event", "Two"]),
+        ("Asia/Tokyo", ["All Day Event", "One", "Two"]),
+    ],
+)
+async def test_all_day_iter_order(
+    hass: HomeAssistant,
+    ws_client: ClientFixture,
+    setup_integration: None,
+    get_events: GetEventsFn,
+    event_order: list[str],
+):
+    """Test the sort order of an all day events depending on the time zone."""
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "All Day Event",
+                "dtstart": "2022-10-08",
+                "dtend": "2022-10-09",
+            },
+        },
+    )
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "One",
+                "dtstart": "2022-10-07T23:00:00+00:00",
+                "dtend": "2022-10-07T23:30:00+00:00",
+            },
+        },
+    )
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Two",
+                "dtstart": "2022-10-08T01:00:00+00:00",
+                "dtend": "2022-10-08T02:00:00+00:00",
+            },
+        },
+    )
+
+    events = await get_events("2022-10-06T00:00:00Z", "2022-10-09T00:00:00Z")
+    assert [event["summary"] for event in events] == event_order
