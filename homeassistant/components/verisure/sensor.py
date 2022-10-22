@@ -34,7 +34,7 @@ async def async_setup_entry(
     sensors.extend(
         VerisureHygrometer(coordinator, serial_number)
         for serial_number, values in coordinator.data["climate"].items()
-        if "humidityValue" in values
+        if values.get("humidityEnabled")
     )
 
     async_add_entities(sensors)
