@@ -106,10 +106,13 @@ def _populate_brand_integrations(
         integration = integrations.get(domain)
         if not integration or integration.integration_type in ("entity", "system"):
             continue
-        metadata = {}
-        metadata["config_flow"] = integration.config_flow
-        metadata["iot_class"] = integration.iot_class
-        metadata["integration_type"] = integration.integration_type
+        metadata = {
+            "integration_type": integration.integration_type,
+        }
+        if integration.config_flow:
+            metadata["config_flow"] = integration.config_flow
+        if integration.iot_class:
+            metadata["iot_class"] = integration.iot_class
         if integration.translated_name:
             integration_data["translated_name"].add(domain)
         else:
