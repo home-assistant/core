@@ -6,5 +6,6 @@
   "requirements": ["aiotractive==0.5.4"],
   "codeowners": ["@Danielhiversen", "@zhulik", "@bieniu"],
   "iot_class": "cloud_push",
-  "loggers": ["aiotractive"]
+  "loggers": ["aiotractive"],
+  "integration_type": "device"
 }
