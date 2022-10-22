@@ -10,7 +10,6 @@ from ibeacon_ble import (
     IBEACON_SECOND_BYTE,
     iBeaconAdvertisement,
     iBeaconParser,
-    is_ibeacon_service_info,
 )
 
 from homeassistant.components import bluetooth
@@ -301,6 +300,7 @@ class IBeaconCoordinator:
             or service_info.device.name.replace("-", ":") == service_info.device.address
         ):
             return
+        previously_tracked = address in self._unique_ids_by_address
         self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
         if address not in self._unavailable_trackers:
@@ -308,7 +308,7 @@ class IBeaconCoordinator:
                 self.hass, self._async_handle_unavailable, address
             )
 
-        if new and ibeacon_advertisement.transient:
+        if not previously_tracked and new and ibeacon_advertisement.transient:
             # Do not create a new tracker right away for transient devices
             # If they keep advertising, we will create entities for them
             # once _async_update_rssi_and_transients has seen them enough times
@@ -452,14 +452,6 @@ class IBeaconCoordinator:
             )
         )
         entry.async_on_unload(self._async_stop)
-        # Replay any that are already there.
-        for service_info in bluetooth.async_discovered_service_info(
-            self.hass, connectable=False
-        ):
-            if is_ibeacon_service_info(service_info):
-                self._async_update_ibeacon(
-                    service_info, bluetooth.BluetoothChange.ADVERTISEMENT
-                )
         entry.async_on_unload(
             async_track_time_interval(self.hass, self._async_update, UPDATE_INTERVAL)
         )
