@@ -18,6 +18,7 @@ from .const import (  # noqa: F401
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
+    CONF_IGNORE_SECURE_DEVICE_PIN,
     CONF_PRIVATE_KEY,
     CONF_PROJECT_ID,
     CONF_REPORT_STATE,
@@ -48,6 +49,7 @@ ENTITY_SCHEMA = vol.Schema(
         vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ROOM_HINT): cv.string,
+        vol.Optional(CONF_IGNORE_SECURE_DEVICE_PIN, default=False): cv.boolean,
     }
 )
 

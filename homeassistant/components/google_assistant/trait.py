@@ -1233,7 +1233,10 @@ class LockUnlockTrait(_Trait):
         if params["lock"]:
             service = lock.SERVICE_LOCK
         else:
-            _verify_pin_challenge(data, self.state, challenge)
+            if not self.config.entity_config[self.state.entity_id][
+                "ignore_secure_device_pin"
+            ]:
+                _verify_pin_challenge(data, self.state, challenge)
             service = lock.SERVICE_UNLOCK
 
         await self.hass.services.async_call(
@@ -1339,7 +1342,12 @@ class ArmDisArmTrait(_Trait):
 
             if self.state.state == arm_level:
                 raise SmartHomeError(ERR_ALREADY_ARMED, "System is already armed")
-            if self.state.attributes["code_arm_required"]:
+            if (
+                self.state.attributes["code_arm_required"]
+                and not self.config.entity_config[self.state.entity_id][
+                    "ignore_secure_device_pin"
+                ]
+            ):
                 _verify_pin_challenge(data, self.state, challenge)
             service = self.state_to_service[arm_level]
         # disarm the system without asking for code when
@@ -1353,7 +1361,10 @@ class ArmDisArmTrait(_Trait):
         else:
             if self.state.state == STATE_ALARM_DISARMED:
                 raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
-            _verify_pin_challenge(data, self.state, challenge)
+            if not self.config.entity_config[self.state.entity_id][
+                "ignore_secure_device_pin"
+            ]:
+                _verify_pin_challenge(data, self.state, challenge)
             service = SERVICE_ALARM_DISARM
 
         await self.hass.services.async_call(
@@ -1955,6 +1966,9 @@ class OpenCloseTrait(_Trait):
                 should_verify
                 and self.state.attributes.get(ATTR_DEVICE_CLASS)
                 in OpenCloseTrait.COVER_2FA
+                and not self.config.entity_config[self.state.entity_id][
+                    "ignore_secure_device_pin"
+                ]
             ):
                 _verify_pin_challenge(data, self.state, challenge)
 
@@ -2101,6 +2115,8 @@ class VolumeTrait(_Trait):
 
 def _verify_pin_challenge(data, state, challenge):
     """Verify a pin challenge."""
+    # if data.config.entity_config['ignore_secure_device_pin']:
+    #     return
     if not data.config.should_2fa(state):
         return
     if not data.config.secure_devices_pin:

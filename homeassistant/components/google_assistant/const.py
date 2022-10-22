@@ -38,6 +38,7 @@ CONF_PROJECT_ID = "project_id"
 CONF_REPORT_STATE = "report_state"
 CONF_ROOM_HINT = "room"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
+CONF_IGNORE_SECURE_DEVICE_PIN = "ignore_secure_device_pin"
 CONF_SERVICE_ACCOUNT = "service_account"
 
 DATA_CONFIG = "config"
