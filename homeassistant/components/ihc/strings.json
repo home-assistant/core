@@ -1,32 +1,32 @@
 {
-    "config": {
-        "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]",
-            "already_setup": "This controller is already setup"
-        },
-        "step": {
-            "user": {
-                "description": "Add your IHC controller to Home Assistant",
-                "data": {
-                    "url": "[%key:common::config_flow::data::url%]",
-                    "username": "[%key:common::config_flow::data::username%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "auto_setup": "Autosetup"
-                }
-            }
-        }
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "already_setup": "This controller is already setup"
     },
-    "options": {
-        "step": {
-            "init": {
-                "description": "IHC controller options",
-                "data": {
-                    "info": "Info (add IHC name,note and position as attributes)"
-                }
-            }
+    "step": {
+      "user": {
+        "description": "Add your IHC controller to Home Assistant",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "auto_setup": "Autosetup"
         }
-    },
-    "title": "IHC"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "IHC controller options",
+        "data": {
+          "info": "Info (add IHC name,note and position as attributes)"
+        }
+      }
+    }
+  },
+  "title": "IHC"
 }
