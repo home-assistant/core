@@ -25,6 +25,8 @@ build.json @home-assistant/supervisor
 
 # Other code
 /homeassistant/scripts/check_config.py @kellerza
+/homeassistant/const.py @epenet
+/homeassistant/util/ @epenet
 
 # Integrations
 """.strip()
