@@ -5591,8 +5591,6 @@
       "name": "U-tec",
       "integrations": {
         "ultraloq": {
-          "config_flow": false,
-          "iot_class": null,
           "integration_type": "virtual",
           "name": "Ultraloq"
         }
