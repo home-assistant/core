@@ -7,6 +7,7 @@ characteristics that don't map to a Home Assistant feature.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
@@ -25,6 +26,8 @@ from homeassistant.helpers.typing import ConfigType
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -121,6 +124,12 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         """Press the button."""
         key = self.entity_description.key
         val = self.entity_description.write_value
+        _LOGGER.warning(
+            "Process button for %s with service %s",
+            self.entity_description.key,
+            self.service.type,
+        )
+
         await self.async_put_characteristics({key: val})
 
 
