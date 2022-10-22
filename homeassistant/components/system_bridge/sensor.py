@@ -148,7 +148,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     ),
     SystemBridgeSensorEntityDescription(
         key="cpu_power_package",
-        name="CPU Power (Package)",
+        name="CPU Package Power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
         icon="mdi:chip",
