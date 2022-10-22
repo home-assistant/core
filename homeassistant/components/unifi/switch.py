@@ -88,7 +88,6 @@ async def async_setup_entry(
     @callback
     def items_added(
         clients: set = controller.api.clients,
-        devices: set = controller.api.devices,
         dpi_groups: set = controller.api.dpi_groups,
     ) -> None:
         """Update the values of the controller."""
