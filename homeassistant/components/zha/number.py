@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_OUTPUT,
+    CHANNEL_COLOR,
     CHANNEL_INOVELLI,
     CHANNEL_LEVEL,
     DATA_ZHA,
@@ -527,6 +528,16 @@ class StartUpCurrentLevelConfigurationEntity(
     _zcl_attribute: str = "start_up_current_level"
     _attr_name = "Start-up current level"
 
+@CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_COLOR)
+class StartUpColorTemperatureConfigurationEntity(
+    ZHANumberConfigurationEntity, id_suffix="start_up_color_temperature"
+):
+    """Representation of a ZHA startup color temperature configuration entity."""
+
+    _attr_native_min_value: float = 0x0000
+    _attr_native_max_value: float = 0xFFFF
+    _zcl_attribute: str = "start_up_color_temperature"
+    _attr_name = "Start-up color temperature"
 
 @CONFIG_DIAGNOSTIC_MATCH(
     channel_names="tuya_manufacturer",
