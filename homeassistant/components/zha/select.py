@@ -227,6 +227,26 @@ class ZHAStartupOnOffSelectEntity(
     _attr_name = "Start-up behavior"
 
 
+class TuyaPowerOnState(types.enum8):
+    """Tuya power on state enum."""
+
+    Off = 0x00
+    On = 0x01
+    LastState = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
+)
+class TuyaPowerOnStateSelectEntity(ZCLEnumSelectEntity, id_suffix="power_on_state"):
+    """Representation of a ZHA power on state select entity."""
+
+    _select_attr = "power_on_state"
+    _enum = TuyaPowerOnState
+    _attr_name = "Power on state"
+
+
 class AqaraMotionSensitivities(types.enum8):
     """Aqara motion sensitivities."""
 
