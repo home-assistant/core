@@ -1027,21 +1027,13 @@ async def test_new_client_discovered_on_block_control(
     )
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
-
-    blocked = hass.states.get("switch.block_client_1")
-    assert blocked is None
+    assert hass.states.get("switch.block_client_1") is None
 
     mock_unifi_websocket(message=MessageKey.CLIENT, data=BLOCKED)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
-
-    mock_unifi_websocket(message=MessageKey.EVENT, data=EVENT_BLOCKED_CLIENT_CONNECTED)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
-    blocked = hass.states.get("switch.block_client_1")
-    assert blocked is not None
+    assert hass.states.get("switch.block_client_1") is not None
 
 
 async def test_option_block_clients(hass, aioclient_mock):

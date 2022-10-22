@@ -15,14 +15,13 @@ from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
-from aiounifi.models.api import SOURCE_EVENT
 from aiounifi.models.client import ClientBlockRequest
 from aiounifi.models.device import (
     DeviceSetOutletRelayRequest,
     DeviceSetPoePortModeRequest,
 )
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
-from aiounifi.models.event import EventKey
+from aiounifi.models.event import Event, EventKey
 
 from homeassistant.components.switch import DOMAIN, SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -113,9 +112,6 @@ async def async_setup_entry(
         devices: set = controller.api.devices,
     ) -> None:
         """Update the values of the controller."""
-        if controller.option_block_clients:
-            add_block_entities(controller, async_add_entities, clients)
-
         if controller.option_poe_clients:
             add_poe_entities(controller, async_add_entities, clients, known_poe_clients)
 
@@ -126,6 +122,17 @@ async def async_setup_entry(
 
     items_added()
     known_poe_clients.clear()
+
+    def async_add_block_client_switch(_: ItemEvent, obj_id: str) -> None:
+        """Add block network access for client switch from UniFi controller."""
+        if obj_id not in controller.option_block_clients:
+            return
+        async_add_entities([UnifiBlockClientSwitch(obj_id, controller)])
+
+    controller.api.clients.subscribe(async_add_block_client_switch, ItemEvent.ADDED)
+
+    for port_idx in controller.api.clients:
+        async_add_block_client_switch(ItemEvent.ADDED, port_idx)
 
     @callback
     def async_load_entities(loader: UnifiEntityLoader) -> None:
@@ -155,21 +162,6 @@ async def async_setup_entry(
 
     for unifi_loader in UNIFI_LOADERS:
         async_load_entities(unifi_loader)
-
-
-@callback
-def add_block_entities(controller, async_add_entities, clients):
-    """Add new switch entities from the controller."""
-    switches = []
-
-    for mac in controller.option_block_clients:
-        if mac in controller.entities[DOMAIN][BLOCK_SWITCH] or mac not in clients:
-            continue
-
-        client = controller.api.clients[mac]
-        switches.append(UniFiBlockClientSwitch(client, controller))
-
-    async_add_entities(switches)
 
 
 @callback
@@ -319,59 +311,123 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
             await self.remove_item({self.client.mac})
 
 
-class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
+class UnifiBlockClientSwitch(SwitchEntity):
     """Representation of a blockable client."""
 
-    DOMAIN = DOMAIN
-    TYPE = BLOCK_SWITCH
-
+    _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:ethernet"
+    _attr_should_poll = False
 
-    def __init__(self, client, controller):
+    def __init__(self, obj_id: str, controller):
         """Set up block switch."""
-        super().__init__(client, controller)
+        controller.entities[DOMAIN][BLOCK_SWITCH].add(obj_id)
+        self._obj_id = obj_id
+        self.controller = controller
 
-        self._is_blocked = client.blocked
+        self._removed = False
+
+        client = controller.api.clients[obj_id]
+        self._attr_available = controller.available
+        self._attr_is_on = not client.blocked
+        self._attr_unique_id = f"{BLOCK_SWITCH}-{obj_id}"
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, obj_id)},
+            default_manufacturer=client.oui,
+            default_name=client.name or client.hostname,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        self.async_on_remove(
+            self.controller.api.clients.subscribe(self.async_signalling_callback)
+        )
+        self.async_on_remove(
+            self.controller.api.events.subscribe(
+                self.async_event_callback, CLIENT_BLOCKED + CLIENT_UNBLOCKED
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self.controller.signal_remove, self.remove_item
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self.controller.signal_options_update, self.options_updated
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self.controller.signal_reachable,
+                self.async_signal_reachable_callback,
+            )
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect object when removed."""
+        self.controller.entities[DOMAIN][BLOCK_SWITCH].remove(self._obj_id)
 
     @callback
-    def async_update_callback(self) -> None:
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
         """Update the clients state."""
-        if (
-            self.client.last_updated == SOURCE_EVENT
-            and self.client.event.key in CLIENT_BLOCKED + CLIENT_UNBLOCKED
-        ):
-            self._is_blocked = self.client.event.key in CLIENT_BLOCKED
+        if event == ItemEvent.DELETED:
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
+            return
 
-        super().async_update_callback()
+        client = self.controller.api.clients[self._obj_id]
+        self._attr_is_on = not client.blocked
+        self._attr_available = self.controller.available
+        self.async_write_ha_state()
 
-    @property
-    def is_on(self):
-        """Return true if client is allowed to connect."""
-        return not self._is_blocked
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Event subscription callback."""
+        if event.mac != self._obj_id:
+            return
+        if event.key in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
+            self._attr_is_on = event.key in CLIENT_UNBLOCKED
+        self._attr_available = self.controller.available
+        self.async_write_ha_state()
+
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on connectivity for client."""
         await self.controller.api.request(
-            ClientBlockRequest.create(self.client.mac, False)
+            ClientBlockRequest.create(self._obj_id, False)
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off connectivity for client."""
-        await self.controller.api.request(
-            ClientBlockRequest.create(self.client.mac, True)
-        )
+        await self.controller.api.request(ClientBlockRequest.create(self._obj_id, True))
 
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
-        if self._is_blocked:
+        if not self._attr_is_on:
             return "mdi:network-off"
         return "mdi:network"
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
-        if self.client.mac not in self.controller.option_block_clients:
-            await self.remove_item({self.client.mac})
+        if self._obj_id not in self.controller.option_block_clients:
+            await self.remove_item({self._obj_id})
+
+    async def remove_item(self, keys: set) -> None:
+        """Remove entity if key is part of set."""
+        if self._obj_id not in keys or self._removed:
+            return
+        self._removed = True
+        if self.registry_entry:
+            er.async_get(self.hass).async_remove(self.entity_id)
+        else:
+            await self.async_remove(force_remove=True)
 
 
 class UnifiDPIRestrictionSwitch(SwitchEntity):
