@@ -73,6 +73,12 @@ async def async_setup_entry(
     @callback
     def async_add_characteristic(char: Characteristic) -> bool:
         entities: list[HomeKitButton | HomeKitEcobeeClearHoldButton] = []
+        _LOGGER.warning(
+            "Adding button for char type %s with service type %s with iid %s",
+            char.type,
+            char.service.type,
+            char.service.iid,
+        )
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
         if description := BUTTON_ENTITIES.get(char.type):
