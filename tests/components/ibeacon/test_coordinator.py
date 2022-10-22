@@ -7,6 +7,7 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components.ibeacon.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.const import STATE_HOME
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.util import dt as dt_util
 
@@ -244,3 +245,10 @@ async def test_ignore_transient_devices_unless_we_see_them_a_few_times(hass):
             await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) > before_entity_count
+
+    assert hass.states.get("device_tracker.s6da7c9389bd5452cc_cccc").state == STATE_HOME
+
+    await hass.config_entries.async_reload(entry.entry_id)
+
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.s6da7c9389bd5452cc_cccc").state == STATE_HOME
