@@ -6,21 +6,32 @@ import logging
 from typing import Any
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
-from elmax_api.http import Elmax
-from elmax_api.model.panel import PanelEntry
+from elmax_api.http import Elmax, ElmaxLocal
+from elmax_api.model.panel import PanelEntry, PanelStatus
+import httpx
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
+    CONF_ELMAX_MODE,
+    CONF_ELMAX_MODE_CLOUD,
+    CONF_ELMAX_MODE_DIRECT,
+    CONF_ELMAX_MODE_DIRECT_URI,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
     CONF_ELMAX_PASSWORD,
     CONF_ELMAX_USERNAME,
     DOMAIN,
+    ELMAX_LOCAL_API_PATH,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,6 +40,33 @@ LOGIN_FORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ELMAX_USERNAME): str,
         vol.Required(CONF_ELMAX_PASSWORD): str,
+    }
+)
+
+CHOOSE_MODE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ELMAX_MODE, default=CONF_ELMAX_MODE_CLOUD): SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    {
+                        "value": CONF_ELMAX_MODE_CLOUD,
+                        "label": "Connect to Elmax Panel via Elmax Cloud APIs",
+                    },
+                    {
+                        "value": CONF_ELMAX_MODE_DIRECT,
+                        "label": "Connect to Elmax Panel via local/direct IP",
+                    },
+                ],
+                mode=SelectSelectorMode.LIST,
+            )
+        )
+    }
+)
+
+DIRECT_SETUP_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ELMAX_MODE_DIRECT_URI): str,
+        vol.Required(CONF_ELMAX_PANEL_PIN): str,
     }
 )
 
@@ -62,7 +100,85 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle a flow initialized by the user."""
+        """Handle the flow initiated by the user."""
+        return self.async_show_form(
+            step_id="choose_mode", data_schema=CHOOSE_MODE_SCHEMA, errors={}
+        )
+
+    async def async_step_choose_mode(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle local vs cloud mode selection step."""
+        errors: dict[str, Any] = {}
+        if user_input is None:
+            return self.async_show_form(
+                step_id="choose_mode", data_schema=CHOOSE_MODE_SCHEMA, errors=errors
+            )
+
+        selected_mode = user_input[CONF_ELMAX_MODE]
+        if selected_mode == CONF_ELMAX_MODE_CLOUD:
+            return self.async_show_form(
+                step_id="cloud_setup", data_schema=None, errors=errors
+            )
+        elif selected_mode == CONF_ELMAX_MODE_DIRECT:
+            return self.async_show_form(
+                step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA, errors=errors
+            )
+
+    async def async_step_direct_setup(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the direct setup step."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA
+            )
+
+        panel_api_uri = user_input[CONF_ELMAX_MODE_DIRECT_URI]
+        panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
+
+        # Attempt the connection to make sure the address is connect, the pin works. Also,
+        # take the chance to retrieve the panel ID via APIs.
+        client_api_url = f"{panel_api_uri.strip('/')}/{ELMAX_LOCAL_API_PATH}"
+        client = ElmaxLocal(panel_api_url=client_api_url, panel_code=panel_pin)
+        try:
+            await client.login()
+        except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout) as e:
+            return self.async_show_form(
+                step_id="direct_setup",
+                data_schema=DIRECT_SETUP_SCHEMA,
+                errors={"base": "network_error"},
+            )
+        except ElmaxBadLoginError as e:
+            return self.async_show_form(
+                step_id="direct_setup",
+                data_schema=DIRECT_SETUP_SCHEMA,
+                errors={"base": "invalid_auth"},
+            )
+
+        # Retrieve the current panel status. If this succeeds, it means the
+        # setup did complete successfully.
+        panel_status: PanelStatus = await client.get_current_panel_status()
+
+        # TODO: set panel id into data by retrieving it from panel_status
+
+        # Make sure this is the only Elmax integration for this specific panel id.
+        await self.async_set_unique_id(client_api_url)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=f"Elmax Direct {client_api_url}",
+            data={
+                CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT,
+                CONF_ELMAX_MODE_DIRECT_URI: client_api_url,
+                CONF_ELMAX_PANEL_PIN: panel_pin,
+            },
+        )
+
+    async def async_step_cloud_setup(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the cloud setup flow."""
         # When invokes without parameters, show the login form.
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=LOGIN_FORM_SCHEMA)
@@ -77,14 +193,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except ElmaxBadLoginError:
             return self.async_show_form(
-                step_id="user",
+                step_id="cloud_setup",
                 data_schema=LOGIN_FORM_SCHEMA,
                 errors={"base": "invalid_auth"},
             )
         except ElmaxNetworkError:
             _LOGGER.exception("A network error occurred")
             return self.async_show_form(
-                step_id="user",
+                step_id="cloud_setup",
                 data_schema=LOGIN_FORM_SCHEMA,
                 errors={"base": "network_error"},
             )
@@ -95,7 +211,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # If no online panel was found, we display an error in the next UI.
         if not online_panels:
             return self.async_show_form(
-                step_id="user",
+                step_id="cloud_setup",
                 data_schema=LOGIN_FORM_SCHEMA,
                 errors={"base": "no_panel_online"},
             )
@@ -150,8 +266,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 control_panel_id=panel_id, pin=panel_pin
             )
             return self.async_create_entry(
-                title=f"Elmax {panel_name}",
+                title=f"Elmax cloud {panel_name}",
                 data={
+                    CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD,
                     CONF_ELMAX_PANEL_ID: panel_id,
                     CONF_ELMAX_PANEL_PIN: panel_pin,
                     CONF_ELMAX_USERNAME: self._username,
