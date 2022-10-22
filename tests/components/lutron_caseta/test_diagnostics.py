@@ -39,7 +39,7 @@ async def test_diagnostics(hass, hass_client) -> None:
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag == {
-        "data": {
+        "bridge_data": {
             "areas": {
                 "898": {"id": "898", "name": "Basement", "parent_id": None},
                 "822": {"id": "822", "name": "Bedroom", "parent_id": "898"},
@@ -53,7 +53,7 @@ async def test_diagnostics(hass, hass_client) -> None:
                 "111": {
                     "device_id": "111",
                     "current_state": "Release",
-                    "button_number": 0,
+                    "button_number": 1,
                     "name": "Dining Room_Pico",
                     "type": "Pico3ButtonRaiseLower",
                     "model": "PJ2-3BRL-GXX-X01",
