@@ -5,7 +5,8 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "incomplete_info": "Unvollst\u00e4ndige Informationen zur Einrichtung des Ger\u00e4ts, kein Host oder Token geliefert.",
             "not_xiaomi_miio": "Ger\u00e4t wird (noch) nicht von Xiaomi Miio unterst\u00fctzt.",
-            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
