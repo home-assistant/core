@@ -1234,7 +1234,6 @@ class LockUnlockTrait(_Trait):
         if params["lock"]:
             service = lock.SERVICE_LOCK
         else:
-            # breakpoint()
             if not self.config.entity_config.get(self.state.entity_id, {}).get(
                 CONF_IGNORE_SECURE_DEVICE_PIN, False
             ):
