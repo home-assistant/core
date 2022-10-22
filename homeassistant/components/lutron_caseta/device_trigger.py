@@ -397,9 +397,9 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-
-    if not (data := get_lutron_data_by_dr_id(hass, config[CONF_DEVICE_ID])) or not (
-        keypad := data.dr_device_id_to_keypad[config[CONF_DEVICE_ID]]
+    device_id = config[CONF_DEVICE_ID]
+    if not (data := get_lutron_data_by_dr_id(hass, device_id)) or not (
+        keypad := data.dr_device_id_to_keypad[device_id]
     ):
         raise HomeAssistantError(
             f"Cannot attach trigger {config} because device with id {config[CONF_DEVICE_ID]} is missing or invalid"
