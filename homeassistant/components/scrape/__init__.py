@@ -36,9 +36,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
+from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,12 +76,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is None:
         return True
 
+    hass.data.setdefault(DOMAIN, {})
+
     sensor_conf: dict[str, Any]
     for sensor_id, sensor_conf in enumerate(conf):
         resource: str = sensor_conf[CONF_RESOURCE]
         method: str = "GET"
         payload: str | None = None
-        headers: str | None = sensor_conf.get(CONF_HEADERS)
+        headers: dict[str, str] | None = sensor_conf.get(CONF_HEADERS)
         verify_ssl: bool = sensor_conf[CONF_VERIFY_SSL]
         username: str | None = sensor_conf.get(CONF_USERNAME)
         password: str | None = sensor_conf.get(CONF_PASSWORD)
@@ -93,12 +95,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 auth = httpx.DigestAuth(username, password)
             else:
                 auth = (username, password)
+
         rest = RestData(
             hass, method, resource, auth, headers, None, payload, verify_ssl
         )
 
-        coordinator = await get_coordinator(hass, rest, update_interval)
-        hass.data.setdefault(DOMAIN, {})[sensor_id] = coordinator
+        coordinator: ScrapeCoordinator
+        for coordinator in hass.data[DOMAIN].values():
+            if rest == coordinator.rest:
+                hass.data[DOMAIN][sensor_id] = coordinator
+            else:
+                coordinator = await get_coordinator(hass, rest, update_interval)
+                hass.data[DOMAIN][sensor_id] = coordinator
 
         discovery.load_platform(
             hass,
@@ -116,26 +124,6 @@ async def get_coordinator(
 ) -> ScrapeCoordinator:
     """Get Scrape Coordinator."""
 
-    coordinator = ScrapeCoordinator(hass, rest, update_interval)
+    coordinator = ScrapeCoordinator(hass, rest, timedelta(seconds=update_interval))
     await coordinator.async_config_entry_first_refresh()
     return coordinator
-
-
-class ScrapeCoordinator(DataUpdateCoordinator[RestData]):
-    """Scrape Coordinator."""
-
-    def __init__(
-        self, hass: HomeAssistant, rest: RestData, update_intervall: int
-    ) -> None:
-        """Initialize Scrape coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Scrape Coordinator",
-            update_interval=timedelta(seconds=update_intervall),
-        )
-        self.rest = rest
-
-    async def _async_update_data(self):
-        """Fetch data from Rest."""
-        await self.rest.async_update()
