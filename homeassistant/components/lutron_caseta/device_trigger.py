@@ -338,7 +338,7 @@ async def async_validate_trigger_config(
     ):
         return config
 
-    keypad_trigger_schemas = data.keypad_data.keypad_trigger_schemas
+    keypad_trigger_schemas = data.keypad_data.trigger_schemas
 
     # Retrieve trigger schema, preferring hard-coded triggers from device_trigger.py
     if not (
@@ -367,7 +367,7 @@ async def async_get_triggers(
     ):
         return []
 
-    keypad_button_names_to_leap = data.keypad_data.keypad_button_names_to_leap
+    keypad_button_names_to_leap = data.keypad_data.button_names_to_leap
 
     # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
@@ -405,8 +405,8 @@ async def async_attach_trigger(
             f"Cannot attach trigger {config} because device with id {config[CONF_DEVICE_ID]} is missing or invalid"
         )
 
-    keypad_trigger_schemas = data.keypad_data.keypad_trigger_schemas
-    keypad_button_names_to_leap = data.keypad_data.keypad_button_names_to_leap
+    keypad_trigger_schemas = data.keypad_data.trigger_schemas
+    keypad_button_names_to_leap = data.keypad_data.button_names_to_leap
 
     device_type = keypad["type"]
     serial = keypad["serial"]
