@@ -390,7 +390,7 @@ async def handle_calendar_event_create(
 
     if (
         not entity.supported_features
-        or not entity.supported_features & CalendarEntityFeature.MUTABLE
+        or not entity.supported_features & CalendarEntityFeature.CREATE_EVENT
     ):
         connection.send_message(
             websocket_api.error_message(
@@ -429,7 +429,7 @@ async def handle_calendar_event_delete(
 
     if (
         not entity.supported_features
-        or not entity.supported_features & CalendarEntityFeature.MUTABLE
+        or not entity.supported_features & CalendarEntityFeature.DELETE_EVENT
     ):
         connection.send_message(
             websocket_api.error_message(

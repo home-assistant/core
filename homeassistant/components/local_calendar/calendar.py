@@ -52,7 +52,9 @@ class LocalCalendarEntity(CalendarEntity):
     """A calendar entity backed by a local iCalendar file."""
 
     _attr_has_entity_name = True
-    _attr_supported_features = CalendarEntityFeature.MUTABLE
+    _attr_supported_features = (
+        CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
+    )
 
     def __init__(
         self,

@@ -8,7 +8,8 @@ CONF_EVENT = "event"
 class CalendarEntityFeature(IntEnum):
     """Supported features of the calendar entity."""
 
-    MUTABLE = 1
+    CREATE_EVENT = 1
+    DELETE_EVENT = 2
 
 
 # rfc5545 fields
