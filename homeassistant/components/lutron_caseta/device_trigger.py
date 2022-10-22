@@ -334,7 +334,7 @@ async def async_validate_trigger_config(
     """Validate trigger config."""
 
     if not (data := get_lutron_data_by_dr_id(hass, config[CONF_DEVICE_ID])) or not (
-        keypad := data.dr_id_to_keypad_map.get(config[CONF_DEVICE_ID])
+        keypad := data.dr_device_id_to_keypad.get(config[CONF_DEVICE_ID])
     ):
         return config
 
@@ -363,16 +363,16 @@ async def async_get_triggers(
 
     # Check if device is a valid keypad.  Return empty if not.
     if not (data := get_lutron_data_by_dr_id(hass, device_id)) or not (
-        keypad := data.dr_id_to_keypad_map.get(device_id)
+        keypad := data.dr_device_id_to_keypad.get(device_id)
     ):
         return []
 
-    keypad_button_maps = data.keypad_button_maps
+    keypad_button_names_to_leap = data.keypad_button_names_to_leap
 
     # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
         keypad["type"],
-        keypad_button_maps.get(keypad["lutron_device_id"], {}),
+        keypad_button_names_to_leap.get(keypad["lutron_device_id"], {}),
     )
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
@@ -399,14 +399,14 @@ async def async_attach_trigger(
     """Attach a trigger."""
 
     if not (data := get_lutron_data_by_dr_id(hass, config[CONF_DEVICE_ID])) or not (
-        keypad := data.dr_id_to_keypad_map[config[CONF_DEVICE_ID]]
+        keypad := data.dr_device_id_to_keypad[config[CONF_DEVICE_ID]]
     ):
         raise HomeAssistantError(
             f"Cannot attach trigger {config} because device with id {config[CONF_DEVICE_ID]} is missing or invalid"
         )
 
     keypad_trigger_schemas = data.keypad_trigger_schemas
-    keypad_button_maps = data.keypad_button_maps
+    keypad_button_names_to_leap = data.keypad_button_names_to_leap
 
     device_type = keypad["type"]
     serial = keypad["serial"]
@@ -420,7 +420,7 @@ async def async_attach_trigger(
     # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
         device_type,
-        keypad_button_maps.get(keypad["lutron_device_id"]),
+        keypad_button_names_to_leap.get(keypad["lutron_device_id"]),
     )
 
     config = schema(config)
@@ -447,6 +447,6 @@ def get_lutron_data_by_dr_id(hass: HomeAssistant, device_id: str):
 
     for entry_id in hass.data[DOMAIN]:
         data: LutronCasetaData = hass.data[DOMAIN][entry_id]
-        if data.dr_id_to_keypad_map.get(device_id):
+        if data.dr_device_id_to_keypad.get(device_id):
             return data
     return None

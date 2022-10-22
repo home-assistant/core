@@ -31,8 +31,8 @@ async def async_get_config_entry_diagnostics(
         "integration_data": {
             "keypads": data.keypads,
             "keypad_buttons": data.keypad_buttons,
-            "keypad_button_maps": data.keypad_button_maps,
+            "keypad_button_names_to_leap": data.keypad_button_names_to_leap,
             "keypad_trigger_schemas": data.keypad_trigger_schemas,
-            "dr_id_to_keypad_map": data.dr_id_to_keypad_map,
+            "dr_device_id_to_keypad": data.dr_device_id_to_keypad,
         },
     }

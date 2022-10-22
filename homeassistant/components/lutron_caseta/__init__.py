@@ -147,10 +147,10 @@ async def async_setup_entry(
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
     bridge = None
 
-    dr_id_to_keypad_map: dict[str, dict] = {}
+    dr_device_id_to_keypad: dict[str, dict] = {}
     keypads: dict[int, Any] = {}
     keypad_buttons: dict[int, Any] = {}
-    keypad_button_maps: dict[int, dict[str, int]] = {}
+    keypad_button_names_to_leap: dict[int, dict[str, int]] = {}
     keypad_trigger_schemas: dict[int, vol.Schema] = {}
 
     try:
@@ -177,8 +177,8 @@ async def async_setup_entry(
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
     await _async_migrate_unique_ids(hass, config_entry)
 
-    devices = bridge.get_devices()
-    bridge_device = devices[BRIDGE_DEVICE_ID]
+    bridge_devices = bridge.get_devices()
+    bridge_device = bridge_devices[BRIDGE_DEVICE_ID]
     if not config_entry.unique_id:
         hass.config_entries.async_update_entry(
             config_entry, unique_id=serial_to_unique_id(bridge_device["serial"])
@@ -190,11 +190,11 @@ async def async_setup_entry(
     (
         keypads,
         keypad_buttons,
-        keypad_button_maps,
-        dr_id_to_keypad_map,
+        keypad_button_names_to_leap,
+        dr_device_id_to_keypad,
     ) = _async_register_keypads(hass, entry_id, bridge, bridge_device, bridge_buttons)
 
-    keypad_trigger_schemas = _async_build_trigger_schemas(keypad_button_maps)
+    keypad_trigger_schemas = _async_build_trigger_schemas(keypad_button_names_to_leap)
 
     _async_subscribe_pico_remote_events(hass, bridge, bridge_buttons)
 
@@ -203,10 +203,10 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry_id] = LutronCasetaData(
         bridge,
         bridge_device,
-        dr_id_to_keypad_map,
+        dr_device_id_to_keypad,
         keypads,
         keypad_buttons,
-        keypad_button_maps,
+        keypad_button_names_to_leap,
         keypad_trigger_schemas,
     )
 
@@ -251,13 +251,13 @@ def _async_register_keypads(
     """Register keypad devices (Keypads and Pico Remotes) in the device registry."""
 
     device_registry = dr.async_get(hass)
-    dr_id_to_keypad_map: dict[str, dict] = {}
+    dr_device_id_to_keypad: dict[str, dict] = {}
     seen: set[str] = set()
     bridge_devices = bridge.get_devices()
 
     keypads: dict[int, Any] = {}
     keypad_buttons: dict[int, Any] = {}
-    keypad_button_maps: dict[int, dict[str, int]] = {}
+    keypad_button_names_to_leap: dict[int, dict[str, int]] = {}
 
     for bridge_button in bridge_buttons.values():
 
@@ -304,9 +304,9 @@ def _async_register_keypads(
                 },
             )
 
-            dr_id_to_keypad_map[dr_device.id] = keypad
+            dr_device_id_to_keypad[dr_device.id] = keypad
 
-        # add button to parent keypad, and build keypad_buttons and keypad_button_maps
+        # add button to parent keypad, and build keypad_buttons and keypad_button_names_to_leap
         keypad["buttons"].append(bridge_button["device_id"])
 
         button = keypad_buttons.setdefault(
@@ -320,30 +320,30 @@ def _async_register_keypads(
             },
         )
 
-        keypad_button_maps.setdefault(keypad["lutron_device_id"], {}).update(
+        keypad_button_names_to_leap.setdefault(keypad["lutron_device_id"], {}).update(
             {button["button_name"]: int(button["leap_button_number"])}
         )
 
         seen.add(keypad_serial)
 
-    return keypads, keypad_buttons, keypad_button_maps, dr_id_to_keypad_map
+    return keypads, keypad_buttons, keypad_button_names_to_leap, dr_device_id_to_keypad
 
 
 @callback
 def _async_build_trigger_schemas(
-    keypad_button_maps: dict[int, dict[str, int]]
+    keypad_button_names_to_leap: dict[int, dict[str, int]]
 ) -> dict[int, vol.Schema]:
     """Build device trigger schemas."""
 
     keypad_trigger_schemas: dict[int, vol.Schema] = {}
 
-    for keypad_id, _ in keypad_button_maps.items():
+    for keypad_id, _ in keypad_button_names_to_leap.items():
         keypad_trigger_schemas.setdefault(
             keypad_id,
             LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
                 {
                     vol.Required(CONF_SUBTYPE): vol.In(
-                        keypad_button_maps.get(keypad_id)
+                        keypad_button_names_to_leap.get(keypad_id)
                     ),
                 }
             ),
