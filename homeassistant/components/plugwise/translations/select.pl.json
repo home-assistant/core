@@ -1,7 +1,7 @@
 {
     "state": {
         "plugwise__dhw_mode": {
-            "auto": "automatycznie",
+            "auto": "auto",
             "boost": "dogrzewanie",
             "comfort": "komfortowo",
             "off": "wy\u0142\u0105czone"
