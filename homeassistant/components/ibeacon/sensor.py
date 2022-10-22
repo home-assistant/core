@@ -65,7 +65,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     IBeaconSensorEntityDescription(
         key="vendor",
-        name="vendor",
+        name="Vendor",
         entity_registry_enabled_default=False,
         value_fn=lambda ibeacon_advertisement: ibeacon_advertisement.vendor,
     ),
