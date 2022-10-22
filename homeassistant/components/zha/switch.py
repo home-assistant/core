@@ -294,6 +294,18 @@ class P1MotionTriggerIndicatorSwitch(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="opple_cluster", models={"lumi.plug.mmeu01", "lumi.plug.maeu01"}
+)
+class XiaomiPlugPowerOutageMemorySwitch(
+    ZHASwitchConfigurationEntity, id_suffix="power_outage_memory"
+):
+    """Representation of a ZHA power outage memory configuration entity."""
+
+    _zcl_attribute: str = "power_outage_memory"
+    _attr_name = "Power outage memory"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
     channel_names="ikea_airpurifier",
     models={"STARKVIND Air purifier", "STARKVIND Air purifier table"},
 )
