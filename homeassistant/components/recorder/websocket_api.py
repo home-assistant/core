@@ -62,7 +62,7 @@ def _ws_get_statistics_during_period(
     start_time: dt,
     end_time: dt | None,
     statistic_ids: list[str] | None,
-    period: Literal["5minute", "day", "hour", "month"],
+    period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str],
 ) -> str:
     """Fetch statistics and convert them to json in the executor."""
@@ -118,7 +118,7 @@ async def ws_handle_get_statistics_during_period(
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Optional("statistic_ids"): [str],
-        vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
+        vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
         vol.Optional("units"): vol.Schema(
             {
                 vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
