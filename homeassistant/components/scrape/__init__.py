@@ -34,7 +34,6 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_INDEX, CONF_SELECT, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import ScrapeCoordinator
@@ -100,26 +99,6 @@ async def get_coordinator(
 ) -> ScrapeCoordinator:
     """Get Scrape Coordinator."""
 
-    coordinator = ScrapeCoordinator(hass, rest, update_interval)
+    coordinator = ScrapeCoordinator(hass, rest, timedelta(seconds=update_interval))
     await coordinator.async_config_entry_first_refresh()
     return coordinator
-
-
-class ScrapeCoordinator(DataUpdateCoordinator[RestData]):
-    """Scrape Coordinator."""
-
-    def __init__(
-        self, hass: HomeAssistant, rest: RestData, update_intervall: int
-    ) -> None:
-        """Initialize Scrape coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Scrape Coordinator",
-            update_interval=timedelta(seconds=update_intervall),
-        )
-        self.rest = rest
-
-    async def _async_update_data(self):
-        """Fetch data from Rest."""
-        await self.rest.async_update()
