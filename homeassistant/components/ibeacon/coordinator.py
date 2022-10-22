@@ -9,8 +9,8 @@ from ibeacon_ble import (
     IBEACON_FIRST_BYTE,
     IBEACON_SECOND_BYTE,
     iBeaconAdvertisement,
+    iBeaconParser,
     is_ibeacon_service_info,
-    parse,
 )
 
 from homeassistant.components import bluetooth
@@ -27,6 +27,7 @@ from .const import (
     DOMAIN,
     MAX_IDS,
     MAX_IDS_PER_UUID,
+    MIN_SEEN_TRANSIENT_NEW,
     SIGNAL_IBEACON_DEVICE_NEW,
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
@@ -111,6 +112,7 @@ class IBeaconCoordinator:
         self.hass = hass
         self._entry = entry
         self._dev_reg = registry
+        self._ibeacon_parser = iBeaconParser()
 
         # iBeacon devices that do not follow the spec
         # and broadcast custom data in the major and minor fields
@@ -125,6 +127,7 @@ class IBeaconCoordinator:
         self._last_ibeacon_advertisement_by_unique_id: dict[
             str, iBeaconAdvertisement
         ] = {}
+        self._transient_seen_count: dict[str, int] = {}
         self._group_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_group_id: dict[str, set[str]] = {}
@@ -236,7 +239,7 @@ class IBeaconCoordinator:
         """Update from a bluetooth callback."""
         if service_info.address in self._ignore_addresses:
             return
-        if not (ibeacon_advertisement := parse(service_info)):
+        if not (ibeacon_advertisement := self._ibeacon_parser.parse(service_info)):
             return
 
         uuid_str = str(ibeacon_advertisement.uuid)
@@ -297,6 +300,13 @@ class IBeaconCoordinator:
             or service_info.device.name.replace("-", ":") == service_info.device.address
         ):
             return
+        if new and ibeacon_advertisement.transient:
+            if (
+                transient_count := self._transient_seen_count.get(unique_id, 0)
+            ) < MIN_SEEN_TRANSIENT_NEW:
+                self._transient_seen_count[unique_id] = transient_count + 1
+                return
+            del self._transient_seen_count[unique_id]
         self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
         if address not in self._unavailable_trackers:
@@ -403,9 +413,9 @@ class IBeaconCoordinator:
                 group_id = f"{uuid}_{major}_{minor}"
                 self._group_ids_random_macs.add(group_id)
 
-    @callback
-    def async_start(self) -> None:
+    async def async_start(self) -> None:
         """Start the Coordinator."""
+        await self._ibeacon_parser.async_setup()
         self._async_restore_from_registry()
         entry = self._entry
         entry.async_on_unload(
