@@ -25,8 +25,6 @@ async def async_setup_entry(
     if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
-    _LOGGER.error("Kodi Sensor, Aufstellen!")
-
     sensor_entities = [
         KodiBinaryEntity(
             "Screensaver",
@@ -78,14 +76,17 @@ class KodiBinaryEntity(BinarySensorEntity):
         """Switch sensor on from api call."""
         self._is_on = True
         self.async_write_ha_state()
+        _LOGGER.debug("Kodi %s on (%s)", self.name, self._api_on)
 
     @callback
     def async_off(self, sender, data):  # pylint: disable=unused-argument
         """Switch sensor off from api call."""
         self._is_on = False
         self.async_write_ha_state()
+        _LOGGER.debug("Kodi %s off (%s)", self.name, self._api_off)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks for needed api endpoints."""
+        _LOGGER.debug("Setting up binary sensor callbacks for Kodi %s", self.name)
         setattr(self._connection.server, self._api_on, self.async_on)
         setattr(self._connection.server, self._api_off, self.async_off)
