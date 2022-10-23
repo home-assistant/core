@@ -43,7 +43,7 @@ BUTTON_DESCRIPTIONS: tuple[FreeboxButtonEntityDescription, ...] = (
     ),
     FreeboxButtonEntityDescription(
         key="mark_calls_as_read",
-        name="Mark missed calls as read",
+        name="Mark calls as read",
         entity_category=EntityCategory.DIAGNOSTIC,
         async_press=lambda router: router.call.mark_calls_log_as_read(),
     ),
