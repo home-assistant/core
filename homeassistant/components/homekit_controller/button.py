@@ -7,7 +7,6 @@ characteristics that don't map to a Home Assistant feature.
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
@@ -26,8 +25,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -73,12 +70,6 @@ async def async_setup_entry(
     @callback
     def async_add_characteristic(char: Characteristic) -> bool:
         entities: list[HomeKitButton | HomeKitEcobeeClearHoldButton] = []
-        _LOGGER.warning(
-            "Adding button for char type %s with service type %s with iid %s",
-            char.type,
-            char.service.type,
-            char.service.iid,
-        )
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
         if description := BUTTON_ENTITIES.get(char.type):
@@ -130,13 +121,6 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         """Press the button."""
         key = self.entity_description.key
         val = self.entity_description.write_value
-        _LOGGER.warning(
-            "Process button for %s with service %s - char services %s",
-            self.entity_description.key,
-            self.service.type,
-            self._char.service.type,
-        )
-
         await self.async_put_characteristics({key: val})
 
 
