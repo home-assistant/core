@@ -110,7 +110,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config: ConfigType | dict[str, Any]) -> None:
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._templates = {
             CONF_VALUE_TEMPLATE: MqttValueTemplate(
