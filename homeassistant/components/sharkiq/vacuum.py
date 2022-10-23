@@ -225,14 +225,20 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     async def async_clean_room(self, **kwargs):
         """Clean a specific room."""
         if ATTR_ROOMS in kwargs:
+            rooms_cleaned = []
             all_rooms_reachable = True
             for room in kwargs.get(ATTR_ROOMS):
-                if room not in self.available_rooms:
+                if room in self.available_rooms:
+                    rooms_cleaned.append(room)
+                elif room.capitalize() in self.available_rooms:
+                    rooms_cleaned.append(room.capitalize())
+                else:
                     all_rooms_reachable = False
                     LOGGER.error("Room not reachable: %s", room)
+
             if all_rooms_reachable:
-                LOGGER.info("Cleaning room: %s", kwargs.get(ATTR_ROOMS))
-                await self.sharkiq.async_clean_rooms(kwargs.get(ATTR_ROOMS))
+                LOGGER.info("Cleaning room(s): %s", rooms_cleaned)
+                await self.sharkiq.async_clean_rooms(rooms_cleaned)
             else:
                 LOGGER.error("Invalid room selection - service not run")
                 raise self.InvalidRoomSelection(
