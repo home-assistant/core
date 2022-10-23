@@ -72,7 +72,7 @@ class FreeboxButton(ButtonEntity):
         """Initialize a Freebox button."""
         self.entity_description = description
         self._router = router
-        self._attr_unique_id = f"{router.mac} {description.name}"
+        self._attr_unique_id = f"{router.mac} {description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
