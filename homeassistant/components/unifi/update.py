@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.device import DeviceUpgradeRequest
@@ -21,6 +21,9 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+
+if TYPE_CHECKING:
+    from .controller import UniFiController
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +58,7 @@ class UnifiDeviceUpdateEntity(UpdateEntity):
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_has_entity_name = True
 
-    def __init__(self, obj_id: str, controller) -> None:
+    def __init__(self, obj_id: str, controller: UniFiController) -> None:
         """Set up device update entity."""
         controller.entities[DOMAIN][DEVICE_UPDATE].add(obj_id)
         self.controller = controller
