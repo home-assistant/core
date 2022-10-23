@@ -67,7 +67,6 @@ from .const import (
     EVENT_TURN_OFF,
     EVENT_TURN_ON,
 )
-from .sensors import KodiBinaryEntity
 
 _KodiEntityT = TypeVar("_KodiEntityT", bound="KodiEntity")
 _P = ParamSpec("_P")
@@ -227,7 +226,6 @@ async def async_setup_entry(
 
     entity = KodiEntity(connection, kodi, name, uid)
     async_add_entities([entity])
-    async_add_entities(entity.sensor_entities)
 
 
 def cmd(
@@ -290,17 +288,6 @@ class KodiEntity(MediaPlayerEntity):
         self._connect_error = False
 
         self._attr_name = name
-        self.sensor_entities = [
-            KodiBinaryEntity(
-                "Screensaver",
-                "GUI.OnScreensaverActivated",
-                "GUI.OnScreensaverDeactivated",
-                uid,
-            ),
-            KodiBinaryEntity(
-                "Energy saving", "GUI.OnDPMSActivated", "GUI.OnDPMSDeactivated", uid
-            ),
-        ]
 
     def _reset_state(self, players=None):
         self._players = players
@@ -309,8 +296,6 @@ class KodiEntity(MediaPlayerEntity):
         self._app_properties = {}
         self._media_position_updated_at = None
         self._media_position = None
-        for entity in self.sensor_entities:
-            entity.reset_state()
 
     @property
     def _kodi_is_off(self):
@@ -475,9 +460,6 @@ class KodiEntity(MediaPlayerEntity):
         self._connection.server.System.OnQuit = self.async_on_quit
         self._connection.server.System.OnRestart = self.async_on_quit
         self._connection.server.System.OnSleep = self.async_on_quit
-
-        for entity in self.sensor_entities:
-            entity.register_callbacks(self._connection)
 
     @cmd
     async def async_update(self) -> None:
