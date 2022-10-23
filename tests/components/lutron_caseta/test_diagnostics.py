@@ -9,6 +9,7 @@ from homeassistant.components.lutron_caseta.const import (
     CONF_KEYFILE,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import MockBridge
 
@@ -34,8 +35,12 @@ async def test_diagnostics(hass, hass_client) -> None:
         "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
         return_value=MockBridge(can_connect=True),
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        with patch(
+            "homeassistant.helpers.device_registry.DeviceRegistry.async_get_or_create",
+            return_value=DeviceEntry(id="0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"),
+        ):
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag == {
@@ -184,5 +189,67 @@ async def test_diagnostics(hass, hass_client) -> None:
         "entry": {
             "data": {"ca_certs": "", "certfile": "", "host": "1.1.1.1", "keyfile": ""},
             "title": "Mock Title",
+        },
+        "integration_data": {
+            "keypad_button_names_to_leap": {
+                "1355": {"Kitchen Pendants": 3},
+                "9": {"Stop": 1},
+            },
+            "keypad_buttons": {
+                "111": {
+                    "button_name": "Stop",
+                    "leap_button_number": 1,
+                    "led_device_id": None,
+                    "lutron_device_id": "111",
+                    "parent_keypad": "9",
+                },
+                "1372": {
+                    "button_name": "Kitchen " "Pendants",
+                    "leap_button_number": 3,
+                    "led_device_id": "1362",
+                    "lutron_device_id": "1372",
+                    "parent_keypad": "1355",
+                },
+            },
+            "keypads": {
+                "1355": {
+                    "area_id": "1205",
+                    "area_name": "Hallway",
+                    "buttons": ["1372"],
+                    "device_info": {
+                        "identifiers": [["lutron_caseta", 66286451]],
+                        "manufacturer": "Lutron " "Electronics " "Co., " "Inc",
+                        "model": "RRST-W3RL-XX " "(SunnataKeypad)",
+                        "name": "Hallway " "Main " "Stairs " "Position 1 " "Keypad",
+                        "suggested_area": "Hallway",
+                        "via_device": ["lutron_caseta", 1234],
+                    },
+                    "dr_device_id": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+                    "lutron_device_id": "1355",
+                    "model": "RRST-W3RL-XX",
+                    "name": "Main Stairs Position 1 " "Keypad",
+                    "serial": 66286451,
+                    "type": "SunnataKeypad",
+                },
+                "9": {
+                    "area_id": "1026",
+                    "area_name": "Dining Room",
+                    "buttons": ["111"],
+                    "device_info": {
+                        "identifiers": [["lutron_caseta", 68551522]],
+                        "manufacturer": "Lutron " "Electronics " "Co., " "Inc",
+                        "model": "PJ2-3BRL-GXX-X01 " "(Pico3ButtonRaiseLower)",
+                        "name": "Dining Room " "Pico",
+                        "suggested_area": "Dining " "Room",
+                        "via_device": ["lutron_caseta", 1234],
+                    },
+                    "dr_device_id": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+                    "lutron_device_id": "9",
+                    "model": "PJ2-3BRL-GXX-X01",
+                    "name": "Pico",
+                    "serial": 68551522,
+                    "type": "Pico3ButtonRaiseLower",
+                },
+            },
         },
     }
