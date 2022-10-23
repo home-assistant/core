@@ -247,7 +247,7 @@ def _async_setup_keypads(
 
         if not (keypad := keypads.get(keypad_device_id)):
             # First time seeing this keypad, build keypad data and store in keypads
-            keypad = keypads[keypad_device_id] = _async_setup_lutron_keypad(
+            keypad = keypads[keypad_device_id] = _async_build_lutron_keypad(
                 bridge, bridge_device, bridge_keypad, keypad_device_id
             )
 
@@ -305,7 +305,7 @@ def _async_build_trigger_schemas(
 
 
 @callback
-def _async_setup_lutron_keypad(
+def _async_build_lutron_keypad(
     bridge: Smartbridge,
     bridge_device: dict[str, Any],
     bridge_keypad: dict[str, Any],
