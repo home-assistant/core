@@ -230,7 +230,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==4.0.0
+aioshelly==4.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -939,7 +939,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.25.2
+plugwise==0.25.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1568,7 +1568,7 @@ smart-meter-texas==0.4.7
 smhi-pkg==1.0.16
 
 # homeassistant.components.sonos
-soco==0.28.0
+soco==0.28.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
