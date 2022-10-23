@@ -51,7 +51,7 @@ from .mixins import (
     warn_for_legacy_schema,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate
-from .util import valid_publish_topic, valid_subscribe_topic
+from .util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -405,7 +405,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 )
                 return
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -451,7 +451,7 @@ class MqttCover(MqttEntity, CoverEntity):
                     else STATE_OPEN
                 )
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
             topics["get_position_topic"] = {
@@ -767,6 +767,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         return position
 
+    @callback
     def tilt_payload_received(self, _payload):
         """Set the tilt value."""
 
@@ -784,7 +785,7 @@ class MqttCover(MqttEntity, CoverEntity):
         ):
             level = self.find_percentage_in_range(payload)
             self._tilt_value = level
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
         else:
             _LOGGER.warning(
                 "Payload '%s' is out of range, must be between '%s' and '%s' inclusive",

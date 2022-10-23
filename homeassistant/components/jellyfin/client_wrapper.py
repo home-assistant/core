@@ -20,17 +20,17 @@ from .const import CLIENT_VERSION, USER_AGENT, USER_APP_NAME
 
 async def validate_input(
     hass: HomeAssistant, user_input: dict[str, Any], client: JellyfinClient
-) -> str:
+) -> tuple[str, dict[str, Any]]:
     """Validate that the provided url and credentials can be used to connect."""
     url = user_input[CONF_URL]
     username = user_input[CONF_USERNAME]
     password = user_input[CONF_PASSWORD]
 
-    userid = await hass.async_add_executor_job(
+    user_id, connect_result = await hass.async_add_executor_job(
         _connect, client, url, username, password
     )
 
-    return userid
+    return (user_id, connect_result)
 
 
 def create_client(device_id: str, device_name: str | None = None) -> JellyfinClient:
@@ -47,20 +47,29 @@ def create_client(device_id: str, device_name: str | None = None) -> JellyfinCli
     return client
 
 
-def _connect(client: JellyfinClient, url: str, username: str, password: str) -> str:
+def _connect(
+    client: JellyfinClient, url: str, username: str, password: str
+) -> tuple[str, dict[str, Any]]:
     """Connect to the Jellyfin server and assert that the user can login."""
     client.config.data["auth.ssl"] = url.startswith("https")
 
-    _connect_to_address(client.auth, url)
+    connect_result = _connect_to_address(client.auth, url)
+
     _login(client.auth, url, username, password)
-    return _get_id(client.jellyfin)
+
+    return (_get_user_id(client.jellyfin), connect_result)
 
 
-def _connect_to_address(connection_manager: ConnectionManager, url: str) -> None:
+def _connect_to_address(
+    connection_manager: ConnectionManager, url: str
+) -> dict[str, Any]:
     """Connect to the Jellyfin server."""
-    state = connection_manager.connect_to_address(url)
-    if state["State"] != CONNECTION_STATE["ServerSignIn"]:
+    result: dict[str, Any] = connection_manager.connect_to_address(url)
+
+    if result["State"] != CONNECTION_STATE["ServerSignIn"]:
         raise CannotConnect
+
+    return result
 
 
 def _login(
@@ -76,7 +85,7 @@ def _login(
         raise InvalidAuth
 
 
-def _get_id(api: API) -> str:
+def _get_user_id(api: API) -> str:
     """Set the unique userid from a Jellyfin server."""
     settings: dict[str, Any] = api.get_user_settings()
     userid: str = settings["Id"]

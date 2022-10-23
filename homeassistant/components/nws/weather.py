@@ -107,7 +107,6 @@ class NWSWeather(WeatherEntity):
             self.coordinator_forecast = hass_data[COORDINATOR_FORECAST_HOURLY]
         self.station = self.nws.station
 
-        self.is_metric = units.is_metric
         self.mode = mode
 
         self.observation = None

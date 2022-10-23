@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.38.0
+    rev: v3.1.0
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
   - repo: https://github.com/psf/black
-    rev: 22.8.0
+    rev: 22.10.0
     hooks:
       - id: black
         args:
@@ -61,7 +61,7 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.27.1
+    rev: v1.28.0
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -69,11 +69,12 @@ repos:
     hooks:
       - id: prettier
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.3.5
+    rev: v0.5.0
     hooks:
       # Run `python-typing-update` hook manually from time to time
       # to update python typing syntax.
       # Will require manual work, before submitting changes!
+      # pre-commit run --hook-stage manual python-typing-update --all-files
       - id: python-typing-update
         stages: [manual]
         args:

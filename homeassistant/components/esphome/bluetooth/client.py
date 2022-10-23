@@ -15,7 +15,7 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.service import BleakGATTServiceCollection
 from bleak.exc import BleakError
 
-from homeassistant.core import CALLBACK_TYPE, async_get_hass
+from homeassistant.core import CALLBACK_TYPE
 
 from ..domain_data import DomainData
 from .characteristic import BleakGATTCharacteristicESPHome
@@ -83,7 +83,7 @@ class ESPHomeClient(BaseBleakClient):
         self._address_as_int = mac_to_int(self._ble_device.address)
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
-        self.domain_data = DomainData.get(async_get_hass())
+        self.domain_data = DomainData.get(kwargs["hass"])
         config_entry = self.domain_data.get_by_unique_id(self._source)
         self.entry_data = self.domain_data.get_entry_data(config_entry)
         self._client = self.entry_data.client

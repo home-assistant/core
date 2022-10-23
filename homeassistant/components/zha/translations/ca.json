@@ -213,9 +213,11 @@
                 "title": "Reconfiguraci\u00f3 de ZHA"
             },
             "instruct_unplug": {
+                "description": "La r\u00e0dio antiga s'ha reiniciat. Si el maquinari ja no \u00e9s necessari, ara pots desconnectar-lo.",
                 "title": "Desconnecta la r\u00e0dio antiga"
             },
             "intent_migrate": {
+                "description": "La r\u00e0dio antiga es restablir\u00e0 de f\u00e0brica. Si utilitzes un adaptador de Z-Wave i Zigbee combinat com el HUSBZB-1, nom\u00e9s restablir\u00e0 la part del Zigbee. \n\nVols continuar?",
                 "title": "Migra a una nova r\u00e0dio"
             },
             "manual_pick_radio_type": {

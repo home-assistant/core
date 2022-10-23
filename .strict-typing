@@ -57,6 +57,7 @@ homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.anthemav.*
+homeassistant.components.aqualogic.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
 homeassistant.components.auth.*
@@ -64,7 +65,9 @@ homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
+homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.blockchain.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
@@ -239,6 +242,7 @@ homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
+homeassistant.components.snooz.*
 homeassistant.components.sonarr.*
 homeassistant.components.ssdp.*
 homeassistant.components.statistics.*
@@ -267,6 +271,7 @@ homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
+homeassistant.components.unifi.update
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.update.*

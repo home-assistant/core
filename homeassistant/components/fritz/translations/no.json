@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "ignore_ip6_link_local": "IPv6-lenkens lokale adresse st\u00f8ttes ikke.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "already_configured": "Enheten er allerede konfigurert",

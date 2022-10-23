@@ -26,9 +26,12 @@ class EntitySubscription:
     qos: int = attr.ib(default=0)
     encoding: str = attr.ib(default="utf-8")
 
-    def resubscribe_if_necessary(self, hass, other):
+    def resubscribe_if_necessary(
+        self, hass: HomeAssistant, other: EntitySubscription | None
+    ) -> None:
         """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
+            assert other
             self.unsubscribe_callback = other.unsubscribe_callback
             return
 
@@ -56,7 +59,7 @@ class EntitySubscription:
             return
         self.unsubscribe_callback = await self.subscribe_task
 
-    def _should_resubscribe(self, other):
+    def _should_resubscribe(self, other: EntitySubscription | None) -> bool:
         """Check if we should re-subscribe to the topic using the old state."""
         if other is None:
             return True

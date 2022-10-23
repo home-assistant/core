@@ -20,8 +20,8 @@ from aiohomekit.model.services import Service
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
@@ -79,9 +79,7 @@ class HKDevice:
 
         connection: Controller = hass.data[CONTROLLER]
 
-        self.pairing = connection.load_pairing(
-            self.pairing_data["AccessoryPairingID"], self.pairing_data
-        )
+        self.pairing = connection.load_pairing(self.unique_id, self.pairing_data)
 
         # A list of callbacks that turn HK accessories into entities
         self.accessory_factories: list[AddAccessoryCb] = []
@@ -194,8 +192,11 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
+        attempts = None if self.hass.state == CoreState.running else 1
         try:
-            await self.pairing.async_populate_accessories_state(force_update=True)
+            await self.pairing.async_populate_accessories_state(
+                force_update=True, attempts=attempts
+            )
         except AccessoryNotFoundError:
             if transport != Transport.BLE or not pairing.accessories:
                 # BLE devices may sleep and we can't force a connection
@@ -253,7 +254,12 @@ class HKDevice:
             identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
 
         device_info = DeviceInfo(
-            identifiers=identifiers,
+            identifiers={
+                (
+                    IDENTIFIER_ACCESSORY_ID,
+                    f"{self.unique_id}:aid:{accessory.aid}",
+                )
+            },
             name=accessory.name,
             manufacturer=accessory.manufacturer,
             model=accessory.model,
@@ -317,26 +323,86 @@ class HKDevice:
                 self.unique_id,
                 accessory.aid,
             )
+            device_registry.async_update_device(
+                device.id,
+                new_identifiers={
+                    (
+                        IDENTIFIER_ACCESSORY_ID,
+                        f"{self.unique_id}:aid:{accessory.aid}",
+                    )
+                },
+            )
 
-            new_identifiers = {
+    @callback
+    def async_migrate_unique_id(
+        self, old_unique_id: str, new_unique_id: str, platform: str
+    ) -> None:
+        """Migrate legacy unique IDs to new format."""
+        _LOGGER.debug(
+            "Checking if unique ID %s on %s needs to be migrated",
+            old_unique_id,
+            platform,
+        )
+        entity_registry = er.async_get(self.hass)
+        # async_get_entity_id wants the "homekit_controller" domain
+        # in the platform field and the actual platform in the domain
+        # field for historical reasons since everything used to be
+        # PLATFORM.INTEGRATION instead of INTEGRATION.PLATFORM
+        if (
+            entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, old_unique_id
+            )
+        ) is None:
+            _LOGGER.debug("Unique ID %s does not need to be migrated", old_unique_id)
+            return
+        if new_entity_id := entity_registry.async_get_entity_id(
+            platform, DOMAIN, new_unique_id
+        ):
+            _LOGGER.debug(
+                "Unique ID %s is already in use by %s (system may have been downgraded)",
+                new_unique_id,
+                new_entity_id,
+            )
+            return
+        _LOGGER.debug(
+            "Migrating unique ID for entity %s (%s -> %s)",
+            entity_id,
+            old_unique_id,
+            new_unique_id,
+        )
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+    @callback
+    def async_remove_legacy_device_serial_numbers(self) -> None:
+        """Migrate remove legacy serial numbers from devices.
+
+        We no longer use serial numbers as device identifiers
+        since they are not reliable, and the HomeKit spec
+        does not require them to be stable.
+        """
+        _LOGGER.debug(
+            "Removing legacy serial numbers from device registry entries for pairing %s",
+            self.unique_id,
+        )
+
+        device_registry = dr.async_get(self.hass)
+        for accessory in self.entity_map.accessories:
+            identifiers = {
                 (
                     IDENTIFIER_ACCESSORY_ID,
                     f"{self.unique_id}:aid:{accessory.aid}",
                 )
             }
-
-            if not self.unreliable_serial_numbers:
-                new_identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
-            else:
-                _LOGGER.debug(
-                    "Not migrating serial number identifier for %s:aid:%s (it is wrong, not unique or unreliable)",
-                    self.unique_id,
-                    accessory.aid,
-                )
-
-            device_registry.async_update_device(
-                device.id, new_identifiers=new_identifiers
+            legacy_serial_identifier = (
+                IDENTIFIER_SERIAL_NUMBER,
+                accessory.serial_number,
             )
+
+            device = device_registry.async_get_device(identifiers=identifiers)
+            if not device or legacy_serial_identifier not in device.identifiers:
+                continue
+
+            device_registry.async_update_device(device.id, new_identifiers=identifiers)
 
     @callback
     def async_create_devices(self) -> None:
@@ -415,6 +481,9 @@ class HKDevice:
 
         # Migrate to new device ids
         self.async_migrate_devices()
+
+        # Remove any of the legacy serial numbers from the device registry
+        self.async_remove_legacy_device_serial_numbers()
 
         self.async_create_devices()
 

@@ -659,6 +659,7 @@ class MQTT:
                     timestamp,
                 ),
             )
+        self._mqtt_data.state_write_requests.process_write_state_requests()
 
     def _mqtt_on_callback(self, _mqttc, _userdata, mid, _granted_qos=None) -> None:
         """Publish / Subscribe / Unsubscribe callback."""

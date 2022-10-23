@@ -10,11 +10,29 @@ from jellyfin_apiclient_python.configuration import Config
 from jellyfin_apiclient_python.connection_manager import ConnectionManager
 import pytest
 
-from .const import (
-    MOCK_SUCCESFUL_CONNECTION_STATE,
-    MOCK_SUCCESFUL_LOGIN_RESPONSE,
-    MOCK_USER_SETTINGS,
-)
+from homeassistant.components.jellyfin.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+
+from . import load_json_fixture
+from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="Jellyfin",
+        domain=DOMAIN,
+        data={
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+        unique_id="USER-UUID",
+    )
 
 
 @pytest.fixture
@@ -40,8 +58,10 @@ def mock_client_device_id() -> Generator[None, MagicMock, None]:
 def mock_auth() -> MagicMock:
     """Return a mocked ConnectionManager."""
     jf_auth = create_autospec(ConnectionManager)
-    jf_auth.connect_to_address.return_value = MOCK_SUCCESFUL_CONNECTION_STATE
-    jf_auth.login.return_value = MOCK_SUCCESFUL_LOGIN_RESPONSE
+    jf_auth.connect_to_address.return_value = load_json_fixture(
+        "auth-connect-address.json"
+    )
+    jf_auth.login.return_value = load_json_fixture("auth-login.json")
 
     return jf_auth
 
@@ -50,7 +70,8 @@ def mock_auth() -> MagicMock:
 def mock_api() -> MagicMock:
     """Return a mocked API."""
     jf_api = create_autospec(API)
-    jf_api.get_user_settings.return_value = MOCK_USER_SETTINGS
+    jf_api.get_user_settings.return_value = load_json_fixture("get-user-settings.json")
+    jf_api.sessions.return_value = load_json_fixture("sessions.json")
 
     return jf_api
 
@@ -87,3 +108,16 @@ def mock_jellyfin(mock_client: MagicMock) -> Generator[None, MagicMock, None]:
         jf.get_client.return_value = mock_client
 
         yield jf
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_jellyfin: MagicMock
+) -> MockConfigEntry:
+    """Set up the Jellyfin integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry
