@@ -38,7 +38,7 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
+    PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
@@ -183,7 +183,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="precipitation",
         name="Precipitation",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
         icon="mdi:weather-pouring",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -197,7 +197,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="precipitation_forecast_average",
         name="Precipitation forecast average",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
         icon="mdi:weather-pouring",
     ),
     SensorEntityDescription(

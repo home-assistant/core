@@ -106,7 +106,7 @@ class RecorderOutput(StreamOutput):
                     format=RECORDER_CONTAINER_FORMAT,
                     container_options={
                         "video_track_timescale": str(int(1 / source_v.time_base)),
-                        "movflags": "frag_keyframe",
+                        "movflags": "frag_keyframe+empty_moov",
                         "min_frag_duration": str(
                             self.stream_settings.min_segment_duration
                         ),

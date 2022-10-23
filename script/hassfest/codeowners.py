@@ -25,6 +25,8 @@ build.json @home-assistant/supervisor
 
 # Other code
 /homeassistant/scripts/check_config.py @kellerza
+/homeassistant/const.py @epenet
+/homeassistant/util/ @epenet
 
 # Integrations
 """.strip()
@@ -47,7 +49,10 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if not integration.manifest:
+        if (
+            not integration.manifest
+            or integration.manifest.get("integration_type") == "virtual"
+        ):
             continue
 
         codeowners = integration.manifest["codeowners"]

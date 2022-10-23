@@ -23,19 +23,24 @@ from homeassistant.components.climate import (
 from homeassistant.components.sensibo.climate import (
     ATTR_AC_INTEGRATION,
     ATTR_GEO_INTEGRATION,
+    ATTR_HORIZONTAL_SWING_MODE,
     ATTR_INDOOR_INTEGRATION,
+    ATTR_LIGHT,
     ATTR_MINUTES,
     ATTR_OUTDOOR_INTEGRATION,
     ATTR_SENSITIVITY,
+    ATTR_TARGET_TEMPERATURE,
     SERVICE_ASSUME_STATE,
     SERVICE_ENABLE_PURE_BOOST,
     SERVICE_ENABLE_TIMER,
+    SERVICE_FULL_STATE,
     _find_valid_target_temp,
 )
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_STATE,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
@@ -916,3 +921,91 @@ async def test_climate_pure_boost(
     assert state2.state == "on"
     assert state3.state == "on"
     assert state4.state == "s"
+
+
+async def test_climate_full_ac_state(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    load_int: ConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the Sensibo climate Full AC state service."""
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state_climate = hass.states.get("climate.hallway")
+    assert state_climate.state == "heat"
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_states",
+    ):
+        with pytest.raises(MultipleInvalid):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_FULL_STATE,
+                {
+                    ATTR_ENTITY_ID: state_climate.entity_id,
+                    ATTR_TARGET_TEMPERATURE: 22,
+                },
+                blocking=True,
+            )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_states",
+        return_value={"result": {"status": "Success"}},
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_FULL_STATE,
+            {
+                ATTR_ENTITY_ID: state_climate.entity_id,
+                ATTR_MODE: "cool",
+                ATTR_TARGET_TEMPERATURE: 22,
+                ATTR_FAN_MODE: "high",
+                ATTR_SWING_MODE: "stopped",
+                ATTR_HORIZONTAL_SWING_MODE: "stopped",
+                ATTR_LIGHT: "on",
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "hvac_mode", "cool")
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "device_on", True)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "target_temp", 22)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "fan_mode", "high")
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "swing_mode", "stopped")
+    monkeypatch.setattr(
+        get_data.parsed["ABC999111"], "horizontal_swing_mode", "stopped"
+    )
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "light_mode", "on")
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("climate.hallway")
+
+    assert state.state == "cool"
+    assert state.attributes["temperature"] == 22

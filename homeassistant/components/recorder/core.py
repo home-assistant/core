@@ -61,7 +61,9 @@ from .db_schema import (
     Events,
     StateAttributes,
     States,
+    Statistics,
     StatisticsRuns,
+    StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
 from .models import (
@@ -534,10 +536,13 @@ class Recorder(threading.Thread):
 
     @callback
     def async_import_statistics(
-        self, metadata: StatisticMetaData, stats: Iterable[StatisticData]
+        self,
+        metadata: StatisticMetaData,
+        stats: Iterable[StatisticData],
+        table: type[Statistics | StatisticsShortTerm],
     ) -> None:
         """Schedule import of statistics."""
-        self.queue_task(ImportStatisticsTask(metadata, stats))
+        self.queue_task(ImportStatisticsTask(metadata, stats, table))
 
     @callback
     def _async_setup_periodic_tasks(self) -> None:
@@ -588,24 +593,31 @@ class Recorder(threading.Thread):
 
     def run(self) -> None:
         """Start processing events to save."""
-        current_version = self._setup_recorder()
+        setup_result = self._setup_recorder()
 
-        if current_version is None:
+        if not setup_result:
+            # Give up if we could not connect
             self.hass.add_job(self.async_connection_failed)
             return
 
-        self.schema_version = current_version
+        schema_status = migration.validate_db_schema(self.hass, self.get_session)
+        if schema_status is None:
+            # Give up if we could not validate the schema
+            self.hass.add_job(self.async_connection_failed)
+            return
+        self.schema_version = schema_status.current_version
 
-        schema_is_current = migration.schema_is_current(current_version)
-        if schema_is_current:
+        schema_is_valid = migration.schema_is_valid(schema_status)
+
+        if schema_is_valid:
             self._setup_run()
         else:
             self.migration_in_progress = True
-            self.migration_is_live = migration.live_migration(current_version)
+            self.migration_is_live = migration.live_migration(schema_status)
 
         self.hass.add_job(self.async_connection_success)
 
-        if self.migration_is_live or schema_is_current:
+        if self.migration_is_live or schema_is_valid:
             # If the migrate is live or the schema is current, we need to
             # wait for startup to complete. If its not live, we need to continue
             # on.
@@ -623,8 +635,8 @@ class Recorder(threading.Thread):
                 self.hass.add_job(self.async_set_db_ready)
                 return
 
-        if not schema_is_current:
-            if self._migrate_schema_and_setup_run(current_version):
+        if not schema_is_valid:
+            if self._migrate_schema_and_setup_run(schema_status):
                 self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:
                     # If the schema migration takes so long that the end
@@ -689,14 +701,14 @@ class Recorder(threading.Thread):
         # happens to rollback and recover
         self._reopen_event_session()
 
-    def _setup_recorder(self) -> None | int:
-        """Create connect to the database and get the schema version."""
+    def _setup_recorder(self) -> bool:
+        """Create a connection to the database."""
         tries = 1
 
         while tries <= self.db_max_retries:
             try:
                 self._setup_connection()
-                return migration.get_schema_version(self.get_session)
+                return migration.initialize_database(self.get_session)
             except UnsupportedDialect:
                 break
             except Exception as err:  # pylint: disable=broad-except
@@ -708,14 +720,16 @@ class Recorder(threading.Thread):
             tries += 1
             time.sleep(self.db_retry_wait)
 
-        return None
+        return False
 
     @callback
     def _async_migration_started(self) -> None:
         """Set the migration started event."""
         self.async_migration_event.set()
 
-    def _migrate_schema_and_setup_run(self, current_version: int) -> bool:
+    def _migrate_schema_and_setup_run(
+        self, schema_status: migration.SchemaValidationStatus
+    ) -> bool:
         """Migrate schema to the latest version."""
         persistent_notification.create(
             self.hass,
@@ -727,7 +741,7 @@ class Recorder(threading.Thread):
 
         try:
             migration.migrate_schema(
-                self, self.hass, self.engine, self.get_session, current_version
+                self, self.hass, self.engine, self.get_session, schema_status
             )
         except exc.DatabaseError as err:
             if self._handle_database_error(err):
