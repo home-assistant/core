@@ -182,9 +182,9 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     @async_handle_api_call
     async def async_turn_on_off_smart(self, key: str, value: Any) -> bool:
         """Make service call to api for setting Climate React."""
-        if self.device_data.smart_on is None:
+        if self.device_data.smart_type is None:
             raise HomeAssistantError(
-                "Use Sensibo Enable Climate React Service once to enable switch"
+                "Use Sensibo Enable Climate React Service once to enable switch or the Sensibo app"
             )
         new_state = bool(self.device_data.smart_on is False)
         data: dict[str, Any] = {"enabled": new_state}

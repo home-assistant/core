@@ -16,7 +16,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -309,7 +308,7 @@ async def test_switch_climate_react_no_data(
 ) -> None:
     """Test the Sensibo switch for climate react."""
 
-    monkeypatch.setattr(get_data.parsed["ABC999111"], "smart_on", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "smart_type", None)
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
@@ -322,7 +321,7 @@ async def test_switch_climate_react_no_data(
         await hass.async_block_till_done()
 
     state1 = hass.states.get("switch.hallway_climate_react")
-    assert state1.state == STATE_UNKNOWN
+    assert state1.state == STATE_OFF
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
