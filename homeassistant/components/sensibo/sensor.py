@@ -237,9 +237,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return (
-                TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
-            )
+            return TEMP_CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property
