@@ -28,8 +28,8 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
     # DPCode, to use. If None, the key will be used as DPCode
     dpcode: DPCode | None = None
 
-    # Value to consider binary sensor to be "on"
-    on_value: bool | float | int | str = True
+    # Value or values to consider binary sensor to be "on"
+    on_value: bool | float | int | str | set[bool | float | int | str] = True
 
 
 # Commonly used sensors
@@ -187,8 +187,9 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
     "mc": (
         TuyaBinarySensorEntityDescription(
-            key=DPCode.DOORCONTACT_STATE,
+            key=DPCode.STATUS,
             device_class=BinarySensorDeviceClass.DOOR,
+            on_value={"open", "opened"},
         ),
     ),
     # Door Window Sensor
@@ -393,4 +394,8 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         dpcode = self.entity_description.dpcode or self.entity_description.key
         if dpcode not in self.device.status:
             return False
+
+        if isinstance(self.entity_description.on_value, set):
+            return self.device.status[dpcode] in self.entity_description.on_value
+
         return self.device.status[dpcode] == self.entity_description.on_value

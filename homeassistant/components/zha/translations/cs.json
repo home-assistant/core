@@ -9,11 +9,53 @@
         },
         "flow_title": "ZHA: {name}",
         "step": {
+            "choose_automatic_backup": {
+                "description": "Obnovit nastaven\u00ed s\u00edt\u011b z automatick\u00e9 z\u00e1lohy"
+            },
+            "choose_formation_strategy": {
+                "description": "Vyberte nastaven\u00ed s\u00edt\u011b sv\u00e9ho r\u00e1dia",
+                "menu_options": {
+                    "form_new_network": "Vymazat nastaven\u00ed s\u00edt\u011b a vytvo\u0159it novou s\u00ed\u0165",
+                    "reuse_settings": "Zachovat nastaven\u00ed s\u00edt\u011b r\u00e1dia"
+                }
+            },
+            "choose_serial_port": {
+                "description": "Zvolte s\u00e9riov\u00fd port pro sv\u00e9 r\u00e1dio Zigbee",
+                "title": "Zvolte s\u00e9riov\u00fd port"
+            },
+            "confirm_hardware": {
+                "description": "Chcete nastavit {name}?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Typ r\u00e1dia"
+                },
+                "title": "Typ r\u00e1dia"
+            },
+            "manual_port_config": {
+                "title": "Nastaven\u00ed s\u00e9riov\u00e9ho portu"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Trvale nahradit IEEE adresu r\u00e1dia"
+                },
+                "title": "P\u0159epsat adresu IEEE r\u00e1dia"
+            },
+            "pick_radio": {
+                "description": "Vyberte typ sv\u00e9ho r\u00e1dia Zigbee"
+            },
             "port_config": {
                 "data": {
                     "baudrate": "rychlost portu"
                 },
                 "title": "Nastaven\u00ed"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Nahr\u00e1t soubor"
+                },
+                "description": "Obnovit nastaven\u00ed s\u00edt\u011b z nahran\u00e9ho z\u00e1lo\u017en\u00edho souboru JSON. Soubor m\u016f\u017eete st\u00e1hnout z jin\u00e9 instalace ZHA v **Nastaven\u00ed s\u00edt\u011b** nebo pou\u017eijte soubor `coordinator_backup.json` z integrace Zigbee2MQTT.",
+                "title": "Nahr\u00e1t ru\u010dn\u00ed z\u00e1lohu"
             },
             "user": {
                 "description": "Vyberte s\u00e9riov\u00fd port pro r\u00e1dio Zigbee",
@@ -68,6 +110,58 @@
             "remote_button_short_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto",
             "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",
             "remote_button_triple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto t\u0159ikr\u00e1t"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Toto za\u0159\u00edzen\u00ed nen\u00ed za\u0159\u00edzen\u00ed zha",
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "flow_title": "ZHA: {name}",
+        "step": {
+            "choose_automatic_backup": {
+                "description": "Obnovit nastaven\u00ed s\u00edt\u011b z automatick\u00e9 z\u00e1lohy"
+            },
+            "choose_formation_strategy": {
+                "description": "Vyberte nastaven\u00ed s\u00edt\u011b sv\u00e9ho r\u00e1dia",
+                "menu_options": {
+                    "form_new_network": "Vymazat nastaven\u00ed s\u00edt\u011b a vytvo\u0159it novou s\u00ed\u0165",
+                    "reuse_settings": "Zachovat nastaven\u00ed s\u00edt\u011b r\u00e1dia"
+                }
+            },
+            "choose_serial_port": {
+                "description": "Zvolte s\u00e9riov\u00fd port pro sv\u00e9 r\u00e1dio Zigbee",
+                "title": "Zvolte s\u00e9riov\u00fd port"
+            },
+            "init": {
+                "description": "Dopln\u011bk ZHA bude zastaven. P\u0159ejete si pokra\u010dovat?",
+                "title": "P\u0159ekonfigurovat ZHA"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Typ r\u00e1dia"
+                },
+                "title": "Typ r\u00e1dia"
+            },
+            "manual_port_config": {
+                "title": "Nastaven\u00ed s\u00e9riov\u00e9ho portu"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Trvale nahradit IEEE adresu r\u00e1dia"
+                },
+                "title": "P\u0159epsat adresu IEEE r\u00e1dia"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Nahr\u00e1t soubor"
+                },
+                "description": "Obnovit nastaven\u00ed s\u00edt\u011b z nahran\u00e9ho z\u00e1lo\u017en\u00edho souboru JSON. Soubor m\u016f\u017eete st\u00e1hnout z jin\u00e9 instalace ZHA v **Nastaven\u00ed s\u00edt\u011b** nebo pou\u017eijte soubor `coordinator_backup.json` z integrace Zigbee2MQTT.",
+                "title": "Nahr\u00e1t ru\u010dn\u00ed z\u00e1lohu"
+            }
         }
     }
 }

@@ -1,27 +1,31 @@
 """MySensors notification service."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
-from homeassistant.components import mysensors
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .. import mysensors
 from .const import DevId, DiscoveryInfo
 
 
 async def async_get_service(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    discovery_info: DiscoveryInfo | None = None,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> BaseNotificationService | None:
     """Get the MySensors notification service."""
     if not discovery_info:
         return None
 
     new_devices = mysensors.setup_mysensors_platform(
-        hass, Platform.NOTIFY, discovery_info, MySensorsNotificationDevice
+        hass,
+        Platform.NOTIFY,
+        cast(DiscoveryInfo, discovery_info),
+        MySensorsNotificationDevice,
     )
     if not new_devices:
         return None

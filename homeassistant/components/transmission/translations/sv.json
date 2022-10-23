@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Det g\u00e5r inte att ansluta till v\u00e4rden",
+            "invalid_auth": "Ogiltig autentisering",
             "name_exists": "Namnet finns redan"
         },
         "step": {

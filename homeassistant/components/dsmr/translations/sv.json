@@ -35,7 +35,8 @@
             "user": {
                 "data": {
                     "type": "Anslutningstyp"
-                }
+                },
+                "title": "V\u00e4lj anslutningstyp"
             }
         }
     },

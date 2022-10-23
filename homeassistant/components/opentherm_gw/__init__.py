@@ -117,6 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             timeout=CONNECTION_TIMEOUT,
         )
     except (asyncio.TimeoutError, ConnectionError, SerialException) as ex:
+        await gateway.cleanup()
         raise ConfigEntryNotReady(
             f"Could not connect to gateway at {gateway.device_path}: {ex}"
         ) from ex

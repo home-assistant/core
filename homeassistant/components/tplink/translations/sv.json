@@ -16,6 +16,12 @@
                 "data": {
                     "device": "Enhet"
                 }
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                },
+                "description": "Om du l\u00e4mnar v\u00e4rden tomt anv\u00e4nds discovery f\u00f6r att hitta enheter."
             }
         }
     }

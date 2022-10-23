@@ -7,6 +7,8 @@
             "reauth_successful": "Reautentisering lyckades"
         },
         "error": {
+            "cannot_connect": "Anslutningsfel - kontrollera din internetanslutning",
+            "expired_credentials": "Utg\u00e5ngna uppgifter - v\u00e4nligen skapa nya p\u00e5 Vulcans mobilapps registreringssida",
             "expired_token": "Token som har upph\u00f6rt att g\u00e4lla \u2013 generera en ny token",
             "invalid_pin": "Ogiltig pin",
             "invalid_symbol": "Ogiltig symbol",

@@ -9,6 +9,9 @@
                     "exclude": "Vera enhets-id att utesluta fr\u00e5n Home Assistant.",
                     "lights": "Vera switch enhets-ID att behandla som lampor i Home Assistant.",
                     "vera_controller_url": "Controller-URL"
+                },
+                "data_description": {
+                    "vera_controller_url": "Det ska se ut s\u00e5 h\u00e4r: http://192.168.1.161:3480"
                 }
             }
         }

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "no_devices_found": "No devices found on the network",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "decryption_failed": "The provided bindkey did not work, sensor data could not be decrypted. Please check it and try again.",
+            "expected_32_characters": "Expected a 32 character hexadecimal bindkey."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Do you want to setup {name}?"
+            },
+            "get_encryption_key": {
+                "data": {
+                    "bindkey": "Bindkey"
+                },
+                "description": "The sensor data broadcast by the sensor is encrypted. In order to decrypt it we need a 32 character hexadecimal bindkey."
+            },
+            "user": {
+                "data": {
+                    "address": "Device"
+                },
+                "description": "Choose a device to setup"
+            }
+        }
+    }
+}

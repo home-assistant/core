@@ -55,8 +55,7 @@ async def async_setup_entry(
                 )
             )
             tracked.add(station[MAC_ADDRESS])
-            if new_entities:
-                async_add_entities(new_entities)
+            async_add_entities(new_entities)
 
     @callback
     def restore_entities() -> None:
@@ -82,8 +81,7 @@ async def async_setup_entry(
                 )
                 tracked.add(mac_address)
 
-        if missing:
-            async_add_entities(missing)
+        async_add_entities(missing)
 
     if device.device and "wifi1" in device.device.features:
         restore_entities()

@@ -22,7 +22,24 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "away": "borta",
+            "hg": "frostvakt",
             "schedule": "schema"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} uppt\u00e4ckte ett larm",
+            "animal": "{entity_name} uppt\u00e4ckte ett djur",
+            "cancel_set_point": "{entity_name} har \u00e5terupptagit sitt schema",
+            "human": "{entity_name} uppt\u00e4ckte en m\u00e4nniska",
+            "movement": "{entity_name} uppt\u00e4ckte r\u00f6relse",
+            "outdoor": "{entity_name} uppt\u00e4ckte en utomhush\u00e4ndelse",
+            "person": "{entity_name} uppt\u00e4ckte en person",
+            "person_away": "{entity_name} uppt\u00e4ckte att en person har l\u00e4mnat",
+            "set_point": "M\u00e5ltemperaturen {entity_name} har st\u00e4llts in manuellt.",
+            "therm_mode": "{entity_name} bytte till \" {subtype} \"",
+            "turned_off": "{entity_name} st\u00e4ngdes av",
+            "turned_on": "{entity_name} slogs p\u00e5",
+            "vehicle": "{entity_name} uppt\u00e4ckt ett fordon"
         }
     },
     "options": {

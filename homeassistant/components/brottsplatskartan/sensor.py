@@ -10,12 +10,7 @@ import brottsplatskartan
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -90,15 +85,17 @@ def setup_platform(
 class BrottsplatskartanSensor(SensorEntity):
     """Representation of a Brottsplatskartan Sensor."""
 
-    def __init__(self, bpk, name):
+    _attr_attribution = brottsplatskartan.ATTRIBUTION
+
+    def __init__(self, bpk: brottsplatskartan.BrottsplatsKartan, name: str) -> None:
         """Initialize the Brottsplatskartan sensor."""
         self._brottsplatskartan = bpk
         self._attr_name = name
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
 
-        incident_counts = defaultdict(int)
+        incident_counts: defaultdict[str, int] = defaultdict(int)
         incidents = self._brottsplatskartan.get_incidents()
 
         if incidents is False:
@@ -106,11 +103,8 @@ class BrottsplatskartanSensor(SensorEntity):
             return
 
         for incident in incidents:
-            incident_type = incident.get("title_type")
-            incident_counts[incident_type] += 1
+            if (incident_type := incident.get("title_type")) is not None:
+                incident_counts[incident_type] += 1
 
-        self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION
-        }
-        self._attr_extra_state_attributes.update(incident_counts)
+        self._attr_extra_state_attributes = incident_counts
         self._attr_native_value = len(incidents)

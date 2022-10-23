@@ -5,8 +5,15 @@
             "cannot_connect": "Det gick inte att ansluta.",
             "not_lutron_device": "Uppt\u00e4ckt enhet \u00e4r inte en Lutron-enhet"
         },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
         "flow_title": "{name} ({host})",
         "step": {
+            "import_failed": {
+                "description": "Det gick inte att st\u00e4lla in bryggan (v\u00e4rd: {host} ) importerad fr\u00e5n configuration.yaml.",
+                "title": "Det gick inte att importera Cas\u00e9ta-bryggkonfigurationen."
+            },
             "link": {
                 "description": "F\u00f6r att para med {name} ( {host} ), efter att ha skickat in detta formul\u00e4r, tryck p\u00e5 den svarta knappen p\u00e5 baksidan av bryggan.",
                 "title": "Para ihop med bryggan"
@@ -24,6 +31,8 @@
         "trigger_subtype": {
             "button_1": "F\u00f6rsta knappen",
             "button_2": "Andra knappen",
+            "button_3": "Tredje knappen",
+            "button_4": "Fj\u00e4rde knappen",
             "close_1": "St\u00e4ng 1",
             "close_2": "St\u00e4ng 2",
             "close_3": "St\u00e4ng 3",
@@ -53,7 +62,15 @@
             "raise_4": "H\u00f6j 4",
             "raise_all": "H\u00f6j alla",
             "stop": "Stoppa (favorit)",
-            "stop_1": "Stoppa 1"
+            "stop_1": "Stoppa 1",
+            "stop_2": "Stoppa 2",
+            "stop_3": "Stoppa 3",
+            "stop_4": "Stoppa 4",
+            "stop_all": "Stoppa alla"
+        },
+        "trigger_type": {
+            "press": "\" {subtype} \" tryckt",
+            "release": "\"{subtyp}\" sl\u00e4pptes"
         }
     }
 }

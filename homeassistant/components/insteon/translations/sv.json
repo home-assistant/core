@@ -1,8 +1,13 @@
 {
     "config": {
         "abort": {
+            "cannot_connect": "Det gick inte att ansluta.",
             "not_insteon_device": "Uppt\u00e4ckt enhet \u00e4r inte en Insteon-enhet",
             "single_instance_allowed": "Redan konfigurerad. Endast en konfiguration m\u00f6jlig."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "select_single": "V\u00e4lj ett alternativ."
         },
         "flow_title": "{name}",
         "step": {
@@ -27,6 +32,13 @@
                 "description": "Konfigurera Insteon Hub version 2.",
                 "title": "Insteon Hub version 2"
             },
+            "plm": {
+                "data": {
+                    "device": "USB-enhetens s\u00f6kv\u00e4g"
+                },
+                "description": "Konfigurera Insteon PowerLink-modemet (PLM).",
+                "title": "Insteon PLM"
+            },
             "user": {
                 "data": {
                     "modem_type": "Modemtyp."
@@ -36,9 +48,15 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
+            "input_error": "Ogiltiga poster, kontrollera dina v\u00e4rden.",
+            "select_single": "V\u00e4lj ett alternativ."
+        },
         "step": {
             "add_override": {
                 "data": {
+                    "address": "Enhetsadress (dvs. 1a2b3c)",
                     "cat": "Enhetskategori (dvs. 0x10)",
                     "subcat": "Enhetsunderkategori (dvs. 0x0a)"
                 },

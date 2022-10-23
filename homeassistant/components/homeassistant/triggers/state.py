@@ -7,10 +7,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -30,10 +26,8 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     process_state_match,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
-
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,8 +91,8 @@ async def async_validate_trigger_config(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
     *,
     platform_type: str = "state",
 ) -> CALLBACK_TYPE:
@@ -131,8 +125,8 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
-    trigger_data = automation_info["trigger_data"]
-    _variables = automation_info["variables"] or {}
+    trigger_data = trigger_info["trigger_data"]
+    _variables = trigger_info["variables"] or {}
 
     @callback
     def state_automation_listener(event: Event):
@@ -193,7 +187,7 @@ async def async_attach_trigger(
             call_action()
             return
 
-        trigger_info = {
+        data = {
             "trigger": {
                 "platform": "state",
                 "entity_id": entity,
@@ -201,7 +195,7 @@ async def async_attach_trigger(
                 "to_state": to_s,
             }
         }
-        variables = {**_variables, **trigger_info}
+        variables = {**_variables, **data}
 
         try:
             period[entity] = cv.positive_time_period(
@@ -209,7 +203,7 @@ async def async_attach_trigger(
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
-                "Error rendering '%s' for template: %s", automation_info["name"], ex
+                "Error rendering '%s' for template: %s", trigger_info["name"], ex
             )
             return
 

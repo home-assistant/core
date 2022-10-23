@@ -50,5 +50,15 @@
         "trigger_type": {
             "camera_motion": "Movimento detectado"
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "A configura\u00e7\u00e3o do Nest em configuration.yaml est\u00e1 sendo removida no Home Assistant 2022.10. \n\n Suas credenciais de aplicativo OAuth e configura\u00e7\u00f5es de acesso existentes foram importadas para a interface do usu\u00e1rio automaticamente. Remova a configura\u00e7\u00e3o YAML do arquivo configuration.yaml e reinicie o Home Assistant para corrigir esse problema.",
+            "title": "A configura\u00e7\u00e3o Nest YAML est\u00e1 sendo removida"
+        },
+        "removed_app_auth": {
+            "description": "Para melhorar a seguran\u00e7a e reduzir o risco de phishing, o Google desativou o m\u00e9todo de autentica\u00e7\u00e3o usado pelo Home Assistant. \n\n **Isso requer uma a\u00e7\u00e3o sua para resolver** ([mais informa\u00e7\u00f5es]( {more_info_url} )) \n\n 1. Visite a p\u00e1gina de integra\u00e7\u00f5es\n 1. Clique em Reconfigurar na integra\u00e7\u00e3o Nest.\n 1. O Home Assistant o guiar\u00e1 pelas etapas para atualizar para a autentica\u00e7\u00e3o da Web. \n\n Consulte as [instru\u00e7\u00f5es de integra\u00e7\u00e3o]( {documentation_url} ) do Nest para obter informa\u00e7\u00f5es sobre solu\u00e7\u00e3o de problemas.",
+            "title": "As credenciais de autentica\u00e7\u00e3o Nest precisam ser atualizadas"
+        }
     }
 }

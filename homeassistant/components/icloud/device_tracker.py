@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.device_tracker import AsyncSeeCallback, SourceType
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .account import IcloudAccount, IcloudDevice
 from .const import (
@@ -21,20 +20,11 @@ from .const import (
 )
 
 
-async def async_setup_scanner(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_see: AsyncSeeCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> bool:
-    """Old way of setting up the iCloud tracker."""
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for iCloud component."""
-    account = hass.data[DOMAIN][entry.unique_id]
+    account: IcloudAccount = hass.data[DOMAIN][entry.unique_id]
     tracked = set[str]()
 
     @callback
@@ -61,8 +51,7 @@ def add_entities(account: IcloudAccount, async_add_entities, tracked):
         new_tracked.append(IcloudTrackerEntity(account, device))
         tracked.add(dev_id)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    async_add_entities(new_tracked, True)
 
 
 class IcloudTrackerEntity(TrackerEntity):
@@ -72,7 +61,7 @@ class IcloudTrackerEntity(TrackerEntity):
         """Set up the iCloud tracker entity."""
         self._account = account
         self._device = device
-        self._unsub_dispatcher = None
+        self._unsub_dispatcher: CALLBACK_TYPE | None = None
 
     @property
     def unique_id(self) -> str:
@@ -130,15 +119,16 @@ class IcloudTrackerEntity(TrackerEntity):
             name=self._device.name,
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
             self.hass, self._account.signal_device_update, self.async_write_ha_state
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
-        self._unsub_dispatcher()
+        if self._unsub_dispatcher:
+            self._unsub_dispatcher()
 
 
 def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:

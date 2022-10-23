@@ -34,6 +34,7 @@ from homeassistant.components.zha.core.const import (
     CLUSTER_TYPE_IN,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
+    EZSP_OVERWRITE_EUI64,
     GROUP_ID,
     GROUP_IDS,
     GROUP_NAME,
@@ -709,11 +710,7 @@ async def test_restore_network_backup_force_write_eui64(app_controller, zha_clie
     p.assert_called_once_with(
         backup.replace(
             network_info=backup.network_info.replace(
-                stack_specific={
-                    "ezsp": {
-                        "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it": True
-                    }
-                }
+                stack_specific={"ezsp": {EZSP_OVERWRITE_EUI64: True}}
             )
         )
     )

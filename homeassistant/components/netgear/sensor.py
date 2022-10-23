@@ -36,7 +36,7 @@ from .const import (
     KEY_COORDINATOR_UTIL,
     KEY_ROUTER,
 )
-from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
+from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterCoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -338,8 +338,7 @@ async def async_setup_entry(
             )
             tracked.add(mac)
 
-        if new_entities:
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
 
@@ -381,7 +380,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
             self._state = self._device[self._attribute]
 
 
-class NetgearRouterSensorEntity(NetgearRouterEntity, RestoreSensor):
+class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
     """Representation of a device connected to a Netgear router."""
 
     _attr_entity_registry_enabled_default = False

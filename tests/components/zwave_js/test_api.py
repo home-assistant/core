@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const import (
+    ExclusionStrategy,
     InclusionState,
     InclusionStrategy,
     LogLevel,
@@ -27,12 +28,10 @@ from zwave_js_server.model.controller import (
     ProvisioningEntry,
     QRProvisioningInformation,
 )
+from zwave_js_server.model.firmware import FirmwareUpdateData
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.websocket_api.const import (
-    ERR_INVALID_FORMAT,
-    ERR_NOT_FOUND,
-)
+from homeassistant.components.websocket_api import ERR_INVALID_FORMAT, ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
     ADDITIONAL_PROPERTIES,
     APPLICATION_VERSION,
@@ -68,8 +67,8 @@ from homeassistant.components.zwave_js.api import (
     SECURITY_CLASSES,
     SPECIFIC_DEVICE_CLASS,
     STATUS,
+    STRATEGY,
     TYPE,
-    UNPROVISION,
     VALUE,
     VERSION,
 )
@@ -88,13 +87,18 @@ def get_device(hass, node):
     return dev_reg.async_get_device({device_id})
 
 
-async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
+async def test_network_status(
+    hass, multisensor_6, controller_state, integration, hass_ws_client
+):
     """Test the network status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
     # Try API call with entry ID
-    with patch("zwave_js_server.model.controller.Controller.async_get_state"):
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_get_state",
+        return_value=controller_state["controller"],
+    ):
         await ws_client.send_json(
             {
                 ID: 1,
@@ -115,7 +119,10 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
         identifiers={(DOMAIN, "3245146787-52")},
     )
     assert device
-    with patch("zwave_js_server.model.controller.Controller.async_get_state"):
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_get_state",
+        return_value=controller_state["controller"],
+    ):
         await ws_client.send_json(
             {
                 ID: 2,
@@ -1528,7 +1535,7 @@ async def test_remove_node(
             ID: 2,
             TYPE: "zwave_js/remove_node",
             ENTRY_ID: entry.entry_id,
-            UNPROVISION: True,
+            STRATEGY: ExclusionStrategy.EXCLUDE_ONLY,
         }
     )
 
@@ -1538,7 +1545,7 @@ async def test_remove_node(
     assert len(client.async_send_command.call_args_list) == 1
     assert client.async_send_command.call_args[0][0] == {
         "command": "controller.begin_exclusion",
-        "unprovision": True,
+        "strategy": 0,
     }
 
     # Test FailedZWaveCommand is caught
@@ -2587,27 +2594,10 @@ async def test_set_config_parameter(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -2635,27 +2625,10 @@ async def test_set_config_parameter(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
-        "commandClassName": "Configuration",
         "commandClass": 112,
         "endpoint": 0,
         "property": 102,
-        "propertyName": "Group 2: Send battery reports",
         "propertyKey": 1,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "valueSize": 4,
-            "min": 0,
-            "max": 1,
-            "default": 1,
-            "format": 0,
-            "allowManualEntry": True,
-            "label": "Group 2: Send battery reports",
-            "description": "Include battery information in periodic reports to Group 2",
-            "isFromConfig": True,
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -2843,14 +2816,22 @@ async def test_firmware_upload_view(
     client = await hass_client()
     device = get_device(hass, multisensor_6)
     with patch(
-        "homeassistant.components.zwave_js.api.begin_firmware_update",
-    ) as mock_cmd:
+        "homeassistant.components.zwave_js.api.update_firmware",
+    ) as mock_cmd, patch.dict(
+        "homeassistant.components.zwave_js.api.USER_AGENT",
+        {"HomeAssistant": "0.0.0"},
+    ):
         resp = await client.post(
             f"/api/zwave_js/firmware/upload/{device.id}",
-            data={"file": firmware_file, "target": "15"},
+            data={"file": firmware_file},
         )
-        assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
-        assert mock_cmd.call_args[1] == {"target": 15}
+        assert mock_cmd.call_args[0][1:3] == (
+            multisensor_6,
+            [FirmwareUpdateData("file", bytes(10))],
+        )
+        assert mock_cmd.call_args[1] == {
+            "additional_user_agent_components": {"HomeAssistant": "0.0.0"},
+        }
         assert json.loads(await resp.text()) is None
 
 
@@ -2861,7 +2842,7 @@ async def test_firmware_upload_view_failed_command(
     client = await hass_client()
     device = get_device(hass, multisensor_6)
     with patch(
-        "homeassistant.components.zwave_js.api.begin_firmware_update",
+        "homeassistant.components.zwave_js.api.update_firmware",
         side_effect=FailedCommand("test", "test"),
     ):
         resp = await client.post(
@@ -3524,8 +3505,13 @@ async def test_subscribe_firmware_update_status(
             "source": "node",
             "event": "firmware update progress",
             "nodeId": multisensor_6.node_id,
-            "sentFragments": 1,
-            "totalFragments": 10,
+            "progress": {
+                "currentFile": 1,
+                "totalFiles": 1,
+                "sentFragments": 1,
+                "totalFragments": 10,
+                "progress": 10.0,
+            },
         },
     )
     multisensor_6.receive_event(event)
@@ -3533,8 +3519,11 @@ async def test_subscribe_firmware_update_status(
     msg = await ws_client.receive_json()
     assert msg["event"] == {
         "event": "firmware update progress",
+        "current_file": 1,
+        "total_files": 1,
         "sent_fragments": 1,
         "total_fragments": 10,
+        "progress": 10.0,
     }
 
     event = Event(
@@ -3543,8 +3532,12 @@ async def test_subscribe_firmware_update_status(
             "source": "node",
             "event": "firmware update finished",
             "nodeId": multisensor_6.node_id,
-            "status": 255,
-            "waitTime": 10,
+            "result": {
+                "status": 255,
+                "success": True,
+                "waitTime": 10,
+                "reInterview": False,
+            },
         },
     )
     multisensor_6.receive_event(event)
@@ -3553,7 +3546,9 @@ async def test_subscribe_firmware_update_status(
     assert msg["event"] == {
         "event": "firmware update finished",
         "status": 255,
+        "success": True,
         "wait_time": 10,
+        "reinterview": False,
     }
 
 
@@ -3573,8 +3568,13 @@ async def test_subscribe_firmware_update_status_initial_value(
             "source": "node",
             "event": "firmware update progress",
             "nodeId": multisensor_6.node_id,
-            "sentFragments": 1,
-            "totalFragments": 10,
+            "progress": {
+                "currentFile": 1,
+                "totalFiles": 1,
+                "sentFragments": 1,
+                "totalFragments": 10,
+                "progress": 10.0,
+            },
         },
     )
     multisensor_6.receive_event(event)
@@ -3596,8 +3596,11 @@ async def test_subscribe_firmware_update_status_initial_value(
     msg = await ws_client.receive_json()
     assert msg["event"] == {
         "event": "firmware update progress",
+        "current_file": 1,
+        "total_files": 1,
         "sent_fragments": 1,
         "total_fragments": 10,
+        "progress": 10.0,
     }
 
 

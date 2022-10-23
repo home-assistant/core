@@ -20,6 +20,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+import voluptuous as vol
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
@@ -42,7 +43,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -50,12 +51,14 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry,
     intent,
+    issue_registry,
     recorder as recorder_helper,
     restore_state,
     storage,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
@@ -297,9 +300,10 @@ async def async_test_home_assistant(loop, load_registries=True):
     # Load the registries
     if load_registries:
         await asyncio.gather(
+            area_registry.async_load(hass),
             device_registry.async_load(hass),
             entity_registry.async_load(hass),
-            area_registry.async_load(hass),
+            issue_registry.async_load(hass),
         )
         await hass.async_block_till_done()
 
@@ -326,7 +330,9 @@ async def async_test_home_assistant(loop, load_registries=True):
     return hass
 
 
-def async_mock_service(hass, domain, service, schema=None):
+def async_mock_service(
+    hass: HomeAssistant, domain: str, service: str, schema: vol.Schema | None = None
+) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
@@ -367,7 +373,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
     msg = ReceiveMessage(topic, payload, qos, retain)
-    hass.data["mqtt"]._mqtt_handle_message(msg)
+    hass.data["mqtt"].client._mqtt_handle_message(msg)
 
 
 fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
@@ -415,18 +421,20 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 
     if integration is None:
         return pathlib.Path(__file__).parent.joinpath("fixtures", filename)
-    else:
-        return pathlib.Path(__file__).parent.joinpath(
-            "components", integration, "fixtures", filename
-        )
+
+    return pathlib.Path(__file__).parent.joinpath(
+        "components", integration, "fixtures", filename
+    )
 
 
-def load_fixture(filename, integration=None):
+def load_fixture(filename: str, integration: str | None = None) -> str:
     """Load a fixture."""
     return get_fixture_path(filename, integration).read_text()
 
 
-def mock_state_change_event(hass, new_state, old_state=None):
+def mock_state_change_event(
+    hass: HomeAssistant, new_state: State, old_state: State | None = None
+) -> None:
     """Mock state change envent."""
     event_data = {"entity_id": new_state.entity_id, "new_state": new_state}
 
@@ -437,7 +445,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 
 @ha.callback
-def mock_component(hass, component):
+def mock_component(hass: HomeAssistant, component: str) -> None:
     """Mock a component is setup."""
     if component in hass.config.components:
         AssertionError(f"Integration {component} is already setup")
@@ -445,7 +453,10 @@ def mock_component(hass, component):
     hass.config.components.add(component)
 
 
-def mock_registry(hass, mock_entries=None):
+def mock_registry(
+    hass: HomeAssistant,
+    mock_entries: dict[str, entity_registry.RegistryEntry] | None = None,
+) -> entity_registry.EntityRegistry:
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
     if mock_entries is None:
@@ -458,7 +469,9 @@ def mock_registry(hass, mock_entries=None):
     return registry
 
 
-def mock_area_registry(hass, mock_entries=None):
+def mock_area_registry(
+    hass: HomeAssistant, mock_entries: dict[str, area_registry.AreaEntry] | None = None
+) -> area_registry.AreaRegistry:
     """Mock the Area Registry."""
     registry = area_registry.AreaRegistry(hass)
     registry.areas = mock_entries or OrderedDict()
@@ -467,12 +480,18 @@ def mock_area_registry(hass, mock_entries=None):
     return registry
 
 
-def mock_device_registry(hass, mock_entries=None, mock_deleted_entries=None):
+def mock_device_registry(
+    hass: HomeAssistant,
+    mock_entries: dict[str, device_registry.DeviceEntry] | None = None,
+) -> device_registry.DeviceRegistry:
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
-    registry.devices = mock_entries or OrderedDict()
-    registry.deleted_devices = mock_deleted_entries or OrderedDict()
-    registry._rebuild_index()
+    registry.devices = device_registry.DeviceRegistryItems()
+    if mock_entries is None:
+        mock_entries = {}
+    for key, entry in mock_entries.items():
+        registry.devices[key] = entry
+    registry.deleted_devices = device_registry.DeviceRegistryItems()
 
     hass.data[device_registry.DATA_REGISTRY] = registry
     return registry
@@ -540,7 +559,9 @@ class MockUser(auth_models.User):
         self._permissions = auth_permissions.PolicyPermissions(policy, self.perm_lookup)
 
 
-async def register_auth_provider(hass, config):
+async def register_auth_provider(
+    hass: HomeAssistant, config: ConfigType
+) -> auth_providers.AuthProvider:
     """Register an auth provider."""
     provider = await auth_providers.auth_provider_from_config(
         hass, hass.auth._store, config
@@ -904,17 +925,15 @@ def assert_setup_component(count, domain=None):
 SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
 
 
-def init_recorder_component(hass, add_config=None):
+def init_recorder_component(hass, add_config=None, db_url="sqlite://"):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        config[recorder.CONF_DB_URL] = db_url
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration.migrate_schema"
-    ):
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})

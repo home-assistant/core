@@ -27,7 +27,8 @@ LOGGER: Final[logging.Logger] = logging.getLogger(__package__)
 PLATFORMS: Final[list[Platform]] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.LIGHT,
-    Platform.SWITCH,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]

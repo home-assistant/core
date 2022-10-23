@@ -110,6 +110,7 @@ WALLETS = {
     "FJD": "FJD",
     "FKP": "FKP",
     "FORTH": "FORTH",
+    "GALA": "GALA",
     "GBP": "GBP",
     "GBX": "GBX",
     "GEL": "GEL",

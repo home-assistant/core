@@ -9,15 +9,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -89,7 +83,7 @@ class PjLinkDevice(MediaPlayerEntity):
         self._password = password
         self._encoding = encoding
         self._muted = False
-        self._pwstate = STATE_OFF
+        self._pwstate = MediaPlayerState.OFF
         self._current_source = None
         with self.projector() as projector:
             if not self._name:
@@ -107,30 +101,30 @@ class PjLinkDevice(MediaPlayerEntity):
         projector.authenticate(self._password)
         return projector
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state from the device."""
 
         with self.projector() as projector:
             try:
                 pwstate = projector.get_power()
                 if pwstate in ("on", "warm-up"):
-                    self._pwstate = STATE_ON
+                    self._pwstate = MediaPlayerState.ON
                     self._muted = projector.get_mute()[1]
                     self._current_source = format_input_source(*projector.get_input())
                 else:
-                    self._pwstate = STATE_OFF
+                    self._pwstate = MediaPlayerState.OFF
                     self._muted = False
                     self._current_source = None
             except KeyError as err:
                 if str(err) == "'OK'":
-                    self._pwstate = STATE_OFF
+                    self._pwstate = MediaPlayerState.OFF
                     self._muted = False
                     self._current_source = None
                 else:
                     raise
             except ProjectorError as err:
                 if str(err) == "unavailable time":
-                    self._pwstate = STATE_OFF
+                    self._pwstate = MediaPlayerState.OFF
                     self._muted = False
                     self._current_source = None
                 else:
@@ -161,22 +155,22 @@ class PjLinkDevice(MediaPlayerEntity):
         """Return all available input sources."""
         return self._source_list
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn projector off."""
         with self.projector() as projector:
             projector.set_power("off")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn projector on."""
         with self.projector() as projector:
             projector.set_power("on")
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) of unmute (false) media player."""
         with self.projector() as projector:
             projector.set_mute(MUTE_AUDIO, mute)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set the input source."""
         source = self._source_name_mapping[source]
         with self.projector() as projector:

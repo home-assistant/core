@@ -12,6 +12,7 @@
         },
         "error": {
             "authentication_error": "Felaktig HomeKit-kod. V\u00e4nligen kontrollera och f\u00f6rs\u00f6k igen.",
+            "insecure_setup_code": "Den beg\u00e4rda installationskoden \u00e4r os\u00e4ker p\u00e5 grund av dess triviala natur. Detta tillbeh\u00f6r uppfyller inte grundl\u00e4ggande s\u00e4kerhetskrav.",
             "max_peers_error": "Enheten nekade parningsf\u00f6rs\u00f6ket d\u00e5 det inte finns n\u00e5got parningsminnesutrymme kvar",
             "pairing_failed": "Ett ok\u00e4nt fel uppstod n\u00e4r parningsf\u00f6rs\u00f6ket gjordes med den h\u00e4r enheten. Det h\u00e4r kan vara ett tillf\u00e4lligt fel, eller s\u00e5 st\u00f6ds inte din enhet i nul\u00e4get.",
             "unable_to_pair": "Det g\u00e5r inte att para ihop, f\u00f6rs\u00f6k igen.",
@@ -29,6 +30,7 @@
             },
             "pair": {
                 "data": {
+                    "allow_insecure_setup_codes": "Till\u00e5t parning med os\u00e4kra installationskoder.",
                     "pairing_code": "Parningskod"
                 },
                 "description": "HomeKit Controller kommunicerar med {name} \u00f6ver det lokala n\u00e4tverket med hj\u00e4lp av en s\u00e4ker krypterad anslutning utan en separat HomeKit-kontroller eller iCloud. Ange din HomeKit-kopplingskod (i formatet XXX-XX-XXX) f\u00f6r att anv\u00e4nda detta tillbeh\u00f6r. Denna kod finns vanligtvis p\u00e5 sj\u00e4lva enheten eller i f\u00f6rpackningen.",

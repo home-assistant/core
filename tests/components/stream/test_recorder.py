@@ -20,7 +20,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import DefaultSegment as Segment, generate_h264_video, remux_with_audio
+from .common import (
+    DefaultSegment as Segment,
+    assert_mp4_has_transform_matrix,
+    generate_h264_video,
+    remux_with_audio,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -72,7 +77,7 @@ async def test_record_stream(hass, filename, h264_video):
 
 
 async def test_record_lookback(hass, filename, h264_video):
-    """Exercise record with loopback."""
+    """Exercise record with lookback."""
 
     stream = create_stream(hass, h264_video, {})
 
@@ -252,3 +257,40 @@ async def test_recorder_log(hass, filename, caplog):
         await stream.async_record(filename)
     assert "https://abcd:efgh@foo.bar" not in caplog.text
     assert "https://****:****@foo.bar" in caplog.text
+
+
+async def test_record_stream_rotate(hass, filename, h264_video):
+    """Test record stream with rotation."""
+
+    worker_finished = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
+
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
+
+    with patch("homeassistant.components.stream.Stream", wraps=MockStream):
+        stream = create_stream(hass, h264_video, {})
+        stream.orientation = 8
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        make_recording = hass.async_create_task(stream.async_record(filename))
+
+        # In general usage the recorder will only include what has already been
+        # processed by the worker. To guarantee we have some output for the test,
+        # wait until the worker has finished before firing
+        await worker_finished.wait()
+
+        # Fire the IdleTimer
+        future = dt_util.utcnow() + timedelta(seconds=30)
+        async_fire_time_changed(hass, future)
+
+        await make_recording
+
+    # Assert
+    assert os.path.exists(filename)
+    with open(filename, "rb") as rotated_mp4:
+        assert_mp4_has_transform_matrix(rotated_mp4.read(), stream.orientation)

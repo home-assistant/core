@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from pprint import pformat
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -44,11 +45,11 @@ async def async_setup_platform(
 class SuplaSwitch(SuplaChannel, SwitchEntity):
     """Representation of a Supla Switch."""
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.async_action("TURN_ON")
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.async_action("TURN_OFF")
 

@@ -30,3 +30,14 @@ TEST_NO_PERMISSION_SENSOR = Sensor(
     permissions={"read": False},
     model="Test",
 )
+TEST_UNSUPPORTED_SENSOR = Sensor(
+    name="Test",
+    device_id="1",
+    type="Test",
+    sensor_id="2",
+    sensor_field_names=["SomeUnsupportedField"],
+    location=Location(id="1", name="Test"),
+    data={"SomeUnsupportedField": {"values": [{"s": "2"}], "unit": "degrees_celsius"}},
+    permissions={"read": True},
+    model="Test",
+)

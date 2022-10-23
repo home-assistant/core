@@ -35,10 +35,9 @@ from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done, do_adhoc_statistics
+from .common import async_wait_recording_done, do_adhoc_statistics, wait_recording_done
 
 from tests.common import get_test_home_assistant, mock_registry
-from tests.components.recorder.common import wait_recording_done
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -157,10 +156,11 @@ def mock_sensor_statistics():
         """Generate fake statistics."""
         return {
             "meta": {
-                "statistic_id": entity_id,
-                "unit_of_measurement": "dogs",
                 "has_mean": True,
                 "has_sum": False,
+                "name": None,
+                "statistic_id": entity_id,
+                "unit_of_measurement": "dogs",
             },
             "stat": {"start": start},
         }
@@ -448,9 +448,9 @@ def test_statistics_duplicated(hass_recorder, caplog):
     ),
 )
 async def test_import_statistics(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     caplog,
     source,
     statistic_id,
@@ -528,7 +528,8 @@ async def test_import_statistics(
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "unit_of_measurement": "kWh",
+            "statistics_unit_of_measurement": "kWh",
+            "unit_class": "energy",
         }
     ]
     metadata = get_metadata(hass, statistic_ids=(statistic_id,))
@@ -599,7 +600,7 @@ async def test_import_statistics(
         ]
     }
 
-    # Update the previously inserted statistics
+    # Update the previously inserted statistics + rename
     external_statistics = {
         "start": period1,
         "max": 1,
@@ -609,8 +610,35 @@ async def test_import_statistics(
         "state": 4,
         "sum": 5,
     }
+    external_metadata["name"] = "Total imported energy renamed"
     import_fn(hass, external_metadata, (external_statistics,))
     await async_wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "has_mean": False,
+            "has_sum": True,
+            "statistic_id": statistic_id,
+            "name": "Total imported energy renamed",
+            "source": source,
+            "statistics_unit_of_measurement": "kWh",
+            "unit_class": "energy",
+        }
+    ]
+    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    assert metadata == {
+        statistic_id: (
+            1,
+            {
+                "has_mean": False,
+                "has_sum": True,
+                "name": "Total imported energy renamed",
+                "source": source,
+                "statistic_id": statistic_id,
+                "unit_of_measurement": "kWh",
+            },
+        )
+    }
     stats = statistics_during_period(hass, zero, period="hour")
     assert stats == {
         statistic_id: [
@@ -639,6 +667,7 @@ async def test_import_statistics(
         ]
     }
 
+    # Adjust the statistics in a different unit
     await client.send_json(
         {
             "id": 1,
@@ -646,6 +675,7 @@ async def test_import_statistics(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
+            "adjustment_unit_of_measurement": "MWh",
         }
     )
     response = await client.receive_json()
@@ -675,7 +705,7 @@ async def test_import_statistics(
                 "min": None,
                 "last_reset": last_reset_utc_str,
                 "state": approx(1.0),
-                "sum": approx(1003.0),
+                "sum": approx(1000 * 1000 + 3.0),
             },
         ]
     }

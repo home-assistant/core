@@ -32,31 +32,31 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_sensor_pair_dump", scope="session")
+@pytest.fixture(name="data_sensor_pair_dump", scope="package")
 def data_sensor_pair_dump_fixture():
     """Define data from a successful sensor_pair_dump response."""
     return json.loads(load_fixture("sensor_pair_dump_data.json", "guardian"))
 
 
-@pytest.fixture(name="data_sensor_pair_sensor", scope="session")
+@pytest.fixture(name="data_sensor_pair_sensor", scope="package")
 def data_sensor_pair_sensor_fixture():
     """Define data from a successful sensor_pair_sensor response."""
     return json.loads(load_fixture("sensor_pair_sensor_data.json", "guardian"))
 
 
-@pytest.fixture(name="data_sensor_paired_sensor_status", scope="session")
+@pytest.fixture(name="data_sensor_paired_sensor_status", scope="package")
 def data_sensor_paired_sensor_status_fixture():
     """Define data from a successful sensor_paired_sensor_status response."""
     return json.loads(load_fixture("sensor_paired_sensor_status_data.json", "guardian"))
 
 
-@pytest.fixture(name="data_system_diagnostics", scope="session")
+@pytest.fixture(name="data_system_diagnostics", scope="package")
 def data_system_diagnostics_fixture():
     """Define data from a successful system_diagnostics response."""
     return json.loads(load_fixture("system_diagnostics_data.json", "guardian"))
 
 
-@pytest.fixture(name="data_system_onboard_sensor_status", scope="session")
+@pytest.fixture(name="data_system_onboard_sensor_status", scope="package")
 def data_system_onboard_sensor_status_fixture():
     """Define data from a successful system_onboard_sensor_status response."""
     return json.loads(
@@ -64,19 +64,19 @@ def data_system_onboard_sensor_status_fixture():
     )
 
 
-@pytest.fixture(name="data_system_ping", scope="session")
+@pytest.fixture(name="data_system_ping", scope="package")
 def data_system_ping_fixture():
     """Define data from a successful system_ping response."""
     return json.loads(load_fixture("system_ping_data.json", "guardian"))
 
 
-@pytest.fixture(name="data_valve_status", scope="session")
+@pytest.fixture(name="data_valve_status", scope="package")
 def data_valve_status_fixture():
     """Define data from a successful valve_status response."""
     return json.loads(load_fixture("valve_status_data.json", "guardian"))
 
 
-@pytest.fixture(name="data_wifi_status", scope="session")
+@pytest.fixture(name="data_wifi_status", scope="package")
 def data_wifi_status_fixture():
     """Define data from a successful wifi_status response."""
     return json.loads(load_fixture("wifi_status_data.json", "guardian"))

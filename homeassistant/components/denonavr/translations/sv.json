@@ -25,6 +25,9 @@
             "user": {
                 "data": {
                     "host": "IP-adress"
+                },
+                "data_description": {
+                    "host": "L\u00e4mna tomt f\u00f6r att anv\u00e4nda automatisk uppt\u00e4ckt"
                 }
             }
         }

@@ -123,7 +123,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         """Domain specific event handler."""
         self._state = event["value"]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)

@@ -1,6 +1,6 @@
 """Test ZHA Gateway."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import zigpy.profiles.zha as zha
@@ -211,3 +211,51 @@ async def test_gateway_create_group_with_id(hass, device_light_1, coordinator):
     assert len(zha_group.members) == 1
     assert zha_group.members[0].device is device_light_1
     assert zha_group.group_id == 0x1234
+
+
+@patch(
+    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_devices",
+    MagicMock(),
+)
+@patch(
+    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_groups",
+    MagicMock(),
+)
+@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
+@pytest.mark.parametrize(
+    "startup",
+    [
+        [asyncio.TimeoutError(), FileNotFoundError(), MagicMock()],
+        [asyncio.TimeoutError(), MagicMock()],
+        [MagicMock()],
+    ],
+)
+async def test_gateway_initialize_success(startup, hass, device_light_1, coordinator):
+    """Test ZHA initializing the gateway successfully."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+
+    zha_gateway.shutdown = AsyncMock()
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new", side_effect=startup
+    ) as mock_new:
+        await zha_gateway.async_initialize()
+
+    assert mock_new.call_count == len(startup)
+
+
+@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
+async def test_gateway_initialize_failure(hass, device_light_1, coordinator):
+    """Test ZHA failing to initialize the gateway."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+
+    with patch(
+        "bellows.zigbee.application.ControllerApplication.new",
+        side_effect=[asyncio.TimeoutError(), FileNotFoundError(), RuntimeError()],
+    ) as mock_new:
+        with pytest.raises(RuntimeError):
+            await zha_gateway.async_initialize()
+
+    assert mock_new.call_count == 3

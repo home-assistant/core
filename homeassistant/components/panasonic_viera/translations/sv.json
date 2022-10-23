@@ -2,9 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta.",
             "unknown": "Ett ov\u00e4ntat fel intr\u00e4ffade. Kontrollera loggarna f\u00f6r mer information."
         },
         "error": {
+            "cannot_connect": "Det gick inte att ansluta.",
             "invalid_pin_code": "Pin-kod du angav \u00e4r ogiltig"
         },
         "step": {

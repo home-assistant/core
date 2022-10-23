@@ -9,11 +9,29 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Passwort",
+                    "pin": "PIN-Code",
+                    "username": "Benutzername"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Host",
+                    "pin": "PIN-Code",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Passwort",
                     "pin": "PIN-Code",
                     "username": "Benutzername"
+                },
+                "menu_options": {
+                    "cloud": "Risco-Cloud (empfohlen)",
+                    "local": "Lokales Risco-Panel (fortgeschritten)"
                 }
             }
         }

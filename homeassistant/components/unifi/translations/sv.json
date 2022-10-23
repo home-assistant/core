@@ -67,7 +67,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Skapa bandbreddsanv\u00e4ndningssensorer f\u00f6r n\u00e4tverksklienter"
+                    "allow_bandwidth_sensors": "Skapa bandbreddsanv\u00e4ndningssensorer f\u00f6r n\u00e4tverksklienter",
+                    "allow_uptime_sensors": "Upptidssensorer f\u00f6r n\u00e4tverksklienter"
                 },
                 "description": "Konfigurera statistiksensorer",
                 "title": "UniFi-inst\u00e4llningar 2/3"

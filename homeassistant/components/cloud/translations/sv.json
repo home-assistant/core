@@ -10,6 +10,7 @@
             "relayer_connected": "Vidarebefodrare Ansluten",
             "remote_connected": "Fj\u00e4rransluten",
             "remote_enabled": "Fj\u00e4rr\u00e5tkomst Aktiverad",
+            "remote_server": "Fj\u00e4rrserver",
             "subscription_expiration": "Prenumerationens utg\u00e5ng"
         }
     }

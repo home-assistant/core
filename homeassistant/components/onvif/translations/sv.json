@@ -7,6 +7,9 @@
             "no_mac": "Det gick inte att konfigurera unikt ID f\u00f6r ONVIF-enhet.",
             "onvif_error": "Problem med att konfigurera ONVIF enheten. Kolla loggarna f\u00f6r mer information."
         },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
         "step": {
             "configure": {
                 "data": {

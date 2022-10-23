@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "port_name_in_use": "Ya existe un enlace o accesorio configurado con ese nombre o puerto."
+            "port_name_in_use": "Ya est\u00e1 configurado un accesorio o puente con el mismo nombre o puerto."
         },
         "step": {
             "pairing": {
-                "description": "Para completar el emparejamiento, sigue las instrucciones en \"Notificaciones\" en \"Emparejamiento HomeKit\".",
-                "title": "Vinculaci\u00f3n HomeKit"
+                "description": "Para completar el emparejamiento, sigue las instrucciones en \"Notificaciones\" bajo \"Emparejamiento HomeKit\".",
+                "title": "Emparejar HomeKit"
             },
             "user": {
                 "data": {
                     "include_domains": "Dominios para incluir"
                 },
-                "description": "Una pasarela Homekit permitir\u00e1 a Homekit acceder a sus entidades de Home Assistant. La pasarela Homekit est\u00e1 limitada a 150 accesorios por instancia incluyendo la propia pasarela. Si desea enlazar m\u00e1s del m\u00e1ximo n\u00famero de accesorios, se recomienda que use multiples pasarelas Homekit para diferentes dominios. Configuraci\u00f3n detallada de la entidad solo est\u00e1 disponible via YAML para la pasarela primaria.",
-                "title": "Activar pasarela Homekit"
+                "description": "Elige los dominios a incluir. Se incluir\u00e1n todas las entidades admitidas en el dominio, excepto las entidades categorizadas. Se crear\u00e1 una instancia separada de HomeKit en modo accesorio para cada reproductor multimedia de TV, control remoto basado en actividad, cerradura y c\u00e1mara.",
+                "title": "Selecciona los dominios que se incluir\u00e1n"
             }
         }
     },
@@ -23,13 +23,13 @@
                 "data": {
                     "entities": "Entidad"
                 },
-                "title": "Seleccione la entidad para el accesorio"
+                "title": "Selecciona la entidad para el accesorio"
             },
             "advanced": {
                 "data": {
-                    "devices": "Dispositivos (disparadores)"
+                    "devices": "Dispositivos (Disparadores)"
                 },
-                "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",
+                "description": "Se crean interruptores programables para cada dispositivo seleccionado. Cuando se dispara un dispositivo, HomeKit se puede configurar para ejecutar una automatizaci\u00f3n o una escena.",
                 "title": "Configuraci\u00f3n avanzada"
             },
             "cameras": {
@@ -37,35 +37,35 @@
                     "camera_audio": "C\u00e1maras que admiten audio",
                     "camera_copy": "C\u00e1maras compatibles con transmisiones H.264 nativas"
                 },
-                "description": "Verifique todas las c\u00e1maras que admiten transmisiones H.264 nativas. Si la c\u00e1mara no emite una transmisi\u00f3n H.264, el sistema transcodificar\u00e1 el video a H.264 para HomeKit. La transcodificaci\u00f3n requiere una CPU de alto rendimiento y es poco probable que funcione en ordenadores de placa \u00fanica.",
-                "title": "Seleccione el c\u00f3dec de video de la c\u00e1mara."
+                "description": "Marca todas las c\u00e1maras que admitan transmisiones H.264 nativas. Si la c\u00e1mara no emite una transmisi\u00f3n H.264, el sistema transcodificar\u00e1 el video a H.264 para HomeKit. La transcodificaci\u00f3n requiere una CPU de alto rendimiento y es poco probable que funcione en ordenadores de placa \u00fanica.",
+                "title": "Configuraci\u00f3n de C\u00e1mara"
             },
             "exclude": {
                 "data": {
                     "entities": "Entidades"
                 },
-                "description": "Se incluir\u00e1n todas las entidades de \" {domains} \" excepto las entidades excluidas y las entidades categorizadas.",
+                "description": "Se incluir\u00e1n todas las entidades de \"{domains}\" excepto las entidades excluidas y las entidades categorizadas.",
                 "title": "Selecciona las entidades a excluir"
             },
             "include": {
                 "data": {
                     "entities": "Entidades"
                 },
-                "description": "Se incluir\u00e1n todas las entidades de \" {domains} \" a menos que se seleccionen entidades espec\u00edficas.",
-                "title": "Seleccione las entidades a incluir"
+                "description": "Se incluir\u00e1n todas las entidades de \"{domains}\" a menos que se seleccionen entidades espec\u00edficas.",
+                "title": "Selecciona las entidades a incluir"
             },
             "init": {
                 "data": {
-                    "domains": "Dominios a incluir",
+                    "domains": "Dominios para incluir",
                     "include_exclude_mode": "Modo de inclusi\u00f3n",
-                    "mode": "Mode de HomeKit"
+                    "mode": "Modo de HomeKit"
                 },
-                "description": "Las entidades de los \"Dominios que se van a incluir\" se establecer\u00e1n en HomeKit. Podr\u00e1 seleccionar qu\u00e9 entidades excluir de esta lista en la siguiente pantalla.",
-                "title": "Selecciona el modo y dominios."
+                "description": "HomeKit se puede configurar para exponer un puente o un solo accesorio. En el modo accesorio, solo se puede usar una sola entidad. El modo accesorio es necesario para que los reproductores multimedia con la clase de dispositivo TV funcionen correctamente. Las entidades en los \"Dominios para incluir\" se incluir\u00e1n en HomeKit. Podr\u00e1s seleccionar qu\u00e9 entidades incluir o excluir de esta lista en la siguiente pantalla.",
+                "title": "Selecciona el modo y los dominios."
             },
             "yaml": {
                 "description": "Esta entrada se controla a trav\u00e9s de YAML",
-                "title": "Ajustar las opciones del puente HomeKit"
+                "title": "Ajustar las opciones de HomeKit"
             }
         }
     }

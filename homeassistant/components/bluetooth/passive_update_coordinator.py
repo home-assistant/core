@@ -28,9 +28,10 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         logger: logging.Logger,
         address: str,
         mode: BluetoothScanningMode,
+        connectable: bool = False,
     ) -> None:
         """Initialize PassiveBluetoothDataUpdateCoordinator."""
-        super().__init__(hass, logger, address, mode)
+        super().__init__(hass, logger, address, mode, connectable)
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
 
     @callback
@@ -40,9 +41,11 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
             update_callback()
 
     @callback
-    def _async_handle_unavailable(self, address: str) -> None:
+    def _async_handle_unavailable(
+        self, service_info: BluetoothServiceInfoBleak
+    ) -> None:
         """Handle the device going unavailable."""
-        super()._async_handle_unavailable(address)
+        super()._async_handle_unavailable(service_info)
         self.async_update_listeners()
 
     @callback
@@ -72,7 +75,6 @@ class PassiveBluetoothDataUpdateCoordinator(BasePassiveBluetoothCoordinator):
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        super()._async_handle_bluetooth_event(service_info, change)
         self.async_update_listeners()
 
 

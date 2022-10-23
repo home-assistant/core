@@ -12,10 +12,7 @@ from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
+    FanEntityFeature,
 )
 from homeassistant.components.homekit.const import ATTR_VALUE, PROP_MIN_STEP
 from homeassistant.components.homekit.type_fans import Fan
@@ -118,7 +115,10 @@ async def test_fan_direction(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_DIRECTION, ATTR_DIRECTION: DIRECTION_FORWARD},
+        {
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.DIRECTION,
+            ATTR_DIRECTION: DIRECTION_FORWARD,
+        },
     )
     await hass.async_block_till_done()
     acc = Fan(hass, hk_driver, "Fan", entity_id, 1, None)
@@ -186,7 +186,7 @@ async def test_fan_oscillate(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         STATE_ON,
-        {ATTR_SUPPORTED_FEATURES: SUPPORT_OSCILLATE, ATTR_OSCILLATING: False},
+        {ATTR_SUPPORTED_FEATURES: FanEntityFeature.OSCILLATE, ATTR_OSCILLATING: False},
     )
     await hass.async_block_till_done()
     acc = Fan(hass, hk_driver, "Fan", entity_id, 1, None)
@@ -256,7 +256,7 @@ async def test_fan_speed(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED,
             ATTR_PERCENTAGE: 0,
             ATTR_PERCENTAGE_STEP: 25,
         },
@@ -342,9 +342,9 @@ async def test_fan_set_all_one_shot(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED
-            | SUPPORT_OSCILLATE
-            | SUPPORT_DIRECTION,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED
+            | FanEntityFeature.OSCILLATE
+            | FanEntityFeature.DIRECTION,
             ATTR_PERCENTAGE: 0,
             ATTR_OSCILLATING: False,
             ATTR_DIRECTION: DIRECTION_FORWARD,
@@ -364,9 +364,9 @@ async def test_fan_set_all_one_shot(hass, hk_driver, events):
         entity_id,
         STATE_OFF,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED
-            | SUPPORT_OSCILLATE
-            | SUPPORT_DIRECTION,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED
+            | FanEntityFeature.OSCILLATE
+            | FanEntityFeature.DIRECTION,
             ATTR_PERCENTAGE: 0,
             ATTR_OSCILLATING: False,
             ATTR_DIRECTION: DIRECTION_FORWARD,
@@ -435,9 +435,9 @@ async def test_fan_set_all_one_shot(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED
-            | SUPPORT_OSCILLATE
-            | SUPPORT_DIRECTION,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.SET_SPEED
+            | FanEntityFeature.OSCILLATE
+            | FanEntityFeature.DIRECTION,
             ATTR_PERCENTAGE: 0,
             ATTR_OSCILLATING: False,
             ATTR_DIRECTION: DIRECTION_FORWARD,
@@ -545,7 +545,9 @@ async def test_fan_restore(hass, hk_driver, events):
         "9012",
         suggested_object_id="all_info_set",
         capabilities={"speed_list": ["off", "low", "medium", "high"]},
-        supported_features=SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION,
+        supported_features=FanEntityFeature.SET_SPEED
+        | FanEntityFeature.OSCILLATE
+        | FanEntityFeature.DIRECTION,
         original_device_class="mock-device-class",
     )
 
@@ -559,7 +561,7 @@ async def test_fan_restore(hass, hk_driver, events):
     assert acc.char_speed is None
     assert acc.char_swing is None
 
-    acc = Fan(hass, hk_driver, "Fan", "fan.all_info_set", 2, None)
+    acc = Fan(hass, hk_driver, "Fan", "fan.all_info_set", 3, None)
     assert acc.category == 3
     assert acc.char_active is not None
     assert acc.char_direction is not None
@@ -575,7 +577,7 @@ async def test_fan_multiple_preset_modes(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_PRESET_MODE,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE,
             ATTR_PRESET_MODE: "auto",
             ATTR_PRESET_MODES: ["auto", "smart"],
         },
@@ -594,7 +596,7 @@ async def test_fan_multiple_preset_modes(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_PRESET_MODE,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE,
             ATTR_PRESET_MODE: "smart",
             ATTR_PRESET_MODES: ["auto", "smart"],
         },
@@ -655,7 +657,8 @@ async def test_fan_single_preset_mode(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_PRESET_MODE | SUPPORT_SET_SPEED,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.SET_SPEED,
             ATTR_PERCENTAGE: 42,
             ATTR_PRESET_MODE: "smart",
             ATTR_PRESET_MODES: ["smart"],
@@ -718,7 +721,8 @@ async def test_fan_single_preset_mode(hass, hk_driver, events):
         entity_id,
         STATE_ON,
         {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_PRESET_MODE | SUPPORT_SET_SPEED,
+            ATTR_SUPPORTED_FEATURES: FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.SET_SPEED,
             ATTR_PERCENTAGE: 42,
             ATTR_PRESET_MODE: None,
             ATTR_PRESET_MODES: ["smart"],

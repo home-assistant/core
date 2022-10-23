@@ -304,6 +304,8 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
 class UtilityMeterSensor(RestoreSensor):
     """Representation of an utility meter sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         *,
@@ -580,11 +582,6 @@ class UtilityMeterSensor(RestoreSensor):
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def extra_state_attributes(self):

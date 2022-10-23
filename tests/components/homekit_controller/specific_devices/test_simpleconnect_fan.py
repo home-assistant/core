@@ -4,9 +4,9 @@ Test against characteristics captured from a SIMPLEconnect Fan.
 https://github.com/home-assistant/core/issues/26180
 """
 
-from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED
+from homeassistant.components.fan import FanEntityFeature
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -36,8 +36,9 @@ async def test_simpleconnect_fan_setup(hass):
                 EntityTestInfo(
                     entity_id="fan.simpleconnect_fan_06f674_hunter_fan",
                     friendly_name="SIMPLEconnect Fan-06F674 Hunter Fan",
-                    unique_id="homekit-1234567890abcd-8",
-                    supported_features=SUPPORT_DIRECTION | SUPPORT_SET_SPEED,
+                    unique_id="00:00:00:00:00:00_1_8",
+                    supported_features=FanEntityFeature.DIRECTION
+                    | FanEntityFeature.SET_SPEED,
                     capabilities={
                         "preset_modes": None,
                     },

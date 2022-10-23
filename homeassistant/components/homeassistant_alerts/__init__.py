@@ -9,11 +9,14 @@ import logging
 import aiohttp
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
-from homeassistant.components.repairs import async_create_issue, async_delete_issue
-from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -138,7 +141,6 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
         self.ha_version = AwesomeVersion(
             __version__,
             ensure_strategy=AwesomeVersionStrategy.CALVER,
-            find_first_match=False,
         )
 
     async def _async_update_data(self) -> dict[str, IntegrationAlert]:
@@ -158,14 +160,12 @@ class AlertUpdateCoordinator(DataUpdateCoordinator[dict[str, IntegrationAlert]])
                 if "affected_from_version" in alert["homeassistant"]:
                     affected_from_version = AwesomeVersion(
                         alert["homeassistant"]["affected_from_version"],
-                        find_first_match=False,
                     )
                     if self.ha_version < affected_from_version:
                         continue
                 if "resolved_in_version" in alert["homeassistant"]:
                     resolved_in_version = AwesomeVersion(
                         alert["homeassistant"]["resolved_in_version"],
-                        find_first_match=False,
                     )
                     if self.ha_version >= resolved_in_version:
                         continue

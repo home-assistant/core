@@ -4,7 +4,7 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Fallo al conectar",
+            "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
@@ -13,7 +13,7 @@
                 "data": {
                     "host": "Host",
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }
@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "reverse": "L\u00f3gica de conmutaci\u00f3n inversa (utilizar NC)"
+                    "reverse": "L\u00f3gica de interruptor inverso (usar NC)"
                 }
             }
         }

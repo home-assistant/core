@@ -1,8 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
         "error": {
             "cannot_connect": "Det gick inte att ansluta.",
             "invalid_auth": "Ogiltig autentisering",
+            "invalid_auth_key": "API-inloggningsuppgifter avvisades av Coinbase p\u00e5 grund av en ogiltig API-nyckel.",
+            "invalid_auth_secret": "API-inloggningsuppgifter avvisades av Coinbase p\u00e5 grund av en ogiltig API-hemlighet.",
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {

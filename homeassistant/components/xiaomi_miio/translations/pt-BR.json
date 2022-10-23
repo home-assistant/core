@@ -5,7 +5,8 @@
             "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
             "incomplete_info": "Informa\u00e7\u00f5es incompletas para configurar o dispositivo, nenhum host ou token fornecido.",
             "not_xiaomi_miio": "O dispositivo (ainda) n\u00e3o \u00e9 suportado pelo Xiaomi Miio.",
-            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "unknown": "Erro inesperado"
         },
         "error": {
             "cannot_connect": "Falha ao conectar",

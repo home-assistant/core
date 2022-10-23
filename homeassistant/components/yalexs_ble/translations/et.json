@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "no_devices_found": "V\u00f5rgust seadmeid ei leitud",
+            "no_unconfigured_devices": "H\u00e4\u00e4lestamata seadmeid ei leitud."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "invalid_key_format": "V\u00f5rgu\u00fchenduseta v\u00f5ti peab olema 32-baidine kuueteistk\u00fcmnebaidine string.",
+            "invalid_key_index": "V\u00f5rgu\u00fchenduseta v\u00f5tmepesa peab olema t\u00e4isarv vahemikus 0 kuni 255.",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "integration_discovery_confirm": {
+                "description": "Kas seadistada {name} Bluetoothi kaudu aadressiga {address} ?"
+            },
+            "user": {
+                "data": {
+                    "address": "Bluetoothi aadress",
+                    "key": "V\u00f5rgu\u00fchenduseta v\u00f5ti (32-baidine kuueteistk\u00fcmnebaidine string)",
+                    "slot": "V\u00f5rgu\u00fchenduseta v\u00f5tmepesa (t\u00e4isarv vahemikus 0 kuni 255)"
+                },
+                "description": "V\u00f5rgu\u00fchenduseta v\u00f5tme leidmise kohta vaata dokumentatsiooni."
+            }
+        }
+    }
+}

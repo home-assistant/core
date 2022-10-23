@@ -73,6 +73,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             icon="mdi:water-sync",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.UV,
+            name="UV Sterilization",
+            icon="mdi:lightbulb",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     # Light
     # https://developer.tuya.com/en/docs/iot/f?id=K9i5ql3v98hn3

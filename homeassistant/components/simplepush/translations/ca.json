@@ -22,6 +22,10 @@
         "deprecated_yaml": {
             "description": "La configuraci\u00f3 de Simplepush mitjan\u00e7ant YAML s'eliminar\u00e0 de Home Assistant.\n\nLa configuraci\u00f3 YAML existent s'ha importat autom\u00e0ticament a la interf\u00edcie d'usuari.\n\nElimina la configuraci\u00f3 YAML de Simplepush del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
             "title": "La configuraci\u00f3 YAML de Simplepush est\u00e0 sent eliminada"
+        },
+        "removed_yaml": {
+            "description": "La configuraci\u00f3 de Simplepush mitjan\u00e7ant YAML s'ha eliminat de Home Assistant.\n\nHome Assistant ja no utilitza la configuraci\u00f3 YAML existent.\n\nElimina la configuraci\u00f3 YAML de Simplepush del fitxer configuration.yaml i reinicia Home Assistant per solucionar aquest problema.",
+            "title": "La configuraci\u00f3 YAML de Simplepush s'ha eliminat"
         }
     }
 }

@@ -91,7 +91,7 @@ class HddTempSensor(SensorEntity):
         if self._details is not None:
             return {ATTR_DEVICE: self._details[0], ATTR_MODEL: self._details[1]}
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from HDDTemp daemon and updates the state."""
         self.hddtemp.update()
 

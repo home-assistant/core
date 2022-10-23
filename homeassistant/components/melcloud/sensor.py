@@ -57,6 +57,15 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         value_fn=lambda x: x.device.total_energy_consumed,
         enabled=lambda x: x.device.has_energy_consumed_meter,
     ),
+    MelcloudSensorEntityDescription(
+        key="daily_energy",
+        name="Daily Energy Consumed",
+        icon="mdi:factory",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda x: x.device.daily_energy_consumed,
+        enabled=lambda x: True,
+    ),
 )
 ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
@@ -75,6 +84,15 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda x: x.device.tank_temperature,
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="daily_energy",
+        name="Daily Energy Consumed",
+        icon="mdi:factory",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda x: x.device.daily_energy_consumed,
         enabled=lambda x: True,
     ),
 )
@@ -165,7 +183,7 @@ class MelDeviceSensor(SensorEntity):
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._api)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
         await self._api.async_update()
 

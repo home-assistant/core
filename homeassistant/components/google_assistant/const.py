@@ -186,3 +186,21 @@ SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"
 
 NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}
+
+FAN_SPEEDS = {
+    "5/5": ["High", "Max", "Fast", "5"],
+    "4/5": ["Medium High", "4"],
+    "3/5": ["Medium", "3"],
+    "2/5": ["Medium Low", "2"],
+    "1/5": ["Low", "Min", "Slow", "1"],
+    "4/4": ["High", "Max", "Fast", "4"],
+    "3/4": ["Medium High", "3"],
+    "2/4": ["Medium Low", "2"],
+    "1/4": ["Low", "Min", "Slow", "1"],
+    "3/3": ["High", "Max", "Fast", "3"],
+    "2/3": ["Medium", "2"],
+    "1/3": ["Low", "Min", "Slow", "1"],
+    "2/2": ["High", "Max", "Fast", "2"],
+    "1/2": ["Low", "Min", "Slow", "1"],
+    "1/1": ["Normal", "1"],
+}

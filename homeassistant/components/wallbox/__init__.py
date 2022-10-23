@@ -13,12 +13,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
-from ...helpers.entity import DeviceInfo
 from .const import (
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
@@ -93,6 +94,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Authenticate using Wallbox API."""
         try:
             self._wallbox.authenticate()
+
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
                 raise ConfigEntryAuthFailed from wallbox_connection_error
@@ -125,11 +127,12 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
                 data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
             )
-
             return data
-
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            raise ConnectionError from wallbox_connection_error
+        except (
+            ConnectionError,
+            requests.exceptions.HTTPError,
+        ) as wallbox_connection_error:
+            raise UpdateFailed from wallbox_connection_error
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""

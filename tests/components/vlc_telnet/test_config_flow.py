@@ -15,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-# mypy: allow-untyped-calls
-
 
 @pytest.mark.parametrize(
     "input_data, entry_data",
@@ -139,7 +137,7 @@ async def test_errors(
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test successful reauth flow."""
-    entry_data = {
+    entry_data: dict[str, Any] = {
         "password": "old-password",
         "host": "1.1.1.1",
         "port": 8888,
@@ -248,8 +246,10 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
                 "host": "1.1.1.1",
                 "port": 8888,
                 "name": "custom name",
-                "addon": "vlc",
-            }
+                "addon": "VLC",
+            },
+            name="VLC",
+            slug="vlc",
         )
 
         result = await hass.config_entries.flow.async_init(
@@ -286,7 +286,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config=entry_data),
+        data=HassioServiceInfo(config=entry_data, name="VLC", slug="vlc"),
     )
     await hass.async_block_till_done()
 
@@ -326,8 +326,10 @@ async def test_hassio_errors(
                     "host": "1.1.1.1",
                     "port": 8888,
                     "name": "custom name",
-                    "addon": "vlc",
-                }
+                    "addon": "VLC",
+                },
+                name="VLC",
+                slug="vlc",
             ),
         )
         await hass.async_block_till_done()

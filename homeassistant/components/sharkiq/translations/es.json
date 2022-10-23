@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "La cuenta ya est\u00e1 configurada",
             "cannot_connect": "No se pudo conectar",
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "unknown": "Error inesperado"
         },
         "error": {
@@ -15,13 +15,13 @@
             "reauth": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Usuario"
+                    "username": "Nombre de usuario"
                 }
             }
         }

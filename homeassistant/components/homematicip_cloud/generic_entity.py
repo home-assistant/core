@@ -72,6 +72,8 @@ GROUP_ATTRIBUTES = {
 class HomematicipGenericEntity(Entity):
     """Representation of the HomematicIP generic entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hap: HomematicipHAP,
@@ -200,11 +202,6 @@ class HomematicipGenericEntity(Entity):
             name = f"{self._home.name} {name}"
 
         return name
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def available(self) -> bool:

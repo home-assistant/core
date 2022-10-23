@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "Seadme juurdep\u00e4\u00e4su projekti ID"
                 },
-                "description": "Loo Nest Device Accessi projekt, mille seadistamiseks on vaja 5 USA dollari suurust tasu**.\n1. Ava [Seadme juurdep\u00e4\u00e4sukonsool]({device_access_console_url}) ja maksevoo kaudu.\n1. Vajuta **Loo projekt**\n1. Anna oma seadmele juurdep\u00e4\u00e4su projektile nimi ja kl\u00f5psa nuppu **Next**.\n1. Sisesta oma OAuth Kliendi ID\n1. Luba s\u00fcndmused, kl\u00f5psates nuppu **Luba** ja **Loo projekt**.\n\nSisesta allpool seadme accessi projekti ID ([lisateave]({more_info_url})).\n",
+                "description": "Loo Nest Device Accessi projekt, mille seadistamiseks on vaja 5 USA dollari suurust tasu**.\n1. Ava [Seadme juurdep\u00e4\u00e4sukonsool]({device_access_console_url}) ja maksevoo kaudu.\n1. Vajuta **Loo projekt**\n1. Anna oma seadmele juurdep\u00e4\u00e4su projektile nimi ja kl\u00f5psa nuppu **Next**.\n1. Sisesta oma OAuth Kliendi ID\n1. Luba s\u00fcndmused, kl\u00f5psates nuppu **Luba** ja **Loo projekt**.\n\nSisesta allpool seadme accessi projekti ID ([lisateave]({more_info_url})).",
                 "title": "Nest: seadmele juurdep\u00e4\u00e4su projekti loomine"
             },
             "device_project_upgrade": {
@@ -95,6 +95,16 @@
             "camera_person": "Isik tuvastatud",
             "camera_sound": "Tuvastati heli",
             "doorbell_chime": "Uksekell helises"
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Nesti seadistamine rakenduses configuration.yaml eemaldatakse koduabilisest 2022.10.\n\nTeie olemasolevad OAuthi rakenduse identimis- ja juurdep\u00e4\u00e4sus\u00e4tted on automaatselt kasutajaliidesesse imporditud. Eemaldage FAILIST CONFIGURATION.yaml YAML-konfiguratsioon ja taask\u00e4ivitage selle probleemi lahendamiseks Home Assistant.",
+            "title": "Nesti YAML-i konfiguratsioon eemaldatakse"
+        },
+        "removed_app_auth": {
+            "description": "Turvalisuse parandamiseks ja andmep\u00fc\u00fcgiriski v\u00e4hendamiseks katkestas Google Home Assistanti autentimismeetodi. \n\n **Selle lahendamiseks peate midagi ette v\u00f5tma** ([rohkem teavet]( {more_info_url} )) \n\n 1. K\u00fclastage integreerimise lehte\n 1. Kl\u00f5psake Nesti integratsioonil nuppu Konfigureeri uuesti.\n 1. Koduassistent juhendab teid veebiautentimisele \u00fcleminekuks. \n\n Veaotsingu teabe saamiseks vaadake Nesti [integreerimisjuhiseid]( {documentation_url} ).",
+            "title": "Nesti autentimise mandaate tuleb v\u00e4rskendada"
         }
     }
 }

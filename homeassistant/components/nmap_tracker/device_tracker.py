@@ -46,6 +46,8 @@ async def async_setup_entry(
 class NmapTrackerEntity(ScannerEntity):
     """An Nmap Tracker entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, nmap_tracker: NmapDeviceScanner, mac_address: str, active: bool
     ) -> None:
@@ -96,11 +98,6 @@ class NmapTrackerEntity(ScannerEntity):
     def source_type(self) -> SourceType:
         """Return tracker source type."""
         return SourceType.ROUTER
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
 
     @property
     def icon(self) -> str:

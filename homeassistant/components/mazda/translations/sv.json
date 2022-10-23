@@ -13,9 +13,11 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "E-post",
                     "password": "L\u00f6senord",
                     "region": "Region"
-                }
+                },
+                "description": "Ange den e-postadress och det l\u00f6senord som du anv\u00e4nder f\u00f6r att logga in i MyMazda-mobilappen."
             }
         }
     }

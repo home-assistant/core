@@ -1,10 +1,16 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
             "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
             "backoff": "Enheten accepterar inte parningsf\u00f6rfr\u00e5gningar f\u00f6r n\u00e4rvarande (du kan ha angett en ogiltig PIN-kod f\u00f6r m\u00e5nga g\u00e5nger), f\u00f6rs\u00f6k igen senare.",
             "device_did_not_pair": "Inget f\u00f6rs\u00f6k att avsluta parningsprocessen gjordes fr\u00e5n enheten.",
+            "device_not_found": "Enheten hittades inte under uppt\u00e4ckten, f\u00f6rs\u00f6k att l\u00e4gga till den igen.",
+            "inconsistent_device": "F\u00f6rv\u00e4ntade protokoll hittades inte under uppt\u00e4ckten. Detta indikerar normalt ett problem med multicast DNS (Zeroconf). F\u00f6rs\u00f6k att l\u00e4gga till enheten igen.",
+            "ipv6_not_supported": "IPv6 st\u00f6ds inte.",
             "no_devices_found": "Inga enheter hittades i n\u00e4tverket",
+            "reauth_successful": "\u00c5terautentisering lyckades",
+            "setup_failed": "Det gick inte att konfigurera enheten.",
             "unknown": "Ov\u00e4ntat fel"
         },
         "error": {
@@ -30,6 +36,14 @@
                 "description": "Parning kr\u00e4vs f\u00f6r protokollet ` {protocol} `. V\u00e4nligen ange PIN-koden som visas p\u00e5 sk\u00e4rmen. Inledande nollor ska utel\u00e4mnas, dvs ange 123 om den visade koden \u00e4r 0123.",
                 "title": "Parkoppling"
             },
+            "password": {
+                "description": "Ett l\u00f6senord kr\u00e4vs av ` {protocol} `. Detta st\u00f6ds inte \u00e4nnu, inaktivera l\u00f6senordet f\u00f6r att forts\u00e4tta.",
+                "title": "L\u00f6senord kr\u00e4vs"
+            },
+            "protocol_disabled": {
+                "description": "Parkoppling kr\u00e4vs f\u00f6r ` {protocol} ` men det \u00e4r inaktiverat p\u00e5 enheten. Granska potentiella \u00e5tkomstbegr\u00e4nsningar (t.ex. till\u00e5t alla enheter i det lokala n\u00e4tverket att ansluta) p\u00e5 enheten. \n\n Du kan forts\u00e4tta utan att para detta protokoll, men vissa funktioner kommer att vara begr\u00e4nsade.",
+                "title": "Det g\u00e5r inte att koppla ihop"
+            },
             "reconfigure": {
                 "description": "Konfigurera om enheten f\u00f6r att \u00e5terst\u00e4lla dess funktionalitet.",
                 "title": "Omkonfigurering av enheten"
@@ -52,7 +66,8 @@
             "init": {
                 "data": {
                     "start_off": "Sl\u00e5 inte p\u00e5 enheten n\u00e4r du startar Home Assistant"
-                }
+                },
+                "description": "Konfigurera allm\u00e4nna enhetsinst\u00e4llningar"
             }
         }
     }

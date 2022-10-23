@@ -18,6 +18,7 @@
             "user": {
                 "data": {
                     "api_key": "API nyckel",
+                    "url": "URL",
                     "verify_ssl": "Verifiera SSL-certifikat"
                 }
             }

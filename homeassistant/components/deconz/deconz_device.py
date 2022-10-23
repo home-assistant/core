@@ -32,6 +32,8 @@ _DeviceT = TypeVar(
 class DeconzBase(Generic[_DeviceT]):
     """Common base for deconz entities and events."""
 
+    unique_id_suffix: str | None = None
+
     def __init__(
         self,
         device: _DeviceT,
@@ -45,6 +47,8 @@ class DeconzBase(Generic[_DeviceT]):
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         assert isinstance(self._device, PydeconzDevice)
+        if self.unique_id_suffix is not None:
+            return f"{self._device.unique_id}-{self.unique_id_suffix}"
         return self._device.unique_id
 
     @property
@@ -78,6 +82,10 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
 
     _attr_should_poll = False
 
+    _name_suffix: str | None = None
+    _update_key: str | None = None
+    _update_keys: set[str] | None = None
+
     TYPE = ""
 
     def __init__(
@@ -90,6 +98,13 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
         self.gateway.entities[self.TYPE].add(self.unique_id)
 
         self._attr_name = self._device.name
+        if self._name_suffix is not None:
+            self._attr_name += f" {self._name_suffix}"
+
+        if self._update_key is not None:
+            self._update_keys = {self._update_key}
+        if self._update_keys is not None:
+            self._update_keys |= {"reachable"}
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
@@ -118,6 +133,12 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
     def async_update_callback(self) -> None:
         """Update the device's state."""
         if self.gateway.ignore_state_updates:
+            return
+
+        if (
+            self._update_keys is not None
+            and not self._device.changed_keys.intersection(self._update_keys)
+        ):
             return
 
         self.async_write_ha_state()

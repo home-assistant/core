@@ -39,7 +39,7 @@ class EcoalTempSensor(SensorEntity):
         self._attr_name = name
         self._status_attr = status_attr
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor.
 
         This is the only method that should fetch new data for Home Assistant.

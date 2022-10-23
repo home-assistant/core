@@ -14,10 +14,10 @@ from .common import FAKE_WEBHOOK_ACTIVATION, selected_platforms, simulate_webhoo
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
-async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
-    """Test setup and services."""
+async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth):
+    """Test camera ligiht setup and services."""
     with selected_platforms(["light"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -53,7 +53,7 @@ async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
     assert hass.states.get(light_entity).state == "on"
 
     # Test turning light off
-    with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
+    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -62,13 +62,11 @@ async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
-            home_id="91763b24c43d3e344f424e8b",
-            camera_id="12:34:56:00:a5:a4",
-            floodlight="auto",
+            {"modules": [{"id": "12:34:56:00:a5:a4", "floodlight": "auto"}]}
         )
 
     # Test turning light on
-    with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
+    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -77,9 +75,7 @@ async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
-            home_id="91763b24c43d3e344f424e8b",
-            camera_id="12:34:56:00:a5:a4",
-            floodlight="on",
+            {"modules": [{"id": "12:34:56:00:a5:a4", "floodlight": "on"}]}
         )
 
 
@@ -93,7 +89,7 @@ async def test_setup_component_no_devices(hass, config_entry):
         fake_post_hits += 1
         return AiohttpClientMockResponse(
             method="POST",
-            url=kwargs["url"],
+            url=kwargs["endpoint"],
             json={},
         )
 
@@ -106,13 +102,13 @@ async def test_setup_component_no_devices(hass, config_entry):
     ), patch(
         "homeassistant.components.netatmo.webhook_generate_url"
     ):
-        mock_auth.return_value.async_post_request.side_effect = (
+        mock_auth.return_value.async_post_api_request.side_effect = (
             fake_post_request_no_data
         )
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
 
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Fake webhook activation
@@ -125,3 +121,57 @@ async def test_setup_component_no_devices(hass, config_entry):
 
         assert hass.config_entries.async_entries(DOMAIN)
         assert len(hass.states.async_all()) == 0
+
+
+async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
+    """Test setup and services."""
+    with selected_platforms(["light"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    light_entity = "light.bathroom_light"
+
+    assert hass.states.get(light_entity).state == "off"
+
+    # Test turning light off
+    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: light_entity},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_set_state.assert_called_once_with(
+            {
+                "modules": [
+                    {
+                        "id": "12:34:56:00:01:01:01:a1",
+                        "on": False,
+                        "bridge": "12:34:56:80:60:40",
+                    }
+                ]
+            }
+        )
+
+    # Test turning light on
+    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: light_entity},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_set_state.assert_called_once_with(
+            {
+                "modules": [
+                    {
+                        "id": "12:34:56:00:01:01:01:a1",
+                        "on": True,
+                        "bridge": "12:34:56:80:60:40",
+                    }
+                ]
+            }
+        )

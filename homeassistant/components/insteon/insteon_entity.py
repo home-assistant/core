@@ -28,6 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 class InsteonEntity(Entity):
     """INSTEON abstract base entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, device, group):
         """Initialize the INSTEON binary sensor."""
         self._insteon_device_group = device.groups[group]
@@ -36,11 +38,6 @@ class InsteonEntity(Entity):
     def __hash__(self):
         """Return the hash of the Insteon Entity."""
         return hash(self._insteon_device)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def address(self):

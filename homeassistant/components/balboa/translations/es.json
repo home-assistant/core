@@ -12,7 +12,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "title": "Con\u00e9ctese al dispositivo Wi-Fi de Balboa"
+                "title": "Con\u00e9ctate al dispositivo Wi-Fi de Balboa"
             }
         }
     },
@@ -20,7 +20,7 @@
         "step": {
             "init": {
                 "data": {
-                    "sync_time": "Mantenga sincronizada la hora de su cliente de Balboa Spa con Home Assistant"
+                    "sync_time": "Mant\u00e9n sincronizada la hora de tu Cliente Balboa Spa con Home Assistant"
                 }
             }
         }

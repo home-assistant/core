@@ -12,7 +12,8 @@
             "cloud_credentials_incomplete": "Cloud-uppgifterna \u00e4r ofullst\u00e4ndiga, v\u00e4nligen fyll i anv\u00e4ndarnamn, l\u00f6senord och land",
             "cloud_login_error": "Kunde inte logga in p\u00e5 Xiaomi Miio Cloud, kontrollera anv\u00e4ndaruppgifterna.",
             "cloud_no_devices": "Inga enheter hittades i detta Xiaomi Miio molnkonto.",
-            "unknown_device": "Enhetsmodellen \u00e4r inte k\u00e4nd, kan inte st\u00e4lla in enheten med hj\u00e4lp av konfigurationsfl\u00f6de."
+            "unknown_device": "Enhetsmodellen \u00e4r inte k\u00e4nd, kan inte st\u00e4lla in enheten med hj\u00e4lp av konfigurationsfl\u00f6de.",
+            "wrong_token": "Kontrollsummafel, fel token"
         },
         "flow_title": "{name}",
         "step": {

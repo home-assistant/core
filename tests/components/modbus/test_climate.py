@@ -2,10 +2,17 @@
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
+    HVACMode,
+)
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
+    CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_ONOFF_REGISTER,
     CONF_LAZY_ERROR,
     CONF_TARGET_TEMP,
     MODBUS_DOMAIN,
@@ -53,11 +60,101 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                 }
             ],
         },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 12,
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 12,
+                    CONF_HVAC_MODE_REGISTER: {
+                        CONF_ADDRESS: 11,
+                        CONF_HVAC_MODE_VALUES: {
+                            HVACMode.OFF.value: 0,
+                            HVACMode.HEAT.value: 1,
+                            HVACMode.COOL.value: 2,
+                            HVACMode.HEAT_COOL.value: 3,
+                            HVACMode.DRY.value: 4,
+                            HVACMode.FAN_ONLY.value: 5,
+                            HVACMode.AUTO.value: 6,
+                        },
+                    },
+                }
+            ],
+        },
     ],
 )
 async def test_config_climate(hass, mock_modbus):
     """Run configuration test for climate."""
     assert CLIMATE_DOMAIN in hass.config.components
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_MODE_REGISTER: {
+                        CONF_ADDRESS: 11,
+                        CONF_HVAC_MODE_VALUES: {
+                            HVACMode.OFF.value: 0,
+                            HVACMode.HEAT.value: 1,
+                            HVACMode.COOL.value: 2,
+                            HVACMode.HEAT_COOL.value: 3,
+                        },
+                    },
+                }
+            ],
+        },
+    ],
+)
+async def test_config_hvac_mode_register(hass, mock_modbus):
+    """Run configuration test for mode register."""
+    state = hass.states.get(ENTITY_ID)
+    assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.HEAT in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.COOL in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.HEAT_COOL in state.attributes[ATTR_HVAC_MODES]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 11,
+                }
+            ],
+        },
+    ],
+)
+async def test_config_hvac_onoff_register(hass, mock_modbus):
+    """Run configuration test for On/Off register."""
+    state = hass.states.get(ENTITY_ID)
+    assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
 
 
 @pytest.mark.parametrize(
@@ -91,28 +188,93 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
 
 
 @pytest.mark.parametrize(
-    "do_config",
+    "do_config,result,register_words",
     [
-        {
-            CONF_CLIMATES: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_TARGET_TEMP: 117,
-                    CONF_ADDRESS: 117,
-                    CONF_SLAVE: 10,
-                    CONF_SCAN_INTERVAL: 0,
-                    CONF_DATA_TYPE: DataType.INT32,
-                }
-            ]
-        },
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVACMode.COOL.value: 0,
+                                HVACMode.HEAT.value: 1,
+                                HVACMode.DRY.value: 2,
+                            },
+                        },
+                    },
+                ]
+            },
+            HVACMode.COOL,
+            [0x00],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVACMode.COOL.value: 0,
+                                HVACMode.HEAT.value: 1,
+                                HVACMode.DRY.value: 2,
+                            },
+                        },
+                    },
+                ]
+            },
+            HVACMode.HEAT,
+            [0x01],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVACMode.COOL.value: 0,
+                                HVACMode.HEAT.value: 2,
+                                HVACMode.DRY.value: 3,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 119,
+                    },
+                ]
+            },
+            HVACMode.OFF,
+            [0x00],
+        ),
     ],
 )
-async def test_service_climate_update(hass, mock_modbus, mock_ha):
+async def test_service_climate_update(
+    hass, mock_modbus, mock_ha, result, register_words
+):
     """Run test for service homeassistant.update_entity."""
+    mock_modbus.read_holding_registers.return_value = ReadResult(register_words)
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(ENTITY_ID).state == "auto"
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == result
 
 
 @pytest.mark.parametrize(
@@ -191,6 +353,68 @@ async def test_service_climate_set_temperature(
         {
             "entity_id": ENTITY_ID,
             ATTR_TEMPERATURE: temperature,
+        },
+        blocking=True,
+    )
+
+
+@pytest.mark.parametrize(
+    "hvac_mode, result, do_config",
+    [
+        (
+            HVACMode.COOL,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVACMode.COOL.value: 1,
+                                HVACMode.HEAT.value: 2,
+                            },
+                        },
+                    }
+                ]
+            },
+        ),
+        (
+            HVACMode.HEAT,
+            [0x00],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVACMode.COOL.value: 1,
+                                HVACMode.HEAT.value: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_REGISTER: 119,
+                    }
+                ]
+            },
+        ),
+    ],
+)
+async def test_service_set_mode(hass, hvac_mode, result, mock_modbus, mock_ha):
+    """Test set mode."""
+    mock_modbus.read_holding_registers.return_value = ReadResult(result)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_hvac_mode",
+        {
+            "entity_id": ENTITY_ID,
+            ATTR_HVAC_MODE: hvac_mode,
         },
         blocking=True,
     )

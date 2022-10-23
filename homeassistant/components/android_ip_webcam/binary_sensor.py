@@ -4,46 +4,57 @@ from __future__ import annotations
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_HOST, CONF_NAME, DATA_IP_WEBCAM, KEY_MAP, AndroidIPCamEntity
+from .const import DOMAIN, MOTION_ACTIVE
+from .coordinator import AndroidIPCamDataUpdateCoordinator
+from .entity import AndroidIPCamBaseEntity
+
+BINARY_SENSOR_DESCRIPTION = BinarySensorEntityDescription(
+    key="motion_active",
+    name="Motion active",
+    device_class=BinarySensorDeviceClass.MOTION,
+)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the IP Webcam binary sensors."""
-    if discovery_info is None:
-        return
+    """Set up the IP Webcam sensors from config entry."""
 
-    host = discovery_info[CONF_HOST]
-    name = discovery_info[CONF_NAME]
-    ipcam = hass.data[DATA_IP_WEBCAM][host]
+    coordinator: AndroidIPCamDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
-    async_add_entities([IPWebcamBinarySensor(name, host, ipcam, "motion_active")], True)
+    async_add_entities([IPWebcamBinarySensor(coordinator)])
 
 
-class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorEntity):
+class IPWebcamBinarySensor(AndroidIPCamBaseEntity, BinarySensorEntity):
     """Representation of an IP Webcam binary sensor."""
 
-    _attr_device_class = BinarySensorDeviceClass.MOTION
-
-    def __init__(self, name, host, ipcam, sensor):
+    def __init__(
+        self,
+        coordinator: AndroidIPCamDataUpdateCoordinator,
+    ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(host, ipcam)
+        self.entity_description = BINARY_SENSOR_DESCRIPTION
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}-{BINARY_SENSOR_DESCRIPTION.key}"
+        )
+        super().__init__(coordinator)
 
-        self._sensor = sensor
-        self._mapped_name = KEY_MAP.get(self._sensor, self._sensor)
-        self._attr_name = f"{name} {self._mapped_name}"
-        self._attr_is_on = None
+    @property
+    def available(self) -> bool:
+        """Return avaibility if setting is enabled."""
+        return MOTION_ACTIVE in self.cam.enabled_sensors and super().available
 
-    async def async_update(self):
-        """Retrieve latest state."""
-        state, _ = self._ipcam.export_sensor(self._sensor)
-        self._attr_is_on = state == 1.0
+    @property
+    def is_on(self) -> bool:
+        """Return if motion is detected."""
+        return self.cam.get_sensor_value(MOTION_ACTIVE) == 1.0

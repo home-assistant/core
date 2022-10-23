@@ -37,6 +37,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service": {
+            "description": "Modifiez tout script ou automatisation utilisant ce service afin qu'ils utilisent \u00e0 la place le service `{alternate_service}` avec pour ID d'entit\u00e9 cible `{alternate_target}`. Cliquez ensuite sur VALIDER ci-dessous afin de marquer ce probl\u00e8me comme r\u00e9solu.",
+            "title": "Le service {deprecated_service} sera bient\u00f4t supprim\u00e9"
+        }
+    },
     "options": {
         "step": {
             "init": {
