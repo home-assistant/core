@@ -169,17 +169,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # the panel ID and store it as ELMAX_PANEL_ID within async_create_entry data.
         await client.get_current_panel_status()
 
-        # Make sure this is the only Elmax integration for this specific panel id.
-        await self.async_set_unique_id(client_api_url)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
+        return await self._check_unique_and_create_entry(
+            unique_id=client_api_url,
             title=f"Elmax Direct {client_api_url}",
             data={
                 CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT,
                 CONF_ELMAX_MODE_DIRECT_URI: client_api_url,
                 CONF_ELMAX_PANEL_PIN: panel_pin,
             },
+        )
+
+    async def _check_unique_and_create_entry(
+        self, unique_id: str, title: str, data: Mapping[str, Any]
+    ) -> FlowResult:
+        # Make sure this is the only Elmax integration for this specific panel id.
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=title,
+            data=data,
         )
 
     async def async_step_cloud_setup(
@@ -263,24 +272,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Lookup the panel id from the panel name.
         panel_id = self._panel_names[panel_name]
 
-        # Make sure this is the only elmax integration for this specific panel id.
-        await self.async_set_unique_id(panel_id)
-        self._abort_if_unique_id_configured()
-
         # Try to list all the devices using the given PIN.
         try:
             await self._client.get_panel_status(
                 control_panel_id=panel_id, pin=panel_pin
-            )
-            return self.async_create_entry(
-                title=f"Elmax cloud {panel_name}",
-                data={
-                    CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD,
-                    CONF_ELMAX_PANEL_ID: panel_id,
-                    CONF_ELMAX_PANEL_PIN: panel_pin,
-                    CONF_ELMAX_USERNAME: self._username,
-                    CONF_ELMAX_PASSWORD: self._password,
-                },
             )
         except ElmaxBadPinError:
             errors["base"] = "invalid_pin"
@@ -288,8 +283,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Error occurred")
             errors["base"] = "unknown"
 
-        return self.async_show_form(
-            step_id="panels", data_schema=self._panels_schema, errors=errors
+        if errors:
+            return self.async_show_form(
+                step_id="panels", data_schema=self._panels_schema, errors=errors
+            )
+
+        return await self._check_unique_and_create_entry(
+            unique_id=panel_id,
+            title=f"Elmax cloud {panel_name}",
+            data={
+                CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD,
+                CONF_ELMAX_PANEL_ID: panel_id,
+                CONF_ELMAX_PANEL_PIN: panel_pin,
+                CONF_ELMAX_USERNAME: self._username,
+                CONF_ELMAX_PASSWORD: self._password,
+            },
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:

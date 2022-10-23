@@ -5,6 +5,8 @@ from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetw
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.elmax.const import (
+    CONF_ELMAX_MODE,
+    CONF_ELMAX_MODE_CLOUD,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -33,11 +35,11 @@ async def test_show_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "choose_mode"
 
 
-async def test_standard_setup(hass):
-    """Test the standard setup case."""
+async def test_cloud_setup(hass):
+    """Test the standard cloud setup case."""
     # Setup once.
     show_form_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -46,6 +48,10 @@ async def test_standard_setup(hass):
         "homeassistant.components.elmax.async_setup_entry",
         return_value=True,
     ):
+        login_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -64,7 +70,7 @@ async def test_standard_setup(hass):
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_one_config_allowed(hass):
+async def test_one_config_allowed_cloud(hass):
     """Test that only one Elmax configuration is allowed for each panel."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -81,8 +87,12 @@ async def test_one_config_allowed(hass):
     show_form_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    login_result = await hass.config_entries.flow.async_configure(
+    user_result = await hass.config_entries.flow.async_configure(
         show_form_result["flow_id"],
+        {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+    )
+    login_result = await hass.config_entries.flow.async_configure(
+        user_result["flow_id"],
         {
             CONF_ELMAX_USERNAME: MOCK_USERNAME,
             CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
@@ -99,7 +109,7 @@ async def test_one_config_allowed(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_credentials(hass):
+async def test_cloud_invalid_credentials(hass):
     """Test that invalid credentials throws an error."""
     with patch(
         "elmax_api.http.Elmax.login",
@@ -108,6 +118,10 @@ async def test_invalid_credentials(hass):
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -115,7 +129,7 @@ async def test_invalid_credentials(hass):
                 CONF_ELMAX_PASSWORD: "incorrect_password",
             },
         )
-        assert login_result["step_id"] == "user"
+        assert login_result["step_id"] == "cloud_setup"
         assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "invalid_auth"}
 
@@ -129,6 +143,10 @@ async def test_connection_error(hass):
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -136,7 +154,7 @@ async def test_connection_error(hass):
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
             },
         )
-        assert login_result["step_id"] == "user"
+        assert login_result["step_id"] == "cloud_setup"
         assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "network_error"}
 
@@ -149,6 +167,10 @@ async def test_unhandled_error(hass):
     ):
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
         )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
@@ -179,6 +201,10 @@ async def test_invalid_pin(hass):
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -208,6 +234,10 @@ async def test_no_online_panel(hass):
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -215,7 +245,7 @@ async def test_no_online_panel(hass):
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
             },
         )
-        assert login_result["step_id"] == "user"
+        assert login_result["step_id"] == "cloud_setup"
         assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "no_panel_online"}
 
