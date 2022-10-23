@@ -81,7 +81,7 @@ enable_pure_boost:
             - "Normal"
             - "Sensitive"
 full_state:
-  name: Set full AC state
+  name: Set full state
   description: Set full AC state for Sensibo device.
   target:
     entity:
