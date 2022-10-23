@@ -33,7 +33,7 @@ from homeassistant.components.sensibo.climate import (
     SERVICE_ASSUME_STATE,
     SERVICE_ENABLE_PURE_BOOST,
     SERVICE_ENABLE_TIMER,
-    SERVICE_FULL_AC_STATE,
+    SERVICE_FULL_STATE,
     _find_valid_target_temp,
 )
 from homeassistant.components.sensibo.const import DOMAIN
@@ -953,7 +953,7 @@ async def test_climate_full_ac_state(
         with pytest.raises(MultipleInvalid):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_FULL_AC_STATE,
+                SERVICE_FULL_STATE,
                 {
                     ATTR_ENTITY_ID: state_climate.entity_id,
                     ATTR_TARGET_TEMPERATURE: 22,
@@ -971,7 +971,7 @@ async def test_climate_full_ac_state(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_FULL_AC_STATE,
+            SERVICE_FULL_STATE,
             {
                 ATTR_ENTITY_ID: state_climate.entity_id,
                 ATTR_MODE: "cool",

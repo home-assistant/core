@@ -37,7 +37,7 @@ SERVICE_ENABLE_TIMER = "enable_timer"
 ATTR_MINUTES = "minutes"
 SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
 SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
-SERVICE_FULL_AC_STATE = "full_ac_state"
+SERVICE_FULL_STATE = "full_ac_state"
 
 ATTR_AC_INTEGRATION = "ac_integration"
 ATTR_GEO_INTEGRATION = "geo_integration"
@@ -126,7 +126,7 @@ async def async_setup_entry(
         "async_enable_pure_boost",
     )
     platform.async_register_entity_service(
-        SERVICE_FULL_AC_STATE,
+        SERVICE_FULL_STATE,
         {
             vol.Required(ATTR_MODE): vol.In(
                 ["cool", "heat", "fan", "auto", "dry", "off"]

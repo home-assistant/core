@@ -80,7 +80,7 @@ enable_pure_boost:
           options:
             - "Normal"
             - "Sensitive"
-full_ac_state:
+full_state:
   name: Set full AC state
   description: Set full AC state for Sensibo device.
   target:
