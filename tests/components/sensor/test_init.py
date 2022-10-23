@@ -35,7 +35,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import mock_restore_cache_with_extra_data
 
@@ -43,8 +43,8 @@ from tests.common import mock_restore_cache_with_extra_data
 @pytest.mark.parametrize(
     "unit_system,native_unit,state_unit,native_value,state_value",
     [
-        (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, TEMP_FAHRENHEIT, 100, 100),
-        (IMPERIAL_SYSTEM, TEMP_CELSIUS, TEMP_FAHRENHEIT, 38, 100),
+        (US_CUSTOMARY_SYSTEM, TEMP_FAHRENHEIT, TEMP_FAHRENHEIT, 100, 100),
+        (US_CUSTOMARY_SYSTEM, TEMP_CELSIUS, TEMP_FAHRENHEIT, 38, 100),
         (METRIC_SYSTEM, TEMP_FAHRENHEIT, TEMP_CELSIUS, 100, 38),
         (METRIC_SYSTEM, TEMP_CELSIUS, TEMP_CELSIUS, 38, 38),
     ],

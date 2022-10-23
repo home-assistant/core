@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import MazdaEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
@@ -51,7 +51,7 @@ class MazdaSensorEntityDescription(
 
 def _get_distance_unit(unit_system: UnitSystem) -> str:
     """Return the distance unit for the given unit system."""
-    if unit_system is IMPERIAL_SYSTEM:
+    if unit_system is US_CUSTOMARY_SYSTEM:
         return LENGTH_MILES
     return LENGTH_KILOMETERS
 

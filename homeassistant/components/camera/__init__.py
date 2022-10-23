@@ -14,7 +14,7 @@ from functools import partial
 import logging
 import os
 from random import SystemRandom
-from typing import Final, Optional, cast, final
+from typing import Any, Final, Optional, cast, final
 
 from PIL import Image as PilImage, ImageDraw, ImageFont
 from aiohttp import hdrs, web
@@ -835,7 +835,7 @@ class Annotation:
 )
 @websocket_api.async_response
 async def ws_camera_stream(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get camera stream websocket command.
 
@@ -865,7 +865,7 @@ async def ws_camera_stream(
 )
 @websocket_api.async_response
 async def ws_camera_web_rtc_offer(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle the signal path for a WebRTC stream.
 
@@ -905,7 +905,7 @@ async def ws_camera_web_rtc_offer(
 )
 @websocket_api.async_response
 async def websocket_get_prefs(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
     prefs = hass.data[DATA_CAMERA_PREFS].get(msg["entity_id"])
@@ -922,7 +922,7 @@ async def websocket_get_prefs(
 )
 @websocket_api.async_response
 async def websocket_update_prefs(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
     prefs = hass.data[DATA_CAMERA_PREFS]

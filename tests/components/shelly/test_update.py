@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_registry import async_get
 
-from . import init_integration
+from . import MOCK_MAC, init_integration
 
 
 async def test_block_update(hass: HomeAssistant, mock_block_device, monkeypatch):
@@ -15,7 +15,7 @@ async def test_block_update(hass: HomeAssistant, mock_block_device, monkeypatch)
     entity_registry.async_get_or_create(
         UPDATE_DOMAIN,
         DOMAIN,
-        "test-mac-fwupdate",
+        f"{MOCK_MAC}-fwupdate",
         suggested_object_id="test_name_firmware_update",
         disabled_by=None,
     )
@@ -46,7 +46,7 @@ async def test_rpc_update(hass: HomeAssistant, mock_rpc_device, monkeypatch):
     entity_registry.async_get_or_create(
         UPDATE_DOMAIN,
         DOMAIN,
-        "shelly-sys-fwupdate",
+        f"{MOCK_MAC}-sys-fwupdate",
         suggested_object_id="test_name_firmware_update",
         disabled_by=None,
     )

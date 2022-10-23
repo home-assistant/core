@@ -7,8 +7,5 @@
   "dependencies": ["network"],
   "codeowners": ["@cmroche"],
   "iot_class": "local_polling",
-  "loggers": ["greeclimate"],
-  "supported_brands": {
-    "heiwa": "Heiwa"
-  }
+  "loggers": ["greeclimate"]
 }
