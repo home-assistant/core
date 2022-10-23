@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
-from .const import DATA_LIFX_MANAGER, DOMAIN
+from .const import ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator, Light
 from .util import convert_8_to_16, find_hsbk
 
@@ -51,7 +51,6 @@ ATTR_CHANGE = "change"
 ATTR_DIRECTION = "direction"
 ATTR_SPEED = "speed"
 ATTR_PALETTE = "palette"
-ATTR_THEME = "theme"
 
 EFFECT_FLAME = "FLAME"
 EFFECT_MORPH = "MORPH"
@@ -177,6 +176,7 @@ LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: vol.All(vol.Coerce(float), vol.Clamp(min=0.1, max=60)),
         ATTR_DIRECTION: vol.In(EFFECT_MOVE_DIRECTIONS),
+        ATTR_THEME: vol.Optional(vol.In(ThemeLibrary().themes)),
     }
 )
 
@@ -324,6 +324,7 @@ class LIFXManager:
                         direction=kwargs.get(
                             ATTR_DIRECTION, EFFECT_MOVE_DEFAULT_DIRECTION
                         ),
+                        theme_name=kwargs.get(ATTR_THEME, None),
                         power_on=kwargs.get(ATTR_POWER_ON, False),
                     )
                     for coordinator in coordinators
