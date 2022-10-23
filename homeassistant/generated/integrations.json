@@ -2454,7 +2454,7 @@
     },
     "ipp": {
       "name": "Internet Printing Protocol (IPP)",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4406,7 +4406,7 @@
     },
     "roku": {
       "name": "Roku",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
