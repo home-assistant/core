@@ -23,12 +23,23 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Atualize quaisquer automa\u00e7\u00f5es ou scripts que usam este servi\u00e7o para usar o servi\u00e7o `{alternate_service}` com um ID de entidade de destino de `{alternate_target}`. Em seguida, clique em ENVIAR abaixo para marcar este problema como resolvido.",
-                        "title": "O servi\u00e7o {deprecated_service} est\u00e1 sendo removido"
+                        "description": "Atualize quaisquer automa\u00e7\u00f5es ou scripts que usam este servi\u00e7o para usar o servi\u00e7o `{alternate_service}` com um ID de entidade de destino de `{alternate_target}`.",
+                        "title": "O servi\u00e7o {deprecated_service} ser\u00e1 removido"
                     }
                 }
             },
-            "title": "O servi\u00e7o {deprecated_service} est\u00e1 sendo removido"
+            "title": "O servi\u00e7o {deprecated_service} ser\u00e1 removido"
+        },
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Atualize quaisquer automa\u00e7\u00f5es ou scripts que usam essa entidade para usar `{replacement_entity_id}`.",
+                        "title": "A entidade {old_entity_id} ser\u00e1 removida"
+                    }
+                }
+            },
+            "title": "A entidade {old_entity_id} ser\u00e1 removida"
         }
     }
 }

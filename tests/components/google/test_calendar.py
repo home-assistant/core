@@ -24,6 +24,7 @@ from .conftest import (
     TEST_API_ENTITY,
     TEST_API_ENTITY_NAME,
     TEST_YAML_ENTITY,
+    TEST_YAML_ENTITY_NAME,
 )
 
 from tests.common import async_fire_time_changed
@@ -81,15 +82,6 @@ def upcoming() -> dict[str, Any]:
     return {
         "start": {"dateTime": now.isoformat()},
         "end": {"dateTime": (now + datetime.timedelta(minutes=5)).isoformat()},
-    }
-
-
-def upcoming_date() -> dict[str, Any]:
-    """Create a test event with an arbitrary start/end date fetched from the api url."""
-    now = dt_util.now()
-    return {
-        "start": {"date": now.date().isoformat()},
-        "end": {"date": now.date().isoformat()},
     }
 
 
@@ -462,7 +454,8 @@ async def test_http_api_all_day_event(
     """Test querying the API and fetching events from the server."""
     event = {
         **TEST_EVENT,
-        **upcoming_date(),
+        "start": {"date": "2022-03-27"},
+        "end": {"date": "2022-03-28"},
     }
     mock_events_list_items([event])
     assert await component_setup()
@@ -475,7 +468,7 @@ async def test_http_api_all_day_event(
     assert {k: events[0].get(k) for k in ["summary", "start", "end"]} == {
         "summary": TEST_EVENT["summary"],
         "start": {"date": "2022-03-27"},
-        "end": {"date": "2022-03-27"},
+        "end": {"date": "2022-03-28"},
     }
 
 
@@ -576,6 +569,11 @@ async def test_opaque_event(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert (len(events) > 0) == expect_visible_event
+
+    # Verify entity state for upcoming event
+    state = hass.states.get(TEST_YAML_ENTITY)
+    assert state.name == TEST_YAML_ENTITY_NAME
+    assert state.state == (STATE_ON if expect_visible_event else STATE_OFF)
 
 
 @pytest.mark.parametrize("mock_test_setup", [None])

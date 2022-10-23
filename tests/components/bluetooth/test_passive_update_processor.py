@@ -34,13 +34,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import patch_all_discovered_devices
-
-from tests.common import MockEntityPlatform, async_fire_time_changed
-from tests.components.bluetooth import (
+from . import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
 )
+
+from tests.common import MockEntityPlatform, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_basic_usage(hass, mock_bleak_scanner_start):
+async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapters):
     """Test basic usage of the PassiveBluetoothProcessorCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -196,11 +196,13 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
     cancel_coordinator()
 
 
-async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
+async def test_unavailable_after_no_data(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test that the coordinator is unavailable after no data for a while."""
     with patch(
-        "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
-        [MagicMock(address="44:44:33:11:23:45")],
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -290,7 +292,9 @@ async def test_unavailable_after_no_data(hass, mock_bleak_scanner_start):
     cancel_coordinator()
 
 
-async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
+async def test_no_updates_once_stopping(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test updates are ignored once hass is stopping."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -343,7 +347,9 @@ async def test_no_updates_once_stopping(hass, mock_bleak_scanner_start):
     cancel_coordinator()
 
 
-async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_start):
+async def test_exception_from_update_method(
+    hass, caplog, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test we handle exceptions from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -406,7 +412,9 @@ async def test_exception_from_update_method(hass, caplog, mock_bleak_scanner_sta
     cancel_coordinator()
 
 
-async def test_bad_data_from_update_method(hass, mock_bleak_scanner_start):
+async def test_bad_data_from_update_method(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test we handle bad data from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -758,7 +766,9 @@ GOVEE_B5178_PRIMARY_AND_REMOTE_PASSIVE_BLUETOOTH_DATA_UPDATE = (
 )
 
 
-async def test_integration_with_entity(hass, mock_bleak_scanner_start):
+async def test_integration_with_entity(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test integration of PassiveBluetoothProcessorCoordinator with PassiveBluetoothCoordinatorEntity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -888,7 +898,9 @@ NO_DEVICES_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner_start):
+async def test_integration_with_entity_without_a_device(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test integration with PassiveBluetoothCoordinatorEntity with no device."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -950,7 +962,7 @@ async def test_integration_with_entity_without_a_device(hass, mock_bleak_scanner
 
 
 async def test_passive_bluetooth_entity_with_entity_platform(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Test with a mock entity platform."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -1048,7 +1060,9 @@ BINARY_SENSOR_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
 )
 
 
-async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_start):
+async def test_integration_multiple_entity_platforms(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test integration of PassiveBluetoothProcessorCoordinator with multiple platforms."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -1138,7 +1152,7 @@ async def test_integration_multiple_entity_platforms(hass, mock_bleak_scanner_st
 
 
 async def test_exception_from_coordinator_update_method(
-    hass, caplog, mock_bleak_scanner_start
+    hass, caplog, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Test we handle exceptions from the update method."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})

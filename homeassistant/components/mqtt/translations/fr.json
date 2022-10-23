@@ -49,6 +49,11 @@
             "button_triple_press": "\u00ab\u00a0{subtype}\u00a0\u00bb triple-cliqu\u00e9"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "Un\u00b7e ou plusieurs {plateform}\u00b7e\u00b7s MQTT configur\u00e9\u00b7e\u00b7s manuellement requi\u00e8rent votre attention"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Sujet de la naissance non valide.",

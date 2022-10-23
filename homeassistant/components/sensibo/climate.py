@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
@@ -169,7 +169,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.device_data.temp:
-            return convert_temperature(
+            return TemperatureConverter.convert(
                 self.device_data.temp,
                 TEMP_CELSIUS,
                 self.temperature_unit,

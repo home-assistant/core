@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
+        },
+        "step": {
+            "user": {
+                "description": "Voulez-vous configurer iBeacon Tracker\u00a0?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "min_rssi": "RSSI minimal"
+                }
+            }
+        }
+    }
+}

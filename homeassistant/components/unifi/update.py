@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aiounifi.models.device import DeviceUpgradeRequest
+
 from homeassistant.components.update import (
     DOMAIN,
     UpdateDeviceClass,
@@ -62,8 +64,7 @@ def add_device_update_entities(controller, async_add_entities, devices):
         device = controller.api.devices[mac]
         entities.append(UniFiDeviceUpdateEntity(device, controller))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
@@ -136,4 +137,4 @@ class UniFiDeviceUpdateEntity(UniFiBase, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        await self.controller.api.devices.upgrade(self.device.mac)
+        await self.controller.api.request(DeviceUpgradeRequest.create(self.device.mac))

@@ -1,6 +1,7 @@
 """Config flow for ZHA."""
 from __future__ import annotations
 
+import asyncio
 import collections
 import contextlib
 import copy
@@ -65,7 +66,15 @@ FORMATION_UPLOAD_MANUAL_BACKUP = "upload_manual_backup"
 CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
 
+OPTIONS_INTENT_MIGRATE = "intent_migrate"
+OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
+
 UPLOADED_BACKUP_FILE = "uploaded_backup_file"
+
+DEFAULT_ZHA_ZEROCONF_PORT = 6638
+ESPHOME_API_PORT = 6053
+
+CONNECT_DELAY_S = 1.0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,6 +168,7 @@ class BaseZhaFlow(FlowHandler):
             yield app
         finally:
             await app.disconnect()
+            await asyncio.sleep(CONNECT_DELAY_S)
 
     async def _restore_backup(
         self, backup: zigpy.backups.NetworkBackup, **kwargs: Any
@@ -628,14 +638,21 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
 
         # Hostname is format: livingroom.local.
         local_name = discovery_info.hostname[:-1]
-        radio_type = discovery_info.properties.get("radio_type") or local_name
+        port = discovery_info.port or DEFAULT_ZHA_ZEROCONF_PORT
+
+        # Fix incorrect port for older TubesZB devices
+        if "tube" in local_name and port == ESPHOME_API_PORT:
+            port = DEFAULT_ZHA_ZEROCONF_PORT
+
+        if "radio_type" in discovery_info.properties:
+            self._radio_type = RadioType[discovery_info.properties["radio_type"]]
+        elif "efr32" in local_name:
+            self._radio_type = RadioType.ezsp
+        else:
+            self._radio_type = RadioType.znp
+
         node_name = local_name[: -len(".local")]
-        host = discovery_info.host
-        port = discovery_info.port
-        if local_name.startswith("tube") or "efr32" in local_name:
-            # This is hard coded to work with legacy devices
-            port = 6638
-        device_path = f"socket://{host}:{port}"
+        device_path = f"socket://{discovery_info.host}:{port}"
 
         if current_entry := await self.async_set_unique_id(node_name):
             self._abort_if_unique_id_configured(
@@ -650,13 +667,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
         self.context["title_placeholders"] = {CONF_NAME: node_name}
         self._title = device_path
         self._device_path = device_path
-
-        if "efr32" in radio_type:
-            self._radio_type = RadioType.ezsp
-        elif "zigate" in radio_type:
-            self._radio_type = RadioType.zigate
-        else:
-            self._radio_type = RadioType.znp
 
         return await self.async_step_confirm()
 
@@ -720,9 +730,53 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, config_entries.OptionsFlow):
                 # ZHA is not running
                 pass
 
-            return await self.async_step_choose_serial_port()
+            return await self.async_step_prompt_migrate_or_reconfigure()
 
         return self.async_show_form(step_id="init")
+
+    async def async_step_prompt_migrate_or_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm if we are migrating adapters or just re-configuring."""
+
+        return self.async_show_menu(
+            step_id="prompt_migrate_or_reconfigure",
+            menu_options=[
+                OPTIONS_INTENT_RECONFIGURE,
+                OPTIONS_INTENT_MIGRATE,
+            ],
+        )
+
+    async def async_step_intent_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Virtual step for when the user is reconfiguring the integration."""
+        return await self.async_step_choose_serial_port()
+
+    async def async_step_intent_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm the user wants to reset their current radio."""
+
+        if user_input is not None:
+            # Reset the current adapter
+            async with self._connect_zigpy_app() as app:
+                await app.reset_network_info()
+
+            return await self.async_step_instruct_unplug()
+
+        return self.async_show_form(step_id="intent_migrate")
+
+    async def async_step_instruct_unplug(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Instruct the user to unplug the current radio, if possible."""
+
+        if user_input is not None:
+            # Now that the old radio is gone, we can scan for serial ports again
+            return await self.async_step_choose_serial_port()
+
+        return self.async_show_form(step_id="instruct_unplug")
 
     async def _async_create_radio_entity(self):
         """Re-implementation of the base flow's final step to update the config."""

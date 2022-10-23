@@ -2,21 +2,22 @@
 from __future__ import annotations
 
 from numbers import Number
+from typing import Final
+
+import voluptuous as vol
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
     LENGTH,
-    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-    LENGTH_MILLIMETERS,
     MASS,
     MASS_GRAMS,
     MASS_KILOGRAMS,
     MASS_OUNCES,
     MASS_POUNDS,
+    PRECIPITATION_INCHES,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE,
     PRESSURE_PA,
     PRESSURE_PSI,
@@ -31,29 +32,34 @@ from homeassistant.const import (
     VOLUME_LITERS,
     WIND_SPEED,
 )
+from homeassistant.helpers.frame import report
 
-from . import (
-    distance as distance_util,
-    pressure as pressure_util,
-    speed as speed_util,
-    temperature as temperature_util,
-    volume as volume_util,
+from .unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
+    VolumeConverter,
 )
 
-LENGTH_UNITS = distance_util.VALID_UNITS
+_CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
+_CONF_UNIT_SYSTEM_METRIC: Final = "metric"
+_CONF_UNIT_SYSTEM_US_CUSTOMARY: Final = "us_customary"
 
-MASS_UNITS: tuple[str, ...] = (MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS)
+LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
-PRESSURE_UNITS = pressure_util.VALID_UNITS
+MASS_UNITS: set[str] = {MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS}
 
-VOLUME_UNITS = volume_util.VALID_UNITS
+PRESSURE_UNITS = PressureConverter.VALID_UNITS
 
-WIND_SPEED_UNITS = speed_util.VALID_UNITS
+VOLUME_UNITS = VolumeConverter.VALID_UNITS
 
-TEMPERATURE_UNITS: tuple[str, ...] = (TEMP_FAHRENHEIT, TEMP_CELSIUS)
+WIND_SPEED_UNITS = SpeedConverter.VALID_UNITS
+
+TEMPERATURE_UNITS: set[str] = {TEMP_FAHRENHEIT, TEMP_CELSIUS}
 
 
-def is_valid_unit(unit: str, unit_type: str) -> bool:
+def _is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
     if unit_type == LENGTH:
         units = LENGTH_UNITS
@@ -81,13 +87,14 @@ class UnitSystem:
     def __init__(
         self,
         name: str,
-        temperature: str,
+        *,
+        accumulated_precipitation: str,
         length: str,
-        wind_speed: str,
-        volume: str,
         mass: str,
         pressure: str,
-        accumulated_precipitation: str,
+        temperature: str,
+        volume: str,
+        wind_speed: str,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
@@ -101,13 +108,13 @@ class UnitSystem:
                 (mass, MASS),
                 (pressure, PRESSURE),
             )
-            if not is_valid_unit(unit, unit_type)
+            if not _is_valid_unit(unit, unit_type)
         )
 
         if errors:
             raise ValueError(errors)
 
-        self.name = name
+        self._name = name
         self.accumulated_precipitation_unit = accumulated_precipitation
         self.temperature_unit = temperature
         self.length_unit = length
@@ -117,16 +124,38 @@ class UnitSystem:
         self.wind_speed_unit = wind_speed
 
     @property
+    def name(self) -> str:
+        """Return the name of the unit system."""
+        report(
+            "accesses the `name` property of the unit system. "
+            "This is deprecated and will stop working in Home Assistant 2023.1. "
+            "Please adjust to use instance check instead.",
+            error_if_core=False,
+        )
+        if self is IMPERIAL_SYSTEM:
+            # kept for compatibility reasons, with associated warning above
+            return _CONF_UNIT_SYSTEM_IMPERIAL
+        return self._name
+
+    @property
     def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
-        return self.name == CONF_UNIT_SYSTEM_METRIC
+        report(
+            "accesses the `is_metric` property of the unit system. "
+            "This is deprecated and will stop working in Home Assistant 2023.1. "
+            "Please adjust to use instance check instead.",
+            error_if_core=False,
+        )
+        return self is METRIC_SYSTEM
 
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
             raise TypeError(f"{temperature!s} is not a numeric value.")
 
-        return temperature_util.convert(temperature, from_unit, self.temperature_unit)
+        return TemperatureConverter.convert(
+            temperature, from_unit, self.temperature_unit
+        )
 
     def length(self, length: float | None, from_unit: str) -> float:
         """Convert the given length to this unit system."""
@@ -134,7 +163,7 @@ class UnitSystem:
             raise TypeError(f"{length!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return distance_util.convert(  # type: ignore[unreachable]
+        return DistanceConverter.convert(  # type: ignore[unreachable]
             length, from_unit, self.length_unit
         )
 
@@ -144,7 +173,7 @@ class UnitSystem:
             raise TypeError(f"{precip!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return distance_util.convert(  # type: ignore[unreachable]
+        return DistanceConverter.convert(  # type: ignore[unreachable]
             precip, from_unit, self.accumulated_precipitation_unit
         )
 
@@ -154,7 +183,7 @@ class UnitSystem:
             raise TypeError(f"{pressure!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return pressure_util.convert(  # type: ignore[unreachable]
+        return PressureConverter.convert(  # type: ignore[unreachable]
             pressure, from_unit, self.pressure_unit
         )
 
@@ -164,7 +193,7 @@ class UnitSystem:
             raise TypeError(f"{wind_speed!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return speed_util.convert(wind_speed, from_unit, self.wind_speed_unit)  # type: ignore[unreachable]
+        return SpeedConverter.convert(wind_speed, from_unit, self.wind_speed_unit)  # type: ignore[unreachable]
 
     def volume(self, volume: float | None, from_unit: str) -> float:
         """Convert the given volume to this unit system."""
@@ -172,7 +201,7 @@ class UnitSystem:
             raise TypeError(f"{volume!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
-        return volume_util.convert(volume, from_unit, self.volume_unit)  # type: ignore[unreachable]
+        return VolumeConverter.convert(volume, from_unit, self.volume_unit)  # type: ignore[unreachable]
 
     def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""
@@ -187,24 +216,51 @@ class UnitSystem:
         }
 
 
-METRIC_SYSTEM = UnitSystem(
-    CONF_UNIT_SYSTEM_METRIC,
-    TEMP_CELSIUS,
-    LENGTH_KILOMETERS,
-    SPEED_METERS_PER_SECOND,
-    VOLUME_LITERS,
-    MASS_GRAMS,
-    PRESSURE_PA,
-    LENGTH_MILLIMETERS,
+def get_unit_system(key: str) -> UnitSystem:
+    """Get unit system based on key."""
+    if key == _CONF_UNIT_SYSTEM_US_CUSTOMARY:
+        return US_CUSTOMARY_SYSTEM
+    if key == _CONF_UNIT_SYSTEM_METRIC:
+        return METRIC_SYSTEM
+    raise ValueError(f"`{key}` is not a valid unit system key")
+
+
+def _deprecated_unit_system(value: str) -> str:
+    """Convert deprecated unit system."""
+
+    if value == _CONF_UNIT_SYSTEM_IMPERIAL:
+        # need to add warning in 2023.1
+        return _CONF_UNIT_SYSTEM_US_CUSTOMARY
+    return value
+
+
+validate_unit_system = vol.All(
+    vol.Lower,
+    _deprecated_unit_system,
+    vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
 )
 
-IMPERIAL_SYSTEM = UnitSystem(
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    TEMP_FAHRENHEIT,
-    LENGTH_MILES,
-    SPEED_MILES_PER_HOUR,
-    VOLUME_GALLONS,
-    MASS_POUNDS,
-    PRESSURE_PSI,
-    LENGTH_INCHES,
+METRIC_SYSTEM = UnitSystem(
+    _CONF_UNIT_SYSTEM_METRIC,
+    accumulated_precipitation=PRECIPITATION_MILLIMETERS,
+    length=LENGTH_KILOMETERS,
+    mass=MASS_GRAMS,
+    pressure=PRESSURE_PA,
+    temperature=TEMP_CELSIUS,
+    volume=VOLUME_LITERS,
+    wind_speed=SPEED_METERS_PER_SECOND,
 )
+
+US_CUSTOMARY_SYSTEM = UnitSystem(
+    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+    accumulated_precipitation=PRECIPITATION_INCHES,
+    length=LENGTH_MILES,
+    mass=MASS_POUNDS,
+    pressure=PRESSURE_PSI,
+    temperature=TEMP_FAHRENHEIT,
+    volume=VOLUME_GALLONS,
+    wind_speed=SPEED_MILES_PER_HOUR,
+)
+
+IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM
+"""IMPERIAL_SYSTEM is deprecated. Please use US_CUSTOMARY_SYSTEM instead."""

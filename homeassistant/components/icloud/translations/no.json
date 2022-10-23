@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
             "no_device": "Ingen av enhetene dine har \"Finn min iPhone\" aktivert",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",

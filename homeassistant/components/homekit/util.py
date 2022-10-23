@@ -40,7 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
-import homeassistant.util.temperature as temp_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     AUDIO_CODEC_COPY,
@@ -391,12 +391,12 @@ def cleanup_name_for_homekit(name: str | None) -> str:
 
 def temperature_to_homekit(temperature: float | int, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
-    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS), 1)
+    return round(TemperatureConverter.convert(temperature, unit, TEMP_CELSIUS), 1)
 
 
 def temperature_to_states(temperature: float | int, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return round(temp_util.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
+    return round(TemperatureConverter.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
 
 
 def density_to_air_quality(density: float) -> int:
@@ -431,8 +431,13 @@ def get_persist_filename_for_entry_id(entry_id: str) -> str:
 
 
 def get_aid_storage_filename_for_entry_id(entry_id: str) -> str:
-    """Determine the ilename of homekit aid storage file."""
+    """Determine the filename of homekit aid storage file."""
     return f"{DOMAIN}.{entry_id}.aids"
+
+
+def get_iid_storage_filename_for_entry_id(entry_id: str) -> str:
+    """Determine the filename of homekit iid storage file."""
+    return f"{DOMAIN}.{entry_id}.iids"
 
 
 def get_persist_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str) -> str:
@@ -444,6 +449,13 @@ def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str) ->
     """Determine the path to the homekit aid storage file."""
     return hass.config.path(
         STORAGE_DIR, get_aid_storage_filename_for_entry_id(entry_id)
+    )
+
+
+def get_iid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str) -> str:
+    """Determine the path to the homekit iid storage file."""
+    return hass.config.path(
+        STORAGE_DIR, get_iid_storage_filename_for_entry_id(entry_id)
     )
 
 
@@ -466,14 +478,15 @@ def _is_zero_but_true(value: Any) -> bool:
     return convert_to_float(value) == 0
 
 
-def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str) -> bool:
+def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str) -> None:
     """Remove the state files from disk."""
-    persist_file_path = get_persist_fullpath_for_entry_id(hass, entry_id)
-    aid_storage_path = get_aid_storage_fullpath_for_entry_id(hass, entry_id)
-    os.unlink(persist_file_path)
-    if os.path.exists(aid_storage_path):
-        os.unlink(aid_storage_path)
-    return True
+    for path in (
+        get_persist_fullpath_for_entry_id(hass, entry_id),
+        get_aid_storage_fullpath_for_entry_id(hass, entry_id),
+        get_iid_storage_fullpath_for_entry_id(hass, entry_id),
+    ):
+        if os.path.exists(path):
+            os.unlink(path)
 
 
 def _get_test_socket() -> socket.socket:

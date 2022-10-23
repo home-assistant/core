@@ -7,7 +7,10 @@
             "link_local_address": "Endere\u00e7os locais de links n\u00e3o s\u00e3o suportados",
             "missing_configuration": "A integra\u00e7\u00e3o LaMetric n\u00e3o est\u00e1 configurada. Por favor, siga a documenta\u00e7\u00e3o.",
             "no_devices": "O usu\u00e1rio autorizado n\u00e3o possui dispositivos LaMetric",
-            "no_url_available": "N\u00e3o h\u00e1 URL dispon\u00edvel. Para obter informa\u00e7\u00f5es sobre esse erro, [verifique a se\u00e7\u00e3o de ajuda]({docs_url})"
+            "no_url_available": "N\u00e3o h\u00e1 URL dispon\u00edvel. Para obter informa\u00e7\u00f5es sobre esse erro, [verifique a se\u00e7\u00e3o de ajuda]({docs_url})",
+            "reauth_device_not_found": "O dispositivo que voc\u00ea est\u00e1 tentando autenticar novamente n\u00e3o foi encontrado nesta conta LaMetric",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "unknown": "Erro inesperado"
         },
         "error": {
             "cannot_connect": "Falha ao conectar",

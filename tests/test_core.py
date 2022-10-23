@@ -925,7 +925,7 @@ async def test_serviceregistry_callback_service_raise_exception(hass):
     await hass.async_block_till_done()
 
 
-def test_config_defaults():
+async def test_config_defaults():
     """Test config defaults."""
     hass = Mock()
     config = ha.Config(hass)
@@ -950,21 +950,21 @@ def test_config_defaults():
     assert config.currency == "EUR"
 
 
-def test_config_path_with_file():
+async def test_config_path_with_file():
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("test.conf") == "/test/ha-config/test.conf"
 
 
-def test_config_path_with_dir_and_file():
+async def test_config_path_with_dir_and_file():
     """Test get_config_path method."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
-def test_config_as_dict():
+async def test_config_as_dict():
     """Test as dict."""
     config = ha.Config(None)
     config.config_dir = "/test/ha-config"
@@ -994,7 +994,7 @@ def test_config_as_dict():
     assert expected == config.as_dict()
 
 
-def test_config_is_allowed_path():
+async def test_config_is_allowed_path():
     """Test is_allowed_path method."""
     config = ha.Config(None)
     with TemporaryDirectory() as tmp_dir:
@@ -1026,7 +1026,7 @@ def test_config_is_allowed_path():
             config.is_allowed_path(None)
 
 
-def test_config_is_allowed_external_url():
+async def test_config_is_allowed_external_url():
     """Test is_allowed_external_url method."""
     config = ha.Config(None)
     config.allowlist_external_urls = [
@@ -1273,7 +1273,7 @@ async def test_additional_data_in_core_config(hass, hass_storage):
 
 
 async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
-    """Test that we warn when detecting invalid internal/extenral url."""
+    """Test that we warn when detecting invalid internal/external url."""
     config = ha.Config(hass)
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
@@ -1286,6 +1286,8 @@ async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
     await config.async_load()
     assert "Invalid external_url set" not in caplog.text
     assert "Invalid internal_url set" not in caplog.text
+
+    config = ha.Config(hass)
 
     hass_storage[ha.CORE_STORAGE_KEY] = {
         "version": 1,

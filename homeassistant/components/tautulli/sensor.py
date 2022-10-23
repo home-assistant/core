@@ -232,7 +232,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tautulli sensor."""
-    coordinator: TautulliDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: TautulliDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[TautulliSensor | TautulliSessionSensor] = [
         TautulliSensor(
             coordinator,

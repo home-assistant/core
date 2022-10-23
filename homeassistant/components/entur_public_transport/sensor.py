@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
@@ -24,8 +23,6 @@ from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 API_CLIENT_NAME = "homeassistant-homeassistant"
-
-ATTRIBUTION = "Data provided by entur.org under NLOD"
 
 CONF_STOP_IDS = "stop_ids"
 CONF_EXPAND_PLATFORMS = "expand_platforms"
@@ -160,6 +157,8 @@ class EnturProxy:
 class EnturPublicTransportSensor(SensorEntity):
     """Implementation of a Entur public transport sensor."""
 
+    _attr_attribution = "Data provided by entur.org under NLOD"
+
     def __init__(
         self, api: EnturProxy, name: str, stop: str, show_on_map: bool
     ) -> None:
@@ -185,7 +184,6 @@ class EnturPublicTransportSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
 

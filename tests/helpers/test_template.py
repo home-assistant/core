@@ -43,13 +43,13 @@ def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem(
         "custom",
-        TEMP_CELSIUS,
-        LENGTH_METERS,
-        SPEED_KILOMETERS_PER_HOUR,
-        VOLUME_LITERS,
-        MASS_GRAMS,
-        PRESSURE_PA,
-        LENGTH_MILLIMETERS,
+        temperature=TEMP_CELSIUS,
+        length=LENGTH_METERS,
+        wind_speed=SPEED_KILOMETERS_PER_HOUR,
+        volume=VOLUME_LITERS,
+        mass=MASS_GRAMS,
+        pressure=PRESSURE_PA,
+        accumulated_precipitation=LENGTH_MILLIMETERS,
     )
 
 
@@ -973,11 +973,26 @@ def test_average(hass):
     assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
     assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
 
+    # Testing of default values
+    assert template.Template("{{ average([1, 2, 3], -1) }}", hass).async_render() == 2
+    assert template.Template("{{ average([], -1) }}", hass).async_render() == -1
+    assert template.Template("{{ average([], default=-1) }}", hass).async_render() == -1
+    assert (
+        template.Template("{{ average([], 5, default=-1) }}", hass).async_render() == -1
+    )
+    assert (
+        template.Template("{{ average(1, 'a', 3, default=-1) }}", hass).async_render()
+        == -1
+    )
+
     with pytest.raises(TemplateError):
         template.Template("{{ 1 | average }}", hass).async_render()
 
     with pytest.raises(TemplateError):
         template.Template("{{ average() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ average([]) }}", hass).async_render()
 
 
 def test_min(hass):
@@ -2455,6 +2470,30 @@ async def test_integration_entities(hass):
     # Test non existing integration/entry title
     info = render_to_info(hass, "{{ integration_entities('abc123') }}")
     assert_result_info(info, [])
+    assert info.rate_limit is None
+
+
+async def test_entry_id(hass):
+    """Test entry_id function."""
+    config_entry = MockConfigEntry(domain="light", title="Some integration")
+    config_entry.add_to_hass(hass)
+    entity_registry = mock_registry(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
+    )
+
+    info = render_to_info(hass, "{{ 'sensor.fail' | entry_id }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 56 | entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, f"{{{{ entry_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, config_entry.entry_id)
     assert info.rate_limit is None
 
 

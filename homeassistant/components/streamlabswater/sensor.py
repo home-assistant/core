@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import VOLUME_GALLONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -79,6 +79,8 @@ class StreamlabsUsageData:
 
 class StreamLabsDailyUsage(SensorEntity):
     """Monitors the daily water usage."""
+
+    _attr_device_class = SensorDeviceClass.VOLUME
 
     def __init__(self, location_name, streamlabs_usage_data):
         """Initialize the daily water usage device."""

@@ -19,7 +19,7 @@ from homeassistant.components.minio import (
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
-from tests.components.minio.common import TEST_EVENT
+from .common import TEST_EVENT
 
 
 @pytest.fixture(name="minio_client")

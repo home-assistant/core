@@ -46,7 +46,7 @@ class YaleDoorlock(YaleEntity, LockEntity):
         """Initialize the Yale Lock Device."""
         super().__init__(coordinator, data)
         self._attr_code_format = f"^\\d{code_format}$"
-        self.lock_name = data["name"]
+        self.lock_name: str = data["name"]
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
@@ -79,14 +79,14 @@ class YaleDoorlock(YaleEntity, LockEntity):
                 )
         except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not set lock for {self._attr_name}: {error}"
+                f"Could not set lock for {self.lock_name}: {error}"
             ) from error
 
         if lock_state:
             self.coordinator.data["lock_map"][self._attr_unique_id] = command
             self.async_write_ha_state()
             return
-        raise HomeAssistantError("Could set lock, check system ready for lock.")
+        raise HomeAssistantError("Could not set lock, check system ready for lock.")
 
     @property
     def is_locked(self) -> bool | None:

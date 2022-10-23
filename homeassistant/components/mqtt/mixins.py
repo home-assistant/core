@@ -28,17 +28,10 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HomeAssistant,
-    async_get_hass,
-    callback,
-)
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    discovery,
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -69,12 +62,6 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
-    DATA_MQTT,
-    DATA_MQTT_CONFIG,
-    DATA_MQTT_DISCOVERY_REGISTRY_HOOKS,
-    DATA_MQTT_RELOAD_DISPATCHERS,
-    DATA_MQTT_RELOAD_ENTRY,
-    DATA_MQTT_UPDATED_CONFIG,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
@@ -96,7 +83,7 @@ from .subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import mqtt_config_entry_enabled, valid_subscribe_topic
+from .util import get_mqtt_data, mqtt_config_entry_enabled, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -288,38 +275,15 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
-async def async_discover_yaml_entities(
-    hass: HomeAssistant, platform_domain: str
-) -> None:
-    """Discover entities for a platform."""
-    if DATA_MQTT_UPDATED_CONFIG in hass.data:
-        # The platform has been reloaded
-        config_yaml = hass.data[DATA_MQTT_UPDATED_CONFIG]
-    else:
-        config_yaml = hass.data.get(DATA_MQTT_CONFIG, {})
-    if not config_yaml:
-        return
-    if platform_domain not in config_yaml:
-        return
-    await asyncio.gather(
-        *(
-            discovery.async_load_platform(hass, platform_domain, DOMAIN, config, {})
-            for config in await async_get_platform_config_from_yaml(
-                hass, platform_domain, config_yaml
-            )
-        )
-    )
-
-
 async def async_get_platform_config_from_yaml(
     hass: HomeAssistant,
     platform_domain: str,
     config_yaml: ConfigType | None = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
-
+    mqtt_data = get_mqtt_data(hass)
     if config_yaml is None:
-        config_yaml = hass.data.get(DATA_MQTT_CONFIG)
+        config_yaml = mqtt_data.config
     if not config_yaml:
         return []
     if not (platform_configs := config_yaml.get(platform_domain)):
@@ -331,9 +295,10 @@ async def async_setup_entry_helper(
     hass: HomeAssistant,
     domain: str,
     async_setup: partial[Coroutine[HomeAssistant, str, None]],
-    schema: vol.Schema,
+    discovery_schema: vol.Schema,
 ) -> None:
     """Set up entity, automation or tag creation dynamically through MQTT discovery."""
+    mqtt_data = get_mqtt_data(hass)
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT entity, automation or tag."""
@@ -347,7 +312,7 @@ async def async_setup_entry_helper(
             return
         discovery_data = discovery_payload.discovery_data
         try:
-            config = schema(discovery_payload)
+            config = discovery_schema(discovery_payload)
             await async_setup(config, discovery_data=discovery_data)
         except Exception:
             discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
@@ -357,11 +322,36 @@ async def async_setup_entry_helper(
             )
             raise
 
-    hass.data.setdefault(DATA_MQTT_RELOAD_DISPATCHERS, []).append(
+    mqtt_data.reload_dispatchers.append(
         async_dispatcher_connect(
             hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
         )
     )
+
+    async def _async_setup_entities() -> None:
+        """Set up MQTT items from configuration.yaml."""
+        mqtt_data = get_mqtt_data(hass)
+        if mqtt_data.updated_config:
+            # The platform has been reloaded
+            config_yaml = mqtt_data.updated_config
+        else:
+            config_yaml = mqtt_data.config or {}
+        if not config_yaml:
+            return
+        if domain not in config_yaml:
+            return
+        await asyncio.gather(
+            *[
+                async_setup(config)
+                for config in await async_get_platform_config_from_yaml(
+                    hass, domain, config_yaml
+                )
+            ]
+        )
+
+    # discover manual configured MQTT items
+    mqtt_data.reload_handlers[domain] = _async_setup_entities
+    await _async_setup_entities()
 
 
 async def async_setup_platform_helper(
@@ -372,7 +362,8 @@ async def async_setup_platform_helper(
     async_setup_entities: SetupEntity,
 ) -> None:
     """Help to set up the platform for manual configured MQTT entities."""
-    if DATA_MQTT_RELOAD_ENTRY in hass.data:
+    mqtt_data = get_mqtt_data(hass)
+    if mqtt_data.reload_entry:
         _LOGGER.debug(
             "MQTT integration is %s, skipping setup of manually configured MQTT items while unloading the config entry",
             platform_domain,
@@ -444,7 +435,9 @@ class MqttAttributes(Entity):
                         and k not in self._attributes_extra_blocked
                     }
                     self._attributes = filtered_dict
-                    self.async_write_ha_state()
+                    get_mqtt_data(self.hass).state_write_requests.write_state_request(
+                        self
+                    )
                 else:
                     _LOGGER.warning("JSON result was not a dictionary")
                     self._attributes = None
@@ -556,7 +549,7 @@ class MqttAvailability(Entity):
                 self._available[topic] = False
                 self._available_latest = False
 
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._available = {
             topic: (self._available[topic] if topic in self._available else False)
@@ -597,7 +590,10 @@ class MqttAvailability(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        if not self.hass.data[DATA_MQTT].connected and not self.hass.is_stopping:
+        mqtt_data = get_mqtt_data(self.hass)
+        assert mqtt_data.client is not None
+        client = mqtt_data.client
+        if not client.connected and not self.hass.is_stopping:
             return False
         if not self._avail_topics:
             return True
@@ -632,7 +628,7 @@ async def cleanup_device_registry(
         )
 
 
-def get_discovery_hash(discovery_data: dict) -> tuple:
+def get_discovery_hash(discovery_data: dict) -> tuple[str, str]:
     """Get the discovery hash from the discovery data."""
     return discovery_data[ATTR_DISCOVERY_HASH]
 
@@ -817,9 +813,8 @@ class MqttDiscoveryUpdate(Entity):
         self._removed_from_hass = False
         if discovery_data is None:
             return
-        self._registry_hooks: dict[tuple, CALLBACK_TYPE] = hass.data[
-            DATA_MQTT_DISCOVERY_REGISTRY_HOOKS
-        ]
+        mqtt_data = get_mqtt_data(hass)
+        self._registry_hooks = mqtt_data.discovery_registry_hooks
         discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
@@ -872,6 +867,7 @@ class MqttDiscoveryUpdate(Entity):
             send_discovery_done(self.hass, self._discovery_data)
 
         if discovery_hash:
+            assert self._discovery_data is not None
             debug_info.add_entity_discovery_data(
                 self.hass, self._discovery_data, self.entity_id
             )
@@ -897,7 +893,7 @@ class MqttDiscoveryUpdate(Entity):
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         if self._discovery_data is not None:
-            discovery_hash: tuple = self._discovery_data[ATTR_DISCOVERY_HASH]
+            discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
             if self.registry_entry is not None:
                 self._registry_hooks[
                     discovery_hash

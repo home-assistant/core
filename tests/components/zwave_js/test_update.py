@@ -7,7 +7,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.firmware import FirmwareUpdateStatus
 
-from homeassistant.components.update.const import (
+from homeassistant.components.update import (
     ATTR_AUTO_UPDATE,
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -49,6 +49,19 @@ FIRMWARE_UPDATES = {
             "changelog": "blah 3",
             "files": [
                 {"target": 0, "url": "https://example3.com", "integrity": "sha3"}
+            ],
+        },
+    ]
+}
+
+FIRMWARE_UPDATE_MULTIPLE_FILES = {
+    "updates": [
+        {
+            "version": "11.2.4",
+            "changelog": "blah 2",
+            "files": [
+                {"target": 0, "url": "https://example2.com", "integrity": "sha2"},
+                {"target": 1, "url": "https://example4.com", "integrity": "sha4"},
             ],
         },
     ]
@@ -311,7 +324,7 @@ async def test_update_entity_progress(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = None
+    client.async_send_command.return_value = {"success": False}
 
     # Test successful install call without a version
     install_task = hass.async_create_task(
@@ -328,14 +341,24 @@ async def test_update_entity_progress(
     # Sleep so that task starts
     await asyncio.sleep(0.1)
 
+    state = hass.states.get(UPDATE_ENTITY)
+    assert state
+    attrs = state.attributes
+    assert attrs[ATTR_IN_PROGRESS] is True
+
     event = Event(
         type="firmware update progress",
         data={
             "source": "node",
             "event": "firmware update progress",
             "nodeId": node.node_id,
-            "sentFragments": 1,
-            "totalFragments": 20,
+            "progress": {
+                "currentFile": 1,
+                "totalFiles": 1,
+                "sentFragments": 1,
+                "totalFragments": 20,
+                "progress": 5.0,
+            },
         },
     )
     node.receive_event(event)
@@ -352,7 +375,11 @@ async def test_update_entity_progress(
             "source": "node",
             "event": "firmware update finished",
             "nodeId": node.node_id,
-            "status": FirmwareUpdateStatus.OK_NO_RESTART,
+            "result": {
+                "status": FirmwareUpdateStatus.OK_NO_RESTART,
+                "success": True,
+                "reInterview": False,
+            },
         },
     )
 
@@ -393,10 +420,11 @@ async def test_update_entity_install_failed(
     assert attrs[ATTR_LATEST_VERSION] == "11.2.4"
 
     client.async_send_command.reset_mock()
-    client.async_send_command.return_value = None
+    client.async_send_command.return_value = {"success": False}
 
-    async def call_install():
-        await hass.services.async_call(
+    # Test install call - we expect it to finish fail
+    install_task = hass.async_create_task(
+        hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {
@@ -404,9 +432,7 @@ async def test_update_entity_install_failed(
             },
             blocking=True,
         )
-
-    # Test install call - we expect it to raise
-    install_task = hass.async_create_task(call_install())
+    )
 
     # Sleep so that task starts
     await asyncio.sleep(0.1)
@@ -417,8 +443,13 @@ async def test_update_entity_install_failed(
             "source": "node",
             "event": "firmware update progress",
             "nodeId": node.node_id,
-            "sentFragments": 1,
-            "totalFragments": 20,
+            "progress": {
+                "currentFile": 1,
+                "totalFiles": 1,
+                "sentFragments": 1,
+                "totalFragments": 20,
+                "progress": 5.0,
+            },
         },
     )
     node.receive_event(event)
@@ -435,7 +466,11 @@ async def test_update_entity_install_failed(
             "source": "node",
             "event": "firmware update finished",
             "nodeId": node.node_id,
-            "status": FirmwareUpdateStatus.ERROR_TIMEOUT,
+            "result": {
+                "status": FirmwareUpdateStatus.ERROR_TIMEOUT,
+                "success": False,
+                "reInterview": False,
+            },
         },
     )
 

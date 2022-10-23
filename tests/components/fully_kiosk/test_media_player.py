@@ -5,7 +5,7 @@ from aiohttp import ClientSession
 
 from homeassistant.components.fully_kiosk.const import DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
 import homeassistant.components.media_player as media_player
-from homeassistant.components.media_source.const import DOMAIN as MS_DOMAIN
+from homeassistant.components.media_source import DOMAIN as MS_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

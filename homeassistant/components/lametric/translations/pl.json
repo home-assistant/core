@@ -7,7 +7,10 @@
             "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane",
             "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
             "no_devices": "Autoryzowany u\u017cytkownik nie posiada urz\u0105dze\u0144 LaMetric",
-            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})"
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
+            "reauth_device_not_found": "Urz\u0105dzenie, kt\u00f3re pr\u00f3bujesz ponownie uwierzytelni\u0107, nie znajduje si\u0119 na tym koncie LaMetric",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",

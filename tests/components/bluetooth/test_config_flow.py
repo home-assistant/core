@@ -18,7 +18,11 @@ from tests.common import MockConfigEntry
 
 
 async def test_options_flow_disabled_not_setup(
-    hass, hass_ws_client, mock_bleak_scanner_start, macos_adapter
+    hass,
+    hass_ws_client,
+    mock_bleak_scanner_start,
+    mock_bluetooth_adapters,
+    macos_adapter,
 ):
     """Test options are disabled if the integration has not been setup."""
     await async_setup_component(hass, "config", {})
@@ -33,11 +37,11 @@ async def test_options_flow_disabled_not_setup(
             "id": 5,
             "type": "config_entries/get",
             "domain": "bluetooth",
-            "type_filter": "integration",
         }
     )
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is False
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_async_step_user_macos(hass, macos_adapter):
@@ -262,7 +266,9 @@ async def test_async_step_integration_discovery_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow_linux(hass, mock_bleak_scanner_start, one_adapter):
+async def test_options_flow_linux(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters, one_adapter
+):
     """Test options on Linux."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -308,10 +314,15 @@ async def test_options_flow_linux(hass, mock_bleak_scanner_start, one_adapter):
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PASSIVE] is False
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_options_flow_disabled_macos(
-    hass, hass_ws_client, mock_bleak_scanner_start, macos_adapter
+    hass,
+    hass_ws_client,
+    mock_bleak_scanner_start,
+    mock_bluetooth_adapters,
+    macos_adapter,
 ):
     """Test options are disabled on MacOS."""
     await async_setup_component(hass, "config", {})
@@ -329,15 +340,15 @@ async def test_options_flow_disabled_macos(
             "id": 5,
             "type": "config_entries/get",
             "domain": "bluetooth",
-            "type_filter": "integration",
         }
     )
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is False
+    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_options_flow_enabled_linux(
-    hass, hass_ws_client, mock_bleak_scanner_start, one_adapter
+    hass, hass_ws_client, mock_bleak_scanner_start, mock_bluetooth_adapters, one_adapter
 ):
     """Test options are enabled on Linux."""
     await async_setup_component(hass, "config", {})
@@ -358,8 +369,8 @@ async def test_options_flow_enabled_linux(
             "id": 5,
             "type": "config_entries/get",
             "domain": "bluetooth",
-            "type_filter": "integration",
         }
     )
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is True
+    await hass.config_entries.async_unload(entry.entry_id)

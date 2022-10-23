@@ -117,12 +117,12 @@ class ActiveBluetoothProcessorCoordinator(
                     "%s: Bluetooth error whilst polling: %s", self.address, str(exc)
                 )
                 self.last_poll_successful = False
-                return
+            return
         except Exception:  # pylint: disable=broad-except
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
                 self.last_poll_successful = False
-                return
+            return
         finally:
             self._last_poll = time.monotonic()
 

@@ -327,6 +327,7 @@ async def test_zeroconf_match_macaddress(hass, mock_async_zeroconf):
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "shelly"
+    assert mock_config_flow.mock_calls[0][2]["context"] == {"source": "zeroconf"}
 
 
 async def test_zeroconf_match_manufacturer(hass, mock_async_zeroconf):
@@ -533,6 +534,10 @@ async def test_homekit_match_partial_space(hass, mock_async_zeroconf):
     # One for HKC, and one for LIFX since lifx is local polling
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "lifx"
+    assert mock_config_flow.mock_calls[1][2]["context"] == {
+        "source": "zeroconf",
+        "alternative_domain": "lifx",
+    }
 
 
 async def test_homekit_match_partial_dash(hass, mock_async_zeroconf):

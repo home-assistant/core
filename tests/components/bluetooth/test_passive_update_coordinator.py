@@ -20,10 +20,9 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import patch_all_discovered_devices
+from . import inject_bluetooth_service_info, patch_all_discovered_devices
 
 from tests.common import async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +58,7 @@ class MyCoordinator(PassiveBluetoothDataUpdateCoordinator):
         super()._async_handle_bluetooth_event(service_info, change)
 
 
-async def test_basic_usage(hass, mock_bleak_scanner_start):
+async def test_basic_usage(hass, mock_bleak_scanner_start, mock_bluetooth_adapters):
     """Test basic usage of the PassiveBluetoothDataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     coordinator = MyCoordinator(
@@ -88,7 +87,7 @@ async def test_basic_usage(hass, mock_bleak_scanner_start):
 
 
 async def test_context_compatiblity_with_data_update_coordinator(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Test contexts can be passed for compatibility with DataUpdateCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -124,12 +123,12 @@ async def test_context_compatiblity_with_data_update_coordinator(
 
 
 async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
-    hass, mock_bleak_scanner_start
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
 ):
     """Test that the coordinator goes unavailable when the bluetooth stack no longer sees the device."""
     with patch(
-        "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
-        [MagicMock(address="44:44:33:11:23:45")],
+        "bleak.BleakScanner.discovered_devices_and_advertisement_data",  # Must patch before we setup
+        {"44:44:33:11:23:45": (MagicMock(address="44:44:33:11:23:45"), MagicMock())},
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -165,7 +164,9 @@ async def test_unavailable_callbacks_mark_the_coordinator_unavailable(
     assert coordinator.available is False
 
 
-async def test_passive_bluetooth_coordinator_entity(hass, mock_bleak_scanner_start):
+async def test_passive_bluetooth_coordinator_entity(
+    hass, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test integration of PassiveBluetoothDataUpdateCoordinator with PassiveBluetoothCoordinatorEntity."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     coordinator = MyCoordinator(

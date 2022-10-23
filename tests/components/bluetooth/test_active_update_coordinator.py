@@ -20,7 +20,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 
-from tests.components.bluetooth import inject_bluetooth_service_info
+from . import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,9 @@ GENERIC_BLUETOOTH_SERVICE_INFO_2 = BluetoothServiceInfo(
 )
 
 
-async def test_basic_usage(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_basic_usage(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test basic usage of the ActiveBluetoothProcessorCoordinator."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -92,7 +94,9 @@ async def test_basic_usage(hass: HomeAssistant, mock_bleak_scanner_start):
     cancel()
 
 
-async def test_poll_can_be_skipped(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_poll_can_be_skipped(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test need_poll callback works and can skip a poll if its not needed."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -151,7 +155,7 @@ async def test_poll_can_be_skipped(hass: HomeAssistant, mock_bleak_scanner_start
 
 
 async def test_bleak_error_and_recover(
-    hass: HomeAssistant, mock_bleak_scanner_start, caplog
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters, caplog
 ):
     """Test bleak error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -212,7 +216,9 @@ async def test_bleak_error_and_recover(
     cancel()
 
 
-async def test_poll_failure_and_recover(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_poll_failure_and_recover(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -267,7 +273,9 @@ async def test_poll_failure_and_recover(hass: HomeAssistant, mock_bleak_scanner_
     cancel()
 
 
-async def test_second_poll_needed(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_second_poll_needed(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """If a poll is queued, by the time it starts it may no longer be needed."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -314,7 +322,9 @@ async def test_second_poll_needed(hass: HomeAssistant, mock_bleak_scanner_start)
     cancel()
 
 
-async def test_rate_limit(hass: HomeAssistant, mock_bleak_scanner_start):
+async def test_rate_limit(
+    hass: HomeAssistant, mock_bleak_scanner_start, mock_bluetooth_adapters
+):
     """Test error handling and recovery."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
