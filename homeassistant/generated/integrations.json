@@ -6348,6 +6348,7 @@
       "config_flow": false
     },
     "sum": {
+      "integration_type": "helper",
       "config_flow": true,
       "iot_class": "calculated"
     },
