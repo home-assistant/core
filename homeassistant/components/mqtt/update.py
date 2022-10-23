@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import DEFAULT_RETAIN, MQTT_RO_SCHEMA
@@ -78,7 +78,7 @@ async def _async_setup_entity(
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
     config_entry: ConfigEntry,
-    discovery_data: dict[str, Any] | None = None,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT update."""
     async_add_entities([MqttUpdate(hass, config, config_entry, discovery_data)])
@@ -94,7 +94,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         hass: HomeAssistant,
         config: ConfigType,
         config_entry: ConfigEntry,
-        discovery_data: dict[str, Any] | None = None,
+        discovery_data: DiscoveryInfoType | None = None,
     ) -> None:
         """Initialize the MQTT update."""
         self._config = config
