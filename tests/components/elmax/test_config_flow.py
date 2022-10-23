@@ -5,6 +5,8 @@ from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetw
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.elmax.const import (
+    CONF_ELMAX_MODE,
+    CONF_ELMAX_MODE_CLOUD,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -34,7 +36,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "choose_mode"
 
 
 async def test_standard_setup(hass: HomeAssistant) -> None:
@@ -47,6 +49,10 @@ async def test_standard_setup(hass: HomeAssistant) -> None:
         "homeassistant.components.elmax.async_setup_entry",
         return_value=True,
     ):
+        login_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -82,8 +88,12 @@ async def test_one_config_allowed(hass: HomeAssistant) -> None:
     show_form_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    login_result = await hass.config_entries.flow.async_configure(
+    user_result = await hass.config_entries.flow.async_configure(
         show_form_result["flow_id"],
+        {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+    )
+    login_result = await hass.config_entries.flow.async_configure(
+        user_result["flow_id"],
         {
             CONF_ELMAX_USERNAME: MOCK_USERNAME,
             CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
@@ -109,6 +119,10 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -116,7 +130,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
                 CONF_ELMAX_PASSWORD: "incorrect_password",
             },
         )
-        assert login_result["step_id"] == "user"
+        assert login_result["step_id"] == "cloud_setup"
         assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "invalid_auth"}
 
@@ -130,6 +144,10 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -137,7 +155,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
             },
         )
-        assert login_result["step_id"] == "user"
+        assert login_result["step_id"] == "cloud_setup"
         assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "network_error"}
 
@@ -150,6 +168,10 @@ async def test_unhandled_error(hass: HomeAssistant) -> None:
     ):
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
         )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
@@ -180,6 +202,10 @@ async def test_invalid_pin(hass: HomeAssistant) -> None:
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -209,6 +235,10 @@ async def test_no_online_panel(hass: HomeAssistant) -> None:
         show_form_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        show_form_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
+        )
         login_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {
@@ -216,7 +246,7 @@ async def test_no_online_panel(hass: HomeAssistant) -> None:
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
             },
         )
-        assert login_result["step_id"] == "user"
+        assert login_result["step_id"] == "cloud_setup"
         assert login_result["type"] == data_entry_flow.FlowResultType.FORM
         assert login_result["errors"] == {"base": "no_panel_online"}
 
