@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -426,7 +426,11 @@ class ShellyRpcEntity(entity.Entity):
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
-                f"Call RPC for entity {self.name} failed, method: {method}, params: {params}, error: {repr(err)}"
+                f"Call RPC for {self.name} connection error, method: {method}, params: {params}, error: {repr(err)}"
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                f"Call RPC for {self.name} request error, method: {method}, params: {params}, error: {repr(err)}"
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)

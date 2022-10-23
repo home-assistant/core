@@ -8,7 +8,7 @@ from typing import Any, cast
 
 import aioshelly
 from aioshelly.block_device import BlockDevice
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.config_entries import ConfigEntry
@@ -510,7 +510,11 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         try:
             await self.device.trigger_ota_update(beta=beta)
         except DeviceConnectionError as err:
-            raise HomeAssistantError(f"Error starting OTA update: {repr(err)}") from err
+            raise HomeAssistantError(
+                f"OTA update connection error: {repr(err)}"
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(f"OTA update request error: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
         else:
@@ -553,7 +557,7 @@ class ShellyRpcPollingCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
             await self.device.update_status()
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
