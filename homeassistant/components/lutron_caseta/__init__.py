@@ -239,14 +239,13 @@ def _async_setup_keypads(
     keypad_buttons: dict[int, LutronButton] = {}
     keypad_button_names_to_leap: dict[int, dict[str, int]] = {}
 
-    keypad: LutronKeypad
     for bridge_button in bridge_buttons.values():
 
         bridge_keypad = bridge_devices[bridge_button["parent_device"]]
         keypad_device_id = bridge_keypad["device_id"]
         button_device_id = bridge_button["device_id"]
 
-        if keypad_device_id not in keypads:
+        if not (keypad := keypads.get(keypad_device_id)):
             # First time seeing this keypad, build keypad data and store in keypads
             area_name = _area_name_from_id(bridge.areas, bridge_keypad["area"])
             keypad_name = bridge_keypad["name"].split("_")[-1]
@@ -267,34 +266,28 @@ def _async_setup_keypads(
                 **device_info, config_entry_id=config_entry_id
             )
 
-            keypad = keypads.setdefault(
-                keypad_device_id,
-                LutronKeypad(
-                    lutron_device_id=keypad_device_id,
-                    dr_device_id=dr_device.id,
-                    area_id=bridge_keypad["area"],
-                    area_name=area_name,
-                    name=keypad_name,
-                    serial=keypad_serial,
-                    device_info=device_info,
-                    model=bridge_keypad["model"],
-                    type=bridge_keypad["type"],
-                    buttons=[],
-                ),
+            keypad = keypads[keypad_device_id] = LutronKeypad(
+                lutron_device_id=keypad_device_id,
+                dr_device_id=dr_device.id,
+                area_id=bridge_keypad["area"],
+                area_name=area_name,
+                name=keypad_name,
+                serial=keypad_serial,
+                device_info=device_info,
+                model=bridge_keypad["model"],
+                type=bridge_keypad["type"],
+                buttons=[],
             )
 
             dr_device_id_to_keypad[dr_device.id] = keypad
 
         # add button to parent keypad, and build keypad_buttons and keypad_button_names_to_leap
-        button = keypad_buttons.setdefault(
-            button_device_id,
-            LutronButton(
-                lutron_device_id=button_device_id,
-                leap_button_number=bridge_button["button_number"],
-                button_name=_get_button_name(keypad, bridge_button),
-                led_device_id=bridge_button.get("button_led"),
-                parent_keypad=keypad["lutron_device_id"],
-            ),
+        button = keypad_buttons[button_device_id] = LutronButton(
+            lutron_device_id=button_device_id,
+            leap_button_number=bridge_button["button_number"],
+            button_name=_get_button_name(keypad, bridge_button),
+            led_device_id=bridge_button.get("button_led"),
+            parent_keypad=keypad["lutron_device_id"],
         )
 
         keypad["buttons"].append(button["lutron_device_id"])
