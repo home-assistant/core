@@ -14,6 +14,7 @@ from aiolifx.aiolifx import (
     TileEffectType,
 )
 from aiolifx.connection import LIFXConnection
+from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -69,6 +70,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.lock = asyncio.Lock()
         self.active_effect = FirmwareEffect.OFF
         update_interval = timedelta(seconds=10)
+        self.last_used_theme: str = ""
 
         super().__init__(
             hass,
@@ -286,14 +288,21 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     async def async_set_multizone_effect(
         self,
         effect: str,
-        speed: float = 3,
+        speed: float = 3.0,
         direction: str = "RIGHT",
+        theme_name: str | None = None,
         power_on: bool = True,
     ) -> None:
         """Control the firmware-based Move effect on a multizone device."""
         if lifx_features(self.device)["multizone"] is True:
             if power_on and self.device.power_level == 0:
                 await self.async_set_power(True, 0)
+
+            if theme_name is not None:
+                theme = ThemeLibrary().get_theme(theme_name)
+                await ThemePainter(self.hass.loop).paint(
+                    theme, [self.device], round(speed)
+                )
 
             await async_execute_lifx(
                 partial(
@@ -345,3 +354,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         """Set infrared brightness."""
         infrared_brightness = infrared_brightness_option_to_value(option)
         await async_execute_lifx(partial(self.device.set_infrared, infrared_brightness))
+
+    async def async_apply_theme(self, theme_name: str) -> None:
+        """Apply the selected theme to the device."""
+        self.last_used_theme = theme_name
+        theme = ThemeLibrary().get_theme(theme_name)
+        await ThemePainter(self.hass.loop).paint(theme, [self.device])
