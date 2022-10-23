@@ -4,7 +4,20 @@
   "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
   "requirements": ["pylutron-caseta==0.17.1"],
   "config_flow": true,
-  "zeroconf": ["_lutron._tcp.local."],
+  "zeroconf": [
+    {
+      "type": "_lutron._tcp.local.",
+      "properties": { "SYSTYPE": "radiora3*" }
+    },
+    {
+      "type": "_lutron._tcp.local.",
+      "properties": { "SYSTYPE": "smartbridge*" }
+    },
+    {
+      "type": "_lutron._tcp.local.",
+      "properties": { "SYSTYPE": "ra2select*" }
+    }
+  ],
   "homekit": {
     "models": ["Smart Bridge"]
   },

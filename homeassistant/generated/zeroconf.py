@@ -250,6 +250,21 @@ ZEROCONF = {
     "_lutron._tcp.local.": [
         {
             "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "radiora3*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "smartbridge*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "ra2select*",
+            },
         },
     ],
     "_mediaremotetv._tcp.local.": [
