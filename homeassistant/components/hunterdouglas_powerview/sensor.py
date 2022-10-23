@@ -1,9 +1,15 @@
 """Support for hunterdouglass_powerview sensors."""
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, Final
+
 from aiopvapi.resources.shade import BaseShade, factory as PvShade
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -21,15 +27,111 @@ from .const import (
     SHADE_BATTERY_LEVEL,
     SHADE_BATTERY_LEVEL_MAX,
 )
+from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewEntryData
+from .model import PowerviewDeviceInfo, PowerviewEntryData
+
+
+@dataclass
+class PowerviewSensorDescriptionMixin:
+    """Mixin to describe a Sensor entity."""
+
+    update_fn: Callable[[BaseShade], Any]
+    native_value_fn: Callable[[BaseShade], int]
+    create_sensor_fn: Callable[[BaseShade], bool]
+
+
+@dataclass
+class PowerviewSensorDescription(
+    SensorEntityDescription, PowerviewSensorDescriptionMixin
+):
+    """Class to describe a Sensor entity."""
+
+    entity_category = EntityCategory.DIAGNOSTIC
+    state_class = SensorStateClass.MEASUREMENT
+
+
+SENSORS: Final = [
+    PowerviewSensorDescription(
+        key="charge",
+        name="Battery",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        native_value_fn=lambda shade: round(
+            shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100
+        ),
+        create_sensor_fn=lambda shade: bool(SHADE_BATTERY_LEVEL in shade.raw_data),
+        update_fn=lambda shade: shade.refresh_battery(),
+    ),
+    PowerviewSensorDescription(
+        key="signal",
+        name="Signal",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=PERCENTAGE,
+        native_value_fn=lambda shade: round(
+            shade.raw_data[ATTR_SIGNAL_STRENGTH] / ATTR_SIGNAL_STRENGTH_MAX * 100
+        ),
+        create_sensor_fn=lambda shade: bool(ATTR_SIGNAL_STRENGTH in shade.raw_data),
+        update_fn=lambda shade: shade.refresh(),
+    ),
+]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the hunter douglas sensor entities."""
+
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
+
+    entities: list[PowerViewSensor] = []
+    for raw_shade in pv_entry.shade_data.values():
+        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
+        name_before_refresh = shade.name
+        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
+        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
+
+        for description in SENSORS:
+            if description.create_sensor_fn(shade):
+                entities.append(
+                    PowerViewSensor(
+                        pv_entry.coordinator,
+                        pv_entry.device_info,
+                        room_name,
+                        shade,
+                        name_before_refresh,
+                        description,
+                    )
+                )
+
+    async_add_entities(entities)
 
 
 class PowerViewSensor(ShadeEntity, SensorEntity):
-    """Representation of an shade battery charge sensor."""
+    """Representation of an shade sensor."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    entity_description: PowerviewSensorDescription
+
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        shade: BaseShade,
+        name: str,
+        description: PowerviewSensorDescription,
+    ) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinator, device_info, room_name, shade, name)
+        self.entity_description = description
+        self._attr_name = f"{self._shade_name} {description.name}"
+        self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
+        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
+
+    @property
+    def native_value(self) -> int:
+        """Get the current value in percentage."""
+        return self.entity_description.native_value_fn(self._shade)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -43,83 +145,7 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         self._shade.raw_data = self.data.get_raw_data(self._shade.id)
         self.async_write_ha_state()
 
-
-class PowerViewShadeBatterySensor(PowerViewSensor):
-    """Representation of an shade battery charge sensor."""
-
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = SensorDeviceClass.BATTERY
-
-    def __init__(self, coordinator, device_info, room_name, shade, name):
-        """Initialize the shade."""
-        super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_unique_id = f"{self._attr_unique_id}_charge"
-        self._attr_name = f"{self._shade_name} Battery"
-
-    @property
-    def native_value(self) -> int:
-        """Get the current value in percentage."""
-        return round(
-            self._shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100
-        )
-
     async def async_update(self) -> None:
-        """Refresh shade battery."""
-        await self._shade.refresh_battery()
-
-
-class PowerViewShadeSignalSensor(PowerViewSensor):
-    """Representation of an shade signal sensor."""
-
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, coordinator, device_info, room_name, shade, name):
-        """Initialize the shade."""
-        super().__init__(coordinator, device_info, room_name, shade, name)
-        self._attr_unique_id = f"{self._attr_unique_id}_signal"
-        self._attr_name = f"{self._shade_name} Signal"
-
-    @property
-    def native_value(self) -> int:
-        """Get the current value in percentage."""
-        return round(
-            self._shade.raw_data[ATTR_SIGNAL_STRENGTH] / ATTR_SIGNAL_STRENGTH_MAX * 100
-        )
-
-    async def async_update(self) -> None:
-        """Refresh signal strength."""
-        await self._shade.refresh()
-
-
-SENSOR_TYPES = {
-    PowerViewShadeBatterySensor: SHADE_BATTERY_LEVEL,
-    PowerViewShadeSignalSensor: ATTR_SIGNAL_STRENGTH,
-}
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up the hunter douglas shades sensors."""
-
-    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
-
-    entities: list[PowerViewSensor] = []
-    for raw_shade in pv_entry.shade_data.values():
-        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
-        name_before_refresh = shade.name
-        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
-        for cls, attr in SENSOR_TYPES.items():
-            if attr in shade.raw_data:
-                entities.append(
-                    cls(
-                        pv_entry.coordinator,
-                        pv_entry.device_info,
-                        room_name,
-                        shade,
-                        name_before_refresh,
-                    )
-                )
-    async_add_entities(entities)
+        """Refresh sensor entity."""
+        await self.entity_description.update_fn(self._shade)
+        self.async_write_ha_state()
