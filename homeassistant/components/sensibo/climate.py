@@ -28,7 +28,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 
@@ -480,7 +480,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             "type": smart_type,
         }
 
-        LOGGER.debug("Sending to climate react service: %s", params)
         await self.api_call_custom_service_climate_react(
             key="smart_on",
             value=True,
