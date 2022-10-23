@@ -579,17 +579,18 @@ class UnifiPoePortSwitch(SwitchEntity):
 
     def __init__(self, obj_id: str, controller) -> None:
         """Set up UniFi Network entity base."""
-        self._attr_unique_id = f"{obj_id}-PoE"
-        self._device_mac, port_idx = obj_id.split("_", 1)
-        self._port_idx = int(port_idx)
+        self._device_mac, index = obj_id.split("_", 1)
+        self._index = int(index)
         self._obj_id = obj_id
         self.controller = controller
 
         port = self.controller.api.ports[self._obj_id]
         self._attr_name = f"{port.name} PoE"
         self._attr_is_on = port.poe_mode != "off"
+        self._attr_unique_id = f"{self._device_mac}-poe-{index}"
 
         device = self.controller.api.devices[self._device_mac]
+        self._attr_available = controller.available and not device.disabled
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, device.mac)},
             manufacturer=ATTR_MANUFACTURER,
@@ -630,12 +631,12 @@ class UnifiPoePortSwitch(SwitchEntity):
         """Enable POE for client."""
         device = self.controller.api.devices[self._device_mac]
         await self.controller.api.request(
-            DeviceSetPoePortModeRequest.create(device, self._port_idx, "auto")
+            DeviceSetPoePortModeRequest.create(device, self._index, "auto")
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable POE for client."""
         device = self.controller.api.devices[self._device_mac]
         await self.controller.api.request(
-            DeviceSetPoePortModeRequest.create(device, self._port_idx, "off")
+            DeviceSetPoePortModeRequest.create(device, self._index, "off")
         )
