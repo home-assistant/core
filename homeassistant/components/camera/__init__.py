@@ -1,6 +1,8 @@
 """Component to interface with cameras."""
 from __future__ import annotations
+from email.mime import image
 
+import io
 import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Iterable
@@ -14,6 +16,7 @@ import os
 from random import SystemRandom
 from typing import Final, Optional, cast, final
 
+from PIL import Image as PilImage, ImageDraw, ImageFont
 from aiohttp import hdrs, web
 import async_timeout
 import attr
@@ -88,6 +91,7 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
 ATTR_FORMAT: Final = "format"
+ATTR_ANNOTATION: Final = "annotation"
 
 STATE_RECORDING: Final = "recording"
 STATE_STREAMING: Final = "streaming"
@@ -116,7 +120,10 @@ _RND: Final = SystemRandom()
 
 MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
-CAMERA_SERVICE_SNAPSHOT: Final = {vol.Required(ATTR_FILENAME): cv.template}
+CAMERA_SERVICE_SNAPSHOT: Final = {
+    vol.Required(ATTR_FILENAME): cv.template,
+    vol.Optional(ATTR_ANNOTATION): cv.template,
+}
 
 CAMERA_SERVICE_PLAY_STREAM: Final = {
     vol.Required(ATTR_MEDIA_PLAYER): cv.entities_domain(DOMAIN_MP),
@@ -194,6 +201,7 @@ async def async_get_image(
     timeout: int = 10,
     width: int | None = None,
     height: int | None = None,
+    annotation: Annotation | None = None,
 ) -> Image:
     """Fetch an image from a camera entity.
 
@@ -777,6 +785,47 @@ class CameraMjpegStream(CameraView):
             raise web.HTTPBadRequest() from err
 
 
+class Annotation:
+    """Text to be added to snapshot image."""
+
+    annotation_padding: int = 10
+
+    def __init__(self, service_call: ServiceCall, hass: HomeAssistant) -> None:
+        """Initialize annotation with ServiceCall and Hass."""
+        if "annotation" in service_call.data:
+            self.text = service_call.data["annotation"]
+            self.hass = hass
+            self.is_defined = True
+        else:
+            self.is_defined = False
+
+    def annotate(self, image_stream:bytes) -> bytes:
+        """Write annotation to the file provided as byte stream direct from camera feed."""
+        self.text.hass = self.hass
+        annotation_text = self.text.async_render()
+        _LOGGER.debug(
+            "Annotating snapsot with template text: %s",
+            annotation_text,
+        )
+        image_buffer = io.BytesIO(image_stream) 
+        img = PilImage.open(image_buffer)
+        drawing = ImageDraw.Draw(img)
+
+        font = ImageFont.load_default()
+        text_width, text_height = drawing.textsize(annotation_text, font=font)
+        drawing.text(
+            (
+                (img.width - text_width - self.annotation_padding),
+                img.height - text_height - self.annotation_padding,
+            ),
+            annotation_text,
+            fill=(255, 255, 255),
+            font=font,
+        )
+        img.save(image_buffer,img.format)
+        return image_buffer.getvalue()
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "camera/stream",
@@ -910,6 +959,10 @@ async def async_handle_snapshot_service(
 
     if image is None:
         return
+
+    annotation = Annotation(service_call, hass)
+    if annotation.is_defined:
+        image = annotation.annotate(image)
 
     def _write_image(to_file: str, image_data: bytes) -> None:
         """Executor helper to write image."""
