@@ -527,22 +527,23 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         return bool(result.get("status") == "success")
 
     @async_handle_api_call
-<<<<<<< HEAD
-    async def api_call_custom_service_full_ac_state(
-=======
     async def api_call_custom_service_climate_react(
->>>>>>> 9afa6a6c9d (Sensibo enable Climate React)
         self,
         key: str,
         value: Any,
         data: dict,
     ) -> bool:
         """Make service call to api."""
-<<<<<<< HEAD
-        result = await self._client.async_set_ac_states(self._device_id, data)
-        return bool(result.get("result", {}).get("status") == "Success")
-=======
-        result = {}
         result = await self._client.async_set_climate_react(self._device_id, data)
         return bool(result.get("status") == "success")
->>>>>>> 9afa6a6c9d (Sensibo enable Climate React)
+
+    @async_handle_api_call
+    async def api_call_custom_service_full_ac_state(
+        self,
+        key: str,
+        value: Any,
+        data: dict,
+    ) -> bool:
+        """Make service call to api."""
+        result = await self._client.async_set_ac_states(self._device_id, data)
+        return bool(result.get("result", {}).get("status") == "Success")
