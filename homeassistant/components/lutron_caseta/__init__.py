@@ -309,7 +309,8 @@ def _async_build_trigger_schemas(
     return keypad_trigger_schemas
 
 
-def _setup_lutronkeypad(
+@callback
+def _async_setup_lutron_keypad(
     bridge: Smartbridge,
     bridge_device: dict[str, Any],
     bridge_keypad: dict[str, Any],
