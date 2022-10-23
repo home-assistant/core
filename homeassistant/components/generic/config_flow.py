@@ -7,6 +7,7 @@ from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
+import re
 from typing import Any
 
 import PIL
@@ -68,6 +69,7 @@ DEFAULT_DATA = {
 
 SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 IMAGE_PREVIEWS_ACTIVE = "previews"
+SVG_REGEX = r"\s*(?:<\?xml\b[^>]*>[^<]*)?(?:<!--.*?-->[^<]*)*(?:<svg|<!DOCTYPE svg)\b"
 
 
 def build_schema(
@@ -137,7 +139,8 @@ def get_image_type(image: bytes) -> str | None:
     if fmt is None:
         # if PIL can't figure it out, could be svg.
         with contextlib.suppress(UnicodeDecodeError):
-            if image.decode("utf-8").lstrip().startswith("<svg"):
+            svg_regex = re.compile(SVG_REGEX, re.DOTALL)
+            if svg_regex.match(image.decode("utf-8")) is not None:
                 return "svg+xml"
     return fmt
 
