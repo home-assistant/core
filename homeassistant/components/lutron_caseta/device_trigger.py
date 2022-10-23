@@ -366,10 +366,10 @@ async def async_validate_trigger_config(
     device_type = keypad["type"]
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
         device_type,
-        keypad_button_names_to_leap.get(keypad["lutron_device_id"]),
+        keypad_button_names_to_leap[keypad["lutron_device_id"]],
     )
 
-    if not (subtype in valid_buttons):
+    if subtype not in valid_buttons:
         # Trigger subtype is invalid - raise error
         _LOGGER.error(
             "Cannot validate trigger %s because subtype %s is invalid", config, subtype
@@ -396,7 +396,7 @@ async def async_get_triggers(
     # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
         keypad["type"],
-        keypad_button_names_to_leap.get(keypad["lutron_device_id"], {}),
+        keypad_button_names_to_leap[keypad["lutron_device_id"]],
     )
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
@@ -435,17 +435,18 @@ async def async_attach_trigger(
 
     device_type = keypad["type"]
     serial = keypad["serial"]
+    lutron_device_id = keypad["lutron_device_id"]
 
     # Retrieve trigger schema, preferring hard-coded triggers from device_trigger.py
     schema = DEVICE_TYPE_SCHEMA_MAP.get(
         device_type,
-        keypad_trigger_schemas.get(keypad["lutron_device_id"]),
+        keypad_trigger_schemas[lutron_device_id],
     )
 
     # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
         device_type,
-        keypad_button_names_to_leap.get(keypad["lutron_device_id"]),
+        keypad_button_names_to_leap[lutron_device_id],
     )
 
     if subtype not in valid_buttons:
