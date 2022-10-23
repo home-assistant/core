@@ -1691,7 +1691,7 @@ pylitejet==0.3.0
 pylitterbot==2022.10.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.16.0
+pylutron-caseta==0.17.1
 
 # homeassistant.components.lutron
 pylutron==0.2.8
