@@ -7,11 +7,12 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
+    ATTR_SWING_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.climate.const import ATTR_FAN_MODE, ATTR_SWING_MODE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODE,
@@ -43,6 +44,9 @@ ATTR_GEO_INTEGRATION = "geo_integration"
 ATTR_INDOOR_INTEGRATION = "indoor_integration"
 ATTR_OUTDOOR_INTEGRATION = "outdoor_integration"
 ATTR_SENSITIVITY = "sensitivity"
+ATTR_TARGET_TEMPERATURE = "target_temperature"
+ATTR_HORIZONTAL_SWING_MODE = "horizontal_swing_mode"
+ATTR_LIGHT = "light"
 BOOST_INCLUSIVE = "boost_inclusive"
 
 PARALLEL_UPDATES = 0
@@ -124,17 +128,14 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_FULL_AC_STATE,
         {
-            vol.Required(ATTR_ON): bool,
-            vol.Required(ATTR_TARGET_TEMPERATURE): bool,
-            vol.Required(ATTR_TEMPERATURE_UNIT): bool,
+            vol.Optional(ATTR_TARGET_TEMPERATURE): int,
             vol.Required(ATTR_MODE): bool,
-            vol.Required(ATTR_FAN_MODE): bool,
-            vol.Required(ATTR_SWING_MODE): bool,
-            vol.Required(ATTR_HORIZONTAL_SWING): bool,
-            vol.Required(ATTR_LIGHT): bool,
-            vol.Required(ATTR_MODE): bool,
+            vol.Optional(ATTR_FAN_MODE): bool,
+            vol.Optional(ATTR_SWING_MODE): bool,
+            vol.Optional(ATTR_HORIZONTAL_SWING_MODE): str,
+            vol.Optional(ATTR_LIGHT): vol.In(["on", "off"]),
         },
-        "async_enable_pure_boost",
+        "async_full_ac_state",
     )
 
 
@@ -351,6 +352,34 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             value=state != HVACMode.OFF,
             name="on",
             assumed_state=True,
+        )
+
+    async def async_full_ac_state(
+        self,
+        target_temperature: int | None,
+        mode: str,
+        fan_mode: str | None,
+        swing_mode: str | None,
+        horizontal_swing_mode: str | None,
+        light: str | None,
+    ) -> None:
+        """Set full AC state."""
+        new_ac_state = self.device_data.ac_states
+        new_ac_state["on"] = bool(mode != "off")
+        new_ac_state["mode"] = mode
+        if target_temperature:
+            new_ac_state["targetTemperature"] = target_temperature
+        if fan_mode:
+            new_ac_state["fanLevel"] = fan_mode
+        if swing_mode:
+            new_ac_state["swing"] = swing_mode
+        if horizontal_swing_mode:
+            new_ac_state["horizontalSwing"] = horizontal_swing_mode
+        if light:
+            new_ac_state["light"] = light
+
+        await self.api_call_custom_service_full_ac_state(
+            key="hvac_mode", value=SENSIBO_TO_HA[mode], data=new_ac_state
         )
 
     async def async_enable_timer(self, minutes: int) -> None:
