@@ -35,6 +35,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "network_error": "A network error occurred",
       "invalid_pin": "The provided pin is invalid",
+      "invalid_mode": "Invalid or unsupported mode",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
