@@ -72,12 +72,11 @@ class NoboTemperatureSensor(SensorEntity):
         zone_id = component[ATTR_ZONE_ID]
         if zone_id != "-1":
             self._attr_device_info[ATTR_SUGGESTED_AREA] = hub.zones[zone_id][ATTR_NAME]
+        self._read_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callback from hub."""
         self._nobo.register_callback(self._after_update)
-        # Read state after registering callback to avoid race condition.
-        self._read_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """Deregister callback from hub."""

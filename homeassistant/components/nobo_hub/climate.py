@@ -69,10 +69,7 @@ async def async_setup_entry(
     )
 
     # Add zones as entities
-    async_add_entities(
-        [NoboZone(zone_id, hub, override_type) for zone_id in hub.zones],
-        True,
-    )
+    async_add_entities([NoboZone(zone_id, hub, override_type) for zone_id in hub.zones])
 
 
 class NoboZone(ClimateEntity):
@@ -107,6 +104,7 @@ class NoboZone(ClimateEntity):
             ATTR_VIA_DEVICE: (DOMAIN, hub.hub_info[ATTR_SERIAL]),
             ATTR_SUGGESTED_AREA: hub.zones[zone_id][ATTR_NAME],
         }
+        self._read_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callback from hub."""

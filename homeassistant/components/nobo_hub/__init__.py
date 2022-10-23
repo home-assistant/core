@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     discover = entry.data[CONF_AUTO_DISCOVERED]
     ip_address = None if discover else entry.data[CONF_IP_ADDRESS]
     hub = nobo(serial=serial, ip=ip_address, discover=discover, synchronous=False)
-    await hub.start()
+    await hub.connect()
 
     hass.data.setdefault(DOMAIN, {})
 
@@ -60,6 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
+
+    await hub.start()
 
     return True
 
