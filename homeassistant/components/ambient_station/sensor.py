@@ -19,7 +19,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     PRECIPITATION_INCHES,
-    PRECIPITATION_INCHES_PER_HOUR,
+    PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
     PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
@@ -195,7 +195,7 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_HOURLYRAININ,
         name="Hourly rain rate",
         icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
+        native_unit_of_measurement=PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

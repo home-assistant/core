@@ -276,17 +276,19 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
         for key, value in power_flow.items():
             if key in ["LOAD", "PV", "GRID", "STORAGE"]:
-                self.data[key] = value["currentPower"]
+                self.data[key] = value.get("currentPower")
                 self.attributes[key] = {"status": value["status"]}
 
             if key in ["GRID"]:
                 export = key.lower() in power_to
-                self.data[key] *= -1 if export else 1
+                if self.data[key]:
+                    self.data[key] *= -1 if export else 1
                 self.attributes[key]["flow"] = "export" if export else "import"
 
             if key in ["STORAGE"]:
                 charge = key.lower() in power_to
-                self.data[key] *= -1 if charge else 1
+                if self.data[key]:
+                    self.data[key] *= -1 if charge else 1
                 self.attributes[key]["flow"] = "charge" if charge else "discharge"
                 self.attributes[key]["soc"] = value["chargeLevel"]
 

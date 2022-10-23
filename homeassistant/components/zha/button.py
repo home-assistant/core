@@ -109,6 +109,7 @@ class ZHAIdentifyButton(ZHAButton):
 
     _attr_device_class: ButtonDeviceClass = ButtonDeviceClass.UPDATE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_name = "Identify"
     _command_name = "identify"
 
     def get_args(self) -> list[Any]:
@@ -118,7 +119,7 @@ class ZHAIdentifyButton(ZHAButton):
 
 
 class ZHAAttributeButton(ZhaEntity, ButtonEntity):
-    """Defines a ZHA button, which stes value to an attribute."""
+    """Defines a ZHA button, which writes a value to an attribute."""
 
     _attribute_name: str
     _attribute_value: Any = None

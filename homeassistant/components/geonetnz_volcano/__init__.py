@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
 )
@@ -26,7 +25,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .config_flow import configured_instances
-from .const import DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN, FEED, PLATFORMS
+from .const import (
+    DEFAULT_RADIUS,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    FEED,
+    IMPERIAL_UNITS,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     radius = config_entry.data[CONF_RADIUS]
     unit_system = config_entry.data[CONF_UNIT_SYSTEM]
-    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+    if unit_system == IMPERIAL_UNITS:
         radius = DistanceConverter.convert(radius, LENGTH_MILES, LENGTH_KILOMETERS)
     # Create feed entity manager for all platforms.
     manager = GeonetnzVolcanoFeedEntityManager(hass, config_entry, radius, unit_system)

@@ -92,7 +92,7 @@ def _default_recorder(hass):
 
 
 async def test_shutdown_before_startup_finishes(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT, tmp_path
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant, tmp_path
 ):
     """Test shutdown before recorder starts is clean."""
 
@@ -124,8 +124,8 @@ async def test_shutdown_before_startup_finishes(
 
 
 async def test_canceled_before_startup_finishes(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
     """Test recorder shuts down when its startup future is canceled out from under it."""
@@ -145,7 +145,7 @@ async def test_canceled_before_startup_finishes(
     )
 
 
-async def test_shutdown_closes_connections(hass, recorder_mock):
+async def test_shutdown_closes_connections(recorder_mock, hass):
     """Test shutdown closes connections."""
 
     hass.state = CoreState.not_running
@@ -171,7 +171,7 @@ async def test_shutdown_closes_connections(hass, recorder_mock):
 
 
 async def test_state_gets_saved_when_set_before_start_event(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
 ):
     """Test we can record an event when starting with not running."""
 
@@ -197,7 +197,7 @@ async def test_state_gets_saved_when_set_before_start_event(
         assert db_states[0].event_id is None
 
 
-async def test_saving_state(hass: HomeAssistant, recorder_mock):
+async def test_saving_state(recorder_mock, hass: HomeAssistant):
     """Test saving and restoring a state."""
     entity_id = "test.recorder"
     state = "restoring_from_db"
@@ -220,7 +220,7 @@ async def test_saving_state(hass: HomeAssistant, recorder_mock):
 
 
 async def test_saving_many_states(
-    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
+    async_setup_recorder_instance: SetupRecorderInstanceT, hass: HomeAssistant
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(
@@ -248,7 +248,7 @@ async def test_saving_many_states(
 
 
 async def test_saving_state_with_intermixed_time_changes(
-    hass: HomeAssistant, recorder_mock
+    recorder_mock, hass: HomeAssistant
 ):
     """Test saving states with intermixed time changes."""
     entity_id = "test.recorder"
@@ -348,7 +348,7 @@ def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
 
 
 async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
-    hass, async_setup_recorder_instance, caplog
+    async_setup_recorder_instance, hass, caplog
 ):
     """Test forcing shutdown."""
     instance = await async_setup_recorder_instance(hass)
@@ -657,6 +657,23 @@ def test_recorder_setup_failure(hass):
         "homeassistant.components.recorder.core.time.sleep"
     ):
         setup.side_effect = ImportError("driver not found")
+        rec = _default_recorder(hass)
+        rec.async_initialize()
+        rec.start()
+        rec.join()
+
+    hass.stop()
+
+
+def test_recorder_validate_schema_failure(hass):
+    """Test some exceptions."""
+    recorder_helper.async_initialize_recorder(hass)
+    with patch(
+        "homeassistant.components.recorder.migration._get_schema_version"
+    ) as inspect_schema_version, patch(
+        "homeassistant.components.recorder.core.time.sleep"
+    ):
+        inspect_schema_version.side_effect = ImportError("driver not found")
         rec = _default_recorder(hass)
         rec.async_initialize()
         rec.start()
@@ -985,54 +1002,48 @@ def test_statistics_runs_initiated(hass_recorder):
             ) - timedelta(minutes=5)
 
 
-def test_compile_missing_statistics(tmpdir):
+@pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
+def test_compile_missing_statistics(tmpdir, freezer):
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
     dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow", return_value=now
-    ):
+    hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
 
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-        hass.start()
-        wait_recording_done(hass)
-        wait_recording_done(hass)
+    with session_scope(hass=hass) as session:
+        statistics_runs = list(session.query(StatisticsRuns))
+        assert len(statistics_runs) == 1
+        last_run = process_timestamp(statistics_runs[0].start)
+        assert last_run == now - timedelta(minutes=5)
 
-        with session_scope(hass=hass) as session:
-            statistics_runs = list(session.query(StatisticsRuns))
-            assert len(statistics_runs) == 1
-            last_run = process_timestamp(statistics_runs[0].start)
-            assert last_run == now - timedelta(minutes=5)
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
 
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-        hass.stop()
+    # Start Home Assistant one hour later
+    freezer.tick(timedelta(hours=1))
+    hass = get_test_home_assistant()
+    recorder_helper.async_initialize_recorder(hass)
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
 
-    with patch(
-        "homeassistant.components.recorder.core.dt_util.utcnow",
-        return_value=now + timedelta(hours=1),
-    ):
+    with session_scope(hass=hass) as session:
+        statistics_runs = list(session.query(StatisticsRuns))
+        assert len(statistics_runs) == 13  # 12 5-minute runs
+        last_run = process_timestamp(statistics_runs[1].start)
+        assert last_run == now
 
-        hass = get_test_home_assistant()
-        recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
-        hass.start()
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-
-        with session_scope(hass=hass) as session:
-            statistics_runs = list(session.query(StatisticsRuns))
-            assert len(statistics_runs) == 13  # 12 5-minute runs
-            last_run = process_timestamp(statistics_runs[1].start)
-            assert last_run == now
-
-        wait_recording_done(hass)
-        wait_recording_done(hass)
-        hass.stop()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
 
 
 def test_saving_sets_old_state(hass_recorder):
@@ -1359,8 +1370,8 @@ def test_entity_id_filter(hass_recorder):
 
 
 async def test_database_lock_and_unlock(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     tmp_path,
 ):
     """Test writing events during lock getting written after unlocking."""
@@ -1401,8 +1412,8 @@ async def test_database_lock_and_unlock(
 
 
 async def test_database_lock_and_overflow(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     tmp_path,
 ):
     """Test writing events during lock leading to overflow the queue causes the database to unlock."""
@@ -1439,8 +1450,12 @@ async def test_database_lock_and_overflow(
         assert not instance.unlock_database()
 
 
-async def test_database_lock_timeout(hass, recorder_mock):
+async def test_database_lock_timeout(recorder_mock, hass, recorder_db_url):
     """Test locking database timeout when recorder stopped."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: Locking is not implemented for other engines
+        return
+
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
     instance = get_instance(hass)
@@ -1462,7 +1477,7 @@ async def test_database_lock_timeout(hass, recorder_mock):
             block_task.event.set()
 
 
-async def test_database_lock_without_instance(hass, recorder_mock):
+async def test_database_lock_without_instance(recorder_mock, hass):
     """Test database lock doesn't fail if instance is not initialized."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
@@ -1483,8 +1498,8 @@ async def test_in_memory_database(hass, caplog):
 
 
 async def test_database_connection_keep_alive(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ):
     """Test we keep alive socket based dialects."""
@@ -1503,11 +1518,16 @@ async def test_database_connection_keep_alive(
 
 
 async def test_database_connection_keep_alive_disabled_on_sqlite(
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    recorder_db_url: str,
 ):
     """Test we do not do keep alive for sqlite."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite, keepalive runs on other engines
+        return
+
     instance = await async_setup_recorder_instance(hass)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await instance.async_recorder_ready.wait()
@@ -1579,7 +1599,7 @@ def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, ca
         assert first_attributes_id == last_attributes_id
 
 
-async def test_async_block_till_done(hass, async_setup_recorder_instance):
+async def test_async_block_till_done(async_setup_recorder_instance, hass):
     """Test we can block until recordering is done."""
     instance = await async_setup_recorder_instance(hass)
     await async_wait_recording_done(hass)
@@ -1632,7 +1652,7 @@ async def test_disable_echo(hass, db_url, echo, caplog):
 
 
 @pytest.mark.parametrize(
-    "config_url, connect_args",
+    "config_url, expected_connect_args",
     (
         (
             "mariadb://user:password@SERVER_IP/DB_NAME",
@@ -1660,15 +1680,15 @@ async def test_disable_echo(hass, db_url, echo, caplog):
         ),
         (
             "postgresql://blabla",
-            None,
+            {},
         ),
         (
             "sqlite://blabla",
-            None,
+            {},
         ),
     ),
 )
-async def test_mysql_missing_utf8mb4(hass, config_url, connect_args):
+async def test_mysql_missing_utf8mb4(hass, config_url, expected_connect_args):
     """Test recorder fails to setup if charset=utf8mb4 is missing from db_url."""
     recorder_helper.async_initialize_recorder(hass)
 
@@ -1684,7 +1704,10 @@ async def test_mysql_missing_utf8mb4(hass, config_url, connect_args):
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
         create_engine_mock.assert_called_once()
-        assert create_engine_mock.mock_calls[0][2].get("connect_args") == connect_args
+
+        connect_args = create_engine_mock.mock_calls[0][2].get("connect_args", {})
+        for key, value in expected_connect_args.items():
+            assert connect_args[key] == value
 
 
 @pytest.mark.parametrize(
@@ -1754,4 +1777,4 @@ async def test_connect_args_priority(hass, config_url):
                 }
             },
         )
-    assert connect_params == [{"charset": "utf8mb4"}]
+    assert connect_params[0]["charset"] == "utf8mb4"
