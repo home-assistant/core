@@ -15,7 +15,7 @@ from .const import (
     INFRARED_BRIGHTNESS,
     INFRARED_BRIGHTNESS_VALUES_MAP,
 )
-from .coordinator import LIFXUpdateCoordinator, LIFXSensorUpdateCoordinator
+from .coordinator import LIFXSensorUpdateCoordinator, LIFXUpdateCoordinator
 from .entity import LIFXSensorEntity
 from .util import lifx_features
 
@@ -41,13 +41,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up LIFX from a config entry."""
     coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
     entities: list[LIFXSensorEntity] = []
 
     if lifx_features(coordinator.device)["infrared"]:
-        entities.append(LIFXInfraredBrightnessSelectEntity(coordinator.sensor_coordinator,description=INFRARED_BRIGHTNESS_ENTITY))
+        entities.append(
+            LIFXInfraredBrightnessSelectEntity(
+                coordinator.sensor_coordinator, description=INFRARED_BRIGHTNESS_ENTITY
+            )
+        )
 
     if lifx_features(coordinator.device)["multizone"] is True:
-        entities.append(LIFXThemeSelectEntity(coordinator=coordinator, description=THEME_ENTITY))
+        entities.append(
+            LIFXThemeSelectEntity(
+                coordinator.sensor_coordinator, description=THEME_ENTITY
+            )
+        )
+
+    async_add_entities(entities)
 
 
 class LIFXInfraredBrightnessSelectEntity(LIFXSensorEntity, SelectEntity):
@@ -90,7 +101,9 @@ class LIFXThemeSelectEntity(LIFXSensorEntity, SelectEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, coordinator: LIFXSensorUpdateCoordinator, description: SelectEntityDescription
+        self,
+        coordinator: LIFXSensorUpdateCoordinator,
+        description: SelectEntityDescription,
     ) -> None:
         """Initialise the theme selection entity."""
 
