@@ -1,5 +1,10 @@
 {
     "state": {
+        "plugwise__dhw_mode": {
+            "auto": "Automatico",
+            "comfort": "Comfort",
+            "off": "Spento"
+        },
         "plugwise__regulation_mode": {
             "bleeding_cold": "Sfiatamento freddo",
             "bleeding_hot": "Sfiatamento caldo",

@@ -52,7 +52,6 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[JellyfinDataT]):
     @abstractmethod
     async def _fetch_data(self) -> JellyfinDataT:
         """Fetch the actual data."""
-        raise NotImplementedError
 
 
 class SessionsDataUpdateCoordinator(
@@ -60,10 +59,14 @@ class SessionsDataUpdateCoordinator(
 ):
     """Sessions update coordinator for Jellyfin."""
 
-    async def _fetch_data(self) -> dict:
+    async def _fetch_data(self) -> dict[str, dict[str, Any]]:
         """Fetch the data."""
         sessions = await self.hass.async_add_executor_job(
             self.api_client.jellyfin.sessions
         )
 
-        return {session["Id"]: session for session in sessions}
+        sessions_by_id: dict[str, dict[str, Any]] = {
+            session["Id"]: session for session in sessions
+        }
+
+        return sessions_by_id

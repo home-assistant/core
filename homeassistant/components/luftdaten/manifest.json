@@ -7,5 +7,6 @@
   "codeowners": ["@fabaff", "@frenck"],
   "quality_scale": "gold",
   "iot_class": "cloud_polling",
+  "integration_type": "device",
   "loggers": ["luftdaten"]
 }
