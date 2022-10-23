@@ -1,6 +1,7 @@
 """Config flow for Forecast.Solar integration."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import voluptuous as vol
@@ -9,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_AZIMUTH,
@@ -84,12 +85,26 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
+    async def validate_input(self, user_input: dict[str, Any]) -> str | None:
+        """Validate the input from the config options flow."""
+        if user_input.get(CONF_API_KEY):
+            api_key = user_input[CONF_API_KEY]
+            if not re.match("[a-zA-Z0-9]{16}", api_key):
+                raise Exception("invalid_api_key")
+        return None
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
+        errors = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            try:
+                await self.validate_input(user_input)
+            except Exception as error:  # pylint: disable=broad-except
+                errors["base"] = str(error)
+            else:
+                return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -129,4 +144,5 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                     ): vol.Coerce(int),
                 }
             ),
+            errors=errors,
         )
