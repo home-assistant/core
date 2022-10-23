@@ -19,8 +19,8 @@ from aiohomekit.model.characteristics import Characteristic
 from aiohomekit.model.services import Service
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_VIA_DEVICE
-from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -176,6 +176,24 @@ class HKDevice:
         self.available = available
         async_dispatcher_send(self.hass, self.signal_state_updated)
 
+    async def _async_retry_populate_ble_accessory_state(self, event: Event) -> None:
+        """Try again to populate the BLE accessory state.
+
+        If the accessory was asleep at startup we need to retry
+        since we continued on to allow startup to proceed.
+
+        If this fails the state may be inconsistent, but will
+        get corrected as soon as the accessory advertises again.
+        """
+        try:
+            await self.pairing.async_populate_accessories_state(force_update=True)
+        except (asyncio.TimeoutError, AccessoryNotFoundError):
+            _LOGGER.debug(
+                "Failed to populate BLE accessory state for %s, accessory may be sleeping"
+                " and will be retried the next time it advertises",
+                self.config_entry.title,
+            )
+
     async def async_setup(self) -> None:
         """Prepare to use a paired HomeKit device in Home Assistant."""
         pairing = self.pairing
@@ -201,6 +219,12 @@ class HKDevice:
             if transport != Transport.BLE or not pairing.accessories:
                 # BLE devices may sleep and we can't force a connection
                 raise
+            entry.async_on_unload(
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED,
+                    self._async_retry_populate_ble_accessory_state,
+                )
+            )
 
         entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
         entry.async_on_unload(
