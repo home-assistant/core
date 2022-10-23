@@ -154,8 +154,6 @@ async def async_execute_lifx(method: Callable) -> Message:
             # us by async_timeout when we hit the OVERALL_TIMEOUT
             future.set_result(message)
 
-    # _LOGGER.debug("Sending LIFX command: %s", method)
-
     method(callb=_callback)
     result = None
 
