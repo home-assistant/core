@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import Any
 
 from sharkiq import OperatingModes, PowerModes, Properties, SharkIqVacuum
 import voluptuous as vol
@@ -108,13 +109,18 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     class InvalidRoomSelection(exceptions.HomeAssistantError):
         """Error to indicate an invalid room was included in the selection."""
 
-    def send_command(self, command, params=None, **kwargs):
+    def send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Send a command to the vacuum. Not yet implemented."""
         raise NotImplementedError(
             "Service `send_command` is currently not compatible with SharkIQ."
         )
 
-    def clean_spot(self, **kwargs):
+    def clean_spot(self, **kwargs: Any) -> None:
         """Spot clean an area. Not yet implemented."""
         raise NotImplementedError(
             "Service `clean_spot` is currently not compatible with SharkIQ."
@@ -169,7 +175,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         return self.sharkiq.get_property_value(Properties.RECHARGING_TO_RESUME)
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """
         Get the current vacuum state.
 
@@ -192,27 +198,27 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Get the current battery level."""
         return self.sharkiq.get_property_value(Properties.BATTERY_CAPACITY)
 
-    async def async_return_to_base(self, **kwargs):
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Have the device return to base."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.RETURN)
         await self.coordinator.async_refresh()
 
-    async def async_pause(self):
+    async def async_pause(self) -> None:
         """Pause the cleaning task."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.PAUSE)
         await self.coordinator.async_refresh()
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Start the device."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.START)
         await self.coordinator.async_refresh()
 
-    async def async_stop(self, **kwargs):
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the device."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.STOP)
         await self.coordinator.async_refresh()
 
-    async def async_locate(self, **kwargs):
+    async def async_locate(self, **kwargs: Any) -> None:
         """Cause the device to generate a loud chirp."""
         await self.sharkiq.async_find_device()
 
@@ -249,7 +255,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
                 fan_speed = k
         return fan_speed
 
-    async def async_set_fan_speed(self, fan_speed: str, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set the fan speed."""
         await self.sharkiq.async_set_property_value(
             Properties.POWER_MODE, FAN_SPEEDS_MAP.get(fan_speed.capitalize())
@@ -278,7 +284,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         return self.sharkiq.get_room_list()
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return a dictionary of device state attributes specific to sharkiq."""
         data = {
             ATTR_ERROR_CODE: self.error_code,
