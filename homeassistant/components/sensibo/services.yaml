@@ -80,3 +80,69 @@ enable_pure_boost:
           options:
             - "Normal"
             - "Sensitive"
+full_state:
+  name: Set full state
+  description: Set full state for Sensibo device
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    mode:
+      name: HVAC mode
+      description: HVAC mode to set
+      required: true
+      example: "heat"
+      selector:
+        select:
+          options:
+            - "cool"
+            - "heat"
+            - "fan"
+            - "auto"
+            - "dry"
+            - "off"
+    target_temperature:
+      name: Target Temperature
+      description: Optionally set target temperature
+      required: false
+      example: 23
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+    fan_mode:
+      name: Fan mode
+      description: Optionally set fan mode
+      required: false
+      example: "low"
+      selector:
+        text:
+          type: text
+    swing_mode:
+      name: swing mode
+      description: Optionally set swing mode
+      required: false
+      example: "fixedBottom"
+      selector:
+        text:
+          type: text
+    horizontal_swing_mode:
+      name: Horizontal swing mode
+      description: Optionally set horizontal swing mode
+      required: false
+      example: "fixedLeft"
+      selector:
+        text:
+          type: text
+    light:
+      name: Light
+      description: Set light on or off
+      required: false
+      example: "on"
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
