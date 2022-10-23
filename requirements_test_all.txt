@@ -1063,7 +1063,7 @@ pycomfoconnect==0.4
 pycoolmasternet-async==0.1.2
 
 # homeassistant.components.daikin
-pydaikin==2.7.2
+pydaikin==2.8.0
 
 # homeassistant.components.deconz
 pydeconz==105
