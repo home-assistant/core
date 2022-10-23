@@ -1,6 +1,5 @@
 """Component to interface with cameras."""
 from __future__ import annotations
-from email.mime import image
 
 import io
 import asyncio
