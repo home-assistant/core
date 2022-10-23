@@ -79,11 +79,11 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
             SharkIqAuthExpiringError,
         ) as err:
             LOGGER.debug("Bad auth state.  Attempting re-auth", exc_info=err)
-            self.ayla_api.async_sign_in()
+            await self.ayla_api.async_sign_in()
             raise ConfigEntryAuthFailed from err
         except Exception as err:
             LOGGER.exception("Unexpected error updating SharkIQ.  Attempting re-auth")
-            self.ayla_api.async_sign_in()
+            await self.ayla_api.async_sign_in()
             raise UpdateFailed(err) from err
 
         return True

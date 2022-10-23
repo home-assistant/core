@@ -1,6 +1,6 @@
 clean_room:
   name: Clean Room
-  description: Cleans a specific room or set of user-defined rooms.
+  description: Cleans a specific user-defined room or set of rooms.
   target:
     entity:
       integration: "sharkiq"
