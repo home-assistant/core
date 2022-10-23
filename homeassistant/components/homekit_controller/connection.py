@@ -20,7 +20,7 @@ from aiohomekit.model.services import Service
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -192,7 +192,7 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
-        attempts = None if self.hass.is_running else 1
+        attempts = None if self.hass.state == CoreState.running else 1
         try:
             await self.pairing.async_populate_accessories_state(
                 force_update=True, attempts=attempts
