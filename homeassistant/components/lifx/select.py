@@ -41,20 +41,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up LIFX from a config entry."""
     coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    entities: list[LIFXEntity] = []
 
     if lifx_features(coordinator.device)["infrared"]:
-        async_add_entities(
-            [
-                LIFXInfraredBrightnessSelectEntity(
-                    coordinator=coordinator, description=INFRARED_BRIGHTNESS_ENTITY
-                )
-            ]
+        entities.append(
+            LIFXInfraredBrightnessSelectEntity(
+                coordinator=coordinator, description=INFRARED_BRIGHTNESS_ENTITY
+            )
         )
 
     if lifx_features(coordinator.device)["multizone"] is True:
-        async_add_entities(
-            [LIFXThemeSelectEntity(coordinator=coordinator, description=THEME_ENTITY)]
+        entities.append(
+            LIFXThemeSelectEntity(coordinator=coordinator, description=THEME_ENTITY)
         )
+
+    async_add_entities(entities)
 
 
 class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
