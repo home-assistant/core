@@ -41,13 +41,14 @@ async def test_diagnostics(hass, hass_client) -> None:
     assert diag == {
         "bridge_data": {
             "areas": {
-                "898": {"id": "898", "name": "Basement", "parent_id": None},
+                "3": {"id": "3", "name": "House", "parent_id": None},
+                "898": {"id": "898", "name": "Basement", "parent_id": "3"},
                 "822": {"id": "822", "name": "Bedroom", "parent_id": "898"},
                 "910": {"id": "910", "name": "Bathroom", "parent_id": "898"},
-                "1024": {"id": "1024", "name": "Master Bedroom", "parent_id": None},
-                "1025": {"id": "1025", "name": "Kitchen", "parent_id": None},
-                "1026": {"id": "1026", "name": "Dining Room", "parent_id": None},
-                "1205": {"id": "1205", "name": "Hallway", "parent_id": None},
+                "1024": {"id": "1024", "name": "Master Bedroom", "parent_id": "3"},
+                "1025": {"id": "1025", "name": "Kitchen", "parent_id": "3"},
+                "1026": {"id": "1026", "name": "Dining Room", "parent_id": "3"},
+                "1205": {"id": "1205", "name": "Hallway", "parent_id": "3"},
             },
             "buttons": {
                 "111": {
