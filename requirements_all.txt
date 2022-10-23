@@ -1505,7 +1505,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.7.2
+pydaikin==2.8.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
