@@ -420,6 +420,7 @@ class Scanner:
             else:
                 source_tuple = (source_ip_str, 0)
             source, target = determine_source_target(source_tuple)
+            source = fix_ipv6_address_scope_id(source) or source
             self._ssdp_listeners.append(
                 SsdpListener(
                     async_callback=self._ssdp_listener_callback,
