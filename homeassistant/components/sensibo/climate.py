@@ -456,7 +456,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         data: dict,
     ) -> bool:
         """Make service call to api."""
-        result = {}
         result = await self._client.async_set_timer(self._device_id, data)
         return bool(result.get("status") == "success")
 
@@ -468,7 +467,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         data: dict,
     ) -> bool:
         """Make service call to api."""
-        result = {}
         result = await self._client.async_set_pureboost(self._device_id, data)
         return bool(result.get("status") == "success")
 
