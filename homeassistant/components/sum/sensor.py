@@ -34,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 ICON = "mdi:calculator"
 ATTR_ENTITIES = "entities"
 ATTR_VALID_ENTITIES = "valid_entities"
+ATTR_COUNT_VALID = "count_valid"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -150,6 +151,7 @@ class SumSensor(SensorEntity):
         return {
             ATTR_ENTITIES: self._entity_ids,
             ATTR_VALID_ENTITIES: self.valid_entities,
+            ATTR_COUNT_VALID: len(self.valid_entities) if self.valid_entities else 0,
         }
 
     @callback

@@ -5,7 +5,11 @@ import pytest
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.sum.const import DOMAIN
-from homeassistant.components.sum.sensor import ATTR_ENTITIES, ATTR_VALID_ENTITIES
+from homeassistant.components.sum.sensor import (
+    ATTR_COUNT_VALID,
+    ATTR_ENTITIES,
+    ATTR_VALID_ENTITIES,
+)
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -174,6 +178,7 @@ async def test_sensor_incorrect_values(
         "sensor.test_1",
         "sensor.test_3",
     ]
+    assert state.attributes.get(ATTR_COUNT_VALID) == 2
 
 
 async def test_sum_sensor_from_yaml(hass: HomeAssistant):
