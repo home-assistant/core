@@ -72,7 +72,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the min/max/mean sensor."""
+    """Set up the Sum sensor."""
     entity_ids: list[str] = config[CONF_ENTITY_IDS]
     name: str = config[CONF_NAME]
     round_digits: float = config[CONF_ROUND_DIGITS]

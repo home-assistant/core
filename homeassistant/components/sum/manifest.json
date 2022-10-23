@@ -5,6 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/sum",
   "codeowners": ["@gjohansson-ST"],
   "quality_scale": "internal",
-  "iot_class": "local_push",
+  "iot_class": "calculated",
   "config_flow": true
 }
