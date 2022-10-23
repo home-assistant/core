@@ -4,7 +4,8 @@
             "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "user": {

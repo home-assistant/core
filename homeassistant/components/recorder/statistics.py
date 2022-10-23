@@ -1461,7 +1461,7 @@ def _async_import_statistics(
             statistic["last_reset"] = dt_util.as_utc(last_reset)
 
     # Insert job in recorder's queue
-    get_instance(hass).async_import_statistics(metadata, statistics)
+    get_instance(hass).async_import_statistics(metadata, statistics, Statistics)
 
 
 @callback
@@ -1529,7 +1529,7 @@ def _filter_unique_constraint_integrity_error(
             and err.orig.pgcode == "23505"
         ):
             ignore = True
-        if dialect_name == "mysql" and hasattr(err.orig, "args"):
+        if dialect_name == SupportedDialect.MYSQL and hasattr(err.orig, "args"):
             with contextlib.suppress(TypeError):
                 if err.orig.args[0] == 1062:
                     ignore = True
@@ -1551,6 +1551,7 @@ def import_statistics(
     instance: Recorder,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
+    table: type[Statistics | StatisticsShortTerm],
 ) -> bool:
     """Process an import_statistics job."""
 
@@ -1564,11 +1565,11 @@ def import_statistics(
         metadata_id = _update_or_add_metadata(session, metadata, old_metadata_dict)
         for stat in statistics:
             if stat_id := _statistics_exists(
-                session, Statistics, metadata_id, stat["start"]
+                session, table, metadata_id, stat["start"]
             ):
-                _update_statistics(session, Statistics, stat_id, stat)
+                _update_statistics(session, table, stat_id, stat)
             else:
-                _insert_statistics(session, Statistics, metadata_id, stat)
+                _insert_statistics(session, table, metadata_id, stat)
 
     return True
 
