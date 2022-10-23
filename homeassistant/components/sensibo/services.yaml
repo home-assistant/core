@@ -138,7 +138,7 @@ full_state:
           type: text
     light:
       name: Light
-      description: Set light on or off.
+      description: Set light on or off
       required: false
       example: "on"
       selector:
