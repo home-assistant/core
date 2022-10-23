@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dienst is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_api_key": "Ongeldige API-sleutel"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "title": "Integratie herauthenticeren"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "name": "Naam"
+                }
+            }
+        }
+    }
+}

@@ -4,7 +4,7 @@
             "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "Error al conectar",
+            "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
@@ -19,10 +19,10 @@
                 "data_description": {
                     "api_key": "El token de la API de Slack que se usar\u00e1 para enviar mensajes de Slack.",
                     "default_channel": "Canal al que publicar en caso de que no se especifique ning\u00fan canal al enviar un mensaje.",
-                    "icon": "Utilice uno de los emojis de Slack como icono para el nombre de usuario proporcionado.",
+                    "icon": "Utiliza uno de los emojis de Slack como icono para el nombre de usuario proporcionado.",
                     "username": "Home Assistant publicar\u00e1 en Slack con el nombre de usuario especificado."
                 },
-                "description": "Consulte la documentaci\u00f3n sobre c\u00f3mo obtener su clave API de Slack."
+                "description": "Consulta la documentaci\u00f3n sobre c\u00f3mo obtener tu clave API de Slack."
             }
         }
     }

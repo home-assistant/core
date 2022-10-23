@@ -9,11 +9,29 @@
             "unknown": "Erro inesperado"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Senha",
+                    "pin": "C\u00f3digo PIN",
+                    "username": "Usu\u00e1rio"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Nome do host",
+                    "pin": "C\u00f3digo PIN",
+                    "port": "Porta"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Senha",
                     "pin": "C\u00f3digo PIN",
                     "username": "Usu\u00e1rio"
+                },
+                "menu_options": {
+                    "cloud": "Risco Cloud (recomendado)",
+                    "local": "Painel de Risco Local (avan\u00e7ado)"
                 }
             }
         }

@@ -72,8 +72,8 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(api.gateway_id))},
         manufacturer="Plugwise",
-        name=entry.title,
-        model=f"Smile {api.smile_name}",
+        model=api.smile_model,
+        name=api.smile_name,
         sw_version=api.smile_version[0],
     )
 
@@ -82,7 +82,7 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_GATEWAY

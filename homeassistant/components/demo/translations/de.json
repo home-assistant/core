@@ -1,10 +1,21 @@
 {
     "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Dr\u00fccke SENDEN, um zu best\u00e4tigen, dass das Netzteil ausgetauscht wurde",
+                        "title": "Das Netzteil muss ausgetauscht werden"
+                    }
+                }
+            },
+            "title": "Das Netzteil ist nicht stabil"
+        },
         "out_of_blinker_fluid": {
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Dr\u00fccke OK, wenn die Blinkerfl\u00fcssigkeit nachgef\u00fcllt wurde.",
+                        "description": "Dr\u00fccke SENDEN, wenn die Blinkerfl\u00fcssigkeit nachgef\u00fcllt wurde",
                         "title": "Blinkerfl\u00fcssigkeit muss nachgef\u00fcllt werden"
                     }
                 }

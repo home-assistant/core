@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "error_pairing": "Ansluten till LG webOS TV men inte ihopkopplad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta. Sl\u00e5 p\u00e5 din TV eller kontrollera ip-adressen"
+        },
+        "flow_title": "LG webOS Smart TV",
+        "step": {
+            "pairing": {
+                "description": "Klicka p\u00e5 skicka och acceptera parningsf\u00f6rfr\u00e5gan p\u00e5 din TV. \n\n ![Image](/static/images/config_webos.png)",
+                "title": "Koppling av webOS TV"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "name": "Namn"
+                },
+                "description": "Sl\u00e5 p\u00e5 TV:n, fyll i f\u00f6ljande f\u00e4lt och klicka p\u00e5 skicka.",
+                "title": "Anslut till webOS TV"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "webostv.turn_on": "Enheten uppmanas att sl\u00e5s p\u00e5"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_retrieve": "Det gick inte att h\u00e4mta k\u00e4lllistan. Se till att enheten \u00e4r p\u00e5slagen",
+            "script_not_found": "Skriptet hittades inte"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "sources": "K\u00e4lllista"
+                },
+                "description": "V\u00e4lj aktiverade k\u00e4llor",
+                "title": "Alternativ f\u00f6r webOS Smart TV"
+            }
+        }
+    }
+}

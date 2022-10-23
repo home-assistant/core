@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import logging
 from math import ceil
 from typing import Any
 
@@ -18,7 +17,7 @@ from pytomorrowio.exceptions import (
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -26,8 +25,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -40,6 +39,7 @@ from .const import (
     CONF_TIMESTEP,
     DOMAIN,
     INTEGRATION_NAME,
+    LOGGER,
     TMRW_ATTR_CARBON_MONOXIDE,
     TMRW_ATTR_CHINA_AQI,
     TMRW_ATTR_CHINA_HEALTH_CONCERN,
@@ -78,8 +78,6 @@ from .const import (
     TMRW_ATTR_WIND_SPEED,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
 
 
@@ -110,88 +108,24 @@ def async_set_update_interval(
         (24 * 60 * len(entries) * api.num_api_requests)
         / (api.max_requests_per_day * 0.9)
     )
-    return timedelta(minutes=minutes)
-
-
-@callback
-def async_migrate_entry_from_climacell(
-    hass: HomeAssistant,
-    dev_reg: dr.DeviceRegistry,
-    entry: ConfigEntry,
-    device: dr.DeviceEntry,
-) -> None:
-    """Migrate a config entry from a Climacell entry."""
-    # Remove the old config entry ID from the entry data so we don't try this again
-    # on the next setup
-    data = entry.data.copy()
-    old_config_entry_id = data.pop("old_config_entry_id")
-    hass.config_entries.async_update_entry(entry, data=data)
-    _LOGGER.debug(
+    LOGGER.debug(
         (
-            "Setting up imported climacell entry %s for the first time as "
-            "tomorrowio entry %s"
+            "Number of config entries: %s\n"
+            "Number of API Requests per call: %s\n"
+            "Max requests per day: %s\n"
+            "Update interval: %s minutes"
         ),
-        old_config_entry_id,
-        entry.entry_id,
+        len(entries),
+        api.num_api_requests,
+        api.max_requests_per_day,
+        minutes,
     )
-
-    ent_reg = er.async_get(hass)
-    for entity_entry in er.async_entries_for_config_entry(ent_reg, old_config_entry_id):
-        old_platform = entity_entry.platform
-        # In case the API key has changed due to a V3 -> V4 change, we need to
-        # generate the new entity's unique ID
-        new_unique_id = (
-            f"{entry.data[CONF_API_KEY]}_"
-            f"{'_'.join(entity_entry.unique_id.split('_')[1:])}"
-        )
-        ent_reg.async_update_entity_platform(
-            entity_entry.entity_id,
-            DOMAIN,
-            new_unique_id=new_unique_id,
-            new_config_entry_id=entry.entry_id,
-            new_device_id=device.id,
-        )
-        assert entity_entry
-        _LOGGER.debug(
-            "Migrated %s from %s to %s",
-            entity_entry.entity_id,
-            old_platform,
-            DOMAIN,
-        )
-
-    # We only have one device in the registry but we will do a loop just in case
-    for old_device in dr.async_entries_for_config_entry(dev_reg, old_config_entry_id):
-        if old_device.name_by_user:
-            dev_reg.async_update_device(device.id, name_by_user=old_device.name_by_user)
-
-    # Remove the old config entry and now the entry is fully migrated
-    hass.async_create_task(hass.config_entries.async_remove(old_config_entry_id))
+    return timedelta(minutes=minutes)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tomorrow.io API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-
-    # Let's precreate the device so that if this is a first time setup for a config
-    # entry imported from a ClimaCell entry, we can apply customizations from the old
-    # device.
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.data[CONF_API_KEY])},
-        name=INTEGRATION_NAME,
-        manufacturer=INTEGRATION_NAME,
-        sw_version="v4",
-        entry_type=dr.DeviceEntryType.SERVICE,
-    )
-
-    # If this is an import and we still have the old config entry ID in the entry data,
-    # it means we are setting this entry up for the first time after a migration from
-    # ClimaCell to Tomorrow.io. In order to preserve any customizations on the ClimaCell
-    # entities, we need to remove each old entity, creating a new entity in its place
-    # but attached to this entry.
-    if entry.source == SOURCE_IMPORT and "old_config_entry_id" in entry.data:
-        async_migrate_entry_from_climacell(hass, dev_reg, entry, device)
 
     api_key = entry.data[CONF_API_KEY]
     # If coordinator already exists for this API key, we'll use that, otherwise
@@ -238,7 +172,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         self.entry_id_to_location_dict: dict[str, str] = {}
         self._coordinator_ready: asyncio.Event | None = None
 
-        super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{self._api.api_key}")
+        super().__init__(hass, LOGGER, name=f"{DOMAIN}_{self._api.api_key_masked}")
 
     def add_entry_to_location_dict(self, entry: ConfigEntry) -> None:
         """Add an entry to the location dict."""
@@ -253,9 +187,17 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         # may start setup before we finish setting the initial data and we don't want
         # to do multiple refreshes on startup.
         if self._coordinator_ready is None:
+            LOGGER.debug(
+                "Setting up coordinator for API key %s, loading data for all entries",
+                self._api.api_key_masked,
+            )
             self._coordinator_ready = asyncio.Event()
             for entry_ in async_get_entries_by_api_key(self.hass, self._api.api_key):
                 self.add_entry_to_location_dict(entry_)
+            LOGGER.debug(
+                "Loaded %s entries, initiating first refresh",
+                len(self.entry_id_to_location_dict),
+            )
             await self.async_config_entry_first_refresh()
             self._coordinator_ready.set()
         else:
@@ -265,6 +207,13 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
             # don't need to schedule a refresh
             if entry.entry_id in self.entry_id_to_location_dict:
                 return
+            LOGGER.debug(
+                (
+                    "Adding new entry to existing coordinator for API key %s, doing a "
+                    "partial refresh"
+                ),
+                self._api.api_key_masked,
+            )
             # We need a refresh, but it's going to be a partial refresh so we can
             # minimize repeat API calls
             self.add_entry_to_location_dict(entry)
@@ -294,6 +243,10 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
         ):
             data = self.data
 
+        LOGGER.debug(
+            "Fetching data for %s entries",
+            len(set(self.entry_id_to_location_dict) - set(data)),
+        )
         for entry_id, location in self.entry_id_to_location_dict.items():
             if entry_id in data:
                 continue
@@ -367,6 +320,8 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator):
 class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
     """Base Tomorrow.io Entity."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -379,10 +334,10 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         self._config_entry = config_entry
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.data[CONF_API_KEY])},
-            name="Tomorrow.io",
-            manufacturer="Tomorrow.io",
+            name=INTEGRATION_NAME,
+            manufacturer=INTEGRATION_NAME,
             sw_version=f"v{self.api_version}",
-            entry_type=dr.DeviceEntryType.SERVICE,
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     def _get_current_property(self, property_name: str) -> int | str | float | None:
@@ -393,8 +348,3 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         """
         entry_id = self._config_entry.entry_id
         return self.coordinator.data[entry_id].get(CURRENT, {}).get(property_name)
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION

@@ -94,7 +94,7 @@
             "powered": "{entity_name} alimentado",
             "present": "{entity_name} presente",
             "problem": "{entity_name} come\u00e7ou a detectar problema",
-            "running": "{entity_name} come\u00e7ar a correr",
+            "running": "{nome_da_entidade} come\u00e7ou a executar",
             "smoke": "{entity_name} come\u00e7ou a detectar fuma\u00e7a",
             "sound": "{entity_name} come\u00e7ou a detectar som",
             "tampered": "{entity_name} come\u00e7ou a detectar adultera\u00e7\u00e3o",

@@ -72,6 +72,8 @@ class MyStromView(HomeAssistantView):
 class MyStromBinarySensor(BinarySensorEntity):
     """Representation of a myStrom button."""
 
+    _attr_should_poll = False
+
     def __init__(self, button_id):
         """Initialize the myStrom Binary sensor."""
         self._button_id = button_id
@@ -81,11 +83,6 @@ class MyStromBinarySensor(BinarySensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._button_id
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def is_on(self):

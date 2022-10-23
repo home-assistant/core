@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -27,7 +28,11 @@ from .const import (
     DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
-from .util import GuardianDataUpdateCoordinator
+from .util import (
+    EntityDomainReplacementStrategy,
+    GuardianDataUpdateCoordinator,
+    async_finish_entity_domain_replacements,
+)
 
 ATTR_CONNECTED_CLIENTS = "connected_clients"
 
@@ -79,6 +84,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up Guardian switches based on a config entry."""
     data: GuardianData = hass.data[DOMAIN][entry.entry_id]
+    uid = entry.data[CONF_UID]
+
+    async_finish_entity_domain_replacements(
+        hass,
+        entry,
+        (
+            EntityDomainReplacementStrategy(
+                BINARY_SENSOR_DOMAIN,
+                f"{uid}_ap_enabled",
+                f"switch.guardian_valve_controller_{uid}_onboard_ap",
+                "2022.12.0",
+                remove_old_entity=False,
+            ),
+        ),
+    )
 
     @callback
     def add_new_paired_sensor(uid: str) -> None:
@@ -137,7 +157,7 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
 
     @callback
     def _async_update_from_latest_data(self) -> None:
-        """Update the entity."""
+        """Update the entity's underlying data."""
         if self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
             self._attr_is_on = self.coordinator.data["wet"]
         elif self.entity_description.key == SENSOR_KIND_MOVED:

@@ -109,6 +109,12 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     class InvalidRoomSelection(exceptions.HomeAssistantError):
         """Error to indicate an invalid room was included in the selection."""
 
+    def clean_spot(self, **kwargs: Any) -> None:
+        """Clean a spot. Not yet implemented."""
+        raise NotImplementedError(
+            "Service `clean_spot` is currently not compatible with SharkIQ."
+        )
+
     def send_command(
         self,
         command: str,
@@ -118,12 +124,6 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         """Send a command to the vacuum. Not yet implemented."""
         raise NotImplementedError(
             "Service `send_command` is currently not compatible with SharkIQ."
-        )
-
-    def clean_spot(self, **kwargs: Any) -> None:
-        """Spot clean an area. Not yet implemented."""
-        raise NotImplementedError(
-            "Service `clean_spot` is currently not compatible with SharkIQ."
         )
 
     @property

@@ -30,7 +30,9 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> QuantumGatewayDeviceScanner | None:
     """Validate the configuration and return a Quantum Gateway scanner."""
     scanner = QuantumGatewayDeviceScanner(config[DOMAIN])
 

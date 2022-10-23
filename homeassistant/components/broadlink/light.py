@@ -1,5 +1,6 @@
 """Support for Broadlink lights."""
 import logging
+from typing import Any
 
 from broadlink.exceptions import BroadlinkException
 
@@ -43,10 +44,11 @@ async def async_setup_entry(
 class BroadlinkLight(BroadlinkEntity, LightEntity):
     """Representation of a Broadlink light."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device):
         """Initialize the light."""
         super().__init__(device)
-        self._attr_name = f"{device.name} Light"
         self._attr_unique_id = device.unique_id
         self._attr_supported_color_modes = set()
 
@@ -88,7 +90,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
                 # Scenes are not yet supported.
                 self._attr_color_mode = ColorMode.UNKNOWN
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         state = {"pwr": 1}
 
@@ -122,7 +124,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
 
         await self._async_set_state(state)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._async_set_state({"pwr": 0})
 

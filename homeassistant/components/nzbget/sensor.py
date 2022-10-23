@@ -74,6 +74,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
+    SensorEntityDescription(
+        key="DownloadLimit",
+        name="Speed Limit",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+    ),
 )
 
 
@@ -125,6 +130,9 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
             _LOGGER.warning("Unable to locate value for %s", sensor_type)
             self._native_value = None
         elif "DownloadRate" in sensor_type and value > 0:
+            # Convert download rate from Bytes/s to MBytes/s
+            self._native_value = round(value / 2**20, 2)
+        elif "DownloadLimit" in sensor_type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
             self._native_value = round(value / 2**20, 2)
         elif "UpTimeSec" in sensor_type and value > 0:

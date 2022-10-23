@@ -33,6 +33,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Google'i kalendri konfigureerimine failis configuration.yaml eemaldatakse versioonis Home Assistant 2022.9.\n\nTeie olemasolevad OAuth-rakenduse volitused ja juurdep\u00e4\u00e4su seaded on automaatselt kasutajaliidesesse imporditud. Probleemi lahendamiseks eemaldage YAML-konfiguratsioon failist configuration.yaml ja taask\u00e4ivitage Home Assistant.",
+            "title": "Google'i kalendri YAML-i konfiguratsioon eemaldatakse"
+        },
+        "removed_track_new_yaml": {
+            "description": "Oled keelanud Google'i kalendri olemite j\u00e4lgimise rakenduses configuration.yaml, mida enam ei toetata. Peate kasutajaliideses integratsioonis\u00fcsteemi suvandeid k\u00e4sitsi muutma, et \u00e4sja avastatud olemid edaspidi keelata. Eemaldage saidilt configuration.yaml s\u00e4te track_new ja taask\u00e4ivitage home assistant selle probleemi lahendamiseks.",
+            "title": "Google'i kalendri olemi j\u00e4lgimine on muutunud"
+        }
+    },
     "options": {
         "step": {
             "init": {

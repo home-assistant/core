@@ -18,6 +18,13 @@
                 "description": "Dein zuvor eingegebenes Passwort f\u00fcr {username} funktioniert nicht mehr. Aktualisiere dein Passwort, um diese Integration weiterhin zu verwenden.",
                 "title": "Integration erneut authentifizieren"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Dein zuvor eingegebenes Passwort f\u00fcr {username} funktioniert nicht mehr. Aktualisiere dein Passwort, um diese Integration weiterhin zu verwenden.",
+                "title": "Integration erneut authentifizieren"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Vertrauensw\u00fcrdiges Ger\u00e4t"

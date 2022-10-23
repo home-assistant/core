@@ -8,7 +8,7 @@ import socket
 from typing import Any
 
 from aiolifx.aiolifx import Light
-from aiolifx_connection import LIFXConnection
+from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -57,7 +57,7 @@ CONFIG_SCHEMA = vol.All(
 )
 
 
-PLATFORMS = [Platform.LIGHT]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT, Platform.SELECT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 MIGRATION_INTERVAL = timedelta(minutes=5)
 
@@ -77,7 +77,7 @@ async def async_legacy_migration(
     }
     # device.mac_addr is not the mac_address, its the serial number
     hosts_by_serial = {device.mac_addr: device.ip_addr for device in discovered_devices}
-    missing_discovery_count = await async_migrate_legacy_entries(
+    missing_discovery_count = async_migrate_legacy_entries(
         hass, hosts_by_serial, existing_serials, legacy_entry
     )
     if missing_discovery_count:
@@ -173,14 +173,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
-
     if async_entry_is_legacy(entry):
         return True
 
     if legacy_entry := async_get_legacy_entry(hass):
         # If the legacy entry still exists, harvest the entities
         # that are moving to this config entry.
-        await async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
+        async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
 
     assert entry.unique_id is not None
     domain_data = hass.data[DOMAIN]
@@ -194,10 +193,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await connection.async_setup()
     except socket.gaierror as ex:
+        connection.async_stop()
         raise ConfigEntryNotReady(f"Could not resolve {host}: {ex}") from ex
     coordinator = LIFXUpdateCoordinator(hass, connection, entry.title)
     coordinator.async_setup()
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        connection.async_stop()
+        raise
 
     domain_data[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

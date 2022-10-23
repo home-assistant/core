@@ -9,7 +9,8 @@
                 "data": {
                     "api_key": "API Nyckel",
                     "name": "Namn",
-                    "path": "S\u00f6kv\u00e4g"
+                    "path": "S\u00f6kv\u00e4g",
+                    "url": "URL"
                 }
             }
         }

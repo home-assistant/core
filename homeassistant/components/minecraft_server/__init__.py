@@ -150,7 +150,7 @@ class MinecraftServer:
             )
             self.online = False
 
-    async def async_update(self, now: datetime = None) -> None:
+    async def async_update(self, now: datetime | None = None) -> None:
         """Get server data from 3rd party library and update properties."""
         # Check connection status.
         server_online_old = self.online

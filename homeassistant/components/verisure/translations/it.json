@@ -6,7 +6,8 @@
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
-            "unknown": "Errore imprevisto"
+            "unknown": "Errore imprevisto",
+            "unknown_mfa": "Si \u00e8 verificato un errore sconosciuto durante la configurazione dell'autenticazione a pi\u00f9 fattori"
         },
         "step": {
             "installation": {
@@ -30,7 +31,8 @@
             },
             "reauth_mfa": {
                 "data": {
-                    "code": "Codice di verifica"
+                    "code": "Codice di verifica",
+                    "description": "Il tuo account ha la verifica in due passaggi abilitata. Inserisci il codice di verifica che ti viene inviato da Verisure."
                 }
             },
             "user": {

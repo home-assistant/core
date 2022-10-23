@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.lovelace import cast as lovelace_cast
+from homeassistant.components.media_player import MediaClass
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -71,7 +72,7 @@ async def test_root_object(hass):
     assert len(root) == 1
     item = root[0]
     assert item.title == "Dashboards"
-    assert item.media_class == lovelace_cast.MEDIA_CLASS_APP
+    assert item.media_class == MediaClass.APP
     assert item.media_content_id == ""
     assert item.media_content_type == lovelace_cast.DOMAIN
     assert item.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
@@ -106,7 +107,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
 
     child_1 = top_level_items.children[0]
     assert child_1.title == "Default"
-    assert child_1.media_class == lovelace_cast.MEDIA_CLASS_APP
+    assert child_1.media_class == MediaClass.APP
     assert child_1.media_content_id == lovelace_cast.DEFAULT_DASHBOARD
     assert child_1.media_content_type == lovelace_cast.DOMAIN
     assert child_1.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
@@ -115,7 +116,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
 
     child_2 = top_level_items.children[1]
     assert child_2.title == "YAML Title"
-    assert child_2.media_class == lovelace_cast.MEDIA_CLASS_APP
+    assert child_2.media_class == MediaClass.APP
     assert child_2.media_content_id == "yaml-with-views"
     assert child_2.media_content_type == lovelace_cast.DOMAIN
     assert child_2.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
@@ -130,7 +131,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
 
     grandchild_1 = child_2.children[0]
     assert grandchild_1.title == "Hello"
-    assert grandchild_1.media_class == lovelace_cast.MEDIA_CLASS_APP
+    assert grandchild_1.media_class == MediaClass.APP
     assert grandchild_1.media_content_id == "yaml-with-views/0"
     assert grandchild_1.media_content_type == lovelace_cast.DOMAIN
     assert (
@@ -141,7 +142,7 @@ async def test_browse_media(hass, mock_yaml_dashboard, mock_https_url):
 
     grandchild_2 = child_2.children[1]
     assert grandchild_2.title == "second-view"
-    assert grandchild_2.media_class == lovelace_cast.MEDIA_CLASS_APP
+    assert grandchild_2.media_class == MediaClass.APP
     assert grandchild_2.media_content_id == "yaml-with-views/second-view"
     assert grandchild_2.media_content_type == lovelace_cast.DOMAIN
     assert (

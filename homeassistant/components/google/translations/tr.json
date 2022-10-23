@@ -33,6 +33,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Google Takvim'in configuration.yaml dosyas\u0131nda yap\u0131land\u0131r\u0131lmas\u0131 Home Assistant 2022.9'da kald\u0131r\u0131l\u0131yor.\n\nMevcut OAuth Uygulama Kimlik Bilgileriniz ve eri\u015fim ayarlar\u0131n\u0131z otomatik olarak kullan\u0131c\u0131 aray\u00fcz\u00fcne aktar\u0131lm\u0131\u015ft\u0131r. YAML yap\u0131land\u0131rmas\u0131n\u0131 configuration.yaml dosyan\u0131zdan kald\u0131r\u0131n ve bu sorunu gidermek i\u00e7in Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "Google Takvim YAML yap\u0131land\u0131rmas\u0131 kald\u0131r\u0131l\u0131yor"
+        },
+        "removed_track_new_yaml": {
+            "description": "Art\u0131k desteklenmeyen configuration.yaml dosyas\u0131nda Google Takvim i\u00e7in varl\u0131k izlemeyi devre d\u0131\u015f\u0131 b\u0131rakt\u0131n\u0131z. \u0130leride yeni ke\u015ffedilen varl\u0131klar\u0131 devre d\u0131\u015f\u0131 b\u0131rakmak i\u00e7in kullan\u0131c\u0131 aray\u00fcz\u00fcndeki entegrasyon Sistem Se\u00e7eneklerini manuel olarak de\u011fi\u015ftirmeniz gerekir. Bu sorunu \u00e7\u00f6zmek i\u00e7in configuration.yaml dosyas\u0131ndan track_new ayar\u0131n\u0131 kald\u0131r\u0131n ve Home Assistant'\u0131 yeniden ba\u015flat\u0131n.",
+            "title": "Google Takvim varl\u0131k takibi de\u011fi\u015fti"
+        }
+    },
     "options": {
         "step": {
             "init": {

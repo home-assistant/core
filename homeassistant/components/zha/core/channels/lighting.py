@@ -1,7 +1,7 @@
 """Lighting channels module for Zigbee Home Automation."""
 from __future__ import annotations
 
-from contextlib import suppress
+from functools import cached_property
 
 from zigpy.zcl.clusters import lighting
 
@@ -46,17 +46,8 @@ class ColorChannel(ZigbeeChannel):
         "color_loop_active": False,
     }
 
-    @property
-    def color_capabilities(self) -> int:
-        """Return color capabilities of the light."""
-        with suppress(KeyError):
-            return self.cluster["color_capabilities"]
-        if self.cluster.get("color_temperature") is not None:
-            return self.CAPABILITIES_COLOR_XY | self.CAPABILITIES_COLOR_TEMP
-        return self.CAPABILITIES_COLOR_XY
-
-    @property
-    def zcl_color_capabilities(self) -> lighting.Color.ColorCapabilities:
+    @cached_property
+    def color_capabilities(self) -> lighting.Color.ColorCapabilities:
         """Return ZCL color capabilities of the light."""
         color_capabilities = self.cluster.get("color_capabilities")
         if color_capabilities is None:
@@ -117,43 +108,41 @@ class ColorChannel(ZigbeeChannel):
     def hs_supported(self) -> bool:
         """Return True if the channel supports hue and saturation."""
         return (
-            self.zcl_color_capabilities is not None
+            self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.Hue_and_saturation
-            in self.zcl_color_capabilities
+            in self.color_capabilities
         )
 
     @property
     def enhanced_hue_supported(self) -> bool:
         """Return True if the channel supports enhanced hue and saturation."""
         return (
-            self.zcl_color_capabilities is not None
-            and lighting.Color.ColorCapabilities.Enhanced_hue
-            in self.zcl_color_capabilities
+            self.color_capabilities is not None
+            and lighting.Color.ColorCapabilities.Enhanced_hue in self.color_capabilities
         )
 
     @property
     def xy_supported(self) -> bool:
         """Return True if the channel supports xy."""
         return (
-            self.zcl_color_capabilities is not None
+            self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.XY_attributes
-            in self.zcl_color_capabilities
+            in self.color_capabilities
         )
 
     @property
     def color_temp_supported(self) -> bool:
         """Return True if the channel supports color temperature."""
         return (
-            self.zcl_color_capabilities is not None
+            self.color_capabilities is not None
             and lighting.Color.ColorCapabilities.Color_temperature
-            in self.zcl_color_capabilities
-        )
+            in self.color_capabilities
+        ) or self.color_temperature is not None
 
     @property
     def color_loop_supported(self) -> bool:
         """Return True if the channel supports color loop."""
         return (
-            self.zcl_color_capabilities is not None
-            and lighting.Color.ColorCapabilities.Color_loop
-            in self.zcl_color_capabilities
+            self.color_capabilities is not None
+            and lighting.Color.ColorCapabilities.Color_loop in self.color_capabilities
         )

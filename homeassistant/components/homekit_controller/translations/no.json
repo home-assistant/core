@@ -18,7 +18,7 @@
             "unable_to_pair": "Kunne ikke koble til, vennligst pr\u00f8v igjen.",
             "unknown_error": "Enheten rapporterte en ukjent feil. Sammenkobling mislyktes."
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ( {category} )",
         "step": {
             "busy_error": {
                 "description": "Avbryt sammenkobling p\u00e5 alle kontrollere, eller pr\u00f8v \u00e5 starte enheten p\u00e5 nytt, og fortsett deretter med \u00e5 fortsette sammenkoblingen.",
@@ -33,7 +33,7 @@
                     "allow_insecure_setup_codes": "Tillat sammenkobling med usikre oppsettkoder.",
                     "pairing_code": "Sammenkoblingskode"
                 },
-                "description": "HomeKit Controller kommuniserer med {name} over lokalnettverket ved hjelp av en sikker kryptert tilkobling uten en separat HomeKit-kontroller eller iCloud. Skriv inn HomeKit-paringskoden (i formatet XXX-XX-XXX) for \u00e5 bruke dette tilbeh\u00f8ret. Denne koden finnes vanligvis p\u00e5 selve enheten eller i emballasjen.",
+                "description": "HomeKit-kontrolleren kommuniserer med {name} ( {category} ) over det lokale nettverket ved hjelp av en sikker kryptert tilkobling uten en separat HomeKit-kontroller eller iCloud. Skriv inn HomeKit-paringskoden (i formatet XXX-XX-XXX) for \u00e5 bruke dette tilbeh\u00f8ret. Denne koden finnes vanligvis p\u00e5 selve enheten eller i emballasjen.",
                 "title": "Par med en enhet via HomeKit Accessory Protocol"
             },
             "protocol_error": {

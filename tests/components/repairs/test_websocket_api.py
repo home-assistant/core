@@ -9,41 +9,54 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.repairs import (
-    RepairsFlow,
-    async_create_issue,
-    issue_registry,
-)
+from homeassistant.components.repairs import RepairsFlow
 from homeassistant.components.repairs.const import DOMAIN
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
 
+DEFAULT_ISSUES = [
+    {
+        "breaks_in_ha_version": "2022.9",
+        "domain": "fake_integration",
+        "issue_id": "issue_1",
+        "is_fixable": True,
+        "learn_more_url": "https://theuselessweb.com",
+        "severity": "error",
+        "translation_key": "abc_123",
+        "translation_placeholders": {"abc": "123"},
+    }
+]
 
-async def create_issues(hass, ws_client):
+
+async def create_issues(hass, ws_client, issues=None):
     """Create issues."""
-    issues = [
-        {
-            "breaks_in_ha_version": "2022.9",
-            "domain": "fake_integration",
-            "issue_id": "issue_1",
-            "is_fixable": True,
-            "learn_more_url": "https://theuselessweb.com",
-            "severity": "error",
-            "translation_key": "abc_123",
-            "translation_placeholders": {"abc": "123"},
-        },
-    ]
+
+    def api_issue(issue):
+        excluded_keys = ("data",)
+        return dict(
+            {key: issue[key] for key in issue if key not in excluded_keys},
+            created=ANY,
+            dismissed_version=None,
+            ignored=False,
+            issue_domain=None,
+        )
+
+    if issues is None:
+        issues = DEFAULT_ISSUES
 
     for issue in issues:
-        async_create_issue(
+        issue_registry.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
+            data=issue.get("data"),
             is_fixable=issue["is_fixable"],
+            is_persistent=False,
             learn_more_url=issue["learn_more_url"],
             severity=issue["severity"],
             translation_key=issue["translation_key"],
@@ -54,19 +67,15 @@ async def create_issues(hass, ws_client):
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            dict(
-                issue,
-                created=ANY,
-                dismissed_version=None,
-                ignored=False,
-            )
-            for issue in issues
-        ]
-    }
+    assert msg["result"] == {"issues": [api_issue(issue) for issue in issues]}
 
     return issues
+
+
+EXPECTED_DATA = {
+    "issue_1": None,
+    "issue_2": {"blah": "bleh"},
+}
 
 
 class MockFixFlow(RepairsFlow):
@@ -77,25 +86,30 @@ class MockFixFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
 
-        return await (self.async_step_confirm())
+        assert self.issue_id in EXPECTED_DATA
+        assert self.data == EXPECTED_DATA[self.issue_id]
 
-    async def async_step_confirm(
+        return await (self.async_step_custom_step())
+
+    async def async_step_custom_step(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
+        """Handle a custom_step step of a fix flow."""
         if user_input is not None:
-            return self.async_create_entry(title=None, data=None)
+            return self.async_create_entry(title="", data={})
 
-        return self.async_show_form(step_id="confirm", data_schema=vol.Schema({}))
+        return self.async_show_form(step_id="custom_step", data_schema=vol.Schema({}))
 
 
 @pytest.fixture(autouse=True)
 async def mock_repairs_integration(hass):
     """Mock a repairs integration."""
     hass.config.components.add("fake_integration")
-    hass.config.components.add("integration_without_diagnostics")
 
-    def async_create_fix_flow(hass, issue_id):
+    def async_create_fix_flow(hass, issue_id, data):
+        assert issue_id in EXPECTED_DATA
+        assert data == EXPECTED_DATA[issue_id]
+
         return MockFixFlow()
 
     mock_platform(
@@ -105,7 +119,7 @@ async def mock_repairs_integration(hass):
     )
     mock_platform(
         hass,
-        "integration_without_diagnostics.repairs",
+        "integration_without_repairs.repairs",
         Mock(spec=[]),
     )
 
@@ -154,6 +168,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created=ANY,
                 dismissed_version=ha_version,
                 ignored=True,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -183,6 +198,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
                 created=ANY,
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
@@ -226,13 +242,28 @@ async def test_fix_non_existing_issue(
                 created=ANY,
                 dismissed_version=None,
                 ignored=False,
+                issue_domain=None,
             )
             for issue in issues
         ]
     }
 
 
-async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> None:
+@pytest.mark.parametrize(
+    "domain, step, description_placeholders",
+    (
+        ("fake_integration", "custom_step", None),
+        ("fake_integration_default_handler", "confirm", {"abc": "123"}),
+    ),
+)
+async def test_fix_issue(
+    hass: HomeAssistant,
+    hass_client,
+    hass_ws_client,
+    domain,
+    step,
+    description_placeholders,
+) -> None:
     """Test we can fix an issue."""
     assert await async_setup_component(hass, "http", {})
     assert await async_setup_component(hass, DOMAIN, {})
@@ -240,12 +271,18 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    await create_issues(hass, ws_client)
+    issues = [
+        {
+            **DEFAULT_ISSUES[0],
+            "data": {"blah": "bleh"},
+            "domain": domain,
+            "issue_id": "issue_2",
+        }
+    ]
+    await create_issues(hass, ws_client, issues=issues)
 
     url = "/api/repairs/issues/fix"
-    resp = await client.post(
-        url, json={"handler": "fake_integration", "issue_id": "issue_1"}
-    )
+    resp = await client.post(url, json={"handler": domain, "issue_id": "issue_2"})
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -253,12 +290,12 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
     flow_id = data["flow_id"]
     assert data == {
         "data_schema": [],
-        "description_placeholders": None,
+        "description_placeholders": description_placeholders,
         "errors": None,
         "flow_id": ANY,
-        "handler": "fake_integration",
+        "handler": domain,
         "last_step": None,
-        "step_id": "confirm",
+        "step_id": step,
         "type": "form",
     }
 
@@ -281,8 +318,8 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
         "description": None,
         "description_placeholders": None,
         "flow_id": flow_id,
-        "handler": "fake_integration",
-        "title": None,
+        "handler": domain,
+        "title": "",
         "type": "create_entry",
         "version": 1,
     }
@@ -375,14 +412,16 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
 
     # Add an inactive issue, this should not be exposed in the list
     hass_storage[issue_registry.STORAGE_KEY] = {
-        "version": issue_registry.STORAGE_VERSION,
+        "version": issue_registry.STORAGE_VERSION_MAJOR,
         "data": {
             "issues": [
                 {
                     "created": "2022-07-19T09:41:13.746514+00:00",
                     "dismissed_version": None,
                     "domain": "test",
+                    "is_persistent": False,
                     "issue_id": "issue_3_inactive",
+                    "issue_domain": None,
                 },
             ]
         },
@@ -404,6 +443,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
             "domain": "test",
             "is_fixable": True,
             "issue_id": "issue_1",
+            "issue_domain": None,
             "learn_more_url": "https://theuselessweb.com",
             "severity": "error",
             "translation_key": "abc_123",
@@ -414,6 +454,7 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
             "domain": "test",
             "is_fixable": False,
             "issue_id": "issue_2",
+            "issue_domain": None,
             "learn_more_url": "https://theuselessweb.com/abc",
             "severity": "other",
             "translation_key": "even_worse",
@@ -422,12 +463,13 @@ async def test_list_issues(hass: HomeAssistant, hass_storage, hass_ws_client) ->
     ]
 
     for issue in issues:
-        async_create_issue(
+        issue_registry.async_create_issue(
             hass,
             issue["domain"],
             issue["issue_id"],
             breaks_in_ha_version=issue["breaks_in_ha_version"],
             is_fixable=issue["is_fixable"],
+            is_persistent=False,
             learn_more_url=issue["learn_more_url"],
             severity=issue["severity"],
             translation_key=issue["translation_key"],

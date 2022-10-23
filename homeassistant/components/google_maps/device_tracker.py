@@ -1,7 +1,6 @@
 """Support for Google Maps location sharing."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import timedelta
 import logging
 
@@ -11,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
-    SOURCE_TYPE_GPS,
+    SeeCallback,
+    SourceType,
 )
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
 def setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    see: Callable[..., None],
+    see: SeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Google Maps Location sharing scanner."""
@@ -61,7 +61,7 @@ def setup_scanner(
 class GoogleMapsScanner:
     """Representation of an Google Maps location sharing account."""
 
-    def __init__(self, hass, config: ConfigType, see) -> None:
+    def __init__(self, hass, config: ConfigType, see: SeeCallback) -> None:
         """Initialize the scanner."""
         self.see = see
         self.username = config[CONF_USERNAME]
@@ -129,7 +129,7 @@ class GoogleMapsScanner:
                 dev_id=dev_id,
                 gps=(person.latitude, person.longitude),
                 picture=person.picture_url,
-                source_type=SOURCE_TYPE_GPS,
+                source_type=SourceType.GPS,
                 gps_accuracy=person.accuracy,
                 attributes=attrs,
             )

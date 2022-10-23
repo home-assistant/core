@@ -16,7 +16,7 @@ from homeassistant.const import (
     PRESSURE_PSI,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import init_integration
 
@@ -63,7 +63,7 @@ async def test_sensors(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:speedometer"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
-    assert state.state == "2796"
+    assert state.state == "2795"
     entry = entity_registry.async_get("sensor.my_mazda3_odometer")
     assert entry
     assert entry.unique_id == "JM000000000000000_odometer"
@@ -132,7 +132,7 @@ async def test_sensors(hass):
 
 async def test_sensors_imperial_units(hass):
     """Test that the sensors work properly with imperial units."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     await init_integration(hass)
 

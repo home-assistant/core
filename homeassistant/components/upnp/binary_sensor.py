@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import UpnpBinarySensorEntityDescription, UpnpDataUpdateCoordinator, UpnpEntity
@@ -16,6 +17,8 @@ BINARYSENSOR_ENTITY_DESCRIPTIONS: tuple[UpnpBinarySensorEntityDescription, ...] 
     UpnpBinarySensorEntityDescription(
         key=WAN_STATUS,
         name="wan status",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -44,7 +47,6 @@ class UpnpStatusBinarySensor(UpnpEntity, BinarySensorEntity):
     """Class for UPnP/IGD binary sensors."""
 
     entity_description: UpnpBinarySensorEntityDescription
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(
         self,

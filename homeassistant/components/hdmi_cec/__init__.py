@@ -17,11 +17,6 @@ from pycec.const import (
     KEY_MUTE_TOGGLE,
     KEY_VOLUME_DOWN,
     KEY_VOLUME_UP,
-    POWER_OFF,
-    POWER_ON,
-    STATUS_PLAY,
-    STATUS_STILL,
-    STATUS_STOP,
 )
 from pycec.network import HDMINetwork, PhysicalAddress
 from pycec.tcp import TcpAdapter
@@ -35,12 +30,6 @@ from homeassistant.const import (
     CONF_PLATFORM,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery, event
@@ -219,7 +208,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     def _adapter_watchdog(now=None):
         _LOGGER.debug("Reached _adapter_watchdog")
-        event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        event.call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
         if not adapter.initialized:
             _LOGGER.info("Adapter not initialized; Trying to restart")
             hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
@@ -382,7 +371,6 @@ class CecEntity(Entity):
     def __init__(self, device, logical) -> None:
         """Initialize the device."""
         self._device = device
-        self._state: str | None = None
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
         self._set_attr_name()
@@ -405,26 +393,8 @@ class CecEntity(Entity):
             self._attr_name = f"{self._device.type_name} {self._logical_address} ({self._device.osd_name})"
 
     def _hdmi_cec_unavailable(self, callback_event):
-        # Change state to unavailable. Without this, entity would remain in
-        # its last state, since the state changes are pushed.
-        self._state = STATE_UNAVAILABLE
+        self._attr_available = False
         self.schedule_update_ha_state(False)
-
-    def update(self):
-        """Update device status."""
-        device = self._device
-        if device.power_status in [POWER_OFF, 3]:
-            self._state = STATE_OFF
-        elif device.status == STATUS_PLAY:
-            self._state = STATE_PLAYING
-        elif device.status == STATUS_STOP:
-            self._state = STATE_IDLE
-        elif device.status == STATUS_STILL:
-            self._state = STATE_PAUSED
-        elif device.power_status in [POWER_ON, 4]:
-            self._state = STATE_ON
-        else:
-            _LOGGER.warning("Unknown state: %d", device.power_status)
 
     async def async_added_to_hass(self):
         """Register HDMI callbacks after initialization."""
@@ -435,6 +405,7 @@ class CecEntity(Entity):
 
     def _update(self, device=None):
         """Device status changed, schedule an update."""
+        self._attr_available = True
         self.schedule_update_ha_state(True)
 
     @property

@@ -18,5 +18,12 @@
                 "description": "Konfigurera integration av luftkvalitet. F\u00f6r att skapa API-nyckel, g\u00e5 till https://developer.airly.eu/register"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "N\u00e5 Airly-servern",
+            "requests_per_day": "Till\u00e5tna f\u00f6rfr\u00e5gningar per dag",
+            "requests_remaining": "\u00c5terst\u00e5ende till\u00e5tna f\u00f6rfr\u00e5gningar"
+        }
     }
 }

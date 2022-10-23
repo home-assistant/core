@@ -49,6 +49,12 @@
             "button_triple_press": "\" {subtype} \" \u00fc\u00e7 kez t\u0131kland\u0131"
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "El ile yap\u0131land\u0131r\u0131lm\u0131\u015f MQTT {platform} (lar) ` {platform} ` platform anahtar\u0131 alt\u0131nda bulundu. \n\n Bu sorunu gidermek i\u00e7in l\u00fctfen yap\u0131land\u0131rmay\u0131 `mqtt` entegrasyon anahtar\u0131na ta\u015f\u0131y\u0131n ve Home Assistant'\u0131 yeniden ba\u015flat\u0131n. Daha fazla bilgi i\u00e7in [belgelere]( {more_info_url} ) bak\u0131n.",
+            "title": "Manuel olarak yap\u0131land\u0131r\u0131lan MQTT {platform} (lar)\u0131n\u0131zla ilgilenilmesi gerekiyor"
+        }
+    },
     "options": {
         "error": {
             "bad_birth": "Ge\u00e7ersiz do\u011fum konusu.",

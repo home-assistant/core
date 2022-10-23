@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP-adress",
+                    "port": "Port"
+                },
+                "description": "Anslut till API:et f\u00f6r din Advantage Air v\u00e4ggmonterade surfplatta.",
+                "title": "Anslut"
+            }
+        }
+    }
+}

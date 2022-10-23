@@ -7,12 +7,12 @@
         "step": {
             "select": {
                 "data": {
-                    "select_host": "IP do receptor"
+                    "select_host": "IP do Receptor"
                 }
             },
             "user": {
                 "data": {
-                    "host": "endere\u00e7o de IP"
+                    "host": "Endere\u00e7o IP"
                 }
             }
         }

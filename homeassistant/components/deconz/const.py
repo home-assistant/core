@@ -35,6 +35,7 @@ PLATFORMS = [
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,

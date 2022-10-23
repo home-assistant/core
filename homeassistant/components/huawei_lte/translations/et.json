@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Pole Huawei LTE seade"
+            "not_huawei_lte": "Pole Huawei LTE seade",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "connection_timeout": "\u00dchenduse ajal\u00f5pp",
@@ -15,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Sisesta seadme juurdep\u00e4\u00e4suload.",
+                "title": "Taastuvasta sidumine"
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",

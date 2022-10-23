@@ -1,52 +1,78 @@
 """Support for LaMetric time."""
-from lmnotify import LaMetricManager
 import voluptuous as vol
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.components import notify as hass_notify
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, PLATFORMS
+from .coordinator import LaMetricDataUpdateCoordinator
+from .services import async_setup_services
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_CLIENT_ID): cv.string,
+                    vol.Required(CONF_CLIENT_SECRET): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the LaMetricManager."""
-    LOGGER.debug("Setting up LaMetric platform")
-    conf = config[DOMAIN]
-    hlmn = HassLaMetricManager(
-        client_id=conf[CONF_CLIENT_ID], client_secret=conf[CONF_CLIENT_SECRET]
-    )
-    if not (devices := hlmn.manager.get_devices()):
-        LOGGER.error("No LaMetric devices found")
-        return False
-
-    hass.data[DOMAIN] = hlmn
-    for dev in devices:
-        LOGGER.debug("Discovered LaMetric device: %s", dev)
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the LaMetric integration."""
+    async_setup_services(hass)
+    hass.data[DOMAIN] = {"hass_config": config}
+    if DOMAIN in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "manual_migration",
+            breaks_in_ha_version="2022.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key="manual_migration",
+        )
 
     return True
 
 
-class HassLaMetricManager:
-    """A class that encapsulated requests to the LaMetric manager."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up LaMetric from a config entry."""
+    coordinator = LaMetricDataUpdateCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
 
-    def __init__(self, client_id: str, client_secret: str) -> None:
-        """Initialize HassLaMetricManager and connect to LaMetric."""
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-        LOGGER.debug("Connecting to LaMetric")
-        self.manager = LaMetricManager(client_id, client_secret)
-        self._client_id = client_id
-        self._client_secret = client_secret
+    # Set up notify platform, no entry support for notify component yet,
+    # have to use discovery to load platform.
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {CONF_NAME: coordinator.data.name, "entry_id": entry.entry_id},
+            hass.data[DOMAIN]["hass_config"],
+        )
+    )
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload LaMetric config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        del hass.data[DOMAIN][entry.entry_id]
+        await hass_notify.async_reload(hass, DOMAIN)
+    return unload_ok

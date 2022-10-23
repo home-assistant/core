@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from devolo_plc_api.device import Device
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PLUG,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -47,7 +47,7 @@ class DevoloBinarySensorEntityDescription(
 SENSOR_TYPES: dict[str, DevoloBinarySensorEntityDescription] = {
     CONNECTED_TO_ROUTER: DevoloBinarySensorEntityDescription(
         key=CONNECTED_TO_ROUTER,
-        device_class=DEVICE_CLASS_PLUG,
+        device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:router-network",

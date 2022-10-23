@@ -1,7 +1,11 @@
 """Support for Risco alarms."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
+from typing import Any
+
+from pyrisco.common import Partition
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -23,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import LocalData, RiscoDataUpdateCoordinator, is_local
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
@@ -53,56 +58,60 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Risco alarm control panel."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     options = {**DEFAULT_OPTIONS, **config_entry.options}
-    entities = [
-        RiscoAlarm(coordinator, partition_id, config_entry.data[CONF_PIN], options)
-        for partition_id in coordinator.data.partitions
-    ]
+    if is_local(config_entry):
+        local_data: LocalData = hass.data[DOMAIN][config_entry.entry_id]
+        async_add_entities(
+            RiscoLocalAlarm(
+                local_data.system.id,
+                partition_id,
+                partition,
+                local_data.partition_updates,
+                config_entry.data[CONF_PIN],
+                options,
+            )
+            for partition_id, partition in local_data.system.partitions.items()
+        )
+    else:
+        coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][
+            config_entry.entry_id
+        ][DATA_COORDINATOR]
+        async_add_entities(
+            RiscoCloudAlarm(
+                coordinator, partition_id, config_entry.data[CONF_PIN], options
+            )
+            for partition_id in coordinator.data.partitions
+        )
 
-    async_add_entities(entities, False)
 
-
-class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
-    """Representation of a Risco partition."""
+class RiscoAlarm(AlarmControlPanelEntity):
+    """Representation of a Risco cloud partition."""
 
     _attr_code_format = CodeFormat.NUMBER
 
-    def __init__(self, coordinator, partition_id, code, options):
+    def __init__(
+        self,
+        *,
+        partition_id: int,
+        partition: Partition,
+        code: str,
+        options: dict[str, Any],
+        **kwargs: Any,
+    ) -> None:
         """Init the partition."""
-        super().__init__(coordinator)
+        super().__init__(**kwargs)
         self._partition_id = partition_id
-        self._partition = self.coordinator.data.partitions[self._partition_id]
+        self._partition = partition
         self._code = code
         self._attr_code_arm_required = options[CONF_CODE_ARM_REQUIRED]
         self._code_disarm_required = options[CONF_CODE_DISARM_REQUIRED]
         self._risco_to_ha = options[CONF_RISCO_STATES_TO_HA]
         self._ha_to_risco = options[CONF_HA_STATES_TO_RISCO]
         self._attr_supported_features = 0
+        self._attr_has_entity_name = True
+        self._attr_name = None
         for state in self._ha_to_risco:
             self._attr_supported_features |= STATES_TO_SUPPORTED_FEATURES[state]
-
-    def _get_data_from_coordinator(self):
-        self._partition = self.coordinator.data.partitions[self._partition_id]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            name=self.name,
-            manufacturer="Risco",
-        )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the partition."""
-        return f"Risco {self._risco.site_name} Partition {self._partition_id}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for that partition."""
-        return f"{self._risco.site_uuid}_{self._partition_id}"
 
     @property
     def state(self) -> str | None:
@@ -165,7 +174,74 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
         else:
             await self._call_alarm_method(risco_state)
 
+    async def _call_alarm_method(self, method: str, *args: Any) -> None:
+        raise NotImplementedError
+
+
+class RiscoCloudAlarm(RiscoAlarm, RiscoEntity):
+    """Representation of a Risco partition."""
+
+    def __init__(
+        self,
+        coordinator: RiscoDataUpdateCoordinator,
+        partition_id: int,
+        code: str,
+        options: dict[str, Any],
+    ) -> None:
+        """Init the partition."""
+        super().__init__(
+            partition_id=partition_id,
+            partition=coordinator.data.partitions[partition_id],
+            coordinator=coordinator,
+            code=code,
+            options=options,
+        )
+        self._attr_unique_id = f"{self._risco.site_uuid}_{partition_id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=f"Risco {self._risco.site_name} Partition {partition_id}",
+            manufacturer="Risco",
+        )
+
+    def _get_data_from_coordinator(self) -> None:
+        self._partition = self.coordinator.data.partitions[self._partition_id]
+
     async def _call_alarm_method(self, method, *args):
         alarm = await getattr(self._risco, method)(self._partition_id, *args)
         self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
+
+
+class RiscoLocalAlarm(RiscoAlarm):
+    """Representation of a Risco local, partition."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        system_id: str,
+        partition_id: int,
+        partition: Partition,
+        partition_updates: dict[int, Callable[[], Any]],
+        code: str,
+        options: dict[str, Any],
+    ) -> None:
+        """Init the partition."""
+        super().__init__(
+            partition_id=partition_id, partition=partition, code=code, options=options
+        )
+        self._system_id = system_id
+        self._partition_updates = partition_updates
+        self._attr_unique_id = f"{system_id}_{partition_id}_local"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=partition.name,
+            manufacturer="Risco",
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        self._partition_updates[self._partition_id] = self.async_write_ha_state
+
+    async def _call_alarm_method(self, method: str, *args: Any) -> None:
+        await getattr(self._partition, method)(*args)

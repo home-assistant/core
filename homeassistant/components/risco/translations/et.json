@@ -9,11 +9,29 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "pin": "PIN kood",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "local": {
+                "data": {
+                    "host": "Host",
+                    "pin": "PIN kood",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "pin": "PIN kood",
                     "username": "Kasutajanimi"
+                },
+                "menu_options": {
+                    "cloud": "Risco Cloud (soovitatav)",
+                    "local": "Kohalik Risco paneel (t\u00e4psem)"
                 }
             }
         }

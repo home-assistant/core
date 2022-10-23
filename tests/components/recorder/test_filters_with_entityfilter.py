@@ -71,7 +71,7 @@ async def _async_get_states_and_events_with_filter(
     return filtered_states_entity_ids, filtered_events_entity_ids
 
 
-async def test_included_and_excluded_simple_case_no_domains(hass, recorder_mock):
+async def test_included_and_excluded_simple_case_no_domains(recorder_mock, hass):
     """Test filters with included and excluded without domains."""
     filter_accept = {"sensor.kitchen4", "switch.kitchen"}
     filter_reject = {
@@ -127,7 +127,7 @@ async def test_included_and_excluded_simple_case_no_domains(hass, recorder_mock)
     assert not filtered_events_entity_ids.intersection(filter_reject)
 
 
-async def test_included_and_excluded_simple_case_no_globs(hass, recorder_mock):
+async def test_included_and_excluded_simple_case_no_globs(recorder_mock, hass):
     """Test filters with included and excluded without globs."""
     filter_accept = {"switch.bla", "sensor.blu", "sensor.keep"}
     filter_reject = {"sensor.bli"}
@@ -168,7 +168,7 @@ async def test_included_and_excluded_simple_case_no_globs(hass, recorder_mock):
 
 
 async def test_included_and_excluded_simple_case_without_underscores(
-    hass, recorder_mock
+    recorder_mock, hass
 ):
     """Test filters with included and excluded without underscores."""
     filter_accept = {"light.any", "sensor.kitchen4", "switch.kitchen"}
@@ -221,7 +221,7 @@ async def test_included_and_excluded_simple_case_without_underscores(
     assert not filtered_events_entity_ids.intersection(filter_reject)
 
 
-async def test_included_and_excluded_simple_case_with_underscores(hass, recorder_mock):
+async def test_included_and_excluded_simple_case_with_underscores(recorder_mock, hass):
     """Test filters with included and excluded with underscores."""
     filter_accept = {"light.any", "sensor.kitchen_4", "switch.kitchen"}
     filter_reject = {"switch.other", "cover.any", "sensor.weather_5", "light.kitchen"}
@@ -273,7 +273,7 @@ async def test_included_and_excluded_simple_case_with_underscores(hass, recorder
     assert not filtered_events_entity_ids.intersection(filter_reject)
 
 
-async def test_included_and_excluded_complex_case(hass, recorder_mock):
+async def test_included_and_excluded_complex_case(recorder_mock, hass):
     """Test filters with included and excluded with a complex filter."""
     filter_accept = {"light.any", "sensor.kitchen_4", "switch.kitchen"}
     filter_reject = {
@@ -330,7 +330,7 @@ async def test_included_and_excluded_complex_case(hass, recorder_mock):
     assert not filtered_events_entity_ids.intersection(filter_reject)
 
 
-async def test_included_entities_and_excluded_domain(hass, recorder_mock):
+async def test_included_entities_and_excluded_domain(recorder_mock, hass):
     """Test filters with included entities and excluded domain."""
     filter_accept = {
         "media_player.test",
@@ -376,7 +376,7 @@ async def test_included_entities_and_excluded_domain(hass, recorder_mock):
     assert not filtered_events_entity_ids.intersection(filter_reject)
 
 
-async def test_same_domain_included_excluded(hass, recorder_mock):
+async def test_same_domain_included_excluded(recorder_mock, hass):
     """Test filters with the same domain included and excluded."""
     filter_accept = {
         "media_player.test",
@@ -422,7 +422,7 @@ async def test_same_domain_included_excluded(hass, recorder_mock):
     assert not filtered_events_entity_ids.intersection(filter_reject)
 
 
-async def test_same_entity_included_excluded(hass, recorder_mock):
+async def test_same_entity_included_excluded(recorder_mock, hass):
     """Test filters with the same entity included and excluded."""
     filter_accept = {
         "media_player.test",
@@ -468,7 +468,7 @@ async def test_same_entity_included_excluded(hass, recorder_mock):
     assert not filtered_events_entity_ids.intersection(filter_reject)
 
 
-async def test_same_entity_included_excluded_include_domain_wins(hass, recorder_mock):
+async def test_same_entity_included_excluded_include_domain_wins(recorder_mock, hass):
     """Test filters with domain and entities and the include domain wins."""
     filter_accept = {
         "media_player.test2",
@@ -516,7 +516,7 @@ async def test_same_entity_included_excluded_include_domain_wins(hass, recorder_
     assert not filtered_events_entity_ids.intersection(filter_reject)
 
 
-async def test_specificly_included_entity_always_wins(hass, recorder_mock):
+async def test_specificly_included_entity_always_wins(recorder_mock, hass):
     """Test specificlly included entity always wins."""
     filter_accept = {
         "media_player.test2",
@@ -564,7 +564,7 @@ async def test_specificly_included_entity_always_wins(hass, recorder_mock):
     assert not filtered_events_entity_ids.intersection(filter_reject)
 
 
-async def test_specificly_included_entity_always_wins_over_glob(hass, recorder_mock):
+async def test_specificly_included_entity_always_wins_over_glob(recorder_mock, hass):
     """Test specificlly included entity always wins over a glob."""
     filter_accept = {
         "sensor.apc900va_status",

@@ -1,4 +1,5 @@
 """The tests for the Demo component."""
+import datetime
 from http import HTTPStatus
 import json
 from unittest.mock import ANY, patch
@@ -7,27 +8,34 @@ import pytest
 
 from homeassistant.components.demo import DOMAIN
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.statistics import list_statistic_ids
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    get_last_statistics,
+    list_statistic_ids,
+)
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_history(hass):
     """Mock history component loaded."""
     hass.config.components.add("history")
 
 
 @pytest.fixture(autouse=True)
-def mock_device_tracker_update_config(hass):
+def mock_device_tracker_update_config():
     """Prevent device tracker from creating known devices file."""
     with patch("homeassistant.components.device_tracker.legacy.update_config"):
         yield
 
 
-async def test_setting_up_demo(hass):
+async def test_setting_up_demo(mock_history, hass):
     """Test if we can set up the demo and dump it to JSON."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -44,7 +52,7 @@ async def test_setting_up_demo(hass):
         )
 
 
-async def test_demo_statistics(hass, recorder_mock):
+async def test_demo_statistics(recorder_mock, mock_history, hass):
     """Test that the demo components makes some statistics available."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -57,23 +65,64 @@ async def test_demo_statistics(hass, recorder_mock):
     assert {
         "has_mean": True,
         "has_sum": False,
-        "name": None,
+        "name": "Outdoor temperature",
         "source": "demo",
         "statistic_id": "demo:temperature_outdoor",
-        "unit_of_measurement": "°C",
+        "statistics_unit_of_measurement": "°C",
+        "unit_class": "temperature",
     } in statistic_ids
     assert {
         "has_mean": False,
         "has_sum": True,
-        "name": None,
+        "name": "Energy consumption 1",
         "source": "demo",
-        "statistic_id": "demo:energy_consumption",
-        "unit_of_measurement": "kWh",
+        "statistic_id": "demo:energy_consumption_kwh",
+        "statistics_unit_of_measurement": "kWh",
+        "unit_class": "energy",
     } in statistic_ids
 
 
-async def test_issues_created(hass, hass_client, hass_ws_client):
+async def test_demo_statistics_growth(recorder_mock, mock_history, hass):
+    """Test that the demo sum statistics adds to the previous state."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    now = dt_util.now()
+    last_week = now - datetime.timedelta(days=7)
+    last_week_midnight = last_week.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    statistic_id = f"{DOMAIN}:energy_consumption_kwh"
+    metadata = {
+        "source": DOMAIN,
+        "name": "Energy consumption 1",
+        "statistic_id": statistic_id,
+        "unit_of_measurement": "m³",
+        "has_mean": False,
+        "has_sum": True,
+    }
+    statistics = [
+        {
+            "start": last_week_midnight,
+            "sum": 2**20,
+        }
+    ]
+    async_add_external_statistics(hass, metadata, statistics)
+    await async_wait_recording_done(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await async_wait_recording_done(hass)
+
+    statistics = await get_instance(hass).async_add_executor_job(
+        get_last_statistics, hass, 1, statistic_id, False
+    )
+    assert statistics[statistic_id][0]["sum"] > 2**20
+    assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)
+
+
+async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
     """Test issues are created and can be fixed."""
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
     await hass.async_start()
@@ -95,6 +144,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": "transmogrifier_deprecated",
+                "issue_domain": None,
                 "learn_more_url": "https://en.wiktionary.org/wiki/transmogrifier",
                 "severity": "warning",
                 "translation_key": "transmogrifier_deprecated",
@@ -108,6 +158,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
                 "ignored": False,
                 "is_fixable": True,
                 "issue_id": "out_of_blinker_fluid",
+                "issue_domain": None,
                 "learn_more_url": "https://www.youtube.com/watch?v=b9rntRxLlbU",
                 "severity": "critical",
                 "translation_key": "out_of_blinker_fluid",
@@ -121,9 +172,24 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": "unfixable_problem",
+                "issue_domain": None,
                 "learn_more_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "severity": "warning",
                 "translation_key": "unfixable_problem",
+                "translation_placeholders": None,
+            },
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "demo",
+                "ignored": False,
+                "is_fixable": True,
+                "issue_domain": None,
+                "issue_id": "bad_psu",
+                "learn_more_url": "https://www.youtube.com/watch?v=b9rntRxLlbU",
+                "severity": "critical",
+                "translation_key": "bad_psu",
                 "translation_placeholders": None,
             },
         ]
@@ -161,7 +227,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": "demo",
-        "title": "Fixed issue",
+        "title": "",
         "type": "create_entry",
         "version": 1,
     }
@@ -180,6 +246,7 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": "transmogrifier_deprecated",
+                "issue_domain": None,
                 "learn_more_url": "https://en.wiktionary.org/wiki/transmogrifier",
                 "severity": "warning",
                 "translation_key": "transmogrifier_deprecated",
@@ -193,9 +260,24 @@ async def test_issues_created(hass, hass_client, hass_ws_client):
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": "unfixable_problem",
+                "issue_domain": None,
                 "learn_more_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "severity": "warning",
                 "translation_key": "unfixable_problem",
+                "translation_placeholders": None,
+            },
+            {
+                "breaks_in_ha_version": None,
+                "created": ANY,
+                "dismissed_version": None,
+                "domain": "demo",
+                "ignored": False,
+                "is_fixable": True,
+                "issue_domain": None,
+                "issue_id": "bad_psu",
+                "learn_more_url": "https://www.youtube.com/watch?v=b9rntRxLlbU",
+                "severity": "critical",
+                "translation_key": "bad_psu",
                 "translation_placeholders": None,
             },
         ]

@@ -131,7 +131,7 @@ class DarkSkyWeather(WeatherEntity):
         self._ds_daily = None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if weather data is available from Dark Sky."""
         return self._ds_data is not None
 
@@ -233,7 +233,7 @@ class DarkSkyWeather(WeatherEntity):
 
         return data
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from Dark Sky."""
         self._dark_sky.update()
 

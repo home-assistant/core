@@ -13,5 +13,10 @@
                 "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
             }
         }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour XBox sera bient\u00f4t supprim\u00e9e"
+        }
     }
 }

@@ -15,11 +15,11 @@ from .typing import DiscoveryInfoType
 if TYPE_CHECKING:
     import asyncio
 
+    from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
     from homeassistant.components.dhcp import DhcpServiceInfo
     from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
-    from .service_info.bluetooth import BluetoothServiceInfo
     from .service_info.mqtt import MqttServiceInfo
 
 _R = TypeVar("_R", bound="Awaitable[bool] | bool")
@@ -97,7 +97,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
         return await self.async_step_confirm()
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle a flow initialized by bluetooth discovery."""
         if self._async_in_progress() or self._async_current_entries():

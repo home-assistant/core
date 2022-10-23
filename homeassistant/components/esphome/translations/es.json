@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP ya est\u00e1 configurado",
-            "already_in_progress": "La configuraci\u00f3n del ESP ya est\u00e1 en marcha",
-            "reauth_successful": "La re-autenticaci\u00f3n ha funcionado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente"
         },
         "error": {
-            "connection_error": "No se puede conectar a ESP. Aseg\u00farate de que tu archivo YAML contenga una l\u00ednea 'api:'.",
+            "connection_error": "No se puede conectar a ESP. Por favor, aseg\u00farate de que tu archivo YAML contiene una l\u00ednea 'api:'.",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "invalid_psk": "La clave de transporte cifrado no es v\u00e1lida. Por favor, aseg\u00farese de que coincide con la que tiene en su configuraci\u00f3n",
-            "resolve_error": "No se puede resolver la direcci\u00f3n de ESP. Si el error persiste, configura una direcci\u00f3n IP est\u00e1tica: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+            "invalid_psk": "La clave de cifrado de transporte no es v\u00e1lida. Por favor, aseg\u00farate de que coincida con lo que tienes en tu configuraci\u00f3n",
+            "resolve_error": "No se puede resolver la direcci\u00f3n del ESP. Si este error persiste, por favor, configura una direcci\u00f3n IP est\u00e1tica"
         },
         "flow_title": "{name}",
         "step": {
@@ -17,30 +17,30 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "Escribe la contrase\u00f1a que hayas puesto en la configuraci\u00f3n para {name}."
+                "description": "Por favor, introduce la contrase\u00f1a que hayas puesto en la configuraci\u00f3n para {name}."
             },
             "discovery_confirm": {
-                "description": "\u00bfQuieres a\u00f1adir el nodo `{name}` de ESPHome a Home Assistant?",
+                "description": "\u00bfQuieres a\u00f1adir el nodo de ESPHome `{name}` a Home Assistant?",
                 "title": "Nodo ESPHome descubierto"
             },
             "encryption_key": {
                 "data": {
                     "noise_psk": "Clave de cifrado"
                 },
-                "description": "Por favor, introduzca la clave de cifrado que estableci\u00f3 en su configuraci\u00f3n para {name}."
+                "description": "Por favor, introduce la clave de cifrado que estableciste en tu configuraci\u00f3n para {name}."
             },
             "reauth_confirm": {
                 "data": {
                     "noise_psk": "Clave de cifrado"
                 },
-                "description": "El dispositivo ESPHome {name} ha activado el transporte cifrado o ha cambiado la clave de cifrado. Por favor, introduzca la clave actualizada."
+                "description": "El dispositivo ESPHome {name} habilit\u00f3 el cifrado de transporte o cambi\u00f3 la clave de cifrado. Por favor, introduce la clave actualizada."
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Puerto"
                 },
-                "description": "Introduce la configuraci\u00f3n de la conexi\u00f3n de tu nodo [ESPHome](https://esphomelib.com/)."
+                "description": "Por favor, introduce la configuraci\u00f3n de conexi\u00f3n de tu nodo [ESPHome]({esphome_url})."
             }
         }
     }

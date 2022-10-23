@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6det p\u00e5g\u00e5r redan",
+            "no_devices_found": "Inga enheter hittades i n\u00e4tverket"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta."
+        },
+        "flow_title": "{model} {id} ({ipaddr})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vill du konfigurera {modell} {id} ({ipaddr})?"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                },
+                "description": "Om du l\u00e4mnar v\u00e4rden tomt anv\u00e4nds discovery f\u00f6r att hitta enheter."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_colors": "Anpassad effekt: Lista med 1 till 16 [R,G,B] f\u00e4rger. Exempel: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "Anpassad effekt: Hastighet i procent f\u00f6r effekten som byter f\u00e4rg.",
+                    "custom_effect_transition": "Anpassad effekt: Typ av \u00f6verg\u00e5ng mellan f\u00e4rgerna.",
+                    "mode": "Det valda l\u00e4get f\u00f6r ljusstyrka."
+                }
+            }
+        }
+    }
+}

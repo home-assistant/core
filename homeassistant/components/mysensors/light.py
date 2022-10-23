@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from homeassistant.components import mysensors
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
@@ -18,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
+from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
 from .device import MySensorsDevice
 from .helpers import on_unload
