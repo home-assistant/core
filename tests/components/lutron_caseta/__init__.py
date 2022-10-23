@@ -250,7 +250,7 @@ class MockBridge:
             "111": {
                 "device_id": "111",
                 "current_state": "Release",
-                "button_number": 0,
+                "button_number": 1,
                 "name": "Dining Room_Pico",
                 "type": "Pico3ButtonRaiseLower",
                 "model": "PJ2-3BRL-GXX-X01",
