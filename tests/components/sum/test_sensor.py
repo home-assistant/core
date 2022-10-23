@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.sum.const import DOMAIN
+from homeassistant.components.sum.sensor import ATTR_ENTITIES, ATTR_VALID_ENTITIES
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -43,10 +44,20 @@ async def test_sum_sensor(hass: HomeAssistant):
 
     assert str(float(SUM_VALUE)) == state.state
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_ENTITIES) == [
+        "sensor.test_1",
+        "sensor.test_2",
+        "sensor.test_3",
+    ]
+    assert state.attributes.get(ATTR_VALID_ENTITIES) == [
+        "sensor.test_1",
+        "sensor.test_2",
+        "sensor.test_3",
+    ]
 
 
 async def test_incorrect_states(hass: HomeAssistant):
-    """Test that returns state unknown on missing values."""
+    """Test that returns state when missing correct values on entities."""
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -71,19 +82,28 @@ async def test_incorrect_states(hass: HomeAssistant):
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.my_sum")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "35.3"
+    assert state.attributes.get(ATTR_ENTITIES) == [
+        "sensor.test_1",
+        "sensor.test_2",
+        "sensor.test_3",
+    ]
+    assert state.attributes.get(ATTR_VALID_ENTITIES) == [
+        "sensor.test_2",
+        "sensor.test_3",
+    ]
 
     hass.states.async_set(entity_ids[0], VALUES[0])
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.my_sum")
-    assert STATE_UNKNOWN != state.state
+    assert state.state == "52.3"
 
     hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.my_sum")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "32.3"
 
 
 async def test_sensor_different_uom(
@@ -142,6 +162,18 @@ async def test_sensor_incorrect_values(
     log = caplog.text
 
     assert "Unable to store state. Only numerical states are supported" in log
+
+    state = hass.states.get("sensor.my_sum")
+    assert state.state == "32.3"
+    assert state.attributes.get(ATTR_ENTITIES) == [
+        "sensor.test_1",
+        "sensor.test_2",
+        "sensor.test_3",
+    ]
+    assert state.attributes.get(ATTR_VALID_ENTITIES) == [
+        "sensor.test_1",
+        "sensor.test_3",
+    ]
 
 
 async def test_sum_sensor_from_yaml(hass: HomeAssistant):

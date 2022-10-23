@@ -1,6 +1,7 @@
 """Support for displaying sum values."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -31,6 +32,8 @@ from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DEFAULT_NAME, DOMAIN, PLA
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:calculator"
+ATTR_ENTITIES = "entities"
+ATTR_VALID_ENTITIES = "Valid entities"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -84,11 +87,11 @@ async def async_setup_platform(
 
 
 def calc_sum(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
-    """Calculate sum value, not honoring unknown states."""
+    """Calculate sum value, skipping unknown/unavailable state."""
     result = []
     for _, sensor_value in sensor_values:
         if sensor_value in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            return None
+            continue
         result.append(sensor_value)
 
     return round(sum(result), round_digits)
@@ -116,9 +119,7 @@ class SumSensor(SensorEntity):
         self._attr_name = name
 
         self.sum: float | None = None
-        self.last: float | None = None
-        self.last_entity_id: str | None = None
-        self.count_sensors = len(self._entity_ids)
+        self.valid_entities: list[str] | None = None
         self._unit_of_measurement = None
         self.states: dict[str, Any] = {}
 
@@ -142,6 +143,14 @@ class SumSensor(SensorEntity):
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.sum
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return extra state attributes."""
+        return {
+            ATTR_ENTITIES: self._entity_ids,
+            ATTR_VALID_ENTITIES: self.valid_entities,
+        }
 
     @callback
     def _async_sum_sensor_state_listener(
@@ -182,12 +191,11 @@ class SumSensor(SensorEntity):
 
         try:
             self.states[entity] = float(new_state.state)
-            self.last = float(new_state.state)
-            self.last_entity_id = entity
         except ValueError:
             _LOGGER.warning(
                 "Unable to store state. Only numerical states are supported"
             )
+            self.states[entity] = STATE_UNKNOWN
 
         if not update_state:
             return
@@ -202,6 +210,15 @@ class SumSensor(SensorEntity):
             (entity_id, self.states[entity_id])
             for entity_id in self._entity_ids
             if entity_id in self.states
+        ]
+        self.valid_entities = [
+            entity_id
+            for entity_id in self._entity_ids
+            if self.states[entity_id]
+            not in [
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            ]
         ]
 
         self.sum = calc_sum(sensor_values, self._round_digits)
