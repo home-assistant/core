@@ -77,6 +77,11 @@ async def test_media_player(
     await hass.async_block_till_done()
     assert len(mock_api.sessions.mock_calls) == 2
 
+    mock_api.sessions.return_value = []
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=20))
+    await hass.async_block_till_done()
+    assert len(mock_api.sessions.mock_calls) == 3
+
     device = device_registry.async_get(entry.device_id)
     assert device
     assert device.configuration_url is None

@@ -95,16 +95,14 @@ class JellyfinMediaPlayer(JellyfinEntity, MediaPlayerEntity):
             if self.coordinator.data is not None
             else None
         )
-        self.now_playing = (
-            self.session_data.get("NowPlayingItem")
-            if self.session_data is not None
-            else None
-        )
-        self.play_state = (
-            self.session_data.get("PlayState")
-            if self.session_data is not None
-            else None
-        )
+
+        if self.session_data is not None:
+            self.now_playing = self.session_data.get("NowPlayingItem")
+            self.play_state = self.session_data.get("PlayState")
+        else:
+            self.now_playing = None
+            self.play_state = None
+
         self._update_from_session_data()
         super()._handle_coordinator_update()
 
