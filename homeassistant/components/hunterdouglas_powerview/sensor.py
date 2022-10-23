@@ -123,7 +123,7 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
     ) -> None:
         """Initialize the select entity."""
         super().__init__(coordinator, device_info, room_name, shade, name)
-        self.entity_description: PowerviewSensorDescription = description
+        self.entity_description = description
         self._attr_name = f"{self._shade_name} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
