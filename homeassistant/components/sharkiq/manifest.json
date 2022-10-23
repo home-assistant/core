@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sharkiq",
   "requirements": ["sharkiq==1.0.2"],
-  "codeowners": ["@JeffResc", "@funkybunch", "@AritroSaha10"],
+  "codeowners": ["@JeffResc", "@funkybunch"],
   "iot_class": "cloud_polling",
   "loggers": ["sharkiq"]
 }
