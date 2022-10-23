@@ -37,7 +37,6 @@ async def async_setup_entry(
         entities = []
         for actuator in panel_status.actuators:
             entity = ElmaxSwitch(
-                panel=coordinator.panel_entry,
                 elmax_device=actuator,
                 panel_version=panel_status.release,
                 coordinator=coordinator,

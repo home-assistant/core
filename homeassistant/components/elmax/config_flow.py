@@ -7,7 +7,7 @@ from typing import Any
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 from elmax_api.http import Elmax, ElmaxLocal
-from elmax_api.model.panel import PanelEntry, PanelStatus
+from elmax_api.model.panel import PanelEntry
 import httpx
 import voluptuous as vol
 
@@ -15,11 +15,13 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
+from .common import get_direct_api_url
 from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -31,7 +33,6 @@ from .const import (
     CONF_ELMAX_PASSWORD,
     CONF_ELMAX_USERNAME,
     DOMAIN,
-    ELMAX_LOCAL_API_PATH,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,14 +49,14 @@ CHOOSE_MODE_SCHEMA = vol.Schema(
         vol.Required(CONF_ELMAX_MODE, default=CONF_ELMAX_MODE_CLOUD): SelectSelector(
             SelectSelectorConfig(
                 options=[
-                    {
-                        "value": CONF_ELMAX_MODE_CLOUD,
-                        "label": "Connect to Elmax Panel via Elmax Cloud APIs",
-                    },
-                    {
-                        "value": CONF_ELMAX_MODE_DIRECT,
-                        "label": "Connect to Elmax Panel via local/direct IP",
-                    },
+                    SelectOptionDict(
+                        value=CONF_ELMAX_MODE_CLOUD,
+                        label="Connect to Elmax Panel via Elmax Cloud APIs",
+                    ),
+                    SelectOptionDict(
+                        value=CONF_ELMAX_MODE_DIRECT,
+                        label="Connect to Elmax Panel via local/direct IP",
+                    ),
                 ],
                 mode=SelectSelectorMode.LIST,
             )
@@ -120,10 +121,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="cloud_setup", data_schema=None, errors=errors
             )
-        elif selected_mode == CONF_ELMAX_MODE_DIRECT:
+        if selected_mode == CONF_ELMAX_MODE_DIRECT:
             return self.async_show_form(
                 step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA, errors=errors
             )
+
+        errors = {"base": "invalid_mode"}
+        return self.async_show_form(
+            step_id="choose_mode", data_schema=CHOOSE_MODE_SCHEMA, errors=errors
+        )
 
     async def async_step_direct_setup(
         self, user_input: dict[str, Any] | None = None
@@ -139,17 +145,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Attempt the connection to make sure the address is connect, the pin works. Also,
         # take the chance to retrieve the panel ID via APIs.
-        client_api_url = f"{panel_api_uri.strip('/')}/{ELMAX_LOCAL_API_PATH}"
+        client_api_url = get_direct_api_url(panel_api_uri)
         client = ElmaxLocal(panel_api_url=client_api_url, panel_code=panel_pin)
         try:
             await client.login()
-        except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout) as e:
+        except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
             return self.async_show_form(
                 step_id="direct_setup",
                 data_schema=DIRECT_SETUP_SCHEMA,
                 errors={"base": "network_error"},
             )
-        except ElmaxBadLoginError as e:
+        except ElmaxBadLoginError:
             return self.async_show_form(
                 step_id="direct_setup",
                 data_schema=DIRECT_SETUP_SCHEMA,
@@ -157,10 +163,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # Retrieve the current panel status. If this succeeds, it means the
-        # setup did complete successfully.
-        panel_status: PanelStatus = await client.get_current_panel_status()
-
-        # TODO: set panel id into data by retrieving it from panel_status
+        # setup did complete successfully. At the moment the local-api
+        # does not expose the Panel ID, so there is no way to get it.
+        # When such features is added at the lower API level, we might take
+        # the panel ID and store it as ELMAX_PANEL_ID within async_create_entry data.
+        await client.get_current_panel_status()
 
         # Make sure this is the only Elmax integration for this specific panel id.
         await self.async_set_unique_id(client_api_url)
