@@ -179,6 +179,8 @@ async def async_setup_entry(
             config_entry, unique_id=serial_to_unique_id(bridge_device["serial"])
         )
 
+    _LOGGER.warning("AREAS: %s", bridge.areas)
+
     _async_register_bridge_device(hass, entry_id, bridge_device, bridge)
 
     keypad_data = _async_setup_keypads(hass, entry_id, bridge, bridge_device)
