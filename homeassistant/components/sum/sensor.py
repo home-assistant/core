@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:calculator"
 ATTR_ENTITIES = "entities"
-ATTR_VALID_ENTITIES = "Valid entities"
+ATTR_VALID_ENTITIES = "valid_entities"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
