@@ -37,7 +37,7 @@ SERVICE_ENABLE_TIMER = "enable_timer"
 ATTR_MINUTES = "minutes"
 SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
 SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
-SERVICE_FULL_STATE = "full_ac_state"
+SERVICE_FULL_STATE = "full_state"
 
 ATTR_AC_INTEGRATION = "ac_integration"
 ATTR_GEO_INTEGRATION = "geo_integration"
