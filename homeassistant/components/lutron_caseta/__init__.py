@@ -375,7 +375,9 @@ def _handle_none_keypad_serial(keypad_device: dict, bridge_serial: int) -> str:
     return keypad_device["serial"] or f"{bridge_serial}_{keypad_device['device_id']}"
 
 
-def _area_name_from_id(areas: dict[str, dict], area_id: str) -> str:
+def _area_name_from_id(
+    areas: dict[str, dict], area_id: str, previous_area_part: str = ""
+) -> str:
     """Return the full area name including parent(s)."""
 
     if area_id is None:
@@ -383,10 +385,15 @@ def _area_name_from_id(areas: dict[str, dict], area_id: str) -> str:
 
     area = areas[area_id]
     if (parent_area := area["parent_id"]) is None:
-        # This is the root area, we should ignore it
-        return ""
+        # This is the root area, return last area
+        return previous_area_part
 
-    return f"{_area_name_from_id(areas, parent_area)} {area['name']}"
+    if previous_area_part:
+        return _area_name_from_id(
+            areas, parent_area, f"{area['name']} {previous_area_part}"
+        )
+
+    return _area_name_from_id(areas, parent_area, area["name"])
 
 
 @callback
