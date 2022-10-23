@@ -38,6 +38,12 @@ ATTR_MINUTES = "minutes"
 SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
 SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
 SERVICE_FULL_STATE = "full_state"
+SERVICE_ENABLE_CLIMATE_REACT = "enable_climate_react"
+ATTR_HIGH_TEMPERATURE_THRESHOLD = "high_temperature_threshold"
+ATTR_HIGH_TEMPERATURE_STATE = "high_temperature_state"
+ATTR_LOW_TEMPERATURE_THRESHOLD = "low_temperature_threshold"
+ATTR_LOW_TEMPERATURE_STATE = "low_temperature_state"
+ATTR_SMART_TYPE = "smart_type"
 
 ATTR_AC_INTEGRATION = "ac_integration"
 ATTR_GEO_INTEGRATION = "geo_integration"
@@ -138,6 +144,20 @@ async def async_setup_entry(
             vol.Optional(ATTR_LIGHT): vol.In(["on", "off"]),
         },
         "async_full_ac_state",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_ENABLE_CLIMATE_REACT,
+        {
+            vol.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_HIGH_TEMPERATURE_STATE): dict,
+            vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
+            vol.Required(ATTR_SMART_TYPE): vol.In(
+                ["temperature", "feelsLike", "humidity"]
+            ),
+        },
+        "async_enable_climate_react",
     )
 
 
@@ -430,6 +450,42 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             data=params,
         )
 
+    async def async_enable_climate_react(
+        self,
+        high_temperature_threshold: float,
+        high_temperature_state: dict[str, Any],
+        low_temperature_threshold: float,
+        low_temperature_state: dict[str, Any],
+        smart_type: str,
+    ) -> None:
+        """Enable Climate React Configuration."""
+        high_temp = high_temperature_threshold
+        low_temp = low_temperature_threshold
+
+        if high_temperature_state.get("temperatureUnit") == "F":
+            high_temp = TemperatureConverter.convert(
+                high_temperature_threshold, TEMP_FAHRENHEIT, TEMP_CELSIUS
+            )
+            low_temp = TemperatureConverter.convert(
+                low_temperature_threshold, TEMP_FAHRENHEIT, TEMP_CELSIUS
+            )
+
+        params: dict[str, str | bool | float | dict] = {
+            "enabled": True,
+            "deviceUid": self._device_id,
+            "highTemperatureState": high_temperature_state,
+            "highTemperatureThreshold": high_temp,
+            "lowTemperatureState": low_temperature_state,
+            "lowTemperatureThreshold": low_temp,
+            "type": smart_type,
+        }
+
+        await self.api_call_custom_service_climate_react(
+            key="smart_on",
+            value=True,
+            data=params,
+        )
+
     @async_handle_api_call
     async def async_send_api_call(
         self,
@@ -468,6 +524,17 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     ) -> bool:
         """Make service call to api."""
         result = await self._client.async_set_pureboost(self._device_id, data)
+        return bool(result.get("status") == "success")
+
+    @async_handle_api_call
+    async def api_call_custom_service_climate_react(
+        self,
+        key: str,
+        value: Any,
+        data: dict,
+    ) -> bool:
+        """Make service call to api."""
+        result = await self._client.async_set_climate_react(self._device_id, data)
         return bool(result.get("status") == "success")
 
     @async_handle_api_call
