@@ -448,7 +448,7 @@ async def async_attach_trigger(
         keypad_button_names_to_leap.get(keypad["lutron_device_id"]),
     )
 
-    if not (subtype in valid_buttons):
+    if subtype not in valid_buttons:
         raise InvalidDeviceAutomationConfig(
             f"Cannot attach trigger {config} because subtype {subtype} is invalid"
         )
