@@ -320,7 +320,7 @@ def _async_build_lutron_keypad(
         name=f"{area_name} {keypad_name}",
         manufacturer=MANUFACTURER,
         identifiers={(DOMAIN, keypad_serial)},
-        model="{bridge_keypad['model']} ({bridge_keypad['type']})",
+        model=f"{bridge_keypad['model']} ({bridge_keypad['type']})",
         via_device=(DOMAIN, bridge_device["serial"]),
     )
     if area_name != UNASSIGNED_AREA:
