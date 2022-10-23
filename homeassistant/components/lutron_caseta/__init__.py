@@ -50,7 +50,7 @@ from .device_trigger import (
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
     LUTRON_BUTTON_TRIGGER_SCHEMA,
 )
-from .models import LutronCasetaData, LutronKeypadData
+from .models import LutronButton, LutronCasetaData, LutronKeypad, LutronKeypadData
 from .util import serial_to_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -234,65 +234,67 @@ def _async_setup_keypads(
     bridge_devices = bridge.get_devices()
     bridge_buttons = bridge.buttons
 
-    dr_device_id_to_keypad: dict[str, dict] = {}
-    keypads: dict[int, Any] = {}
-    keypad_buttons: dict[int, Any] = {}
+    dr_device_id_to_keypad: dict[str, LutronKeypad] = {}
+    keypads: dict[int, LutronKeypad] = {}
+    keypad_buttons: dict[int, LutronButton] = {}
     keypad_button_names_to_leap: dict[int, dict[str, int]] = {}
 
-    keypad: dict[str, Any] = {}
+    keypad: LutronKeypad
     for bridge_button in bridge_buttons.values():
 
         bridge_keypad = bridge_devices[bridge_button["parent_device"]]
+        keypad_device_id = bridge_keypad["device_id"]
+        button_device_id = bridge_button["device_id"]
 
-        if bridge_keypad["device_id"] not in keypads:
+        if keypad_device_id not in keypads:
             # First time seeing this keypad, build keypad data and store in keypads
             area_name = _area_name_from_id(bridge.areas, bridge_keypad["area"])
             keypad_name = bridge_keypad["name"].split("_")[-1]
             keypad_serial = _handle_none_keypad_serial(
                 bridge_keypad, bridge_device["serial"]
             )
-            device_args: DeviceInfo = {
-                "name": f"{area_name} {keypad_name}",
-                "manufacturer": MANUFACTURER,
-                "identifiers": {(DOMAIN, keypad_serial)},
-                "model": f"{bridge_keypad['model']} ({bridge_keypad['type']})",
-                "via_device": (DOMAIN, bridge_device["serial"]),
-            }
+            device_info = DeviceInfo(
+                name=f"{area_name} {keypad_name}",
+                manufacturer=MANUFACTURER,
+                identifiers={(DOMAIN, keypad_serial)},
+                model="{bridge_keypad['model']} ({bridge_keypad['type']})",
+                via_device=(DOMAIN, bridge_device["serial"]),
+            )
             if area_name != UNASSIGNED_AREA:
-                device_args["suggested_area"] = area_name
+                device_info["suggested_area"] = area_name
 
             dr_device = device_registry.async_get_or_create(
-                **device_args, config_entry_id=config_entry_id
+                **device_info, config_entry_id=config_entry_id
             )
 
             keypad = keypads.setdefault(
-                bridge_keypad["device_id"],
-                {
-                    "lutron_device_id": bridge_keypad["device_id"],
-                    "dr_device_id": dr_device.id,
-                    "area_id": bridge_keypad["area"],
-                    "area_name": area_name,
-                    "name": keypad_name,
-                    "serial": keypad_serial,
-                    "device_info": device_args,
-                    "model": bridge_keypad["model"],
-                    "type": bridge_keypad["type"],
-                    "buttons": [],
-                },
+                keypad_device_id,
+                LutronKeypad(
+                    lutron_device_id=keypad_device_id,
+                    dr_device_id=dr_device.id,
+                    area_id=bridge_keypad["area"],
+                    area_name=area_name,
+                    name=keypad_name,
+                    serial=keypad_serial,
+                    device_info=device_info,
+                    model=bridge_keypad["model"],
+                    type=bridge_keypad["type"],
+                    buttons=[],
+                ),
             )
 
             dr_device_id_to_keypad[dr_device.id] = keypad
 
         # add button to parent keypad, and build keypad_buttons and keypad_button_names_to_leap
         button = keypad_buttons.setdefault(
-            bridge_button["device_id"],
-            {
-                "lutron_device_id": bridge_button["device_id"],
-                "leap_button_number": bridge_button["button_number"],
-                "button_name": _get_button_name(keypad, bridge_button),
-                "led_device_id": bridge_button.get("button_led"),
-                "parent_keypad": keypad["lutron_device_id"],
-            },
+            button_device_id,
+            LutronButton(
+                lutron_device_id=button_device_id,
+                leap_button_number=bridge_button["button_number"],
+                button_name=_get_button_name(keypad, bridge_button),
+                led_device_id=bridge_button.get("button_led"),
+                parent_keypad=keypad["lutron_device_id"],
+            ),
         )
 
         keypad["buttons"].append(button["lutron_device_id"])
@@ -337,7 +339,7 @@ def _async_build_trigger_schemas(
     return keypad_trigger_schemas
 
 
-def _get_button_name(keypad: dict[str, Any], bridge_button: dict[str, Any]) -> str:
+def _get_button_name(keypad: LutronKeypad, bridge_button: dict[str, Any]) -> str:
     """Get the LEAP button name and check for override."""
 
     button_number = bridge_button["button_number"]
@@ -355,7 +357,7 @@ def _get_button_name(keypad: dict[str, Any], bridge_button: dict[str, Any]) -> s
     return button_name
 
 
-def _get_button_name_from_triggers(keypad: dict[str, Any], button_number: int) -> str:
+def _get_button_name_from_triggers(keypad: LutronKeypad, button_number: int) -> str:
     """Retrieve the caseta button name from device triggers."""
     button_number_map = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(keypad["type"], {})
     return (
