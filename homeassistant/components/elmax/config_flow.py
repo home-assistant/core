@@ -102,9 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the flow initiated by the user."""
-        return self.async_show_form(
-            step_id="choose_mode", data_schema=CHOOSE_MODE_SCHEMA, errors={}
-        )
+        return await self.async_step_choose_mode(user_input=user_input)
 
     async def async_step_choose_mode(
         self, user_input: dict[str, Any] | None = None
@@ -121,25 +119,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="cloud_setup", data_schema=None, errors=errors
             )
-        if selected_mode == CONF_ELMAX_MODE_DIRECT:
-            return self.async_show_form(
-                step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA, errors=errors
-            )
-
-        errors = {"base": "invalid_mode"}
+        # Assume mode direct.
         return self.async_show_form(
-            step_id="choose_mode", data_schema=CHOOSE_MODE_SCHEMA, errors=errors
+            step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA, errors=errors
         )
 
-    async def async_step_direct_setup(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_direct_setup(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle the direct setup step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA
-            )
-
         panel_api_uri = user_input[CONF_ELMAX_MODE_DIRECT_URI]
         panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
 
@@ -191,14 +177,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
-    async def async_step_cloud_setup(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_cloud_setup(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle the cloud setup flow."""
         # When invokes without parameters, show the login form.
-        if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=LOGIN_FORM_SCHEMA)
-
         username = user_input[CONF_ELMAX_USERNAME]
         password = user_input[CONF_ELMAX_PASSWORD]
 
