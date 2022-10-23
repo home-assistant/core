@@ -375,19 +375,25 @@ def _handle_none_keypad_serial(keypad_device: dict, bridge_serial: int) -> str:
     return keypad_device["serial"] or f"{bridge_serial}_{keypad_device['device_id']}"
 
 
-def _area_name_from_id(areas: dict[str, dict], area_id: str) -> str:
+def _area_name_from_id(areas: dict[str, dict], area_id: str | None) -> str:
     """Return the full area name including parent(s)."""
-
     if area_id is None:
         return UNASSIGNED_AREA
+    return _construct_area_name_from_id(areas, area_id, [])
 
+
+def _construct_area_name_from_id(
+    areas: dict[str, dict], area_id: str, labels: list[str]
+) -> str:
+    """Recursively construct the full area name including parent(s)."""
     area = areas[area_id]
-    if "parent_id" in area:
-        parent_area = area["parent_id"]
-        if parent_area is not None:
-            return f"{_area_name_from_id(areas, parent_area)} {area['name']}"
+    parent_area_id = area["parent_id"]
+    if parent_area_id is None:
+        # This is the root area, return last area
+        return " ".join(labels)
 
-    return area["name"]
+    labels.insert(0, area["name"])
+    return _construct_area_name_from_id(areas, parent_area_id, labels)
 
 
 @callback
