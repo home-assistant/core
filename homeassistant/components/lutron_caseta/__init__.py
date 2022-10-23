@@ -247,41 +247,18 @@ def _async_setup_keypads(
 
         if not (keypad := keypads.get(keypad_device_id)):
             # First time seeing this keypad, build keypad data and store in keypads
-            area_name = _area_name_from_id(bridge.areas, bridge_keypad["area"])
-            keypad_name = bridge_keypad["name"].split("_")[-1]
-            keypad_serial = _handle_none_keypad_serial(
-                bridge_keypad, bridge_device["serial"]
+            keypad = keypads[keypad_device_id] = _setup_lutronkeypad(
+                bridge, bridge_device, bridge_keypad, keypad_device_id
             )
-            device_info = DeviceInfo(
-                name=f"{area_name} {keypad_name}",
-                manufacturer=MANUFACTURER,
-                identifiers={(DOMAIN, keypad_serial)},
-                model="{bridge_keypad['model']} ({bridge_keypad['type']})",
-                via_device=(DOMAIN, bridge_device["serial"]),
-            )
-            if area_name != UNASSIGNED_AREA:
-                device_info["suggested_area"] = area_name
 
+            # Register the keypad device
             dr_device = device_registry.async_get_or_create(
-                **device_info, config_entry_id=config_entry_id
+                **keypad["device_info"], config_entry_id=config_entry_id
             )
-
-            keypad = keypads[keypad_device_id] = LutronKeypad(
-                lutron_device_id=keypad_device_id,
-                dr_device_id=dr_device.id,
-                area_id=bridge_keypad["area"],
-                area_name=area_name,
-                name=keypad_name,
-                serial=keypad_serial,
-                device_info=device_info,
-                model=bridge_keypad["model"],
-                type=bridge_keypad["type"],
-                buttons=[],
-            )
-
+            keypad["dr_device_id"] = dr_device.id
             dr_device_id_to_keypad[dr_device.id] = keypad
 
-        # add button to parent keypad, and build keypad_buttons and keypad_button_names_to_leap
+        # Add button to parent keypad, and build keypad_buttons and keypad_button_names_to_leap
         button = keypad_buttons[button_device_id] = LutronButton(
             lutron_device_id=button_device_id,
             leap_button_number=bridge_button["button_number"],
@@ -330,6 +307,41 @@ def _async_build_trigger_schemas(
         )
 
     return keypad_trigger_schemas
+
+
+def _setup_lutronkeypad(
+    bridge: Smartbridge,
+    bridge_device: dict[str, Any],
+    bridge_keypad: dict[str, Any],
+    keypad_device_id: int,
+) -> LutronKeypad:
+    # First time seeing this keypad, build keypad data and store in keypads
+
+    area_name = _area_name_from_id(bridge.areas, bridge_keypad["area"])
+    keypad_name = bridge_keypad["name"].split("_")[-1]
+    keypad_serial = _handle_none_keypad_serial(bridge_keypad, bridge_device["serial"])
+    device_info = DeviceInfo(
+        name=f"{area_name} {keypad_name}",
+        manufacturer=MANUFACTURER,
+        identifiers={(DOMAIN, keypad_serial)},
+        model="{bridge_keypad['model']} ({bridge_keypad['type']})",
+        via_device=(DOMAIN, bridge_device["serial"]),
+    )
+    if area_name != UNASSIGNED_AREA:
+        device_info["suggested_area"] = area_name
+
+    return LutronKeypad(
+        lutron_device_id=keypad_device_id,
+        dr_device_id="",
+        area_id=bridge_keypad["area"],
+        area_name=area_name,
+        name=keypad_name,
+        serial=keypad_serial,
+        device_info=device_info,
+        model=bridge_keypad["model"],
+        type=bridge_keypad["type"],
+        buttons=[],
+    )
 
 
 def _get_button_name(keypad: LutronKeypad, bridge_button: dict[str, Any]) -> str:
