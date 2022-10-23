@@ -37,11 +37,9 @@ async def async_setup_entry(
     hub: nobo = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        [
-            NoboTemperatureSensor(component["serial"], hub)
-            for component in hub.components.values()
-            if component[ATTR_MODEL].has_temp_sensor
-        ]
+        NoboTemperatureSensor(component["serial"], hub)
+        for component in hub.components.values()
+        if component[ATTR_MODEL].has_temp_sensor
     )
 
 

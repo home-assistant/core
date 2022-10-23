@@ -69,7 +69,7 @@ async def async_setup_entry(
     )
 
     # Add zones as entities
-    async_add_entities([NoboZone(zone_id, hub, override_type) for zone_id in hub.zones])
+    async_add_entities(NoboZone(zone_id, hub, override_type) for zone_id in hub.zones)
 
 
 class NoboZone(ClimateEntity):
