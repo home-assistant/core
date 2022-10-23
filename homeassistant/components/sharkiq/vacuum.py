@@ -110,11 +110,15 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
 
     def send_command(self, command, params=None, **kwargs):
         """Send a command to the vacuum. Not yet implemented."""
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "Service `send_command` is currently not compatible with SharkIQ."
+        )
 
     def clean_spot(self, **kwargs):
         """Spot clean an area. Not yet implemented."""
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "Service `clean_spot` is currently not compatible with SharkIQ."
+        )
 
     @property
     def is_online(self) -> bool:
