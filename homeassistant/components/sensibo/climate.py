@@ -128,10 +128,12 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_FULL_AC_STATE,
         {
+            vol.Required(ATTR_MODE): vol.In(
+                ["cool", "heat", "fan", "auto", "dry", "off"]
+            ),
             vol.Optional(ATTR_TARGET_TEMPERATURE): int,
-            vol.Required(ATTR_MODE): bool,
-            vol.Optional(ATTR_FAN_MODE): bool,
-            vol.Optional(ATTR_SWING_MODE): bool,
+            vol.Optional(ATTR_FAN_MODE): str,
+            vol.Optional(ATTR_SWING_MODE): str,
             vol.Optional(ATTR_HORIZONTAL_SWING_MODE): str,
             vol.Optional(ATTR_LIGHT): vol.In(["on", "off"]),
         },
@@ -356,17 +358,20 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_full_ac_state(
         self,
-        target_temperature: int | None,
         mode: str,
-        fan_mode: str | None,
-        swing_mode: str | None,
-        horizontal_swing_mode: str | None,
-        light: str | None,
+        target_temperature: int | None = None,
+        fan_mode: str | None = None,
+        swing_mode: str | None = None,
+        horizontal_swing_mode: str | None = None,
+        light: str | None = None,
     ) -> None:
         """Set full AC state."""
         new_ac_state = self.device_data.ac_states
-        new_ac_state["on"] = bool(mode != "off")
-        new_ac_state["mode"] = mode
+        new_ac_state.pop("timestamp")
+        new_ac_state["on"] = False
+        if mode != "off":
+            new_ac_state["on"] = True
+            new_ac_state["mode"] = mode
         if target_temperature:
             new_ac_state["targetTemperature"] = target_temperature
         if fan_mode:
@@ -379,7 +384,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             new_ac_state["light"] = light
 
         await self.api_call_custom_service_full_ac_state(
-            key="hvac_mode", value=SENSIBO_TO_HA[mode], data=new_ac_state
+            key="hvac_mode", value=mode, data=new_ac_state
         )
 
     async def async_enable_timer(self, minutes: int) -> None:

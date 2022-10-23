@@ -94,8 +94,14 @@ full_ac_state:
       required: true
       example: "heat"
       selector:
-        text:
-          type: text
+        select:
+          options:
+            - "cool"
+            - "heat"
+            - "fan"
+            - "auto"
+            - "dry"
+            - "off"
     target_temperature:
       name: Target Temperature
       description: Optionally set target temperature
