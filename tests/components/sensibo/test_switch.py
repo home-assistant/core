@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -223,3 +224,113 @@ async def test_switch_command_failure(
                 },
                 blocking=True,
             )
+
+
+async def test_switch_climate_react(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    monkeypatch: MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the Sensibo switch for climate react."""
+
+    state1 = hass.states.get("switch.hallway_climate_react")
+    assert state1.state == STATE_OFF
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
+        return_value={"status": "success"},
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "smart_on", True)
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+    state1 = hass.states.get("switch.hallway_climate_react")
+    assert state1.state == STATE_ON
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_enable_climate_react",
+        return_value={"status": "success"},
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "smart_on", False)
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state1 = hass.states.get("switch.hallway_climate_react")
+    assert state1.state == STATE_OFF
+
+
+async def test_switch_climate_react_no_data(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    monkeypatch: MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the Sensibo switch for climate react."""
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "smart_on", None)
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state1 = hass.states.get("switch.hallway_climate_react")
+    assert state1.state == STATE_UNKNOWN
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
