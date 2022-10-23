@@ -16,6 +16,7 @@ from aiolifx.aiolifx import (
     TileEffectType,
 )
 from aiolifx.connection import LIFXConnection
+from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 from awesomeversion import AwesomeVersion
 
 from homeassistant.const import (
@@ -261,14 +262,21 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     async def async_set_multizone_effect(
         self,
         effect: str,
-        speed: float = 3,
+        speed: float = 3.0,
         direction: str = "RIGHT",
+        theme_name: str | None = None,
         power_on: bool = True,
     ) -> None:
         """Control the firmware-based Move effect on a multizone device."""
         if lifx_features(self.device)["multizone"] is True:
             if power_on and self.device.power_level == 0:
                 await self.async_set_power(True, 0)
+
+            if theme_name is not None:
+                theme = ThemeLibrary().get_theme(theme_name)
+                await ThemePainter(self.hass.loop).paint(
+                    theme, [self.device], round(speed)
+                )
 
             await async_execute_lifx(
                 partial(
@@ -324,14 +332,14 @@ class LIFXSensorUpdateCoordinator(DataUpdateCoordinator):
         self.lock = asyncio.Lock()
         self._update_rssi: bool = False
         self._rssi: int = 0
+        self.last_used_theme: str = ""
 
         super().__init__(
             hass,
             _LOGGER,
             name=f"{title} Sensors ({self.parent.device.ip_addr})",
             update_interval=timedelta(seconds=SENSOR_UPDATE_INTERVAL),
-            # We don't want an immediate refresh since the device
-            # takes a moment to reflect the state change
+            # Refresh immmediately because the changes are not visible
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=0, immediate=True
             ),
@@ -426,3 +434,9 @@ class LIFXSensorUpdateCoordinator(DataUpdateCoordinator):
                     self.parent.device.set_hev_cycle, enable=enable, duration=duration
                 )
             )
+
+    async def async_apply_theme(self, theme_name: str) -> None:
+        """Apply the selected theme to the device."""
+        self.last_used_theme = theme_name
+        theme = ThemeLibrary().get_theme(theme_name)
+        await ThemePainter(self.hass.loop).paint(theme, [self.parent.device])

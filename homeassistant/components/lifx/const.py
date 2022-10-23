@@ -37,6 +37,8 @@ ATTR_REMAINING = "remaining"
 ATTR_RSSI = "rssi"
 ATTR_ZONES = "zones"
 
+ATTR_THEME = "theme"
+
 HEV_CYCLE_STATE = "hev_cycle_state"
 INFRARED_BRIGHTNESS = "infrared_brightness"
 INFRARED_BRIGHTNESS_VALUES_MAP = {
