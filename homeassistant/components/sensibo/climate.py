@@ -480,6 +480,5 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         data: dict,
     ) -> bool:
         """Make service call to api."""
-        result = {}
         result = await self._client.async_set_ac_states(self._device_id, data)
         return bool(result.get("result", {}).get("status") == "Success")
