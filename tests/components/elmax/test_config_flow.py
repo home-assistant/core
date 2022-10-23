@@ -7,6 +7,8 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.elmax.const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
+    CONF_ELMAX_MODE_DIRECT,
+    CONF_ELMAX_MODE_DIRECT_URI,
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -18,6 +20,7 @@ from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 
 from . import (
+    MOCK_DIRECT_BASE_URI,
     MOCK_PANEL_ID,
     MOCK_PANEL_NAME,
     MOCK_PANEL_PIN,
@@ -39,8 +42,37 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "choose_mode"
 
 
+<<<<<<< HEAD
 async def test_standard_setup(hass: HomeAssistant) -> None:
     """Test the standard setup case."""
+=======
+async def test_direct_setup(hass):
+    """Test the standard direct setup case."""
+    show_form_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.elmax.async_setup_entry",
+        return_value=True,
+    ):
+        set_mode_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            set_mode_result["flow_id"],
+            {
+                CONF_ELMAX_MODE_DIRECT_URI: MOCK_DIRECT_BASE_URI,
+                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_cloud_setup(hass):
+    """Test the standard cloud setup case."""
+>>>>>>> 5f7c7068c3 (Improve test coverage to 100%)
     # Setup once.
     show_form_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -49,7 +81,7 @@ async def test_standard_setup(hass: HomeAssistant) -> None:
         "homeassistant.components.elmax.async_setup_entry",
         return_value=True,
     ):
-        login_result = await hass.config_entries.flow.async_configure(
+        show_form_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
             {CONF_ELMAX_MODE: CONF_ELMAX_MODE_CLOUD},
         )
@@ -135,7 +167,11 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         assert login_result["errors"] == {"base": "invalid_auth"}
 
 
+<<<<<<< HEAD
 async def test_connection_error(hass: HomeAssistant) -> None:
+=======
+async def test_cloud_connection_error(hass):
+>>>>>>> 5f7c7068c3 (Improve test coverage to 100%)
     """Test other than invalid credentials throws an error."""
     with patch(
         "elmax_api.http.Elmax.login",
@@ -160,7 +196,61 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         assert login_result["errors"] == {"base": "network_error"}
 
 
+<<<<<<< HEAD
 async def test_unhandled_error(hass: HomeAssistant) -> None:
+=======
+async def test_direct_connection_error(hass):
+    """Test network error while dealing with direct panel APIs."""
+    with patch(
+        "elmax_api.http.ElmaxLocal.login",
+        side_effect=ElmaxNetworkError(),
+    ):
+        show_form_result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        set_mode_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            set_mode_result["flow_id"],
+            {
+                CONF_ELMAX_MODE_DIRECT_URI: MOCK_DIRECT_BASE_URI,
+                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+            },
+        )
+        assert result["step_id"] == "direct_setup"
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == {"base": "network_error"}
+
+
+async def test_direct_wrong_panel_code(hass):
+    """Test wrong code being specified while dealing with direct panel APIs."""
+    with patch(
+        "elmax_api.http.ElmaxLocal.login",
+        side_effect=ElmaxBadLoginError(),
+    ):
+        show_form_result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        set_mode_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            set_mode_result["flow_id"],
+            {
+                CONF_ELMAX_MODE_DIRECT_URI: MOCK_DIRECT_BASE_URI,
+                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+            },
+        )
+        assert result["step_id"] == "direct_setup"
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_unhandled_error(hass):
+>>>>>>> 5f7c7068c3 (Improve test coverage to 100%)
     """Test unhandled exceptions."""
     with patch(
         "elmax_api.http.Elmax.get_panel_status",
