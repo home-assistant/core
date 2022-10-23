@@ -26,15 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
-    NumberSelectorMode,
-    ObjectSelector,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN, LOGGER
@@ -158,23 +149,12 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_ENABLE_CLIMATE_REACT,
         {
-            vol.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): NumberSelector(
-                NumberSelectorConfig(
-                    min=0, max=200, step=0.1, mode=NumberSelectorMode.BOX
-                )
-            ),
-            vol.Required(ATTR_HIGH_TEMPERATURE_STATE): ObjectSelector(),
-            vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): NumberSelector(
-                NumberSelectorConfig(
-                    min=0, max=200, step=0.1, mode=NumberSelectorMode.BOX
-                )
-            ),
-            vol.Required(ATTR_LOW_TEMPERATURE_STATE): ObjectSelector(),
-            vol.Required(ATTR_SMART_TYPE): SelectSelector(
-                SelectSelectorConfig(
-                    options=["temperature", "feelsLike", "humidity"],
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
+            vol.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_HIGH_TEMPERATURE_STATE): dict,
+            vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
+            vol.Required(ATTR_SMART_TYPE): vol.In(
+                ["temperature", "feelsLike", "humidity"]
             ),
         },
         "async_enable_climate_react",
