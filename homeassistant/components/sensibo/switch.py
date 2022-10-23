@@ -139,7 +139,6 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     @async_handle_api_call
     async def async_turn_on_timer(self, key: str, value: Any) -> bool:
         """Make service call to api for setting timer."""
-        result = {}
         new_state = bool(self.device_data.ac_states["on"] is False)
         data = {
             "minutesFromNow": 60,
@@ -151,14 +150,12 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     @async_handle_api_call
     async def async_turn_off_timer(self, key: str, value: Any) -> bool:
         """Make service call to api for deleting timer."""
-        result = {}
         result = await self._client.async_del_timer(self._device_id)
         return bool(result.get("status") == "success")
 
     @async_handle_api_call
     async def async_turn_on_off_pure_boost(self, key: str, value: Any) -> bool:
         """Make service call to api for setting Pure Boost."""
-        result = {}
         new_state = bool(self.device_data.pure_boost_enabled is False)
         data: dict[str, Any] = {"enabled": new_state}
         if self.device_data.pure_measure_integration is None:
