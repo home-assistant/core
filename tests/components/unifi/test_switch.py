@@ -128,6 +128,7 @@ POE_SWITCH_CLIENTS = [
 ]
 
 DEVICE_1 = {
+    "board_rev": 2,
     "device_id": "mock-id",
     "ip": "10.0.1.1",
     "mac": "00:00:00:00:01:01",
@@ -413,9 +414,16 @@ OUTLET_UP1 = {
             "index": 1,
             "has_relay": True,
             "has_metering": False,
+            "relay_state": True,
+            "name": "Outlet 1",
+        },
+        {
+            "index": 2,
+            "has_relay": False,
+            "has_metering": False,
             "relay_state": False,
             "name": "Outlet 1",
-        }
+        },
     ],
     "element_ap_serial": "44:d9:e7:90:f4:24",
     "connected_at": 1641678609,
@@ -910,34 +918,27 @@ async def test_dpi_switches_add_second_app(hass, aioclient_mock, mock_unifi_webs
 
 
 async def test_outlet_switches(hass, aioclient_mock, mock_unifi_websocket):
-    """Test the update_items function with some clients."""
+    """Test the outlet entities."""
     config_entry = await setup_unifi_integration(
-        hass,
-        aioclient_mock,
-        options={CONF_TRACK_DEVICES: False},
-        devices_response=[OUTLET_UP1],
+        hass, aioclient_mock, devices_response=[OUTLET_UP1]
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    outlet = hass.states.get("switch.plug_outlet_1")
-    assert outlet is not None
-    assert outlet.state == STATE_OFF
+    # Validate state object
+    switch_1 = hass.states.get("switch.plug_outlet_1")
+    assert switch_1 is not None
+    assert switch_1.state == STATE_ON
+    assert switch_1.attributes.get(ATTR_DEVICE_CLASS) == SwitchDeviceClass.OUTLET
 
-    # State change
-
-    outlet_up1 = deepcopy(OUTLET_UP1)
-    outlet_up1["outlet_table"][0]["relay_state"] = True
-
-    mock_unifi_websocket(message=MessageKey.DEVICE, data=outlet_up1)
+    # Update state object
+    device_1 = deepcopy(OUTLET_UP1)
+    device_1["outlet_table"][0]["relay_state"] = False
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
+    assert hass.states.get("switch.plug_outlet_1").state == STATE_OFF
 
-    outlet = hass.states.get("switch.plug_outlet_1")
-    assert outlet.state == STATE_ON
-
-    # Turn on and off outlet
-
+    # Turn off outlet
     aioclient_mock.clear_requests()
     aioclient_mock.put(
         f"https://{controller.host}:1234/api/s/{controller.site}/rest/device/600c8356942a6ade50707b56",
@@ -945,33 +946,50 @@ async def test_outlet_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.plug_outlet_1"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[0][2] == {
-        "outlet_overrides": [{"index": 1, "name": "Outlet 1", "relay_state": True}]
+        "outlet_overrides": [{"index": 1, "name": "Outlet 1", "relay_state": False}]
     }
 
+    # Turn on outlet
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.plug_outlet_1"},
         blocking=True,
     )
     assert aioclient_mock.call_count == 2
     assert aioclient_mock.mock_calls[1][2] == {
-        "outlet_overrides": [{"index": 1, "name": "Outlet 1", "relay_state": False}]
+        "outlet_overrides": [{"index": 1, "name": "Outlet 1", "relay_state": True}]
     }
 
-    # Changes to config entry options shouldn't affect outlets
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_BLOCK_CLIENT: []},
-    )
+    # Availability signalling
+
+    # Controller disconnects
+    mock_unifi_websocket(state=WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    assert hass.states.get("switch.plug_outlet_1").state == STATE_UNAVAILABLE
+
+    # Controller reconnects
+    mock_unifi_websocket(state=WebsocketState.RUNNING)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.plug_outlet_1").state == STATE_OFF
+
+    # Device gets disabled
+    device_1["disabled"] = True
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.plug_outlet_1").state == STATE_UNAVAILABLE
+
+    # Device gets re-enabled
+    device_1["disabled"] = False
+    mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.plug_outlet_1").state == STATE_OFF
 
     # Unload config entry
     await hass.config_entries.async_unload(config_entry.entry_id)
