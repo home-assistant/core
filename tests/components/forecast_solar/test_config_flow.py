@@ -57,10 +57,10 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_flow(
+async def test_options_flow_invalid_api(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test config flow options."""
+    """Test options config flow when API key is invalid."""
     mock_config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
@@ -86,9 +86,81 @@ async def test_options_flow(
         },
     )
 
+    assert result2.get("type") == FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_api_key"}
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test config flow options."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "init"
+    assert "flow_id" in result
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: "SolarForecast150",
+            CONF_DECLINATION: 21,
+            CONF_AZIMUTH: 22,
+            CONF_MODULES_POWER: 2122,
+            CONF_DAMPING: 0.25,
+            CONF_INVERTER_SIZE: 2000,
+        },
+    )
+
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("data") == {
-        CONF_API_KEY: "solarPOWER!",
+        CONF_API_KEY: "SolarForecast150",
+        CONF_DECLINATION: 21,
+        CONF_AZIMUTH: 22,
+        CONF_MODULES_POWER: 2122,
+        CONF_DAMPING: 0.25,
+        CONF_INVERTER_SIZE: 2000,
+    }
+
+
+async def test_options_flow_without_key(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test config flow options."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.forecast_solar.async_setup_entry", return_value=True
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "init"
+    assert "flow_id" in result
+
+    # Without the API key
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DECLINATION: 21,
+            CONF_AZIMUTH: 22,
+            CONF_MODULES_POWER: 2122,
+            CONF_DAMPING: 0.25,
+            CONF_INVERTER_SIZE: 2000,
+        },
+    )
+
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("data") == {
         CONF_DECLINATION: 21,
         CONF_AZIMUTH: 22,
         CONF_MODULES_POWER: 2122,
