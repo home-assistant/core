@@ -155,6 +155,32 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         extra_fn=None,
         entity_registry_enabled_default=False,
     ),
+    SensiboDeviceSensorEntityDescription(
+        key="climate_react_low",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Climate React low temperature threshold",
+        value_fn=lambda data: data.smart_low_temp_threshold,
+        extra_fn=lambda data: data.smart_low_state,
+        entity_registry_enabled_default=False,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="climate_react_high",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Climate React high temperature threshold",
+        value_fn=lambda data: data.smart_high_temp_threshold,
+        extra_fn=lambda data: data.smart_high_state,
+        entity_registry_enabled_default=False,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="climate_react_type",
+        device_class="sensibo__smart_type",
+        name="Climate React type",
+        value_fn=lambda data: data.smart_type,
+        extra_fn=None,
+        entity_registry_enabled_default=False,
+    ),
     FILTER_LAST_RESET_DESCRIPTION,
 )
 
@@ -281,7 +307,10 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self.device_data)
+        state = self.entity_description.value_fn(self.device_data)
+        if isinstance(state, str):
+            return state.lower()
+        return state
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
