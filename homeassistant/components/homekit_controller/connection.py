@@ -192,8 +192,11 @@ class HKDevice:
         # Ideally we would know which entities we are about to add
         # so we only poll those chars but that is not possible
         # yet.
+        attempts = None if self.hass.is_running else 1
         try:
-            await self.pairing.async_populate_accessories_state(force_update=True)
+            await self.pairing.async_populate_accessories_state(
+                force_update=True, attempts=attempts
+            )
         except AccessoryNotFoundError:
             if transport != Transport.BLE or not pairing.accessories:
                 # BLE devices may sleep and we can't force a connection
