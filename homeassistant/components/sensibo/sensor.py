@@ -23,7 +23,6 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -271,9 +270,7 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
     def native_unit_of_measurement(self) -> str | None:
         """Add native unit of measurement."""
         if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
-            return (
-                TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
-            )
+            return TEMP_CELSIUS
         return self.entity_description.native_unit_of_measurement
 
     @property
