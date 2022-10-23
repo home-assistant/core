@@ -19,10 +19,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_BATTERY_KIND,
     ATTR_SIGNAL_STRENGTH,
     ATTR_SIGNAL_STRENGTH_MAX,
-    BATTERY_KIND_HARDWIRED,
     DOMAIN,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
@@ -49,8 +47,8 @@ class PowerviewSensorDescription(
 ):
     """Class to describe a Sensor entity."""
 
-    entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
-    state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    entity_category = EntityCategory.DIAGNOSTIC
+    state_class = SensorStateClass.MEASUREMENT
 
 
 SENSORS: Final = [
@@ -62,10 +60,7 @@ SENSORS: Final = [
         native_value_fn=lambda shade: round(
             shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100
         ),
-        create_sensor_fn=lambda shade: bool(
-            shade.raw_data.get(ATTR_BATTERY_KIND) != BATTERY_KIND_HARDWIRED
-            and SHADE_BATTERY_LEVEL in shade.raw_data
-        ),
+        create_sensor_fn=lambda shade: bool(SHADE_BATTERY_LEVEL in shade.raw_data),
         update_fn=lambda shade: shade.refresh_battery(),
     ),
     PowerviewSensorDescription(
@@ -115,6 +110,8 @@ async def async_setup_entry(
 class PowerViewSensor(ShadeEntity, SensorEntity):
     """Representation of an shade sensor."""
 
+    entity_description: PowerviewSensorDescription
+
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
@@ -149,6 +146,6 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
-        """Refresh shade battery."""
+        """Refresh sensor entity."""
         await self.entity_description.update_fn(self._shade)
         self.async_write_ha_state()
