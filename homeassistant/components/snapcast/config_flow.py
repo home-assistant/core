@@ -55,6 +55,8 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_host"
         except OSError:
             errors["base"] = "cannot_connect"
+        else:
+            await client.stop()
         finally:
             del client
 

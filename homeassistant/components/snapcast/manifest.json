@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/snapcast",
   "requirements": ["snapcast==2.3.0"],
   "codeowners": ["@luar123"],
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "loggers": ["construct", "snapcast"],
   "config_flow": true
 }

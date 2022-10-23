@@ -77,12 +77,13 @@ async def async_setup_entry(
         SnapcastGroupDevice(group, hpid) for group in the_server.groups
     ]
     clients: list[MediaPlayerEntity] = [
-        SnapcastClientDevice(client, hpid, config_entry.entry_id)
-        for client in the_server.clients
+        SnapcastClientDevice(client, hpid) for client in the_server.clients
     ]
-    hass.data[DOMAIN][config_entry.entry_id].clients = clients
-    hass.data[DOMAIN][config_entry.entry_id].groups = groups
+
     async_add_entities(clients + groups)
+    hass.data[DOMAIN][
+        config_entry.entry_id
+    ].hass_async_add_entities = async_add_entities
 
 
 async def async_setup_platform(
@@ -144,16 +145,27 @@ class SnapcastGroupDevice(MediaPlayerEntity):
 
     def __init__(self, group, uid_part):
         """Initialize the Snapcast group device."""
+        self._attr_available = True
         self._group = group
+        self.entry_id = None
         self._uid = f"{GROUP_PREFIX}{uid_part}_{self._group.identifier}"
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to group events."""
         self._group.set_callback(self.schedule_update_ha_state)
+        if self.registry_entry:
+            self.entry_id = self.registry_entry.config_entry_id
+            self.hass.data[DOMAIN][self.entry_id].groups.append(self)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect group object when removed."""
         self._group.set_callback(None)
+        self.hass.data[DOMAIN][self.entry_id].groups.remove(self)
+
+    def set_availability(self, available: bool) -> None:
+        """Set availability of group."""
+        self._attr_available = available
+        self.schedule_update_ha_state()
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -168,6 +180,11 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     def unique_id(self):
         """Return the ID of snapcast group."""
         return self._uid
+
+    @property
+    def identifier(self):
+        """Return the snapcast identifier."""
+        return self._group.identifier
 
     @property
     def name(self):
@@ -237,19 +254,28 @@ class SnapcastClientDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, client, uid_part, entry_id):
+    def __init__(self, client, uid_part):
         """Initialize the Snapcast client device."""
         self._client = client
         self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
-        self.entry_id = entry_id
+        self.entry_id = None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to client events."""
         self._client.set_callback(self.schedule_update_ha_state)
+        if self.registry_entry:
+            self.entry_id = self.registry_entry.config_entry_id
+            self.hass.data[DOMAIN][self.entry_id].clients.append(self)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect client object when removed."""
         self._client.set_callback(None)
+        self.hass.data[DOMAIN][self.entry_id].clients.remove(self)
+
+    def set_availability(self, available: bool) -> None:
+        """Set availability of group."""
+        self._attr_available = available
+        self.schedule_update_ha_state()
 
     @property
     def unique_id(self):
@@ -268,7 +294,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{CLIENT_PREFIX}{self._client.identifier}"
+        return f"{CLIENT_PREFIX}{self._client.friendly_name}"
 
     @property
     def source(self):
