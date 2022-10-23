@@ -242,14 +242,14 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
-    "_leap._tcp.local.": [
-        {
-            "domain": "lutron_caseta",
-        },
-    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",
+        },
+    ],
+    "_lutron._tcp.local.": [
+        {
+            "domain": "lutron_caseta",
         },
     ],
     "_mediaremotetv._tcp.local.": [
