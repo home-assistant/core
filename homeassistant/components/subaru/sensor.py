@@ -300,7 +300,7 @@ async def _async_migrate_entries(
         id_split = entry.unique_id.split("_")
         key = id_split[1].upper() if len(id_split) == 2 else None
 
-        if key not in replacements:
+        if key not in replacements or id_split[1] == replacements[key]:
             return None
 
         new_unique_id = entry.unique_id.replace(id_split[1], replacements[key])
