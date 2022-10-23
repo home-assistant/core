@@ -292,21 +292,16 @@ def _async_build_trigger_schemas(
 ) -> dict[int, vol.Schema]:
     """Build device trigger schemas."""
 
-    keypad_trigger_schemas: dict[int, vol.Schema] = {}
-
-    for keypad_id, _ in keypad_button_names_to_leap.items():
-        keypad_trigger_schemas.setdefault(
-            keypad_id,
-            LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
-                {
-                    vol.Required(CONF_SUBTYPE): vol.In(
-                        keypad_button_names_to_leap.get(keypad_id)
-                    ),
-                }
-            ),
+    return {
+        keypad_id: LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+            {
+                vol.Required(CONF_SUBTYPE): vol.In(
+                    keypad_button_names_to_leap[keypad_id]
+                ),
+            }
         )
-
-    return keypad_trigger_schemas
+        for keypad_id in keypad_button_names_to_leap
+    }
 
 
 @callback
