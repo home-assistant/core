@@ -1,7 +1,6 @@
 """Component to interface with cameras."""
 from __future__ import annotations
 
-import io
 import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Iterable
@@ -10,6 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
+import io
 import logging
 import os
 from random import SystemRandom
@@ -798,16 +798,17 @@ class Annotation:
         else:
             self.is_defined = False
 
-    def annotate(self, image_stream:bytes) -> bytes:
+    def annotate(self, image_stream: bytes) -> bytes:
         """Write annotation to the file provided as byte stream direct from camera feed."""
         self.text.hass = self.hass
         annotation_text = self.text.async_render()
+        image_buffer = io.BytesIO(image_stream)
+        img = PilImage.open(image_buffer)
         _LOGGER.debug(
-            "Annotating snapsot with template text: %s",
+            "Annotating snapshot type: %s with text: %s",
+            img.format,
             annotation_text,
         )
-        image_buffer = io.BytesIO(image_stream) 
-        img = PilImage.open(image_buffer)
         drawing = ImageDraw.Draw(img)
 
         font = ImageFont.load_default()
@@ -821,7 +822,9 @@ class Annotation:
             fill=(255, 255, 255),
             font=font,
         )
-        img.save(image_buffer,img.format)
+
+        image_buffer = io.BytesIO()
+        img.save(image_buffer, format=img.format)
         return image_buffer.getvalue()
 
 
@@ -959,12 +962,12 @@ async def async_handle_snapshot_service(
     if image is None:
         return
 
-    annotation = Annotation(service_call, hass)
-    if annotation.is_defined:
-        image = annotation.annotate(image)
-
     def _write_image(to_file: str, image_data: bytes) -> None:
         """Executor helper to write image."""
+        annotation = Annotation(service_call, hass)
+        if annotation.is_defined:
+            image_data = annotation.annotate(image_data)
+
         os.makedirs(os.path.dirname(to_file), exist_ok=True)
         with open(to_file, "wb") as img_file:
             img_file.write(image_data)
