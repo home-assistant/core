@@ -18,6 +18,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import MockRestData, return_config
@@ -91,6 +92,34 @@ async def test_scrape_uom_and_classes(hass: HomeAssistant) -> None:
     assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert state.attributes[CONF_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
     assert state.attributes[CONF_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_scrape_unique_id(hass: HomeAssistant) -> None:
+    """Test Scrape sensor for unique id."""
+    config = {
+        "sensor": return_config(
+            select=".current-temp h3",
+            name="Current Temp",
+            template="{{ value.split(':')[1] }}",
+            unique_id="very_unique_id",
+        )
+    }
+
+    mocker = MockRestData("test_scrape_uom_and_classes")
+    with patch(
+        "homeassistant.components.scrape.sensor.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.current_temp")
+    assert state.state == "22.1"
+
+    registry = er.async_get(hass)
+    entry = registry.async_get("sensor.current_temp")
+    assert entry
+    assert entry.unique_id == "very_unique_id"
 
 
 async def test_scrape_sensor_authentication(hass: HomeAssistant) -> None:
