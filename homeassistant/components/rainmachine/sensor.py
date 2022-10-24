@@ -14,11 +14,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
+from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS, VOLUME_LITERS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from . import RainMachineData, RainMachineEntity
 from .const import (
@@ -45,10 +45,14 @@ DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE = timedelta(seconds=5)
 
 TYPE_FLOW_SENSOR_CLICK_M3 = "flow_sensor_clicks_cubic_meter"
 TYPE_FLOW_SENSOR_CONSUMED_LITERS = "flow_sensor_consumed_liters"
+TYPE_FLOW_SENSOR_LEAK_CLICKS = "flow_sensor_leak_clicks"
+TYPE_FLOW_SENSOR_LEAK_VOLUME = "flow_sensor_leak_volume"
 TYPE_FLOW_SENSOR_START_INDEX = "flow_sensor_start_index"
 TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
 TYPE_FREEZE_TEMP = "freeze_protect_temp"
+TYPE_LAST_LEAK_DETECTED = "last_leak_detected"
 TYPE_PROGRAM_RUN_COMPLETION_TIME = "program_run_completion_time"
+TYPE_RAIN_SENSOR_RAIN_START = "rain_sensor_rain_start"
 TYPE_ZONE_RUN_COMPLETION_TIME = "zone_run_completion_time"
 
 
@@ -67,7 +71,7 @@ class RainMachineSensorCompletionTimerDescription(
     RainMachineEntityDescription,
     RainMachineEntityDescriptionMixinUid,
 ):
-    """Describe a RainMachine sensor."""
+    """Describe a RainMachine completion timer sensor."""
 
 
 SENSOR_DESCRIPTIONS = (
@@ -87,11 +91,33 @@ SENSOR_DESCRIPTIONS = (
         name="Flow sensor consumed liters",
         icon="mdi:water-pump",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement="liter",
+        native_unit_of_measurement=VOLUME_LITERS,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         api_category=DATA_PROVISION_SETTINGS,
         data_key="flowSensorWateringClicks",
+    ),
+    RainMachineSensorDataDescription(
+        key=TYPE_FLOW_SENSOR_LEAK_CLICKS,
+        name="Flow sensor leak clicks",
+        icon="mdi:pipe-leak",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement="clicks",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        api_category=DATA_PROVISION_SETTINGS,
+        data_key="flowSensorLeakClicks",
+    ),
+    RainMachineSensorDataDescription(
+        key=TYPE_FLOW_SENSOR_LEAK_VOLUME,
+        name="Flow sensor leak volume",
+        icon="mdi:pipe-leak",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=VOLUME_LITERS,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        api_category=DATA_PROVISION_SETTINGS,
+        data_key="flowSensorLeakClicks",
     ),
     RainMachineSensorDataDescription(
         key=TYPE_FLOW_SENSOR_START_INDEX,
@@ -110,7 +136,7 @@ SENSOR_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="clicks",
         entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         api_category=DATA_PROVISION_SETTINGS,
         data_key="flowSensorWateringClicks",
     ),
@@ -124,6 +150,26 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
         data_key="freezeProtectTemp",
+    ),
+    RainMachineSensorDataDescription(
+        key=TYPE_LAST_LEAK_DETECTED,
+        name="Last leak detected",
+        icon="mdi:pipe-leak",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_category=DATA_PROVISION_SETTINGS,
+        data_key="lastLeakDetected",
+    ),
+    RainMachineSensorDataDescription(
+        key=TYPE_RAIN_SENSOR_RAIN_START,
+        name="Rain sensor rain start",
+        icon="mdi:weather-pouring",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        state_class=SensorStateClass.MEASUREMENT,
+        api_category=DATA_PROVISION_SETTINGS,
+        data_key="rainSensorRainStart",
     ),
 )
 
@@ -306,7 +352,21 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
             )
 
             if clicks and clicks_per_m3:
-                self._attr_native_value = (clicks * 1000) / clicks_per_m3
+                self._attr_native_value = round((clicks * 1000) / clicks_per_m3, 1)
+            else:
+                self._attr_native_value = None
+        elif self.entity_description.key == TYPE_FLOW_SENSOR_LEAK_CLICKS:
+            self._attr_native_value = self.coordinator.data.get("system", {}).get(
+                "flowSensorLeakClicks"
+            )
+        elif self.entity_description.key == TYPE_FLOW_SENSOR_LEAK_VOLUME:
+            clicks = self.coordinator.data.get("system", {}).get("flowSensorLeakClicks")
+            clicks_per_m3 = self.coordinator.data.get("system", {}).get(
+                "flowSensorClicksPerCubicMeter"
+            )
+
+            if clicks and clicks_per_m3:
+                self._attr_native_value = round((clicks * 1000) / clicks_per_m3, 1)
             else:
                 self._attr_native_value = None
         elif self.entity_description.key == TYPE_FLOW_SENSOR_START_INDEX:
@@ -316,6 +376,14 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
         elif self.entity_description.key == TYPE_FLOW_SENSOR_WATERING_CLICKS:
             self._attr_native_value = self.coordinator.data.get("system", {}).get(
                 "flowSensorWateringClicks"
+            )
+        elif self.entity_description.key == TYPE_LAST_LEAK_DETECTED:
+            self._attr_native_value = utc_from_timestamp(
+                self.coordinator.data.get("system", {}).get("lastLeakDetected")
+            )
+        elif self.entity_description.key == TYPE_RAIN_SENSOR_RAIN_START:
+            self._attr_native_value = utc_from_timestamp(
+                self.coordinator.data.get("system", {}).get("rainSensorRainStart")
             )
 
 
