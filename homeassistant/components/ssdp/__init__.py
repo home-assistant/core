@@ -9,6 +9,7 @@ from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
 import socket
+from time import time
 from typing import Any
 from urllib.parse import urljoin
 import xml.etree.ElementTree as ET
@@ -218,8 +219,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         UPNP_SERVER: server,
     }
 
-    await hass.async_create_task(scanner.async_start())
-    await hass.async_create_task(server.async_start())
+    await scanner.async_start()
+    await server.async_start()
 
     return True
 
@@ -716,6 +717,7 @@ class Server:
             )
 
         # Start a server on all source IPs.
+        boot_id = int(time())
         for source_ip in await async_build_source_set(self.hass):
             source_ip_str = str(source_ip)
             if source_ip.version == 6:
@@ -737,6 +739,7 @@ class Server:
                     target=target,
                     http_port=http_port,
                     server_device=HassUpnpServiceDevice,
+                    boot_id=boot_id,
                     options={
                         SSDP_SEARCH_RESPONDER_OPTIONS: {
                             SSDP_SEARCH_RESPONDER_OPTION_ALWAYS_REPLY_WITH_ROOT_DEVICE: True
