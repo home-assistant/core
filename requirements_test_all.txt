@@ -528,7 +528,7 @@ foobot_async==1.0.0
 forecast_solar==2.2.0
 
 # homeassistant.components.freebox
-freebox-api==1.0.0
+freebox-api==1.0.1
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
