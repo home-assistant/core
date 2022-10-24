@@ -341,7 +341,7 @@ class MQTT:
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
-        self._cleanup_on_unload: list[Callable] = []
+        self._cleanup_on_unload: list[Callable[[], None]] = []
 
         self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
         self._pending_operations: dict[int, asyncio.Event] = {}

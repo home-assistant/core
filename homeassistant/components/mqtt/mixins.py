@@ -662,7 +662,9 @@ def stop_discovery_updates(
     clear_discovery_hash(hass, discovery_hash)
 
 
-async def async_remove_discovery_payload(hass: HomeAssistant, discovery_data: dict):
+async def async_remove_discovery_payload(
+    hass: HomeAssistant, discovery_data: DiscoveryInfoType
+) -> None:
     """Clear retained discovery topic in broker to avoid rediscovery after a restart of HA."""
     discovery_topic = discovery_data[ATTR_DISCOVERY_TOPIC]
     await async_publish(hass, discovery_topic, "", retain=True)
@@ -820,7 +822,7 @@ class MqttDiscoveryUpdate(Entity):
         """Initialize the discovery update mixin."""
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
-        self._remove_discovery_updated: Callable | None = None
+        self._remove_discovery_updated: Callable[[], None] | None = None
         self._removed_from_hass = False
         if discovery_data is None:
             return
@@ -1169,7 +1171,7 @@ def update_device(
     device_info = device_info_from_specifications(config[CONF_DEVICE])
 
     if config_entry_id is not None and device_info is not None:
-        update_device_info = cast(dict, device_info)
+        update_device_info = cast(dict[str, Any], device_info)
         update_device_info["config_entry_id"] = config_entry_id
         device = device_registry.async_get_or_create(**update_device_info)
 
