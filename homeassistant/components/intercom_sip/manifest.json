@@ -1,0 +1,11 @@
+{
+  "domain": "intercom_sip",
+  "name": "SIP Inercom",
+  "documentation": "https://github.com/home-assistant/example-custom-config/tree/master/custom_components/example_sensor/",
+  "dependencies": [],
+  "codeowners": ["@dionisis"],
+  "requirements": ["pyvoip==1.6.2"],
+  "iot_class": "local_polling",
+  "version": "0.1.0",
+  "config_flow": false
+}

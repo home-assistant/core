@@ -44,6 +44,7 @@ from homeassistant.const import (  # noqa: F401, pylint: disable=[hass-deprecate
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
     DEVICE_CLASS_VOLTAGE,
+    DEVICE_CLASS_INTERCOM,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -196,6 +197,8 @@ class SensorDeviceClass(StrEnum):
 
     Weight is used instead of mass to fit with every day language.
     """
+
+    INTERCOM = "intercom"
 
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
