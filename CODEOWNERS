@@ -352,6 +352,8 @@ build.json @home-assistant/supervisor
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/envisalink/ @ufodone
 /homeassistant/components/ephember/ @ttroy50
+/homeassistant/components/epic_games_store/ @Quentame
+/tests/components/epic_games_store/ @Quentame
 /homeassistant/components/epson/ @pszafer
 /tests/components/epson/ @pszafer
 /homeassistant/components/epsonworkforce/ @ThaStealth
