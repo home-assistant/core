@@ -246,7 +246,7 @@ async def test_nibegw_invalid_host(hass: HomeAssistant, mock_connection: Mock) -
     """Test we handle cannot connect error."""
     result = await _get_connection_form(hass, "nibegw")
 
-    mock_connection.return_value.read_coil.side_effect = gaierror()
+    mock_connection.read_coil.side_effect = gaierror()
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {**MOCK_FLOW_NIBEGW_USERDATA, "ip_address": "abcd"}
