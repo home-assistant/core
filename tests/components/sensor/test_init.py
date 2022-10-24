@@ -670,7 +670,7 @@ async def test_custom_unit_change(
     [
         # Distance
         (
-            IMPERIAL_SYSTEM,
+            US_CUSTOMARY_SYSTEM,
             LENGTH_KILOMETERS,
             LENGTH_MILES,
             LENGTH_METERS,
@@ -799,7 +799,7 @@ async def test_unit_conversion_priority(
     [
         # Distance
         (
-            IMPERIAL_SYSTEM,
+            US_CUSTOMARY_SYSTEM,
             LENGTH_KILOMETERS,
             LENGTH_YARD,
             LENGTH_METERS,
