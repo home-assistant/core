@@ -76,7 +76,7 @@ class FreeboxSwitch(SwitchEntity):
         self.entity_description = entity_description
         self._router = router
         self._attr_device_info = self._router.device_info
-        self._attr_unique_id = f"{self._router.mac} {self.entity_description.key}"
+        self._attr_unique_id = f"{self._router.mac} {self.entity_description.name}"
 
     async def _async_set_state(self, enabled: bool):
         """Turn the switch on or off."""
