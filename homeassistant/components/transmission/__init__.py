@@ -9,7 +9,7 @@ import transmissionrpc
 from transmissionrpc.error import TransmissionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -21,11 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -156,8 +152,11 @@ async def get_api(hass, entry):
 def _get_client(hass: HomeAssistant, data: dict[str, Any]) -> TransmissionClient | None:
     """Return client from integration name or entry_id."""
     if entry_id := data.get(CONF_ENTRY_ID):
-        if hass.config_entries.async_get_entry(entry_id):
+        if (
+            entry := hass.config_entries.async_get_entry(entry_id)
+        ) and entry.state == ConfigEntryState.LOADED:
             return hass.data[DOMAIN][entry_id]
+        return None
 
     # to be removed once name key is removed
     if CONF_NAME in data:
@@ -165,7 +164,7 @@ def _get_client(hass: HomeAssistant, data: dict[str, Any]) -> TransmissionClient
             hass,
             DOMAIN,
             "deprecated_key",
-            breaks_in_ha_version="2022.12.0",
+            breaks_in_ha_version="2023.1.0",
             is_fixable=True,
             is_persistent=True,
             severity=IssueSeverity.WARNING,
@@ -173,7 +172,7 @@ def _get_client(hass: HomeAssistant, data: dict[str, Any]) -> TransmissionClient
         )
 
         _LOGGER.warning(
-            'The "name" key in the Transmission services is deprecated and will be removed in "2022.12.0"; '
+            'The "name" key in the Transmission services is deprecated and will be removed in "2023.1.0"; '
             'use the "entry_id" key instead to identity which entry to call'
         )
         for entry in hass.config_entries.async_entries(DOMAIN):
@@ -223,7 +222,7 @@ class TransmissionClient:
         def add_torrent(service: ServiceCall) -> None:
             """Add new torrent to download."""
             if not (tm_client := _get_client(self.hass, service.data)):
-                raise HomeAssistantError("Transmission instance is not found")
+                raise ValueError("Transmission instance is not found")
 
             torrent = service.data[ATTR_TORRENT]
             if torrent.startswith(
@@ -239,7 +238,7 @@ class TransmissionClient:
         def start_torrent(service: ServiceCall) -> None:
             """Start torrent."""
             if not (tm_client := _get_client(self.hass, service.data)):
-                raise HomeAssistantError("Transmission instance is not found")
+                raise ValueError("Transmission instance is not found")
 
             torrent_id = service.data[CONF_ID]
             tm_client.tm_api.start_torrent(torrent_id)
@@ -248,7 +247,7 @@ class TransmissionClient:
         def stop_torrent(service: ServiceCall) -> None:
             """Stop torrent."""
             if not (tm_client := _get_client(self.hass, service.data)):
-                raise HomeAssistantError("Transmission instance is not found")
+                raise ValueError("Transmission instance is not found")
 
             torrent_id = service.data[CONF_ID]
             tm_client.tm_api.stop_torrent(torrent_id)
@@ -257,7 +256,7 @@ class TransmissionClient:
         def remove_torrent(service: ServiceCall) -> None:
             """Remove torrent."""
             if not (tm_client := _get_client(self.hass, service.data)):
-                raise HomeAssistantError("Transmission instance is not found")
+                raise ValueError("Transmission instance is not found")
 
             torrent_id = service.data[CONF_ID]
             delete_data = service.data[ATTR_DELETE_DATA]

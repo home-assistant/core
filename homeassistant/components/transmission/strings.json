@@ -48,7 +48,7 @@
         "step": {
           "confirm": {
             "title": "The name key in Transmission services is being removed",
-            "description": "Update any automations or scripts that use this service and replace the name key by the entry_id key."
+            "description": "Update any automations or scripts that use this service and replace the name key with the entry_id key."
           }
         }
       }
