@@ -1,8 +1,10 @@
 """The tests for the Scrape sensor platform."""
 from __future__ import annotations
 
+from datetime import datetime
 from unittest.mock import patch
 
+from homeassistant.components.scrape.sensor import SCAN_INTERVAL
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -11,14 +13,16 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from . import MockRestData, return_config
+
+from tests.common import async_fire_time_changed
 
 DOMAIN = "scrape"
 
@@ -155,12 +159,13 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "Current Version: 2021.12.10"
 
-    mocker.data = None
-    await async_update_entity(hass, "sensor.ha_version")
+    mocker.payload = "test_scrape_sensor_no_data"
+    async_fire_time_changed(hass, datetime.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
 
-    assert mocker.data is None
+    state = hass.states.get("sensor.ha_version")
     assert state is not None
-    assert state.state == "Current Version: 2021.12.10"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_scrape_sensor_attribute_and_tag(hass: HomeAssistant) -> None:
