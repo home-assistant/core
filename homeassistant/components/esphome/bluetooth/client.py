@@ -50,7 +50,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         disconnected_future = (
             self._disconnected_future  # pylint: disable=protected-access
         )
-        if not disconnected_future:  # pylint: disable=protected-access
+        if not disconnected_future:
             raise BleakError("Not connected")
         done, _ = await asyncio.wait(
             (func(self, *args, **kwargs), disconnected_future),
