@@ -39,85 +39,92 @@ def test_invalid_units():
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
+            length=LENGTH_METERS,
+            length_conversions={},
+            mass=MASS_GRAMS,
+            pressure=PRESSURE_PA,
             temperature=INVALID_UNIT,
-            length=LENGTH_METERS,
-            wind_speed=SPEED_METERS_PER_SECOND,
             volume=VOLUME_LITERS,
-            mass=MASS_GRAMS,
-            pressure=PRESSURE_PA,
-            accumulated_precipitation=LENGTH_MILLIMETERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            temperature=TEMP_CELSIUS,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
             length=INVALID_UNIT,
-            wind_speed=SPEED_METERS_PER_SECOND,
-            volume=VOLUME_LITERS,
+            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
-            accumulated_precipitation=LENGTH_MILLIMETERS,
+            temperature=TEMP_CELSIUS,
+            volume=VOLUME_LITERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            temperature=TEMP_CELSIUS,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
             length=LENGTH_METERS,
+            length_conversions={},
+            mass=MASS_GRAMS,
+            pressure=PRESSURE_PA,
+            temperature=TEMP_CELSIUS,
+            volume=VOLUME_LITERS,
             wind_speed=INVALID_UNIT,
-            volume=VOLUME_LITERS,
-            mass=MASS_GRAMS,
-            pressure=PRESSURE_PA,
-            accumulated_precipitation=LENGTH_MILLIMETERS,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            temperature=TEMP_CELSIUS,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
             length=LENGTH_METERS,
-            wind_speed=SPEED_METERS_PER_SECOND,
+            length_conversions={},
+            mass=MASS_GRAMS,
+            pressure=PRESSURE_PA,
+            temperature=TEMP_CELSIUS,
             volume=INVALID_UNIT,
-            mass=MASS_GRAMS,
-            pressure=PRESSURE_PA,
-            accumulated_precipitation=LENGTH_MILLIMETERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            temperature=TEMP_CELSIUS,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
             length=LENGTH_METERS,
-            wind_speed=SPEED_METERS_PER_SECOND,
-            volume=VOLUME_LITERS,
+            length_conversions={},
             mass=INVALID_UNIT,
             pressure=PRESSURE_PA,
-            accumulated_precipitation=LENGTH_MILLIMETERS,
+            temperature=TEMP_CELSIUS,
+            volume=VOLUME_LITERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            temperature=TEMP_CELSIUS,
+            accumulated_precipitation=LENGTH_MILLIMETERS,
             length=LENGTH_METERS,
-            wind_speed=SPEED_METERS_PER_SECOND,
-            volume=VOLUME_LITERS,
+            length_conversions={},
             mass=MASS_GRAMS,
             pressure=INVALID_UNIT,
-            accumulated_precipitation=LENGTH_MILLIMETERS,
+            temperature=TEMP_CELSIUS,
+            volume=VOLUME_LITERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
         UnitSystem(
             SYSTEM_NAME,
-            temperature=TEMP_CELSIUS,
+            accumulated_precipitation=INVALID_UNIT,
             length=LENGTH_METERS,
-            wind_speed=SPEED_METERS_PER_SECOND,
-            volume=VOLUME_LITERS,
+            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
-            accumulated_precipitation=INVALID_UNIT,
+            temperature=TEMP_CELSIUS,
+            volume=VOLUME_LITERS,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
 

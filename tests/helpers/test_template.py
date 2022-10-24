@@ -43,13 +43,14 @@ def _set_up_units(hass):
     """Set up the tests."""
     hass.config.units = UnitSystem(
         "custom",
-        temperature=TEMP_CELSIUS,
+        accumulated_precipitation=LENGTH_MILLIMETERS,
         length=LENGTH_METERS,
-        wind_speed=SPEED_KILOMETERS_PER_HOUR,
-        volume=VOLUME_LITERS,
+        length_conversions={},
         mass=MASS_GRAMS,
         pressure=PRESSURE_PA,
-        accumulated_precipitation=LENGTH_MILLIMETERS,
+        temperature=TEMP_CELSIUS,
+        volume=VOLUME_LITERS,
+        wind_speed=SPEED_KILOMETERS_PER_HOUR,
     )
 
 
