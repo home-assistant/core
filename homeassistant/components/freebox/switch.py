@@ -1,8 +1,6 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -20,28 +18,11 @@ from .router import FreeboxRouter
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class FreeboxSwitchRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    state_fn: Callable[[FreeboxRouter], Any]
-    on_off_fn: Callable[[FreeboxRouter], Any]
-
-
-@dataclass
-class FreeboxSwitchEntityDescription(
-    SwitchEntityDescription, FreeboxSwitchRequiredKeysMixin
-):
-    """Describes Freebox switch entity."""
-
-
 SWITCH_DESCRIPTIONS = [
-    FreeboxSwitchEntityDescription(
+    SwitchEntityDescription(
         key="wifi",
         name="Freebox WiFi",
         entity_category=EntityCategory.CONFIG,
-        state_fn=lambda router: router.wifi.get_global_config,
-        on_off_fn=lambda router: router.wifi.set_global_config,
     )
 ]
 
@@ -61,10 +42,8 @@ async def async_setup_entry(
 class FreeboxSwitch(SwitchEntity):
     """Representation of a freebox switch."""
 
-    entity_description: FreeboxSwitchEntityDescription
-
     def __init__(
-        self, router: FreeboxRouter, entity_description: FreeboxSwitchEntityDescription
+        self, router: FreeboxRouter, entity_description: SwitchEntityDescription
     ) -> None:
         """Initialize the switch."""
         self.entity_description = entity_description
@@ -75,7 +54,7 @@ class FreeboxSwitch(SwitchEntity):
     async def _async_set_state(self, enabled: bool):
         """Turn the switch on or off."""
         try:
-            await self.entity_description.on_off_fn(self._router)({"enabled": enabled})
+            await self._router.wifi.set_global_config({"enabled": enabled})
         except InsufficientPermissionsError:
             _LOGGER.warning(
                 "Home Assistant does not have permissions to modify the Freebox settings. Please refer to documentation"
@@ -91,5 +70,5 @@ class FreeboxSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Get the state and update it."""
-        datas = await self.entity_description.state_fn(self._router)()
+        datas = await self._router.wifi.get_global_config()
         self._attr_is_on = bool(datas["enabled"])
