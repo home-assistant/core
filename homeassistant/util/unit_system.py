@@ -2,22 +2,22 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
-    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-    LENGTH_MILLIMETERS,
     MASS,
     MASS_GRAMS,
     MASS_KILOGRAMS,
     MASS_OUNCES,
     MASS_POUNDS,
+    PRECIPITATION_INCHES,
+    PRECIPITATION_MILLIMETERS,
     PRESSURE,
     PRESSURE_PA,
     PRESSURE_PSI,
@@ -42,8 +42,12 @@ from .unit_conversion import (
     VolumeConverter,
 )
 
+if TYPE_CHECKING:
+    from homeassistant.components.sensor import SensorDeviceClass
+
 _CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
 _CONF_UNIT_SYSTEM_METRIC: Final = "metric"
+_CONF_UNIT_SYSTEM_US_CUSTOMARY: Final = "us_customary"
 
 LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
@@ -86,13 +90,15 @@ class UnitSystem:
     def __init__(
         self,
         name: str,
-        temperature: str,
+        *,
+        accumulated_precipitation: str,
         length: str,
-        wind_speed: str,
-        volume: str,
+        length_conversions: dict[str | None, str],
         mass: str,
         pressure: str,
-        accumulated_precipitation: str,
+        temperature: str,
+        volume: str,
+        wind_speed: str,
     ) -> None:
         """Initialize the unit system object."""
         errors: str = ", ".join(
@@ -120,6 +126,7 @@ class UnitSystem:
         self.pressure_unit = pressure
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
+        self._length_conversions = length_conversions
 
     @property
     def name(self) -> str:
@@ -130,6 +137,9 @@ class UnitSystem:
             "Please adjust to use instance check instead.",
             error_if_core=False,
         )
+        if self is IMPERIAL_SYSTEM:
+            # kept for compatibility reasons, with associated warning above
+            return _CONF_UNIT_SYSTEM_IMPERIAL
         return self._name
 
     @property
@@ -210,38 +220,65 @@ class UnitSystem:
             WIND_SPEED: self.wind_speed_unit,
         }
 
+    def get_converted_unit(
+        self,
+        device_class: SensorDeviceClass | str | None,
+        original_unit: str | None,
+    ) -> str | None:
+        """Return converted unit given a device class or an original unit."""
+        if device_class == "distance":
+            return self._length_conversions.get(original_unit)
+
+        return None
+
 
 def get_unit_system(key: str) -> UnitSystem:
     """Get unit system based on key."""
-    if key == _CONF_UNIT_SYSTEM_IMPERIAL:
-        return IMPERIAL_SYSTEM
+    if key == _CONF_UNIT_SYSTEM_US_CUSTOMARY:
+        return US_CUSTOMARY_SYSTEM
     if key == _CONF_UNIT_SYSTEM_METRIC:
         return METRIC_SYSTEM
     raise ValueError(f"`{key}` is not a valid unit system key")
 
 
+def _deprecated_unit_system(value: str) -> str:
+    """Convert deprecated unit system."""
+
+    if value == _CONF_UNIT_SYSTEM_IMPERIAL:
+        # need to add warning in 2023.1
+        return _CONF_UNIT_SYSTEM_US_CUSTOMARY
+    return value
+
+
 validate_unit_system = vol.All(
-    vol.Lower, vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_IMPERIAL)
+    vol.Lower,
+    _deprecated_unit_system,
+    vol.Any(_CONF_UNIT_SYSTEM_METRIC, _CONF_UNIT_SYSTEM_US_CUSTOMARY),
 )
 
 METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
-    TEMP_CELSIUS,
-    LENGTH_KILOMETERS,
-    SPEED_METERS_PER_SECOND,
-    VOLUME_LITERS,
-    MASS_GRAMS,
-    PRESSURE_PA,
-    LENGTH_MILLIMETERS,
+    accumulated_precipitation=PRECIPITATION_MILLIMETERS,
+    length=LENGTH_KILOMETERS,
+    length_conversions={LENGTH_MILES: LENGTH_KILOMETERS},
+    mass=MASS_GRAMS,
+    pressure=PRESSURE_PA,
+    temperature=TEMP_CELSIUS,
+    volume=VOLUME_LITERS,
+    wind_speed=SPEED_METERS_PER_SECOND,
 )
 
-IMPERIAL_SYSTEM = UnitSystem(
-    _CONF_UNIT_SYSTEM_IMPERIAL,
-    TEMP_FAHRENHEIT,
-    LENGTH_MILES,
-    SPEED_MILES_PER_HOUR,
-    VOLUME_GALLONS,
-    MASS_POUNDS,
-    PRESSURE_PSI,
-    LENGTH_INCHES,
+US_CUSTOMARY_SYSTEM = UnitSystem(
+    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+    accumulated_precipitation=PRECIPITATION_INCHES,
+    length=LENGTH_MILES,
+    length_conversions={LENGTH_KILOMETERS: LENGTH_MILES},
+    mass=MASS_POUNDS,
+    pressure=PRESSURE_PSI,
+    temperature=TEMP_FAHRENHEIT,
+    volume=VOLUME_GALLONS,
+    wind_speed=SPEED_MILES_PER_HOUR,
 )
+
+IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM
+"""IMPERIAL_SYSTEM is deprecated. Please use US_CUSTOMARY_SYSTEM instead."""

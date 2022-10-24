@@ -3,7 +3,8 @@
   "name": "Sentry",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sentry",
-  "requirements": ["sentry-sdk==1.9.10"],
+  "requirements": ["sentry-sdk==1.10.0"],
   "codeowners": ["@dcramer", "@frenck"],
+  "integration_type": "service",
   "iot_class": "cloud_polling"
 }

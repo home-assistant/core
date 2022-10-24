@@ -11,7 +11,6 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     TIME_MINUTES,
@@ -22,21 +21,15 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
     ATTRIBUTION,
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
-    CONF_OPTIONS,
     CONF_ORIGIN,
-    CONF_TRAVEL_MODE,
-    CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
-    UNITS_IMPERIAL,
-    UNITS_METRIC,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,32 +53,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Google travel time sensor entry."""
-    if not config_entry.options:
-        new_data = config_entry.data.copy()
-        options = new_data.pop(CONF_OPTIONS, {})
-
-        if CONF_UNITS not in options:
-            options[CONF_UNITS] = UNITS_METRIC
-            if hass.config.units is IMPERIAL_SYSTEM:
-                options[CONF_UNITS] = UNITS_IMPERIAL
-
-        if CONF_TRAVEL_MODE in new_data:
-            wstr = (
-                "Google Travel Time: travel_mode is deprecated, please "
-                "add mode to the options dictionary instead!"
-            )
-            _LOGGER.warning(wstr)
-            travel_mode = new_data.pop(CONF_TRAVEL_MODE)
-            if CONF_MODE not in options:
-                options[CONF_MODE] = travel_mode
-
-        if CONF_MODE not in options:
-            options[CONF_MODE] = "driving"
-
-        hass.config_entries.async_update_entry(
-            config_entry, data=new_data, options=options
-        )
-
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]

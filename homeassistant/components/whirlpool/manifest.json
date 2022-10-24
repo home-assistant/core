@@ -4,9 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/whirlpool",
   "requirements": ["whirlpool-sixth-sense==0.18.0"],
-  "supported_brands": {
-    "maytag": "Maytag"
-  },
   "codeowners": ["@abmantis"],
   "iot_class": "cloud_push",
   "loggers": ["whirlpool"]

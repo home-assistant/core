@@ -32,6 +32,7 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
     Platform,
 )
@@ -308,6 +309,12 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         device_class="homekit_controller__thread_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_status_to_str,
+    ),
+    CharacteristicsTypes.VENDOR_NETATMO_NOISE: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_NETATMO_NOISE,
+        name="Noise",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SOUND_PRESSURE_DB,
     ),
 }
 

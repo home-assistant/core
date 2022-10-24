@@ -509,6 +509,7 @@ def retryable_database_job(
                 assert instance.engine is not None
                 if (
                     instance.engine.dialect.name == SupportedDialect.MYSQL
+                    and err.orig
                     and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
                 ):
                     _LOGGER.info(
