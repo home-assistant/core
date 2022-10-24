@@ -271,6 +271,10 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             reason="replaced by local constants",
             constant=re.compile(r"^(CONF_UNIT_SYSTEM_(\w*))$"),
         ),
+        ObsoleteImportMatch(
+            reason="replaced by US_CUSTOMARY_SYSTEM",
+            constant=re.compile(r"^IMPERIAL_SYSTEM$"),
+        ),
     ],
     "homeassistant.core": [
         ObsoleteImportMatch(
