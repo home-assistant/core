@@ -49,7 +49,7 @@ DATA_ADDON_MANAGER = f"{DOMAIN}_addon_manager"
 @callback
 def get_addon_manager(hass: HomeAssistant) -> AddonManager:
     """Get the add-on manager."""
-    return AddonManager(hass)
+    return AddonManager(hass, ADDON_SLUG)
 
 
 def api_error(
@@ -104,8 +104,9 @@ class AddonManager:
     to keep track of running add-on tasks.
     """
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, addon_slug: str) -> None:
         """Set up the add-on manager."""
+        self.addon_slug = addon_slug
         self._hass = hass
         self._install_task: asyncio.Task | None = None
         self._restart_task: asyncio.Task | None = None
@@ -126,7 +127,9 @@ class AddonManager:
     @api_error("Failed to get Z-Wave JS add-on discovery info")
     async def async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""
-        discovery_info = await async_get_addon_discovery_info(self._hass, ADDON_SLUG)
+        discovery_info = await async_get_addon_discovery_info(
+            self._hass, self.addon_slug
+        )
 
         if not discovery_info:
             raise AddonError("Failed to get Z-Wave JS add-on discovery info")
@@ -137,7 +140,7 @@ class AddonManager:
     @api_error("Failed to get the Z-Wave JS add-on info")
     async def async_get_addon_info(self) -> AddonInfo:
         """Return and cache Z-Wave JS add-on info."""
-        addon_store_info = await async_get_addon_store_info(self._hass, ADDON_SLUG)
+        addon_store_info = await async_get_addon_store_info(self._hass, self.addon_slug)
         LOGGER.debug("Add-on store info: %s", addon_store_info)
         if not addon_store_info["installed"]:
             return AddonInfo(
@@ -147,7 +150,7 @@ class AddonManager:
                 version=None,
             )
 
-        addon_info = await async_get_addon_info(self._hass, ADDON_SLUG)
+        addon_info = await async_get_addon_info(self._hass, self.addon_slug)
         addon_state = self.async_get_addon_state(addon_info)
         return AddonInfo(
             options=addon_info["options"],
@@ -174,12 +177,12 @@ class AddonManager:
     async def async_set_addon_options(self, config: dict) -> None:
         """Set Z-Wave JS add-on options."""
         options = {"options": config}
-        await async_set_addon_options(self._hass, ADDON_SLUG, options)
+        await async_set_addon_options(self._hass, self.addon_slug, options)
 
     @api_error("Failed to install the Z-Wave JS add-on")
     async def async_install_addon(self) -> None:
         """Install the Z-Wave JS add-on."""
-        await async_install_addon(self._hass, ADDON_SLUG)
+        await async_install_addon(self._hass, self.addon_slug)
 
     @callback
     def async_schedule_install_addon(self, catch_error: bool = False) -> asyncio.Task:
@@ -228,7 +231,7 @@ class AddonManager:
     @api_error("Failed to uninstall the Z-Wave JS add-on")
     async def async_uninstall_addon(self) -> None:
         """Uninstall the Z-Wave JS add-on."""
-        await async_uninstall_addon(self._hass, ADDON_SLUG)
+        await async_uninstall_addon(self._hass, self.addon_slug)
 
     @api_error("Failed to update the Z-Wave JS add-on")
     async def async_update_addon(self) -> None:
@@ -242,7 +245,7 @@ class AddonManager:
             return
 
         await self.async_create_backup()
-        await async_update_addon(self._hass, ADDON_SLUG)
+        await async_update_addon(self._hass, self.addon_slug)
 
     @callback
     def async_schedule_update_addon(self, catch_error: bool = False) -> asyncio.Task:
@@ -261,12 +264,12 @@ class AddonManager:
     @api_error("Failed to start the Z-Wave JS add-on")
     async def async_start_addon(self) -> None:
         """Start the Z-Wave JS add-on."""
-        await async_start_addon(self._hass, ADDON_SLUG)
+        await async_start_addon(self._hass, self.addon_slug)
 
     @api_error("Failed to restart the Z-Wave JS add-on")
     async def async_restart_addon(self) -> None:
         """Restart the Z-Wave JS add-on."""
-        await async_restart_addon(self._hass, ADDON_SLUG)
+        await async_restart_addon(self._hass, self.addon_slug)
 
     @callback
     def async_schedule_start_addon(self, catch_error: bool = False) -> asyncio.Task:
@@ -297,7 +300,7 @@ class AddonManager:
     @api_error("Failed to stop the Z-Wave JS add-on")
     async def async_stop_addon(self) -> None:
         """Stop the Z-Wave JS add-on."""
-        await async_stop_addon(self._hass, ADDON_SLUG)
+        await async_stop_addon(self._hass, self.addon_slug)
 
     async def async_configure_addon(
         self,
@@ -358,12 +361,12 @@ class AddonManager:
     async def async_create_backup(self) -> None:
         """Create a partial backup of the Z-Wave JS add-on."""
         addon_info = await self.async_get_addon_info()
-        name = f"addon_{ADDON_SLUG}_{addon_info.version}"
+        name = f"addon_{self.addon_slug}_{addon_info.version}"
 
         LOGGER.debug("Creating backup: %s", name)
         await async_create_backup(
             self._hass,
-            {"name": name, "addons": [ADDON_SLUG]},
+            {"name": name, "addons": [self.addon_slug]},
             partial=True,
         )
 
