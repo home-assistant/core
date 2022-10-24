@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from oralb_ble import SensorDeviceClass as OralBSensorDeviceClass, SensorUpdate, Units
+from oralb_ble import OralBSensor, SensorUpdate
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -26,26 +26,28 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_hass
 
-SENSOR_DESCRIPTIONS = {
-    "counter": SensorEntityDescription(
-        key="counter",
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    OralBSensor.COUNTER: SensorEntityDescription(
+        key=OralBSensor.COUNTER,
     ),
-    "sector": SensorEntityDescription(
-        key="sector",
+    OralBSensor.SECTOR: SensorEntityDescription(
+        key=OralBSensor.SECTOR,
     ),
-    "number_of_sectors": SensorEntityDescription(
-        key="number_of_sectors",
+    OralBSensor.NUMBER_OF_SECTORS: SensorEntityDescription(
+        key=OralBSensor.NUMBER_OF_SECTORS,
     ),
-    "sector_timer": SensorEntityDescription(
-        key="sector_timer",
+    OralBSensor.SECTOR_TIMER: SensorEntityDescription(
+        key=OralBSensor.SECTOR_TIMER,
     ),
-    "toothbrush_state": SensorEntityDescription(key="toothbrush_state"),
-    "pressure": SensorEntityDescription(key="pressure"),
-    "mode": SensorEntityDescription(
-        key="mode",
+    OralBSensor.TOOTHBRUSH_STATE: SensorEntityDescription(
+        key=OralBSensor.TOOTHBRUSH_STATE
     ),
-    "signal_strength": SensorEntityDescription(
-        key=f"{OralBSensorDeviceClass.SIGNAL_STRENGTH}_{Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
+    OralBSensor.PRESSURE: SensorEntityDescription(key=OralBSensor.PRESSURE),
+    OralBSensor.MODE: SensorEntityDescription(
+        key=OralBSensor.MODE,
+    ),
+    OralBSensor.SIGNAL_STRENGTH: SensorEntityDescription(
+        key=OralBSensor.SIGNAL_STRENGTH,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
