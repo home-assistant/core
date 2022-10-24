@@ -2482,7 +2482,7 @@
     },
     "iss": {
       "name": "International Space Station (ISS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
