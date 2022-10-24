@@ -47,9 +47,18 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     async def _async_wrap_bluetooth_connected_operation(
         self: "ESPHomeClient", *args: Any, **kwargs: Any
     ) -> Any:
-        if not self._is_connected:  # pylint: disable=protected-access
+        disconnected_future = (
+            self._disconnected_future  # pylint: disable=protected-access
+        )
+        if not disconnected_future:
             raise BleakError("Not connected")
-        return await func(self, *args, **kwargs)
+        done, _ = await asyncio.wait(
+            (func(self, *args, **kwargs), disconnected_future),
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if disconnected_future.done():
+            disconnected_future.result()
+        return done[0]
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
@@ -91,6 +100,7 @@ class ESPHomeClient(BaseBleakClient):
         self._mtu: int | None = None
         self._cancel_connection_state: CALLBACK_TYPE | None = None
         self._notify_cancels: dict[int, Callable[[], Coroutine[Any, Any, None]]] = {}
+        self._disconnected_future: asyncio.Future[None] | None = None
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
@@ -114,6 +124,13 @@ class ESPHomeClient(BaseBleakClient):
         _LOGGER.debug("%s: BLE device disconnected", self._source)
         self._is_connected = False
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
+        if self._disconnected_future and not self._disconnected_future.done():
+            self._disconnected_future.set_exception(
+                BleakError(
+                    f"{self._ble_device.name} ({self._ble_device.address}): Disconnected during operation"
+                )
+            )
+            self._disconnected_future = None
         self._async_call_bleak_disconnected_callback()
         self._unsubscribe_connection_state()
 
@@ -184,6 +201,7 @@ class ESPHomeClient(BaseBleakClient):
         )
         await connected_future
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
+        self._disconnected_future = asyncio.Future()
         return True
 
     @api_error_as_bleak_error
