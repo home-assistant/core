@@ -525,15 +525,11 @@ TIME_YEARS: Final = "y"
 
 # Length units
 LENGTH_MILLIMETERS: Final = "mm"
-"""Note: for precipitation, please use PRECIPITATION_MILLIMETERS"""
-
 LENGTH_CENTIMETERS: Final = "cm"
 LENGTH_METERS: Final = "m"
 LENGTH_KILOMETERS: Final = "km"
 
 LENGTH_INCHES: Final = "in"
-"""Note: for precipitation, please use PRECIPITATION_INCHES"""
-
 LENGTH_FEET: Final = "ft"
 LENGTH_YARD: Final = "yd"
 LENGTH_MILES: Final = "mi"
