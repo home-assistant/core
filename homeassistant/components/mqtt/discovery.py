@@ -62,6 +62,7 @@ SUPPORTED_COMPONENTS = [
     "sensor",
     "switch",
     "tag",
+    "update",
     "vacuum",
 ]
 
