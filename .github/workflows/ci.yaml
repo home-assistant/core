@@ -964,23 +964,35 @@ jobs:
         run: |
           ./script/check_dirty
 
-  coverage:
-    name: Upload test coverage to Codecov
+  coverage-partial:
+    name: Upload partial test coverage to Codecov
+    runs-on: ubuntu-20.04
+    needs:
+      - info
+      - pytest
+    if: needs.info.outputs.test_full_suite != 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.1.0
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v3
+      - name: Upload coverage to Codecov (partial coverage)
+        uses: codecov/codecov-action@v3.1.1
+
+  coverage-full:
+    name: Upload full test coverage to Codecov
     runs-on: ubuntu-20.04
     needs:
       - info
       - pytest
       - pytest-mariadb
+    if: needs.info.outputs.test_full_suite == 'true'
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.1.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
-        if: needs.info.outputs.test_full_suite == 'true'
         uses: codecov/codecov-action@v3.1.1
         with:
           flags: full-suite
-      - name: Upload coverage to Codecov (partial coverage)
-        if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v3.1.1
