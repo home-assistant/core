@@ -162,7 +162,7 @@ class AddonManager:
 
     @callback
     def async_get_addon_state(self, addon_info: dict[str, Any]) -> AddonState:
-        """Return the current state of the manager add-on."""
+        """Return the current state of the managed add-on."""
         addon_state = AddonState.NOT_RUNNING
 
         if addon_info["state"] == "started":
@@ -182,12 +182,12 @@ class AddonManager:
 
     @api_error("Failed to install the {addon_name} add-on")
     async def async_install_addon(self) -> None:
-        """Install the manager add-on."""
+        """Install the managed add-on."""
         await async_install_addon(self._hass, self.addon_slug)
 
     @callback
     def async_schedule_install_addon(self, catch_error: bool = False) -> asyncio.Task:
-        """Schedule a task that installs the manager add-on.
+        """Schedule a task that installs the managed add-on.
 
         Only schedule a new install task if the there's no running task.
         """
@@ -206,7 +206,7 @@ class AddonManager:
         addon_config: dict[str, Any],
         catch_error: bool = False,
     ) -> asyncio.Task:
-        """Schedule a task that installs and sets up the manager add-on.
+        """Schedule a task that installs and sets up the managed add-on.
 
         Only schedule a new install task if the there's no running task.
         """
@@ -227,12 +227,12 @@ class AddonManager:
 
     @api_error("Failed to uninstall the {addon_name} add-on")
     async def async_uninstall_addon(self) -> None:
-        """Uninstall the manager add-on."""
+        """Uninstall the managed add-on."""
         await async_uninstall_addon(self._hass, self.addon_slug)
 
     @api_error("Failed to update the {addon_name} add-on")
     async def async_update_addon(self) -> None:
-        """Update the manager add-on if needed."""
+        """Update the managed add-on if needed."""
         addon_info = await self.async_get_addon_info()
 
         if addon_info.state is AddonState.NOT_INSTALLED:
@@ -246,7 +246,7 @@ class AddonManager:
 
     @callback
     def async_schedule_update_addon(self, catch_error: bool = False) -> asyncio.Task:
-        """Schedule a task that updates and sets up the manager add-on.
+        """Schedule a task that updates and sets up the managed add-on.
 
         Only schedule a new update task if the there's no running task.
         """
@@ -260,17 +260,17 @@ class AddonManager:
 
     @api_error("Failed to start the {addon_name} add-on")
     async def async_start_addon(self) -> None:
-        """Start the manager add-on."""
+        """Start the managed add-on."""
         await async_start_addon(self._hass, self.addon_slug)
 
     @api_error("Failed to restart the {addon_name} add-on")
     async def async_restart_addon(self) -> None:
-        """Restart the manager add-on."""
+        """Restart the managed add-on."""
         await async_restart_addon(self._hass, self.addon_slug)
 
     @callback
     def async_schedule_start_addon(self, catch_error: bool = False) -> asyncio.Task:
-        """Schedule a task that starts the manager add-on.
+        """Schedule a task that starts the managed add-on.
 
         Only schedule a new start task if the there's no running task.
         """
@@ -283,7 +283,7 @@ class AddonManager:
 
     @callback
     def async_schedule_restart_addon(self, catch_error: bool = False) -> asyncio.Task:
-        """Schedule a task that restarts the manager add-on.
+        """Schedule a task that restarts the managed add-on.
 
         Only schedule a new restart task if the there's no running task.
         """
@@ -296,7 +296,7 @@ class AddonManager:
 
     @api_error("Failed to stop the {addon_name} add-on")
     async def async_stop_addon(self) -> None:
-        """Stop the manager add-on."""
+        """Stop the managed add-on."""
         await async_stop_addon(self._hass, self.addon_slug)
 
     async def async_configure_addon(
@@ -318,9 +318,9 @@ class AddonManager:
         addon_config: dict[str, Any],
         catch_error: bool = False,
     ) -> asyncio.Task:
-        """Schedule a task that configures and starts the manager add-on.
+        """Schedule a task that configures and starts the managed add-on.
 
-        Only schedule a new setup task if the there's no running task.
+        Only schedule a new setup task if there's no running task.
         """
         if not self._start_task or self._start_task.done():
             LOGGER.info("%s add-on is not running. Starting add-on", self.addon_name)
@@ -336,7 +336,7 @@ class AddonManager:
 
     @api_error("Failed to create a backup of the {addon_name} add-on.")
     async def async_create_backup(self) -> None:
-        """Create a partial backup of the manager add-on."""
+        """Create a partial backup of the managed add-on."""
         addon_info = await self.async_get_addon_info()
         name = f"addon_{self.addon_slug}_{addon_info.version}"
 
@@ -368,4 +368,4 @@ class AddonManager:
 
 
 class AddonError(HomeAssistantError):
-    """Represent an error with the manager add-on."""
+    """Represent an error with the managed add-on."""
