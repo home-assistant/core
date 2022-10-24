@@ -1153,7 +1153,7 @@ pyiqvia==2022.04.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.7
+pyisy==3.0.8
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
