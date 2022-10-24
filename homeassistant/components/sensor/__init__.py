@@ -477,15 +477,14 @@ class SensorEntity(Entity):
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options.
 
-        These will be stored in the entity registry the first time the  entity is seen,
+        These will be stored in the entity registry the first time the entity is seen,
         and then never updated.
         """
         suggested_unit_of_measurement = self.suggested_unit_of_measurement
-        native_unit_of_measurement = self.native_unit_of_measurement
 
         if suggested_unit_of_measurement is None:
             suggested_unit_of_measurement = self.hass.config.units.get_converted_unit(
-                self.device_class, native_unit_of_measurement
+                self.device_class, self.native_unit_of_measurement
             )
 
         if suggested_unit_of_measurement is None:
@@ -548,6 +547,12 @@ class SensorEntity(Entity):
         for example to make a temperature sensor display in °C even if the configured
         unit system prefers °F.
 
+        For sensors without a `unique_id`, this takes precedence over legacy
+        temperature conversion rules only.
+
+        For sensors with a `unique_id`, this is applied only if the unit is not set by the user,
+        and takes precedence over automatic device-class conversion rules.
+
         Note:
             suggested_unit_of_measurement is stored in the entity registry the first time
             the entity is seen, and then never updated.
@@ -570,7 +575,8 @@ class SensorEntity(Entity):
         if not self.registry_entry and self.suggested_unit_of_measurement:
             return self.suggested_unit_of_measurement
 
-        # Third priority: Legacy temperature conversion
+        # Third priority: Legacy temperature conversion, which applies
+        # to both registered and non registered entities
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
