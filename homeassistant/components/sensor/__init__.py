@@ -274,7 +274,7 @@ class SensorDeviceClass(StrEnum):
     SPEED = "speed"
     """Generic speed.
 
-    Unit of measurement: `SPEED_*` or `PRECIPITATION_INTENSITY_*` units
+    Unit of measurement: `SPEED_*` or `PRECIPITATION_*_PER_HOUR` units
     - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
     - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
     - Nautical: `kn`

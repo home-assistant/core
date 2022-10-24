@@ -27,8 +27,8 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
-    PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
-    PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
+    PRECIPITATION_INCHES_PER_HOUR,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     PRESSURE_INHG,
     SPEED_KILOMETERS_PER_HOUR,
@@ -157,12 +157,12 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.RAIN_RATE_MM: SensorEntityDescription(
         key="RAIN_RATE_MM",
-        native_unit_of_measurement=PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.RAIN_RATE_INCHES: SensorEntityDescription(
         key="RAIN_RATE_INCHES",
-        native_unit_of_measurement=PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+        native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_KM: SensorEntityDescription(

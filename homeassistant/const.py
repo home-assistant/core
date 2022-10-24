@@ -606,14 +606,6 @@ REVOLUTIONS_PER_MINUTE: Final = "rpm"
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
 IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
 
-# Precipitation intensity units
-# The derivation of these units is a volume of rain amassing in a container
-# with constant cross section in a given time
-PRECIPITATION_INTENSITY_INCHES_PER_DAY: Final = "in/d"
-PRECIPITATION_INTENSITY_INCHES_PER_HOUR: Final = "in/h"
-PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY: Final = "mm/d"
-PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR: Final = "mm/h"
-
 # Precipitation units
 # The derivation of these units is a volume of rain amassing in a container
 # with constant cross section
@@ -621,10 +613,7 @@ PRECIPITATION_INCHES: Final = "in"
 PRECIPITATION_MILLIMETERS: Final = "mm"
 
 PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
-"""Deprecated: please use PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR"""
-
 PRECIPITATION_INCHES_PER_HOUR: Final = "in/h"
-"""Deprecated: please use PRECIPITATION_INTENSITY_INCHES_PER_HOUR"""
 
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
@@ -642,13 +631,8 @@ SPEED_KNOTS: Final = "kn"
 SPEED_MILES_PER_HOUR: Final = "mph"
 
 SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
-"""Deprecated: please use PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY"""
-
 SPEED_INCHES_PER_DAY: Final = "in/d"
-"""Deprecated: please use PRECIPITATION_INTENSITY_INCHES_PER_DAY"""
-
 SPEED_INCHES_PER_HOUR: Final = "in/h"
-"""Deprecated: please use PRECIPITATION_INTENSITY_INCHES_PER_HOUR"""
 
 
 # Signal_strength units
