@@ -44,6 +44,7 @@ from .const import (
     CONF_WORD_SWAP,
     DOMAIN,
     LOGGER,
+    Series,
 )
 
 PLATFORMS: list[Platform] = [
@@ -194,6 +195,11 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
         self.data[coil.address] = coil
         self.seed[coil.address] = coil
         self.async_update_context_listeners([coil.address])
+
+    @property
+    def series(self) -> Series:
+        """Return which series of pump we are connected to."""
+        return Series.F
 
     @property
     def coils(self) -> list[Coil]:
