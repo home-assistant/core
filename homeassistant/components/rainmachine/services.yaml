@@ -99,11 +99,11 @@ unpause_watering:
           integration: rainmachine
 push_flow_meter_data:
   name: Push Flow Meter Data
-  description: Push Flow Meter data from Home Assistant to the RainMachine device.
+  description: Push Flow Meter data to the RainMachine device.
   fields:
     device_id:
       name: Controller
-      description: The controller whose watering activities should be unpaused
+      description: The controller to send flow meter data to
       required: true
       selector:
         device:
@@ -126,8 +126,8 @@ push_flow_meter_data:
           options:
             - "clicks"
             - "gal"
-            - "m3"
             - "litre"
+            - "m3"
 push_weather_data:
   name: Push Weather Data
   description: >-

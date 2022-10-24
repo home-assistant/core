@@ -86,20 +86,12 @@ CONF_WEATHER = "weather"
 CONF_WIND = "wind"
 
 # Config Validator for Flow Meter Data
-CV_FLOW_METER_VALID_UNITS = [
+CV_FLOW_METER_VALID_UNITS = {
     "clicks",
     "gal",
-    "m3",
     "litre",
-]
-
-
-def valid_flow_meter_units(unit_of_measurement: str) -> str:
-    """Validate the flow meter units are allowed by RainMachine."""
-    unit_of_measurement = str(unit_of_measurement).lower()
-    if unit_of_measurement in CV_FLOW_METER_VALID_UNITS:
-        return unit_of_measurement
-    raise vol.Invalid("Invalid Unit for RainMachine Flow Meter")
+    "m3",
+}
 
 
 # Config Validators for Weather Service Data
@@ -134,7 +126,7 @@ SERVICE_PUSH_FLOW_METER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
     {
         vol.Required(CONF_VALUE): cv.positive_float,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(
-            cv.string, valid_flow_meter_units
+            cv.string, vol.In(CV_FLOW_METER_VALID_UNITS)
         ),
     }
 )
@@ -355,13 +347,10 @@ async def async_setup_entry(  # noqa: C901
         call: ServiceCall, controller: Controller
     ) -> None:
         """Push flow meter data to the device."""
-        payload = {CONF_VALUE: call.data.get(CONF_VALUE)}
-        units = call.data.get(CONF_UNIT_OF_MEASUREMENT)
-        if units is not None:
-            payload[CONF_UNITS] = units
-        return_code = await controller.watering.post_flowmeter(payload)
-        if return_code != 0:
-            LOGGER.error("RainMachine returned an error handling flow meter data")
+        payload = {CONF_VALUE: call.data[CONF_VALUE]}
+        if unit := call.data.get(CONF_UNIT_OF_MEASUREMENT):
+            payload[CONF_UNITS] = unit
+        await controller.watering.post_flowmeter(payload)
 
     @call_with_controller(update_programs_and_zones=False)
     async def async_push_weather_data(
