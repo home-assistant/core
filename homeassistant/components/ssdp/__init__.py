@@ -29,7 +29,12 @@ from async_upnp_client.server import (
     UpnpServerDevice,
     UpnpServerService,
 )
-from async_upnp_client.ssdp import SSDP_PORT, determine_source_target, is_ipv4_address
+from async_upnp_client.ssdp import (
+    SSDP_PORT,
+    determine_source_target,
+    fix_ipv6_address_scope_id,
+    is_ipv4_address,
+)
 from async_upnp_client.ssdp_listener import SsdpDevice, SsdpDeviceTracker, SsdpListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
@@ -213,8 +218,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         UPNP_SERVER: server,
     }
 
-    hass.create_task(scanner.async_start())
-    hass.create_task(server.async_start())
+    await hass.async_create_task(scanner.async_start())
+    await hass.async_create_task(server.async_start())
 
     return True
 
@@ -415,6 +420,7 @@ class Scanner:
             else:
                 source_tuple = (source_ip_str, 0)
             source, target = determine_source_target(source_tuple)
+            source = fix_ipv6_address_scope_id(source) or source
             self._ssdp_listeners.append(
                 SsdpListener(
                     async_callback=self._ssdp_listener_callback,
@@ -722,6 +728,7 @@ class Server:
             else:
                 source_tuple = (source_ip_str, 0)
             source, target = determine_source_target(source_tuple)
+            source = fix_ipv6_address_scope_id(source) or source
             http_port = await _async_find_next_available_port(source)
             _LOGGER.debug("Binding UPnP HTTP server to: %s:%s", source_ip, http_port)
             self._upnp_servers.append(
