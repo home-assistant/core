@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "ID de projecte Device Access"
                 },
-                "description": "Crea un projecte d'acc\u00e9s a dispositius Nest que **requereix una tarifa de 5 $** per configurar-lo.\n1. V\u00e9s a [Consola d'acc\u00e9s al dispositiu]({device_access_console_url}) i a trav\u00e9s del flux de pagament.\n2. Fes clic a **Crea projecte**.\n3. D\u00f3na-li un nom al projecte d'acc\u00e9s a dispositius i feu clic a **Seg\u00fcent**.\n4. Introdueix el teu ID de client OAuth.\n5. Activa els esdeveniments fent clic a **Activa** i **Crea projecte**. \n\nIntrodueix el teu ID de projecte d'acc\u00e9s a dispositiu a continuaci\u00f3 ([m\u00e9s informaci\u00f3]({more_info_url})).\n",
+                "description": "Crea un projecte d'acc\u00e9s a dispositius Nest que **implica el pagament a Google de 5$** per configurar-lo.\n1. V\u00e9s a [Consola d'acc\u00e9s al dispositiu]({device_access_console_url}) i a trav\u00e9s del flux de pagament.\n2. Fes clic a **Crea projecte**.\n3. D\u00f3na-li un nom al projecte d'acc\u00e9s a dispositius i feu clic a **Seg\u00fcent**.\n4. Introdueix el teu ID de client OAuth.\n5. Activa els esdeveniments fent clic a **Activa** i **Crea projecte**. \n\nIntrodueix el teu ID de projecte d'acc\u00e9s a dispositiu a continuaci\u00f3 ([m\u00e9s informaci\u00f3]({more_info_url})).\n",
                 "title": "Nest: crea un projecte Device Access"
             },
             "device_project_upgrade": {

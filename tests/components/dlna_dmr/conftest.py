@@ -116,11 +116,18 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
 
 @pytest.fixture(autouse=True)
 def ssdp_scanner_mock() -> Iterable[Mock]:
-    """Mock the SSDP module."""
+    """Mock the SSDP Scanner."""
     with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
         reg_callback = mock_scanner.return_value.async_register_callback
         reg_callback.return_value = Mock(return_value=None)
         yield mock_scanner.return_value
+
+
+@pytest.fixture(autouse=True)
+def ssdp_server_mock() -> Iterable[Mock]:
+    """Mock the SSDP Server."""
+    with patch("homeassistant.components.ssdp.Server", autospec=True):
+        yield
 
 
 @pytest.fixture(autouse=True)

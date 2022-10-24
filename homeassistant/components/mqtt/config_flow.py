@@ -4,35 +4,47 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import queue
+from ssl import PROTOCOL_TLS, SSLContext, SSLError
 from types import MappingProxyType
 from typing import Any
 
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.x509 import load_pem_x509_certificate
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import (
+    CONF_CLIENT_ID,
     CONF_DISCOVERY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PORT,
+    CONF_PROTOCOL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    FileSelector,
+    FileSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .client import MqttClientSetup
+from .config_integration import CONFIG_SCHEMA_ENTRY
 from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
@@ -40,16 +52,36 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_CERTIFICATE,
+    CONF_CLIENT_CERT,
+    CONF_CLIENT_KEY,
+    CONF_DISCOVERY_PREFIX,
+    CONF_KEEPALIVE,
+    CONF_TLS_INSECURE,
     CONF_WILL_MESSAGE,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
+    DEFAULT_ENCODING,
+    DEFAULT_KEEPALIVE,
     DEFAULT_PORT,
+    DEFAULT_PREFIX,
+    DEFAULT_PROTOCOL,
     DEFAULT_WILL,
     DOMAIN,
+    SUPPORTED_PROTOCOLS,
 )
-from .util import MQTT_WILL_BIRTH_SCHEMA, get_mqtt_data
+from .util import (
+    MQTT_WILL_BIRTH_SCHEMA,
+    async_create_certificate_temp_files,
+    get_file_path,
+    valid_publish_topic,
+)
 
 MQTT_TIMEOUT = 5
+
+ADVANCED_OPTIONS = "advanced_options"
+SET_CA_CERT = "set_ca_cert"
+SET_CLIENT_CERT = "set_client_cert"
 
 BOOLEAN_SELECTOR = BooleanSelector()
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
@@ -63,6 +95,40 @@ QOS_SELECTOR = vol.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)),
     vol.Coerce(int),
 )
+KEEPALIVE_SELECTOR = vol.All(
+    NumberSelector(
+        NumberSelectorConfig(
+            mode=NumberSelectorMode.BOX, min=15, step="any", unit_of_measurement="sec"
+        )
+    ),
+    vol.Coerce(int),
+)
+PROTOCOL_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=SUPPORTED_PROTOCOLS,
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+CA_VERIFICATION_MODES = [
+    SelectOptionDict(value="off", label="Off"),
+    SelectOptionDict(value="auto", label="Auto"),
+    SelectOptionDict(value="custom", label="Custom"),
+]
+BROKER_VERIFICATION_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=CA_VERIFICATION_MODES,
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+
+# mime configuration from https://pki-tutorial.readthedocs.io/en/latest/mime.html
+CA_CERT_UPLOAD_SELECTOR = FileSelector(
+    FileSelectorConfig(accept=".crt,application/x-x509-ca-cert")
+)
+CERT_UPLOAD_SELECTOR = FileSelector(
+    FileSelectorConfig(accept=".crt,application/x-x509-user-cert")
+)
+KEY_UPLOAD_SELECTOR = FileSelector(FileSelectorConfig(accept=".key,application/pkcs8"))
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -93,24 +159,20 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm the setup."""
-        yaml_config: ConfigType = get_mqtt_data(self.hass, True).config or {}
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
             self.hass,
             fields,
-            yaml_config,
             None,
             user_input,
             validated_user_input,
             errors,
         ):
-            test_config: dict[str, Any] = yaml_config.copy()
-            test_config.update(validated_user_input)
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                test_config,
+                validated_user_input,
             )
 
             if can_connect:
@@ -177,7 +239,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize MQTT options flow."""
         self.config_entry = config_entry
         self.broker_config: dict[str, str | int] = {}
-        self.options = dict(config_entry.options)
+        self.options = config_entry.options
 
     async def async_step_init(self, user_input: None = None) -> FlowResult:
         """Manage the MQTT options."""
@@ -188,23 +250,19 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Manage the MQTT broker configuration."""
         errors: dict[str, str] = {}
-        yaml_config: ConfigType = get_mqtt_data(self.hass, True).config or {}
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         if await async_get_broker_settings(
             self.hass,
             fields,
-            yaml_config,
             self.config_entry.data,
             user_input,
             validated_user_input,
             errors,
         ):
-            test_config: dict[str, Any] = yaml_config.copy()
-            test_config.update(validated_user_input)
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                test_config,
+                validated_user_input,
             )
 
             if can_connect:
@@ -226,7 +284,6 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
-        yaml_config = get_mqtt_data(self.hass, True).config or {}
         options_config: dict[str, Any] = {}
         bad_input: bool = False
 
@@ -255,6 +312,12 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             # validate input
             options_config[CONF_DISCOVERY] = user_input[CONF_DISCOVERY]
+            _validate(
+                CONF_DISCOVERY_PREFIX,
+                user_input[CONF_DISCOVERY_PREFIX],
+                "bad_discovery_prefix",
+                valid_publish_topic,
+            )
             if "birth_topic" in user_input:
                 _validate(
                     CONF_BIRTH_MESSAGE,
@@ -279,6 +342,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
                 updated_config = {}
                 updated_config.update(self.broker_config)
                 updated_config.update(options_config)
+                CONFIG_SCHEMA_ENTRY(updated_config)
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     data=updated_config,
@@ -288,23 +352,21 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 
         birth = {
             **DEFAULT_BIRTH,
-            **current_config.get(
-                CONF_BIRTH_MESSAGE, yaml_config.get(CONF_BIRTH_MESSAGE, {})
-            ),
+            **current_config.get(CONF_BIRTH_MESSAGE, {}),
         }
         will = {
             **DEFAULT_WILL,
-            **current_config.get(
-                CONF_WILL_MESSAGE, yaml_config.get(CONF_WILL_MESSAGE, {})
-            ),
+            **current_config.get(CONF_WILL_MESSAGE, {}),
         }
-        discovery = current_config.get(
-            CONF_DISCOVERY, yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
-        )
+        discovery = current_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
+        discovery_prefix = current_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
 
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
         fields[vol.Optional(CONF_DISCOVERY, default=discovery)] = BOOLEAN_SELECTOR
+        fields[
+            vol.Optional(CONF_DISCOVERY_PREFIX, default=discovery_prefix)
+        ] = PUBLISH_TOPIC_SELECTOR
 
         # Birth message is disabled if CONF_BIRTH_MESSAGE = {}
         fields[
@@ -363,7 +425,6 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
 async def async_get_broker_settings(
     hass: HomeAssistant,
     fields: OrderedDict[Any, Any],
-    yaml_config: ConfigType,
     entry_config: MappingProxyType[str, Any] | None,
     user_input: dict[str, Any] | None,
     validated_user_input: dict[str, Any],
@@ -371,25 +432,144 @@ async def async_get_broker_settings(
 ) -> bool:
     """Build the config flow schema to collect the broker settings.
 
+    Shows advanced options if one or more are configured
+    or when the advanced_broker_options checkbox was selected.
     Returns True when settings are collected successfully.
     """
+    advanced_broker_options: bool = False
     user_input_basic: dict[str, Any] = {}
-    current_config = entry_config.copy() if entry_config is not None else {}
+    current_config: dict[str, Any] = (
+        entry_config.copy() if entry_config is not None else {}
+    )
 
-    if user_input is not None:
+    async def _async_validate_broker_settings(
+        config: dict[str, Any],
+        user_input: dict[str, Any],
+        validated_user_input: dict[str, Any],
+        errors: dict[str, str],
+    ) -> bool:
+        """Additional validation on broker settings for better error messages."""
+
+        # Get current certificate settings from config entry
+        certificate: str | None = (
+            "auto"
+            if user_input.get(SET_CA_CERT, "off") == "auto"
+            else config.get(CONF_CERTIFICATE)
+            if user_input.get(SET_CA_CERT, "off") == "custom"
+            else None
+        )
+        client_certificate: str | None = (
+            config.get(CONF_CLIENT_CERT) if user_input.get(SET_CLIENT_CERT) else None
+        )
+        client_key: str | None = (
+            config.get(CONF_CLIENT_KEY) if user_input.get(SET_CLIENT_CERT) else None
+        )
+
+        # Prepare entry update with uploaded files
         validated_user_input.update(user_input)
+        client_certificate_id: str | None = user_input.get(CONF_CLIENT_CERT)
+        client_key_id: str | None = user_input.get(CONF_CLIENT_KEY)
+        if (
+            client_certificate_id
+            and not client_key_id
+            or not client_certificate_id
+            and client_key_id
+        ):
+            errors["base"] = "invalid_inclusion"
+            return False
+        certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
+        if certificate_id:
+            with process_uploaded_file(hass, certificate_id) as certiticate_file:
+                certificate = certiticate_file.read_text(encoding=DEFAULT_ENCODING)
+
+        # Return to form for file upload CA cert or client cert and key
+        if (
+            not client_certificate
+            and user_input.get(SET_CLIENT_CERT)
+            and not client_certificate_id
+            or not certificate
+            and user_input.get(SET_CA_CERT, "off") == "custom"
+            and not certificate_id
+        ):
+            return False
+
+        if client_certificate_id:
+            with process_uploaded_file(
+                hass, client_certificate_id
+            ) as client_certiticate_file:
+                client_certificate = client_certiticate_file.read_text(
+                    encoding=DEFAULT_ENCODING
+                )
+        if client_key_id:
+            with process_uploaded_file(hass, client_key_id) as key_file:
+                client_key = key_file.read_text(encoding=DEFAULT_ENCODING)
+
+        certificate_data: dict[str, Any] = {}
+        if certificate:
+            certificate_data[CONF_CERTIFICATE] = certificate
+        if client_certificate:
+            certificate_data[CONF_CLIENT_CERT] = client_certificate
+            certificate_data[CONF_CLIENT_KEY] = client_key
+
+        validated_user_input.update(certificate_data)
+        await async_create_certificate_temp_files(hass, certificate_data)
+        if error := await hass.async_add_executor_job(
+            check_certicate_chain,
+        ):
+            errors["base"] = error
+            return False
+
+        if SET_CA_CERT in validated_user_input:
+            del validated_user_input[SET_CA_CERT]
+        if SET_CLIENT_CERT in validated_user_input:
+            del validated_user_input[SET_CLIENT_CERT]
         return True
 
-    # Update the current settings the the new posted data to fill the defaults
+    if user_input:
+        user_input_basic = user_input.copy()
+        advanced_broker_options = user_input_basic.get(ADVANCED_OPTIONS, False)
+        if ADVANCED_OPTIONS not in user_input or advanced_broker_options is False:
+            if await _async_validate_broker_settings(
+                current_config,
+                user_input_basic,
+                validated_user_input,
+                errors,
+            ):
+                return True
+        # Get defaults settings from previous post
+        current_broker = user_input_basic.get(CONF_BROKER)
+        current_port = user_input_basic.get(CONF_PORT, DEFAULT_PORT)
+        current_user = user_input_basic.get(CONF_USERNAME)
+        current_pass = user_input_basic.get(CONF_PASSWORD)
+    else:
+        # Get default settings from entry or yaml (if any)
+        current_broker = current_config.get(CONF_BROKER)
+        current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
+        current_user = current_config.get(CONF_USERNAME)
+        current_pass = current_config.get(CONF_PASSWORD)
+
+    # Treat the previous post as an update of the current settings (if there was a basic broker setup step)
     current_config.update(user_input_basic)
 
-    # Get default settings (if any)
-    current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
-    current_port = current_config.get(
-        CONF_PORT, yaml_config.get(CONF_PORT, DEFAULT_PORT)
+    # Get default settings for advanced broker options
+    current_client_id = current_config.get(CONF_CLIENT_ID)
+    current_keepalive = current_config.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE)
+    current_ca_certificate = current_config.get(CONF_CERTIFICATE)
+    current_client_certificate = current_config.get(CONF_CLIENT_CERT)
+    current_client_key = current_config.get(CONF_CLIENT_KEY)
+    current_tls_insecure = current_config.get(CONF_TLS_INSECURE, False)
+    current_protocol = current_config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
+    advanced_broker_options |= bool(
+        current_client_id
+        or current_keepalive != DEFAULT_KEEPALIVE
+        or current_ca_certificate
+        or current_client_certificate
+        or current_client_key
+        or current_tls_insecure
+        or current_protocol != DEFAULT_PROTOCOL
+        or current_config.get(SET_CA_CERT, "off") != "off"
+        or current_config.get(SET_CLIENT_CERT)
     )
-    current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
-    current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
 
     # Build form
     fields[vol.Required(CONF_BROKER, default=current_broker)] = TEXT_SELECTOR
@@ -406,6 +586,82 @@ async def async_get_broker_settings(
             description={"suggested_value": current_pass},
         )
     ] = PASSWORD_SELECTOR
+    # show advanced options checkbox if requested
+    # or when the defaults of advanced options are overridden
+    if not advanced_broker_options:
+        fields[
+            vol.Optional(
+                ADVANCED_OPTIONS,
+            )
+        ] = BOOLEAN_SELECTOR
+        return False
+    fields[
+        vol.Optional(
+            CONF_CLIENT_ID,
+            description={"suggested_value": current_client_id},
+        )
+    ] = TEXT_SELECTOR
+    fields[
+        vol.Optional(
+            CONF_KEEPALIVE,
+            description={"suggested_value": current_keepalive},
+        )
+    ] = KEEPALIVE_SELECTOR
+    fields[
+        vol.Optional(
+            SET_CLIENT_CERT,
+            default=current_client_certificate is not None
+            or current_config.get(SET_CLIENT_CERT) is True,
+        )
+    ] = BOOLEAN_SELECTOR
+    if (
+        current_client_certificate is not None
+        or current_config.get(SET_CLIENT_CERT) is True
+    ):
+        fields[
+            vol.Optional(
+                CONF_CLIENT_CERT,
+                description={"suggested_value": user_input_basic.get(CONF_CLIENT_CERT)},
+            )
+        ] = CERT_UPLOAD_SELECTOR
+        fields[
+            vol.Optional(
+                CONF_CLIENT_KEY,
+                description={"suggested_value": user_input_basic.get(CONF_CLIENT_KEY)},
+            )
+        ] = KEY_UPLOAD_SELECTOR
+    verification_mode = current_config.get(SET_CA_CERT) or (
+        "off"
+        if current_ca_certificate is None
+        else "auto"
+        if current_ca_certificate == "auto"
+        else "custom"
+    )
+    fields[
+        vol.Optional(
+            SET_CA_CERT,
+            default=verification_mode,
+        )
+    ] = BROKER_VERIFICATION_SELECTOR
+    if current_ca_certificate is not None or verification_mode == "custom":
+        fields[
+            vol.Optional(
+                CONF_CERTIFICATE,
+                user_input_basic.get(CONF_CERTIFICATE),
+            )
+        ] = CA_CERT_UPLOAD_SELECTOR
+    fields[
+        vol.Optional(
+            CONF_TLS_INSECURE,
+            description={"suggested_value": current_tls_insecure},
+        )
+    ] = BOOLEAN_SELECTOR
+    fields[
+        vol.Optional(
+            CONF_PROTOCOL,
+            description={"suggested_value": current_protocol},
+        )
+    ] = PROTOCOL_SELECTOR
 
     # Show form
     return False
@@ -439,3 +695,36 @@ def try_connection(
     finally:
         client.disconnect()
         client.loop_stop()
+
+
+def check_certicate_chain() -> str | None:
+    """Check the MQTT certificates."""
+    if client_certiticate := get_file_path(CONF_CLIENT_CERT):
+        try:
+            with open(client_certiticate, "rb") as client_certiticate_file:
+                load_pem_x509_certificate(client_certiticate_file.read())
+        except ValueError:
+            return "bad_client_cert"
+    # Check we can serialize the private key file
+    if private_key := get_file_path(CONF_CLIENT_KEY):
+        try:
+            with open(private_key, "rb") as client_key_file:
+                load_pem_private_key(client_key_file.read(), password=None)
+        except (TypeError, ValueError):
+            return "bad_client_key"
+    # Check the certificate chain
+    context = SSLContext(PROTOCOL_TLS)
+    if client_certiticate and private_key:
+        try:
+            context.load_cert_chain(client_certiticate, private_key)
+        except SSLError:
+            return "bad_client_cert_key"
+    # try to load the custom CA file
+    if (ca_cert := get_file_path(CONF_CERTIFICATE)) is None:
+        return None
+
+    try:
+        context.load_verify_locations(ca_cert)
+    except SSLError:
+        return "bad_certificate"
+    return None

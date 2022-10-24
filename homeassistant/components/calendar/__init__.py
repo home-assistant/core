@@ -1,7 +1,8 @@
 """Support for Google Calendar event device sensors."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Iterable
+import dataclasses
 import datetime
 from http import HTTPStatus
 import logging
@@ -77,7 +78,7 @@ def get_date(date: dict[str, Any]) -> datetime.datetime:
     return dt.as_local(parsed_datetime)
 
 
-@dataclass
+@dataclasses.dataclass
 class CalendarEvent:
     """An event on a calendar."""
 
@@ -104,17 +105,34 @@ class CalendarEvent:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event."""
-        data = {
-            "start": self.start.isoformat(),
-            "end": self.end.isoformat(),
-            "summary": self.summary,
+        return {
+            **dataclasses.asdict(self, dict_factory=_event_dict_factory),
             "all_day": self.all_day,
         }
-        if self.description:
-            data["description"] = self.description
-        if self.location:
-            data["location"] = self.location
-        return data
+
+
+def _event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
+    """Convert CalendarEvent dataclass items to dictionary of attributes."""
+    result: dict[str, str] = {}
+    for name, value in obj:
+        if isinstance(value, (datetime.datetime, datetime.date)):
+            result[name] = value.isoformat()
+        elif value is not None:
+            result[name] = str(value)
+    return result
+
+
+def _api_event_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, Any]:
+    """Convert CalendarEvent dataclass items to the API format."""
+    result: dict[str, Any] = {}
+    for name, value in obj:
+        if isinstance(value, datetime.datetime):
+            result[name] = {"dateTime": dt.as_local(value).isoformat()}
+        elif isinstance(value, datetime.date):
+            result[name] = {"date": value.isoformat()}
+        else:
+            result[name] = value
+    return result
 
 
 def _get_datetime_local(
@@ -250,15 +268,10 @@ class CalendarEventView(http.HomeAssistantView):
             return self.json_message(
                 f"Error reading events: {err}", HTTPStatus.INTERNAL_SERVER_ERROR
             )
+
         return self.json(
             [
-                {
-                    "summary": event.summary,
-                    "description": event.description,
-                    "location": event.location,
-                    "start": _get_api_date(event.start),
-                    "end": _get_api_date(event.end),
-                }
+                dataclasses.asdict(event, dict_factory=_api_event_dict_factory)
                 for event in calendar_event_list
             ]
         )

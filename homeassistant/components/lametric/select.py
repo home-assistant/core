@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
+from .helpers import lametric_exception_handler
 
 
 @dataclass
@@ -83,6 +84,7 @@ class LaMetricSelectEntity(LaMetricEntity, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         return self.entity_description.current_fn(self.coordinator.data)
 
+    @lametric_exception_handler
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self.coordinator.lametric, option)

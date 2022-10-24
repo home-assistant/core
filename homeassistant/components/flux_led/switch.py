@@ -48,8 +48,7 @@ async def async_setup_entry(
             FluxMusicSwitch(coordinator, base_unique_id, f"{name} Music", "music")
         )
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class FluxSwitch(

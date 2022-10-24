@@ -7,7 +7,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -18,8 +18,6 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
-
-ATTRIBUTION = "Data provided by hydrawise.com"
 
 CONF_WATERING_TIME = "watering_minutes"
 
@@ -89,6 +87,8 @@ class HydrawiseHub:
 class HydrawiseEntity(Entity):
     """Entity class for Hydrawise devices."""
 
+    _attr_attribution = "Data provided by hydrawise.com"
+
     def __init__(self, data, description: EntityDescription):
         """Initialize the Hydrawise entity."""
         self.entity_description = description
@@ -111,4 +111,4 @@ class HydrawiseEntity(Entity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.get("relay")}
+        return {"identifier": self.data.get("relay")}
