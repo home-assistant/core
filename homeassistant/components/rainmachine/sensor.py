@@ -355,7 +355,7 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
         ):
             if clicks_per_m3 := system.get("flowSensorClicksPerCubicMeter"):
                 self._attr_native_value = round((new_value * 1000) / clicks_per_m3, 1)
-            return
+                return
 
         # Convert timestamp sensors to datetime
         if (
