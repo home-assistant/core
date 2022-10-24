@@ -487,8 +487,9 @@ POWER_BTU_PER_HOUR: Final = "BTU/h"
 POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 # Energy units
-ENERGY_WATT_HOUR: Final = "Wh"
+ENERGY_GIGA_JOULE: Final = "GJ"
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
+ENERGY_WATT_HOUR: Final = "Wh"
 ENERGY_MEGA_WATT_HOUR: Final = "MWh"
 
 # Electric_current units

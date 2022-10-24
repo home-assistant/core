@@ -146,7 +146,7 @@ class SensorDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`
     """
 
     FREQUENCY = "frequency"
