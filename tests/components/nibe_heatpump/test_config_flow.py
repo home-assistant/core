@@ -1,5 +1,6 @@
 """Test the Nibe Heat Pump config flow."""
 import errno
+from socket import gaierror
 from unittest.mock import Mock, patch
 
 from nibe.coil import Coil
@@ -150,13 +151,13 @@ async def test_unexpected_exception(hass: HomeAssistant, mock_connection: Mock) 
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_invalid_ip(hass: HomeAssistant, mock_connection: Mock) -> None:
+async def test_invalid_host(hass: HomeAssistant, mock_connection: Mock) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_connection.return_value.read_coil.side_effect = Exception()
+    mock_connection.return_value.read_coil.side_effect = gaierror()
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {**MOCK_FLOW_USERDATA, "ip_address": "abcd"}
