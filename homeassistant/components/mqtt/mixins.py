@@ -938,39 +938,43 @@ class MqttDiscoveryUpdate(Entity):
             self._removed_from_hass = True
 
 
-def device_info_from_config(config: DiscoveryInfoType | None) -> DeviceInfo | None:
+def device_info_from_specifications(
+    specifications: dict[str, Any] | None
+) -> DeviceInfo | None:
     """Return a device description for device registry."""
-    if not config:
+    if not specifications:
         return None
 
     info = DeviceInfo(
-        identifiers={(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
-        connections={(conn_[0], conn_[1]) for conn_ in config[CONF_CONNECTIONS]},
+        identifiers={(DOMAIN, id_) for id_ in specifications[CONF_IDENTIFIERS]},
+        connections={
+            (conn_[0], conn_[1]) for conn_ in specifications[CONF_CONNECTIONS]
+        },
     )
 
-    if CONF_MANUFACTURER in config:
-        info[ATTR_MANUFACTURER] = config[CONF_MANUFACTURER]
+    if CONF_MANUFACTURER in specifications:
+        info[ATTR_MANUFACTURER] = specifications[CONF_MANUFACTURER]
 
-    if CONF_MODEL in config:
-        info[ATTR_MODEL] = config[CONF_MODEL]
+    if CONF_MODEL in specifications:
+        info[ATTR_MODEL] = specifications[CONF_MODEL]
 
-    if CONF_NAME in config:
-        info[ATTR_NAME] = config[CONF_NAME]
+    if CONF_NAME in specifications:
+        info[ATTR_NAME] = specifications[CONF_NAME]
 
-    if CONF_HW_VERSION in config:
-        info[ATTR_HW_VERSION] = config[CONF_HW_VERSION]
+    if CONF_HW_VERSION in specifications:
+        info[ATTR_HW_VERSION] = specifications[CONF_HW_VERSION]
 
-    if CONF_SW_VERSION in config:
-        info[ATTR_SW_VERSION] = config[CONF_SW_VERSION]
+    if CONF_SW_VERSION in specifications:
+        info[ATTR_SW_VERSION] = specifications[CONF_SW_VERSION]
 
-    if CONF_VIA_DEVICE in config:
-        info[ATTR_VIA_DEVICE] = (DOMAIN, config[CONF_VIA_DEVICE])
+    if CONF_VIA_DEVICE in specifications:
+        info[ATTR_VIA_DEVICE] = (DOMAIN, specifications[CONF_VIA_DEVICE])
 
-    if CONF_SUGGESTED_AREA in config:
-        info[ATTR_SUGGESTED_AREA] = config[CONF_SUGGESTED_AREA]
+    if CONF_SUGGESTED_AREA in specifications:
+        info[ATTR_SUGGESTED_AREA] = specifications[CONF_SUGGESTED_AREA]
 
-    if CONF_CONFIGURATION_URL in config:
-        info[ATTR_CONFIGURATION_URL] = config[CONF_CONFIGURATION_URL]
+    if CONF_CONFIGURATION_URL in specifications:
+        info[ATTR_CONFIGURATION_URL] = specifications[CONF_CONFIGURATION_URL]
 
     return info
 
@@ -979,15 +983,15 @@ class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
     def __init__(
-        self, device_config: ConfigType | None, config_entry: ConfigEntry
+        self, specifications: dict[str, Any] | None, config_entry: ConfigEntry
     ) -> None:
         """Initialize the device mixin."""
-        self._device_config = device_config
+        self._device_specifications = specifications
         self._config_entry = config_entry
 
     def device_info_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
-        self._device_config = config.get(CONF_DEVICE)
+        self._device_specifications = config.get(CONF_DEVICE)
         device_registry = dr.async_get(self.hass)
         config_entry_id = self._config_entry.entry_id
         device_info = self.device_info
@@ -1000,7 +1004,7 @@ class MqttEntityDeviceInfo(Entity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
-        return device_info_from_config(self._device_config)
+        return device_info_from_specifications(self._device_specifications)
 
 
 class MqttEntity(
@@ -1162,7 +1166,7 @@ def update_device(
     device: DeviceEntry | None = None
     device_registry = dr.async_get(hass)
     config_entry_id = config_entry.entry_id
-    device_info = device_info_from_config(config[CONF_DEVICE])
+    device_info = device_info_from_specifications(config[CONF_DEVICE])
 
     if config_entry_id is not None and device_info is not None:
         update_device_info = cast(dict, device_info)
