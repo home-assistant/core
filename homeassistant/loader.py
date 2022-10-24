@@ -152,7 +152,6 @@ class Manifest(TypedDict, total=False):
     version: str
     codeowners: list[str]
     loggers: list[str]
-    supported_brands: dict[str, str]
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:

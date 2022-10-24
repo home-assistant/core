@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.google_travel_time.config_flow import default_options
 from homeassistant.components.google_travel_time.const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
-    CONF_TRAVEL_MODE,
     DOMAIN,
 )
 from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
@@ -202,31 +202,6 @@ async def test_sensor_arrival_time_custom_timestamp(hass):
     assert hass.states.get("sensor.google_travel_time").state == "27"
 
 
-@pytest.mark.usefixtures("mock_update")
-async def test_sensor_deprecation_warning(hass, caplog):
-    """Test that sensor setup prints a deprecating warning for old configs.
-
-    The mock_config fixture does not work with caplog.
-    """
-    data = MOCK_CONFIG.copy()
-    data[CONF_TRAVEL_MODE] = "driving"
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=data,
-        entry_id="test",
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.google_travel_time").state == "27"
-    wstr = (
-        "Google Travel Time: travel_mode is deprecated, please "
-        "add mode to the options dictionary instead!"
-    )
-    assert wstr in caplog.text
-
-
 @pytest.mark.parametrize(
     "unit_system, expected_unit_option",
     [
@@ -245,7 +220,7 @@ async def test_sensor_unit_system(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
-        options={},
+        options=default_options(hass),
         entry_id="test",
     )
     config_entry.add_to_hass(hass)

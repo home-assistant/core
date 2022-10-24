@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.1.1
+aiohomekit==2.2.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -255,7 +255,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==4.0.0
+aioshelly==4.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -276,7 +276,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.4
 
 # homeassistant.components.unifi
-aiounifi==40
+aiounifi==41
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -413,7 +413,7 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.3.1
+bleak-retry-connector==2.3.2
 
 # homeassistant.components.bluetooth
 bleak==0.19.0
@@ -563,7 +563,7 @@ deluge-client==1.7.1
 demetriek==0.4.0
 
 # homeassistant.components.denonavr
-denonavr==0.10.11
+denonavr==0.10.12
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.2
@@ -709,7 +709,7 @@ forecast_solar==2.2.0
 fortiosapi==1.0.5
 
 # homeassistant.components.freebox
-freebox-api==1.0.0
+freebox-api==1.0.1
 
 # homeassistant.components.free_mobile
 freesms==0.2.0
@@ -725,7 +725,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==1.1.0
+gcal-sync==2.2.0
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -868,7 +868,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221020.0
+home-assistant-frontend==20221021.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1312,7 +1312,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.25.2
+plugwise==0.25.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1345,7 +1345,7 @@ proxmoxer==1.3.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.2
+psutil==5.9.3
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==20.2.4
@@ -1442,7 +1442,7 @@ pyalmond==0.0.2
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.1.1
+pyatmo==7.2.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1505,7 +1505,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.7.2
+pydaikin==2.8.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1574,7 +1574,7 @@ pyflume==0.6.5
 pyfnip==0.2
 
 # homeassistant.components.forked_daapd
-pyforked-daapd==0.1.11
+pyforked-daapd==0.1.14
 
 # homeassistant.components.freedompro
 pyfreedompro==1.1.0
@@ -1682,16 +1682,16 @@ pylaunches==1.3.0
 pylgnetcast==0.3.7
 
 # homeassistant.components.forked_daapd
-pylibrespot-java==0.1.0
+pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.10.0
+pylitterbot==2022.10.2
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.16.0
+pylutron-caseta==0.17.1
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -1745,7 +1745,7 @@ pynetio==0.1.9.1
 pynina==0.1.8
 
 # homeassistant.components.nobo_hub
-pynobo==1.4.0
+pynobo==1.6.0
 
 # homeassistant.components.nuki
 pynuki==1.5.2
@@ -1890,7 +1890,7 @@ pysignalclirestapi==0.3.18
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==0.6.12
+pysma==0.7.1
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -2126,7 +2126,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qingping
-qingping-ble==0.8.1
+qingping-ble==0.8.2
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -2241,7 +2241,7 @@ sensorpro-ble==0.5.0
 sensorpush-ble==1.5.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.9.10
+sentry-sdk==1.10.0
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
@@ -2256,7 +2256,7 @@ shodan==1.28.0
 simplehound==0.3
 
 # homeassistant.components.simplepush
-simplepush==1.1.4
+simplepush==2.1.1
 
 # homeassistant.components.simplisafe
 simplisafe-python==2022.07.1
@@ -2280,7 +2280,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.0
 
 # homeassistant.components.sonos
-soco==0.28.0
+soco==0.28.1
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0
@@ -2601,7 +2601,7 @@ youtube_dl==2021.12.17
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.39.1
+zeroconf==0.39.2
 
 # homeassistant.components.zha
 zha-quirks==0.0.83
