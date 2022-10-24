@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def update_data(service_info) -> dict:
     """Return the data."""
-    print(service_info.manufacturer_data)
+    _LOGGER.debug(service_info.manufacturer_data)
     oralb_data = parse_oral_b(
         service_info.manufacturer_data.get(220, ""),
         service_info.rssi,
