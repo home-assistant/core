@@ -98,8 +98,6 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
     ) -> None:
         """Initialize the MQTT update."""
         self._config = config
-        self._sub_state = None
-
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
 
         UpdateEntity.__init__(self)
