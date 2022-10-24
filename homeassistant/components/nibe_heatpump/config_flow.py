@@ -14,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_CONNECTION_TYPE,
@@ -27,13 +27,22 @@ from .const import (
     LOGGER,
 )
 
+PORT_SELECTOR = vol.All(
+    selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=1, step=1, max=65535, mode=selector.NumberSelectorMode.BOX
+        )
+    ),
+    vol.Coerce(int),
+)
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_MODEL): vol.In(list(Model.__members__)),
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_LISTENING_PORT, default=9999): cv.port,
-        vol.Required(CONF_REMOTE_READ_PORT, default=9999): cv.port,
-        vol.Required(CONF_REMOTE_WRITE_PORT, default=10000): cv.port,
+        vol.Required(CONF_IP_ADDRESS): selector.TextSelector(),
+        vol.Required(CONF_LISTENING_PORT, default=9999): PORT_SELECTOR,
+        vol.Required(CONF_REMOTE_READ_PORT, default=9999): PORT_SELECTOR,
+        vol.Required(CONF_REMOTE_WRITE_PORT, default=10000): PORT_SELECTOR,
     }
 )
 
