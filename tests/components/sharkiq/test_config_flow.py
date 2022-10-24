@@ -37,7 +37,7 @@ async def test_form(hass):
     assert result2["data"] == {
         "username": TEST_USERNAME,
         "password": TEST_PASSWORD,
-        "europe": TEST_REGION,
+        "region": TEST_REGION,
     }
     await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()
@@ -48,7 +48,7 @@ async def test_form(hass):
     [
         (SharkIqAuthError, "invalid_auth"),
         (aiohttp.ClientError, "cannot_connect"),
-        (TypeError, "unknown"),
+        (TypeError, "cannot_connect"),
     ],
 )
 async def test_form_error(hass: HomeAssistant, exc: Exception, base_error: str):
@@ -88,7 +88,7 @@ async def test_reauth_success(hass: HomeAssistant):
     [
         (SharkIqAuthError, "form", "errors", "invalid_auth"),
         (aiohttp.ClientError, "abort", "reason", "cannot_connect"),
-        (TypeError, "abort", "reason", "unknown"),
+        (TypeError, "abort", "reason", "cannot_connect"),
     ],
 )
 async def test_reauth(

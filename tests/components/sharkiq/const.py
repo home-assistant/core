@@ -65,6 +65,7 @@ SHARK_PROPERTIES_DICT = {
         "read_only": True,
         "value": "Dummy Firmware 1.0",
     },
+    "Rooms": {"base_type": "string", "read_only": True, "value": "Kitchen, Entry"},
 }
 
 TEST_USERNAME = "test-username"
