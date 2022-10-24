@@ -51,16 +51,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch."""
     router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
-    async_add_entities(
-        [
-            FreeboxSwitch(
-                router,
-                entity_description,
-            )
-            for entity_description in SWITCH_DESCRIPTIONS
-        ],
-        True,
-    )
+    entities = [
+        FreeboxSwitch(router, entity_description)
+        for entity_description in SWITCH_DESCRIPTIONS
+    ]
+    async_add_entities(entities, True)
 
 
 class FreeboxSwitch(SwitchEntity):
