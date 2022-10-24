@@ -1685,10 +1685,10 @@ pylibrespot-java==0.1.1
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2022.10.0
+pylitterbot==2022.10.2
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.16.0
+pylutron-caseta==0.17.1
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -1742,7 +1742,7 @@ pynetio==0.1.9.1
 pynina==0.1.8
 
 # homeassistant.components.nobo_hub
-pynobo==1.4.0
+pynobo==1.6.0
 
 # homeassistant.components.nuki
 pynuki==1.5.2
