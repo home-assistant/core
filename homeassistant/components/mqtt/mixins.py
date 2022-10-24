@@ -1019,7 +1019,7 @@ class MqttEntity(
         hass: HomeAssistant,
         config: ConfigType,
         config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType,
+        discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Init the MQTT Entity."""
         self.hass = hass
