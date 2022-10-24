@@ -156,6 +156,7 @@ SENSOR_DESCRIPTIONS = (
         name="Last leak detected",
         icon="mdi:pipe-leak",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
@@ -166,6 +167,7 @@ SENSOR_DESCRIPTIONS = (
         name="Rain sensor rain start",
         icon="mdi:weather-pouring",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
@@ -339,52 +341,36 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        if self.entity_description.key == TYPE_FLOW_SENSOR_CLICK_M3:
-            self._attr_native_value = self.coordinator.data.get("system", {}).get(
-                "flowSensorClicksPerCubicMeter"
-            )
-        elif self.entity_description.key == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
-            clicks = self.coordinator.data.get("system", {}).get(
-                "flowSensorWateringClicks"
-            )
-            clicks_per_m3 = self.coordinator.data.get("system", {}).get(
-                "flowSensorClicksPerCubicMeter"
-            )
+        system = self.coordinator.data.get("system", {})
+        new_value = system.get(self.entity_description.data_key)
 
-            if clicks and clicks_per_m3:
-                self._attr_native_value = round((clicks * 1000) / clicks_per_m3, 1)
-            else:
-                self._attr_native_value = None
-        elif self.entity_description.key == TYPE_FLOW_SENSOR_LEAK_CLICKS:
-            self._attr_native_value = self.coordinator.data.get("system", {}).get(
-                "flowSensorLeakClicks"
-            )
-        elif self.entity_description.key == TYPE_FLOW_SENSOR_LEAK_VOLUME:
-            clicks = self.coordinator.data.get("system", {}).get("flowSensorLeakClicks")
-            clicks_per_m3 = self.coordinator.data.get("system", {}).get(
-                "flowSensorClicksPerCubicMeter"
-            )
+        # Calculate volumetric sensors
+        if (
+            self.entity_description.key
+            in {
+                TYPE_FLOW_SENSOR_CONSUMED_LITERS,
+                TYPE_FLOW_SENSOR_LEAK_VOLUME,
+            }
+            and new_value
+        ):
+            if clicks_per_m3 := system.get("flowSensorClicksPerCubicMeter"):
+                self._attr_native_value = round((new_value * 1000) / clicks_per_m3, 1)
+            return
 
-            if clicks and clicks_per_m3:
-                self._attr_native_value = round((clicks * 1000) / clicks_per_m3, 1)
-            else:
-                self._attr_native_value = None
-        elif self.entity_description.key == TYPE_FLOW_SENSOR_START_INDEX:
-            self._attr_native_value = self.coordinator.data.get("system", {}).get(
-                "flowSensorStartIndex"
-            )
-        elif self.entity_description.key == TYPE_FLOW_SENSOR_WATERING_CLICKS:
-            self._attr_native_value = self.coordinator.data.get("system", {}).get(
-                "flowSensorWateringClicks"
-            )
-        elif self.entity_description.key == TYPE_LAST_LEAK_DETECTED:
-            self._attr_native_value = utc_from_timestamp(
-                self.coordinator.data.get("system", {}).get("lastLeakDetected")
-            )
-        elif self.entity_description.key == TYPE_RAIN_SENSOR_RAIN_START:
-            self._attr_native_value = utc_from_timestamp(
-                self.coordinator.data.get("system", {}).get("rainSensorRainStart")
-            )
+        # Convert timestamp sensors to datetime
+        if (
+            self.entity_description.key
+            in {
+                TYPE_LAST_LEAK_DETECTED,
+                TYPE_RAIN_SENSOR_RAIN_START,
+            }
+            and new_value
+        ):
+            self._attr_native_value = utc_from_timestamp(new_value)
+            return
+
+        # Return all other sensor values or None
+        self._attr_native_value = new_value
 
 
 class UniversalRestrictionsSensor(RainMachineEntity, SensorEntity):
