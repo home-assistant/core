@@ -117,6 +117,44 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         """Return the current infrared brightness as a string."""
         return infrared_brightness_value_to_option(self.device.infrared_brightness)
 
+    async def diagnostics(self) -> dict[str, Any]:
+        """Return diagnostic information about the device."""
+        features = lifx_features(self.device)
+        device_data = {
+            "firmware": self.device.host_firmware_version,
+            "vendor": self.device.vendor,
+            "product_id": self.device.product,
+            "features": features,
+            "hue": self.device.color[0],
+            "saturation": self.device.color[1],
+            "brightness": self.device.color[2],
+            "kelvin": self.device.color[3],
+            "power": self.device.power_level,
+        }
+
+        if features["multizone"] is True:
+            zones = {"count": self.device.zones_count, "state": {}}
+            for index, zone_color in enumerate(self.device.color_zones):
+                zones["state"][index] = {
+                    "hue": zone_color[0],
+                    "saturation": zone_color[1],
+                    "brightness": zone_color[2],
+                    "kelvin": zone_color[3],
+                }
+            device_data["zones"] = zones
+
+        if features["hev"] is True:
+            device_data["hev"] = {
+                "hev_cycle": self.device.hev_cycle,
+                "hev_config": self.device.hev_cycle_configuration,
+                "last_result": self.device.last_hev_cycle_result,
+            }
+
+        if features["infrared"] is True:
+            device_data["infrared"] = {"brightness": self.device.infrared_brightness}
+
+        return device_data
+
     def async_get_entity_id(self, platform: Platform, key: str) -> str | None:
         """Return the entity_id from the platform and key provided."""
         ent_reg = er.async_get(self.hass)
