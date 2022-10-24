@@ -853,7 +853,7 @@ jobs:
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -956,7 +956,7 @@ jobs:
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
             tests/components/recorder
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v3.1.1
         with:
           name: coverage-${{ matrix.python-version }}-mariadb
           path: coverage.xml
