@@ -62,6 +62,7 @@ CONF_VALUE = "value"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 CONF_VOLTAGE = "voltage"
 CONF_VOLUME = "volume"
+CONF_WATER = "water"
 CONF_WEIGHT = "weight"
 
 ENTITY_TRIGGERS = {
@@ -100,6 +101,7 @@ ENTITY_TRIGGERS = {
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_VOLUME}],
+    SensorDeviceClass.WATER: [{CONF_TYPE: CONF_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_WEIGHT}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_VALUE}],
 }
