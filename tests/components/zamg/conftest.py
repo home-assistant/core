@@ -63,6 +63,7 @@ def mock_zamg(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None
         }
         zamg.closest_station.return_value = TEST_STATION_ID
         zamg.get_data.return_value = TEST_STATION_ID
+        zamg.get_station_name = TEST_STATION_NAME
         yield zamg
 
 

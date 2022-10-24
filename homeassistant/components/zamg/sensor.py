@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -31,10 +31,12 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -210,44 +212,45 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ZAMG sensor platform."""
-    name = config[CONF_NAME]
+
+    probe = ZamgData(session=async_get_clientsession(hass))
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     station_id = config.get(CONF_STATION_ID)
-
-    probe = ZamgData(station_id)
-
-    station_id = station_id or probe.closest_station(latitude, longitude)
-    if station_id not in probe.zamg_stations():
-        LOGGER.error(
-            "Configured ZAMG %s (%s) is not a known station",
-            CONF_STATION_ID,
+    if station_id not in await probe.zamg_stations():
+        LOGGER.warning(
+            "Configured station_id %s could not be found at zamg, adding the nearest weather station instead",
             station_id,
         )
-        return
+        station_id = await probe.closest_station(latitude, longitude)
+    probe.set_default_station(station_id)
 
-    try:
-        probe.set_default_station(station_id)
-        probe.update()
-    except (ValueError, TypeError) as err:
-        LOGGER.error("Sensor: Received error from ZAMG: %s", err)
-        return
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2023.1.0",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
 
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    add_entities(
-        [
-            ZamgSensor(probe, name, station_id, description)
-            for description in SENSOR_TYPES
-            if description.key in monitored_conditions
-        ],
-        True,
+    # No config entry exists and configuration.yaml config exists, trigger the import flow.
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data.get(CONF_STATION_ID):
+            return
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION_ID: station_id, CONF_NAME: config.get(CONF_NAME, "")},
     )
 
 

@@ -7,6 +7,7 @@ import voluptuous as vol
 from zamg import ZamgData
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -71,27 +72,27 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=self._client.get_station_name,
+            title=user_input.get(CONF_NAME, self._client.get_station_name),
             data={CONF_STATION_ID: station_id},
         )
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle ZAMG configuration import."""
-        self._async_abort_entries_match({CONF_STATION_ID: config[CONF_STATION_ID]})
+        station_id = str(config[CONF_STATION_ID])
+
+        self._client = ZamgData()
+        self._client.session = async_get_clientsession(self.hass)
+        await self._client.zamg_stations()
+
         LOGGER.debug(
-            "Importing zamg on %s from your configuration.yaml", config[CONF_STATION_ID]
+            "async_step_import: station_id = %s, name = %s",
+            station_id,
+            config.get(CONF_NAME, ""),
         )
 
-        try:
-            if self._client is None:
-                self._client = ZamgData(config[CONF_STATION_ID])
-                self._client.session = async_get_clientsession(self.hass)
-            await self._client.update()
-        except (ValueError, TypeError) as err:
-            LOGGER.error("Received error from ZAMG: %s", err)
-            return self.async_abort(reason="unknown")
-
-        return self.async_create_entry(
-            title=self._client.get_station_name,
-            data={CONF_STATION_ID: config[CONF_STATION_ID]},
+        return await self.async_step_user(
+            user_input={
+                CONF_STATION_ID: int(config[CONF_STATION_ID]),
+                CONF_NAME: config.get(CONF_NAME, ""),
+            }
         )

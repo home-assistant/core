@@ -17,10 +17,19 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
     config_entry: ConfigEntry
     data: dict = {}
 
-    def __init__(self, hass: HomeAssistant, *, entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        entry: ConfigEntry | None = None,
+        station_id: str | None = None,
+    ) -> None:
         """Initialize global ZAMG data updater."""
         self.zamg = ZamgDevice(session=async_get_clientsession(hass))
-        self.zamg.set_default_station(entry.data[CONF_STATION_ID])
+        if entry:
+            self.zamg.set_default_station(entry.data[CONF_STATION_ID])
+        if station_id:
+            self.zamg.set_default_station(station_id)
         super().__init__(
             hass,
             LOGGER,
