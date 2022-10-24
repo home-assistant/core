@@ -8,14 +8,7 @@ from pydroid_ipcam.exceptions import PyDroidIPCamException, Unauthorized
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -82,9 +75,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
-
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        import_config.pop(CONF_SCAN_INTERVAL)
-        import_config.pop(CONF_TIMEOUT)
-        return await self.async_step_user(import_config)
