@@ -38,8 +38,7 @@ class FreeboxSwitchEntityDescription(
 SWITCH_DESCRIPTIONS = [
     FreeboxSwitchEntityDescription(
         key="wifi",
-        name="WiFi",
-        has_entity_name=True,
+        name="Freebox WiFi",
         entity_category=EntityCategory.CONFIG,
         state_fn=lambda router: router.wifi.get_global_config,
         on_off_fn=lambda router: router.wifi.set_global_config,
