@@ -31,7 +31,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
     ATTR_AUX_HEAT,
@@ -560,7 +560,7 @@ class ClimateEntity(Entity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if not hasattr(self, "_attr_min_temp"):
-            return convert_temperature(
+            return TemperatureConverter.convert(
                 DEFAULT_MIN_TEMP, TEMP_CELSIUS, self.temperature_unit
             )
         return self._attr_min_temp
@@ -569,7 +569,7 @@ class ClimateEntity(Entity):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if not hasattr(self, "_attr_max_temp"):
-            return convert_temperature(
+            return TemperatureConverter.convert(
                 DEFAULT_MAX_TEMP, TEMP_CELSIUS, self.temperature_unit
             )
         return self._attr_max_temp
@@ -604,7 +604,7 @@ async def async_service_temperature_set(
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = convert_temperature(
+            kwargs[value] = TemperatureConverter.convert(
                 temp, hass.config.units.temperature_unit, entity.temperature_unit
             )
         else:

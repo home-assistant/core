@@ -23,5 +23,14 @@
       "server_failure": "RTSPtoWebRTC server returned an error. Check logs for more information.",
       "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "stun_server": "Stun server address (host:port)"
+        }
+      }
+    }
   }
 }

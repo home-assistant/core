@@ -34,7 +34,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140
@@ -328,7 +328,7 @@ class WaterHeaterEntity(Entity):
         """Return the minimum temperature."""
         if hasattr(self, "_attr_min_temp"):
             return self._attr_min_temp
-        return convert_temperature(
+        return TemperatureConverter.convert(
             DEFAULT_MIN_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
         )
 
@@ -337,7 +337,7 @@ class WaterHeaterEntity(Entity):
         """Return the maximum temperature."""
         if hasattr(self, "_attr_max_temp"):
             return self._attr_max_temp
-        return convert_temperature(
+        return TemperatureConverter.convert(
             DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
         )
 
@@ -361,7 +361,7 @@ async def async_service_temperature_set(
 
     for value, temp in service.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = convert_temperature(
+            kwargs[value] = TemperatureConverter.convert(
                 temp, hass.config.units.temperature_unit, entity.temperature_unit
             )
         else:

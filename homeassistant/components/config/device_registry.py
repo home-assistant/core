@@ -1,6 +1,8 @@
 """HTTP views to interact with the device registry."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import loader
@@ -109,7 +111,9 @@ def websocket_update_device(hass, connection, msg):
 )
 @websocket_api.async_response
 async def websocket_remove_config_entry_from_device(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
 ) -> None:
     """Remove config entry from a device."""
     registry = async_get(hass)
@@ -167,7 +171,6 @@ def _entry_dict(entry):
         "model": entry.model,
         "name_by_user": entry.name_by_user,
         "name": entry.name,
-        "serial_number": entry.serial_number,
         "sw_version": entry.sw_version,
         "via_device_id": entry.via_device_id,
     }

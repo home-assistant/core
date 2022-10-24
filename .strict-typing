@@ -2,7 +2,7 @@
 # If component is fully covered with type annotations, please add it here
 # to enable strict mypy checks.
 
-# Stict typing is enabled by default for core files.
+# Strict typing is enabled by default for core files.
 # Add it here to add 'disallow_any_generics'.
 # --- Only for core file! ---
 homeassistant.exceptions
@@ -57,6 +57,7 @@ homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.anthemav.*
+homeassistant.components.aqualogic.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.asuswrt.*
 homeassistant.components.auth.*
@@ -64,7 +65,9 @@ homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
+homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.blockchain.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
@@ -77,6 +80,8 @@ homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.cover.*
+homeassistant.components.clickatell.*
+homeassistant.components.clicksend.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.deconz.*
@@ -116,6 +121,7 @@ homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
+homeassistant.components.google_sheets.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
@@ -160,6 +166,7 @@ homeassistant.components.lacrosse_view.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
+homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
 homeassistant.components.litterrobot.*
@@ -208,6 +215,7 @@ homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
+homeassistant.components.radarr.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
@@ -230,9 +238,12 @@ homeassistant.components.sensor.*
 homeassistant.components.senz.*
 homeassistant.components.shelly.*
 homeassistant.components.simplisafe.*
+homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
+homeassistant.components.snooz.*
+homeassistant.components.sonarr.*
 homeassistant.components.ssdp.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
@@ -241,6 +252,7 @@ homeassistant.components.stream.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
+homeassistant.components.switchbee.*
 homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
@@ -259,6 +271,7 @@ homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
+homeassistant.components.unifi.update
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.update.*
@@ -278,6 +291,7 @@ homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
 homeassistant.components.wiz.*
+homeassistant.components.wled.*
 homeassistant.components.worldclock.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.zeroconf.*

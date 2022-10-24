@@ -13,8 +13,18 @@ from homeassistant.const import (
     LENGTH_MILES,
     LENGTH_MILLIMETERS,
     LENGTH_YARD,
+    MASS_GRAMS,
+    MASS_KILOGRAMS,
+    MASS_MICROGRAMS,
+    MASS_MILLIGRAMS,
+    MASS_OUNCES,
+    MASS_POUNDS,
     POWER_KILO_WATT,
     POWER_WATT,
+    PRECIPITATION_INTENSITY_INCHES_PER_DAY,
+    PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+    PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+    PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
     PRESSURE_CBAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
@@ -24,13 +34,10 @@ from homeassistant.const import (
     PRESSURE_PA,
     PRESSURE_PSI,
     SPEED_FEET_PER_SECOND,
-    SPEED_INCHES_PER_DAY,
-    SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
-    SPEED_MILLIMETERS_PER_DAY,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -41,10 +48,12 @@ from homeassistant.const import (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DistanceConverter,
     EnergyConverter,
+    MassConverter,
     PowerConverter,
     PressureConverter,
     SpeedConverter,
@@ -69,6 +78,12 @@ INVALID_SYMBOL = "bob"
         (EnergyConverter, ENERGY_WATT_HOUR),
         (EnergyConverter, ENERGY_KILO_WATT_HOUR),
         (EnergyConverter, ENERGY_MEGA_WATT_HOUR),
+        (MassConverter, MASS_GRAMS),
+        (MassConverter, MASS_KILOGRAMS),
+        (MassConverter, MASS_MICROGRAMS),
+        (MassConverter, MASS_MILLIGRAMS),
+        (MassConverter, MASS_OUNCES),
+        (MassConverter, MASS_POUNDS),
         (PowerConverter, POWER_WATT),
         (PowerConverter, POWER_KILO_WATT),
         (PressureConverter, PRESSURE_PA),
@@ -79,14 +94,15 @@ INVALID_SYMBOL = "bob"
         (PressureConverter, PRESSURE_CBAR),
         (PressureConverter, PRESSURE_MMHG),
         (PressureConverter, PRESSURE_PSI),
+        (SpeedConverter, PRECIPITATION_INTENSITY_INCHES_PER_DAY),
+        (SpeedConverter, PRECIPITATION_INTENSITY_INCHES_PER_HOUR),
+        (SpeedConverter, PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY),
+        (SpeedConverter, PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR),
         (SpeedConverter, SPEED_FEET_PER_SECOND),
-        (SpeedConverter, SPEED_INCHES_PER_DAY),
-        (SpeedConverter, SPEED_INCHES_PER_HOUR),
         (SpeedConverter, SPEED_KILOMETERS_PER_HOUR),
         (SpeedConverter, SPEED_KNOTS),
         (SpeedConverter, SPEED_METERS_PER_SECOND),
         (SpeedConverter, SPEED_MILES_PER_HOUR),
-        (SpeedConverter, SPEED_MILLIMETERS_PER_DAY),
         (TemperatureConverter, TEMP_CELSIUS),
         (TemperatureConverter, TEMP_FAHRENHEIT),
         (TemperatureConverter, TEMP_KELVIN),
@@ -106,10 +122,13 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
     [
         (DistanceConverter, LENGTH_KILOMETERS),
         (EnergyConverter, ENERGY_KILO_WATT_HOUR),
+        (MassConverter, MASS_GRAMS),
         (PowerConverter, POWER_WATT),
         (PressureConverter, PRESSURE_PA),
         (SpeedConverter, SPEED_KILOMETERS_PER_HOUR),
         (TemperatureConverter, TEMP_CELSIUS),
+        (TemperatureConverter, TEMP_FAHRENHEIT),
+        (TemperatureConverter, TEMP_KELVIN),
         (VolumeConverter, VOLUME_LITERS),
     ],
 )
@@ -117,10 +136,10 @@ def test_convert_invalid_unit(
     converter: type[BaseUnitConverter], valid_unit: str
 ) -> None:
     """Test exception is thrown for invalid units."""
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         converter.convert(5, INVALID_SYMBOL, valid_unit)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
         converter.convert(5, valid_unit, INVALID_SYMBOL)
 
 
@@ -129,6 +148,7 @@ def test_convert_invalid_unit(
     [
         (DistanceConverter, LENGTH_KILOMETERS, LENGTH_METERS),
         (EnergyConverter, ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
+        (MassConverter, MASS_GRAMS, MASS_KILOGRAMS),
         (PowerConverter, POWER_WATT, POWER_KILO_WATT),
         (PressureConverter, PRESSURE_HPA, PRESSURE_INHG),
         (SpeedConverter, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR),
@@ -142,6 +162,30 @@ def test_convert_nonnumeric_value(
     """Test exception is thrown for nonnumeric type."""
     with pytest.raises(TypeError):
         converter.convert("a", from_unit, to_unit)
+
+
+@pytest.mark.parametrize(
+    "converter,from_unit,to_unit,expected",
+    [
+        (DistanceConverter, LENGTH_KILOMETERS, LENGTH_METERS, 1 / 1000),
+        (EnergyConverter, ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, 1000),
+        (PowerConverter, POWER_WATT, POWER_KILO_WATT, 1000),
+        (PressureConverter, PRESSURE_HPA, PRESSURE_INHG, pytest.approx(33.86389)),
+        (
+            SpeedConverter,
+            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_MILES_PER_HOUR,
+            pytest.approx(1.609343),
+        ),
+        (TemperatureConverter, TEMP_CELSIUS, TEMP_FAHRENHEIT, 1 / 1.8),
+        (VolumeConverter, VOLUME_GALLONS, VOLUME_LITERS, pytest.approx(0.264172)),
+    ],
+)
+def test_get_unit_ratio(
+    converter: type[BaseUnitConverter], from_unit: str, to_unit: str, expected: float
+) -> None:
+    """Test unit ratio."""
+    assert converter.get_unit_ratio(from_unit, to_unit) == expected
 
 
 @pytest.mark.parametrize(
@@ -239,6 +283,51 @@ def test_energy_convert(
 @pytest.mark.parametrize(
     "value,from_unit,expected,to_unit",
     [
+        (10, MASS_KILOGRAMS, 10000, MASS_GRAMS),
+        (10, MASS_KILOGRAMS, 10000000, MASS_MILLIGRAMS),
+        (10, MASS_KILOGRAMS, 10000000000, MASS_MICROGRAMS),
+        (10, MASS_KILOGRAMS, pytest.approx(352.73961), MASS_OUNCES),
+        (10, MASS_KILOGRAMS, pytest.approx(22.046226), MASS_POUNDS),
+        (10, MASS_GRAMS, 0.01, MASS_KILOGRAMS),
+        (10, MASS_GRAMS, 10000, MASS_MILLIGRAMS),
+        (10, MASS_GRAMS, 10000000, MASS_MICROGRAMS),
+        (10, MASS_GRAMS, pytest.approx(0.35273961), MASS_OUNCES),
+        (10, MASS_GRAMS, pytest.approx(0.022046226), MASS_POUNDS),
+        (10, MASS_MILLIGRAMS, 0.00001, MASS_KILOGRAMS),
+        (10, MASS_MILLIGRAMS, 0.01, MASS_GRAMS),
+        (10, MASS_MILLIGRAMS, 10000, MASS_MICROGRAMS),
+        (10, MASS_MILLIGRAMS, pytest.approx(0.00035273961), MASS_OUNCES),
+        (10, MASS_MILLIGRAMS, pytest.approx(0.000022046226), MASS_POUNDS),
+        (10000, MASS_MICROGRAMS, 0.00001, MASS_KILOGRAMS),
+        (10000, MASS_MICROGRAMS, 0.01, MASS_GRAMS),
+        (10000, MASS_MICROGRAMS, 10, MASS_MILLIGRAMS),
+        (10000, MASS_MICROGRAMS, pytest.approx(0.00035273961), MASS_OUNCES),
+        (10000, MASS_MICROGRAMS, pytest.approx(0.000022046226), MASS_POUNDS),
+        (1, MASS_POUNDS, 0.45359237, MASS_KILOGRAMS),
+        (1, MASS_POUNDS, 453.59237, MASS_GRAMS),
+        (1, MASS_POUNDS, 453592.37, MASS_MILLIGRAMS),
+        (1, MASS_POUNDS, 453592370, MASS_MICROGRAMS),
+        (1, MASS_POUNDS, 16, MASS_OUNCES),
+        (16, MASS_OUNCES, 0.45359237, MASS_KILOGRAMS),
+        (16, MASS_OUNCES, 453.59237, MASS_GRAMS),
+        (16, MASS_OUNCES, 453592.37, MASS_MILLIGRAMS),
+        (16, MASS_OUNCES, 453592370, MASS_MICROGRAMS),
+        (16, MASS_OUNCES, 1, MASS_POUNDS),
+    ],
+)
+def test_mass_convert(
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+) -> None:
+    """Test conversion to other units."""
+    assert MassConverter.convert(value, from_unit, to_unit) == expected
+
+
+@pytest.mark.parametrize(
+    "value,from_unit,expected,to_unit",
+    [
         (10, POWER_KILO_WATT, 10000, POWER_WATT),
         (10, POWER_WATT, 0.01, POWER_KILO_WATT),
     ],
@@ -274,14 +363,14 @@ def test_power_convert(
         (30, PRESSURE_INHG, pytest.approx(101591.67), PRESSURE_PA),
         (30, PRESSURE_INHG, pytest.approx(1015.9167), PRESSURE_MBAR),
         (30, PRESSURE_INHG, pytest.approx(101.59167), PRESSURE_CBAR),
-        (30, PRESSURE_INHG, pytest.approx(762.002), PRESSURE_MMHG),
-        (30, PRESSURE_MMHG, pytest.approx(0.580102), PRESSURE_PSI),
-        (30, PRESSURE_MMHG, pytest.approx(3.99966), PRESSURE_KPA),
-        (30, PRESSURE_MMHG, pytest.approx(39.9966), PRESSURE_HPA),
-        (30, PRESSURE_MMHG, pytest.approx(3999.66), PRESSURE_PA),
-        (30, PRESSURE_MMHG, pytest.approx(39.9966), PRESSURE_MBAR),
-        (30, PRESSURE_MMHG, pytest.approx(3.99966), PRESSURE_CBAR),
-        (30, PRESSURE_MMHG, pytest.approx(1.181099), PRESSURE_INHG),
+        (30, PRESSURE_INHG, pytest.approx(762), PRESSURE_MMHG),
+        (30, PRESSURE_MMHG, pytest.approx(0.580103), PRESSURE_PSI),
+        (30, PRESSURE_MMHG, pytest.approx(3.99967), PRESSURE_KPA),
+        (30, PRESSURE_MMHG, pytest.approx(39.9967), PRESSURE_HPA),
+        (30, PRESSURE_MMHG, pytest.approx(3999.67), PRESSURE_PA),
+        (30, PRESSURE_MMHG, pytest.approx(39.9967), PRESSURE_MBAR),
+        (30, PRESSURE_MMHG, pytest.approx(3.99967), PRESSURE_CBAR),
+        (30, PRESSURE_MMHG, pytest.approx(1.181102), PRESSURE_INHG),
     ],
 )
 def test_pressure_convert(
@@ -302,17 +391,44 @@ def test_pressure_convert(
         # 5 mi/h * 1.609 km/mi = 8.04672 km/h
         (5, SPEED_MILES_PER_HOUR, 8.04672, SPEED_KILOMETERS_PER_HOUR),
         # 5 in/day * 25.4 mm/in = 127 mm/day
-        (5, SPEED_INCHES_PER_DAY, 127, SPEED_MILLIMETERS_PER_DAY),
+        (
+            5,
+            PRECIPITATION_INTENSITY_INCHES_PER_DAY,
+            127,
+            PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+        ),
         # 5 mm/day / 25.4 mm/in = 0.19685 in/day
-        (5, SPEED_MILLIMETERS_PER_DAY, pytest.approx(0.1968504), SPEED_INCHES_PER_DAY),
+        (
+            5,
+            PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+            pytest.approx(0.1968504),
+            PRECIPITATION_INTENSITY_INCHES_PER_DAY,
+        ),
+        # 48 mm/day = 2 mm/h
+        (
+            48,
+            PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+            pytest.approx(2),
+            PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
+        ),
         # 5 in/hr * 24 hr/day = 3048 mm/day
-        (5, SPEED_INCHES_PER_HOUR, 3048, SPEED_MILLIMETERS_PER_DAY),
+        (
+            5,
+            PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+            3048,
+            PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+        ),
         # 5 m/s * 39.3701 in/m * 3600 s/hr = 708661
-        (5, SPEED_METERS_PER_SECOND, pytest.approx(708661.42), SPEED_INCHES_PER_HOUR),
+        (
+            5,
+            SPEED_METERS_PER_SECOND,
+            pytest.approx(708661.42),
+            PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+        ),
         # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s
         (
             5000,
-            SPEED_INCHES_PER_HOUR,
+            PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
             pytest.approx(0.0352778),
             SPEED_METERS_PER_SECOND,
         ),
@@ -365,10 +481,7 @@ def test_temperature_convert_with_interval(
     value: float, from_unit: str, expected: float, to_unit: str
 ) -> None:
     """Test conversion to other units."""
-    assert (
-        TemperatureConverter.convert(value, from_unit, to_unit, interval=True)
-        == expected
-    )
+    assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
 
 
 @pytest.mark.parametrize(

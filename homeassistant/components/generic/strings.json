@@ -40,8 +40,12 @@
           "content_type": "Content Type"
         }
       },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user_confirm_still": {
+        "title": "Preview",
+        "description": "![Camera Still Image Preview]({preview_url})",
+        "data": {
+          "confirmed_ok": "This image looks good."
+        }
       }
     }
   },

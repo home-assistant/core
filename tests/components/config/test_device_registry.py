@@ -64,7 +64,6 @@ async def test_list_devices(hass, client, registry):
             "model": "model",
             "name_by_user": None,
             "name": None,
-            "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
         },
@@ -81,7 +80,6 @@ async def test_list_devices(hass, client, registry):
             "model": "model",
             "name_by_user": None,
             "name": None,
-            "serial_number": None,
             "sw_version": None,
             "via_device_id": dev1,
         },
@@ -108,7 +106,6 @@ async def test_list_devices(hass, client, registry):
             "model": "model",
             "name_by_user": None,
             "name": None,
-            "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
         }

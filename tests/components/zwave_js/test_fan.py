@@ -54,19 +54,9 @@ async def test_generic_fan(hass, client, fan_generic, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 17
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-        },
     }
     assert args["value"] == 66
 
@@ -96,19 +86,9 @@ async def test_generic_fan(hass, client, fan_generic, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 17
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-        },
     }
     assert args["value"] == 255
 
@@ -127,19 +107,9 @@ async def test_generic_fan(hass, client, fan_generic, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 17
     assert args["valueId"] == {
-        "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
         "property": "targetValue",
-        "propertyName": "targetValue",
-        "metadata": {
-            "label": "Target value",
-            "max": 99,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-        },
     }
     assert args["value"] == 0
 
@@ -602,22 +572,9 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 68
     assert args["valueId"] == {
-        "ccVersion": 3,
-        "commandClassName": "Thermostat Fan Mode",
         "commandClass": CommandClass.THERMOSTAT_FAN_MODE.value,
         "endpoint": 0,
         "property": "mode",
-        "propertyName": "mode",
-        "metadata": {
-            "label": "Thermostat fan mode",
-            "max": 255,
-            "min": 0,
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "states": {"0": "Auto low", "1": "Low", "6": "Circulation"},
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -647,19 +604,9 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 68
     assert args["valueId"] == {
-        "ccVersion": 3,
-        "commandClassName": "Thermostat Fan Mode",
         "commandClass": CommandClass.THERMOSTAT_FAN_MODE.value,
         "endpoint": 0,
         "property": "off",
-        "propertyName": "off",
-        "metadata": {
-            "label": "Thermostat fan turned off",
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-        },
-        "value": False,
     }
     assert args["value"]
 
@@ -678,19 +625,9 @@ async def test_thermostat_fan(hass, client, climate_adc_t3000, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 68
     assert args["valueId"] == {
-        "ccVersion": 3,
-        "commandClassName": "Thermostat Fan Mode",
         "commandClass": CommandClass.THERMOSTAT_FAN_MODE.value,
         "endpoint": 0,
         "property": "off",
-        "propertyName": "off",
-        "metadata": {
-            "label": "Thermostat fan turned off",
-            "type": "boolean",
-            "readable": True,
-            "writeable": True,
-        },
-        "value": False,
     }
     assert not args["value"]
 

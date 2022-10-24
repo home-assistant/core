@@ -61,6 +61,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=LENGTH_METERS,
         value_fn=lambda ibeacon_advertisement: ibeacon_advertisement.distance,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DISTANCE,
     ),
 )
 

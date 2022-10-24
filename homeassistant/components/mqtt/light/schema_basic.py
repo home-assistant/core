@@ -51,7 +51,7 @@ from ..const import (
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from ..models import MqttCommandTemplate, MqttValueTemplate
-from ..util import valid_publish_topic, valid_subscribe_topic
+from ..util import get_mqtt_data, valid_publish_topic, valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -438,7 +438,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._state = False
             elif payload == PAYLOAD_NONE:
                 self._state = None
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             topics[CONF_STATE_TOPIC] = {
@@ -462,7 +462,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             device_value = float(payload)
             percent_bright = device_value / self._config[CONF_BRIGHTNESS_SCALE]
             self._brightness = percent_bright * 255
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_BRIGHTNESS_STATE_TOPIC, brightness_received)
 
@@ -493,7 +493,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             if not rgb:
                 return
             self._rgb_color = rgb
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_RGB_STATE_TOPIC, rgb_received)
 
@@ -510,7 +510,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             if not rgbw:
                 return
             self._rgbw_color = rgbw
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_RGBW_STATE_TOPIC, rgbw_received)
 
@@ -527,7 +527,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             if not rgbww:
                 return
             self._rgbww_color = rgbww
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_RGBWW_STATE_TOPIC, rgbww_received)
 
@@ -543,7 +543,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 return
 
             self._color_mode = payload
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_COLOR_MODE_STATE_TOPIC, color_mode_received)
 
@@ -561,7 +561,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             if self._optimistic_color_mode:
                 self._color_mode = ColorMode.COLOR_TEMP
             self._color_temp = int(payload)
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_COLOR_TEMP_STATE_TOPIC, color_temp_received)
 
@@ -577,7 +577,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 return
 
             self._effect = payload
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_EFFECT_STATE_TOPIC, effect_received)
 
@@ -594,7 +594,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 if self._optimistic_color_mode:
                     self._color_mode = ColorMode.HS
                 self._hs_color = hs_color
-                self.async_write_ha_state()
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
             except ValueError:
                 _LOGGER.debug("Failed to parse hs state update: '%s'", payload)
 
@@ -613,7 +613,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             if self._optimistic_color_mode:
                 self._color_mode = ColorMode.XY
             self._xy_color = xy_color
-            self.async_write_ha_state()
+            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_topic(CONF_XY_STATE_TOPIC, xy_received)
 

@@ -19,7 +19,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import (
     async_recorder_block_till_done,
@@ -30,6 +30,16 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
+DISTANCE_SENSOR_FT_ATTRIBUTES = {
+    "device_class": "distance",
+    "state_class": "measurement",
+    "unit_of_measurement": "ft",
+}
+DISTANCE_SENSOR_M_ATTRIBUTES = {
+    "device_class": "distance",
+    "state_class": "measurement",
+    "unit_of_measurement": "m",
+}
 ENERGY_SENSOR_KWH_ATTRIBUTES = {
     "device_class": "energy",
     "state_class": "total",
@@ -70,6 +80,16 @@ PRESSURE_SENSOR_PA_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "Pa",
 }
+SPEED_SENSOR_KPH_ATTRIBUTES = {
+    "device_class": "speed",
+    "state_class": "measurement",
+    "unit_of_measurement": "km/h",
+}
+SPEED_SENSOR_MPH_ATTRIBUTES = {
+    "device_class": "speed",
+    "state_class": "measurement",
+    "unit_of_measurement": "mph",
+}
 TEMPERATURE_SENSOR_C_ATTRIBUTES = {
     "device_class": "temperature",
     "state_class": "measurement",
@@ -80,13 +100,33 @@ TEMPERATURE_SENSOR_F_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "°F",
 }
+VOLUME_SENSOR_FT3_ATTRIBUTES = {
+    "device_class": "volume",
+    "state_class": "measurement",
+    "unit_of_measurement": "ft³",
+}
+VOLUME_SENSOR_M3_ATTRIBUTES = {
+    "device_class": "volume",
+    "state_class": "measurement",
+    "unit_of_measurement": "m³",
+}
+VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL = {
+    "device_class": "volume",
+    "state_class": "total",
+    "unit_of_measurement": "ft³",
+}
+VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL = {
+    "device_class": "volume",
+    "state_class": "total",
+    "unit_of_measurement": "m³",
+}
 
 
-async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
+async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
 
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
@@ -141,20 +181,28 @@ async def test_statistics_during_period(hass, hass_ws_client, recorder_mock):
 @pytest.mark.parametrize(
     "attributes, state, value, custom_units, converted_value",
     [
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 1000),
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "m"}, 10),
+        (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "in"}, 10 / 0.0254),
         (POWER_SENSOR_KW_ATTRIBUTES, 10, 10, {"power": "W"}, 10000),
         (POWER_SENSOR_KW_ATTRIBUTES, 10, 10, {"power": "kW"}, 10),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "Pa"}, 1000),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "hPa"}, 10),
         (PRESSURE_SENSOR_HPA_ATTRIBUTES, 10, 10, {"pressure": "psi"}, 1000 / 6894.757),
+        (SPEED_SENSOR_KPH_ATTRIBUTES, 10, 10, {"speed": "m/s"}, 2.77778),
+        (SPEED_SENSOR_KPH_ATTRIBUTES, 10, 10, {"speed": "km/h"}, 10),
+        (SPEED_SENSOR_KPH_ATTRIBUTES, 10, 10, {"speed": "mph"}, 6.21371),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°C"}, 10),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°F"}, 50),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "K"}, 283.15),
+        (VOLUME_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "m³"}, 10),
+        (VOLUME_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "ft³"}, 353.14666),
     ],
 )
 async def test_statistics_during_period_unit_conversion(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     attributes,
     state,
     value,
@@ -240,12 +288,14 @@ async def test_statistics_during_period_unit_conversion(
         (ENERGY_SENSOR_KWH_ATTRIBUTES, 10, 10, {"energy": "Wh"}, 10000),
         (GAS_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "m³"}, 10),
         (GAS_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "ft³"}, 353.147),
+        (VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL, 10, 10, {"volume": "m³"}, 10),
+        (VOLUME_SENSOR_M3_ATTRIBUTES_TOTAL, 10, 10, {"volume": "ft³"}, 353.147),
     ],
 )
 async def test_sum_statistics_during_period_unit_conversion(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     attributes,
     state,
     value,
@@ -327,6 +377,7 @@ async def test_sum_statistics_during_period_unit_conversion(
 @pytest.mark.parametrize(
     "custom_units",
     [
+        {"distance": "L"},
         {"energy": "W"},
         {"power": "Pa"},
         {"pressure": "K"},
@@ -335,7 +386,7 @@ async def test_sum_statistics_during_period_unit_conversion(
     ],
 )
 async def test_statistics_during_period_invalid_unit_conversion(
-    hass, hass_ws_client, recorder_mock, custom_units
+    recorder_mock, hass, hass_ws_client, custom_units
 ):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
@@ -374,13 +425,13 @@ async def test_statistics_during_period_invalid_unit_conversion(
 
 
 async def test_statistics_during_period_in_the_past(
-    hass, hass_ws_client, recorder_mock
+    recorder_mock, hass, hass_ws_client
 ):
     """Test statistics_during_period in the past."""
     hass.config.set_time_zone("UTC")
     now = dt_util.utcnow().replace()
 
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
 
@@ -497,7 +548,7 @@ async def test_statistics_during_period_in_the_past(
 
 
 async def test_statistics_during_period_bad_start_time(
-    hass, hass_ws_client, recorder_mock
+    recorder_mock, hass, hass_ws_client
 ):
     """Test statistics_during_period."""
     client = await hass_ws_client()
@@ -515,7 +566,7 @@ async def test_statistics_during_period_bad_start_time(
 
 
 async def test_statistics_during_period_bad_end_time(
-    hass, hass_ws_client, recorder_mock
+    recorder_mock, hass, hass_ws_client
 ):
     """Test statistics_during_period."""
     now = dt_util.utcnow()
@@ -538,24 +589,64 @@ async def test_statistics_during_period_bad_end_time(
 @pytest.mark.parametrize(
     "units, attributes, display_unit, statistics_unit, unit_class",
     [
-        (IMPERIAL_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
-        (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "kWh", "energy"),
-        (IMPERIAL_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
-        (METRIC_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "m³", "volume"),
-        (IMPERIAL_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W", "power"),
-        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "W", "power"),
-        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "Pa", "pressure"),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
+        (US_CUSTOMARY_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
+        (METRIC_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            DISTANCE_SENSOR_FT_ATTRIBUTES,
+            "ft",
+            "ft",
+            "distance",
+        ),
+        (METRIC_SYSTEM, DISTANCE_SENSOR_FT_ATTRIBUTES, "ft", "ft", "distance"),
+        (US_CUSTOMARY_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "Wh", "energy"),
+        (METRIC_SYSTEM, ENERGY_SENSOR_WH_ATTRIBUTES, "Wh", "Wh", "energy"),
+        (US_CUSTOMARY_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (METRIC_SYSTEM, GAS_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "kW", "power"),
+        (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "kW", "kW", "power"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            PRESSURE_SENSOR_HPA_ATTRIBUTES,
+            "hPa",
+            "hPa",
+            "pressure",
+        ),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "hPa", "hPa", "pressure"),
+        (US_CUSTOMARY_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "km/h", "speed"),
+        (METRIC_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "km/h", "km/h", "speed"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            TEMPERATURE_SENSOR_C_ATTRIBUTES,
+            "°C",
+            "°C",
+            "temperature",
+        ),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "°C", "temperature"),
-        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
-        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°C", "temperature"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            TEMPERATURE_SENSOR_F_ATTRIBUTES,
+            "°F",
+            "°F",
+            "temperature",
+        ),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°F", "temperature"),
+        (US_CUSTOMARY_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL,
+            "ft³",
+            "ft³",
+            "volume",
+        ),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES_TOTAL, "ft³", "ft³", "volume"),
     ],
 )
 async def test_list_statistic_ids(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     units,
     attributes,
     display_unit,
@@ -590,7 +681,6 @@ async def test_list_statistic_ids(
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "display_unit_of_measurement": display_unit,
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
         }
@@ -612,7 +702,6 @@ async def test_list_statistic_ids(
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "display_unit_of_measurement": display_unit,
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
         }
@@ -637,7 +726,6 @@ async def test_list_statistic_ids(
                 "has_sum": has_sum,
                 "name": None,
                 "source": "recorder",
-                "display_unit_of_measurement": display_unit,
                 "statistics_unit_of_measurement": statistics_unit,
                 "unit_class": unit_class,
             }
@@ -658,7 +746,6 @@ async def test_list_statistic_ids(
                 "has_sum": has_sum,
                 "name": None,
                 "source": "recorder",
-                "display_unit_of_measurement": display_unit,
                 "statistics_unit_of_measurement": statistics_unit,
                 "unit_class": unit_class,
             }
@@ -667,7 +754,7 @@ async def test_list_statistic_ids(
         assert response["result"] == []
 
 
-async def test_validate_statistics(hass, hass_ws_client, recorder_mock):
+async def test_validate_statistics(recorder_mock, hass, hass_ws_client):
     """Test validate_statistics can be called."""
     id = 1
 
@@ -689,7 +776,7 @@ async def test_validate_statistics(hass, hass_ws_client, recorder_mock):
     await assert_validation_result(client, {})
 
 
-async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
+async def test_clear_statistics(recorder_mock, hass, hass_ws_client):
     """Test removing statistics."""
     now = dt_util.utcnow()
 
@@ -816,7 +903,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     "new_unit, new_unit_class", [("dogs", None), (None, None), ("W", "power")]
 )
 async def test_update_statistics_metadata(
-    hass, hass_ws_client, recorder_mock, new_unit, new_unit_class
+    recorder_mock, hass, hass_ws_client, new_unit, new_unit_class
 ):
     """Test removing statistics."""
     now = dt_util.utcnow()
@@ -842,13 +929,12 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "kW",
-            "unit_class": None,
+            "unit_class": "power",
         }
     ]
 
@@ -870,7 +956,6 @@ async def test_update_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -909,7 +994,7 @@ async def test_update_statistics_metadata(
     }
 
 
-async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
+async def test_change_statistics_unit(recorder_mock, hass, hass_ws_client):
     """Test change unit of recorded statistics."""
     now = dt_util.utcnow()
 
@@ -934,13 +1019,12 @@ async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "kW",
-            "unit_class": None,
+            "unit_class": "power",
         }
     ]
 
@@ -990,7 +1074,6 @@ async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
@@ -1030,7 +1113,7 @@ async def test_change_statistics_unit(hass, hass_ws_client, recorder_mock):
 
 
 async def test_change_statistics_unit_errors(
-    hass, hass_ws_client, recorder_mock, caplog
+    recorder_mock, hass, hass_ws_client, caplog
 ):
     """Test change unit of recorded statistics."""
     now = dt_util.utcnow()
@@ -1043,13 +1126,12 @@ async def test_change_statistics_unit_errors(
     expected_statistic_ids = [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": "kW",
             "has_mean": True,
             "has_sum": False,
             "name": None,
             "source": "recorder",
             "statistics_unit_of_measurement": "kW",
-            "unit_class": None,
+            "unit_class": "power",
         }
     ]
 
@@ -1148,7 +1230,7 @@ async def test_change_statistics_unit_errors(
     await assert_statistics(expected_statistics)
 
 
-async def test_recorder_info(hass, hass_ws_client, recorder_mock):
+async def test_recorder_info(recorder_mock, hass, hass_ws_client):
     """Test getting recorder status."""
     client = await hass_ws_client()
 
@@ -1277,9 +1359,13 @@ async def test_backup_start_no_recorder(
 
 
 async def test_backup_start_timeout(
-    hass, hass_ws_client, hass_supervisor_access_token, recorder_mock
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
 ):
     """Test getting backup start when recorder is not present."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: Locking is not implemented for other engines
+        return
+
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     # Ensure there are no queued events
@@ -1296,7 +1382,7 @@ async def test_backup_start_timeout(
 
 
 async def test_backup_end(
-    hass, hass_ws_client, hass_supervisor_access_token, recorder_mock
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token
 ):
     """Test backup start."""
     client = await hass_ws_client(hass, hass_supervisor_access_token)
@@ -1314,9 +1400,13 @@ async def test_backup_end(
 
 
 async def test_backup_end_without_start(
-    hass, hass_ws_client, hass_supervisor_access_token, recorder_mock
+    recorder_mock, hass, hass_ws_client, hass_supervisor_access_token, recorder_db_url
 ):
     """Test backup start."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: Locking is not implemented for other engines
+        return
+
     client = await hass_ws_client(hass, hass_supervisor_access_token)
 
     # Ensure there are no queued events
@@ -1339,12 +1429,16 @@ async def test_backup_end_without_start(
         (METRIC_SYSTEM, POWER_SENSOR_KW_ATTRIBUTES, "W", "power"),
         (METRIC_SYSTEM, PRESSURE_SENSOR_PA_ATTRIBUTES, "Pa", "pressure"),
         (METRIC_SYSTEM, PRESSURE_SENSOR_HPA_ATTRIBUTES, "Pa", "pressure"),
+        (METRIC_SYSTEM, SPEED_SENSOR_KPH_ATTRIBUTES, "m/s", "speed"),
+        (METRIC_SYSTEM, SPEED_SENSOR_MPH_ATTRIBUTES, "m/s", "speed"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°C", "temperature"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "m³", "volume"),
+        (METRIC_SYSTEM, VOLUME_SENSOR_M3_ATTRIBUTES, "m³", "volume"),
     ],
 )
 async def test_get_statistics_metadata(
-    hass, hass_ws_client, recorder_mock, units, attributes, unit, unit_class
+    recorder_mock, hass, hass_ws_client, units, attributes, unit, unit_class
 ):
     """Test get_statistics_metadata."""
     now = dt_util.utcnow()
@@ -1396,7 +1490,6 @@ async def test_get_statistics_metadata(
         "has_sum": has_sum,
         "name": "Total imported energy",
         "source": "test",
-        "state_unit_of_measurement": unit,
         "statistic_id": "test:total_gas",
         "unit_of_measurement": unit,
     }
@@ -1418,7 +1511,6 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "test:total_gas",
-            "display_unit_of_measurement": unit,
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": "Total imported energy",
@@ -1446,12 +1538,11 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": unit,
+            "statistics_unit_of_measurement": attributes["unit_of_measurement"],
             "unit_class": unit_class,
         }
     ]
@@ -1474,12 +1565,11 @@ async def test_get_statistics_metadata(
     assert response["result"] == [
         {
             "statistic_id": "sensor.test",
-            "display_unit_of_measurement": attributes["unit_of_measurement"],
             "has_mean": has_mean,
             "has_sum": has_sum,
             "name": None,
             "source": "recorder",
-            "statistics_unit_of_measurement": unit,
+            "statistics_unit_of_measurement": attributes["unit_of_measurement"],
             "unit_class": unit_class,
         }
     ]
@@ -1493,7 +1583,7 @@ async def test_get_statistics_metadata(
     ),
 )
 async def test_import_statistics(
-    hass, hass_ws_client, recorder_mock, caplog, source, statistic_id
+    recorder_mock, hass, hass_ws_client, caplog, source, statistic_id
 ):
     """Test importing statistics."""
     client = await hass_ws_client()
@@ -1570,7 +1660,6 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -1589,7 +1678,6 @@ async def test_import_statistics(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
@@ -1722,7 +1810,7 @@ async def test_import_statistics(
     ),
 )
 async def test_adjust_sum_statistics_energy(
-    hass, hass_ws_client, recorder_mock, caplog, source, statistic_id
+    recorder_mock, hass, hass_ws_client, caplog, source, statistic_id
 ):
     """Test adjusting statistics."""
     client = await hass_ws_client()
@@ -1799,7 +1887,6 @@ async def test_adjust_sum_statistics_energy(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -1818,7 +1905,6 @@ async def test_adjust_sum_statistics_energy(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "kWh",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
             },
@@ -1833,7 +1919,7 @@ async def test_adjust_sum_statistics_energy(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
-            "display_unit": "kWh",
+            "adjustment_unit_of_measurement": "kWh",
         }
     )
     response = await client.receive_json()
@@ -1876,7 +1962,7 @@ async def test_adjust_sum_statistics_energy(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 2.0,
-            "display_unit": "MWh",
+            "adjustment_unit_of_measurement": "MWh",
         }
     )
     response = await client.receive_json()
@@ -1920,7 +2006,7 @@ async def test_adjust_sum_statistics_energy(
     ),
 )
 async def test_adjust_sum_statistics_gas(
-    hass, hass_ws_client, recorder_mock, caplog, source, statistic_id
+    recorder_mock, hass, hass_ws_client, caplog, source, statistic_id
 ):
     """Test adjusting statistics."""
     client = await hass_ws_client()
@@ -1997,7 +2083,6 @@ async def test_adjust_sum_statistics_gas(
     statistic_ids = list_statistic_ids(hass)  # TODO
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "m³",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
@@ -2016,7 +2101,6 @@ async def test_adjust_sum_statistics_gas(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": "m³",
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "m³",
             },
@@ -2031,7 +2115,7 @@ async def test_adjust_sum_statistics_gas(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
-            "display_unit": "m³",
+            "adjustment_unit_of_measurement": "m³",
         }
     )
     response = await client.receive_json()
@@ -2074,7 +2158,7 @@ async def test_adjust_sum_statistics_gas(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 35.3147,  # ~1 m³
-            "display_unit": "ft³",
+            "adjustment_unit_of_measurement": "ft³",
         }
     )
     response = await client.receive_json()
@@ -2114,17 +2198,17 @@ async def test_adjust_sum_statistics_gas(
     "state_unit, statistic_unit, unit_class, factor, valid_units, invalid_units",
     (
         ("kWh", "kWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
-        ("MWh", "MWh", None, 1, ("MWh",), ("Wh", "kWh", "ft³", "m³", "cats", None)),
+        ("MWh", "MWh", "energy", 1, ("Wh", "kWh", "MWh"), ("ft³", "m³", "cats", None)),
         ("m³", "m³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
-        ("ft³", "ft³", None, 1, ("ft³",), ("m³", "Wh", "kWh", "MWh", "cats", None)),
+        ("ft³", "ft³", "volume", 1, ("ft³", "m³"), ("Wh", "kWh", "MWh", "cats", None)),
         ("dogs", "dogs", None, 1, ("dogs",), ("cats", None)),
         (None, None, None, 1, (None,), ("cats",)),
     ),
 )
 async def test_adjust_sum_statistics_errors(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     caplog,
     state_unit,
     statistic_unit,
@@ -2211,13 +2295,12 @@ async def test_adjust_sum_statistics_errors(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": state_unit,
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
-            "statistics_unit_of_measurement": statistic_unit,
+            "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
         }
     ]
@@ -2230,9 +2313,8 @@ async def test_adjust_sum_statistics_errors(
                 "has_sum": True,
                 "name": "Total imported energy",
                 "source": source,
-                "state_unit_of_measurement": state_unit,
                 "statistic_id": statistic_id,
-                "unit_of_measurement": statistic_unit,
+                "unit_of_measurement": state_unit,
             },
         )
     }
@@ -2246,7 +2328,7 @@ async def test_adjust_sum_statistics_errors(
             "statistic_id": "sensor.does_not_exist",
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
-            "display_unit": statistic_unit,
+            "adjustment_unit_of_measurement": statistic_unit,
         }
     )
     response = await client.receive_json()
@@ -2266,7 +2348,7 @@ async def test_adjust_sum_statistics_errors(
                 "statistic_id": statistic_id,
                 "start_time": period2.isoformat(),
                 "adjustment": 1000.0,
-                "display_unit": unit,
+                "adjustment_unit_of_measurement": unit,
             }
         )
         response = await client.receive_json()
@@ -2286,7 +2368,7 @@ async def test_adjust_sum_statistics_errors(
                 "statistic_id": statistic_id,
                 "start_time": period2.isoformat(),
                 "adjustment": 1000.0,
-                "display_unit": unit,
+                "adjustment_unit_of_measurement": unit,
             }
         )
         response = await client.receive_json()

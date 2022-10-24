@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "unknown": "Uventet feil"
+        },
         "step": {
             "auth": {
                 "data": {

@@ -21,6 +21,12 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
+from homeassistant.components.spotify import (
+    async_browse_media as spotify_async_browse_media,
+    is_spotify_media_type,
+    resolve_spotify_media_type,
+    spotify_uri_from_media_browser_url,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -677,6 +683,9 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             media_id = play_item.url
         elif is_owntone_media_content_id(media_id):
             media_id = convert_to_owntone_uri(media_id)
+        elif is_spotify_media_type(media_type):
+            media_type = resolve_spotify_media_type(media_type)
+            media_id = spotify_uri_from_media_browser_url(media_id)
 
         if media_type not in CAN_PLAY_TYPE:
             _LOGGER.warning("Media type '%s' not supported", media_type)
@@ -836,12 +845,27 @@ class ForkedDaapdMaster(MediaPlayerEntity):
                 media_content_id,
                 content_filter=lambda bm: bm.media_content_type in CAN_PLAY_TYPE,
             )
-            if media_content_type is None:
-                # This is the base level, so we combine our library with the media source
-                return library(ms_result.children)
-            return ms_result
+            if media_content_type is not None:
+                return ms_result
+            other_sources: list[BrowseMedia] = (
+                list(ms_result.children) if ms_result.children else []
+            )
+        if "spotify" in self.hass.config.components and (
+            media_content_type is None or is_spotify_media_type(media_content_type)
+        ):
+            spotify_result = await spotify_async_browse_media(
+                self.hass, media_content_type, media_content_id
+            )
+            if media_content_type is not None:
+                return spotify_result
+            if spotify_result.children:
+                other_sources += spotify_result.children
+
+        if media_content_id is None or media_content_type is None:
+            # This is the base level, so we combine our library with the other sources
+            return library(other_sources)
+
         # media_content_type should only be None if media_content_id is None
-        assert media_content_type
         return await get_owntone_content(self, media_content_id)
 
     async def async_get_browse_image(

@@ -1,9 +1,6 @@
 """Typing Helpers for Home Assistant."""
 from __future__ import annotations
 
-from abc import abstractmethod
-from numbers import Number
-
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
@@ -16,8 +13,18 @@ from homeassistant.const import (
     LENGTH_MILES,
     LENGTH_MILLIMETERS,
     LENGTH_YARD,
+    MASS_GRAMS,
+    MASS_KILOGRAMS,
+    MASS_MICROGRAMS,
+    MASS_MILLIGRAMS,
+    MASS_OUNCES,
+    MASS_POUNDS,
     POWER_KILO_WATT,
     POWER_WATT,
+    PRECIPITATION_INTENSITY_INCHES_PER_DAY,
+    PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+    PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+    PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
     PRESSURE_BAR,
     PRESSURE_CBAR,
     PRESSURE_HPA,
@@ -28,13 +35,10 @@ from homeassistant.const import (
     PRESSURE_PA,
     PRESSURE_PSI,
     SPEED_FEET_PER_SECOND,
-    SPEED_INCHES_PER_DAY,
-    SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
-    SPEED_MILLIMETERS_PER_DAY,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -46,6 +50,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -63,6 +68,14 @@ _NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
 _HRS_TO_SECS = 60 * 60  # 1 hr = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
+# Mass conversion constants
+_POUND_TO_G = 453.59237
+_OUNCE_TO_G = _POUND_TO_G / 16
+
+# Pressure conversion constants
+_STANDARD_GRAVITY = 9.80665
+_MERCURY_DENSITY = 13.5951
+
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
 _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
@@ -78,50 +91,43 @@ class BaseUnitConverter:
     NORMALIZED_UNIT: str
     VALID_UNITS: set[str]
 
-    @classmethod
-    def _check_arguments(cls, value: float, from_unit: str, to_unit: str) -> None:
-        """Check that arguments are all valid."""
-        if from_unit not in cls.VALID_UNITS:
-            raise ValueError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
-            )
-        if to_unit not in cls.VALID_UNITS:
-            raise ValueError(
-                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
-            )
-
-        if not isinstance(value, Number):
-            raise TypeError(f"{value} is not of numeric type")
-
-    @classmethod
-    @abstractmethod
-    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
-        """Convert one unit of measurement to another."""
-
-
-class BaseUnitConverterWithUnitConversion(BaseUnitConverter):
-    """Define the format of a conversion utility."""
-
-    UNIT_CONVERSION: dict[str, float]
+    _UNIT_CONVERSION: dict[str, float]
 
     @classmethod
     def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
         """Convert one unit of measurement to another."""
-        cls._check_arguments(value, from_unit, to_unit)
-
         if from_unit == to_unit:
             return value
 
-        new_value = value / cls.UNIT_CONVERSION[from_unit]
-        return new_value * cls.UNIT_CONVERSION[to_unit]
+        try:
+            from_ratio = cls._UNIT_CONVERSION[from_unit]
+        except KeyError as err:
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
+            ) from err
+
+        try:
+            to_ratio = cls._UNIT_CONVERSION[to_unit]
+        except KeyError as err:
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
+            ) from err
+
+        new_value = value / from_ratio
+        return new_value * to_ratio
+
+    @classmethod
+    def get_unit_ratio(cls, from_unit: str, to_unit: str) -> float:
+        """Get unit ratio between units of measurement."""
+        return cls._UNIT_CONVERSION[from_unit] / cls._UNIT_CONVERSION[to_unit]
 
 
-class DistanceConverter(BaseUnitConverterWithUnitConversion):
+class DistanceConverter(BaseUnitConverter):
     """Utility to convert distance values."""
 
     UNIT_CLASS = "distance"
     NORMALIZED_UNIT = LENGTH_METERS
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         LENGTH_METERS: 1,
         LENGTH_MILLIMETERS: 1 / _MM_TO_M,
         LENGTH_CENTIMETERS: 1 / _CM_TO_M,
@@ -143,12 +149,12 @@ class DistanceConverter(BaseUnitConverterWithUnitConversion):
     }
 
 
-class EnergyConverter(BaseUnitConverterWithUnitConversion):
+class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         ENERGY_WATT_HOUR: 1 * 1000,
         ENERGY_KILO_WATT_HOUR: 1,
         ENERGY_MEGA_WATT_HOUR: 1 / 1000,
@@ -160,12 +166,35 @@ class EnergyConverter(BaseUnitConverterWithUnitConversion):
     }
 
 
-class PowerConverter(BaseUnitConverterWithUnitConversion):
+class MassConverter(BaseUnitConverter):
+    """Utility to convert mass values."""
+
+    UNIT_CLASS = "mass"
+    NORMALIZED_UNIT = MASS_GRAMS
+    _UNIT_CONVERSION: dict[str, float] = {
+        MASS_MICROGRAMS: 1 * 1000 * 1000,
+        MASS_MILLIGRAMS: 1 * 1000,
+        MASS_GRAMS: 1,
+        MASS_KILOGRAMS: 1 / 1000,
+        MASS_OUNCES: 1 / _OUNCE_TO_G,
+        MASS_POUNDS: 1 / _POUND_TO_G,
+    }
+    VALID_UNITS = {
+        MASS_GRAMS,
+        MASS_KILOGRAMS,
+        MASS_MILLIGRAMS,
+        MASS_MICROGRAMS,
+        MASS_OUNCES,
+        MASS_POUNDS,
+    }
+
+
+class PowerConverter(BaseUnitConverter):
     """Utility to convert power values."""
 
     UNIT_CLASS = "power"
     NORMALIZED_UNIT = POWER_WATT
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         POWER_WATT: 1,
         POWER_KILO_WATT: 1 / 1000,
     }
@@ -175,21 +204,21 @@ class PowerConverter(BaseUnitConverterWithUnitConversion):
     }
 
 
-class PressureConverter(BaseUnitConverterWithUnitConversion):
+class PressureConverter(BaseUnitConverter):
     """Utility to convert pressure values."""
 
     UNIT_CLASS = "pressure"
     NORMALIZED_UNIT = PRESSURE_PA
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         PRESSURE_PA: 1,
         PRESSURE_HPA: 1 / 100,
         PRESSURE_KPA: 1 / 1000,
         PRESSURE_BAR: 1 / 100000,
         PRESSURE_CBAR: 1 / 1000,
         PRESSURE_MBAR: 1 / 100,
-        PRESSURE_INHG: 1 / 3386.389,
+        PRESSURE_INHG: 1 / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
         PRESSURE_PSI: 1 / 6894.757,
-        PRESSURE_MMHG: 1 / 133.322,
+        PRESSURE_MMHG: 1 / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
     }
     VALID_UNITS = {
         PRESSURE_PA,
@@ -204,30 +233,32 @@ class PressureConverter(BaseUnitConverterWithUnitConversion):
     }
 
 
-class SpeedConverter(BaseUnitConverterWithUnitConversion):
+class SpeedConverter(BaseUnitConverter):
     """Utility to convert speed values."""
 
     UNIT_CLASS = "speed"
     NORMALIZED_UNIT = SPEED_METERS_PER_SECOND
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
+        PRECIPITATION_INTENSITY_INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
+        PRECIPITATION_INTENSITY_INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
+        PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
+        PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR: _HRS_TO_SECS / _MM_TO_M,
         SPEED_FEET_PER_SECOND: 1 / _FOOT_TO_M,
-        SPEED_INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
-        SPEED_INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
         SPEED_KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         SPEED_KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
         SPEED_METERS_PER_SECOND: 1,
         SPEED_MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
-        SPEED_MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
     }
     VALID_UNITS = {
+        PRECIPITATION_INTENSITY_INCHES_PER_DAY,
+        PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+        PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+        PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
         SPEED_FEET_PER_SECOND,
-        SPEED_INCHES_PER_DAY,
-        SPEED_INCHES_PER_HOUR,
         SPEED_KILOMETERS_PER_HOUR,
         SPEED_KNOTS,
         SPEED_METERS_PER_SECOND,
         SPEED_MILES_PER_HOUR,
-        SPEED_MILLIMETERS_PER_DAY,
     }
 
 
@@ -241,75 +272,97 @@ class TemperatureConverter(BaseUnitConverter):
         TEMP_FAHRENHEIT,
         TEMP_KELVIN,
     }
+    _UNIT_CONVERSION = {
+        TEMP_CELSIUS: 1.0,
+        TEMP_FAHRENHEIT: 1.8,
+        TEMP_KELVIN: 1.0,
+    }
 
     @classmethod
-    def convert(
-        cls, value: float, from_unit: str, to_unit: str, *, interval: bool = False
-    ) -> float:
-        """Convert a temperature from one unit to another."""
-        cls._check_arguments(value, from_unit, to_unit)
+    def convert(cls, value: float, from_unit: str, to_unit: str) -> float:
+        """Convert a temperature from one unit to another.
 
+        eg. 10°C will return 50°F
+
+        For converting an interval between two temperatures, please use
+        `convert_interval` instead.
+        """
+        # We cannot use the implementation from BaseUnitConverter here because the temperature
+        # units do not use the same floor: 0°C, 0°F and 0K do not align
         if from_unit == to_unit:
             return value
 
         if from_unit == TEMP_CELSIUS:
             if to_unit == TEMP_FAHRENHEIT:
-                return cls.celsius_to_fahrenheit(value, interval)
-            # kelvin
-            return cls.celsius_to_kelvin(value, interval)
+                return cls._celsius_to_fahrenheit(value)
+            if to_unit == TEMP_KELVIN:
+                return cls._celsius_to_kelvin(value)
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
+            )
 
         if from_unit == TEMP_FAHRENHEIT:
             if to_unit == TEMP_CELSIUS:
-                return cls.fahrenheit_to_celsius(value, interval)
-            # kelvin
-            return cls.celsius_to_kelvin(
-                cls.fahrenheit_to_celsius(value, interval), interval
+                return cls._fahrenheit_to_celsius(value)
+            if to_unit == TEMP_KELVIN:
+                return cls._celsius_to_kelvin(cls._fahrenheit_to_celsius(value))
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
             )
 
-        # from_unit == kelvin
-        if to_unit == TEMP_CELSIUS:
-            return cls.kelvin_to_celsius(value, interval)
-        # fahrenheit
-        return cls.celsius_to_fahrenheit(
-            cls.kelvin_to_celsius(value, interval), interval
+        if from_unit == TEMP_KELVIN:
+            if to_unit == TEMP_CELSIUS:
+                return cls._kelvin_to_celsius(value)
+            if to_unit == TEMP_FAHRENHEIT:
+                return cls._celsius_to_fahrenheit(cls._kelvin_to_celsius(value))
+            raise HomeAssistantError(
+                UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, cls.UNIT_CLASS)
+            )
+        raise HomeAssistantError(
+            UNIT_NOT_RECOGNIZED_TEMPLATE.format(from_unit, cls.UNIT_CLASS)
         )
 
     @classmethod
-    def fahrenheit_to_celsius(cls, fahrenheit: float, interval: bool = False) -> float:
+    def convert_interval(cls, interval: float, from_unit: str, to_unit: str) -> float:
+        """Convert a temperature interval from one unit to another.
+
+        eg. a 10°C interval (10°C to 20°C) will return a 18°F (50°F to 68°F) interval
+
+        For converting a temperature value, please use `convert` as this method
+        skips floor adjustment.
+        """
+        # We use BaseUnitConverter implementation here because we are only interested
+        # in the ratio between the units.
+        return super().convert(interval, from_unit, to_unit)
+
+    @classmethod
+    def _fahrenheit_to_celsius(cls, fahrenheit: float) -> float:
         """Convert a temperature in Fahrenheit to Celsius."""
-        if interval:
-            return fahrenheit / 1.8
         return (fahrenheit - 32.0) / 1.8
 
     @classmethod
-    def kelvin_to_celsius(cls, kelvin: float, interval: bool = False) -> float:
+    def _kelvin_to_celsius(cls, kelvin: float) -> float:
         """Convert a temperature in Kelvin to Celsius."""
-        if interval:
-            return kelvin
         return kelvin - 273.15
 
     @classmethod
-    def celsius_to_fahrenheit(cls, celsius: float, interval: bool = False) -> float:
+    def _celsius_to_fahrenheit(cls, celsius: float) -> float:
         """Convert a temperature in Celsius to Fahrenheit."""
-        if interval:
-            return celsius * 1.8
         return celsius * 1.8 + 32.0
 
     @classmethod
-    def celsius_to_kelvin(cls, celsius: float, interval: bool = False) -> float:
+    def _celsius_to_kelvin(cls, celsius: float) -> float:
         """Convert a temperature in Celsius to Kelvin."""
-        if interval:
-            return celsius
         return celsius + 273.15
 
 
-class VolumeConverter(BaseUnitConverterWithUnitConversion):
+class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
     UNIT_CLASS = "volume"
     NORMALIZED_UNIT = VOLUME_CUBIC_METERS
     # Units in terms of m³
-    UNIT_CONVERSION: dict[str, float] = {
+    _UNIT_CONVERSION: dict[str, float] = {
         VOLUME_LITERS: 1 / _L_TO_CUBIC_METER,
         VOLUME_MILLILITERS: 1 / _ML_TO_CUBIC_METER,
         VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,

@@ -27,4 +27,9 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 # we will add it to the ignore list since its garbage data.
 MAX_IDS = 10
 
+# If a device broadcasts this many major minors for the same uuid
+# we will add it to the ignore list since its garbage data.
+MAX_IDS_PER_UUID = 50
+
 CONF_IGNORE_ADDRESSES = "ignore_addresses"
+CONF_IGNORE_UUIDS = "ignore_uuids"

@@ -12,7 +12,7 @@ from .common import TEST_TIME, selected_platforms
 async def test_weather_sensor(hass, config_entry, netatmo_auth):
     """Test weather sensor setup."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -27,7 +27,7 @@ async def test_weather_sensor(hass, config_entry, netatmo_auth):
 async def test_public_weather_sensor(hass, config_entry, netatmo_auth):
     """Test public weather sensor setup."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -182,7 +182,7 @@ async def test_weather_sensor_enabling(
             suggested_object_id=name,
             disabled_by=None,
         )
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -195,7 +195,7 @@ async def test_climate_battery_sensor(hass, config_entry, netatmo_auth):
     with patch("time.time", return_value=TEST_TIME), selected_platforms(
         ["sensor", "climate"]
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 

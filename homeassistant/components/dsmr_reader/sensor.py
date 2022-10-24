@@ -40,12 +40,12 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config: ConfigEntry,
+    _: HomeAssistant,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up DSMR Reader sensors from config entry."""
-    async_add_entities(DSMRSensor(description) for description in SENSORS)
+    async_add_entities(DSMRSensor(description, config_entry) for description in SENSORS)
 
 
 class DSMRSensor(SensorEntity):
@@ -53,12 +53,15 @@ class DSMRSensor(SensorEntity):
 
     entity_description: DSMRReaderSensorEntityDescription
 
-    def __init__(self, description: DSMRReaderSensorEntityDescription) -> None:
+    def __init__(
+        self, description: DSMRReaderSensorEntityDescription, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
 
         slug = slugify(description.key.replace("/", "_"))
         self.entity_id = f"sensor.{slug}"
+        self._attr_unique_id = f"{config_entry.entry_id}-{slug}"
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
