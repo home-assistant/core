@@ -151,12 +151,12 @@ async def get_api(hass, entry):
 
 def _get_client(hass: HomeAssistant, data: dict[str, Any]) -> TransmissionClient | None:
     """Return client from integration name or entry_id."""
-    if entry_id := data.get(CONF_ENTRY_ID):
-        if (
-            entry := hass.config_entries.async_get_entry(entry_id)
-        ) and entry.state == ConfigEntryState.LOADED:
-            return hass.data[DOMAIN][entry_id]
-        return None
+    if (
+        (entry_id := data.get(CONF_ENTRY_ID))
+        and (entry := hass.config_entries.async_get_entry(entry_id))
+        and entry.state == ConfigEntryState.LOADED
+    ):
+        return hass.data[DOMAIN][entry_id]
 
     # to be removed once name key is removed
     if CONF_NAME in data:
