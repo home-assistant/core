@@ -1,0 +1,23 @@
+name: Delete Caches
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: "Closed PR number"
+        type: string
+        required: true
+
+jobs:
+  delete:
+    name: "Delete unused caches (PR #${{ github.event.inputs.pr-number || github.event.number }})"
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: snnaplab/delete-branch-cache-action@v1.0.0
+        with:
+          ref: refs/pull/${{ github.event.inputs.pr-number || github.event.number }}/merge
