@@ -93,7 +93,6 @@ CV_FLOW_METER_VALID_UNITS = {
     "m3",
 }
 
-
 # Config Validators for Weather Service Data
 CV_WX_DATA_VALID_PERCENTAGE = vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
 CV_WX_DATA_VALID_TEMP_RANGE = vol.All(vol.Coerce(float), vol.Range(min=-40.0, max=40.0))
