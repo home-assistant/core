@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -66,6 +67,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
@@ -92,6 +94,7 @@ async def async_setup_platform(
     unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
     device_class: str | None = config.get(CONF_DEVICE_CLASS)
     state_class: str | None = config.get(CONF_STATE_CLASS)
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
     username: str | None = config.get(CONF_USERNAME)
     password: str | None = config.get(CONF_PASSWORD)
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
@@ -117,6 +120,7 @@ async def async_setup_platform(
         [
             ScrapeSensor(
                 coordinator,
+                unique_id,
                 name,
                 select,
                 attr,
@@ -136,6 +140,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: ScrapeCoordinator,
+        unique_id: str | None,
         name: str,
         select: str | None,
         attr: str | None,
@@ -153,6 +158,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], SensorEntity):
         self._index = index
         self._value_template = value_template
         self._attr_name = name
+        self._attr_unique_id = unique_id
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class

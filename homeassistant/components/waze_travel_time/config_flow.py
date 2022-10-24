@@ -8,7 +8,7 @@ from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     CONF_AVOID_FERRIES,
@@ -35,7 +35,7 @@ from .helpers import is_valid_config_entry
 def default_options(hass: HomeAssistant) -> dict[str, str | bool]:
     """Get the default options."""
     defaults = DEFAULT_OPTIONS.copy()
-    if hass.config.units is IMPERIAL_SYSTEM:
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
         defaults[CONF_UNITS] = IMPERIAL_UNITS
     return defaults
 

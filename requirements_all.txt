@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.2
+aiohomekit==2.2.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -413,7 +413,7 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.3.2
+bleak-retry-connector==2.4.0
 
 # homeassistant.components.bluetooth
 bleak==0.19.0
