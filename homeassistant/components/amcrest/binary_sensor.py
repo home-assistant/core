@@ -192,10 +192,12 @@ class AmcrestBinarySensor(BinarySensorEntity):
             raise ValueError(f"Binary sensor {self.name} event codes not set")
 
         try:
-            self._attr_is_on = any(  # type: ignore[arg-type]
-                len(await self._api.async_event_channels_happened(event_code)) > 0
-                for event_code in event_codes
-            )
+            for event_code in event_codes:
+                if await self._api.async_event_channels_happened(event_code):
+                    self._attr_is_on = True
+                    break
+            else:
+                self._attr_is_on = False
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return

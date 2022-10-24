@@ -1,8 +1,9 @@
 """Tests for the Bluetooth integration manager."""
 
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bleak.backends.scanner import BLEDevice
 from bluetooth_adapters import AdvertisementHistory
 
 from homeassistant.components import bluetooth
@@ -12,8 +13,10 @@ from homeassistant.components.bluetooth.manager import (
 from homeassistant.setup import async_setup_component
 
 from . import (
+    generate_advertisement_data,
     inject_advertisement_with_source,
     inject_advertisement_with_time_and_source,
+    inject_advertisement_with_time_and_source_connectable,
 )
 
 
@@ -25,7 +28,7 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
     address = "44:44:33:11:23:12"
 
     switchbot_device_signal_100 = BLEDevice(address, "wohand_signal_100", rssi=-100)
-    switchbot_adv_signal_100 = AdvertisementData(
+    switchbot_adv_signal_100 = generate_advertisement_data(
         local_name="wohand_signal_100", service_uuids=[]
     )
     inject_advertisement_with_source(
@@ -38,7 +41,7 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
     )
 
     switchbot_device_signal_99 = BLEDevice(address, "wohand_signal_99", rssi=-99)
-    switchbot_adv_signal_99 = AdvertisementData(
+    switchbot_adv_signal_99 = generate_advertisement_data(
         local_name="wohand_signal_99", service_uuids=[]
     )
     inject_advertisement_with_source(
@@ -51,7 +54,7 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
     )
 
     switchbot_device_signal_98 = BLEDevice(address, "wohand_good_signal", rssi=-98)
-    switchbot_adv_signal_98 = AdvertisementData(
+    switchbot_adv_signal_98 = generate_advertisement_data(
         local_name="wohand_good_signal", service_uuids=[]
     )
     inject_advertisement_with_source(
@@ -70,9 +73,9 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
 
     address = "44:44:33:11:23:45"
 
-    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal", rssi=-100)
-    switchbot_adv_poor_signal = AdvertisementData(
-        local_name="wohand_poor_signal", service_uuids=[]
+    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_adv_poor_signal = generate_advertisement_data(
+        local_name="wohand_poor_signal", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, "hci0"
@@ -83,9 +86,9 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
         is switchbot_device_poor_signal
     )
 
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal", rssi=-60)
-    switchbot_adv_good_signal = AdvertisementData(
-        local_name="wohand_good_signal", service_uuids=[]
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_adv_good_signal = generate_advertisement_data(
+        local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
     inject_advertisement_with_source(
         hass, switchbot_device_good_signal, switchbot_adv_good_signal, "hci1"
@@ -105,11 +108,9 @@ async def test_switching_adapters_based_on_rssi(hass, enable_bluetooth):
     )
 
     # We should not switch adapters unless the signal hits the threshold
-    switchbot_device_similar_signal = BLEDevice(
-        address, "wohand_similar_signal", rssi=-62
-    )
-    switchbot_adv_similar_signal = AdvertisementData(
-        local_name="wohand_similar_signal", service_uuids=[]
+    switchbot_device_similar_signal = BLEDevice(address, "wohand_similar_signal")
+    switchbot_adv_similar_signal = generate_advertisement_data(
+        local_name="wohand_similar_signal", service_uuids=[], rssi=-62
     )
 
     inject_advertisement_with_source(
@@ -126,9 +127,9 @@ async def test_switching_adapters_based_on_zero_rssi(hass, enable_bluetooth):
 
     address = "44:44:33:11:23:45"
 
-    switchbot_device_no_rssi = BLEDevice(address, "wohand_poor_signal", rssi=0)
-    switchbot_adv_no_rssi = AdvertisementData(
-        local_name="wohand_no_rssi", service_uuids=[]
+    switchbot_device_no_rssi = BLEDevice(address, "wohand_poor_signal")
+    switchbot_adv_no_rssi = generate_advertisement_data(
+        local_name="wohand_no_rssi", service_uuids=[], rssi=0
     )
     inject_advertisement_with_source(
         hass, switchbot_device_no_rssi, switchbot_adv_no_rssi, "hci0"
@@ -139,9 +140,9 @@ async def test_switching_adapters_based_on_zero_rssi(hass, enable_bluetooth):
         is switchbot_device_no_rssi
     )
 
-    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal", rssi=-60)
-    switchbot_adv_good_signal = AdvertisementData(
-        local_name="wohand_good_signal", service_uuids=[]
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_adv_good_signal = generate_advertisement_data(
+        local_name="wohand_good_signal", service_uuids=[], rssi=-60
     )
     inject_advertisement_with_source(
         hass, switchbot_device_good_signal, switchbot_adv_good_signal, "hci1"
@@ -161,11 +162,9 @@ async def test_switching_adapters_based_on_zero_rssi(hass, enable_bluetooth):
     )
 
     # We should not switch adapters unless the signal hits the threshold
-    switchbot_device_similar_signal = BLEDevice(
-        address, "wohand_similar_signal", rssi=-62
-    )
-    switchbot_adv_similar_signal = AdvertisementData(
-        local_name="wohand_similar_signal", service_uuids=[]
+    switchbot_device_similar_signal = BLEDevice(address, "wohand_similar_signal")
+    switchbot_adv_similar_signal = generate_advertisement_data(
+        local_name="wohand_similar_signal", service_uuids=[], rssi=-62
     )
 
     inject_advertisement_with_source(
@@ -183,11 +182,9 @@ async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
     address = "44:44:33:11:23:41"
     start_time_monotonic = 50.0
 
-    switchbot_device_poor_signal_hci0 = BLEDevice(
-        address, "wohand_poor_signal_hci0", rssi=-100
-    )
-    switchbot_adv_poor_signal_hci0 = AdvertisementData(
-        local_name="wohand_poor_signal_hci0", service_uuids=[]
+    switchbot_device_poor_signal_hci0 = BLEDevice(address, "wohand_poor_signal_hci0")
+    switchbot_adv_poor_signal_hci0 = generate_advertisement_data(
+        local_name="wohand_poor_signal_hci0", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_time_and_source(
         hass,
@@ -202,11 +199,9 @@ async def test_switching_adapters_based_on_stale(hass, enable_bluetooth):
         is switchbot_device_poor_signal_hci0
     )
 
-    switchbot_device_poor_signal_hci1 = BLEDevice(
-        address, "wohand_poor_signal_hci1", rssi=-99
-    )
-    switchbot_adv_poor_signal_hci1 = AdvertisementData(
-        local_name="wohand_poor_signal_hci1", service_uuids=[]
+    switchbot_device_poor_signal_hci1 = BLEDevice(address, "wohand_poor_signal_hci1")
+    switchbot_adv_poor_signal_hci1 = generate_advertisement_data(
+        local_name="wohand_poor_signal_hci1", service_uuids=[], rssi=-99
     )
     inject_advertisement_with_time_and_source(
         hass,
@@ -246,7 +241,7 @@ async def test_restore_history_from_dbus(hass, one_adapter):
     ble_device = BLEDevice(address, "name")
     history = {
         address: AdvertisementHistory(
-            ble_device, AdvertisementData(local_name="name"), "hci0"
+            ble_device, generate_advertisement_data(local_name="name"), "hci0"
         )
     }
 
@@ -258,3 +253,134 @@ async def test_restore_history_from_dbus(hass, one_adapter):
         await hass.async_block_till_done()
 
     assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
+
+
+async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
+    hass, enable_bluetooth
+):
+    """Test switching adapters based on rssi from connectable to non connectable."""
+
+    address = "44:44:33:11:23:45"
+    now = time.monotonic()
+    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_adv_poor_signal = generate_advertisement_data(
+        local_name="wohand_poor_signal", service_uuids=[], rssi=-100
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, now, "hci0", True
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, False)
+        is switchbot_device_poor_signal
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, True)
+        is switchbot_device_poor_signal
+    )
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_adv_good_signal = generate_advertisement_data(
+        local_name="wohand_good_signal", service_uuids=[], rssi=-60
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        switchbot_device_good_signal,
+        switchbot_adv_good_signal,
+        now,
+        "hci1",
+        False,
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, False)
+        is switchbot_device_good_signal
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, True)
+        is switchbot_device_poor_signal
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        switchbot_device_good_signal,
+        switchbot_adv_poor_signal,
+        now,
+        "hci0",
+        False,
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, False)
+        is switchbot_device_good_signal
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, True)
+        is switchbot_device_poor_signal
+    )
+    switchbot_device_excellent_signal = BLEDevice(address, "wohand_excellent_signal")
+    switchbot_adv_excellent_signal = generate_advertisement_data(
+        local_name="wohand_excellent_signal", service_uuids=[], rssi=-25
+    )
+
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        switchbot_device_excellent_signal,
+        switchbot_adv_excellent_signal,
+        now,
+        "hci2",
+        False,
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, False)
+        is switchbot_device_excellent_signal
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, True)
+        is switchbot_device_poor_signal
+    )
+
+
+async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_connectable(
+    hass, enable_bluetooth
+):
+    """Test we can still get a connectable BLEDevice when the best path is non-connectable.
+
+    In this case the the device is closer to a non-connectable scanner, but the
+    at least one connectable scanner has the device in range.
+    """
+
+    address = "44:44:33:11:23:45"
+    now = time.monotonic()
+    switchbot_device_good_signal = BLEDevice(address, "wohand_good_signal")
+    switchbot_adv_good_signal = generate_advertisement_data(
+        local_name="wohand_good_signal", service_uuids=[], rssi=-60
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        switchbot_device_good_signal,
+        switchbot_adv_good_signal,
+        now,
+        "hci1",
+        False,
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, False)
+        is switchbot_device_good_signal
+    )
+    assert bluetooth.async_ble_device_from_address(hass, address, True) is None
+
+    switchbot_device_poor_signal = BLEDevice(address, "wohand_poor_signal")
+    switchbot_adv_poor_signal = generate_advertisement_data(
+        local_name="wohand_poor_signal", service_uuids=[], rssi=-100
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass, switchbot_device_poor_signal, switchbot_adv_poor_signal, now, "hci0", True
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, False)
+        is switchbot_device_good_signal
+    )
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address, True)
+        is switchbot_device_poor_signal
+    )

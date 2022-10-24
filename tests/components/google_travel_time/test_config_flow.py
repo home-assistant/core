@@ -67,6 +67,73 @@ async def test_invalid_config_entry(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.usefixtures("invalid_api_key")
+async def test_invalid_api_key(hass):
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+@pytest.mark.usefixtures("transport_error")
+async def test_transport_error(hass):
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("timeout")
+async def test_timeout(hass):
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_malformed_api_key(hass):
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
 @pytest.mark.parametrize(
     "data,options",
     [
@@ -74,7 +141,6 @@ async def test_invalid_config_entry(hass):
             MOCK_CONFIG,
             {
                 CONF_MODE: "driving",
-                CONF_ARRIVAL_TIME: "test",
                 CONF_UNITS: UNITS_IMPERIAL,
             },
         )
@@ -131,7 +197,15 @@ async def test_options_flow(hass, mock_config):
 
 @pytest.mark.parametrize(
     "data,options",
-    [(MOCK_CONFIG, {})],
+    [
+        (
+            MOCK_CONFIG,
+            {
+                CONF_MODE: "driving",
+                CONF_UNITS: UNITS_IMPERIAL,
+            },
+        )
+    ],
 )
 @pytest.mark.usefixtures("validate_config_entry")
 async def test_options_flow_departure_time(hass, mock_config):

@@ -9,12 +9,7 @@ from typing import Any
 
 from aiohttp import CookieJar
 import aiounifi
-from aiounifi.controller import (
-    DATA_CLIENT_REMOVED,
-    DATA_DPI_GROUP,
-    DATA_DPI_GROUP_REMOVED,
-    DATA_EVENT,
-)
+from aiounifi.interfaces.messages import DATA_CLIENT_REMOVED, DATA_EVENT
 from aiounifi.models.event import EventKey
 from aiounifi.websocket import WebsocketSignal, WebsocketState
 import async_timeout
@@ -245,14 +240,6 @@ class UniFiController:
             elif DATA_CLIENT_REMOVED in data:
                 async_dispatcher_send(
                     self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
-                )
-
-            elif DATA_DPI_GROUP in data:
-                async_dispatcher_send(self.hass, self.signal_update)
-
-            elif DATA_DPI_GROUP_REMOVED in data:
-                async_dispatcher_send(
-                    self.hass, self.signal_remove, data[DATA_DPI_GROUP_REMOVED]
                 )
 
     @property

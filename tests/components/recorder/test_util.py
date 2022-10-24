@@ -40,8 +40,14 @@ def test_session_scope_not_setup(hass_recorder):
             pass
 
 
-def test_recorder_bad_commit(hass_recorder):
+def test_recorder_bad_commit(hass_recorder, recorder_db_url):
     """Bad _commit should retry 3 times."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite: mysql does not raise an OperationalError
+        # which triggers retries for the bad query below, it raises ProgrammingError
+        # on which we give up
+        return
+
     hass = hass_recorder()
 
     def work(session):
@@ -542,8 +548,12 @@ def test_warn_unsupported_dialect(caplog, dialect, message):
     assert message in caplog.text
 
 
-def test_basic_sanity_check(hass_recorder):
+def test_basic_sanity_check(hass_recorder, recorder_db_url):
     """Test the basic sanity checks with a missing table."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite
+        return
+
     hass = hass_recorder()
 
     cursor = util.get_instance(hass).engine.raw_connection().cursor()
@@ -556,8 +566,12 @@ def test_basic_sanity_check(hass_recorder):
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(hass_recorder, caplog):
+def test_combined_checks(hass_recorder, caplog, recorder_db_url):
     """Run Checks on the open database."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite
+        return
+
     hass = hass_recorder()
     instance = util.get_instance(hass)
     instance.db_retry_wait = 0
@@ -635,8 +649,12 @@ def test_end_incomplete_runs(hass_recorder, caplog):
     assert "Ended unfinished session" in caplog.text
 
 
-def test_periodic_db_cleanups(hass_recorder):
+def test_periodic_db_cleanups(hass_recorder, recorder_db_url):
     """Test periodic db cleanups."""
+    if recorder_db_url.startswith("mysql://"):
+        # This test is specific for SQLite
+        return
+
     hass = hass_recorder()
     with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
         util.periodic_db_cleanups(util.get_instance(hass))
@@ -651,8 +669,8 @@ def test_periodic_db_cleanups(hass_recorder):
 @patch("homeassistant.components.recorder.pool.check_loop")
 async def test_write_lock_db(
     skip_check_loop,
-    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
+    hass: HomeAssistant,
     tmp_path,
 ):
     """Test database write lock."""

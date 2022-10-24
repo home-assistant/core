@@ -1,6 +1,12 @@
 """Constants for the homekit_controller component."""
+import asyncio
 from typing import Final
 
+from aiohomekit.exceptions import (
+    AccessoryDisconnectedError,
+    AccessoryNotFoundError,
+    EncryptionError,
+)
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -94,3 +100,10 @@ CHARACTERISTIC_PLATFORMS = {
 
 # Device classes
 DEVICE_CLASS_ECOBEE_MODE: Final = "homekit_controller__ecobee_mode"
+
+STARTUP_EXCEPTIONS = (
+    asyncio.TimeoutError,
+    AccessoryNotFoundError,
+    EncryptionError,
+    AccessoryDisconnectedError,
+)
