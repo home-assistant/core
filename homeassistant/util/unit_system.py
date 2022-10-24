@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import voluptuous as vol
 
@@ -41,6 +41,9 @@ from .unit_conversion import (
     TemperatureConverter,
     VolumeConverter,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.sensor import SensorDeviceClass
 
 _CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
 _CONF_UNIT_SYSTEM_METRIC: Final = "metric"
@@ -90,6 +93,7 @@ class UnitSystem:
         *,
         accumulated_precipitation: str,
         length: str,
+        length_conversions: dict[str | None, str],
         mass: str,
         pressure: str,
         temperature: str,
@@ -122,6 +126,7 @@ class UnitSystem:
         self.pressure_unit = pressure
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
+        self._length_conversions = length_conversions
 
     @property
     def name(self) -> str:
@@ -215,6 +220,17 @@ class UnitSystem:
             WIND_SPEED: self.wind_speed_unit,
         }
 
+    def get_converted_unit(
+        self,
+        device_class: SensorDeviceClass | str | None,
+        original_unit: str | None,
+    ) -> str | None:
+        """Return converted unit given a device class or an original unit."""
+        if device_class == "distance":
+            return self._length_conversions.get(original_unit)
+
+        return None
+
 
 def get_unit_system(key: str) -> UnitSystem:
     """Get unit system based on key."""
@@ -244,6 +260,7 @@ METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
     accumulated_precipitation=PRECIPITATION_MILLIMETERS,
     length=LENGTH_KILOMETERS,
+    length_conversions={LENGTH_MILES: LENGTH_KILOMETERS},
     mass=MASS_GRAMS,
     pressure=PRESSURE_PA,
     temperature=TEMP_CELSIUS,
@@ -255,6 +272,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     accumulated_precipitation=PRECIPITATION_INCHES,
     length=LENGTH_MILES,
+    length_conversions={LENGTH_KILOMETERS: LENGTH_MILES},
     mass=MASS_POUNDS,
     pressure=PRESSURE_PSI,
     temperature=TEMP_FAHRENHEIT,
