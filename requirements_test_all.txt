@@ -1231,7 +1231,7 @@ pynetgear==0.10.8
 pynina==0.1.8
 
 # homeassistant.components.nobo_hub
-pynobo==1.4.0
+pynobo==1.6.0
 
 # homeassistant.components.nuki
 pynuki==1.5.2
