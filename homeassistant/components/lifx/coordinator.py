@@ -133,12 +133,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         }
 
         if features["multizone"] is True:
-
-            if features["extended_multizone"] is True:
-                await self.async_get_extended_color_zones()
-            else:
-                await self.async_get_color_zones()
-
             zones = {"count": self.device.zones_count, "state": {}}
             for index, zone_color in enumerate(self.device.color_zones):
                 zones["state"][index] = {
@@ -150,8 +144,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             device_data["zones"] = zones
 
         if features["hev"] is True:
-            await async_execute_lifx(self.device.get_hev_configuration)
-            await async_execute_lifx(self.device.get_last_hev_cycle_result)
             device_data["hev"] = {
                 "hev_cycle": self.device.hev_cycle,
                 "hev_config": self.device.hev_cycle_configuration,
@@ -159,8 +151,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             }
 
         if features["infrared"] is True:
-            await async_execute_lifx(self.device.get_infrared)
             device_data["infrared"] = {"brightness": self.device.infrared_brightness}
+
         return device_data
 
     def async_get_entity_id(self, platform: Platform, key: str) -> str | None:
