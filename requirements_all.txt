@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.0.1
+aiohomekit==2.0.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -435,7 +435,7 @@ bluemaestro-ble==0.2.0
 bluetooth-adapters==0.6.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==0.3.4
+bluetooth-auto-recovery==0.3.6
 
 # homeassistant.components.bond
 bond-async==0.1.22
@@ -934,7 +934,7 @@ inkbird-ble==0.5.5
 insteon-frontend-home-assistant==0.2.0
 
 # homeassistant.components.intellifire
-intellifire4py==2.0.1
+intellifire4py==2.2.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -1306,7 +1306,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
-plugwise==0.21.3
+plugwise==0.21.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2592,7 +2592,7 @@ zengge==0.2
 zeroconf==0.39.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.82
+zha-quirks==0.0.83
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

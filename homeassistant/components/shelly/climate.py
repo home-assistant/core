@@ -140,6 +140,7 @@ class BlockSleepingClimate(
         self.last_state: State | None = None
         self.last_state_attributes: Mapping[str, Any]
         self._preset_modes: list[str] = []
+        self._last_target_temp = 20.0
 
         if self.block is not None and self.device_block is not None:
             self._unique_id = f"{self.wrapper.mac}-{self.block.description}"
@@ -266,8 +267,14 @@ class BlockSleepingClimate(
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.OFF:
+            if isinstance(self.target_temperature, float):
+                self._last_target_temp = self.target_temperature
             await self.set_state_full_path(
                 target_t_enabled=1, target_t=f"{self._attr_min_temp}"
+            )
+        if hvac_mode == HVACMode.HEAT:
+            await self.set_state_full_path(
+                target_t_enabled=1, target_t=self._last_target_temp
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
