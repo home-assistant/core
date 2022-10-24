@@ -468,6 +468,7 @@ async def _cleanup_instance(
     """Cleanup the esphome client if it exists."""
     domain_data = DomainData.get(hass)
     data = domain_data.pop_entry_data(entry)
+    data.available = False
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
     data.disconnect_callbacks = []
