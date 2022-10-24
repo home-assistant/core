@@ -1,6 +1,8 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
+import datetime
 from datetime import timedelta
+from statistics import fmean
 import threading
 from unittest.mock import patch
 
@@ -9,6 +11,7 @@ import pytest
 from pytest import approx
 
 from homeassistant.components import recorder
+from homeassistant.components.recorder.db_schema import Statistics, StatisticsShortTerm
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -178,6 +181,7 @@ async def test_statistics_during_period(recorder_mock, hass, hass_ws_client):
     }
 
 
+@freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
 async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
     """Test statistic_during_period."""
     id = 1
@@ -191,50 +195,37 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", 500, attributes=POWER_SENSOR_KW_ATTRIBUTES)
-    hass.states.async_set("sensor.test", -500, attributes=POWER_SENSOR_KW_ATTRIBUTES)
-    await async_wait_recording_done(hass)
-
-    do_adhoc_statistics(hass, start=now)
-    await async_wait_recording_done(hass)
-
     client = await hass_ws_client()
 
     zero = now
-    period1 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-4)
-    period2 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-3)
-    period3 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-2)
-    period4 = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-1)
+    start = zero.replace(minute=0, second=0, microsecond=0) + timedelta(hours=-3)
 
-    imported_statistics1 = {
-        "start": period1.isoformat(),
-        "max": 40,
-        "mean": 20,
-        "min": -10,
-        "sum": 0,
-    }
-    imported_statistics2 = {
-        "start": period2.isoformat(),
-        "max": 10,
-        "mean": 30,
-        "min": -40,
-        "sum": 1,
-    }
-    imported_statistics3 = {
-        "start": period3.isoformat(),
-        "max": 20,
-        "mean": 0,
-        "min": -10,
-        "sum": 2,
-    }
-    imported_statistics4 = {
-        "start": period4.isoformat(),
-        "max": 10,
-        "mean": 20,
-        "min": -20,
-        "sum": 1,
-    }
-
+    imported_stats_5min = [
+        {
+            "start": (start + timedelta(minutes=5 * i)),
+            "max": i * 2,
+            "mean": i,
+            "min": -76 + i * 2,
+            "sum": i,
+        }
+        for i in range(0, 39)
+    ]
+    imported_stats = [
+        {
+            "start": imported_stats_5min[i * 12]["start"],
+            "max": max(
+                stat["max"] for stat in imported_stats_5min[i * 12 : (i + 1) * 12]
+            ),
+            "mean": fmean(
+                stat["mean"] for stat in imported_stats_5min[i * 12 : (i + 1) * 12]
+            ),
+            "min": min(
+                stat["min"] for stat in imported_stats_5min[i * 12 : (i + 1) * 12]
+            ),
+            "sum": imported_stats_5min[i * 12 + 11]["sum"],
+        }
+        for i in range(0, 3)
+    ]
     imported_metadata = {
         "has_mean": False,
         "has_sum": True,
@@ -244,24 +235,19 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "unit_of_measurement": "kWh",
     }
 
-    await client.send_json(
-        {
-            "id": next_id(),
-            "type": "recorder/import_statistics",
-            "metadata": imported_metadata,
-            "stats": [
-                imported_statistics1,
-                imported_statistics2,
-                imported_statistics3,
-                imported_statistics4,
-            ],
-        }
+    recorder.get_instance(hass).async_import_statistics(
+        imported_metadata,
+        imported_stats,
+        Statistics,
     )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] is None
+    recorder.get_instance(hass).async_import_statistics(
+        imported_metadata,
+        imported_stats_5min,
+        StatisticsShortTerm,
+    )
+    await async_wait_recording_done(hass)
 
-    # No data for this period
+    # No data for this period yet
     await client.send_json(
         {
             "id": next_id(),
@@ -275,89 +261,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {"max": None, "mean": None, "min": None, "sum": None}
 
-    # This should include imported_statistics3 + imported_statistics4
-    await client.send_json(
-        {
-            "id": next_id(),
-            "type": "recorder/statistic_during_period",
-            "start_time": period3.isoformat(),
-            "statistic_id": "sensor.test",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {"max": 20, "mean": 10, "min": -20, "sum": -1}
-
-    # This should also include imported_statistics3 + imported_statistics4
-    await client.send_json(
-        {
-            "id": next_id(),
-            "type": "recorder/statistic_during_period",
-            "duration": {"hours": 3},
-            "statistic_id": "sensor.test",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {"max": 20, "mean": 10, "min": -20, "sum": -1}
-
-    # This should also include imported_statistics3 + imported_statistics4
-    await client.send_json(
-        {
-            "id": next_id(),
-            "type": "recorder/statistic_during_period",
-            "duration": {"hours": 2},
-            "offset": {"hours": -1},
-            "statistic_id": "sensor.test",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {"max": 20, "mean": 10, "min": -20, "sum": -1}
-
-    # This should also include imported_statistics3 + imported_statistics4
-    await client.send_json(
-        {
-            "id": next_id(),
-            "type": "recorder/statistic_during_period",
-            "start_time": period3.isoformat(),
-            "end_time": zero.isoformat(),
-            "statistic_id": "sensor.test",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {"max": 20, "mean": 10, "min": -20, "sum": -1}
-
-    # This should include imported_statistics1 + imported_statistics2
-    await client.send_json(
-        {
-            "id": next_id(),
-            "type": "recorder/statistic_during_period",
-            "start_time": period1.isoformat(),
-            "end_time": period3.isoformat(),
-            "statistic_id": "sensor.test",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {"max": 40, "mean": 25, "min": -40, "sum": 1}
-
-    # This should include everything
-    await client.send_json(
-        {
-            "id": next_id(),
-            "type": "recorder/statistic_during_period",
-            "start_time": period1.isoformat(),
-            "end_time": zero.isoformat(),
-            "statistic_id": "sensor.test",
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"] == {"max": 40, "mean": 17.5, "min": -40, "sum": 1}
-
-    # This should also include everything
+    # This should include imported_statistics_5min[:]
     await client.send_json(
         {
             "id": next_id(),
@@ -367,9 +271,196 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"max": 40, "mean": 17.5, "min": -40, "sum": 1}
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[:]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]),
+        "min": min(stat["min"] for stat in imported_stats_5min[:]),
+        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+    }
 
-    # Get only selected types
+    # This should also include imported_statistics_5min[:]
+    start_time = "2022-10-21T04:00:00+00:00"
+    end_time = "2022-10-21T07:15:00+00:00"
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[:]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]),
+        "min": min(stat["min"] for stat in imported_stats_5min[:]),
+        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+    }
+
+    # This should also include imported_statistics_5min[:]
+    start_time = "2022-10-20T04:00:00+00:00"
+    end_time = "2022-10-21T08:20:00+00:00"
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+            "start_time": start_time,
+            "end_time": end_time,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[:]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]),
+        "min": min(stat["min"] for stat in imported_stats_5min[:]),
+        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+    }
+
+    # This should include imported_statistics_5min[26:]
+    start_time = "2022-10-21T06:10:00+00:00"
+    assert imported_stats_5min[26]["start"].isoformat() == start_time
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "start_time": start_time,
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[26:]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[26:]),
+        "min": min(stat["min"] for stat in imported_stats_5min[26:]),
+        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[25]["sum"],
+    }
+
+    # This should also include imported_statistics_5min[26:]
+    start_time = "2022-10-21T06:09:00+00:00"
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "start_time": start_time,
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[26:]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[26:]),
+        "min": min(stat["min"] for stat in imported_stats_5min[26:]),
+        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[25]["sum"],
+    }
+
+    # This should include imported_statistics_5min[:26]
+    end_time = "2022-10-21T06:10:00+00:00"
+    assert imported_stats_5min[26]["start"].isoformat() == end_time
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "end_time": end_time,
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[:26]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[:26]),
+        "min": min(stat["min"] for stat in imported_stats_5min[:26]),
+        "sum": imported_stats_5min[25]["sum"] - 0,
+    }
+
+    # This should include imported_statistics_5min[26:32] (less than a full hour)
+    start_time = "2022-10-21T06:10:00+00:00"
+    assert imported_stats_5min[26]["start"].isoformat() == start_time
+    end_time = "2022-10-21T06:40:00+00:00"
+    assert imported_stats_5min[32]["start"].isoformat() == end_time
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "start_time": start_time,
+            "end_time": end_time,
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[26:32]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[26:32]),
+        "min": min(stat["min"] for stat in imported_stats_5min[26:32]),
+        "sum": imported_stats_5min[31]["sum"] - imported_stats_5min[25]["sum"],
+    }
+
+    # This should include imported_statistics[2:] + imported_statistics_5min[36:]
+    start_time = "2022-10-21T06:00:00+00:00"
+    assert imported_stats_5min[24]["start"].isoformat() == start_time
+    assert imported_stats[2]["start"].isoformat() == start_time
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "start_time": start_time,
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[24:]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[24:]),
+        "min": min(stat["min"] for stat in imported_stats_5min[24:]),
+        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[23]["sum"],
+    }
+
+    # This should also include imported_statistics[2:] + imported_statistics_5min[36:]
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "duration": {"hours": 1, "minutes": 25},
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[24:]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[24:]),
+        "min": min(stat["min"] for stat in imported_stats_5min[24:]),
+        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[23]["sum"],
+    }
+
+    # This should include imported_statistics[2:3]
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "duration": {"hours": 1},
+            "offset": {"minutes": -25},
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[24:36]),
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[24:36]),
+        "min": min(stat["min"] for stat in imported_stats_5min[24:36]),
+        "sum": imported_stats_5min[35]["sum"] - imported_stats_5min[23]["sum"],
+    }
+
+    # Test we can get only selected types
     await client.send_json(
         {
             "id": next_id(),
@@ -380,7 +471,10 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"max": 40, "sum": 1}
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[:]),
+        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+    }
 
 
 @pytest.mark.parametrize(

@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import messages
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.util import dt as dt_util
@@ -106,6 +107,11 @@ async def ws_get_statistic_during_period(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle statistics websocket command."""
+    if ("start_time" in msg or "end_time" in msg) and "duration" in msg:
+        raise HomeAssistantError
+    if "offset" in msg and "duration" not in msg:
+        raise HomeAssistantError
+
     start_time = None
     end_time = None
 
@@ -126,7 +132,7 @@ async def ws_get_statistic_during_period(
     if duration := msg.get("duration"):
         now = dt_util.utcnow()
         start_time = now - duration
-        end_time = now
+        end_time = start_time + duration
 
     if offset := msg.get("offset"):
         start_time += offset

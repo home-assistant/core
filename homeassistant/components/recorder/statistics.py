@@ -1113,6 +1113,250 @@ def _statistics_during_period_stmt_short_term(
     return stmt
 
 
+def _get_max_mean_min_statistic_in_sub_period(
+    session: Session,
+    result: dict[str, float],
+    start_time: datetime | None,
+    end_time: datetime | None,
+    table: type[Statistics | StatisticsShortTerm],
+    types: set[str],
+    metadata_id: int,
+) -> None:
+    """Return max, mean and min during the period."""
+    # Calculate max, mean, min
+    columns = []
+    if "max" in types:
+        columns.append(func.max(table.max))
+    if "mean" in types:
+        columns.append(func.avg(table.mean))
+        columns.append(func.count(table.mean))
+    if "min" in types:
+        columns.append(func.min(table.min))
+    stmt = lambda_stmt(lambda: select(columns).filter(table.metadata_id == metadata_id))
+    if start_time is not None:
+        stmt += lambda q: q.filter(table.start >= start_time)
+    if end_time is not None:
+        stmt += lambda q: q.filter(table.start < end_time)
+    stats = execute_stmt_lambda_element(session, stmt)
+    if "max" in types and stats and (new_max := stats[0].max) is not None:
+        old_max = result.get("max")
+        result["max"] = max(new_max, old_max) if old_max is not None else new_max
+    if "mean" in types and stats and stats[0].avg is not None:
+        duration = stats[0].count * table.duration.total_seconds()
+        result["duration"] = result.get("duration", 0.0) + duration
+        result["mean_acc"] = result.get("mean_acc", 0.0) + stats[0].avg * duration
+    if "min" in types and stats and (new_min := stats[0].min) is not None:
+        old_min = result.get("min")
+        result["min"] = min(new_min, old_min) if old_min is not None else new_min
+
+
+def _get_max_mean_min_statistic(
+    session: Session,
+    head_start_time: datetime | None,
+    head_end_time: datetime | None,
+    main_start_time: datetime | None,
+    main_end_time: datetime | None,
+    tail_start_time: datetime | None,
+    tail_end_time: datetime | None,
+    tail_only: bool,
+    metadata_id: int,
+    types: set[str],
+) -> dict[str, float | None]:
+    """Return max, mean and min during the period.
+
+    The mean is a time weighted average, combining hourly and 5-minute statistics if
+    necessary.
+    """
+    max_mean_min: dict[str, float] = {}
+    result: dict[str, float | None] = {}
+
+    if tail_start_time is not None:
+        # Calculate max, mean, min
+        _get_max_mean_min_statistic_in_sub_period(
+            session,
+            max_mean_min,
+            tail_start_time,
+            tail_end_time,
+            StatisticsShortTerm,
+            types,
+            metadata_id,
+        )
+
+    if not tail_only:
+        _get_max_mean_min_statistic_in_sub_period(
+            session,
+            max_mean_min,
+            main_start_time,
+            main_end_time,
+            Statistics,
+            types,
+            metadata_id,
+        )
+
+    if head_start_time is not None:
+        _get_max_mean_min_statistic_in_sub_period(
+            session,
+            max_mean_min,
+            head_start_time,
+            head_end_time,
+            StatisticsShortTerm,
+            types,
+            metadata_id,
+        )
+
+    if "max" in types:
+        result["max"] = max_mean_min.get("max")
+    if "mean" in types:
+        if "mean_acc" not in max_mean_min:
+            result["mean"] = None
+        else:
+            result["mean"] = max_mean_min["mean_acc"] / max_mean_min["duration"]
+    if "min" in types:
+        result["min"] = max_mean_min.get("min")
+    return result
+
+
+def _get_oldest_sum_statistic(
+    session: Session,
+    head_start_time: datetime | None,
+    main_start_time: datetime | None,
+    tail_start_time: datetime | None,
+    tail_only: bool,
+    metadata_id: int,
+) -> float | None:
+    """Return the oldest non-NULL sum during the period."""
+
+    def _get_oldest_sum_statistic_in_sub_period(
+        session: Session,
+        start_time: datetime | None,
+        table: type[Statistics | StatisticsShortTerm],
+        metadata_id: int,
+    ) -> tuple[float | None, datetime | None]:
+        """Return the oldest non-NULL sum during the period."""
+        stmt = lambda_stmt(
+            lambda: select(table.sum, table.start)
+            .filter(table.metadata_id == metadata_id)
+            .filter(table.sum.is_not(None))
+            .order_by(table.start.asc())
+            .limit(1)
+        )
+        if start_time is not None:
+            start_time = start_time + table.duration - timedelta.resolution
+            if table == StatisticsShortTerm:
+                minutes = start_time.minute - start_time.minute % 5
+                period = start_time.replace(minute=minutes, second=0, microsecond=0)
+            else:
+                period = start_time.replace(minute=0, second=0, microsecond=0)
+            prev_period = period - table.duration
+            stmt += lambda q: q.filter(table.start == prev_period)
+        stats = execute_stmt_lambda_element(session, stmt)
+        return (
+            (stats[0].sum, process_timestamp(stats[0].start)) if stats else (None, None)
+        )
+
+    oldest_start: datetime | None
+    oldest_sum: float | None = None
+
+    if head_start_time is not None:
+        oldest_sum, oldest_start = _get_oldest_sum_statistic_in_sub_period(
+            session, head_start_time, StatisticsShortTerm, metadata_id
+        )
+        if (
+            oldest_start is not None
+            and oldest_start < head_start_time
+            and oldest_sum is not None
+        ):
+            return oldest_sum
+
+    if not tail_only:
+        assert main_start_time is not None
+        oldest_sum, oldest_start = _get_oldest_sum_statistic_in_sub_period(
+            session, main_start_time, Statistics, metadata_id
+        )
+        if (
+            oldest_start is not None
+            and oldest_start < main_start_time
+            and oldest_sum is not None
+        ):
+            return oldest_sum
+        return 0
+
+    if tail_start_time is not None:
+        oldest_sum, oldest_start = _get_oldest_sum_statistic_in_sub_period(
+            session, tail_start_time, StatisticsShortTerm, metadata_id
+        )
+        if (
+            oldest_start is not None
+            and oldest_start < tail_start_time
+            and oldest_sum is not None
+        ):
+            return oldest_sum
+
+    return 0
+
+
+def _get_newest_sum_statistic(
+    session: Session,
+    head_start_time: datetime | None,
+    head_end_time: datetime | None,
+    main_start_time: datetime | None,
+    main_end_time: datetime | None,
+    tail_start_time: datetime | None,
+    tail_end_time: datetime | None,
+    tail_only: bool,
+    metadata_id: int,
+) -> float | None:
+    """Return the newest non-NULL sum during the period."""
+
+    def _get_newest_sum_statistic_in_sub_period(
+        session: Session,
+        start_time: datetime | None,
+        end_time: datetime | None,
+        table: type[Statistics | StatisticsShortTerm],
+        metadata_id: int,
+    ) -> float | None:
+        """Return the newest non-NULL sum during the period."""
+        stmt = lambda_stmt(
+            lambda: select(
+                table.sum,
+            )
+            .filter(table.metadata_id == metadata_id)
+            .filter(table.sum.is_not(None))
+            .order_by(table.start.desc())
+            .limit(1)
+        )
+        if start_time is not None:
+            stmt += lambda q: q.filter(table.start >= start_time)
+        if end_time is not None:
+            stmt += lambda q: q.filter(table.start < end_time)
+        stats = execute_stmt_lambda_element(session, stmt)
+
+        return stats[0].sum if stats else None
+
+    newest_sum: float | None = None
+
+    if tail_start_time is not None:
+        newest_sum = _get_newest_sum_statistic_in_sub_period(
+            session, tail_start_time, tail_end_time, StatisticsShortTerm, metadata_id
+        )
+        if newest_sum is not None:
+            return newest_sum
+
+    if not tail_only:
+        newest_sum = _get_newest_sum_statistic_in_sub_period(
+            session, main_start_time, main_end_time, Statistics, metadata_id
+        )
+        if newest_sum is not None:
+            return newest_sum
+
+    if head_start_time is not None:
+        newest_sum = _get_newest_sum_statistic_in_sub_period(
+            session, head_start_time, head_end_time, StatisticsShortTerm, metadata_id
+        )
+
+    return newest_sum
+
+
 def statistic_during_period(
     hass: HomeAssistant,
     start_time: datetime | None,
@@ -1121,82 +1365,107 @@ def statistic_during_period(
     types: set[str] | None,
     units: dict[str, str] | None,
 ) -> dict[str, Any]:
-    """Return a statistic data point for the UTC period start_time - end_time.
-
-    If end_time is omitted, include statistics newer than or equal to start_time.
-    """
+    """Return a statistic data point for the UTC period start_time - end_time."""
     metadata = None
+
+    if not types:
+        types = {"max", "mean", "min", "sum"}
+
     result: dict[str, Any] = {}
+
+    # To calculate the summary, data from the statistics (hourly) and short_term_statistics
+    # (5 minute) tables is combined
+    # - The short term statistics table is used for the head and tail of the period,
+    #   if the period it doesn't start or end on a full hour
+    # - The statistics table is used for the remainder of the time
+    now = dt_util.utcnow()
+    if end_time is not None and end_time > now:
+        end_time = now
+
+    tail_only = (
+        start_time is not None
+        and end_time is not None
+        and end_time - start_time < timedelta(hours=1)
+    )
+
+    # Calculate the head period
+    head_start_time: datetime | None = None
+    head_end_time: datetime | None = None
+    if not tail_only and start_time is not None and start_time.minute:
+        head_start_time = start_time
+        head_end_time = start_time.replace(
+            minute=0, second=0, microsecond=0
+        ) + timedelta(hours=1)
+
+    # Calculate the tail period
+    tail_start_time: datetime | None = None
+    tail_end_time: datetime | None = None
+    if end_time is None:
+        tail_start_time = now.replace(minute=0, second=0, microsecond=0)
+    elif end_time.minute:
+        tail_start_time = (
+            start_time
+            if tail_only
+            else end_time.replace(minute=0, second=0, microsecond=0)
+        )
+        tail_end_time = end_time
+
+    # Calculate the main period
+    main_start_time: datetime | None = None
+    main_end_time: datetime | None = None
+    if not tail_only:
+        main_start_time = start_time if head_end_time is None else head_end_time
+        main_end_time = end_time if tail_start_time is None else tail_start_time
+
     with session_scope(hass=hass) as session:
-        # Fetch metadata for the given (or all) statistic_ids
+        # Fetch metadata for the given statistic_id
         metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
         if not metadata:
             return result
 
         metadata_id = metadata[statistic_id][0]
 
-        # Calculate max, mean, min
-        if not types or not types.isdisjoint({"max", "mean", "min"}):
-            columns = []
-            if not types or "max" in types:
-                columns.append(func.max(Statistics.max))
-            if not types or "mean" in types:
-                columns.append(func.avg(Statistics.mean))
-            if not types or "min" in types:
-                columns.append(func.min(Statistics.min))
-            stmt = lambda_stmt(
-                lambda: select(columns).filter(
-                    Statistics.metadata_id.__eq__(metadata_id)
-                )
+        if not types.isdisjoint({"max", "mean", "min"}):
+            result = _get_max_mean_min_statistic(
+                session,
+                head_start_time,
+                head_end_time,
+                main_start_time,
+                main_end_time,
+                tail_start_time,
+                tail_end_time,
+                tail_only,
+                metadata_id,
+                types,
             )
-            if start_time is not None:
-                stmt += lambda q: q.filter(Statistics.start >= start_time)
-            if end_time is not None:
-                stmt += lambda q: q.filter(Statistics.start < end_time)
-            stats = execute_stmt_lambda_element(session, stmt)
-            if not types or "max" in types:
-                result["max"] = stats[0].max if stats else None
-            if not types or "mean" in types:
-                result["mean"] = stats[0].avg if stats else None
-            if not types or "min" in types:
-                result["min"] = stats[0].min if stats else None
 
-        # Calculate sum, first find the oldest non-NULL sum
-        if not types or "sum" in types:
-            stmt = lambda_stmt(
-                lambda: select(
-                    Statistics.sum,
+        if "sum" in types:
+            oldest_sum: float | None
+            if start_time is None:
+                oldest_sum = 0.0
+            else:
+                oldest_sum = _get_oldest_sum_statistic(
+                    session,
+                    head_start_time,
+                    main_start_time,
+                    tail_start_time,
+                    tail_only,
+                    metadata_id,
                 )
-                .filter(Statistics.metadata_id.__eq__(metadata_id))
-                .filter(Statistics.sum.is_not(None))
-                .order_by(Statistics.start.asc())
-                .limit(1)
+            newest_sum = _get_newest_sum_statistic(
+                session,
+                head_start_time,
+                head_end_time,
+                main_start_time,
+                main_end_time,
+                tail_start_time,
+                tail_end_time,
+                tail_only,
+                metadata_id,
             )
-            if start_time is not None:
-                stmt += lambda q: q.filter(Statistics.start >= start_time)
-            if end_time is not None:
-                stmt += lambda q: q.filter(Statistics.start < end_time)
-            oldest_stats = execute_stmt_lambda_element(session, stmt)
-
-            # Then find the newest non-NULL sum
-            stmt = lambda_stmt(
-                lambda: select(
-                    Statistics.sum,
-                )
-                .filter(Statistics.metadata_id.__eq__(metadata_id))
-                .filter(Statistics.sum.is_not(None))
-                .order_by(Statistics.start.desc())
-                .limit(1)
-            )
-            if start_time is not None:
-                stmt += lambda q: q.filter(Statistics.start >= start_time)
-            if end_time is not None:
-                stmt += lambda q: q.filter(Statistics.start < end_time)
-            newest_stats = execute_stmt_lambda_element(session, stmt)
-
-            # Calculate the difference
-            if oldest_stats and newest_stats:
-                result["sum"] = newest_stats[0].sum - oldest_stats[0].sum
+            # Calculate the difference between the oldest and newest sum
+            if oldest_sum is not None and newest_sum is not None:
+                result["sum"] = newest_sum - oldest_sum
             else:
                 result["sum"] = None
 
