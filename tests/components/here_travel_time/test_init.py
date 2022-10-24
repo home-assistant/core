@@ -16,10 +16,10 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     API_KEY,
-    CAR_DESTINATION_LATITUDE,
-    CAR_DESTINATION_LONGITUDE,
-    CAR_ORIGIN_LATITUDE,
-    CAR_ORIGIN_LONGITUDE,
+    DESTINATION_LATITUDE,
+    DESTINATION_LONGITUDE,
+    ORIGIN_LATITUDE,
+    ORIGIN_LONGITUDE,
 )
 
 from tests.common import MockConfigEntry
@@ -32,10 +32,10 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="0123456789",
         data={
-            CONF_ORIGIN_LATITUDE: float(CAR_ORIGIN_LATITUDE),
-            CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
-            CONF_DESTINATION_LATITUDE: float(CAR_DESTINATION_LATITUDE),
-            CONF_DESTINATION_LONGITUDE: float(CAR_DESTINATION_LONGITUDE),
+            CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
+            CONF_ORIGIN_LONGITUDE: float(ORIGIN_LONGITUDE),
+            CONF_DESTINATION_LATITUDE: float(DESTINATION_LATITUDE),
+            CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
             CONF_MODE: TRAVEL_MODE_CAR,
             CONF_NAME: "test",

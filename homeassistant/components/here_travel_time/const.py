@@ -11,7 +11,6 @@ CONF_ORIGIN = "origin"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
-CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
 CONF_ARRIVAL = "arrival"
 CONF_DEPARTURE = "departure"
@@ -36,10 +35,6 @@ TRAVEL_MODES = [
 ]
 
 TRAVEL_MODES_VEHICLE = [TRAVEL_MODE_CAR, TRAVEL_MODE_TRUCK]
-
-TRAFFIC_MODE_ENABLED = "traffic_enabled"
-TRAFFIC_MODE_DISABLED = "traffic_disabled"
-TRAFFIC_MODES = [TRAFFIC_MODE_ENABLED, TRAFFIC_MODE_DISABLED]
 
 ROUTE_MODE_FASTEST = "fastest"
 ROUTE_MODE_SHORTEST = "shortest"
@@ -69,10 +64,7 @@ ATTR_ORIGIN = "origin"
 ATTR_DESTINATION = "destination"
 
 ATTR_UNIT_SYSTEM = "unit_system"
-ATTR_TRAFFIC_MODE = CONF_TRAFFIC_MODE
 
 ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"
 ATTR_DESTINATION_NAME = "destination_name"
-
-NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
