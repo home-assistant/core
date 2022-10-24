@@ -245,7 +245,7 @@ def subscribe(
         async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 
-    def remove():
+    def remove() -> None:
         """Remove listener convert."""
         run_callback_threadsafe(hass.loop, async_remove).result()
 
@@ -352,14 +352,14 @@ class MQTT:
         else:
 
             @callback
-            def ha_started(_):
+            def ha_started(_: Event) -> None:
                 self._ha_started.set()
 
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
 
         self.init_client()
 
-        async def async_stop_mqtt(_event: Event):
+        async def async_stop_mqtt(_event: Event) -> None:
             """Stop MQTT component."""
             await self.async_disconnect()
 
@@ -506,9 +506,11 @@ class MQTT:
 
         def _client_unsubscribe(topic: str) -> int:
             result: int | None = None
+            mid: int | None = None
             result, mid = self._mqttc.unsubscribe(topic)
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
+            assert mid
             return mid
 
         if any(other.topic == topic for other in self.subscriptions):
@@ -596,7 +598,7 @@ class MQTT:
             and ATTR_TOPIC in self.conf[CONF_BIRTH_MESSAGE]
         ):
 
-            async def publish_birth_message(birth_message):
+            async def publish_birth_message(birth_message: PublishMessage) -> None:
                 await self._ha_started.wait()  # Wait for Home Assistant to start
                 await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
                 await self.async_publish(
@@ -611,7 +613,7 @@ class MQTT:
                 publish_birth_message(birth_message), self.hass.loop
             )
 
-    def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
+    def _mqtt_on_message(self, _mqttc, _userdata, msg: MQTTMessage) -> None:
         """Message received callback."""
         self.hass.add_job(self._mqtt_handle_message, msg)
 
@@ -663,7 +665,7 @@ class MQTT:
             )
         self._mqtt_data.state_write_requests.process_write_state_requests()
 
-    def _mqtt_on_callback(self, _mqttc, _userdata, mid, _granted_qos=None) -> None:
+    def _mqtt_on_callback(self, _mqttc, _userdata, mid: int, _granted_qos=None) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
@@ -707,7 +709,7 @@ class MQTT:
                 del self._pending_operations[mid]
                 self._pending_operations_condition.notify_all()
 
-    async def _discovery_cooldown(self):
+    async def _discovery_cooldown(self) -> None:
         now = time.time()
         # Reset discovery and subscribe cooldowns
         self._mqtt_data.last_discovery = now

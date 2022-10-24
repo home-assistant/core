@@ -287,6 +287,7 @@ async def async_get_platform_config_from_yaml(
     config_yaml: ConfigType | None = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
+    platform_configs: Any | None
     mqtt_data = get_mqtt_data(hass)
     if config_yaml is None:
         config_yaml = mqtt_data.config
@@ -294,6 +295,7 @@ async def async_get_platform_config_from_yaml(
         return []
     if not (platform_configs := config_yaml.get(platform_domain)):
         return []
+    assert isinstance(platform_configs, list)
     return platform_configs
 
 

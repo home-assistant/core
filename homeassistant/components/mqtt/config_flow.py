@@ -302,7 +302,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             values: dict[str, Any],
             error_code: str,
             schema: Callable[[Any], Any],
-        ):
+        ) -> None:
             """Validate the user input."""
             nonlocal bad_input
             try:
@@ -682,7 +682,7 @@ def try_connection(
 
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
-    def on_connect(client_, userdata, flags, result_code):
+    def on_connect(client_, userdata, flags, result_code: int) -> None:
         """Handle connection result."""
         result.put(result_code == mqtt.CONNACK_ACCEPTED)
 
