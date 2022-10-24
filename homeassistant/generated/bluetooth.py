@@ -228,6 +228,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
     },
     {
+        "domain": "oralb",
+        "manufacturer_id": 220,
+    },
+    {
         "domain": "qingping",
         "local_name": "Qingping*",
         "connectable": False,

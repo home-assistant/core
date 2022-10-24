@@ -885,6 +885,9 @@ open-meteo==0.2.1
 # homeassistant.components.openerz
 openerz-api==0.1.0
 
+# homeassistant.components.oralb
+oralb-ble==0.3.0
+
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
 

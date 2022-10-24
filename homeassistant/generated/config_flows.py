@@ -282,6 +282,7 @@ FLOWS = {
         "opentherm_gw",
         "openuv",
         "openweathermap",
+        "oralb",
         "overkiz",
         "ovo_energy",
         "owntracks",

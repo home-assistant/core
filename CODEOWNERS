@@ -827,6 +827,8 @@ build.json @home-assistant/supervisor
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi
 /homeassistant/components/opnsense/ @mtreinish
 /tests/components/opnsense/ @mtreinish
+/homeassistant/components/oralb/ @bdraco
+/tests/components/oralb/ @bdraco
 /homeassistant/components/oru/ @bvlaicu
 /homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne
 /tests/components/overkiz/ @imicknl @vlebourl @tetienne
