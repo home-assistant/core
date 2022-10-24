@@ -58,7 +58,7 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         )
         if disconnected_future.done():
             disconnected_future.result()
-        return done[0]
+        return next(iter(done))
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
