@@ -1,67 +1,39 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import timedelta
 import logging
+from typing import Optional, Union
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothDataProcessor,
+    PassiveBluetoothDataUpdate,
+    PassiveBluetoothEntityKey,
+    PassiveBluetoothProcessorEntity,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, TIME_SECONDS
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, TIME_SECONDS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=1)
 
-
-@dataclass
-class OralBSensorEntityDescription(SensorEntityDescription):
-    """Provide a description of a OralB sensor."""
-
-    # For backwards compat, allow description to override unique ID key to use
-    unique_id: str | None = None
-
-
-SENSORS = (
-    OralBSensorEntityDescription(
-        key="battery",
-        name="Battery",
-        unique_id="oralb_battery",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
+SENSOR_DESCRIPTIONS = {
+    (SensorDeviceClass.TEMPERATURE, TIME_SECONDS): SensorEntityDescription(
+        key=f"{SensorDeviceClass.TEMPERATURE}_{TIME_SECONDS}",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TIME_SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    OralBSensorEntityDescription(
-        key="status",
-        name="Status",
-        unique_id="oralb_status",
-        icon="mdi:toothbrush-electric",
-    ),
-    OralBSensorEntityDescription(
-        key="brush_time",
-        name="Brush Time",
-        unique_id="oralb_brushtime",
-        native_unit_of_measurement=TIME_SECONDS,
-        icon="",
-    ),
-    OralBSensorEntityDescription(
-        key="mode",
-        name="Mode",
-        unique_id="oralb_mode",
-        icon="mdi:tooth",
-    ),
-)
+}
 
 
 async def async_setup_entry(
@@ -70,37 +42,57 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        OralBSensor(data.coordinator, data.device, description)
-        for description in SENSORS
+    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
+    entry.async_on_unload(
+        processor.async_add_entities_listener(
+            OralBBluetoothSensorEntity, async_add_entities
+        )
     )
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    entry.async_on_unload(coordinator.async_register_processor(processor))
+    # async_add_entities(
+    #     OralBSensor(coordinator, processor, description)
+    #     for description in SENSORS
+    # )
 
 
-class OralBSensor(CoordinatorEntity, SensorEntity):
-    """Implementation of the OralB sensor."""
+def device_key_to_bluetooth_entity_key(
+    device_key,
+) -> PassiveBluetoothEntityKey:
+    """Convert a device key to an entity key."""
+    return PassiveBluetoothEntityKey(device_key.key, device_key.device_id)
 
-    _attr_has_entity_name = True
 
-    def __init__(self, coordinator, device, description):
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self.device = device
+def sensor_device_info_to_hass(
+    sensor_device_info,
+) -> DeviceInfo:
+    """Convert a sensor device info to a sensor device info."""
+    hass_device_info = DeviceInfo({})
+    if sensor_device_info.name is not None:
+        hass_device_info[ATTR_NAME] = sensor_device_info.name
+    if sensor_device_info.manufacturer is not None:
+        hass_device_info[ATTR_MANUFACTURER] = sensor_device_info.manufacturer
+    if sensor_device_info.model is not None:
+        hass_device_info[ATTR_MODEL] = sensor_device_info.model
+    return hass_device_info
 
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.device.ble_device.address)},
-            manufacturer="OralB",
-            name="OralB Toothbrush",
-        )
 
-        self._attr_unique_id = (
-            f"{self.device.ble_device.address}_{description.unique_id}"
-        )
+def sensor_update_to_bluetooth_data_update(
+    sensor_update,
+) -> PassiveBluetoothDataUpdate:
+    """Convert a sensor update to a bluetooth data update."""
+    return PassiveBluetoothDataUpdate()
+
+
+class OralBBluetoothSensorEntity(
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
+    ],
+    SensorEntity,
+):
+    """Representation of a Tilt Hydrometer BLE sensor."""
 
     @property
-    def native_value(self) -> float | None:
-        """Return sensor state."""
-        value = self.device.result[self.entity_description.key]
-        return value
+    def native_value(self) -> int | float | None:
+        """Return the native value."""
+        return self.processor.entity_data.get(self.entity_key)
