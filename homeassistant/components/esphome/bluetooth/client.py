@@ -52,11 +52,13 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
         )
         if not disconnected_event:
             raise BleakError("Not connected")
+        task = asyncio.create_task(func(self, *args, **kwargs))
         done, _ = await asyncio.wait(
-            (func(self, *args, **kwargs), disconnected_event.wait()),
+            (task, disconnected_event.wait()),
             return_when=asyncio.FIRST_COMPLETED,
         )
         if disconnected_event.is_set():
+            task.cancel()
             raise BleakError(
                 f"{self._ble_device.name} ({self._ble_device.address}): "  # pylint: disable=protected-access
                 "Disconnected during operation"
