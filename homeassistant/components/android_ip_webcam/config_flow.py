@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
@@ -75,10 +74,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match(
             {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
         )
-        # to be removed when YAML import is removed
-        title = user_input.get(CONF_NAME) or user_input[CONF_HOST]
         if not (errors := await validate_input(self.hass, user_input)):
-            return self.async_create_entry(title=title, data=user_input)
+            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         return self.async_show_form(
             step_id="user",
