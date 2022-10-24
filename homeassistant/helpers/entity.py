@@ -343,7 +343,7 @@ class Entity(ABC):
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options.
 
-        These will be stored in the entity registry the first time the  entity is seen,
+        These will be stored in the entity registry the first time the entity is seen,
         and then never updated.
 
         Implemented by component base class, should not be extended by integrations.

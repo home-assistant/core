@@ -480,9 +480,11 @@ class SensorEntity(Entity):
         These will be stored in the entity registry the first time the entity is seen,
         and then never updated.
         """
+        # Unit suggested by the integration
         suggested_unit_of_measurement = self.suggested_unit_of_measurement
 
         if suggested_unit_of_measurement is None:
+            # Fallback to suggested by the unit conversion rules
             suggested_unit_of_measurement = self.hass.config.units.get_converted_unit(
                 self.device_class, self.native_unit_of_measurement
             )
@@ -567,11 +569,12 @@ class SensorEntity(Entity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
-        # Highest priority: Unit set by user, with fallback to unit conversion rules
+        # Highest priority, for registered entities: unit set by user, with fallback to unit suggested
+        # by integration or secondary fallback to unit conversion rules
         if self._sensor_option_unit_of_measurement:
             return self._sensor_option_unit_of_measurement
 
-        # Second priority: Unit suggested by integration for non registered entities
+        # Second priority, for non registered entities: unit suggested by integration
         if not self.registry_entry and self.suggested_unit_of_measurement:
             return self.suggested_unit_of_measurement
 
