@@ -26,7 +26,7 @@ async def setup_repairs(hass):
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock, request):
+def mock_all(aioclient_mock: AiohttpClientMocker, request: pytest.FixtureRequest):
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
