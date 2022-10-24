@@ -6,11 +6,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN
+from .const import ACCOUNT, DOMAIN
 
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str, ACCOUNT: str}
 )
 
 
@@ -30,7 +30,9 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             client = OVOEnergy()
             try:
                 authenticated = await client.authenticate(
-                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    user_input.get(ACCOUNT, None),
                 )
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
@@ -44,6 +46,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                         data={
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            ACCOUNT: user_input.get(ACCOUNT, None),
                         },
                     )
 
@@ -66,7 +69,9 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             client = OVOEnergy()
             try:
                 authenticated = await client.authenticate(
-                    self.username, user_input[CONF_PASSWORD]
+                    self.username,
+                    user_input[CONF_PASSWORD],
+                    user_input.get(ACCOUNT, None),
                 )
             except aiohttp.ClientError:
                 errors["base"] = "connection_error"
@@ -78,6 +83,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                         data={
                             CONF_USERNAME: self.username,
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            ACCOUNT: user_input.get(ACCOUNT, None),
                         },
                     )
                     return self.async_abort(reason="reauth_successful")
