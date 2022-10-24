@@ -35,6 +35,7 @@ from .const import (
     IDENTIFIER_LEGACY_ACCESSORY_ID,
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
     IDENTIFIER_SERIAL_NUMBER,
+    STARTUP_EXCEPTIONS,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
@@ -187,11 +188,12 @@ class HKDevice:
         """
         try:
             await self.pairing.async_populate_accessories_state(force_update=True)
-        except (asyncio.TimeoutError, AccessoryNotFoundError):
+        except STARTUP_EXCEPTIONS as ex:
             _LOGGER.debug(
                 "Failed to populate BLE accessory state for %s, accessory may be sleeping"
-                " and will be retried the next time it advertises",
+                " and will be retried the next time it advertises: %s",
                 self.config_entry.title,
+                ex,
             )
 
     async def async_setup(self) -> None:
@@ -220,7 +222,7 @@ class HKDevice:
                 # BLE devices may sleep and we can't force a connection
                 raise
             entry.async_on_unload(
-                self.hass.bus.async_listen_once(
+                self.hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
                     self._async_retry_populate_ble_accessory_state,
                 )
