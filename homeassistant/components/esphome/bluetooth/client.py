@@ -47,12 +47,11 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     async def _async_wrap_bluetooth_connected_operation(
         self: "ESPHomeClient", *args: Any, **kwargs: Any
     ) -> Any:
-        if not self._is_connected:  # pylint: disable=protected-access
-            raise BleakError("Not connected")
         disconnected_future = (
             self._disconnected_future  # pylint: disable=protected-access
         )
-        assert disconnected_future is not None
+        if not disconnected_future:  # pylint: disable=protected-access
+            raise BleakError("Not connected")
         done, _ = await asyncio.wait(
             (func(self, *args, **kwargs), disconnected_future),
             return_when=asyncio.FIRST_COMPLETED,
@@ -131,6 +130,7 @@ class ESPHomeClient(BaseBleakClient):
                     f"{self._ble_device.name} ({self._ble_device.address}): Disconnected during operation"
                 )
             )
+            self._disconnected_future = None
         self._async_call_bleak_disconnected_callback()
         self._unsubscribe_connection_state()
 
