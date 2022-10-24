@@ -199,6 +199,8 @@ class Coordinator(ContextCoordinator[dict[int, Coil], int]):
     @property
     def series(self) -> Series:
         """Return which series of pump we are connected to."""
+        if self.heatpump.model in (Model.S1155, Model.S1255, Model.S320, Model.SMOS40):
+            return Series.S
         return Series.F
 
     @property
