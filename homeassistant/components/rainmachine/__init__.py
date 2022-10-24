@@ -349,8 +349,8 @@ async def async_setup_entry(  # noqa: C901
         value = call.data[CONF_VALUE]
         if units := call.data.get(CONF_UNIT_OF_MEASUREMENT):
             await controller.watering.post_flowmeter(value=value, units=units)
-            return
-        await controller.watering.post_flowmeter(value=value)
+        else:
+            await controller.watering.post_flowmeter(value=value)
 
     @call_with_controller(update_programs_and_zones=False)
     async def async_push_weather_data(
