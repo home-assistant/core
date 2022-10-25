@@ -69,10 +69,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# When doing a full sync, how far back to sync
-SYNC_EVENT_MIN_TIME = timedelta(days=-90)
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+
+# Avoid syncing super old data on initial syncs. Note that old but active
+# recurring events are still included.
+SYNC_EVENT_MIN_TIME = timedelta(days=-90)
 
 # Events have a transparency that determine whether or not they block time on calendar.
 # When an event is opaque, it means "Show me as busy" which is the default.  Events that
@@ -350,11 +351,10 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        if not self.coordinator.data:
+        if not (timeline := self.coordinator.data):
             raise HomeAssistantError(
                 "Unable to get events: Sync from server has not completed"
             )
-        timeline = self.coordinator.data
         result_items = timeline.overlapping(
             dt_util.as_local(start_date),
             dt_util.as_local(end_date),
