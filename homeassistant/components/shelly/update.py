@@ -123,7 +123,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up update entities for Shelly component."""
     if get_device_entry_gen(config_entry) == 2:
-        # Remove legacy update binary sensors, remove in 2023.2.0
+        # Remove legacy update binary sensor & buttons, remove in 2023.2.0
         rpc_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
         assert rpc_coordinator
         mac = rpc_coordinator.mac
@@ -136,7 +136,7 @@ async def async_setup_entry(
             hass, config_entry, async_add_entities, RPC_UPDATES, RpcUpdateEntity
         )
 
-    # Remove legacy update binary sensors, remove in 2023.2.0
+    # Remove legacy update binary sensor & buttons, remove in 2023.2.0
     block_coordinator = get_entry_data(hass)[config_entry.entry_id].block
     assert block_coordinator
     mac = block_coordinator.mac
