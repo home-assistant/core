@@ -142,6 +142,7 @@ DHCP: list[dict[str, str | bool]] = [
     {"domain": "tplink", "registered_devices": True},
     {"domain": "tplink", "hostname": "es*", "macaddress": "54AF97*"},
     {"domain": "tplink", "hostname": "ep*", "macaddress": "E848B8*"},
+    {"domain": "tplink", "hostname": "ep*", "macaddress": "1C61B4*"},
     {"domain": "tplink", "hostname": "ep*", "macaddress": "003192*"},
     {"domain": "tplink", "hostname": "hs*", "macaddress": "1C3BF3*"},
     {"domain": "tplink", "hostname": "hs*", "macaddress": "50C7BF*"},
