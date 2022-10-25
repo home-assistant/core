@@ -1,6 +1,7 @@
 """Support for MQTT locks."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 from typing import Any
 
@@ -32,7 +33,7 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
-from .models import MqttValueTemplate
+from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
 from .util import get_mqtt_data
 
 CONF_PAYLOAD_LOCK = "payload_lock"
@@ -112,8 +113,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT Lock platform."""
     async_add_entities([MqttLock(hass, config, config_entry, discovery_data)])
@@ -125,19 +126,26 @@ class MqttLock(MqttEntity, LockEntity):
     _entity_id_format = lock.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LOCK_ATTRIBUTES_BLOCKED
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize the lock."""
-        self._state = False
-        self._optimistic = False
+        self._state: bool | None = False
+        self._optimistic: bool = False
+        self._value_template: Callable[..., ReceivePayloadType]
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._optimistic = config[CONF_OPTIMISTIC]
 
@@ -146,12 +154,12 @@ class MqttLock(MqttEntity, LockEntity):
             entity=self,
         ).async_render_with_possible_json_value
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def message_received(msg):
+        def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             payload = self._value_template(msg.payload)
             if payload == self._config[CONF_STATE_LOCKED]:
@@ -178,12 +186,12 @@ class MqttLock(MqttEntity, LockEntity):
                 },
             )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def is_locked(self) -> bool:
+    def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         return self._state
 
