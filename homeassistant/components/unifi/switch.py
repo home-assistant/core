@@ -400,7 +400,7 @@ class UnifiBlockClientSwitch(SwitchEntity):
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
-        if not self._attr_is_on:
+        if not self.is_on:
             return "mdi:network-off"
         return "mdi:network"
 
@@ -502,7 +502,7 @@ class UnifiDPIRestrictionSwitch(SwitchEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        if self._attr_is_on:
+        if self.is_on:
             return "mdi:network"
         return "mdi:network-off"
 
