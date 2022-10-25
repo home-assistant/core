@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.client_factory import UpnpFactory
-from async_upnp_client.profiles.igd import IgdDevice, StatusInfo
+from async_upnp_client.profiles.igd import IgdDevice
 from getmac import get_mac_address
 
 from homeassistant.core import HomeAssistant
@@ -139,39 +139,29 @@ class Device:
         """Get all data from device."""
         _LOGGER.debug("Getting data for device: %s", self)
         igd_state = await self._igd_device.async_get_traffic_and_status_data()
+        status_info = igd_state.status_info
+        if status_info is not None and not isinstance(status_info, Exception):
+            wan_status = status_info.connection_status
+            router_uptime = status_info.uptime
+        else:
+            wan_status = None
+            router_uptime = None
+
+        def get_value(value: Any) -> Any:
+            if value is None or isinstance(value, Exception):
+                return None
+
+            return value
 
         return {
             TIMESTAMP: igd_state.timestamp,
-            BYTES_RECEIVED: igd_state.bytes_received
-            if igd_state.bytes_received is not None
-            and not isinstance(igd_state.bytes_received, Exception)
-            else None,
-            BYTES_SENT: igd_state.bytes_sent
-            if igd_state.bytes_received is not None
-            and not isinstance(igd_state.bytes_received, Exception)
-            else None,
-            PACKETS_RECEIVED: igd_state.packets_received
-            if igd_state.packets_received is not None
-            and not isinstance(igd_state.packets_received, Exception)
-            else None,
-            PACKETS_SENT: igd_state.packets_sent
-            if igd_state.packets_sent is not None
-            and not isinstance(igd_state.packets_sent, Exception)
-            else None,
-            WAN_STATUS: igd_state.status_info.connection_status
-            if isinstance(igd_state.status_info, StatusInfo)
-            and igd_state.status_info.connection_status is not None
-            and not isinstance(igd_state.status_info.connection_status, Exception)
-            else None,
-            ROUTER_UPTIME: igd_state.status_info.uptime
-            if isinstance(igd_state.status_info, StatusInfo)
-            and igd_state.status_info.uptime is not None
-            and not isinstance(igd_state.status_info.uptime, Exception)
-            else None,
-            ROUTER_IP: igd_state.external_ip_address
-            if igd_state.external_ip_address is not None
-            and not isinstance(igd_state.external_ip_address, Exception)
-            else None,
+            BYTES_RECEIVED: get_value(igd_state.bytes_received),
+            BYTES_SENT: get_value(igd_state.bytes_sent),
+            PACKETS_RECEIVED: get_value(igd_state.packets_received),
+            PACKETS_SENT: get_value(igd_state.packets_sent),
+            WAN_STATUS: wan_status,
+            ROUTER_UPTIME: router_uptime,
+            ROUTER_IP: get_value(igd_state.external_ip_address),
             KIBIBYTES_PER_SEC_RECEIVED: igd_state.kibibytes_per_sec_received,
             KIBIBYTES_PER_SEC_SENT: igd_state.kibibytes_per_sec_sent,
             PACKETS_PER_SEC_RECEIVED: igd_state.packets_per_sec_received,
