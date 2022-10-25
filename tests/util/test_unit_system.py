@@ -1,6 +1,9 @@
 """Test the unit system helper."""
+from __future__ import annotations
+
 import pytest
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
@@ -388,38 +391,74 @@ def test_get_unit_system_invalid(key: str) -> None:
 @pytest.mark.parametrize(
     "unit_system, device_class, original_unit, state_unit",
     (
-        # Test distance conversion
-        (METRIC_SYSTEM, "distance", LENGTH_FEET, LENGTH_METERS),
-        (METRIC_SYSTEM, "distance", LENGTH_INCHES, LENGTH_MILLIMETERS),
-        (METRIC_SYSTEM, "distance", LENGTH_MILES, LENGTH_KILOMETERS),
-        (METRIC_SYSTEM, "distance", LENGTH_YARD, LENGTH_METERS),
-        (METRIC_SYSTEM, "distance", LENGTH_KILOMETERS, None),
-        (METRIC_SYSTEM, "distance", "very_long", None),
+        (METRIC_SYSTEM, SensorDeviceClass.DISTANCE, LENGTH_FEET, LENGTH_METERS),
+        (METRIC_SYSTEM, SensorDeviceClass.DISTANCE, LENGTH_INCHES, LENGTH_MILLIMETERS),
+        (METRIC_SYSTEM, SensorDeviceClass.DISTANCE, LENGTH_MILES, LENGTH_KILOMETERS),
+        (METRIC_SYSTEM, SensorDeviceClass.DISTANCE, LENGTH_YARD, LENGTH_METERS),
+        (METRIC_SYSTEM, SensorDeviceClass.DISTANCE, LENGTH_KILOMETERS, None),
+        (METRIC_SYSTEM, SensorDeviceClass.DISTANCE, "very_long", None),
         # Test speed conversion
-        (METRIC_SYSTEM, "speed", SPEED_FEET_PER_SECOND, SPEED_KILOMETERS_PER_HOUR),
-        (METRIC_SYSTEM, "speed", SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR),
-        (METRIC_SYSTEM, "speed", SPEED_KILOMETERS_PER_HOUR, None),
-        (METRIC_SYSTEM, "speed", SPEED_KNOTS, None),
-        (METRIC_SYSTEM, "speed", SPEED_METERS_PER_SECOND, None),
-        (METRIC_SYSTEM, "speed", "very_fast", None),
-        # Test distance conversion
-        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_CENTIMETERS, LENGTH_INCHES),
-        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_KILOMETERS, LENGTH_MILES),
-        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_METERS, LENGTH_FEET),
-        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_MILLIMETERS, LENGTH_INCHES),
-        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_MILES, None),
-        (US_CUSTOMARY_SYSTEM, "distance", "very_long", None),
+        (
+            METRIC_SYSTEM,
+            SensorDeviceClass.SPEED,
+            SPEED_FEET_PER_SECOND,
+            SPEED_KILOMETERS_PER_HOUR,
+        ),
+        (
+            METRIC_SYSTEM,
+            SensorDeviceClass.SPEED,
+            SPEED_MILES_PER_HOUR,
+            SPEED_KILOMETERS_PER_HOUR,
+        ),
+        (METRIC_SYSTEM, SensorDeviceClass.SPEED, SPEED_KILOMETERS_PER_HOUR, None),
+        (METRIC_SYSTEM, SensorDeviceClass.SPEED, SPEED_KNOTS, None),
+        (METRIC_SYSTEM, SensorDeviceClass.SPEED, SPEED_METERS_PER_SECOND, None),
+        (METRIC_SYSTEM, SensorDeviceClass.SPEED, "very_fast", None),
+        (
+            US_CUSTOMARY_SYSTEM,
+            SensorDeviceClass.DISTANCE,
+            LENGTH_CENTIMETERS,
+            LENGTH_INCHES,
+        ),
+        (
+            US_CUSTOMARY_SYSTEM,
+            SensorDeviceClass.DISTANCE,
+            LENGTH_KILOMETERS,
+            LENGTH_MILES,
+        ),
+        (US_CUSTOMARY_SYSTEM, SensorDeviceClass.DISTANCE, LENGTH_METERS, LENGTH_FEET),
+        (
+            US_CUSTOMARY_SYSTEM,
+            SensorDeviceClass.DISTANCE,
+            LENGTH_MILLIMETERS,
+            LENGTH_INCHES,
+        ),
+        (US_CUSTOMARY_SYSTEM, SensorDeviceClass.DISTANCE, LENGTH_MILES, None),
+        (US_CUSTOMARY_SYSTEM, SensorDeviceClass.DISTANCE, "very_long", None),
         # Test speed conversion
-        (US_CUSTOMARY_SYSTEM, "speed", SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR),
-        (US_CUSTOMARY_SYSTEM, "speed", SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR),
-        (US_CUSTOMARY_SYSTEM, "speed", SPEED_FEET_PER_SECOND, None),
-        (US_CUSTOMARY_SYSTEM, "speed", SPEED_KNOTS, None),
-        (US_CUSTOMARY_SYSTEM, "speed", SPEED_MILES_PER_HOUR, None),
-        (US_CUSTOMARY_SYSTEM, "speed", "very_fast", None),
+        (
+            US_CUSTOMARY_SYSTEM,
+            SensorDeviceClass.SPEED,
+            SPEED_METERS_PER_SECOND,
+            SPEED_MILES_PER_HOUR,
+        ),
+        (
+            US_CUSTOMARY_SYSTEM,
+            SensorDeviceClass.SPEED,
+            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_MILES_PER_HOUR,
+        ),
+        (US_CUSTOMARY_SYSTEM, SensorDeviceClass.SPEED, SPEED_FEET_PER_SECOND, None),
+        (US_CUSTOMARY_SYSTEM, SensorDeviceClass.SPEED, SPEED_KNOTS, None),
+        (US_CUSTOMARY_SYSTEM, SensorDeviceClass.SPEED, SPEED_MILES_PER_HOUR, None),
+        (US_CUSTOMARY_SYSTEM, SensorDeviceClass.SPEED, "very_fast", None),
     ),
 )
 def test_get_converted_unit(
-    unit_system, device_class, original_unit, state_unit
+    unit_system: UnitSystem,
+    device_class: SensorDeviceClass,
+    original_unit: str,
+    state_unit: str | None,
 ) -> None:
     """Test unit conversion rules."""
     assert unit_system.get_converted_unit(device_class, original_unit) == state_unit
