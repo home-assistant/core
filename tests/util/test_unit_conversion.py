@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.const import (
+    ENERGY_GIGA_JOULE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -78,6 +79,7 @@ INVALID_SYMBOL = "bob"
         (EnergyConverter, ENERGY_WATT_HOUR),
         (EnergyConverter, ENERGY_KILO_WATT_HOUR),
         (EnergyConverter, ENERGY_MEGA_WATT_HOUR),
+        (EnergyConverter, ENERGY_GIGA_JOULE),
         (MassConverter, MASS_GRAMS),
         (MassConverter, MASS_KILOGRAMS),
         (MassConverter, MASS_MICROGRAMS),
@@ -268,6 +270,8 @@ def test_distance_convert(
         (10, ENERGY_KILO_WATT_HOUR, 0.01, ENERGY_MEGA_WATT_HOUR),
         (10, ENERGY_MEGA_WATT_HOUR, 10000000, ENERGY_WATT_HOUR),
         (10, ENERGY_MEGA_WATT_HOUR, 10000, ENERGY_KILO_WATT_HOUR),
+        (10, ENERGY_GIGA_JOULE, 10000 / 3.6, ENERGY_KILO_WATT_HOUR),
+        (10, ENERGY_GIGA_JOULE, 10 / 3.6, ENERGY_MEGA_WATT_HOUR),
     ],
 )
 def test_energy_convert(
