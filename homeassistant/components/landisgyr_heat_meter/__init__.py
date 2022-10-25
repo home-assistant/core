@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from ultraheat_api import HeatMeterService, UltraheatReader
+import ultraheat_api
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, Platform
@@ -22,9 +22,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up heat meter from a config entry."""
 
     _LOGGER.debug("Initializing %s integration on %s", DOMAIN, entry.data[CONF_DEVICE])
-    reader = UltraheatReader(entry.data[CONF_DEVICE])
-
-    api = HeatMeterService(reader)
+    reader = ultraheat_api.UltraheatReader(entry.data[CONF_DEVICE])
+    api = ultraheat_api.HeatMeterService(reader)
 
     async def async_update_data():
         """Fetch data from the API."""

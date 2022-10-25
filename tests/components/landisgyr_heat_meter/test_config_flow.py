@@ -1,6 +1,6 @@
 """Test the Landis + Gyr Heat Meter config flow."""
 from dataclasses import dataclass
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import serial.tools.list_ports
 
@@ -17,6 +17,8 @@ def mock_serial_port():
     port.manufacturer = "Virtual serial port"
     port.device = "/dev/ttyUSB1234"
     port.description = "Some serial port"
+    port.pid = 9876
+    port.vid = 5678
 
     return port
 
@@ -29,7 +31,9 @@ class MockUltraheatRead:
     device_number: str
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.config_flow.HeatMeterService")
+@patch(
+    "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+)
 async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test manual entry."""
 
@@ -67,7 +71,9 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
     }
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.config_flow.HeatMeterService")
+@patch(
+    "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+)
 @patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
 async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
     """Test select from list entry."""
@@ -94,7 +100,9 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
     }
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.config_flow.HeatMeterService")
+@patch(
+    "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+)
 async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test manual entry fails."""
 
@@ -128,7 +136,9 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.config_flow.HeatMeterService")
+@patch(
+    "homeassistant.components.landisgyr_heat_meter.config_flow.ultraheat_api.HeatMeterService"
+)
 @patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
 async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
     """Test select from list entry fails."""
@@ -149,79 +159,3 @@ async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
-
-
-@patch("homeassistant.components.landisgyr_heat_meter.config_flow.HeatMeterService")
-@patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
-async def test_get_serial_by_id_realpath(
-    mock_port, mock_heat_meter, hass: HomeAssistant
-) -> None:
-    """Test getting the serial path name."""
-
-    mock_heat_meter().read.return_value = MockUltraheatRead("LUGCUH50", "123456789")
-    port = mock_serial_port()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    scandir = [MagicMock(), MagicMock()]
-    scandir[0].path = "/dev/ttyUSB1234"
-    scandir[0].is_symlink.return_value = True
-    scandir[1].path = "/dev/ttyUSB5678"
-    scandir[1].is_symlink.return_value = True
-
-    with patch("os.path") as path:
-        with patch("os.scandir", return_value=scandir):
-            path.isdir.return_value = True
-            path.realpath.side_effect = ["/dev/ttyUSB1234", "/dev/ttyUSB5678"]
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {"device": port.device}
-            )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "LUGCUH50"
-    assert result["data"] == {
-        "device": port.device,
-        "model": "LUGCUH50",
-        "device_number": "123456789",
-    }
-
-
-@patch("homeassistant.components.landisgyr_heat_meter.config_flow.HeatMeterService")
-@patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
-async def test_get_serial_by_id_dev_path(
-    mock_port, mock_heat_meter, hass: HomeAssistant
-) -> None:
-    """Test getting the serial path name with no realpath result."""
-
-    mock_heat_meter().read.return_value = MockUltraheatRead("LUGCUH50", "123456789")
-    port = mock_serial_port()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    scandir = [MagicMock()]
-    scandir[0].path.return_value = "/dev/serial/by-id/USB5678"
-    scandir[0].is_symlink.return_value = True
-
-    with patch("os.path") as path:
-        with patch("os.scandir", return_value=scandir):
-            path.isdir.return_value = True
-            path.realpath.side_effect = ["/dev/ttyUSB5678"]
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {"device": port.device}
-            )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "LUGCUH50"
-    assert result["data"] == {
-        "device": port.device,
-        "model": "LUGCUH50",
-        "device_number": "123456789",
-    }

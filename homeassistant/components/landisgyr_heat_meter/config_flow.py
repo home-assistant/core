@@ -2,16 +2,18 @@
 from __future__ import annotations
 
 import logging
-import os
+from typing import Any
 
 import async_timeout
-import serial
-import serial.tools.list_ports
-from ultraheat_api import HeatMeterService, UltraheatReader
+from serial.tools import list_ports
+import ultraheat_api
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import usb
 from homeassistant.const import CONF_DEVICE
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, ULTRAHEAT_TIMEOUT
@@ -32,7 +34,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Step when setting up serial configuration."""
         errors = {}
 
@@ -41,7 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_setup_serial_manual_path()
 
             dev_path = await self.hass.async_add_executor_job(
-                get_serial_by_id, user_input[CONF_DEVICE]
+                usb.get_serial_by_id, user_input[CONF_DEVICE]
             )
             _LOGGER.debug("Using this path : %s", dev_path)
 
@@ -50,12 +54,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
-        ports = await self.get_ports()
+        ports = await get_usb_ports(self.hass)
+        ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 
         schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(ports)})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_setup_serial_manual_path(self, user_input=None):
+    async def async_step_setup_serial_manual_path(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Set path manually."""
         errors = {}
 
@@ -93,8 +100,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def validate_ultraheat(self, port: str):
         """Validate the user input allows us to connect."""
 
-        reader = UltraheatReader(port)
-        heat_meter = HeatMeterService(reader)
+        reader = ultraheat_api.UltraheatReader(port)
+        heat_meter = ultraheat_api.HeatMeterService(reader)
         try:
             async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):
                 # validate and retrieve the model and device number for a unique id
@@ -107,30 +114,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Successfully connected to %s. Got data: %s", port, data)
         return data.model, data.device_number
 
-    async def get_ports(self) -> dict:
-        """Get the available ports."""
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        formatted_ports = {}
-        for port in ports:
-            formatted_ports[
-                port.device
-            ] = f"{port}, s/n: {port.serial_number or 'n/a'}" + (
-                f" - {port.manufacturer}" if port.manufacturer else ""
+
+async def get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
+    """Return a dict of USB ports and their friendly names."""
+    ports = await hass.async_add_executor_job(list_ports.comports)
+    port_descriptions = {}
+    for port in ports:
+        if (
+            port.vid
+        ):  # this prevents an issue with usb_device_from_port not working for ports without vid on RPi
+            usb_device = usb.usb_device_from_port(port)
+            dev_path = usb.get_serial_by_id(usb_device.device)
+            human_name = usb.human_readable_device_name(
+                dev_path,
+                usb_device.serial_number,
+                usb_device.manufacturer,
+                usb_device.description,
+                usb_device.vid,
+                usb_device.pid,
             )
-        formatted_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
-        return formatted_ports
+            port_descriptions[dev_path] = human_name
 
-
-def get_serial_by_id(dev_path: str) -> str:
-    """Return a /dev/serial/by-id match for given device if available."""
-    by_id = "/dev/serial/by-id"
-    if not os.path.isdir(by_id):
-        return dev_path
-
-    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
-        if os.path.realpath(path) == dev_path:
-            return path
-    return dev_path
+    return port_descriptions
 
 
 class CannotConnect(HomeAssistantError):

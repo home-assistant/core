@@ -42,7 +42,7 @@ class MockHeatMeterResponse:
     meter_date_time: datetime.datetime
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.HeatMeterService")
+@patch("homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService")
 async def test_create_sensors(mock_heat_meter, hass):
     """Test sensor."""
     entry_data = {
@@ -107,7 +107,7 @@ async def test_create_sensors(mock_heat_meter, hass):
     assert entity_registry_entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
-@patch("homeassistant.components.landisgyr_heat_meter.HeatMeterService")
+@patch("homeassistant.components.landisgyr_heat_meter.ultraheat_api.HeatMeterService")
 async def test_restore_state(mock_heat_meter, hass):
     """Test sensor restore state."""
     # Home assistant is not running yet
