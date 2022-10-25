@@ -5,6 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import functools
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -292,7 +293,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @callback
-    def _value_is_expired(self, *_) -> None:
+    def _value_is_expired(self, *_: Any) -> None:
         """Triggered when value is expired."""
         self._expiration_trigger = None
         self._expired = True
