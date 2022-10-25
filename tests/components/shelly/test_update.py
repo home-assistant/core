@@ -46,7 +46,6 @@ async def test_remove_legacy_entities(
     object_id,
     mock_block_device,
     mock_rpc_device,
-    caplog,
 ):
     """Test removes legacy update entities."""
     entity_id = f"{domain}.test_name_{object_id}"
@@ -63,7 +62,6 @@ async def test_remove_legacy_entities(
 
     await init_integration(hass, gen)
 
-    assert f"Removing entity: {entity_id}" in caplog.text
     assert entity_registry.async_get(entity_id) is None
 
 
