@@ -26,8 +26,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
-
 CONF_DATA_GROUP = "data_group"
 CONF_ELEMENT = "element"
 CONF_INVERT = "invert"
@@ -223,7 +221,6 @@ class NetdataData:
         self.api = api
         self.available = True
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Netdata REST API."""
 
