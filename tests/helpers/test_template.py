@@ -1348,6 +1348,22 @@ def test_is_state(hass):
     )
     assert tpl.async_render() is False
 
+    tpl = template.Template(
+        """
+{% if "test.object" is is_state("available") %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | select("is_state", "available") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "test.object"
+
 
 def test_is_state_attr(hass):
     """Test is_state_attr method."""
@@ -1368,10 +1384,28 @@ def test_is_state_attr(hass):
     )
     assert tpl.async_render() is False
 
+    tpl = template.Template(
+        """
+{% if "test.object" is is_state_attr("mode", "on") %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | select("is_state_attr", "mode", "on") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "test.object"
+
 
 def test_state_attr(hass):
     """Test state_attr method."""
-    hass.states.async_set("test.object", "available", {"mode": "on"})
+    hass.states.async_set(
+        "test.object", "available", {"effect": "action", "mode": "on"}
+    )
     tpl = template.Template(
         """
 {% if state_attr("test.object", "mode") == "on" %}yes{% else %}no{% endif %}
@@ -1388,6 +1422,22 @@ def test_state_attr(hass):
     )
     assert tpl.async_render() is True
 
+    tpl = template.Template(
+        """
+{% if "test.object" | state_attr("mode") == "on" %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | map("state_attr", "effect") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "action"
+
 
 def test_states_function(hass):
     """Test using states as a function."""
@@ -1397,6 +1447,22 @@ def test_states_function(hass):
 
     tpl2 = template.Template('{{ states("test.object2") }}', hass)
     assert tpl2.async_render() == "unknown"
+
+    tpl = template.Template(
+        """
+{% if "test.object" | states == "available" %}yes{% else %}no{% endif %}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{{ ['test.object'] | map("states") | first | default }}
+        """,
+        hass,
+    )
+    assert tpl.async_render() == "available"
 
 
 @patch(

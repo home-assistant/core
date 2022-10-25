@@ -147,7 +147,7 @@ class SensorDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `GJ`
     """
 
     FREQUENCY = "frequency"
@@ -245,9 +245,9 @@ class SensorDeviceClass(StrEnum):
     PRECIPITATION_INTENSITY = "precipitation_intensity"
     """Precipitation intensity.
 
-    Unit of measurement:
-    - `in/d`, `in/h`
-    - `mm/d`, `mm/h`
+    Unit of measurement: UnitOfVolumetricFlux
+    - SI /metric: `mm/d`, `mm/h`
+    - USCS / imperial: `in/d`, `in/h`
     """
 
     PRESSURE = "pressure"
@@ -275,7 +275,7 @@ class SensorDeviceClass(StrEnum):
     SPEED = "speed"
     """Generic speed.
 
-    Unit of measurement: `SPEED_*` or `PRECIPITATION_INTENSITY_*` units
+    Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
     - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
     - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
     - Nautical: `kn`
@@ -341,6 +341,15 @@ class SensorDeviceClass(StrEnum):
     - USCS / imperial: `oz`, `lb`
     """
 
+    WIND_SPEED = "wind_speed"
+    """Wind speed.
+
+    Unit of measurement: `SPEED_*` units
+    - SI /metric: `m/s`, `km/h`
+    - USCS / imperial: `ft/s`, `mph`
+    - Nautical: `kn`
+    """
+
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 
@@ -387,6 +396,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.VOLUME: VolumeConverter,
     SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
+    SensorDeviceClass.WIND_SPEED: SpeedConverter,
 }
 
 # mypy: disallow-any-generics
