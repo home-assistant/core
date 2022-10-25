@@ -452,6 +452,7 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.DISTANCE, "very_long", None),
         # Test gas meter conversion
         (SensorDeviceClass.GAS, VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+        (SensorDeviceClass.GAS, VOLUME_CUBIC_FEET, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test speed conversion
         (SensorDeviceClass.SPEED, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR),
