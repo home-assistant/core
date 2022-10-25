@@ -2368,6 +2368,7 @@
       "integrations": {
         "symfonisk": {
           "integration_type": "virtual",
+          "supported_by": "sonos",
           "name": "IKEA SYMFONISK"
         },
         "tradfri": {
@@ -5607,6 +5608,9 @@
       "integrations": {
         "ultraloq": {
           "integration_type": "virtual",
+          "iot_standards": [
+            "zwave"
+          ],
           "name": "Ultraloq"
         }
       }
