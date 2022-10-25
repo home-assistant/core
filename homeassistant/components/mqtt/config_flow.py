@@ -682,7 +682,9 @@ def try_connection(
 
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
-    def on_connect(client_, userdata, flags, result_code: int) -> None:
+    def on_connect(
+        client_: mqtt.Client, userdata: None, flags: dict[str, Any], result_code: int
+    ) -> None:
         """Handle connection result."""
         result.put(result_code == mqtt.CONNACK_ACCEPTED)
 
