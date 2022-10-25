@@ -9,7 +9,12 @@ from homeassistant import data_entry_flow
 from homeassistant.components.livisi.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 
-from . import VALID_CONFIG, mocked_livisi_controller, mocked_livisi_login
+from . import (
+    VALID_CONFIG,
+    mocked_livisi_controller,
+    mocked_livisi_login,
+    mocked_livisi_setup_entry,
+)
 
 
 async def test_create_entry(hass):
@@ -18,7 +23,7 @@ async def test_create_entry(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with mocked_livisi_login(), mocked_livisi_controller():
+    with mocked_livisi_login(), mocked_livisi_controller(), mocked_livisi_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
@@ -27,7 +32,7 @@ async def test_create_entry(hass):
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "SHC Classic"
         assert result["data"]["host"] == "1.1.1.1"
-        assert result["data"]["os_version"] == "1234"
+        assert result["data"]["password"] == "test"
 
 
 @pytest.mark.parametrize(
@@ -55,7 +60,7 @@ async def test_create_entity_after_login_error(
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"]["base"] == expected_reason
-    with mocked_livisi_login(), mocked_livisi_controller():
+    with mocked_livisi_login(), mocked_livisi_controller(), mocked_livisi_setup_entry():
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=VALID_CONFIG,

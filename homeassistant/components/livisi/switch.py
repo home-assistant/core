@@ -37,7 +37,7 @@ async def async_setup_entry(
     def handle_coordinator_update() -> None:
         """Add switch."""
         shc_devices: list[dict[str, Any]] = coordinator.data
-        switch_devices: list[SwitchEntity] = []
+        entities: list[SwitchEntity] = []
         for device in shc_devices:
             if device["type"] == PSS_DEVICE_TYPE:
                 if device["id"] not in coordinator.devices:
@@ -46,8 +46,8 @@ async def async_setup_entry(
                     )
                     LOGGER.debug("Include device type: %s", device["type"])
                     coordinator.devices.add(device["id"])
-                    switch_devices.append(livisi_switch)
-        async_add_entities(switch_devices)
+                    entities.append(livisi_switch)
+        async_add_entities(entities)
 
     config_entry.async_on_unload(
         coordinator.async_add_listener(handle_coordinator_update)
@@ -175,8 +175,5 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         """Update the reachability of the switch device."""
         if device_id_reachability[ID] != self.unique_id:
             return
-        if device_id_reachability[IS_REACHABLE] is False:
-            self._attr_available = False
-        else:
-            self._attr_available = True
+        self._attr_available = device_id_reachability[IS_REACHABLE]
         self.async_write_ha_state()

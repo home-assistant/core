@@ -10,8 +10,6 @@ VALID_CONFIG = {
 
 DEVICE_CONFIG = {
     "serialNumber": "1234",
-    "appVersion": "1234",
-    "osVersion": "1234",
     "controllerType": "Classic",
 }
 
@@ -28,4 +26,12 @@ def mocked_livisi_controller():
     return patch(
         "homeassistant.components.livisi.config_flow.AioLivisi.async_get_controller",
         return_value=DEVICE_CONFIG,
+    )
+
+
+def mocked_livisi_setup_entry():
+    """Create mock for LIVISI setup entry."""
+    return patch(
+        "homeassistant.components.livisi.async_setup_entry",
+        return_value=True,
     )

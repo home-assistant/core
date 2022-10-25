@@ -16,7 +16,6 @@ from .const import (
     AVATAR_PORT,
     CLASSIC_PORT,
     CONF_HOST,
-    CONF_OS_VERSION,
     CONF_PASSWORD,
     DEVICE_POLLING_DELAY,
     ID,
@@ -82,7 +81,6 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             self.is_avatar = False
         self.serial_number = controller_data["serialNumber"]
         self.controller_type = controller_data["controllerType"]
-        self.os_version = self.config_entry.data[CONF_OS_VERSION]
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
         """Set the discovered devices list."""

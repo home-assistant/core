@@ -11,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_HOST, CONF_OS_VERSION, CONF_PASSWORD, DOMAIN, LOGGER
+from .const import CONF_HOST, CONF_PASSWORD, DOMAIN, LOGGER
 
 
 class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -44,10 +44,13 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except livisi_errors.IncorrectIpAddressException:
             errors["base"] = "wrong_ip_address"
         else:
+            controller_info: dict[str, Any] = {}
             try:
-                return await self.create_entity(user_input)
+                controller_info = await self.get_controller()
             except ClientConnectorError:
                 errors["base"] = "shc_unreachable"
+            if controller_info:
+                return await self.create_entity(user_input, controller_info)
 
         return self.async_show_form(
             step_id="user", data_schema=self.data_schema, errors=errors
@@ -64,10 +67,10 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.aio_livisi.async_set_token(livisi_connection_data)
 
-    async def create_entity(self, user_input: dict[str, str]) -> FlowResult:
+    async def create_entity(
+        self, user_input: dict[str, str], controller_info: dict[str, Any]
+    ) -> FlowResult:
         """Create LIVISI entity."""
-        controller_info: dict[str, Any] = await self.aio_livisi.async_get_controller()
-
         if (controller_data := controller_info.get("gateway")) is None:
             controller_data = controller_info
         controller_type = controller_data["controllerType"]
@@ -81,6 +84,9 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"SHC {controller_type}",
             data={
                 **user_input,
-                CONF_OS_VERSION: controller_info["osVersion"],
             },
         )
+
+    async def get_controller(self) -> dict[str, Any]:
+        """Return the LIVISI controller data."""
+        return await self.aio_livisi.async_get_controller()
