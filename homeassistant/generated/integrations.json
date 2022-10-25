@@ -2363,6 +2363,21 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "ikea": {
+      "name": "IKEA",
+      "integrations": {
+        "symfonisk": {
+          "integration_type": "virtual",
+          "name": "IKEA SYMFONISK"
+        },
+        "tradfri": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "IKEA TR\u00c5DFRI"
+        }
+      }
+    },
     "imap": {
       "name": "IMAP",
       "integration_type": "hub",
@@ -5488,12 +5503,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_push"
-    },
-    "tradfri": {
-      "name": "IKEA TR\u00c5DFRI",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "trafikverket": {
       "name": "Trafikverket",
