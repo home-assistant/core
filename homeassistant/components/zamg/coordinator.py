@@ -22,14 +22,10 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
         hass: HomeAssistant,
         *,
         entry: ConfigEntry | None = None,
-        station_id: str | None = None,
     ) -> None:
         """Initialize global ZAMG data updater."""
         self.zamg = ZamgDevice(session=async_get_clientsession(hass))
-        if entry:
-            self.zamg.set_default_station(entry.data[CONF_STATION_ID])
-        if station_id:
-            self.zamg.set_default_station(station_id)
+        self.zamg.set_default_station(entry.data[CONF_STATION_ID])
         super().__init__(
             hass,
             LOGGER,
