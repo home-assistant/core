@@ -82,7 +82,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             LOGGER.error("Could not read overview, %s", ex)
             raise
 
-        def unpack(overview: list, value: str) -> dict:
+        def unpack(overview: list, value: str) -> dict[str, str] | list[dict[str, str]]:
             unpacked = [
                 item["data"]["installation"][value]
                 for item in overview
