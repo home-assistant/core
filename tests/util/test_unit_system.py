@@ -397,9 +397,9 @@ def test_get_unit_system_invalid(key: str) -> None:
         (METRIC_SYSTEM, "distance", "very_long", None),
         # Test speed conversion
         (METRIC_SYSTEM, "speed", SPEED_FEET_PER_SECOND, SPEED_KILOMETERS_PER_HOUR),
-        (METRIC_SYSTEM, "speed", SPEED_KNOTS, SPEED_KILOMETERS_PER_HOUR),
         (METRIC_SYSTEM, "speed", SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR),
         (METRIC_SYSTEM, "speed", SPEED_KILOMETERS_PER_HOUR, None),
+        (METRIC_SYSTEM, "speed", SPEED_KNOTS, None),
         (METRIC_SYSTEM, "speed", SPEED_METERS_PER_SECOND, None),
         (METRIC_SYSTEM, "speed", "very_fast", None),
         # Test distance conversion
@@ -410,10 +410,10 @@ def test_get_unit_system_invalid(key: str) -> None:
         (US_CUSTOMARY_SYSTEM, "distance", LENGTH_MILES, None),
         (US_CUSTOMARY_SYSTEM, "distance", "very_long", None),
         # Test speed conversion
-        (US_CUSTOMARY_SYSTEM, "speed", SPEED_KNOTS, SPEED_MILES_PER_HOUR),
         (US_CUSTOMARY_SYSTEM, "speed", SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR),
         (US_CUSTOMARY_SYSTEM, "speed", SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR),
         (US_CUSTOMARY_SYSTEM, "speed", SPEED_FEET_PER_SECOND, None),
+        (US_CUSTOMARY_SYSTEM, "speed", SPEED_KNOTS, None),
         (US_CUSTOMARY_SYSTEM, "speed", SPEED_MILES_PER_HOUR, None),
         (US_CUSTOMARY_SYSTEM, "speed", "very_fast", None),
     ),
