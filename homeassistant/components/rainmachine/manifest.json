@@ -15,5 +15,6 @@
       "name": "rainmachine*"
     }
   ],
-  "loggers": ["regenmaschine"]
+  "loggers": ["regenmaschine"],
+  "integration_type": "device"
 }

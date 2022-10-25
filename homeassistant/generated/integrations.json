@@ -114,7 +114,7 @@
     },
     "airvisual": {
       "name": "AirVisual",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2047,7 +2047,7 @@
     },
     "guardian": {
       "name": "Elexa Guardian",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2450,7 +2450,7 @@
     },
     "iqvia": {
       "name": "IQVIA",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3750,7 +3750,7 @@
     },
     "openuv": {
       "name": "OpenUV",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4213,7 +4213,7 @@
     },
     "rainmachine": {
       "name": "RainMachine",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4262,7 +4262,7 @@
     },
     "recollect_waste": {
       "name": "ReCollect Waste",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4339,7 +4339,7 @@
     },
     "ridwell": {
       "name": "Ridwell",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4719,7 +4719,7 @@
     },
     "slack": {
       "name": "Slack",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -5833,7 +5833,7 @@
     },
     "watttime": {
       "name": "WattTime",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6068,7 +6068,7 @@
     },
     "yi": {
       "name": "Yi Home Cameras",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": false,
       "iot_class": "local_polling"
     },
