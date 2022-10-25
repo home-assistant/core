@@ -54,6 +54,7 @@ from .const import (
     CONF_TLS_INSECURE,
     CONF_WILL_MESSAGE,
     DEFAULT_ENCODING,
+    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
@@ -67,7 +68,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
-from .util import get_mqtt_data, mqtt_config_entry_enabled
+from .util import get_file_path, get_mqtt_data, mqtt_config_entry_enabled
 
 if TYPE_CHECKING:
     # Only import for paho-mqtt type checking here, imports are done locally
@@ -272,7 +273,7 @@ class MqttClientSetup:
         # should be able to optionally rely on MQTT.
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
-        if config[CONF_PROTOCOL] == PROTOCOL_31:
+        if config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_31:
             proto = mqtt.MQTTv31
         else:
             proto = mqtt.MQTTv311
@@ -291,11 +292,13 @@ class MqttClientSetup:
         if username is not None:
             self._client.username_pw_set(username, password)
 
-        if (certificate := config.get(CONF_CERTIFICATE)) == "auto":
+        if (
+            certificate := get_file_path(CONF_CERTIFICATE, config.get(CONF_CERTIFICATE))
+        ) == "auto":
             certificate = certifi.where()
 
-        client_key = config.get(CONF_CLIENT_KEY)
-        client_cert = config.get(CONF_CLIENT_CERT)
+        client_key = get_file_path(CONF_CLIENT_KEY, config.get(CONF_CLIENT_KEY))
+        client_cert = get_file_path(CONF_CLIENT_CERT, config.get(CONF_CLIENT_CERT))
         tls_insecure = config.get(CONF_TLS_INSECURE)
         if certificate is not None:
             self._client.tls_set(
@@ -658,6 +661,7 @@ class MQTT:
                     timestamp,
                 ),
             )
+        self._mqtt_data.state_write_requests.process_write_state_requests()
 
     def _mqtt_on_callback(self, _mqttc, _userdata, mid, _granted_qos=None) -> None:
         """Publish / Subscribe / Unsubscribe callback."""

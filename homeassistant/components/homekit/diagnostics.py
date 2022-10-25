@@ -27,7 +27,7 @@ async def async_get_config_entry_diagnostics(
             "options": dict(entry.options),
         },
     }
-    if not hasattr(homekit, "driver"):
+    if not homekit.driver:  # not started yet or startup failed
         return data
     driver: AccessoryDriver = homekit.driver
     data.update(driver.get_accessories())

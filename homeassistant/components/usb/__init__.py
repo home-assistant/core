@@ -315,7 +315,7 @@ class USBDiscovery:
 async def websocket_usb_scan(
     hass: HomeAssistant,
     connection: ActiveConnection,
-    msg: dict,
+    msg: dict[str, Any],
 ) -> None:
     """Scan for new usb devices."""
     usb_discovery: USBDiscovery = hass.data[DOMAIN]

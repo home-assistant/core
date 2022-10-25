@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "home_control": "De devolo Home Control Centrale Unit werkt niet met deze integratie."
+            "home_control": "De devolo Home Control Centrale Unit werkt niet met deze integratie.",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -10,6 +11,11 @@
         },
         "flow_title": "{product} ({name})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "IP-adres"

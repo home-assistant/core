@@ -39,6 +39,7 @@ from .const import (
     DATA_MANAGER,
     DEFAULT_ADDRESS,
     DOMAIN,
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     SOURCE_LOCAL,
     AdapterDetails,
 )
@@ -55,7 +56,7 @@ from .models import (
     HaBluetoothConnector,
     ProcessAdvertisementCallback,
 )
-from .scanner import HaScanner, ScannerStartError, create_bleak_scanner
+from .scanner import HaScanner, ScannerStartError
 from .util import adapter_human_name, adapter_unique_name, async_default_adapter
 
 if TYPE_CHECKING:
@@ -81,6 +82,7 @@ __all__ = [
     "BluetoothCallback",
     "HaBluetoothConnector",
     "SOURCE_LOCAL",
+    "FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -400,13 +402,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
+    scanner = HaScanner(hass, mode, adapter, address)
     try:
-        bleak_scanner = create_bleak_scanner(mode, adapter)
+        scanner.async_setup()
     except RuntimeError as err:
         raise ConfigEntryNotReady(
             f"{adapter_human_name(adapter, address)}: {err}"
         ) from err
-    scanner = HaScanner(hass, bleak_scanner, adapter, address)
     info_callback = async_get_advertisement_callback(hass)
     entry.async_on_unload(scanner.async_register_callback(info_callback))
     try:

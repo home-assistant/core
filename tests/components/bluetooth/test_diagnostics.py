@@ -8,6 +8,8 @@ from bleak.backends.scanner import BLEDevice
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 
+from . import generate_advertisement_data, inject_advertisement
+
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
@@ -108,13 +110,18 @@ async def test_diagnostics(
                         "sw_version": "BlueZ 4.63",
                     },
                 },
+                "advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {},
+                    "timings": {},
+                },
                 "connectable_history": [],
-                "history": [],
+                "all_history": [],
                 "scanners": [
                     {
                         "adapter": "hci0",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -125,7 +132,7 @@ async def test_diagnostics(
                     {
                         "adapter": "hci0",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -136,7 +143,7 @@ async def test_diagnostics(
                     {
                         "adapter": "hci1",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "hci1 (00:00:00:00:00:02)",
@@ -158,6 +165,10 @@ async def test_diagnostics_macos(
     # because we cannot import the scanner class directly without it throwing an
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
+    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_adv = generate_advertisement_data(
+        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
+    )
 
     with patch(
         "homeassistant.components.bluetooth.scanner.HaScanner.discovered_devices",
@@ -180,6 +191,8 @@ async def test_diagnostics_macos(
         assert await hass.config_entries.async_setup(entry1.entry_id)
         await hass.async_block_till_done()
 
+        inject_advertisement(hass, switchbot_device, switchbot_adv)
+
         diag = await get_diagnostics_for_config_entry(hass, hass_client, entry1)
         assert diag == {
             "adapters": {
@@ -197,13 +210,64 @@ async def test_diagnostics_macos(
                         "sw_version": ANY,
                     }
                 },
-                "connectable_history": [],
-                "history": [],
+                "advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {"44:44:33:11:23:45": "local"},
+                    "timings": {"44:44:33:11:23:45": [ANY]},
+                },
+                "connectable_history": [
+                    {
+                        "address": "44:44:33:11:23:45",
+                        "advertisement": [
+                            "wohand",
+                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {},
+                            [],
+                            -127,
+                            -127,
+                            [[]],
+                        ],
+                        "connectable": True,
+                        "manufacturer_data": {
+                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                        },
+                        "name": "wohand",
+                        "rssi": -127,
+                        "service_data": {},
+                        "service_uuids": [],
+                        "source": "local",
+                        "time": ANY,
+                    }
+                ],
+                "all_history": [
+                    {
+                        "address": "44:44:33:11:23:45",
+                        "advertisement": [
+                            "wohand",
+                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {},
+                            [],
+                            -127,
+                            -127,
+                            [[]],
+                        ],
+                        "connectable": True,
+                        "manufacturer_data": {
+                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                        },
+                        "name": "wohand",
+                        "rssi": -127,
+                        "service_data": {},
+                        "service_uuids": [],
+                        "source": "local",
+                        "time": ANY,
+                    }
+                ],
                 "scanners": [
                     {
                         "adapter": "Core Bluetooth",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "Core Bluetooth",

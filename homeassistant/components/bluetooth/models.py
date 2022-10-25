@@ -18,13 +18,11 @@ from bleak.backends.scanner import (
     AdvertisementDataCallback,
     BaseBleakScanner,
 )
-from bleak_retry_connector import freshen_ble_device
+from bleak_retry_connector import NO_RSSI_VALUE, freshen_ble_device
 
-from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from .const import NO_RSSI_VALUE
 
 if TYPE_CHECKING:
 
@@ -52,6 +50,25 @@ class BluetoothServiceInfoBleak(BluetoothServiceInfo):
     advertisement: AdvertisementData
     connectable: bool
     time: float
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return as dict.
+
+        The dataclass asdict method is not used because
+        it will try to deepcopy pyobjc data which will fail.
+        """
+        return {
+            "name": self.name,
+            "address": self.address,
+            "rssi": self.rssi,
+            "manufacturer_data": self.manufacturer_data,
+            "service_data": self.service_data,
+            "service_uuids": self.service_uuids,
+            "source": self.source,
+            "advertisement": self.advertisement,
+            "connectable": self.connectable,
+            "time": self.time,
+        }
 
 
 class BluetoothScanningMode(Enum):
@@ -86,14 +103,22 @@ class _HaWrappedBleakBackend:
 class BaseHaScanner:
     """Base class for Ha Scanners."""
 
+    def __init__(self, hass: HomeAssistant, source: str) -> None:
+        """Initialize the scanner."""
+        self.hass = hass
+        self.source = source
+
     @property
     @abstractmethod
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
 
+    @property
     @abstractmethod
-    async def async_get_device_by_address(self, address: str) -> BLEDevice | None:
-        """Get a device by address."""
+    def discovered_devices_and_advertisement_data(
+        self,
+    ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
+        """Return a list of discovered devices and their advertisement data."""
 
     async def async_diagnostics(self) -> dict[str, Any]:
         """Return diagnostic information about the scanner."""
@@ -103,7 +128,6 @@ class BaseHaScanner:
                 {
                     "name": device.name,
                     "address": device.address,
-                    "rssi": device.rssi,
                 }
                 for device in self.discovered_devices
             ],
@@ -260,14 +284,16 @@ class HaBleakClientWrapper(BleakClient):
     async def connect(self, **kwargs: Any) -> bool:
         """Connect to the specified GATT server."""
         if not self._backend:
+            assert MANAGER is not None
             wrapped_backend = (
-                self._async_get_backend() or await self._async_get_fallback_backend()
+                self._async_get_backend() or self._async_get_fallback_backend()
             )
             self._backend = wrapped_backend.client(
                 await freshen_ble_device(wrapped_backend.device)
                 or wrapped_backend.device,
                 disconnected_callback=self.__disconnected_callback,
                 timeout=self.__timeout,
+                hass=MANAGER.hass,
             )
         return await super().connect(**kwargs)
 
@@ -305,7 +331,8 @@ class HaBleakClientWrapper(BleakClient):
 
         return None
 
-    async def _async_get_fallback_backend(self) -> _HaWrappedBleakBackend:
+    @hass_callback
+    def _async_get_fallback_backend(self) -> _HaWrappedBleakBackend:
         """Get a fallback backend for the given address."""
         #
         # The preferred backend cannot currently connect the device
@@ -316,13 +343,20 @@ class HaBleakClientWrapper(BleakClient):
         #
         assert MANAGER is not None
         address = self.__address
-        devices = await MANAGER.async_get_devices_by_address(address, True)
-        for ble_device in sorted(
-            devices,
-            key=lambda ble_device: ble_device.rssi or NO_RSSI_VALUE,
+        device_advertisement_datas = (
+            MANAGER.async_get_discovered_devices_and_advertisement_data_by_address(
+                address, True
+            )
+        )
+        for device_advertisement_data in sorted(
+            device_advertisement_datas,
+            key=lambda device_advertisement_data: device_advertisement_data[1].rssi
+            or NO_RSSI_VALUE,
             reverse=True,
         ):
-            if backend := self._async_get_backend_for_ble_device(ble_device):
+            if backend := self._async_get_backend_for_ble_device(
+                device_advertisement_data[0]
+            ):
                 return backend
 
         raise BleakError(

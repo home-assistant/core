@@ -52,6 +52,7 @@ CONF_IS_PM10 = "is_pm10"
 CONF_IS_PM25 = "is_pm25"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
+CONF_IS_PRECIPITATION_INTENSITY = "is_precipitation_intensity"
 CONF_IS_PRESSURE = "is_pressure"
 CONF_IS_SPEED = "is_speed"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
@@ -62,6 +63,7 @@ CONF_IS_VALUE = "is_value"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VOLUME = "is_volume"
+CONF_IS_WATER = "is_water"
 CONF_IS_WEIGHT = "is_weight"
 
 ENTITY_CONDITIONS = {
@@ -86,6 +88,9 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_IS_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
+    SensorDeviceClass.PRECIPITATION_INTENSITY: [
+        {CONF_TYPE: CONF_IS_PRECIPITATION_INTENSITY}
+    ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
@@ -97,6 +102,7 @@ ENTITY_CONDITIONS = {
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
+    SensorDeviceClass.WATER: [{CONF_TYPE: CONF_IS_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_IS_WEIGHT}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }

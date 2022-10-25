@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "not_forked_daapd": "El dispositiu no \u00e9s un servidor de forked-daapd."
+            "not_forked_daapd": "El dispositiu no \u00e9s un servidor Owntone."
         },
         "error": {
-            "forbidden": "No s'ha pogut connectar. Comprova els permisos de xarxa de forked-daapd.",
+            "forbidden": "No s'ha pogut connectar. Comprova els permisos de xarxa d'Owntone.",
             "unknown_error": "Error inesperat",
-            "websocket_not_enabled": "El websocket de forked-daapd no est\u00e0 activat.",
+            "websocket_not_enabled": "El websocket d'Owntone no est\u00e0 activat.",
             "wrong_host_or_port": "No s'ha pogut connectar, verifica l'amfitri\u00f3 i el port.",
             "wrong_password": "Contrasenya incorrecta.",
-            "wrong_server_type": "La integraci\u00f3 forked-daapd necessita un servidor forked-daapd amb versi\u00f3 >= 27.0."
+            "wrong_server_type": "La integraci\u00f3 Owntone necessita un servidor Owntone amb versi\u00f3 >= 27.0."
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -21,7 +21,7 @@
                     "password": "Contrasenya de l'API (deixa-ho en blanc si no t\u00e9 contrasenya)",
                     "port": "Port de l'API"
                 },
-                "title": "Configuraci\u00f3 del dispositiu forked-daapd"
+                "title": "Configuraci\u00f3 de dispositiu Owntone"
             }
         }
     },
@@ -34,8 +34,8 @@
                     "tts_pause_time": "Segons de pausa abans i despr\u00e9s de TTS",
                     "tts_volume": "Volum TTS (valor 'float' entre [0,1])"
                 },
-                "description": "Configura les diferents opcions de la integraci\u00f3 forked-daapd.",
-                "title": "Configuraci\u00f3 de les opcions de forked-daapd"
+                "description": "Configura les diferents opcions de la integraci\u00f3 Owntone.",
+                "title": "Configuraci\u00f3 de les opcions d'Owntone"
             }
         }
     }

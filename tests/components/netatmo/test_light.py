@@ -17,7 +17,7 @@ from tests.test_util.aiohttp import AiohttpClientMockResponse
 async def test_camera_light_setup_and_services(hass, config_entry, netatmo_auth):
     """Test camera ligiht setup and services."""
     with selected_platforms(["light"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 
@@ -108,7 +108,7 @@ async def test_setup_component_no_devices(hass, config_entry):
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
 
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Fake webhook activation
@@ -126,7 +126,7 @@ async def test_setup_component_no_devices(hass, config_entry):
 async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
     """Test setup and services."""
     with selected_platforms(["light"]):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
 

@@ -65,8 +65,14 @@
             "broker": {
                 "data": {
                     "broker": "Vahendaja",
+                    "client_key": "Privaatse v\u00f5tme faili \u00fcleslaadimine",
+                    "keepalive": "Aegumiss\u00f5numite saatmise vaheline aeg",
                     "password": "Salas\u00f5na",
                     "port": "Port",
+                    "protocol": "MQTT protokoll",
+                    "set_ca_cert": "Sertifikaadi kinnitamine",
+                    "set_client_cert": "Kasuta kliendi sertifikaati",
+                    "tls_insecure": "Eira serdi valideerimist",
                     "username": "Kasutajanimi"
                 },
                 "description": "Sisesta oma MQTT vahendaja \u00fchenduse teave.",
@@ -80,6 +86,7 @@
                     "birth_retain": "S\u00fcnniteate j\u00e4\u00e4dvustamine",
                     "birth_topic": "S\u00fcnniteate teema",
                     "discovery": "Luba avastamine",
+                    "discovery_prefix": "Avastamise eesliide",
                     "will_enable": "Luba loomisteavitus",
                     "will_payload": "L\u00f5petamisteate v\u00e4\u00e4rtus",
                     "will_qos": "L\u00f5petamisteate QoS",

@@ -48,10 +48,12 @@ async def test_sensors(hass, entity_registry_enabled_by_default):
     assert battery_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
-    rssi_sensor = hass.states.get("sensor.test_name_rssi")
+    rssi_sensor = hass.states.get("sensor.test_name_bluetooth_signal_strength")
     rssi_sensor_attrs = rssi_sensor.attributes
     assert rssi_sensor.state == "-60"
-    assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Rssi"
+    assert (
+        rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal strength"
+    )
     assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
 
     assert await hass.config_entries.async_unload(entry.entry_id)

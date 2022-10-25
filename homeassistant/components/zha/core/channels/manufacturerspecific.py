@@ -62,7 +62,7 @@ class PhillipsRemote(ZigbeeChannel):
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFCC0)
 class OppleRemote(ZigbeeChannel):
-    """Opple button channel."""
+    """Opple channel."""
 
     REPORT_CONFIG = ()
 
@@ -81,6 +81,10 @@ class OppleRemote(ZigbeeChannel):
                 "monitoring_mode": True,
                 "motion_sensitivity": True,
                 "approach_distance": True,
+            }
+        elif self.cluster.endpoint.model in ("lumi.plug.mmeu01", "lumi.plug.maeu01"):
+            self.ZCL_INIT_ATTRS = {
+                "power_outage_memory": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
@@ -158,7 +162,7 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         Clear = 0xFF
 
     REPORT_CONFIG = ()
-    ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+    ZCL_INIT_ATTRS = {
         "dimming_speed_up_remote": False,
         "dimming_speed_up_local": False,
         "ramp_rate_off_to_on_local": False,
@@ -181,43 +185,13 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         "power_type": False,
         "switch_type": False,
         "button_delay": False,
-        "device_bind_number": False,
         "smart_bulb_mode": False,
         "double_tap_up_for_full_brightness": False,
-        "default_led1_strip_color_when_on": False,
-        "default_led1_strip_color_when_off": False,
-        "default_led1_strip_intensity_when_on": False,
-        "default_led1_strip_intensity_when_off": False,
-        "default_led2_strip_color_when_on": False,
-        "default_led2_strip_color_when_off": False,
-        "default_led2_strip_intensity_when_on": False,
-        "default_led2_strip_intensity_when_off": False,
-        "default_led3_strip_color_when_on": False,
-        "default_led3_strip_color_when_off": False,
-        "default_led3_strip_intensity_when_on": False,
-        "default_led3_strip_intensity_when_off": False,
-        "default_led4_strip_color_when_on": False,
-        "default_led4_strip_color_when_off": False,
-        "default_led4_strip_intensity_when_on": False,
-        "default_led4_strip_intensity_when_off": False,
-        "default_led5_strip_color_when_on": False,
-        "default_led5_strip_color_when_off": False,
-        "default_led5_strip_intensity_when_on": False,
-        "default_led5_strip_intensity_when_off": False,
-        "default_led6_strip_color_when_on": False,
-        "default_led6_strip_color_when_off": False,
-        "default_led6_strip_intensity_when_on": False,
-        "default_led6_strip_intensity_when_off": False,
-        "default_led7_strip_color_when_on": False,
-        "default_led7_strip_color_when_off": False,
-        "default_led7_strip_intensity_when_on": False,
-        "default_led7_strip_intensity_when_off": False,
         "led_color_when_on": False,
         "led_color_when_off": False,
         "led_intensity_when_on": False,
         "led_intensity_when_off": False,
         "local_protection": False,
-        "remote_protection": False,
         "output_mode": False,
         "on_off_led_mode": False,
         "firmware_progress_led": False,

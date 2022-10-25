@@ -26,7 +26,7 @@ from .unit_conversion import (  # pylint: disable=unused-import # noqa: F401
 )
 
 # pylint: disable-next=protected-access
-UNIT_CONVERSION = SpeedConverter._UNIT_CONVERSION
+UNIT_CONVERSION: dict[str, float] = SpeedConverter._UNIT_CONVERSION
 VALID_UNITS = SpeedConverter.VALID_UNITS
 
 
@@ -34,7 +34,7 @@ def convert(value: float, from_unit: str, to_unit: str) -> float:
     """Convert one unit of measurement to another."""
     report(
         "uses speed utility. This is deprecated since 2022.10 and will "
-        "stop working in Home Assistant 2022.4, it should be updated to use "
+        "stop working in Home Assistant 2023.4, it should be updated to use "
         "unit_conversion.SpeedConverter instead",
         error_if_core=False,
     )

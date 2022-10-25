@@ -14,9 +14,11 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DEFAULT_NAME,
+    DEFAULT_OPTIONS,
     DOMAIN,
+    IMPERIAL_UNITS,
 )
-from homeassistant.const import CONF_NAME, CONF_REGION, CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.const import CONF_NAME, CONF_REGION
 
 from .const import MOCK_CONFIG
 
@@ -53,6 +55,7 @@ async def test_options(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
+        options=DEFAULT_OPTIONS,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -72,7 +75,7 @@ async def test_options(hass):
             CONF_EXCL_FILTER: "exclude",
             CONF_INCL_FILTER: "include",
             CONF_REALTIME: False,
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+            CONF_UNITS: IMPERIAL_UNITS,
             CONF_VEHICLE_TYPE: "taxi",
         },
     )
@@ -85,7 +88,7 @@ async def test_options(hass):
         CONF_EXCL_FILTER: "exclude",
         CONF_INCL_FILTER: "include",
         CONF_REALTIME: False,
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }
 
@@ -96,48 +99,7 @@ async def test_options(hass):
         CONF_EXCL_FILTER: "exclude",
         CONF_INCL_FILTER: "include",
         CONF_REALTIME: False,
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-        CONF_VEHICLE_TYPE: "taxi",
-    }
-
-
-@pytest.mark.usefixtures("validate_config_entry")
-async def test_import(hass):
-    """Test import for config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_REGION: "US",
-            CONF_AVOID_FERRIES: True,
-            CONF_AVOID_SUBSCRIPTION_ROADS: True,
-            CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: "exclude",
-            CONF_INCL_FILTER: "include",
-            CONF_REALTIME: False,
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-            CONF_VEHICLE_TYPE: "taxi",
-        },
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data == {
-        CONF_ORIGIN: "location1",
-        CONF_DESTINATION: "location2",
-        CONF_REGION: "US",
-    }
-    assert entry.options == {
-        CONF_AVOID_FERRIES: True,
-        CONF_AVOID_SUBSCRIPTION_ROADS: True,
-        CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: "exclude",
-        CONF_INCL_FILTER: "include",
-        CONF_REALTIME: False,
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
+        CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }
 
@@ -176,7 +138,7 @@ async def test_dupe(hass):
 
 
 @pytest.mark.usefixtures("invalidate_config_entry")
-async def test_invalid_config_entry(hass):
+async def test_invalid_config_entry(hass, caplog):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -190,3 +152,5 @@ async def test_invalid_config_entry(hass):
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    assert "Error trying to validate entry" in caplog.text

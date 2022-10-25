@@ -87,8 +87,7 @@ async def async_setup_entry(
                 and not new_members_only
             ):
                 new_entities.append(Life360DeviceTracker(coordinator, member_id))
-        if new_entities:
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     process_data(new_members_only=False)
     entry.async_on_unload(coordinator.async_add_listener(process_data))

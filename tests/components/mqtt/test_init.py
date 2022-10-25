@@ -1940,6 +1940,7 @@ async def test_update_incomplete_entry(
     # Config entry data should now be updated
     assert entry.data == {
         "port": 1234,
+        "discovery_prefix": "homeassistant",
         "broker": "yaml_broker",
     }
     # Warnings about broker deprecated, but not about other keys with default values
@@ -2969,7 +2970,7 @@ async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock, caplog)
     mqtt_config_entry_data = {
         mqtt.CONF_BROKER: "mock-broker",
         mqtt.CONF_BIRTH_MESSAGE: {},
-        mqtt.client.CONF_PROTOCOL: mqtt.const.PROTOCOL_311,
+        "old_option": "old_value",
     }
 
     entry = MockConfigEntry(
@@ -2985,8 +2986,7 @@ async def test_remove_unknown_conf_entry_options(hass, mqtt_client_mock, caplog)
     assert mqtt.client.CONF_PROTOCOL not in entry.data
     assert (
         "The following unsupported configuration options were removed from the "
-        "MQTT config entry: {'protocol'}. Add them to configuration.yaml if they "
-        "are needed"
+        "MQTT config entry: {'old_option'}"
     ) in caplog.text
 
 

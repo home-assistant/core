@@ -127,3 +127,71 @@ async def test_ignore_default_name(hass):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == before_entity_count
+
+
+async def test_rotating_major_minor_and_mac(hass):
+    """Test the different uuid, major, minor from many addresses removes all associated entities."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    before_entity_count = len(hass.states.async_entity_ids("device_tracker"))
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    for i in range(100):
+        service_info = BluetoothServiceInfo(
+            name="BlueCharm_177999",
+            address=f"AA:BB:CC:DD:EE:{i:02X}",
+            rssi=-63,
+            service_data={},
+            manufacturer_data={
+                76: b"\x02\x15BlueCharmBeacons"
+                + bytearray([i])
+                + b"\xfe"
+                + bytearray([i])
+                + b"U\xc5"
+            },
+            service_uuids=[],
+            source="local",
+        )
+        inject_bluetooth_service_info(hass, service_info)
+        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("device_tracker")) == before_entity_count
+
+
+async def test_rotating_major_minor_and_mac_no_name(hass):
+    """Test no-name devices with different uuid, major, minor from many addresses removes all associated entities."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    before_entity_count = len(hass.states.async_entity_ids("device_tracker"))
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    for i in range(51):
+        service_info = BluetoothServiceInfo(
+            name=f"AA:BB:CC:DD:EE:{i:02X}",
+            address=f"AA:BB:CC:DD:EE:{i:02X}",
+            rssi=-63,
+            service_data={},
+            manufacturer_data={
+                76: b"\x02\x15BlueCharmBeacons"
+                + bytearray([i])
+                + b"\xfe"
+                + bytearray([i])
+                + b"U\xc5"
+            },
+            service_uuids=[],
+            source="local",
+        )
+        inject_bluetooth_service_info(hass, service_info)
+        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("device_tracker")) == before_entity_count

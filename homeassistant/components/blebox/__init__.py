@@ -1,5 +1,6 @@
 """The BleBox devices integration."""
 import logging
+from typing import Generic, TypeVar
 
 from blebox_uniapi.box import Box
 from blebox_uniapi.error import Error
@@ -8,7 +9,7 @@ from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -18,7 +19,7 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.AIR_QUALITY,
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
@@ -28,6 +29,8 @@ PLATFORMS = [
 ]
 
 PARALLEL_UPDATES = 0
+
+_FeatureT = TypeVar("_FeatureT", bound=Feature)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -65,26 +68,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-@callback
-def create_blebox_entities(
-    hass, config_entry, async_add_entities, entity_klass, entity_type
-):
-    """Create entities from a BleBox product's features."""
-
-    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    entities = []
-
-    if entity_type in product.features:
-        for feature in product.features[entity_type]:
-            entities.append(entity_klass(feature))
-
-    async_add_entities(entities, True)
-
-
-class BleBoxEntity(Entity):
+class BleBoxEntity(Entity, Generic[_FeatureT]):
     """Implements a common class for entities representing a BleBox feature."""
 
-    def __init__(self, feature: Feature) -> None:
+    def __init__(self, feature: _FeatureT) -> None:
         """Initialize a BleBox entity."""
         self._feature = feature
         self._attr_name = feature.full_name

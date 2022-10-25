@@ -38,7 +38,7 @@ def _validate_brand(
     if not brand.integrations and not brand.iot_standards:
         config.add_error(
             "brand",
-            f"Invalid brand file {brand.path.name}: At least one of integrations or "
+            f"{brand.path.name}: At least one of integrations or "
             "iot_standards must be non-empty",
         )
 
@@ -47,18 +47,15 @@ def _validate_brand(
             if sub_integration not in integrations:
                 config.add_error(
                     "brand",
-                    f"Invalid brand file {brand.path.name}: Can't add non core domain "
-                    f"'{sub_integration}' to 'integrations'",
+                    f"{brand.path.name}: References unknown integration {sub_integration}",
                 )
 
-    if (
-        brand.domain in integrations
-        and not brand.integrations
-        or brand.domain not in brand.integrations
+    if brand.domain in integrations and (
+        not brand.integrations or brand.domain not in brand.integrations
     ):
         config.add_error(
             "brand",
-            f"Invalid brand file {brand.path.name}: Brand '{brand.brand['domain']}' "
+            f"{brand.path.name}: Brand '{brand.brand['domain']}' "
             f"is an integration but is missing in the brand's 'integrations' list'",
         )
 

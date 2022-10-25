@@ -35,14 +35,14 @@ async def test_netamo_smart_co_alarm_setup(hass):
                 EntityTestInfo(
                     entity_id="binary_sensor.smart_co_alarm_carbon_monoxide_sensor",
                     friendly_name="Smart CO Alarm Carbon Monoxide Sensor",
-                    unique_id="homekit-1234-22",
+                    unique_id="00:00:00:00:00:00_1_22",
                     state="off",
                 ),
                 EntityTestInfo(
                     entity_id="binary_sensor.smart_co_alarm_low_battery",
                     friendly_name="Smart CO Alarm Low Battery",
                     entity_category=EntityCategory.DIAGNOSTIC,
-                    unique_id="homekit-1234-36",
+                    unique_id="00:00:00:00:00:00_1_36",
                     state="off",
                 ),
             ],

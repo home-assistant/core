@@ -12,7 +12,7 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     MATCH_ALL,
-    SIGNAL_BOOTSTRAP_INTEGRATONS,
+    SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from homeassistant.core import Context, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import (
@@ -21,7 +21,6 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.generated import supported_brands
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
@@ -74,7 +73,6 @@ def async_register_commands(
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
     async_reg(hass, handle_subscribe_entities)
-    async_reg(hass, handle_supported_brands)
     async_reg(hass, handle_supported_features)
     async_reg(hass, handle_integration_descriptions)
 
@@ -151,7 +149,7 @@ def handle_subscribe_bootstrap_integrations(
         connection.send_message(messages.event_message(msg["id"], message))
 
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
+        hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, forward_bootstrap_integrations
     )
 
     connection.send_result(msg["id"])
@@ -703,31 +701,6 @@ async def handle_validate_config(
             result[key] = {"valid": True, "error": None}
 
     connection.send_result(msg["id"], result)
-
-
-@decorators.websocket_command(
-    {
-        vol.Required("type"): "supported_brands",
-    }
-)
-@decorators.async_response
-async def handle_supported_brands(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle supported brands command."""
-    data = {}
-
-    ints_or_excs = await async_get_integrations(
-        hass, supported_brands.HAS_SUPPORTED_BRANDS
-    )
-    for int_or_exc in ints_or_excs.values():
-        if isinstance(int_or_exc, Exception):
-            raise int_or_exc
-        # Happens if a custom component without supported brands overrides a built-in one with supported brands
-        if "supported_brands" not in int_or_exc.manifest:
-            continue
-        data[int_or_exc.domain] = int_or_exc.manifest["supported_brands"]
-    connection.send_result(msg["id"], data)
 
 
 @callback

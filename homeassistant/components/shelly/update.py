@@ -6,6 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, cast
 
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
@@ -14,11 +16,12 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BlockDeviceWrapper, RpcDeviceWrapper
-from .const import BLOCK, CONF_SLEEP_PERIOD, DATA_CONFIG_ENTRY, DOMAIN
+from .const import CONF_SLEEP_PERIOD
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,
     RpcEntityDescription,
@@ -37,7 +40,7 @@ class RpcUpdateRequiredKeysMixin:
     """Class for RPC update required keys."""
 
     latest_version: Callable[[dict], Any]
-    install: Callable
+    beta: bool
 
 
 @dataclass
@@ -45,7 +48,7 @@ class RestUpdateRequiredKeysMixin:
     """Class for REST update required keys."""
 
     latest_version: Callable[[dict], Any]
-    install: Callable
+    beta: bool
 
 
 @dataclass
@@ -67,16 +70,16 @@ REST_UPDATES: Final = {
         name="Firmware Update",
         key="fwupdate",
         latest_version=lambda status: status["update"]["new_version"],
-        install=lambda wrapper: wrapper.async_trigger_ota_update(),
+        beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
     ),
     "fwupdate_beta": RestUpdateDescription(
         name="Beta Firmware Update",
         key="fwupdate",
         latest_version=lambda status: status["update"].get("beta_version"),
-        install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
+        beta=True,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -88,20 +91,18 @@ RPC_UPDATES: Final = {
         name="Firmware Update",
         key="sys",
         sub_key="available_updates",
-        latest_version=lambda status: status.get("stable", {"version": None})[
-            "version"
-        ],
-        install=lambda wrapper: wrapper.async_trigger_ota_update(),
+        latest_version=lambda status: status.get("stable", {"version": ""})["version"],
+        beta=False,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=True,
+        entity_registry_enabled_default=False,
     ),
     "fwupdate_beta": RpcUpdateDescription(
         name="Beta Firmware Update",
         key="sys",
         sub_key="available_updates",
-        latest_version=lambda status: status.get("beta", {"version": None})["version"],
-        install=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
+        latest_version=lambda status: status.get("beta", {"version": ""})["version"],
+        beta=True,
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -140,30 +141,26 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
 
     def __init__(
         self,
-        wrapper: BlockDeviceWrapper,
+        block_coordinator: ShellyBlockCoordinator,
         attribute: str,
         description: RestEntityDescription,
     ) -> None:
         """Initialize update entity."""
-        super().__init__(wrapper, attribute, description)
+        super().__init__(block_coordinator, attribute, description)
         self._in_progress_old_version: str | None = None
 
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        version = self.wrapper.device.status["update"]["old_version"]
-        if version is None:
-            return None
-
-        return cast(str, version)
+        return cast(str, self.block_coordinator.device.status["update"]["old_version"])
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_version = self.entity_description.latest_version(
-            self.wrapper.device.status,
+            self.block_coordinator.device.status,
         )
-        if new_version is not None:
+        if new_version:
             return cast(str, new_version)
 
         return self.installed_version
@@ -177,12 +174,29 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the latest firmware version."""
-        config_entry = self.wrapper.entry
-        block_wrapper = self.hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-            config_entry.entry_id
-        ].get(BLOCK)
         self._in_progress_old_version = self.installed_version
-        await self.entity_description.install(block_wrapper)
+        beta = self.entity_description.beta
+        update_data = self.coordinator.device.status["update"]
+        LOGGER.debug("OTA update service - update_data: %s", update_data)
+
+        new_version = update_data["new_version"]
+        if beta:
+            new_version = update_data["beta_version"]
+
+        LOGGER.info(
+            "Starting OTA update of device %s from '%s' to '%s'",
+            self.name,
+            self.coordinator.device.firmware_version,
+            new_version,
+        )
+        try:
+            result = await self.coordinator.device.trigger_ota_update(beta=beta)
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(f"Error starting OTA update: {repr(err)}") from err
+        except InvalidAuthError:
+            self.coordinator.entry.async_start_reauth(self.hass)
+        else:
+            LOGGER.debug("Result of OTA update call: %s", result)
 
 
 class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
@@ -195,30 +209,28 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
 
     def __init__(
         self,
-        wrapper: RpcDeviceWrapper,
+        coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
         description: RpcEntityDescription,
     ) -> None:
         """Initialize update entity."""
-        super().__init__(wrapper, key, attribute, description)
+        super().__init__(coordinator, key, attribute, description)
         self._in_progress_old_version: str | None = None
 
     @property
     def installed_version(self) -> str | None:
         """Version currently in use."""
-        if self.wrapper.device.shelly is None:
-            return None
-
-        return cast(str, self.wrapper.device.shelly["ver"])
+        assert self.coordinator.device.shelly
+        return cast(str, self.coordinator.device.shelly["ver"])
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         new_version = self.entity_description.latest_version(
-            self.wrapper.device.status[self.key][self.entity_description.sub_key],
+            self.coordinator.device.status[self.key][self.entity_description.sub_key],
         )
-        if new_version is not None:
+        if new_version:
             return cast(str, new_version)
 
         return self.installed_version
@@ -233,4 +245,29 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     ) -> None:
         """Install the latest firmware version."""
         self._in_progress_old_version = self.installed_version
-        await self.entity_description.install(self.wrapper)
+        beta = self.entity_description.beta
+        update_data = self.coordinator.device.status["sys"]["available_updates"]
+        LOGGER.debug("OTA update service - update_data: %s", update_data)
+
+        new_version = update_data.get("stable", {"version": ""})["version"]
+        if beta:
+            new_version = update_data.get("beta", {"version": ""})["version"]
+
+        LOGGER.info(
+            "Starting OTA update of device %s from '%s' to '%s'",
+            self.coordinator.name,
+            self.coordinator.device.firmware_version,
+            new_version,
+        )
+        try:
+            await self.coordinator.device.trigger_ota_update(beta=beta)
+        except DeviceConnectionError as err:
+            raise HomeAssistantError(
+                f"OTA update connection error: {repr(err)}"
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(f"OTA update request error: {repr(err)}") from err
+        except InvalidAuthError:
+            self.coordinator.entry.async_start_reauth(self.hass)
+        else:
+            LOGGER.debug("OTA update call successful")

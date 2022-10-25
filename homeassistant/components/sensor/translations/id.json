@@ -6,6 +6,7 @@
             "is_carbon_dioxide": "Level konsentasi karbondioksida {entity_name} saat ini",
             "is_carbon_monoxide": "Level konsentasi karbonmonoksida {entity_name} saat ini",
             "is_current": "Arus {entity_name} saat ini",
+            "is_distance": "Jarak {entity_name} saat ini",
             "is_energy": "Energi {entity_name} saat ini",
             "is_frequency": "Frekuensi {entity_name} saat ini",
             "is_gas": "Gas {entity_name} saat ini",
@@ -24,11 +25,14 @@
             "is_pressure": "Tekanan {entity_name} saat ini",
             "is_reactive_power": "Daya reaktif {entity_name}",
             "is_signal_strength": "Kekuatan sinyal {entity_name} saat ini",
+            "is_speed": "Kecepatan {entity_name} saat ini",
             "is_sulphur_dioxide": "Tingkat konsentrasi sulfur dioksida {entity_name} saat ini",
             "is_temperature": "Suhu {entity_name} saat ini",
             "is_value": "Nilai {entity_name} saat ini",
             "is_volatile_organic_compounds": "Tingkat konsentrasi senyawa organik volatil {entity_name} saat ini",
-            "is_voltage": "Tegangan {entity_name} saat ini"
+            "is_voltage": "Tegangan {entity_name} saat ini",
+            "is_volume": "Volume {entity_name} saat ini",
+            "is_weight": "Berat {entity_name} saat ini"
         },
         "trigger_type": {
             "apparent_power": "Perubahan daya nyata {entity_name}",
@@ -36,6 +40,7 @@
             "carbon_dioxide": "Perubahan konsentrasi karbondioksida {entity_name}",
             "carbon_monoxide": "Perubahan konsentrasi karbonmonoksida {entity_name}",
             "current": "Perubahan arus {entity_name}",
+            "distance": "Perubahan jarak {entity_name}",
             "energy": "Perubahan energi {entity_name}",
             "frequency": "Perubahan frekuensi {entity_name}",
             "gas": "Perubahan gas {entity_name}",
@@ -54,11 +59,14 @@
             "pressure": "Perubahan tekanan {entity_name}",
             "reactive_power": "Perubahan daya reaktif {entity_name}",
             "signal_strength": "Perubahan kekuatan sinyal {entity_name}",
+            "speed": "Perubahan kecepatan {entity_name}",
             "sulphur_dioxide": "Perubahan konsentrasi sulfur dioksida {entity_name}",
             "temperature": "Perubahan suhu {entity_name}",
             "value": "Perubahan nilai {entity_name}",
             "volatile_organic_compounds": "Perubahan konsentrasi senyawa organik volatil {entity_name}",
-            "voltage": "Perubahan tegangan {entity_name}"
+            "voltage": "Perubahan tegangan {entity_name}",
+            "volume": "Perubahan volume {entity_name}",
+            "weight": "Perubahan berat {entity_name}"
         }
     },
     "state": {

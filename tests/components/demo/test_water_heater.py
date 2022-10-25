@@ -4,7 +4,7 @@ import voluptuous as vol
 
 from homeassistant.components import water_heater
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.components.water_heater import common
 
@@ -15,7 +15,7 @@ ENTITY_WATER_HEATER_CELSIUS = "water_heater.demo_water_heater_celsius"
 @pytest.fixture(autouse=True)
 async def setup_comp(hass):
     """Set up demo component."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     assert await async_setup_component(
         hass, water_heater.DOMAIN, {"water_heater": {"platform": "demo"}}
     )
