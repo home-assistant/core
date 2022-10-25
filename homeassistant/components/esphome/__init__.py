@@ -307,6 +307,8 @@ def _async_setup_device_registry(
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
 
     manufacturer = "espressif"
+    if device_info.manufacturer:
+        manufacturer = device_info.manufacturer
     model = device_info.model
     hw_version = None
     if device_info.project_name:
