@@ -180,7 +180,7 @@ CONF_PRECISION = "precision"
 CONF_QUANTILE_INTERVALS = "quantile_intervals"
 CONF_QUANTILE_METHOD = "quantile_method"
 
-DEFAULT_NAME = "Stats"
+DEFAULT_NAME = "Statistical aggregation"
 DEFAULT_PRECISION = 2
 DEFAULT_QUANTILE_INTERVALS = 4
 DEFAULT_QUANTILE_METHOD = "exclusive"
@@ -190,24 +190,6 @@ ICON = "mdi:calculator"
 def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
     is_binary = split_entity_id(config[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
-
-    if config.get(CONF_STATE_CHARACTERISTIC) is None:
-        config[CONF_STATE_CHARACTERISTIC] = STAT_COUNT if is_binary else STAT_MEAN
-        issue_registry.async_create_issue(
-            hass=async_get_hass(),
-            domain=DOMAIN,
-            issue_id=f"{config[CONF_ENTITY_ID]}_default_characteristic",
-            breaks_in_ha_version="2022.12.0",
-            is_fixable=False,
-            severity=issue_registry.IssueSeverity.WARNING,
-            translation_key="deprecation_warning_characteristic",
-            translation_placeholders={
-                "entity": config[CONF_NAME],
-                "characteristic": config[CONF_STATE_CHARACTERISTIC],
-            },
-            learn_more_url="https://github.com/home-assistant/core/pull/60402",
-        )
-
     characteristic = cast(str, config[CONF_STATE_CHARACTERISTIC])
     if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
         not is_binary and characteristic not in STATS_NUMERIC_SUPPORT
@@ -244,7 +226,7 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_STATE_CHARACTERISTIC): cv.string,
+        vol.Required(CONF_STATE_CHARACTERISTIC): cv.string,
         vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.Coerce(int),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
