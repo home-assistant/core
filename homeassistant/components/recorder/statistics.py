@@ -1469,7 +1469,19 @@ def statistic_during_period(
             else:
                 result["sum"] = None
 
-    return result
+    def no_conversion(val: float | None) -> float | None:
+        """Return val."""
+        return val
+
+    state_unit = unit = metadata[statistic_id][1]["unit_of_measurement"]
+    if state := hass.states.get(statistic_id):
+        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    if unit is not None:
+        convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+    else:
+        convert = no_conversion
+
+    return {key: convert(value) for key, value in result.items()}
 
 
 def statistics_during_period(

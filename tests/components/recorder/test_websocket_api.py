@@ -495,6 +495,42 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
     }
 
+    # Test we can convert units
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+            "units": {"energy": "MWh"},
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[:]) / 1000,
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]) / 1000,
+        "min": min(stat["min"] for stat in imported_stats_5min[:]) / 1000,
+        "sum": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"]) / 1000,
+    }
+
+    # Test we can automatically convert units
+    hass.states.async_set("sensor.test", None, attributes=ENERGY_SENSOR_WH_ATTRIBUTES)
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "recorder/statistic_during_period",
+            "statistic_id": "sensor.test",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "max": max(stat["max"] for stat in imported_stats_5min[:]) * 1000,
+        "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]) * 1000,
+        "min": min(stat["min"] for stat in imported_stats_5min[:]) * 1000,
+        "sum": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"]) * 1000,
+    }
+
 
 @freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
 @pytest.mark.parametrize(
