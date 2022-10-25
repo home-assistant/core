@@ -30,7 +30,7 @@ from .coordinator import (
     FlumeDeviceConnectionUpdateCoordinator,
     FlumeNotificationDataUpdateCoordinator,
 )
-from .entity import FlumeEntity
+from .entity import FlumeEntity, FlumeNotificationSensorRequiredKeysMixin
 from .util import get_valid_flume_devices
 
 BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
@@ -40,15 +40,8 @@ BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
 
 
 @dataclass
-class FlumeBinarySensorRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    event_rule: str
-
-
-@dataclass
 class FlumeBinarySensorEntityDescription(
-    BinarySensorEntityDescription, FlumeBinarySensorRequiredKeysMixin
+    BinarySensorEntityDescription, FlumeNotificationSensorRequiredKeysMixin
 ):
     """Describes a binary sensor entity."""
 

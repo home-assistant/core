@@ -1,4 +1,8 @@
 """Sensor for displaying the number of result from Flume."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime
 from numbers import Number
 
 from pyflume import FlumeData
@@ -11,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import VOLUME_GALLONS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -25,10 +30,23 @@ from .const import (
     KEY_DEVICE_LOCATION_NAME,
     KEY_DEVICE_LOCATION_TIMEZONE,
     KEY_DEVICE_TYPE,
+    NOTIFICATION_HIGH_FLOW,
+    NOTIFICATION_LEAK_DETECTED,
 )
-from .coordinator import FlumeDeviceDataUpdateCoordinator
-from .entity import FlumeEntity
+from .coordinator import (
+    FlumeDeviceDataUpdateCoordinator,
+    FlumeNotificationDataUpdateCoordinator,
+)
+from .entity import FlumeEntity, FlumeNotificationSensorRequiredKeysMixin
 from .util import get_valid_flume_devices
+
+
+@dataclass
+class FlumeNotificationSensorEntityDescription(
+    SensorEntityDescription, FlumeNotificationSensorRequiredKeysMixin
+):
+    """Describe a notification based sensor."""
+
 
 FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -72,6 +90,22 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
 )
 
 
+FLUME_NOTIFICATION_SENSORS: tuple[FlumeNotificationSensorEntityDescription, ...] = (
+    FlumeNotificationSensorEntityDescription(
+        key="high_flow_age",
+        name="High flow age",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        event_rule=NOTIFICATION_HIGH_FLOW,
+    ),
+    FlumeNotificationSensorEntityDescription(
+        key="leak_age",
+        name="Leak detected age",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        event_rule=NOTIFICATION_LEAK_DETECTED,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -88,7 +122,7 @@ async def async_setup_entry(
         for device in get_valid_flume_devices(flume_devices)
         if device[KEY_DEVICE_TYPE] == FLUME_TYPE_SENSOR
     ]
-    flume_entity_list = []
+    flume_entity_list: list[FlumeSensor | FlumeNotificationSensor] = []
     for device in flume_devices:
 
         device_id = device[KEY_DEVICE_ID]
@@ -104,19 +138,35 @@ async def async_setup_entry(
             http_session=http_session,
         )
 
-        coordinator = FlumeDeviceDataUpdateCoordinator(
+        data_coordinator = FlumeDeviceDataUpdateCoordinator(
             hass=hass, flume_device=flume_device
         )
 
         flume_entity_list.extend(
             [
                 FlumeSensor(
-                    coordinator=coordinator,
+                    coordinator=data_coordinator,
                     description=description,
                     device_id=device_id,
                     location_name=device_location_name,
                 )
                 for description in FLUME_QUERIES_SENSOR
+            ]
+        )
+
+        notification_coordinator = FlumeNotificationDataUpdateCoordinator(
+            hass=hass, auth=flume_auth
+        )
+
+        flume_entity_list.extend(
+            [
+                FlumeNotificationSensor(
+                    coordinator=notification_coordinator,
+                    description=description,
+                    device_id=device_id,
+                    location_name=device_location_name,
+                )
+                for description in FLUME_NOTIFICATION_SENSORS
             ]
         )
 
@@ -140,3 +190,21 @@ class FlumeSensor(FlumeEntity, SensorEntity):
 
 def _format_state_value(value):
     return round(value, 1) if isinstance(value, Number) else None
+
+
+class FlumeNotificationSensor(FlumeEntity, SensorEntity):
+    """Represents a notification backed flume diagnostic sensor."""
+
+    entity_description: FlumeNotificationSensorEntityDescription
+    coordinator: FlumeNotificationDataUpdateCoordinator
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return time since last error or None."""
+
+        if notifications := self.coordinator.active_notifications_by_device.get(
+            self.device_id
+        ):
+            return notifications.get(self.entity_description.event_rule)
+        return None

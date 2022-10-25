@@ -1,6 +1,7 @@
 """The IntelliFire integration."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 import pyflume
@@ -8,6 +9,7 @@ from pyflume import FlumeDeviceList
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import parse_datetime, utcnow
 
 from .const import (
     _LOGGER,
@@ -88,7 +90,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=NOTIFICATION_SCAN_INTERVAL,
         )
         self.auth = auth
-        self.active_notifications_by_device: dict = {}
+        self.active_notifications_by_device: dict[str, dict[str, datetime]] = {}
         self.notifications: list[dict[str, Any]]
 
     def _update_lists(self):
@@ -98,7 +100,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
         ).notification_list
         _LOGGER.debug("Notifications %s", self.notifications)
 
-        active_notifications_by_device: dict[str, set[str]] = {}
+        active_notifications_by_device_with_time = {}
 
         for notification in self.notifications:
             if (
@@ -109,9 +111,13 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 continue
             device_id = notification["device_id"]
             rule = notification["extra"]["event_rule_name"]
-            active_notifications_by_device.setdefault(device_id, set()).add(rule)
+            time = parse_datetime(notification["created_datetime"])
+            age = utcnow() - (utcnow() - time)
+            active_notifications_by_device_with_time.setdefault(device_id, {})[
+                rule
+            ] = age
 
-        self.active_notifications_by_device = active_notifications_by_device
+        self.active_notifications_by_device = active_notifications_by_device_with_time
 
     async def _async_update_data(self) -> None:
         """Update data."""

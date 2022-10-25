@@ -1,6 +1,8 @@
 """Platform for shared base classes for sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -8,6 +10,13 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
+
+
+@dataclass
+class FlumeNotificationSensorRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    event_rule: str
 
 
 class FlumeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
