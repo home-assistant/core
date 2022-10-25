@@ -22,8 +22,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RainMachineData, RainMachineEntity, async_update_programs_and_zones
 from .const import (
+    CONF_DURATION,
+    CONF_USE_APP_RUN_TIMES,
     CONF_ZONE_RUN_TIME,
     DATA_PROGRAMS,
+    DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
@@ -40,6 +43,7 @@ ATTR_AREA = "area"
 ATTR_CS_ON = "cs_on"
 ATTR_CURRENT_CYCLE = "current_cycle"
 ATTR_CYCLES = "cycles"
+ATTR_DEFAULT_RUN_TIME = "default_run_time"
 ATTR_DELAY = "delay"
 ATTR_DELAY_ON = "delay_on"
 ATTR_FIELD_CAPACITY = "field_capacity"
@@ -459,9 +463,18 @@ class RainMachineZone(RainMachineActivitySwitch):
     @raise_on_request_error
     async def async_turn_on_when_active(self, **kwargs: Any) -> None:
         """Turn the switch on when its associated activity is active."""
+        duration = kwargs.get(CONF_DURATION)
+        if not duration:
+            if (
+                self._entry.options[CONF_USE_APP_RUN_TIMES]
+                and ATTR_DEFAULT_RUN_TIME in self._attr_extra_state_attributes
+            ):
+                duration = self._attr_extra_state_attributes[ATTR_DEFAULT_RUN_TIME]
+            else:
+                duration = self._entry.options[CONF_ZONE_RUN_TIME]
         await self._data.controller.zones.start(
             self.entity_description.uid,
-            kwargs.get("duration", self._entry.options[CONF_ZONE_RUN_TIME]),
+            duration,
         )
         self._update_activities()
 
@@ -496,6 +509,16 @@ class RainMachineZone(RainMachineActivitySwitch):
                 attrs[ATTR_PRECIP_RATE] = round(
                     data["waterSense"]["precipitationRate"], 2
                 )
+
+        if self._entry.options[CONF_USE_APP_RUN_TIMES]:
+            if (
+                zone_durations := self._data.coordinators[DATA_PROVISION_SETTINGS]
+                .data.get("system", {})
+                .get("zoneDuration")
+            ):
+                attrs[ATTR_DEFAULT_RUN_TIME] = zone_durations[
+                    list(self.coordinator.data).index(self.entity_description.uid)
+                ]
 
         self._attr_extra_state_attributes.update(attrs)
 
