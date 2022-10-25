@@ -304,7 +304,7 @@ class TibberSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(*args, **kwargs)
-        self._tibber_home: tibber.TibberHome = tibber_home
+        self._tibber_home = tibber_home
         self._home_name = tibber_home.info["viewer"]["home"]["appNickname"]
         if self._home_name is None:
             self._home_name = tibber_home.info["viewer"]["home"]["address"].get(
