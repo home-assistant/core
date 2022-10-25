@@ -5,6 +5,7 @@ from datetime import timedelta
 from time import sleep
 
 from verisure import (
+    Error as VerisureError,
     LoginError as VerisureLoginError,
     ResponseError as VerisureResponseError,
     Session as Verisure,
@@ -15,7 +16,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import Throttle
 
 from .const import CONF_GIID, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
@@ -28,6 +29,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the Verisure hub."""
         self.imageseries: list[dict[str, str]] = []
         self.entry = entry
+        self._overview: list[dict] = []
 
         self.verisure = Verisure(
             username=entry.data[CONF_EMAIL],
@@ -64,11 +66,6 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""
         try:
-            await self.hass.async_add_executor_job(self.verisure.update_cookie)
-        except (VerisureLoginError, VerisureResponseError) as ex:
-            LOGGER.error("Credentials expired for Verisure, %s", ex)
-            raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
-        try:
             overview = await self.hass.async_add_executor_job(
                 self.verisure.request,
                 self.verisure.arm_state(),
@@ -79,11 +76,22 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 self.verisure.smart_lock(),
                 self.verisure.smartplugs(),
             )
-        except Exception as ex:
-            LOGGER.error("Could not read overview, %s", ex)
-            raise
+        except VerisureResponseError as err:
+            LOGGER.debug("Cookie expired or service unavailable, %s", err)
+            overview = self._overview
+            try:
+                await self.hass.async_add_executor_job(self.verisure.update_cookie)
+            except VerisureResponseError as ex:
+                LOGGER.error("Credentials for Verisure expired, %s", ex)
+                raise ConfigEntryAuthFailed("Credentials for Verisure expired.") from ex
+            except Exception as ex:
+                LOGGER.error("Could not read overview, %s", ex)
+                raise UpdateFailed("Could not read overview") from ex
+        except VerisureError as err:
+            LOGGER.error("Could not read overview, %s", err)
+            raise UpdateFailed("Could not read overview") from err
 
-        def unpack(overview: list, value: str) -> dict[str, str] | list[dict[str, str]]:
+        def unpack(overview: list, value: str) -> dict | list:
             unpacked = [
                 item["data"]["installation"][value]
                 for item in overview
@@ -92,6 +100,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             return unpacked[0]
 
         # Store data in a way Home Assistant can easily consume it
+        self._overview = overview
         return {
             "alarm": unpack(overview, "armState"),
             "broadband": unpack(overview, "broadband"),
