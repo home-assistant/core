@@ -224,7 +224,7 @@ def prepare_parameters(
         try:
             formatted_coordinates = coordinates.split(",")
             vol.Schema(cv.gps(formatted_coordinates))
-        except (AttributeError, vol.Invalid) as ex:
+        except (AttributeError, vol.ExactSequenceInvalid) as ex:
             raise InvalidCoordinatesException(
                 f"{coordinates} are not valid coordinates"
             ) from ex
