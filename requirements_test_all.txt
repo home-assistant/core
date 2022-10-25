@@ -140,7 +140,7 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==11.1.1
+aioesphomeapi==11.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -230,7 +230,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==4.1.0
+aioshelly==4.1.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -881,6 +881,9 @@ open-meteo==0.2.1
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
+
+# homeassistant.components.oralb
+oralb-ble==0.5.0
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
