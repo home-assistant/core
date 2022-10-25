@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from unittest.mock import patch
 
+import serial
 import serial.tools.list_ports
 
 from homeassistant import config_entries
@@ -106,7 +107,7 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
 async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test manual entry fails."""
 
-    mock_heat_meter().read.side_effect = Exception
+    mock_heat_meter().read.side_effect = serial.serialutil.SerialException
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -143,7 +144,7 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
 async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
     """Test select from list entry fails."""
 
-    mock_heat_meter().read.side_effect = Exception
+    mock_heat_meter().read.side_effect = serial.serialutil.SerialException
     port = mock_serial_port()
 
     result = await hass.config_entries.flow.async_init(

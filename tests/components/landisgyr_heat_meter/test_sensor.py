@@ -177,7 +177,6 @@ async def test_restore_state(mock_heat_meter, hass):
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
-    await async_setup_component(hass, HA_DOMAIN, {})
     await hass.async_block_till_done()
 
     # restore from cache
@@ -195,6 +194,5 @@ async def test_restore_state(mock_heat_meter, hass):
 
     state = hass.states.get("sensor.heat_meter_device_number")
     assert state
-    print("STATE IS: ", state)
     assert state.state == "devicenr_789"
     assert state.attributes.get(ATTR_STATE_CLASS) is None
