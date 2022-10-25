@@ -9,8 +9,14 @@ import voluptuous as vol
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
+    LENGTH_CENTIMETERS,
+    LENGTH_FEET,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
+    LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LENGTH_YARD,
     MASS,
     MASS_GRAMS,
     MASS_KILOGRAMS,
@@ -92,8 +98,8 @@ class UnitSystem:
         name: str,
         *,
         accumulated_precipitation: str,
+        conversions: dict[tuple[str | None, str | None], str],
         length: str,
-        length_conversions: dict[str | None, str],
         mass: str,
         pressure: str,
         temperature: str,
@@ -126,7 +132,7 @@ class UnitSystem:
         self.pressure_unit = pressure
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
-        self._length_conversions = length_conversions
+        self._conversions = conversions
 
     @property
     def name(self) -> str:
@@ -226,10 +232,7 @@ class UnitSystem:
         original_unit: str | None,
     ) -> str | None:
         """Return converted unit given a device class or an original unit."""
-        if device_class == "distance":
-            return self._length_conversions.get(original_unit)
-
-        return None
+        return self._conversions.get((device_class, original_unit))
 
 
 def get_unit_system(key: str) -> UnitSystem:
@@ -259,8 +262,13 @@ validate_unit_system = vol.All(
 METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
     accumulated_precipitation=PRECIPITATION_MILLIMETERS,
+    conversions={
+        ("distance", LENGTH_FEET): LENGTH_METERS,
+        ("distance", LENGTH_INCHES): LENGTH_CENTIMETERS,
+        ("distance", LENGTH_MILES): LENGTH_KILOMETERS,
+        ("distance", LENGTH_YARD): LENGTH_METERS,
+    },
     length=LENGTH_KILOMETERS,
-    length_conversions={LENGTH_MILES: LENGTH_KILOMETERS},
     mass=MASS_GRAMS,
     pressure=PRESSURE_PA,
     temperature=TEMP_CELSIUS,
@@ -271,8 +279,13 @@ METRIC_SYSTEM = UnitSystem(
 US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     accumulated_precipitation=PRECIPITATION_INCHES,
+    conversions={
+        ("distance", LENGTH_CENTIMETERS): LENGTH_INCHES,
+        ("distance", LENGTH_KILOMETERS): LENGTH_MILES,
+        ("distance", LENGTH_METERS): LENGTH_FEET,
+        ("distance", LENGTH_MILLIMETERS): LENGTH_INCHES,
+    },
     length=LENGTH_MILES,
-    length_conversions={LENGTH_KILOMETERS: LENGTH_MILES},
     mass=MASS_POUNDS,
     pressure=PRESSURE_PSI,
     temperature=TEMP_FAHRENHEIT,
