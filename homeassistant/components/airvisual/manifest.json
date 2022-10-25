@@ -7,5 +7,5 @@
   "codeowners": ["@bachya"],
   "iot_class": "cloud_polling",
   "loggers": ["pyairvisual", "pysmb"],
-  "integration_type": "device"
+  "integration_type": "service"
 }
