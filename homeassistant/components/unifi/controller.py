@@ -37,6 +37,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_MANUFACTURER,
+    BLOCK_SWITCH,
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
@@ -61,10 +62,10 @@ from .const import (
     DOMAIN as UNIFI_DOMAIN,
     LOGGER,
     PLATFORMS,
+    POE_SWITCH,
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
-from .switch import BLOCK_SWITCH, POE_SWITCH
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
