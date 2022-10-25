@@ -28,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -100,7 +100,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     async def _zone(zone_id: int, zone: Zone) -> None:
         _LOGGER.debug("Risco zone update for %d", zone_id)
-        dispatcher_send(hass, zone_update_signal(zone_id))
+        async_dispatcher_send(hass, zone_update_signal(zone_id))
 
     entry.async_on_unload(risco.add_zone_handler(_zone))
 
