@@ -6091,9 +6091,10 @@
       "iot_class": "local_polling"
     },
     "zamg": {
+      "name": "Zentralanstalt f\u00fcr Meteorologie und Geodynamik (ZAMG)",
+      "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling",
-      "name": "Zentralanstalt f\u00fcr Meteorologie und Geodynamik (ZAMG)"
+      "iot_class": "cloud_polling"
     },
     "zengge": {
       "name": "Zengge",
