@@ -1,6 +1,8 @@
 """The HERE Travel Time integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_UNIT_SYSTEM, Platform
 from homeassistant.core import HomeAssistant
@@ -26,10 +28,12 @@ from .coordinator import (
 from .model import HERETravelTimeConfig
 
 PLATFORMS = [Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up HERE Travel Time from a config entry."""
+    await _async_migrate_entry(hass, config_entry)
     api_key = config_entry.data[CONF_API_KEY]
 
     arrival = (
@@ -87,3 +91,27 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+async def _async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+
+        new_data = {**config_entry.data}
+        if new_data[CONF_MODE] == "publicTransportTimeTable":
+            new_data[CONF_MODE] = TRAVEL_MODE_PUBLIC
+
+        new_options = {**config_entry.options}
+        if "traffic_mode" in new_options:
+            new_options.pop("traffic_mode")
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, options=new_options
+        )
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True

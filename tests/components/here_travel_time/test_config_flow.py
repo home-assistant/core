@@ -17,7 +17,7 @@ from homeassistant.components.here_travel_time.const import (
     DOMAIN,
     ROUTE_MODE_FASTEST,
     TRAVEL_MODE_CAR,
-    TRAVEL_MODE_PUBLIC_TIME_TABLE,
+    TRAVEL_MODE_PUBLIC,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -36,6 +36,7 @@ from homeassistant.util.unit_system import (
 
 from .const import (
     API_KEY,
+    DEFAULT_CONFIG,
     DESTINATION_LATITUDE,
     DESTINATION_LONGITUDE,
     ORIGIN_LATITUDE,
@@ -85,7 +86,7 @@ async def option_init_result_fixture(hass: HomeAssistant) -> data_entry_flow.Flo
             CONF_DESTINATION_LATITUDE: float(DESTINATION_LATITUDE),
             CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
             CONF_API_KEY: API_KEY,
-            CONF_MODE: TRAVEL_MODE_PUBLIC_TIME_TABLE,
+            CONF_MODE: TRAVEL_MODE_PUBLIC,
             CONF_NAME: "test",
         },
     )
@@ -322,15 +323,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="0123456789",
-        data={
-            CONF_ORIGIN_LATITUDE: float(ORIGIN_LATITUDE),
-            CONF_ORIGIN_LONGITUDE: float(ORIGIN_LONGITUDE),
-            CONF_DESTINATION_LATITUDE: float(DESTINATION_LATITUDE),
-            CONF_DESTINATION_LONGITUDE: float(DESTINATION_LONGITUDE),
-            CONF_API_KEY: API_KEY,
-            CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_NAME: "test",
-        },
+        data=DEFAULT_CONFIG,
     )
     entry.add_to_hass(hass)
 

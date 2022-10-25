@@ -52,7 +52,6 @@ from .const import (
     ROUTE_MODE_FASTEST,
     ROUTE_MODES,
     TRAVEL_MODE_CAR,
-    TRAVEL_MODE_PUBLIC_TIME_TABLE,
     TRAVEL_MODES,
     UNITS,
 )
@@ -246,14 +245,9 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
         """Manage the HERE Travel Time options."""
         if user_input is not None:
             self._config = user_input
-            if self.config_entry.data[CONF_MODE] == TRAVEL_MODE_PUBLIC_TIME_TABLE:
-                return self.async_show_menu(
-                    step_id="time_menu",
-                    menu_options=["departure_time", "arrival_time", "no_time"],
-                )
             return self.async_show_menu(
                 step_id="time_menu",
-                menu_options=["departure_time", "no_time"],
+                menu_options=["departure_time", "arrival_time", "no_time"],
             )
 
         defaults = default_options(self.hass)
