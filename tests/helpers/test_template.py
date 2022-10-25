@@ -44,8 +44,8 @@ def _set_up_units(hass):
     hass.config.units = UnitSystem(
         "custom",
         accumulated_precipitation=LENGTH_MILLIMETERS,
+        conversions={},
         length=LENGTH_METERS,
-        length_conversions={},
         mass=MASS_GRAMS,
         pressure=PRESSURE_PA,
         temperature=TEMP_CELSIUS,
@@ -2474,8 +2474,8 @@ async def test_integration_entities(hass):
     assert info.rate_limit is None
 
 
-async def test_entry_id(hass):
-    """Test entry_id function."""
+async def test_config_entry_id(hass):
+    """Test config_entry_id function."""
     config_entry = MockConfigEntry(domain="light", title="Some integration")
     config_entry.add_to_hass(hass)
     entity_registry = mock_registry(hass)
@@ -2483,17 +2483,19 @@ async def test_entry_id(hass):
         "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
     )
 
-    info = render_to_info(hass, "{{ 'sensor.fail' | entry_id }}")
+    info = render_to_info(hass, "{{ 'sensor.fail' | config_entry_id }}")
     assert_result_info(info, None)
     assert info.rate_limit is None
 
-    info = render_to_info(hass, "{{ 56 | entry_id }}")
+    info = render_to_info(hass, "{{ 56 | config_entry_id }}")
     assert_result_info(info, None)
 
-    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | entry_id }}")
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | config_entry_id }}")
     assert_result_info(info, None)
 
-    info = render_to_info(hass, f"{{{{ entry_id('{entity_entry.entity_id}') }}}}")
+    info = render_to_info(
+        hass, f"{{{{ config_entry_id('{entity_entry.entity_id}') }}}}"
+    )
     assert_result_info(info, config_entry.entry_id)
     assert info.rate_limit is None
 

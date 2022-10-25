@@ -87,6 +87,10 @@ DEFAULT_CONFIG = f"""
 # Loads default set of integrations. Do not remove.
 default_config:
 
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
 # Text to speech
 tts:
   - platform: google_translate

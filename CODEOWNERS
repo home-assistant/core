@@ -289,7 +289,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ecovacs/ @OverloadUT @mib1185
 /homeassistant/components/ecowitt/ @pvizeli
 /tests/components/ecowitt/ @pvizeli
-/homeassistant/components/edl21/ @mtdcr
 /homeassistant/components/efergy/ @tkdrob
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt

@@ -140,19 +140,6 @@ async def test_flow_conn_err(hass: HomeAssistant, mock_pushover: MagicMock) -> N
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_import(hass: HomeAssistant) -> None:
-    """Test user initialized flow with unreachable server."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_CONFIG,
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Pushover"
-    assert result["data"] == MOCK_CONFIG
-
-
 async def test_reauth_success(hass: HomeAssistant) -> None:
     """Test we can reauth."""
     entry = MockConfigEntry(

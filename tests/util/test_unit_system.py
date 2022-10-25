@@ -4,14 +4,23 @@ import pytest
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
+    LENGTH_CENTIMETERS,
+    LENGTH_FEET,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
+    LENGTH_MILES,
     LENGTH_MILLIMETERS,
+    LENGTH_YARD,
     MASS,
     MASS_GRAMS,
     PRESSURE,
     PRESSURE_PA,
+    SPEED_FEET_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMPERATURE,
     VOLUME,
@@ -40,8 +49,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=INVALID_UNIT,
@@ -53,8 +62,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=INVALID_UNIT,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -66,8 +75,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -79,8 +88,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -92,8 +101,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=INVALID_UNIT,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -105,8 +114,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=INVALID_UNIT,
             temperature=TEMP_CELSIUS,
@@ -118,8 +127,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=INVALID_UNIT,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -374,3 +383,43 @@ def test_get_unit_system_invalid(key: str) -> None:
     """Test get_unit_system with an invalid key."""
     with pytest.raises(ValueError, match=f"`{key}` is not a valid unit system key"):
         _ = get_unit_system(key)
+
+
+@pytest.mark.parametrize(
+    "unit_system, device_class, original_unit, state_unit",
+    (
+        # Test distance conversion
+        (METRIC_SYSTEM, "distance", LENGTH_FEET, LENGTH_METERS),
+        (METRIC_SYSTEM, "distance", LENGTH_INCHES, LENGTH_MILLIMETERS),
+        (METRIC_SYSTEM, "distance", LENGTH_MILES, LENGTH_KILOMETERS),
+        (METRIC_SYSTEM, "distance", LENGTH_YARD, LENGTH_METERS),
+        (METRIC_SYSTEM, "distance", LENGTH_KILOMETERS, None),
+        (METRIC_SYSTEM, "distance", "very_long", None),
+        # Test speed conversion
+        (METRIC_SYSTEM, "speed", SPEED_FEET_PER_SECOND, SPEED_KILOMETERS_PER_HOUR),
+        (METRIC_SYSTEM, "speed", SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR),
+        (METRIC_SYSTEM, "speed", SPEED_KILOMETERS_PER_HOUR, None),
+        (METRIC_SYSTEM, "speed", SPEED_KNOTS, None),
+        (METRIC_SYSTEM, "speed", SPEED_METERS_PER_SECOND, None),
+        (METRIC_SYSTEM, "speed", "very_fast", None),
+        # Test distance conversion
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_CENTIMETERS, LENGTH_INCHES),
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_KILOMETERS, LENGTH_MILES),
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_METERS, LENGTH_FEET),
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_MILLIMETERS, LENGTH_INCHES),
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_MILES, None),
+        (US_CUSTOMARY_SYSTEM, "distance", "very_long", None),
+        # Test speed conversion
+        (US_CUSTOMARY_SYSTEM, "speed", SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR),
+        (US_CUSTOMARY_SYSTEM, "speed", SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR),
+        (US_CUSTOMARY_SYSTEM, "speed", SPEED_FEET_PER_SECOND, None),
+        (US_CUSTOMARY_SYSTEM, "speed", SPEED_KNOTS, None),
+        (US_CUSTOMARY_SYSTEM, "speed", SPEED_MILES_PER_HOUR, None),
+        (US_CUSTOMARY_SYSTEM, "speed", "very_fast", None),
+    ),
+)
+def test_get_converted_unit(
+    unit_system, device_class, original_unit, state_unit
+) -> None:
+    """Test unit conversion rules."""
+    assert unit_system.get_converted_unit(device_class, original_unit) == state_unit

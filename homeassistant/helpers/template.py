@@ -1063,8 +1063,8 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     ]
 
 
-def entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get an entry ID from an entity ID."""
+def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get an config entry ID from an entity ID."""
     entity_reg = entity_registry.async_get(hass)
     if entity := entity_reg.async_get(entity_id):
         return entity.config_entry_id
@@ -2090,8 +2090,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_attr"] = hassfunction(device_attr)
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
 
-        self.globals["entry_id"] = hassfunction(entry_id)
-        self.filters["entry_id"] = pass_context(self.globals["entry_id"])
+        self.globals["config_entry_id"] = hassfunction(config_entry_id)
+        self.filters["config_entry_id"] = pass_context(self.globals["config_entry_id"])
 
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = pass_context(self.globals["device_id"])

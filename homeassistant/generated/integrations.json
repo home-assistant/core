@@ -758,12 +758,6 @@
         }
       }
     },
-    "cloud": {
-      "name": "Home Assistant Cloud",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "cloudflare": {
       "name": "Cloudflare",
       "integration_type": "hub",
@@ -2182,11 +2176,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "homeassistant_alerts": {
-      "name": "Home Assistant Alerts",
-      "integration_type": "hub",
-      "config_flow": false
-    },
     "homeassistant_sky_connect": {
       "name": "Home Assistant Sky Connect",
       "integration_type": "hardware",
@@ -2362,6 +2351,22 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "ikea": {
+      "name": "IKEA",
+      "integrations": {
+        "symfonisk": {
+          "integration_type": "virtual",
+          "supported_by": "sonos",
+          "name": "IKEA SYMFONISK"
+        },
+        "tradfri": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "IKEA TR\u00c5DFRI"
+        }
+      }
     },
     "imap": {
       "name": "IMAP",
@@ -2955,11 +2960,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"
-    },
-    "map": {
-      "name": "Map",
-      "integration_type": "hub",
-      "config_flow": false
     },
     "marantz": {
       "name": "Marantz",
@@ -3904,12 +3904,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "persistent_notification": {
-      "name": "Persistent Notification",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "philips": {
       "name": "Philips",
@@ -5053,12 +5047,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "stream": {
-      "name": "Stream",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "streamlabswater": {
       "name": "StreamLabs",
       "integration_type": "hub",
@@ -5180,11 +5168,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "system_log": {
-      "name": "System Log",
-      "integration_type": "hub",
-      "config_flow": false
     },
     "systemmonitor": {
       "name": "System Monitor",
@@ -5489,12 +5472,6 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
-    "tradfri": {
-      "name": "IKEA TR\u00c5DFRI",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "trafikverket": {
       "name": "Trafikverket",
       "integrations": {
@@ -5598,6 +5575,9 @@
       "integrations": {
         "ultraloq": {
           "integration_type": "virtual",
+          "iot_standards": [
+            "zwave"
+          ],
           "name": "Ultraloq"
         }
       }
@@ -6177,11 +6157,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "zone": {
-      "name": "Zone",
-      "integration_type": "hub",
-      "config_flow": false
     },
     "zoneminder": {
       "name": "ZoneMinder",
