@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.const import (
+    ENERGY_GIGA_JOULE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -158,11 +159,13 @@ class EnergyConverter(BaseUnitConverter):
         ENERGY_WATT_HOUR: 1 * 1000,
         ENERGY_KILO_WATT_HOUR: 1,
         ENERGY_MEGA_WATT_HOUR: 1 / 1000,
+        ENERGY_GIGA_JOULE: 3.6 / 1000,
     }
     VALID_UNITS = {
         ENERGY_WATT_HOUR,
         ENERGY_KILO_WATT_HOUR,
         ENERGY_MEGA_WATT_HOUR,
+        ENERGY_GIGA_JOULE,
     }
 
 

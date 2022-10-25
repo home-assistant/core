@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
 from homeassistant.const import (
+    ENERGY_GIGA_JOULE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -73,6 +74,7 @@ async def test_validation_empty_config(hass):
         ("total", ENERGY_KILO_WATT_HOUR, {}),
         ("total", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
         ("measurement", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("total_increasing", ENERGY_GIGA_JOULE, {}),
     ],
 )
 async def test_validation(

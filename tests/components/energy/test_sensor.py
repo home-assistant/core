@@ -16,6 +16,7 @@ from homeassistant.components.sensor.recorder import compile_statistics
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_GIGA_JOULE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -703,6 +704,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
         (ENERGY_WATT_HOUR, 1000),
         (ENERGY_KILO_WATT_HOUR, 1),
         (ENERGY_MEGA_WATT_HOUR, 0.001),
+        (ENERGY_GIGA_JOULE, 0.001 * 3.6),
     ],
 )
 async def test_cost_sensor_handle_energy_units(
@@ -768,6 +770,7 @@ async def test_cost_sensor_handle_energy_units(
         (f"EUR/{ENERGY_WATT_HOUR}", 0.001),
         (f"EUR/{ENERGY_KILO_WATT_HOUR}", 1),
         (f"EUR/{ENERGY_MEGA_WATT_HOUR}", 1000),
+        (f"EUR/{ENERGY_GIGA_JOULE}", 1000 / 3.6),
     ],
 )
 async def test_cost_sensor_handle_price_units(
