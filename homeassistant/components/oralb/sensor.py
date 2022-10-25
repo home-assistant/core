@@ -29,6 +29,7 @@ from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_ha
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     OralBSensor.COUNTER: SensorEntityDescription(
         key=OralBSensor.COUNTER,
+        entity_registry_enabled_default=False,
     ),
     OralBSensor.SECTOR: SensorEntityDescription(
         key=OralBSensor.SECTOR,
@@ -38,6 +39,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     OralBSensor.SECTOR_TIMER: SensorEntityDescription(
         key=OralBSensor.SECTOR_TIMER,
+        entity_registry_enabled_default=False,
     ),
     OralBSensor.TOOTHBRUSH_STATE: SensorEntityDescription(
         key=OralBSensor.TOOTHBRUSH_STATE
