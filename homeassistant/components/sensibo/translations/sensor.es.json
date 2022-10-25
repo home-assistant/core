@@ -3,6 +3,11 @@
         "sensibo__sensitivity": {
             "n": "Normal",
             "s": "Sensible"
+        },
+        "sensibo__smart_type": {
+            "feelslike": "Se siente como",
+            "humidity": "Humedad",
+            "temperature": "Temperatura"
         }
     }
 }

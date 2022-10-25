@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "Adresse IP distante",
+                    "ip_address": "Adresse distante",
                     "listening_port": "Port d'\u00e9coute local",
                     "remote_read_port": "Port de lecture distant",
                     "remote_write_port": "Port d'\u00e9criture distant"
