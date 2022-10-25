@@ -1,4 +1,4 @@
-"""Support for monitoring OctoPrint binary sensors."""
+"""Support for OctoPrint binary camera."""
 from __future__ import annotations
 
 from pyoctoprintapi import OctoprintClient, WebcamSettings
@@ -45,8 +45,6 @@ async def async_setup_entry(
 
 class OctoprintCamera(MjpegCamera):
     """Representation of an OctoPrint Camera Stream."""
-
-    entity_registry_enabled_default = False
 
     def __init__(
         self, camera_settings: WebcamSettings, device_info: DeviceInfo, device_id: str
