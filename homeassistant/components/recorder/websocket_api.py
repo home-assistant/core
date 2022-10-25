@@ -79,15 +79,12 @@ def _ws_get_statistic_during_period(
     )
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/statistic_during_period",
         vol.Exclusive("calendar", "period"): vol.Schema(
             {
-                vol.Required("period"): str,
+                vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
                 vol.Optional("offset"): int,
             }
         ),
@@ -140,7 +137,7 @@ async def ws_get_statistic_during_period(
             start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
             start_time += timedelta(hours=offset)
             end_time = start_time + timedelta(hours=1)
-        if calendar_period == "day":
+        elif calendar_period == "day":
             start_time = start_of_day
             start_time += timedelta(days=offset)
             end_time = start_time + timedelta(days=1)
