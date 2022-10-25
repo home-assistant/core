@@ -54,9 +54,9 @@ async def async_setup_entry(
                 description = elevator.get("description")
 
                 if label is not None:
-                    name = f"Elevator {label} at {station_name}"
+                    name = f"Elevator {label}"
                 else:
-                    name = f"Unknown elevator at {station_name}"
+                    name = "Unknown elevator"
 
                 if description is not None:
                     name += f" ({description})"
@@ -125,6 +125,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """HVVDepartureBinarySensor class."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator, idx, config_entry):
         """Initialize."""

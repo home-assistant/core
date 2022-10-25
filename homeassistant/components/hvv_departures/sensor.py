@@ -64,7 +64,8 @@ class HVVDepartureSensor(SensorEntity):
         self.station_name = self.config_entry.data[CONF_STATION]["name"]
         self._attr_extra_state_attributes = {}
         self._attr_available = False
-        self._attr_name = f"Departures at {self.station_name}"
+        self._attr_has_entity_name = True
+        self._attr_name = "Departures"
         self._last_error = None
 
         self.gti = hub.gti
@@ -176,5 +177,5 @@ class HVVDepartureSensor(SensorEntity):
                 )
             },
             manufacturer=MANUFACTURER,
-            name=self.name,
+            name=self.config_entry.data[CONF_STATION]["name"],
         )
