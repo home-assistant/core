@@ -45,16 +45,23 @@ def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None
 ) -> None:
     """Set up the sensor platform."""
-    async_add_entities([ExampleSensor()])
+    async_add_entities([IntercomSensor()])
 
 
-class ExampleSensor(SensorEntity):
+class IntercomSensor(SensorEntity):
     """Representation of a Sensor."""
 
     _attr_name = "Example Intercom"
     #_attr_native_unit_of_measurement = TEMP_CELSIUS
     _attr_device_class = SensorDeviceClass.INTERCOM
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_available: bool
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed for a sensor."""
+        return False
+    
 
     def update(self) -> None:
         """Fetch new state data for the sensor.
