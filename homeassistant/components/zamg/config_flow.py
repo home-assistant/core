@@ -72,7 +72,7 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=user_input.get(CONF_NAME, self._client.get_station_name),
+            title=user_input.get(CONF_NAME) or self._client.get_station_name,
             data={CONF_STATION_ID: station_id},
         )
 
