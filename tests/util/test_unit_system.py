@@ -40,8 +40,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=INVALID_UNIT,
@@ -53,8 +53,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=INVALID_UNIT,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -66,8 +66,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -79,8 +79,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -92,8 +92,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=INVALID_UNIT,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -105,8 +105,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=INVALID_UNIT,
             temperature=TEMP_CELSIUS,
@@ -118,8 +118,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=INVALID_UNIT,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
