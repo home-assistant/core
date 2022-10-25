@@ -71,6 +71,7 @@ class FloDailyUsageSensor(FloEntity, SensorEntity):
     _attr_icon = WATER_ICON
     _attr_native_unit_of_measurement = VOLUME_GALLONS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.WATER
 
     def __init__(self, device):
         """Initialize the daily water usage sensor."""
