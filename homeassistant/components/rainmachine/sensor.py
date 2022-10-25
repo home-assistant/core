@@ -358,15 +358,15 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
                 return
 
         # Convert timestamp sensors to datetime
-        if (
-            self.entity_description.key
-            in {
-                TYPE_LAST_LEAK_DETECTED,
-                TYPE_RAIN_SENSOR_RAIN_START,
-            }
-            and new_value
-        ):
-            self._attr_native_value = utc_from_timestamp(new_value)
+        if self.entity_description.key in {
+            TYPE_LAST_LEAK_DETECTED,
+            TYPE_RAIN_SENSOR_RAIN_START,
+        }:
+            # Timestamp may return 0 instead of null, explicitly set to None
+            if new_value:
+                self._attr_native_value = utc_from_timestamp(new_value)
+            else:
+                self._attr_native_value = None
             return
 
         # Return all other sensor values or None
