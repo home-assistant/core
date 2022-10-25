@@ -1,0 +1,12 @@
+{
+  "issues": {
+    "deprecation_warning_characteristic": {
+      "title": "Mandatory setting assumed for a Statistics entity",
+      "description": "The configuration parameter `state_characteristic` of the statistics integration will become mandatory. Please add `state_characteristic: {characteristic}` to the configuration of sensor `{entity}` to keep the current behavior. Read the documentation for further details: https://www.home-assistant.io/integrations/statistics/"
+    },
+    "deprecation_warning_size": {
+      "title": "Mandatory setting assumed for a Statistics entity",
+      "description": "The configuration parameter `sampling_size` of the statistics integration defaulted to the value 20 so far, which will change. Please check the configuration for sensor `{entity}` and add suited boundaries, e.g., `sampling_size: 20` to keep the current behavior. The configuration of the statistics integration will become more flexible and accept either `sampling_size` or `max_age`, or both settings. Read the documentation for further details: https://www.home-assistant.io/integrations/statistics/"
+    }
+  }
+}

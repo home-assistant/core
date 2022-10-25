@@ -33,10 +33,11 @@ from homeassistant.core import (
     Event,
     HomeAssistant,
     State,
+    async_get_hass,
     callback,
     split_entity_id,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -82,22 +83,6 @@ STAT_TOTAL = "total"
 STAT_VALUE_MAX = "value_max"
 STAT_VALUE_MIN = "value_min"
 STAT_VARIANCE = "variance"
-
-DEPRECATION_WARNING_CHARACTERISTIC = (
-    "The configuration parameter 'state_characteristic' will become "
-    "mandatory in Home Assistant Core 2022.12 for the statistics integration. "
-    "Please add 'state_characteristic: %s' to the configuration of "
-    "sensor '%s' to keep the current behavior. Read the documentation "
-    "for further details: "
-    "https://www.home-assistant.io/integrations/statistics/"
-)
-DEPRECATION_WARNING_SIZE = (
-    "The configuration of 'sampling_size', 'max_age', or both will become "
-    "mandatory in Home Assistant Core 2022.12 for the statistics integration. "
-    "Please add 'sampling_size: 20' to the configuration of sensor '%s' to keep "
-    "the current behavior. Read the documentation for further details: "
-    "https://www.home-assistant.io/integrations/statistics/"
-)
 
 # Statistics supported by a sensor source (numeric)
 STATS_NUMERIC_SUPPORT = {
@@ -198,10 +183,19 @@ def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str
 
     if config.get(CONF_STATE_CHARACTERISTIC) is None:
         config[CONF_STATE_CHARACTERISTIC] = STAT_COUNT if is_binary else STAT_MEAN
-        _LOGGER.warning(
-            DEPRECATION_WARNING_CHARACTERISTIC,
-            config[CONF_STATE_CHARACTERISTIC],
-            config[CONF_NAME],
+        issue_registry.async_create_issue(
+            hass=async_get_hass(),
+            domain=DOMAIN,
+            issue_id=f"{config[CONF_ENTITY_ID]}_default_characteristic",
+            breaks_in_ha_version="2022.12.0",
+            is_fixable=False,
+            severity=issue_registry.IssueSeverity.WARNING,
+            translation_key="deprecation_warning_characteristic",
+            translation_placeholders={
+                "entity": config[CONF_NAME],
+                "characteristic": config[CONF_STATE_CHARACTERISTIC],
+            },
+            learn_more_url="https://github.com/home-assistant/core/pull/60402",
         )
 
     characteristic = cast(str, config[CONF_STATE_CHARACTERISTIC])
@@ -217,13 +211,20 @@ def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str
 
 
 def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate that either sampling_size or max_age are provided."""
+    """Validate that sampling_size, max_age, or both are provided."""
 
     if config.get(CONF_SAMPLES_MAX_BUFFER_SIZE) is None:
         config[CONF_SAMPLES_MAX_BUFFER_SIZE] = 20
-        _LOGGER.warning(
-            DEPRECATION_WARNING_SIZE,
-            config[CONF_NAME],
+        issue_registry.async_create_issue(
+            hass=async_get_hass(),
+            domain=DOMAIN,
+            issue_id=f"{config[CONF_ENTITY_ID]}_invalid_boundary_config",
+            breaks_in_ha_version="2022.12.0",
+            is_fixable=False,
+            severity=issue_registry.IssueSeverity.WARNING,
+            translation_key="deprecation_warning_size",
+            translation_placeholders={"entity": config[CONF_NAME]},
+            learn_more_url="https://github.com/home-assistant/core/pull/69700",
         )
     return config
 
