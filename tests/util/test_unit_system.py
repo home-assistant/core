@@ -27,7 +27,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMPERATURE,
     VOLUME,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLUID_OUNCE,
+    VOLUME_GALLONS,
     VOLUME_LITERS,
+    VOLUME_MILLILITERS,
     WIND_SPEED,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -398,6 +403,10 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.DISTANCE, LENGTH_YARD, LENGTH_METERS),
         (SensorDeviceClass.DISTANCE, LENGTH_KILOMETERS, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test gas meter conversion
+        ("gas", VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+        ("gas", VOLUME_CUBIC_METERS, None),
+        ("gas", "very_much", None),
         # Test speed conversion
         (SensorDeviceClass.SPEED, SPEED_FEET_PER_SECOND, SPEED_KILOMETERS_PER_HOUR),
         (SensorDeviceClass.SPEED, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR),
@@ -405,6 +414,20 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.SPEED, SPEED_KNOTS, None),
         (SensorDeviceClass.SPEED, SPEED_METERS_PER_SECOND, None),
         (SensorDeviceClass.SPEED, "very_fast", None),
+        # Test volume conversion
+        ("volume", VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+        ("volume", VOLUME_FLUID_OUNCE, VOLUME_MILLILITERS),
+        ("volume", VOLUME_GALLONS, VOLUME_LITERS),
+        ("volume", VOLUME_CUBIC_METERS, None),
+        ("volume", VOLUME_LITERS, None),
+        ("volume", VOLUME_MILLILITERS, None),
+        ("volume", "very_much", None),
+        # Test water meter conversion
+        ("water", VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+        ("water", VOLUME_GALLONS, VOLUME_LITERS),
+        ("water", VOLUME_CUBIC_METERS, None),
+        ("water", VOLUME_LITERS, None),
+        ("water", "very_much", None),
     ),
 )
 def test_get_metric_converted_unit_(
@@ -427,6 +450,9 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.DISTANCE, LENGTH_MILLIMETERS, LENGTH_INCHES),
         (SensorDeviceClass.DISTANCE, LENGTH_MILES, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test gas meter conversion
+        ("gas", VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+        ("water", "very_much", None),
         # Test speed conversion
         (SensorDeviceClass.SPEED, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR),
         (SensorDeviceClass.SPEED, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR),
@@ -434,6 +460,20 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.SPEED, SPEED_KNOTS, None),
         (SensorDeviceClass.SPEED, SPEED_MILES_PER_HOUR, None),
         (SensorDeviceClass.SPEED, "very_fast", None),
+        # Test volume conversion
+        ("volume", VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+        ("volume", VOLUME_LITERS, VOLUME_GALLONS),
+        ("volume", VOLUME_MILLILITERS, VOLUME_FLUID_OUNCE),
+        ("volume", VOLUME_CUBIC_FEET, None),
+        ("volume", VOLUME_FLUID_OUNCE, None),
+        ("volume", VOLUME_GALLONS, None),
+        ("volume", "very_much", None),
+        # Test water meter conversion
+        ("water", VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+        ("water", VOLUME_LITERS, VOLUME_GALLONS),
+        ("water", VOLUME_CUBIC_FEET, None),
+        ("water", VOLUME_GALLONS, None),
+        ("water", "very_much", None),
     ),
 )
 def test_get_us_converted_unit(
