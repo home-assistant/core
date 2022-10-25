@@ -7,7 +7,7 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
@@ -15,7 +15,6 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import color
 
 from . import FritzBoxEntity
 from .const import (
@@ -67,17 +66,13 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
         coordinator: FritzboxDataUpdateCoordinator,
         ain: str,
         supported_colors: dict,
-        supported_color_temps: list[str],
+        supported_color_temps: list[int],
     ) -> None:
         """Initialize the FritzboxLight entity."""
         super().__init__(coordinator, ain, None)
 
-        max_kelvin = int(max(supported_color_temps))
-        min_kelvin = int(min(supported_color_temps))
-
-        # max kelvin is min mireds and min kelvin is max mireds
-        self._attr_min_mireds = color.color_temperature_kelvin_to_mired(max_kelvin)
-        self._attr_max_mireds = color.color_temperature_kelvin_to_mired(min_kelvin)
+        self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
+        self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
 
         # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
         # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
@@ -112,13 +107,12 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
         return (hue, float(saturation) * 100.0 / 255.0)
 
     @property
-    def color_temp(self) -> int | None:
+    def color_temp_kelvin(self) -> int | None:
         """Return the CT color value."""
         if self.device.color_mode != COLOR_TEMP_MODE:
             return None
 
-        kelvin = self.device.color_temp
-        return color.color_temperature_kelvin_to_mired(kelvin)
+        return self.device.color_temp  # type: ignore [no-any-return]
 
     @property
     def color_mode(self) -> ColorMode:
@@ -166,9 +160,10 @@ class FritzboxLight(FritzBoxEntity, LightEntity):
                     self.device.set_color, (hue, saturation)
                 )
 
-        if kwargs.get(ATTR_COLOR_TEMP) is not None:
-            kelvin = color.color_temperature_kelvin_to_mired(kwargs[ATTR_COLOR_TEMP])
-            await self.hass.async_add_executor_job(self.device.set_color_temp, kelvin)
+        if kwargs.get(ATTR_COLOR_TEMP_KELVIN) is not None:
+            await self.hass.async_add_executor_job(
+                self.device.set_color_temp, kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
 
         await self.hass.async_add_executor_job(self.device.set_state_on)
         await self.coordinator.async_refresh()
