@@ -54,7 +54,7 @@ CLIENT_1 = {
     "mac": "00:00:00:00:00:01",
     "name": "POE Client 1",
     "oui": "Producer",
-    "sw_mac": "00:00:00:00:01:01",
+    "sw_mac": "10:00:00:00:01:01",
     "sw_port": 1,
     "wired-rx_bytes": 1234000000,
     "wired-tx_bytes": 5678000000,
@@ -67,7 +67,7 @@ CLIENT_2 = {
     "mac": "00:00:00:00:00:02",
     "name": "POE Client 2",
     "oui": "Producer",
-    "sw_mac": "00:00:00:00:01:01",
+    "sw_mac": "10:00:00:00:01:01",
     "sw_port": 2,
     "wired-rx_bytes": 1234000000,
     "wired-tx_bytes": 5678000000,
@@ -80,7 +80,7 @@ CLIENT_3 = {
     "mac": "00:00:00:00:00:03",
     "name": "Non-POE Client 3",
     "oui": "Producer",
-    "sw_mac": "00:00:00:00:01:01",
+    "sw_mac": "10:00:00:00:01:01",
     "sw_port": 3,
     "wired-rx_bytes": 1234000000,
     "wired-tx_bytes": 5678000000,
@@ -93,7 +93,7 @@ CLIENT_4 = {
     "mac": "00:00:00:00:00:04",
     "name": "Non-POE Client 4",
     "oui": "Producer",
-    "sw_mac": "00:00:00:00:01:01",
+    "sw_mac": "10:00:00:00:01:01",
     "sw_port": 4,
     "wired-rx_bytes": 1234000000,
     "wired-tx_bytes": 5678000000,
@@ -107,7 +107,7 @@ POE_SWITCH_CLIENTS = [
         "mac": "00:00:00:00:00:01",
         "name": "POE Client 1",
         "oui": "Producer",
-        "sw_mac": "00:00:00:00:01:01",
+        "sw_mac": "10:00:00:00:01:01",
         "sw_port": 1,
         "wired-rx_bytes": 1234000000,
         "wired-tx_bytes": 5678000000,
@@ -120,7 +120,7 @@ POE_SWITCH_CLIENTS = [
         "mac": "00:00:00:00:00:02",
         "name": "POE Client 2",
         "oui": "Producer",
-        "sw_mac": "00:00:00:00:01:01",
+        "sw_mac": "10:00:00:00:01:01",
         "sw_port": 1,
         "wired-rx_bytes": 1234000000,
         "wired-tx_bytes": 5678000000,
@@ -131,7 +131,7 @@ DEVICE_1 = {
     "board_rev": 2,
     "device_id": "mock-id",
     "ip": "10.0.1.1",
-    "mac": "00:00:00:00:01:01",
+    "mac": "10:00:00:00:01:01",
     "last_seen": 1562600145,
     "model": "US16P150",
     "name": "mock-name",
@@ -650,7 +650,7 @@ async def test_switches(hass, aioclient_mock):
     assert switch_1 is not None
     assert switch_1.state == "on"
     assert switch_1.attributes["power"] == "2.56"
-    assert switch_1.attributes[SWITCH_DOMAIN] == "00:00:00:00:01:01"
+    assert switch_1.attributes[SWITCH_DOMAIN] == "10:00:00:00:01:01"
     assert switch_1.attributes["port"] == 1
     assert switch_1.attributes["poe_mode"] == "auto"
 
@@ -1027,21 +1027,13 @@ async def test_new_client_discovered_on_block_control(
     )
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
-
-    blocked = hass.states.get("switch.block_client_1")
-    assert blocked is None
+    assert hass.states.get("switch.block_client_1") is None
 
     mock_unifi_websocket(message=MessageKey.CLIENT, data=BLOCKED)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
-
-    mock_unifi_websocket(message=MessageKey.EVENT, data=EVENT_BLOCKED_CLIENT_CONNECTED)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
-    blocked = hass.states.get("switch.block_client_1")
-    assert blocked is not None
+    assert hass.states.get("switch.block_client_1") is not None
 
 
 async def test_option_block_clients(hass, aioclient_mock):
