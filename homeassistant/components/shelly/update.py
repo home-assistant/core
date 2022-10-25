@@ -19,9 +19,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 
 from .const import CONF_SLEEP_PERIOD
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     RestEntityDescription,
     RpcEntityDescription,
@@ -30,7 +31,12 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen
+from .utils import (
+    async_remove_shelly_entity,
+    get_block_device_name,
+    get_device_entry_gen,
+    get_rpc_device_name,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -117,9 +123,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up update entities for Shelly component."""
     if get_device_entry_gen(config_entry) == 2:
+        # Remove legacy update binary sensors, remove in 2023.2.0
+        rpc_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+        assert rpc_coordinator
+        mac = rpc_coordinator.mac
+        async_remove_shelly_entity(hass, "binary_sensor", f"{mac}-sys-fwupdate")
+        device_name = slugify(get_rpc_device_name(rpc_coordinator.device))
+        async_remove_shelly_entity(hass, "button", f"{device_name}_ota_update")
+        async_remove_shelly_entity(hass, "button", f"{device_name}_ota_update_beta")
+
         return async_setup_entry_rpc(
             hass, config_entry, async_add_entities, RPC_UPDATES, RpcUpdateEntity
         )
+
+    # Remove legacy update binary sensors, remove in 2023.2.0
+    block_coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    assert block_coordinator
+    mac = block_coordinator.mac
+    async_remove_shelly_entity(hass, "binary_sensor", f"{mac}-fwupdate")
+    device_name = slugify(get_block_device_name(block_coordinator.device))
+    async_remove_shelly_entity(hass, "button", f"{device_name}_ota_update")
+    async_remove_shelly_entity(hass, "button", f"{device_name}_ota_update_beta")
 
     if not config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_rest(
