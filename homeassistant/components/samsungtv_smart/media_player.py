@@ -738,7 +738,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._state == STATE_OFF:
             self._attr_supported_features = SUPPORT_TURN_ON
         else:
-            if self._get_source() == "TV":
+            if self._get_source() == "TV" or self._get_source() == "TV/HDMI":
                 self._attr_supported_features = SUPPORT_SAMSUNGTV_TVONLY
             else:
                 self._attr_supported_features = SUPPORT_SAMSUNGTV_SMART
