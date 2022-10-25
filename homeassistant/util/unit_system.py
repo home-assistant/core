@@ -100,7 +100,7 @@ class UnitSystem:
         name: str,
         *,
         accumulated_precipitation: str,
-        conversions: dict[tuple[str | None, str | None], str],
+        conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str],
         length: str,
         mass: str,
         pressure: str,
