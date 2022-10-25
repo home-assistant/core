@@ -38,7 +38,7 @@ class VelbusCover(VelbusEntity, CoverEntity):
     _channel: VelbusBlind
 
     def __init__(self, channel: VelbusBlind) -> None:
-        """Initialize the dimmer."""
+        """Initialize the cover."""
         super().__init__(channel)
         if self._channel.support_position():
             self._attr_supported_features = (
@@ -61,10 +61,12 @@ class VelbusCover(VelbusEntity, CoverEntity):
 
     @property
     def is_opening(self) -> bool:
+        """Return if the cover is opening."""
         return self._channel.is_opening()
 
     @property
     def is_closing(self) -> bool:
+        """Return if the cover is closing."""
         return self._channel.is_closing()
 
     @property
