@@ -79,6 +79,9 @@ STAT_MEDIAN = "median"
 STAT_NOISINESS = "noisiness"
 STAT_QUANTILES = "quantiles"
 STAT_STANDARD_DEVIATION = "standard_deviation"
+STAT_SUM = "sum"
+STAT_SUM_DIFFERENCES = "sum_differences"
+STAT_SUM_DIFFERENCES_NONNEGATIVE = "sum_differences_nonnegative"
 STAT_TOTAL = "total"
 STAT_VALUE_MAX = "value_max"
 STAT_VALUE_MIN = "value_min"
@@ -114,6 +117,9 @@ STATS_NUMERIC_SUPPORT = {
     STAT_NOISINESS,
     STAT_QUANTILES,
     STAT_STANDARD_DEVIATION,
+    STAT_SUM,
+    STAT_SUM_DIFFERENCES,
+    STAT_SUM_DIFFERENCES_NONNEGATIVE,
     STAT_TOTAL,
     STAT_VALUE_MAX,
     STAT_VALUE_MIN,
@@ -160,6 +166,9 @@ STAT_NUMERIC_RETAIN_UNIT = {
     STAT_MEDIAN,
     STAT_NOISINESS,
     STAT_STANDARD_DEVIATION,
+    STAT_SUM,
+    STAT_SUM_DIFFERENCES,
+    STAT_SUM_DIFFERENCES_NONNEGATIVE,
     STAT_TOTAL,
     STAT_VALUE_MAX,
     STAT_VALUE_MIN,
@@ -670,10 +679,7 @@ class StatisticsSensor(SensorEntity):
 
     def _stat_noisiness(self) -> StateType:
         if len(self.states) >= 2:
-            diff_sum = sum(
-                abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:])
-            )
-            return diff_sum / (len(self.states) - 1)
+            return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
         return None
 
     def _stat_quantiles(self) -> StateType:
@@ -695,10 +701,30 @@ class StatisticsSensor(SensorEntity):
             return statistics.stdev(self.states)
         return None
 
-    def _stat_total(self) -> StateType:
+    def _stat_sum(self) -> StateType:
         if len(self.states) > 0:
             return sum(self.states)
         return None
+
+    def _stat_sum_differences(self) -> StateType:
+        if len(self.states) >= 2:
+            diff_sum = sum(
+                abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:])
+            )
+            return diff_sum
+        return None
+
+    def _stat_sum_differences_nonnegative(self) -> StateType:
+        if len(self.states) >= 2:
+            diff_sum_nn = sum(
+                (j - i if j >= i else j - 0)
+                for i, j in zip(list(self.states), list(self.states)[1:])
+            )
+            return diff_sum_nn
+        return None
+
+    def _stat_total(self) -> StateType:
+        return self._stat_sum()
 
     def _stat_value_max(self) -> StateType:
         if len(self.states) > 0:
