@@ -245,9 +245,9 @@ class SensorDeviceClass(StrEnum):
     PRECIPITATION_INTENSITY = "precipitation_intensity"
     """Precipitation intensity.
 
-    Unit of measurement:
-    - `in/d`, `in/h`
-    - `mm/d`, `mm/h`
+    Unit of measurement: UnitOfVolumetricFlux
+    - SI /metric: `mm/d`, `mm/h`
+    - USCS / imperial: `in/d`, `in/h`
     """
 
     PRESSURE = "pressure"
@@ -275,7 +275,7 @@ class SensorDeviceClass(StrEnum):
     SPEED = "speed"
     """Generic speed.
 
-    Unit of measurement: `SPEED_*` or `PRECIPITATION_INTENSITY_*` units
+    Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
     - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
     - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
     - Nautical: `kn`
