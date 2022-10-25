@@ -141,7 +141,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self.verisure.get_installations
         )
         installations = {
-            inst["giid"]: f"{inst['alias'] ({inst['address']['street']})}"
+            inst["giid"]: f"{inst['alias']} ({inst['address']['street']})"
             for inst in (
                 installations_data.get("data", {})
                 .get("account", {})

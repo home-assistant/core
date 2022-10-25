@@ -35,18 +35,10 @@ async def test_full_user_flow_single_installation(
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {}
 
-    def func():
-        return {
-            "data": {
-                "account": {
-                    "installations": [
-                        {"giid": "12345", "alias": "ascending"},
-                    ]
-                }
-            }
-        }
-
-    mock_verisure_config_flow.get_installations = func
+    mock_verisure_config_flow.get_installations.return_value = {
+        k1: {k2: {k3: [v3[0]] for k3, v3 in v2.items()} for k2, v2 in v1.items()}
+        for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
+    }
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -58,7 +50,7 @@ async def test_full_user_flow_single_installation(
     await hass.async_block_till_done()
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "ascending"
+    assert result2.get("title") == "ascending (12345th street)"
     assert result2.get("data") == {
         CONF_GIID: "12345",
         CONF_EMAIL: "verisure_my_pages@example.com",
@@ -101,7 +93,7 @@ async def test_full_user_flow_multiple_installations(
     await hass.async_block_till_done()
 
     assert result3.get("type") == FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "descending"
+    assert result3.get("title") == "descending (54321th street)"
     assert result3.get("data") == {
         CONF_GIID: "54321",
         CONF_EMAIL: "verisure_my_pages@example.com",
@@ -142,19 +134,10 @@ async def test_full_user_flow_single_installation_with_mfa(
     assert result2.get("step_id") == "mfa"
 
     mock_verisure_config_flow.login.side_effect = None
-
-    def func():
-        return {
-            "data": {
-                "account": {
-                    "installations": [
-                        {"giid": "12345", "alias": "ascending"},
-                    ]
-                }
-            }
-        }
-
-    mock_verisure_config_flow.get_installations = func
+    mock_verisure_config_flow.get_installations.return_value = {
+        k1: {k2: {k3: [v3[0]] for k3, v3 in v2.items()} for k2, v2 in v1.items()}
+        for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
+    }
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -165,7 +148,7 @@ async def test_full_user_flow_single_installation_with_mfa(
     await hass.async_block_till_done()
 
     assert result3.get("type") == FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "ascending"
+    assert result3.get("title") == "ascending (12345th street)"
     assert result3.get("data") == {
         CONF_GIID: "12345",
         CONF_EMAIL: "verisure_my_pages@example.com",
@@ -227,7 +210,7 @@ async def test_full_user_flow_multiple_installations_with_mfa(
     await hass.async_block_till_done()
 
     assert result4.get("type") == FlowResultType.CREATE_ENTRY
-    assert result4.get("title") == "descending"
+    assert result4.get("title") == "descending (54321th street)"
     assert result4.get("data") == {
         CONF_GIID: "54321",
         CONF_EMAIL: "verisure_my_pages@example.com",
@@ -317,19 +300,10 @@ async def test_verisure_errors(
     assert result5.get("step_id") == "mfa"
     assert result5.get("errors") == {"base": error}
 
-    def func():
-        return {
-            "data": {
-                "account": {
-                    "installations": [
-                        {"giid": "12345", "alias": "ascending"},
-                    ]
-                }
-            }
-        }
-
-    mock_verisure_config_flow.get_installations = func
-
+    mock_verisure_config_flow.get_installations.return_value = {
+        k1: {k2: {k3: [v3[0]] for k3, v3 in v2.items()} for k2, v2 in v1.items()}
+        for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
+    }
     mock_verisure_config_flow.validate_mfa.side_effect = None
     mock_verisure_config_flow.login.side_effect = None
 
@@ -342,7 +316,7 @@ async def test_verisure_errors(
     await hass.async_block_till_done()
 
     assert result6.get("type") == FlowResultType.CREATE_ENTRY
-    assert result6.get("title") == "ascending"
+    assert result6.get("title") == "ascending (12345th street)"
     assert result6.get("data") == {
         CONF_GIID: "12345",
         CONF_EMAIL: "verisure_my_pages@example.com",
@@ -562,19 +536,10 @@ async def test_reauth_flow_errors(
 
     mock_verisure_config_flow.validate_mfa.side_effect = None
     mock_verisure_config_flow.login.side_effect = None
-
-    def func():
-        return {
-            "data": {
-                "account": {
-                    "installations": [
-                        {"giid": "12345", "alias": "ascending"},
-                    ]
-                }
-            }
-        }
-
-    mock_verisure_config_flow.get_installations = func
+    mock_verisure_config_flow.get_installations.return_value = {
+        k1: {k2: {k3: [v3[0]] for k3, v3 in v2.items()} for k2, v2 in v1.items()}
+        for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
+    }
 
     await hass.config_entries.flow.async_configure(
         result5["flow_id"],
