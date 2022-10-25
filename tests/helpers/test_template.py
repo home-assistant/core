@@ -44,8 +44,8 @@ def _set_up_units(hass):
     hass.config.units = UnitSystem(
         "custom",
         accumulated_precipitation=LENGTH_MILLIMETERS,
+        conversions={},
         length=LENGTH_METERS,
-        length_conversions={},
         mass=MASS_GRAMS,
         pressure=PRESSURE_PA,
         temperature=TEMP_CELSIUS,
