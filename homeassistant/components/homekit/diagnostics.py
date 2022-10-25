@@ -6,12 +6,15 @@ from typing import Any
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.state import State
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import HomeKit
 from .accessories import HomeAccessory, HomeBridge
 from .const import DOMAIN, HOMEKIT
+
+TO_REDACT = {"access_token", "entity_picture"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -68,5 +71,7 @@ def _get_accessory_diagnostics(
         "category": accessory.category,
         "name": accessory.display_name,
         "entity_id": accessory.entity_id,
-        "entity_state": hass.states.get(accessory.entity_id),
+        "entity_state": async_redact_data(
+            hass.states.get(accessory.entity_id), TO_REDACT
+        ),
     }
