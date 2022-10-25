@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, TIME_SECONDS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,9 +27,11 @@ from .const import DOMAIN
 from .device import device_key_to_bluetooth_entity_key, sensor_device_info_to_hass
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
-    OralBSensor.COUNTER: SensorEntityDescription(
-        key=OralBSensor.COUNTER,
-        entity_registry_enabled_default=False,
+    OralBSensor.TIME: SensorEntityDescription(
+        key=OralBSensor.TIME,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=TIME_SECONDS,
     ),
     OralBSensor.SECTOR: SensorEntityDescription(
         key=OralBSensor.SECTOR,

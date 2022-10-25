@@ -10,7 +10,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(hass):
+async def test_sensors(hass, entity_registry_enabled_by_default):
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -24,7 +24,7 @@ async def test_sensors(hass):
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, ORALB_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 7
+    assert len(hass.states.async_all("sensor")) == 8
 
     toothbrush_sensor = hass.states.get(
         "sensor.smart_series_7000_48be_toothbrush_state"
