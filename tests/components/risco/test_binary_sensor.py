@@ -167,6 +167,7 @@ async def _check_local_state(
         new_callable=PropertyMock(return_value=bypassed),
     ):
         await callback(zone_id, zones[zone_id])
+        await hass.async_block_till_done()
 
         expected_triggered = STATE_ON if triggered else STATE_OFF
         assert hass.states.get(entity_id).state == expected_triggered
@@ -183,6 +184,7 @@ async def _check_alarmed_local_state(
         new_callable=PropertyMock(return_value=alarmed),
     ):
         await callback(zone_id, zones[zone_id])
+        await hass.async_block_till_done()
 
         expected_alarmed = STATE_ON if alarmed else STATE_OFF
         assert hass.states.get(entity_id).state == expected_alarmed
