@@ -17,7 +17,7 @@
                     "api_key": "Clave API"
                 },
                 "data_description": {
-                    "api_key": "Sigue la documentaci\u00f3n para obtener una nueva clave API."
+                    "api_key": "Sigue la documentaci\u00f3n para obtener tu clave API"
                 }
             },
             "user": {
@@ -25,7 +25,7 @@
                     "api_key": "Clave API"
                 },
                 "data_description": {
-                    "api_key": "Sigue la documentaci\u00f3n para obtener tu clave API."
+                    "api_key": "Sigue la documentaci\u00f3n para obtener tu clave API"
                 }
             }
         }

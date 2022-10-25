@@ -9,12 +9,7 @@ from typing import Any
 
 from aiohttp import CookieJar
 import aiounifi
-from aiounifi.controller import (
-    DATA_CLIENT_REMOVED,
-    DATA_DPI_GROUP,
-    DATA_DPI_GROUP_REMOVED,
-    DATA_EVENT,
-)
+from aiounifi.interfaces.messages import DATA_CLIENT_REMOVED, DATA_EVENT
 from aiounifi.models.event import EventKey
 from aiounifi.websocket import WebsocketSignal, WebsocketState
 import async_timeout
@@ -42,6 +37,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_MANUFACTURER,
+    BLOCK_SWITCH,
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
@@ -66,10 +62,10 @@ from .const import (
     DOMAIN as UNIFI_DOMAIN,
     LOGGER,
     PLATFORMS,
+    POE_SWITCH,
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
-from .switch import BLOCK_SWITCH, POE_SWITCH
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
@@ -245,14 +241,6 @@ class UniFiController:
             elif DATA_CLIENT_REMOVED in data:
                 async_dispatcher_send(
                     self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
-                )
-
-            elif DATA_DPI_GROUP in data:
-                async_dispatcher_send(self.hass, self.signal_update)
-
-            elif DATA_DPI_GROUP_REMOVED in data:
-                async_dispatcher_send(
-                    self.hass, self.signal_remove, data[DATA_DPI_GROUP_REMOVED]
                 )
 
     @property

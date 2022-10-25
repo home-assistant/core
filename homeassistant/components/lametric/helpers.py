@@ -7,8 +7,12 @@ from typing import Any, TypeVar
 from demetriek import LaMetricConnectionError, LaMetricError
 from typing_extensions import Concatenate, ParamSpec
 
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
+from .const import DOMAIN
+from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 
 _LaMetricEntityT = TypeVar("_LaMetricEntityT", bound=LaMetricEntity)
@@ -44,3 +48,27 @@ def lametric_exception_handler(
             ) from error
 
     return handler
+
+
+@callback
+def async_get_coordinator_by_device_id(
+    hass: HomeAssistant, device_id: str
+) -> LaMetricDataUpdateCoordinator:
+    """Get the LaMetric coordinator for this device ID."""
+    device_registry = dr.async_get(hass)
+
+    if (device_entry := device_registry.async_get(device_id)) is None:
+        raise ValueError(f"Unknown LaMetric device ID: {device_id}")
+
+    for entry_id in device_entry.config_entries:
+        if (
+            (entry := hass.config_entries.async_get_entry(entry_id))
+            and entry.domain == DOMAIN
+            and entry.entry_id in hass.data[DOMAIN]
+        ):
+            coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][
+                entry.entry_id
+            ]
+            return coordinator
+
+    raise ValueError(f"No coordinator for device ID: {device_id}")

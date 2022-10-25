@@ -6,5 +6,6 @@
   "requirements": ["tailscale==0.2.0"],
   "codeowners": ["@frenck"],
   "quality_scale": "platinum",
+  "integration_type": "hub",
   "iot_class": "cloud_polling"
 }

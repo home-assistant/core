@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.const import (
+    ENERGY_GIGA_JOULE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -31,13 +32,10 @@ from homeassistant.const import (
     PRESSURE_PA,
     PRESSURE_PSI,
     SPEED_FEET_PER_SECOND,
-    SPEED_INCHES_PER_DAY,
-    SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
-    SPEED_MILLIMETERS_PER_DAY,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -48,6 +46,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
 
@@ -157,11 +156,13 @@ class EnergyConverter(BaseUnitConverter):
         ENERGY_WATT_HOUR: 1 * 1000,
         ENERGY_KILO_WATT_HOUR: 1,
         ENERGY_MEGA_WATT_HOUR: 1 / 1000,
+        ENERGY_GIGA_JOULE: 3.6 / 1000,
     }
     VALID_UNITS = {
         ENERGY_WATT_HOUR,
         ENERGY_KILO_WATT_HOUR,
         ENERGY_MEGA_WATT_HOUR,
+        ENERGY_GIGA_JOULE,
     }
 
 
@@ -238,24 +239,26 @@ class SpeedConverter(BaseUnitConverter):
     UNIT_CLASS = "speed"
     NORMALIZED_UNIT = SPEED_METERS_PER_SECOND
     _UNIT_CONVERSION: dict[str, float] = {
+        UnitOfVolumetricFlux.INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
+        UnitOfVolumetricFlux.INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: _HRS_TO_SECS / _MM_TO_M,
         SPEED_FEET_PER_SECOND: 1 / _FOOT_TO_M,
-        SPEED_INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
-        SPEED_INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
         SPEED_KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         SPEED_KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
         SPEED_METERS_PER_SECOND: 1,
         SPEED_MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
-        SPEED_MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
     }
     VALID_UNITS = {
+        UnitOfVolumetricFlux.INCHES_PER_DAY,
+        UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         SPEED_FEET_PER_SECOND,
-        SPEED_INCHES_PER_DAY,
-        SPEED_INCHES_PER_HOUR,
         SPEED_KILOMETERS_PER_HOUR,
         SPEED_KNOTS,
         SPEED_METERS_PER_SECOND,
         SPEED_MILES_PER_HOUR,
-        SPEED_MILLIMETERS_PER_DAY,
     }
 
 

@@ -3,12 +3,12 @@
 
 from unittest.mock import ANY, patch
 
-from bleak.backends.scanner import AdvertisementData, BLEDevice
+from bleak.backends.scanner import BLEDevice
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.const import DEFAULT_ADDRESS
 
-from . import inject_advertisement
+from . import generate_advertisement_data, inject_advertisement
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -96,11 +96,6 @@ async def test_diagnostics(
                 }
             },
             "manager": {
-                "advertisement_tracker": {
-                    "intervals": {},
-                    "sources": {},
-                    "timings": {},
-                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -115,13 +110,18 @@ async def test_diagnostics(
                         "sw_version": "BlueZ 4.63",
                     },
                 },
+                "advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {},
+                    "timings": {},
+                },
                 "connectable_history": [],
-                "history": [],
+                "all_history": [],
                 "scanners": [
                     {
                         "adapter": "hci0",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -132,7 +132,7 @@ async def test_diagnostics(
                     {
                         "adapter": "hci0",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "hci0 (00:00:00:00:00:01)",
@@ -143,7 +143,7 @@ async def test_diagnostics(
                     {
                         "adapter": "hci1",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "hci1 (00:00:00:00:00:02)",
@@ -166,7 +166,7 @@ async def test_diagnostics_macos(
     # error if the test is not running on linux since we won't have the correct
     # deps installed when testing on MacOS.
     switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
-    switchbot_adv = AdvertisementData(
+    switchbot_adv = generate_advertisement_data(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
@@ -203,11 +203,6 @@ async def test_diagnostics_macos(
                 }
             },
             "manager": {
-                "advertisement_tracker": {
-                    "intervals": {},
-                    "sources": {"44:44:33:11:23:45": "local"},
-                    "timings": {"44:44:33:11:23:45": [ANY]},
-                },
                 "adapters": {
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
@@ -215,28 +210,53 @@ async def test_diagnostics_macos(
                         "sw_version": ANY,
                     }
                 },
+                "advertisement_tracker": {
+                    "intervals": {},
+                    "sources": {"44:44:33:11:23:45": "local"},
+                    "timings": {"44:44:33:11:23:45": [ANY]},
+                },
                 "connectable_history": [
                     {
                         "address": "44:44:33:11:23:45",
-                        "advertisement": ANY,
+                        "advertisement": [
+                            "wohand",
+                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {},
+                            [],
+                            -127,
+                            -127,
+                            [[]],
+                        ],
                         "connectable": True,
-                        "manufacturer_data": ANY,
+                        "manufacturer_data": {
+                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                        },
                         "name": "wohand",
-                        "rssi": 0,
+                        "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
                         "source": "local",
                         "time": ANY,
                     }
                 ],
-                "history": [
+                "all_history": [
                     {
                         "address": "44:44:33:11:23:45",
-                        "advertisement": ANY,
+                        "advertisement": [
+                            "wohand",
+                            {"1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}},
+                            {},
+                            [],
+                            -127,
+                            -127,
+                            [[]],
+                        ],
                         "connectable": True,
-                        "manufacturer_data": ANY,
+                        "manufacturer_data": {
+                            "1": {"__type": "<class " "'bytes'>", "repr": "b'\\x01'"}
+                        },
                         "name": "wohand",
-                        "rssi": 0,
+                        "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
                         "source": "local",
@@ -247,7 +267,7 @@ async def test_diagnostics_macos(
                     {
                         "adapter": "Core Bluetooth",
                         "discovered_devices": [
-                            {"address": "44:44:33:11:23:45", "name": "x", "rssi": -60}
+                            {"address": "44:44:33:11:23:45", "name": "x"}
                         ],
                         "last_detection": ANY,
                         "name": "Core Bluetooth",

@@ -4,6 +4,7 @@ import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import aiohttp
 import async_timeout
@@ -282,7 +283,11 @@ class CloudForgotPasswordView(HomeAssistantView):
 
 @websocket_api.websocket_command({vol.Required("type"): "cloud/status"})
 @websocket_api.async_response
-async def websocket_cloud_status(hass, connection, msg):
+async def websocket_cloud_status(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle request for account info.
 
     Async friendly.
@@ -316,7 +321,11 @@ def _require_cloud_login(handler):
 @_require_cloud_login
 @websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
 @websocket_api.async_response
-async def websocket_subscription(hass, connection, msg):
+async def websocket_subscription(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
     try:
@@ -347,7 +356,11 @@ async def websocket_subscription(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_update_prefs(hass, connection, msg):
+async def websocket_update_prefs(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
 
@@ -392,7 +405,11 @@ async def websocket_update_prefs(hass, connection, msg):
 )
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-async def websocket_hook_create(hass, connection, msg):
+async def websocket_hook_create(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
     hook = await cloud.cloudhooks.async_create(msg["webhook_id"], False)
@@ -408,7 +425,11 @@ async def websocket_hook_create(hass, connection, msg):
 )
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-async def websocket_hook_delete(hass, connection, msg):
+async def websocket_hook_delete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle request for account info."""
     cloud = hass.data[DOMAIN]
     await cloud.cloudhooks.async_delete(msg["webhook_id"])
@@ -470,7 +491,11 @@ async def _account_data(hass: HomeAssistant, cloud: Cloud):
 @websocket_api.websocket_command({"type": "cloud/remote/connect"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-async def websocket_remote_connect(hass, connection, msg):
+async def websocket_remote_connect(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle request for connect remote."""
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=True)
@@ -482,7 +507,11 @@ async def websocket_remote_connect(hass, connection, msg):
 @websocket_api.websocket_command({"type": "cloud/remote/disconnect"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-async def websocket_remote_disconnect(hass, connection, msg):
+async def websocket_remote_disconnect(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Handle request for disconnect remote."""
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=False)
@@ -494,7 +523,11 @@ async def websocket_remote_disconnect(hass, connection, msg):
 @websocket_api.websocket_command({"type": "cloud/google_assistant/entities"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-async def google_assistant_list(hass, connection, msg):
+async def google_assistant_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
@@ -528,7 +561,11 @@ async def google_assistant_list(hass, connection, msg):
 )
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-async def google_assistant_update(hass, connection, msg):
+async def google_assistant_update(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Update google assistant config."""
     cloud = hass.data[DOMAIN]
     changes = dict(msg)
@@ -547,7 +584,11 @@ async def google_assistant_update(hass, connection, msg):
 @websocket_api.websocket_command({"type": "cloud/alexa/entities"})
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-async def alexa_list(hass, connection, msg):
+async def alexa_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """List all alexa entities."""
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
@@ -578,7 +619,11 @@ async def alexa_list(hass, connection, msg):
 )
 @websocket_api.async_response
 @_ws_handle_cloud_errors
-async def alexa_update(hass, connection, msg):
+async def alexa_update(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Update alexa entity config."""
     cloud = hass.data[DOMAIN]
     changes = dict(msg)
@@ -596,7 +641,11 @@ async def alexa_update(hass, connection, msg):
 @_require_cloud_login
 @websocket_api.websocket_command({"type": "cloud/alexa/sync"})
 @websocket_api.async_response
-async def alexa_sync(hass, connection, msg):
+async def alexa_sync(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Sync with Alexa."""
     cloud = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
@@ -622,7 +671,11 @@ async def alexa_sync(hass, connection, msg):
 
 @websocket_api.websocket_command({"type": "cloud/thingtalk/convert", "query": str})
 @websocket_api.async_response
-async def thingtalk_convert(hass, connection, msg):
+async def thingtalk_convert(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Convert a query."""
     cloud = hass.data[DOMAIN]
 
@@ -636,7 +689,11 @@ async def thingtalk_convert(hass, connection, msg):
 
 
 @websocket_api.websocket_command({"type": "cloud/tts/info"})
-def tts_info(hass, connection, msg):
+def tts_info(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Fetch available tts info."""
     connection.send_result(
         msg["id"], {"languages": [(lang, gender.value) for lang, gender in MAP_VOICE]}
