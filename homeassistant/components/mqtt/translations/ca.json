@@ -14,6 +14,7 @@
                     "discovery": "Habilita el descobriment autom\u00e0tic",
                     "password": "Contrasenya",
                     "port": "Port",
+                    "protocol": "Protocol MQTT",
                     "username": "Nom d'usuari"
                 },
                 "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT."
