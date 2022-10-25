@@ -1,6 +1,6 @@
 {
   "domain": "oralb",
-  "name": "OralB",
+  "name": "Oral-B",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/oralb",
   "bluetooth": [
