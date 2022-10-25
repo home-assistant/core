@@ -6,11 +6,11 @@
         },
         "error": {
             "bad_birth": "Invalid birth topic",
-            "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_certificate": "The CA certificate is invalid",
             "bad_client_cert": "Invalid client certiticate, ensure a PEM coded file is supplied",
             "bad_client_cert_key": "Client certificate and private are no valid pair",
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
+            "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
             "cannot_connect": "Failed to connect",
             "invalid_inclusion": "The client certificate and private key must be configurered together"
@@ -21,9 +21,10 @@
                     "advanced_options": "Advanced options",
                     "broker": "Broker",
                     "certificate": "Path to custom CA certificate file",
-                    "client_id": "Client ID (leave empty to randomly generated one)",
                     "client_cert": "Path to a client certificate file",
+                    "client_id": "Client ID (leave empty to randomly generated one)",
                     "client_key": "Path to a private key file",
+                    "discovery": "Enable discovery",
                     "keepalive": "The time between sending keep alive messages",
                     "password": "Password",
                     "port": "Port",
@@ -72,18 +73,18 @@
             "title": "Your manually configured MQTT {platform}(s) needs attention"
         },
         "deprecated_yaml_broker_settings": {
-            "title": "Deprecated MQTT settings found in `configuration.yaml`",
-            "description": "The following settings found in `configuration.yaml` were migrated to MQTT config entry and will now override the settings in `configuration.yaml`:\n`{deprecated_settings}`\n\nPlease remove these settings from `configuration.yaml` and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information."
+            "description": "The following settings found in `configuration.yaml` were migrated to MQTT config entry and will now override the settings in `configuration.yaml`:\n`{deprecated_settings}`\n\nPlease remove these settings from `configuration.yaml` and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information.",
+            "title": "Deprecated MQTT settings found in `configuration.yaml`"
         }
     },
     "options": {
         "error": {
             "bad_birth": "Invalid birth topic",
-            "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_certificate": "The CA certificate is invalid",
             "bad_client_cert": "Invalid client certiticate, ensure a PEM coded file is supplied",
             "bad_client_cert_key": "Client certificate and private are no valid pair",
             "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
+            "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
             "cannot_connect": "Failed to connect",
             "invalid_inclusion": "The client certificate and private key must be configured together"
@@ -94,8 +95,8 @@
                     "advanced_options": "Advanced options",
                     "broker": "Broker",
                     "certificate": "Upload custom CA certificate file",
-                    "client_id": "Client ID (leave empty to randomly generated one)",
                     "client_cert": "Upload client certificate file",
+                    "client_id": "Client ID (leave empty to randomly generated one)",
                     "client_key": "Upload private key file",
                     "keepalive": "The time between sending keep alive messages",
                     "password": "Password",

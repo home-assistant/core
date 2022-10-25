@@ -32,6 +32,7 @@
             "is_volatile_organic_compounds": "Praegune {entity_name} lenduvate orgaaniliste \u00fchendite kontsentratsioonitase",
             "is_voltage": "Praegune {entity_name}pinge",
             "is_volume": "Praegune {entity_name} helitugevus",
+            "is_water": "Praegune {entity_name} veekulu",
             "is_weight": "Praegune {entity_name} kaal"
         },
         "trigger_type": {
@@ -66,6 +67,7 @@
             "volatile_organic_compounds": "{entity_name} lenduvate orgaaniliste \u00fchendite kontsentratsiooni muutused",
             "voltage": "{entity_name} pingemuutub",
             "volume": "{entity_name} helitugevus muutub",
+            "water": "{entity_name} veekulu muutub",
             "weight": "{entity_name} kaal muutus"
         }
     },
