@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import ACCOUNT, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import CONF_ACCOUNT, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         authenticated = await client.authenticate(
-            entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], entry.data[ACCOUNT]
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            entry.data[CONF_ACCOUNT],
         )
     except aiohttp.ClientError as exception:
         _LOGGER.warning(exception)
@@ -51,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 authenticated = await client.authenticate(
                     entry.data[CONF_USERNAME],
                     entry.data[CONF_PASSWORD],
-                    entry.data[ACCOUNT],
+                    entry.data[CONF_ACCOUNT],
                 )
             except aiohttp.ClientError as exception:
                 raise UpdateFailed(exception) from exception
