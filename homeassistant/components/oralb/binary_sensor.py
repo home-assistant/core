@@ -44,7 +44,7 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): BINARY_SENSOR_DESCRIPTIONS[
                 device_key.key
             ]
-            for device_key in sensor_update.entity_descriptions
+            for device_key in sensor_update.binary_entity_descriptions
         },
         entity_data={
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
