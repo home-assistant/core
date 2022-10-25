@@ -316,7 +316,7 @@ class TibberSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        device_info: DeviceInfo = DeviceInfo(
+        device_info = DeviceInfo(
             identifiers={(TIBBER_DOMAIN, self._tibber_home.home_id)},
             name=self._device_name,
             manufacturer=MANUFACTURER,
