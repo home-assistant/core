@@ -92,7 +92,7 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(
             user_input={
-                CONF_STATION_ID: int(config[CONF_STATION_ID]),
-                CONF_NAME: config.get(CONF_NAME, ""),
+                CONF_STATION_ID: int(station_id),
+                CONF_NAME: config.get(CONF_NAME) or station_id,
             }
         )
