@@ -70,8 +70,7 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): SENSOR_DESCRIPTIONS[
                 device_key.key
             ]
-            for device_key, description in sensor_update.entity_descriptions.items()
-            if description.device_class and description.native_unit_of_measurement
+            for device_key in sensor_update.entity_descriptions
         },
         entity_data={
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
@@ -104,13 +103,13 @@ async def async_setup_entry(
 
 class OralBBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
-        PassiveBluetoothDataProcessor[Optional[Union[float, int]]]
+        PassiveBluetoothDataProcessor[Optional[Union[str, int]]]
     ],
     SensorEntity,
 ):
     """Representation of a OralB sensor."""
 
     @property
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> str | int | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

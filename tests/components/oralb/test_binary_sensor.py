@@ -1,10 +1,10 @@
-"""Test the OralB binary sensors."""
+"""Test the Oralb binary sensors."""
 
 
 from homeassistant.components.oralb.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 
-from . import LIGHT_AND_SIGNAL_SERVICE_INFO
+from . import ORALB_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -22,7 +22,7 @@ async def test_binary_sensors(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("binary_sensor")) == 0
-    inject_bluetooth_service_info(hass, LIGHT_AND_SIGNAL_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, ORALB_SERVICE_INFO)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("binary_sensor")) == 1
 

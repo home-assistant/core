@@ -1,26 +1,20 @@
-"""Config flow for OralB integration."""
+"""Config flow for oralb ble integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from oralb_ble import OralBBluetoothDeviceData as DeviceData
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
-    BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
-    async_process_advertisements,
 )
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-
-# How long to wait for additional advertisement packets if we don't have the right ones
-ADDITIONAL_DISCOVERY_TIMEOUT = 60
 
 
 class OralBConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -34,23 +28,6 @@ class OralBConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, str] = {}
 
-    async def _async_wait_for_full_advertisement(
-        self, discovery_info: BluetoothServiceInfoBleak, device: DeviceData
-    ) -> BluetoothServiceInfoBleak:
-        """Wait for the full advertisement.
-
-        Sometimes the first advertisement we receive is blank or incomplete.
-        """
-        if device.supported(discovery_info):
-            return discovery_info
-        return await async_process_advertisements(
-            self.hass,
-            device.supported,
-            {"address": discovery_info.address},
-            BluetoothScanningMode.ACTIVE,
-            ADDITIONAL_DISCOVERY_TIMEOUT,
-        )
-
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
@@ -58,11 +35,7 @@ class OralBConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         device = DeviceData()
-        try:
-            self._discovery_info = await self._async_wait_for_full_advertisement(
-                discovery_info, device
-            )
-        except asyncio.TimeoutError:
+        if not device.supported(discovery_info):
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
         self._discovered_device = device

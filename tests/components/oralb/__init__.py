@@ -13,28 +13,12 @@ NOT_ORALB_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-LIGHT_AND_SIGNAL_SERVICE_INFO = BluetoothServiceInfo(
-    name="OralB Motion & Light",
-    manufacturer_data={},
+ORALB_SERVICE_INFO = BluetoothServiceInfo(
+    name="78:DB:2F:C2:48:BE",
+    address="78:DB:2F:C2:48:BE",
+    rssi=-63,
+    manufacturer_data={220: b"\x02\x01\x08\x03\x00\x00\x00\x01\x01\x00\x04"},
     service_uuids=[],
-    address="aa:bb:cc:dd:ee:ff",
-    rssi=-60,
-    service_data={
-        "0000fdcd-0000-1000-8000-00805f9b34fb": b"H\x12"
-        b"\xcd\xd5`4-X\x08\x04\x00\r\x00\x00\x0f\x01\xee"
-    },
-    source="local",
-)
-
-
-NO_DATA_SERVICE_INFO = BluetoothServiceInfo(
-    name="OralB Motion & Light",
-    manufacturer_data={},
-    service_uuids=[],
-    address="aa:bb:cc:dd:ee:ff",
-    rssi=-60,
-    service_data={
-        "0000fdcd-0000-1000-8000-00805f9b34fb": b"0X\x83\n\x02\xcd\xd5`4-X\x08"
-    },
+    service_data={},
     source="local",
 )
