@@ -341,6 +341,15 @@ class SensorDeviceClass(StrEnum):
     - USCS / imperial: `oz`, `lb`
     """
 
+    WIND_SPEED = "wind_speed"
+    """Wind speed.
+
+    Unit of measurement: `SPEED_*` units
+    - SI /metric: `m/s`, `km/h`
+    - USCS / imperial: `ft/s`, `mph`
+    - Nautical: `kn`
+    """
+
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
 
@@ -387,6 +396,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.VOLUME: VolumeConverter,
     SensorDeviceClass.WATER: VolumeConverter,
     SensorDeviceClass.WEIGHT: MassConverter,
+    SensorDeviceClass.WIND_SPEED: SpeedConverter,
 }
 
 # mypy: disallow-any-generics
