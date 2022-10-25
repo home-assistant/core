@@ -27,6 +27,7 @@ from .mixins import (
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import ReceiveMessage
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,8 +115,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT Camera."""
     async_add_entities([MqttCamera(hass, config, config_entry, discovery_data)])
@@ -124,28 +125,35 @@ async def _async_setup_entity(
 class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
 
-    _entity_id_format = camera.ENTITY_ID_FORMAT
-    _attributes_extra_blocked = MQTT_CAMERA_ATTRIBUTES_BLOCKED
+    _entity_id_format: str = camera.ENTITY_ID_FORMAT
+    _attributes_extra_blocked: frozenset[str] = MQTT_CAMERA_ATTRIBUTES_BLOCKED
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize the MQTT Camera."""
-        self._last_image = None
+        self._last_image: bytes | None = None
 
         Camera.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def message_received(msg):
+        def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
+            assert isinstance(msg.payload, bytes)
             if CONF_IMAGE_ENCODING in self._config:
                 self._last_image = b64decode(msg.payload)
             else:
@@ -164,7 +172,7 @@ class MqttCamera(MqttEntity, Camera):
             },
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
