@@ -2057,11 +2057,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "hardkernel": {
-      "name": "Hardkernel",
-      "integration_type": "hardware",
-      "config_flow": false
-    },
     "harman_kardon_avr": {
       "name": "Harman Kardon AVR",
       "integration_type": "hub",
@@ -2175,16 +2170,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "homeassistant_sky_connect": {
-      "name": "Home Assistant Sky Connect",
-      "integration_type": "hardware",
-      "config_flow": false
-    },
-    "homeassistant_yellow": {
-      "name": "Home Assistant Yellow",
-      "integration_type": "hardware",
-      "config_flow": false
     },
     "homematic": {
       "name": "Homematic",
@@ -4238,7 +4223,7 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "raspberry": {
+    "raspberry_pi": {
       "name": "Raspberry Pi",
       "integrations": {
         "rpi_camera": {
@@ -4254,14 +4239,9 @@
         "remote_rpi_gpio": {
           "integration_type": "hub",
           "iot_class": "local_push",
-          "name": "remote_rpi_gpio"
+          "name": "Raspberry Pi Remote GPIO"
         }
       }
-    },
-    "raspberry_pi": {
-      "name": "Raspberry Pi",
-      "integration_type": "hardware",
-      "config_flow": false
     },
     "raspyrfm": {
       "name": "RaspyRFM",
@@ -6183,7 +6163,6 @@
       "iot_class": "local_push"
     }
   },
-  "hardware": {},
   "helper": {
     "counter": {
       "name": "Counter",
