@@ -263,8 +263,9 @@ METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
     accumulated_precipitation=PRECIPITATION_MILLIMETERS,
     conversions={
+        # Convert non-metric distances
         ("distance", LENGTH_FEET): LENGTH_METERS,
-        ("distance", LENGTH_INCHES): LENGTH_CENTIMETERS,
+        ("distance", LENGTH_INCHES): LENGTH_MILLIMETERS,
         ("distance", LENGTH_MILES): LENGTH_KILOMETERS,
         ("distance", LENGTH_YARD): LENGTH_METERS,
     },
@@ -280,6 +281,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     accumulated_precipitation=PRECIPITATION_INCHES,
     conversions={
+        # Convert non-USCS distances
         ("distance", LENGTH_CENTIMETERS): LENGTH_INCHES,
         ("distance", LENGTH_KILOMETERS): LENGTH_MILES,
         ("distance", LENGTH_METERS): LENGTH_FEET,
