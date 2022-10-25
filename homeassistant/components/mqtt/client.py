@@ -674,7 +674,11 @@ class MQTT:
         self._mqtt_data.state_write_requests.process_write_state_requests()
 
     def _mqtt_on_callback(
-        self, _mqttc: mqtt.Client, _userdata: None, mid: int, _granted_qos: tuple[Any]
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        mid: int,
+        _granted_qos: tuple[Any] | None = None,
     ) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
         self.hass.add_job(self._mqtt_handle_mid, mid)
