@@ -3,4 +3,4 @@ DOMAIN = "ovo_energy"
 
 DATA_CLIENT = "ovo_client"
 DATA_COORDINATOR = "coordinator"
-ACCOUNT = "account"
+CONF_ACCOUNT = "account"
