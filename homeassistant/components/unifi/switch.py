@@ -58,12 +58,12 @@ T = TypeVar("T")
 class UnifiEntityLoader(Generic[T]):
     """Validate and load entities from different UniFi handlers."""
 
-    config_option_fn: Callable[[UniFiController, str], bool]
+    allowed_fn: Callable[[UniFiController, str], bool]
     entity_cls: type[UnifiBlockClientSwitch] | type[UnifiDPIRestrictionSwitch] | type[
         UnifiOutletSwitch
     ] | type[UnifiPoePortSwitch] | type[UnifiDPIRestrictionSwitch]
     handler_fn: Callable[[UniFiController], T]
-    value_fn: Callable[[T, str], bool | None]
+    supported_fn: Callable[[T, str], bool | None]
 
 
 async def async_setup_entry(
@@ -133,7 +133,7 @@ async def async_setup_entry(
         @callback
         def async_create_entity(event: ItemEvent, obj_id: str) -> None:
             """Create UniFi entity."""
-            if not loader.config_option_fn(controller, obj_id) or not loader.value_fn(
+            if not loader.allowed_fn(controller, obj_id) or not loader.supported_fn(
                 api_handler, obj_id
             ):
                 return
@@ -704,27 +704,27 @@ class UnifiPoePortSwitch(SwitchEntity):
 
 UNIFI_LOADERS: tuple[UnifiEntityLoader, ...] = (
     UnifiEntityLoader[Clients](
-        config_option_fn=lambda contrlr, obj_id: obj_id in contrlr.option_block_clients,
+        allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
         entity_cls=UnifiBlockClientSwitch,
         handler_fn=lambda contrlr: contrlr.api.clients,
-        value_fn=lambda handler, obj_id: True,
+        supported_fn=lambda handler, obj_id: True,
     ),
     UnifiEntityLoader[DPIRestrictionGroups](
-        config_option_fn=lambda contrlr, obj_id: contrlr.option_dpi_restrictions,
+        allowed_fn=lambda controller, obj_id: controller.option_dpi_restrictions,
         entity_cls=UnifiDPIRestrictionSwitch,
-        handler_fn=lambda contrlr: contrlr.api.dpi_groups,
-        value_fn=lambda handler, obj_id: bool(handler[obj_id].dpiapp_ids),
+        handler_fn=lambda controller: controller.api.dpi_groups,
+        supported_fn=lambda handler, obj_id: bool(handler[obj_id].dpiapp_ids),
     ),
     UnifiEntityLoader[Outlets](
-        config_option_fn=lambda contrlr, obj_id: True,
+        allowed_fn=lambda controller, obj_id: True,
         entity_cls=UnifiOutletSwitch,
-        handler_fn=lambda contrlr: contrlr.api.outlets,
-        value_fn=lambda handler, obj_id: handler[obj_id].has_relay,
+        handler_fn=lambda controller: controller.api.outlets,
+        supported_fn=lambda handler, obj_id: handler[obj_id].has_relay,
     ),
     UnifiEntityLoader[Ports](
-        config_option_fn=lambda contrlr, obj_id: True,
+        allowed_fn=lambda controller, obj_id: True,
         entity_cls=UnifiPoePortSwitch,
-        handler_fn=lambda contrlr: contrlr.api.ports,
-        value_fn=lambda handler, obj_id: handler[obj_id].port_poe,
+        handler_fn=lambda controller: controller.api.ports,
+        supported_fn=lambda handler, obj_id: handler[obj_id].port_poe,
     ),
 )
