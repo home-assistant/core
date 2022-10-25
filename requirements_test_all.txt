@@ -1370,7 +1370,7 @@ pytankerkoenig==0.0.6
 pytautulli==21.11.0
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.5
+python-bsblan==0.5.6
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.14

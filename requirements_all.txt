@@ -1950,7 +1950,7 @@ pythinkingcleaner==0.0.3
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.5
+python-bsblan==0.5.6
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
