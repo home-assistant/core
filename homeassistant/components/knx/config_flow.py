@@ -1,6 +1,7 @@
 """Config flow for KNX."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import Any, Final
 
 import voluptuous as vol
@@ -79,31 +80,44 @@ _PORT_SELECTOR = vol.All(
 )
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class KNXCommonFlow(ABC):
+    """Base class for KNX flows."""
+
+    def __init__(self) -> None:
+        """Initialize KNXCommonFlow."""
+        self._found_gateways: list[GatewayDescriptor] = []
+        self._found_tunnels: list[GatewayDescriptor] = []
+        self._selected_tunnel: GatewayDescriptor | None = None
+        self._tunneling_config: KNXConfigEntryData | None = None
+
+    @abstractmethod
+    def finish_flow(self, entry_data: KNXConfigEntryData, title: str) -> FlowResult:
+        """Finish the flow."""
+
+
+class KNXConfigFlow(KNXCommonFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a KNX config flow."""
 
     VERSION = 1
 
-    _found_gateways: list[GatewayDescriptor]
-    _found_tunnels: list[GatewayDescriptor]
-    _selected_tunnel: GatewayDescriptor | None
-    _tunneling_config: KNXConfigEntryData | None
-
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> KNXOptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> KNXOptionsFlow:
         """Get the options flow for this handler."""
-        return KNXOptionsFlowHandler(config_entry)
+        return KNXOptionsFlow(config_entry)
+
+    @callback
+    def finish_flow(self, entry_data: KNXConfigEntryData, title: str) -> FlowResult:
+        """Create the ConfigEntry."""
+        return self.async_create_entry(
+            title=title,
+            data=entry_data,
+        )
 
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-
-        self._found_gateways = []
-        self._found_tunnels = []
-        self._selected_tunnel = None
-        self._tunneling_config = None
         return await self.async_step_type()
 
     async def async_step_type(self, user_input: dict | None = None) -> FlowResult:
@@ -130,9 +144,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             entry_data = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
                 connection_type=CONF_KNX_AUTOMATIC
             )
-            return self.async_create_entry(
+            return self.finish_flow(
+                entry_data=entry_data,
                 title=CONF_KNX_AUTOMATIC.capitalize(),
-                data=entry_data,
             )
 
         supported_connection_types = {
@@ -182,9 +196,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     step_id="secure_tunneling",
                     menu_options=["secure_knxkeys", "secure_manual"],
                 )
-            return self.async_create_entry(
+            return self.finish_flow(
+                entry_data=self._tunneling_config,
                 title=f"Tunneling @ {self._selected_tunnel}",
-                data=self._tunneling_config,
             )
 
         if not self._found_tunnels:
@@ -241,10 +255,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         step_id="secure_tunneling",
                         menu_options=["secure_knxkeys", "secure_manual"],
                     )
-
-                return self.async_create_entry(
+                return self.finish_flow(
+                    entry_data=self._tunneling_config,
                     title=f"Tunneling @ {_host}",
-                    data=self._tunneling_config,
                 )
 
         connection_methods: list[str] = [
@@ -299,10 +312,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_id=user_input[CONF_KNX_SECURE_USER_ID],
                 user_password=user_input[CONF_KNX_SECURE_USER_PASSWORD],
             )
-
-            return self.async_create_entry(
+            return self.finish_flow(
+                entry_data=entry_data,
                 title=f"Secure Tunneling @ {self._tunneling_config[CONF_HOST]}",
-                data=entry_data,
             )
 
         fields = {
@@ -351,10 +363,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     knxkeys_filename=storage_key,
                     knxkeys_password=user_input[CONF_KNX_KNXKEY_PASSWORD],
                 )
-
-                return self.async_create_entry(
+                return self.finish_flow(
+                    entry_data=entry_data,
                     title=f"Secure Tunneling @ {self._tunneling_config[CONF_HOST]}",
-                    data=entry_data,
                 )
 
         fields = {
@@ -401,8 +412,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     multicast_port=user_input[CONF_KNX_MCAST_PORT],
                     local_ip=_local_ip,
                 )
-                return self.async_create_entry(
-                    title=CONF_KNX_ROUTING.capitalize(), data=entry_data
+                return self.finish_flow(
+                    entry_data=entry_data,
+                    title=CONF_KNX_ROUTING.capitalize(),
                 )
 
         fields = {
@@ -424,7 +436,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class KNXOptionsFlowHandler(OptionsFlow):
+class KNXOptionsFlow(OptionsFlow):
     """Handle KNX options."""
 
     general_settings: dict
@@ -433,6 +445,17 @@ class KNXOptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize KNX options flow."""
         self.config_entry = config_entry
+        super().__init__()
+
+    @callback
+    def finish_flow(self, entry_data: KNXConfigEntryData, title: str) -> FlowResult:
+        """Update the ConfigEntry and finish the flow."""
+        self.hass.config_entries.async_update_entry(
+            self.config_entry,
+            data=entry_data,
+            title=title,
+        )
+        return self.async_create_entry(title="", data={})
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -555,9 +578,9 @@ class KNXOptionsFlowHandler(OptionsFlow):
             )
 
         _local_ip = self.general_settings.get(CONF_KNX_LOCAL_IP)
-        entry_data = (
+        entry_data: KNXConfigEntryData = (
             DEFAULT_ENTRY_DATA
-            | self.general_settings
+            | self.general_settings  # type: ignore[assignment]
             | KNXConfigEntryData(
                 host=self.current_config.get(CONF_HOST, ""),
                 local_ip=_local_ip if _local_ip != CONF_DEFAULT_LOCAL_IP else None,
@@ -582,14 +605,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
             entry_title = f"Tunneling @ {entry_data[CONF_HOST]}"
         if entry_data[CONF_KNX_CONNECTION_TYPE] == CONF_KNX_TUNNELING_TCP:
             entry_title = f"Tunneling @ {entry_data[CONF_HOST]} (TCP)"
-
-        self.hass.config_entries.async_update_entry(
-            self.config_entry,
-            data=entry_data,
-            title=entry_title,
-        )
-
-        return self.async_create_entry(title="", data={})
+        return self.finish_flow(entry_data=entry_data, title=entry_title)
 
 
 def get_knx_tunneling_type(config_entry_data: dict) -> str:
