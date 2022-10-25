@@ -1,7 +1,7 @@
 """The Recorder websocket API."""
 from __future__ import annotations
 
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 import logging
 from typing import Any, Literal
 
@@ -79,13 +79,30 @@ def _ws_get_statistic_during_period(
     )
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/statistic_during_period",
-        vol.Optional("duration"): cv.time_period_dict,
-        vol.Optional("offset"): cv.time_period_dict,
-        vol.Optional("start_time"): str,
-        vol.Optional("end_time"): str,
+        vol.Exclusive("calendar", "period"): vol.Schema(
+            {
+                vol.Required("period"): str,
+                vol.Optional("offset"): int,
+            }
+        ),
+        vol.Exclusive("fixed_period", "period"): vol.Schema(
+            {
+                vol.Optional("start_time"): str,
+                vol.Optional("end_time"): str,
+            }
+        ),
+        vol.Exclusive("rolling_window", "period"): vol.Schema(
+            {
+                vol.Required("duration"): cv.time_period_dict,
+                vol.Optional("offset"): cv.time_period_dict,
+            }
+        ),
         vol.Optional("statistic_id"): str,
         vol.Optional("types"): vol.All([str], vol.Coerce(set)),
         vol.Optional("units"): vol.Schema(
@@ -115,28 +132,64 @@ async def ws_get_statistic_during_period(
     start_time = None
     end_time = None
 
-    if start_time_str := msg.get("start_time"):
-        if start_time := dt_util.parse_datetime(start_time_str):
-            start_time = dt_util.as_utc(start_time)
-        else:
-            connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
-            return
+    if "calendar" in msg:
+        calendar_period = msg["calendar"]["period"]
+        start_of_day = dt_util.start_of_local_day()
+        offset = msg["calendar"].get("offset", 0)
+        if calendar_period == "hour":
+            start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
+            start_time += timedelta(hours=offset)
+            end_time = start_time + timedelta(hours=1)
+        if calendar_period == "day":
+            start_time = start_of_day
+            start_time += timedelta(days=offset)
+            end_time = start_time + timedelta(days=1)
+        elif calendar_period == "week":
+            start_time = start_of_day - timedelta(days=start_of_day.weekday())
+            start_time += timedelta(days=offset * 7)
+            end_time = start_time + timedelta(weeks=1)
+        elif calendar_period == "month":
+            start_time = start_of_day.replace(day=28)
+            # This works for up to 48 months of offset
+            start_time = (start_time + timedelta(days=offset * 31)).replace(day=1)
+            end_time = (start_time + timedelta(days=31)).replace(day=1)
+        else:  # calendar_period = "year"
+            start_time = start_of_day.replace(month=12, day=31)
+            # This works for 100+ years of offset
+            start_time = (start_time + timedelta(days=offset * 366)).replace(
+                month=1, day=1
+            )
+            end_time = (start_time + timedelta(days=365)).replace(day=1)
 
-    if end_time_str := msg.get("end_time"):
-        if end_time := dt_util.parse_datetime(end_time_str):
-            end_time = dt_util.as_utc(end_time)
-        else:
-            connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
-            return
+        start_time = dt_util.as_utc(start_time)
+        end_time = dt_util.as_utc(end_time)
 
-    if duration := msg.get("duration"):
+    elif "fixed_period" in msg:
+        if start_time_str := msg["fixed_period"].get("start_time"):
+            if start_time := dt_util.parse_datetime(start_time_str):
+                start_time = dt_util.as_utc(start_time)
+            else:
+                connection.send_error(
+                    msg["id"], "invalid_start_time", "Invalid start_time"
+                )
+                return
+
+        if end_time_str := msg["fixed_period"].get("end_time"):
+            if end_time := dt_util.parse_datetime(end_time_str):
+                end_time = dt_util.as_utc(end_time)
+            else:
+                connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+                return
+
+    elif "rolling_window" in msg:
+        duration = msg["rolling_window"]["duration"]
         now = dt_util.utcnow()
         start_time = now - duration
         end_time = start_time + duration
 
-    if offset := msg.get("offset"):
-        start_time += offset
-        end_time += offset
+        if offset := msg["rolling_window"].get("offset"):
+            start_time += offset
+            end_time += offset
 
     connection.send_message(
         await get_instance(hass).async_add_executor_job(

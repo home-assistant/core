@@ -4,7 +4,7 @@ import datetime
 from datetime import timedelta
 from statistics import fmean
 import threading
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
 import pytest
@@ -193,7 +193,6 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
 
     now = dt_util.utcnow()
 
-    await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
     client = await hass_ws_client()
 
@@ -252,8 +251,10 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         {
             "id": next_id(),
             "type": "recorder/statistic_during_period",
-            "start_time": now.isoformat(),
-            "end_time": now.isoformat(),
+            "fixed_period": {
+                "start_time": now.isoformat(),
+                "end_time": now.isoformat(),
+            },
             "statistic_id": "sensor.test",
         }
     )
@@ -286,8 +287,10 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
             "id": next_id(),
             "type": "recorder/statistic_during_period",
             "statistic_id": "sensor.test",
-            "start_time": start_time,
-            "end_time": end_time,
+            "fixed_period": {
+                "start_time": start_time,
+                "end_time": end_time,
+            },
         }
     )
     response = await client.receive_json()
@@ -307,8 +310,10 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
             "id": next_id(),
             "type": "recorder/statistic_during_period",
             "statistic_id": "sensor.test",
-            "start_time": start_time,
-            "end_time": end_time,
+            "fixed_period": {
+                "start_time": start_time,
+                "end_time": end_time,
+            },
         }
     )
     response = await client.receive_json()
@@ -327,7 +332,9 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         {
             "id": next_id(),
             "type": "recorder/statistic_during_period",
-            "start_time": start_time,
+            "fixed_period": {
+                "start_time": start_time,
+            },
             "statistic_id": "sensor.test",
         }
     )
@@ -346,7 +353,9 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         {
             "id": next_id(),
             "type": "recorder/statistic_during_period",
-            "start_time": start_time,
+            "fixed_period": {
+                "start_time": start_time,
+            },
             "statistic_id": "sensor.test",
         }
     )
@@ -366,7 +375,9 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         {
             "id": next_id(),
             "type": "recorder/statistic_during_period",
-            "end_time": end_time,
+            "fixed_period": {
+                "end_time": end_time,
+            },
             "statistic_id": "sensor.test",
         }
     )
@@ -388,8 +399,10 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         {
             "id": next_id(),
             "type": "recorder/statistic_during_period",
-            "start_time": start_time,
-            "end_time": end_time,
+            "fixed_period": {
+                "start_time": start_time,
+                "end_time": end_time,
+            },
             "statistic_id": "sensor.test",
         }
     )
@@ -410,7 +423,9 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         {
             "id": next_id(),
             "type": "recorder/statistic_during_period",
-            "start_time": start_time,
+            "fixed_period": {
+                "start_time": start_time,
+            },
             "statistic_id": "sensor.test",
         }
     )
@@ -428,7 +443,9 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         {
             "id": next_id(),
             "type": "recorder/statistic_during_period",
-            "duration": {"hours": 1, "minutes": 25},
+            "rolling_window": {
+                "duration": {"hours": 1, "minutes": 25},
+            },
             "statistic_id": "sensor.test",
         }
     )
@@ -446,8 +463,10 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         {
             "id": next_id(),
             "type": "recorder/statistic_during_period",
-            "duration": {"hours": 1},
-            "offset": {"minutes": -25},
+            "rolling_window": {
+                "duration": {"hours": 1},
+                "offset": {"minutes": -25},
+            },
             "statistic_id": "sensor.test",
         }
     )
@@ -475,6 +494,90 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[:]),
         "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
     }
+
+
+@freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
+@pytest.mark.parametrize(
+    "calendar_period, start_time, end_time",
+    (
+        (
+            {"period": "hour"},
+            "2022-10-21T07:00:00+00:00",
+            "2022-10-21T08:00:00+00:00",
+        ),
+        (
+            {"period": "hour", "offset": -1},
+            "2022-10-21T06:00:00+00:00",
+            "2022-10-21T07:00:00+00:00",
+        ),
+        (
+            {"period": "day"},
+            "2022-10-21T07:00:00+00:00",
+            "2022-10-22T07:00:00+00:00",
+        ),
+        (
+            {"period": "day", "offset": -1},
+            "2022-10-20T07:00:00+00:00",
+            "2022-10-21T07:00:00+00:00",
+        ),
+        (
+            {"period": "week"},
+            "2022-10-17T07:00:00+00:00",
+            "2022-10-24T07:00:00+00:00",
+        ),
+        (
+            {"period": "week", "offset": -1},
+            "2022-10-10T07:00:00+00:00",
+            "2022-10-17T07:00:00+00:00",
+        ),
+        (
+            {"period": "month"},
+            "2022-10-01T07:00:00+00:00",
+            "2022-11-01T07:00:00+00:00",
+        ),
+        (
+            {"period": "month", "offset": -1},
+            "2022-09-01T07:00:00+00:00",
+            "2022-10-01T07:00:00+00:00",
+        ),
+        (
+            {"period": "year"},
+            "2022-01-01T08:00:00+00:00",
+            "2023-01-01T08:00:00+00:00",
+        ),
+        (
+            {"period": "year", "offset": -1},
+            "2021-01-01T08:00:00+00:00",
+            "2022-01-01T08:00:00+00:00",
+        ),
+    ),
+)
+async def test_statistic_during_period_calendar(
+    recorder_mock, hass, hass_ws_client, calendar_period, start_time, end_time
+):
+    """Test statistic_during_period."""
+    client = await hass_ws_client()
+
+    # Try requesting data for the current hour
+    with patch(
+        "homeassistant.components.recorder.websocket_api.statistic_during_period",
+        return_value={},
+    ) as statistic_during_period:
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "recorder/statistic_during_period",
+                "calendar": calendar_period,
+                "statistic_id": "sensor.test",
+            }
+        )
+        response = await client.receive_json()
+        statistic_during_period.assert_called_once_with(
+            hass, ANY, ANY, "sensor.test", None, units=None
+        )
+        assert statistic_during_period.call_args[0][1].isoformat() == start_time
+        assert statistic_during_period.call_args[0][2].isoformat() == end_time
+        assert response["success"]
 
 
 @pytest.mark.parametrize(
