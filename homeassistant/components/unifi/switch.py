@@ -4,11 +4,17 @@ Support for controlling power supply of clients which are powered over Ethernet 
 Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
 """
+from __future__ import annotations
 
 import asyncio
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, Generic, TypeVar
 
 from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
+from aiounifi.interfaces.outlets import Outlets
+from aiounifi.interfaces.ports import Ports
 from aiounifi.models.api import SOURCE_EVENT
 from aiounifi.models.client import ClientBlockRequest
 from aiounifi.models.device import (
@@ -31,16 +37,33 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import (
+    ATTR_MANUFACTURER,
+    BLOCK_SWITCH,
+    DOMAIN as UNIFI_DOMAIN,
+    DPI_SWITCH,
+    OUTLET_SWITCH,
+    POE_SWITCH,
+)
+from .controller import UniFiController
 from .unifi_client import UniFiClient
-
-BLOCK_SWITCH = "block"
-DPI_SWITCH = "dpi"
-POE_SWITCH = "poe"
-OUTLET_SWITCH = "outlet"
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
+
+T = TypeVar("T")
+
+
+@dataclass
+class UnifiEntityLoader(Generic[T]):
+    """Validate and load entities from different UniFi handlers."""
+
+    config_option_fn: Callable[[UniFiController], bool]
+    entity_cls: type[UnifiDPIRestrictionSwitch] | type[UnifiOutletSwitch] | type[
+        UnifiPoePortSwitch
+    ] | type[UnifiDPIRestrictionSwitch]
+    handler_fn: Callable[[UniFiController], T]
+    value_fn: Callable[[T, str], bool | None]
 
 
 async def async_setup_entry(
@@ -52,7 +75,7 @@ async def async_setup_entry(
 
     Switches are controlling network access and switch ports with POE.
     """
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {
         BLOCK_SWITCH: set(),
         POE_SWITCH: set(),
@@ -105,42 +128,33 @@ async def async_setup_entry(
     known_poe_clients.clear()
 
     @callback
-    def async_add_outlet_switch(_: ItemEvent, obj_id: str) -> None:
-        """Add power outlet switch from UniFi controller."""
-        if not controller.api.outlets[obj_id].has_relay:
-            return
-        async_add_entities([UnifiOutletSwitch(obj_id, controller)])
+    def async_load_entities(loader: UnifiEntityLoader) -> None:
+        """Load and subscribe to UniFi devices."""
+        entities: list[SwitchEntity] = []
+        api_handler = loader.handler_fn(controller)
 
-    controller.api.ports.subscribe(async_add_outlet_switch, ItemEvent.ADDED)
+        @callback
+        def async_create_entity(event: ItemEvent, obj_id: str) -> None:
+            """Create UniFi entity."""
+            if not loader.config_option_fn(controller) or not loader.value_fn(
+                api_handler, obj_id
+            ):
+                return
 
-    for index in controller.api.outlets:
-        async_add_outlet_switch(ItemEvent.ADDED, index)
+            entity = loader.entity_cls(obj_id, controller)
+            if event == ItemEvent.ADDED:
+                async_add_entities(entities)
+                return
+            entities.append(entity)
 
-    def async_add_dpi_switch(_: ItemEvent, obj_id: str) -> None:
-        """Add DPI switch from UniFi controller."""
-        if (
-            not controller.option_dpi_restrictions
-            or not controller.api.dpi_groups[obj_id].dpiapp_ids
-        ):
-            return
-        async_add_entities([UnifiDPIRestrictionSwitch(obj_id, controller)])
+        for obj_id in api_handler:
+            async_create_entity(ItemEvent.CHANGED, obj_id)
+        async_add_entities(entities)
 
-    controller.api.ports.subscribe(async_add_dpi_switch, ItemEvent.ADDED)
+        api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
 
-    for dpi_group_id in controller.api.dpi_groups:
-        async_add_dpi_switch(ItemEvent.ADDED, dpi_group_id)
-
-    @callback
-    def async_add_poe_switch(_: ItemEvent, obj_id: str) -> None:
-        """Add port PoE switch from UniFi controller."""
-        if not controller.api.ports[obj_id].port_poe:
-            return
-        async_add_entities([UnifiPoePortSwitch(obj_id, controller)])
-
-    controller.api.ports.subscribe(async_add_poe_switch, ItemEvent.ADDED)
-
-    for port_idx in controller.api.ports:
-        async_add_poe_switch(ItemEvent.ADDED, port_idx)
+    for unifi_loader in UNIFI_LOADERS:
+        async_load_entities(unifi_loader)
 
 
 @callback
@@ -640,3 +654,25 @@ class UnifiPoePortSwitch(SwitchEntity):
         await self.controller.api.request(
             DeviceSetPoePortModeRequest.create(device, self._index, "off")
         )
+
+
+UNIFI_LOADERS: tuple[UnifiEntityLoader, ...] = (
+    UnifiEntityLoader[DPIRestrictionGroups](
+        config_option_fn=lambda controller: controller.option_dpi_restrictions,
+        entity_cls=UnifiDPIRestrictionSwitch,
+        handler_fn=lambda controller: controller.api.dpi_groups,
+        value_fn=lambda handler, index: bool(handler[index].dpiapp_ids),
+    ),
+    UnifiEntityLoader[Outlets](
+        config_option_fn=lambda controller: True,
+        entity_cls=UnifiOutletSwitch,
+        handler_fn=lambda controller: controller.api.outlets,
+        value_fn=lambda handler, index: handler[index].has_relay,
+    ),
+    UnifiEntityLoader[Ports](
+        config_option_fn=lambda controller: True,
+        entity_cls=UnifiPoePortSwitch,
+        handler_fn=lambda controller: controller.api.ports,
+        value_fn=lambda handler, index: handler[index].port_poe,
+    ),
+)
