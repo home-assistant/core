@@ -4,9 +4,14 @@ import pytest
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
+    LENGTH_CENTIMETERS,
+    LENGTH_FEET,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
+    LENGTH_MILES,
     LENGTH_MILLIMETERS,
+    LENGTH_YARD,
     MASS,
     MASS_GRAMS,
     PRESSURE,
@@ -374,3 +379,27 @@ def test_get_unit_system_invalid(key: str) -> None:
     """Test get_unit_system with an invalid key."""
     with pytest.raises(ValueError, match=f"`{key}` is not a valid unit system key"):
         _ = get_unit_system(key)
+
+
+@pytest.mark.parametrize(
+    "unit_system, device_class, original_unit, state_unit",
+    (
+        (METRIC_SYSTEM, "distance", LENGTH_FEET, LENGTH_METERS),
+        (METRIC_SYSTEM, "distance", LENGTH_INCHES, LENGTH_MILLIMETERS),
+        (METRIC_SYSTEM, "distance", LENGTH_MILES, LENGTH_KILOMETERS),
+        (METRIC_SYSTEM, "distance", LENGTH_YARD, LENGTH_METERS),
+        (METRIC_SYSTEM, "distance", LENGTH_KILOMETERS, None),
+        (METRIC_SYSTEM, "distance", "very_long", None),
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_CENTIMETERS, LENGTH_INCHES),
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_KILOMETERS, LENGTH_MILES),
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_METERS, LENGTH_FEET),
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_MILLIMETERS, LENGTH_INCHES),
+        (US_CUSTOMARY_SYSTEM, "distance", LENGTH_MILES, None),
+        (US_CUSTOMARY_SYSTEM, "distance", "very_long", None),
+    ),
+)
+def test_get_converted_unit(
+    unit_system, device_class, original_unit, state_unit
+) -> None:
+    """Test unit conversion rules."""
+    assert unit_system.get_converted_unit(device_class, original_unit) == state_unit
