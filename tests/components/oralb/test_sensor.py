@@ -26,11 +26,13 @@ async def test_sensors(hass):
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 7
 
-    lux_sensor = hass.states.get("sensor.smart_series_7000_48be_toothbrush_state")
-    lux_sensor_attrs = lux_sensor.attributes
-    assert lux_sensor.state == "running"
+    toothbrush_sensor = hass.states.get(
+        "sensor.smart_series_7000_48be_toothbrush_state"
+    )
+    toothbrush_sensor_attrs = toothbrush_sensor.attributes
+    assert toothbrush_sensor.state == "running"
     assert (
-        lux_sensor_attrs[ATTR_FRIENDLY_NAME]
+        toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME]
         == "Smart Series 7000 48BE Toothbrush State"
     )
 
