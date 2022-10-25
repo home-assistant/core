@@ -25,7 +25,7 @@ import weakref
 
 from awesomeversion import AwesomeVersion
 import jinja2
-from jinja2 import pass_context, pass_environment
+from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
@@ -2153,9 +2153,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["closest"] = pass_context(hassfunction(closest_filter))
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_state"] = hassfunction(is_state)
+        self.tests["is_state"] = pass_eval_context(self.globals["is_state"])
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
+        self.tests["is_state_attr"] = pass_eval_context(self.globals["is_state_attr"])
         self.globals["state_attr"] = hassfunction(state_attr)
+        self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
+        self.filters["states"] = self.globals["states"]
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
 
