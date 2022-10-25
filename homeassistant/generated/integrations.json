@@ -5025,10 +5025,10 @@
       "iot_class": "cloud_polling"
     },
     "starlink": {
-      "config_flow": true,
-      "iot_class": "local_polling",
+      "name": "Starlink",
       "integration_type": "hub",
-      "name": "Starlink"
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "startca": {
       "name": "Start.ca",
