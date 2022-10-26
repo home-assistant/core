@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import VOLUME_GALLONS
@@ -40,19 +41,22 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
         key="month_to_date",
         name="Current Month",
         native_unit_of_measurement=VOLUME_GALLONS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="week_to_date",
         name="Current Week",
         native_unit_of_measurement=VOLUME_GALLONS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="today",
         name="Current Day",
         native_unit_of_measurement=VOLUME_GALLONS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="last_60_min",
