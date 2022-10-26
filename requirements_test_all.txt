@@ -1801,6 +1801,9 @@ yolink-api==0.1.0
 # homeassistant.components.youless
 youless-api==0.16
 
+# homeassistant.components.zamg
+zamg==0.1.1
+
 # homeassistant.components.zeroconf
 zeroconf==0.39.2
 
