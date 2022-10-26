@@ -147,9 +147,6 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_ZONE_RUN_TIME: user_input.get(
                             CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
                         ),
-                        CONF_USE_APP_RUN_TIMES: user_input.get(
-                            CONF_USE_APP_RUN_TIMES, False
-                        ),
                     },
                 )
 

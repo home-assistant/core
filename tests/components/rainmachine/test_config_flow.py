@@ -6,9 +6,17 @@ from regenmaschine.errors import RainMachineError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import zeroconf
-from homeassistant.components.rainmachine import CONF_ZONE_RUN_TIME, DOMAIN
+from homeassistant.components.rainmachine import (
+    CONF_USE_APP_RUN_TIMES,
+    CONF_ZONE_RUN_TIME,
+    DOMAIN,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def test_duplicate_error(hass, config, config_entry):
@@ -88,6 +96,33 @@ async def test_migrate_1_2(
     assert ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id) is None
 
 
+async def test_migrate_entry_2_3(hass: HomeAssistant) -> None:
+    """Test migrating a config entry from version 1 to version 2."""
+    # Create mock entry with version 1
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        data={
+            CONF_IP_ADDRESS: "0.0.0.0",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 8080,
+            CONF_SSL: True,
+        },
+        options={CONF_ZONE_RUN_TIME: 600},
+    )
+
+    # Set it up
+    mock_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {}) is True
+    await hass.async_block_till_done()
+
+    # Check that it has a app run time option now
+    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert updated_entry
+    assert updated_entry.version == 3
+    assert CONF_USE_APP_RUN_TIMES in updated_entry.options
+
+
 async def test_options_flow(hass, config, config_entry):
     """Test config flow options."""
     with patch(
@@ -99,10 +134,14 @@ async def test_options_flow(hass, config, config_entry):
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_ZONE_RUN_TIME: 600}
+            result["flow_id"],
+            user_input={CONF_ZONE_RUN_TIME: 600, CONF_USE_APP_RUN_TIMES: False},
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {CONF_ZONE_RUN_TIME: 600}
+        assert config_entry.options == {
+            CONF_ZONE_RUN_TIME: 600,
+            CONF_USE_APP_RUN_TIMES: False,
+        }
 
 
 async def test_show_form(hass):

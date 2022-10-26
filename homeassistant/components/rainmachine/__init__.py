@@ -247,6 +247,8 @@ async def async_setup_entry(  # noqa: C901
             **entry.options,
             CONF_ZONE_RUN_TIME: data.pop(CONF_ZONE_RUN_TIME),
         }
+    if CONF_USE_APP_RUN_TIMES not in entry.options:
+        entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
     if entry_updates:
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
