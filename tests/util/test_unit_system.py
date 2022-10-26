@@ -464,7 +464,7 @@ def test_get_metric_converted_unit_(
         # Test volume conversion
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.VOLUME, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
-        (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, UnitOfVolume.FLUID_OUNCE),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, UnitOfVolume.FLUID_OUNCES),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, None),
