@@ -1,4 +1,4 @@
-⁸"""Test the Flipr sensor."""
+"""Test the Flipr sensor."""
 from datetime import datetime
 from unittest.mock import patch
 
