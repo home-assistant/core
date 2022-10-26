@@ -1221,3 +1221,22 @@ async def test_start_with_frontend(hass, mock_async_zeroconf):
         await hass.async_block_till_done()
 
     mock_async_zeroconf.async_register_service.assert_called_once()
+
+
+async def test_setup_with_disallowed_characters_in_local_name(
+    hass, mock_async_zeroconf, caplog
+):
+    """Test we still setup with disallowed characters in the location name."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
+    ), patch.object(
+        hass.config,
+        "location_name",
+        "My.House",
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+    calls = mock_async_zeroconf.async_register_service.mock_calls
+    assert calls[0][1][0].name == "My House._home-assistant._tcp.local."
