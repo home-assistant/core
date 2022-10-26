@@ -753,16 +753,6 @@ async def test_state_characteristics(hass: HomeAssistant):
         },
         {
             "source_sensor_domain": "sensor",
-            "name": "quantiles",
-            "value_0": STATE_UNKNOWN,
-            "value_1": STATE_UNKNOWN,
-            "value_9": [
-                round(quantile, 2) for quantile in statistics.quantiles(VALUES_NUMERIC)
-            ],
-            "unit": None,
-        },
-        {
-            "source_sensor_domain": "sensor",
             "name": "standard_deviation",
             "value_0": STATE_UNKNOWN,
             "value_1": STATE_UNKNOWN,

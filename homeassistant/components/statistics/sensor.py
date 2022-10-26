@@ -78,7 +78,6 @@ STAT_DISTANCE_ABSOLUTE = "distance_absolute"
 STAT_MEAN = "mean"
 STAT_MEDIAN = "median"
 STAT_NOISINESS = "noisiness"
-STAT_QUANTILES = "quantiles"
 STAT_STANDARD_DEVIATION = "standard_deviation"
 STAT_SUM = "sum"
 STAT_SUM_DIFFERENCES = "sum_differences"
@@ -107,7 +106,6 @@ STATS_NUMERIC_SUPPORT = {
     STAT_MEAN,
     STAT_MEDIAN,
     STAT_NOISINESS,
-    STAT_QUANTILES,
     STAT_STANDARD_DEVIATION,
     STAT_SUM,
     STAT_SUM_DIFFERENCES,
@@ -135,7 +133,6 @@ STATS_NOT_A_NUMBER = {
     STAT_DATETIME_OLDEST,
     STAT_DATETIME_VALUE_MAX,
     STAT_DATETIME_VALUE_MIN,
-    STAT_QUANTILES,
 }
 
 STATS_DATETIME = {
@@ -177,13 +174,9 @@ CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
-CONF_QUANTILE_INTERVALS = "quantile_intervals"
-CONF_QUANTILE_METHOD = "quantile_method"
 
 DEFAULT_NAME = "Stats"
 DEFAULT_PRECISION = 2
-DEFAULT_QUANTILE_INTERVALS = 4
-DEFAULT_QUANTILE_METHOD = "exclusive"
 ICON = "mdi:calculator"
 
 
@@ -248,12 +241,6 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.Coerce(int),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-        vol.Optional(
-            CONF_QUANTILE_INTERVALS, default=DEFAULT_QUANTILE_INTERVALS
-        ): vol.All(vol.Coerce(int), vol.Range(min=2)),
-        vol.Optional(CONF_QUANTILE_METHOD, default=DEFAULT_QUANTILE_METHOD): vol.In(
-            ["exclusive", "inclusive"]
-        ),
     }
 )
 PLATFORM_SCHEMA = vol.All(
@@ -283,8 +270,6 @@ async def async_setup_platform(
                 samples_max_buffer_size=config[CONF_SAMPLES_MAX_BUFFER_SIZE],
                 samples_max_age=config.get(CONF_MAX_AGE),
                 precision=config[CONF_PRECISION],
-                quantile_intervals=config[CONF_QUANTILE_INTERVALS],
-                quantile_method=config[CONF_QUANTILE_METHOD],
             )
         ],
         update_before_add=True,
@@ -303,8 +288,6 @@ class StatisticsSensor(SensorEntity):
         samples_max_buffer_size: int,
         samples_max_age: timedelta | None,
         precision: int,
-        quantile_intervals: int,
-        quantile_method: Literal["exclusive", "inclusive"],
     ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_icon: str = ICON
@@ -319,8 +302,6 @@ class StatisticsSensor(SensorEntity):
         self._samples_max_buffer_size: int = samples_max_buffer_size
         self._samples_max_age: timedelta | None = samples_max_age
         self._precision: int = precision
-        self._quantile_intervals: int = quantile_intervals
-        self._quantile_method: Literal["exclusive", "inclusive"] = quantile_method
         self._value: StateType | datetime = None
         self._unit_of_measurement: str | None = None
         self._available: bool = False
@@ -698,20 +679,6 @@ class StatisticsSensor(SensorEntity):
     def _stat_noisiness(self) -> StateType:
         if len(self.states) >= 2:
             return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
-        return None
-
-    def _stat_quantiles(self) -> StateType:
-        if len(self.states) > self._quantile_intervals:
-            return str(
-                [
-                    round(quantile, self._precision)
-                    for quantile in statistics.quantiles(
-                        self.states,
-                        n=self._quantile_intervals,
-                        method=self._quantile_method,
-                    )
-                ]
-            )
         return None
 
     def _stat_standard_deviation(self) -> StateType:
