@@ -492,11 +492,8 @@ class UnitOfEnergy(StrEnum):
     """Energy units."""
 
     GIGA_JOULE = "GJ"
-
     KILO_WATT_HOUR = "kWh"
-
     MEGA_WATT_HOUR = "MWh"
-
     WATT_HOUR = "Wh"
 
 
