@@ -16,13 +16,14 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
     Platform,
-    UnitOfEnergy,
 )
 import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
@@ -308,7 +309,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Energy consumption 1",
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
-        "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+        "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "has_mean": False,
         "has_sum": True,
     }
@@ -320,7 +321,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Energy consumption 2",
         "statistic_id": f"{DOMAIN}:energy_consumption_mwh",
-        "unit_of_measurement": UnitOfEnergy.MEGA_WATT_HOUR,
+        "unit_of_measurement": ENERGY_MEGA_WATT_HOUR,
         "has_mean": False,
         "has_sum": True,
     }

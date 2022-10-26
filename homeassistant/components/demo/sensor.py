@@ -15,12 +15,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONCENTRATION_PARTS_PER_MILLION,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
-    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -91,7 +92,7 @@ async def async_setup_platform(
                 0.5,  # 6kWh / h
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL,
-                UnitOfEnergy.KILO_WATT_HOUR,
+                ENERGY_KILO_WATT_HOUR,
                 None,
                 "total_energy_kwh",
             ),
@@ -101,7 +102,7 @@ async def async_setup_platform(
                 0.00025,  # 0.003 MWh/h (3 kWh / h)
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL,
-                UnitOfEnergy.MEGA_WATT_HOUR,
+                ENERGY_MEGA_WATT_HOUR,
                 None,
                 "total_energy_mwh",
             ),
