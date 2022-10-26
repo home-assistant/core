@@ -6,5 +6,6 @@
   "requirements": ["pyairvisual==2022.07.0"],
   "codeowners": ["@bachya"],
   "iot_class": "cloud_polling",
-  "loggers": ["pyairvisual", "pysmb"]
+  "loggers": ["pyairvisual", "pysmb"],
+  "integration_type": "device"
 }
