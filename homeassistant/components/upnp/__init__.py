@@ -1,4 +1,4 @@
-"""Open ports in your router for Home Assistant and provide statistics."""
+"""UPnP/IGD integration."""
 from __future__ import annotations
 
 import asyncio
