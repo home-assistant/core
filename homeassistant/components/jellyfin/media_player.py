@@ -19,7 +19,7 @@ from homeassistant.util.dt import parse_datetime
 
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
-from .const import CONTENT_TYPE_MAP, DOMAIN
+from .const import CONTENT_TYPE_MAP, DOMAIN, USER_APP_NAME
 from .coordinator import JellyfinDataUpdateCoordinator
 from .entity import JellyfinEntity
 from .models import JellyfinData
@@ -39,7 +39,7 @@ async def async_setup_entry(
             JellyfinMediaPlayer(coordinator, session_id, session_data)
             for session_id, session_data in coordinator.data.items()
             if session_data["DeviceId"] != jellyfin_data.client_device_id
-            and session_data["Client"] != "Home Assistant"
+            and session_data["Client"] != USER_APP_NAME
         ),
     )
 
