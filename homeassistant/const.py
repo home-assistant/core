@@ -396,7 +396,9 @@ ATTR_ICON: Final = "icon"
 ATTR_UNIT_OF_MEASUREMENT: Final = "unit_of_measurement"
 
 CONF_UNIT_SYSTEM_METRIC: Final = "metric"
+"""Deprecated: please use a local constant."""
 CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
+"""Deprecated: please use a local constant."""
 
 # Electrical attributes
 ATTR_VOLTAGE: Final = "voltage"
@@ -485,9 +487,10 @@ POWER_BTU_PER_HOUR: Final = "BTU/h"
 POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 # Energy units
-ENERGY_WATT_HOUR: Final = "Wh"
+ENERGY_GIGA_JOULE: Final = "GJ"
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
 ENERGY_MEGA_WATT_HOUR: Final = "MWh"
+ENERGY_WATT_HOUR: Final = "Wh"
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
@@ -600,10 +603,38 @@ REVOLUTIONS_PER_MINUTE: Final = "rpm"
 IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
 IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
 
+
+class UnitOfVolumetricFlux(StrEnum):
+    """Volumetric flux, commonly used for precipitation intensity.
+
+    The derivation of these units is a volume of rain amassing in a container
+    with constant cross section in a given time
+    """
+
+    INCHES_PER_DAY = "in/d"
+    """Derived from in³/(in².d)"""
+
+    INCHES_PER_HOUR = "in/h"
+    """Derived from in³/(in².h)"""
+
+    MILLIMETERS_PER_DAY = "mm/d"
+    """Derived from mm³/(mm².d)"""
+
+    MILLIMETERS_PER_HOUR = "mm/h"
+    """Derived from mm³/(mm².h)"""
+
+
 # Precipitation units
-PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
+# The derivation of these units is a volume of rain amassing in a container
+# with constant cross section
 PRECIPITATION_INCHES: Final = "in"
+PRECIPITATION_MILLIMETERS: Final = "mm"
+
+PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
+"""Deprecated: please use UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR"""
+
 PRECIPITATION_INCHES_PER_HOUR: Final = "in/h"
+"""Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_HOUR"""
 
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
@@ -614,14 +645,21 @@ CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
 # Speed units
-SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
 SPEED_FEET_PER_SECOND: Final = "ft/s"
-SPEED_INCHES_PER_DAY: Final = "in/d"
 SPEED_METERS_PER_SECOND: Final = "m/s"
-SPEED_INCHES_PER_HOUR: Final = "in/h"
 SPEED_KILOMETERS_PER_HOUR: Final = "km/h"
 SPEED_KNOTS: Final = "kn"
 SPEED_MILES_PER_HOUR: Final = "mph"
+
+SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
+"""Deprecated: please use UnitOfVolumetricFlux.MILLIMETERS_PER_DAY"""
+
+SPEED_INCHES_PER_DAY: Final = "in/d"
+"""Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_DAY"""
+
+SPEED_INCHES_PER_HOUR: Final = "in/h"
+"""Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_HOUR"""
+
 
 # Signal_strength units
 SIGNAL_STRENGTH_DECIBELS: Final = "dB"

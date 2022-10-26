@@ -40,13 +40,13 @@ def config_fixture(hass):
     }
 
 
-@pytest.fixture(name="data_protection_window", scope="session")
+@pytest.fixture(name="data_protection_window", scope="package")
 def data_protection_window_fixture():
     """Define a fixture to return UV protection window data."""
     return json.loads(load_fixture("protection_window_data.json", "openuv"))
 
 
-@pytest.fixture(name="data_uv_index", scope="session")
+@pytest.fixture(name="data_uv_index", scope="package")
 def data_uv_index_fixture():
     """Define a fixture to return UV index data."""
     return json.loads(load_fixture("uv_index_data.json", "openuv"))

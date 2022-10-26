@@ -49,8 +49,7 @@ async def async_setup_entry(
 
     hass.data[OT_DOMAIN]["context"].set_async_see(_receive_data)
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class OwnTracksEntity(TrackerEntity, RestoreEntity):

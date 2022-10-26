@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.sensor.recorder import reset_detected
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_GIGA_JOULE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -44,7 +45,12 @@ SUPPORTED_STATE_CLASSES = [
     SensorStateClass.TOTAL,
     SensorStateClass.TOTAL_INCREASING,
 ]
-VALID_ENERGY_UNITS = [ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, ENERGY_MEGA_WATT_HOUR]
+VALID_ENERGY_UNITS = [
+    ENERGY_WATT_HOUR,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
+    ENERGY_GIGA_JOULE,
+]
 VALID_ENERGY_UNITS_GAS = [VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS] + VALID_ENERGY_UNITS
 _LOGGER = logging.getLogger(__name__)
 
@@ -233,7 +239,7 @@ class EnergyCostSensor(SensorEntity):
         self.async_write_ha_state()
 
     @callback
-    def _update_cost(self) -> None:
+    def _update_cost(self) -> None:  # noqa: C901
         """Update incurred costs."""
         energy_state = self.hass.states.get(
             cast(str, self._config[self._adapter.stat_energy_key])
@@ -289,6 +295,11 @@ class EnergyCostSensor(SensorEntity):
             ):
                 energy_price /= 1000.0
 
+            if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
+                f"/{ENERGY_GIGA_JOULE}"
+            ):
+                energy_price /= 1000 / 3.6
+
         else:
             energy_price_state = None
             energy_price = cast(float, self._config["number_energy_price"])
@@ -312,6 +323,8 @@ class EnergyCostSensor(SensorEntity):
             energy_price /= 1000
         elif energy_unit == ENERGY_MEGA_WATT_HOUR:
             energy_price *= 1000
+        elif energy_unit == ENERGY_GIGA_JOULE:
+            energy_price *= 1000 / 3.6
 
         if energy_unit is None:
             if not self._wrong_unit_reported:

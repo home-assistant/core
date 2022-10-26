@@ -79,6 +79,11 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 asyncio.set_event_loop_policy = lambda policy: None
 
 
+def pytest_addoption(parser):
+    """Register custom pytest options."""
+    parser.addoption("--dburl", action="store", default="sqlite://")
+
+
 def pytest_configure(config):
     """Register marker for tests that log exceptions."""
     config.addinivalue_line(
@@ -108,7 +113,18 @@ def pytest_runtest_setup():
     def adapt_datetime(val):
         return val.isoformat(" ")
 
+    # Setup HAFakeDatetime converter for sqlite3
     sqlite3.register_adapter(HAFakeDatetime, adapt_datetime)
+
+    # Setup HAFakeDatetime converter for pymysql
+    try:
+        import MySQLdb.converters as MySQLdb_converters
+    except ImportError:
+        pass
+    else:
+        MySQLdb_converters.conversions[
+            HAFakeDatetime
+        ] = MySQLdb_converters.DateTime2literal
 
 
 def ha_datetime_to_fakedatetime(datetime):
@@ -312,8 +328,16 @@ def aiohttp_client(
 
 
 @pytest.fixture
-def hass(loop, load_registries, hass_storage, request):
+def hass_fixture_setup():
+    """Fixture whichis truthy if the hass fixture has been setup."""
+    return []
+
+
+@pytest.fixture
+def hass(hass_fixture_setup, loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
+
+    hass_fixture_setup.append(True)
 
     orig_tz = dt_util.DEFAULT_TIME_ZONE
 
@@ -857,7 +881,29 @@ def recorder_config():
 
 
 @pytest.fixture
-def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
+def recorder_db_url(pytestconfig):
+    """Prepare a default database for tests and return a connection URL."""
+    db_url: str = pytestconfig.getoption("dburl")
+    if db_url.startswith("mysql://"):
+        import sqlalchemy_utils
+
+        charset = "utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
+        assert not sqlalchemy_utils.database_exists(db_url)
+        sqlalchemy_utils.create_database(db_url, encoding=charset)
+    elif db_url.startswith("postgresql://"):
+        pass
+    yield db_url
+    if db_url.startswith("mysql://"):
+        sqlalchemy_utils.drop_database(db_url)
+
+
+@pytest.fixture
+def hass_recorder(
+    recorder_db_url,
+    enable_nightly_purge,
+    enable_statistics,
+    hass_storage,
+):
     """Home Assistant fixture with in-memory recorder."""
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
@@ -876,7 +922,7 @@ def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
 
         def setup_recorder(config=None):
             """Set up with params."""
-            init_recorder_component(hass, config)
+            init_recorder_component(hass, config, recorder_db_url)
             hass.start()
             hass.block_till_done()
             hass.data[recorder.DATA_INSTANCE].block_till_done()
@@ -889,17 +935,15 @@ def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     dt_util.DEFAULT_TIME_ZONE = original_tz
 
 
-async def _async_init_recorder_component(hass, add_config=None):
+async def _async_init_recorder_component(hass, add_config=None, db_url=None):
     """Initialize the recorder asynchronously."""
     config = dict(add_config) if add_config else {}
     if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        config[recorder.CONF_DB_URL] = db_url
         if recorder.CONF_COMMIT_INTERVAL not in config:
             config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
-        "homeassistant.components.recorder.migration.migrate_schema"
-    ):
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
         if recorder.DOMAIN not in hass.data:
             recorder_helper.async_initialize_recorder(hass)
         assert await async_setup_component(
@@ -914,9 +958,13 @@ async def _async_init_recorder_component(hass, add_config=None):
 
 @pytest.fixture
 async def async_setup_recorder_instance(
-    enable_nightly_purge, enable_statistics
+    recorder_db_url,
+    hass_fixture_setup,
+    enable_nightly_purge,
+    enable_statistics,
 ) -> AsyncGenerator[SetupRecorderInstanceT, None]:
     """Yield callable to setup recorder instance."""
+    assert not hass_fixture_setup
 
     nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
@@ -934,7 +982,7 @@ async def async_setup_recorder_instance(
             hass: HomeAssistant, config: ConfigType | None = None
         ) -> recorder.Recorder:
             """Setup and return recorder instance."""  # noqa: D401
-            await _async_init_recorder_component(hass, config)
+            await _async_init_recorder_component(hass, config, recorder_db_url)
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running

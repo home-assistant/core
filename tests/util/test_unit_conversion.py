@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.const import (
+    ENERGY_GIGA_JOULE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -30,13 +31,10 @@ from homeassistant.const import (
     PRESSURE_PA,
     PRESSURE_PSI,
     SPEED_FEET_PER_SECOND,
-    SPEED_INCHES_PER_DAY,
-    SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
-    SPEED_MILLIMETERS_PER_DAY,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -46,6 +44,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_conversion import (
@@ -77,6 +76,7 @@ INVALID_SYMBOL = "bob"
         (EnergyConverter, ENERGY_WATT_HOUR),
         (EnergyConverter, ENERGY_KILO_WATT_HOUR),
         (EnergyConverter, ENERGY_MEGA_WATT_HOUR),
+        (EnergyConverter, ENERGY_GIGA_JOULE),
         (MassConverter, MASS_GRAMS),
         (MassConverter, MASS_KILOGRAMS),
         (MassConverter, MASS_MICROGRAMS),
@@ -93,14 +93,15 @@ INVALID_SYMBOL = "bob"
         (PressureConverter, PRESSURE_CBAR),
         (PressureConverter, PRESSURE_MMHG),
         (PressureConverter, PRESSURE_PSI),
+        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_DAY),
+        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_HOUR),
+        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_DAY),
+        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR),
         (SpeedConverter, SPEED_FEET_PER_SECOND),
-        (SpeedConverter, SPEED_INCHES_PER_DAY),
-        (SpeedConverter, SPEED_INCHES_PER_HOUR),
         (SpeedConverter, SPEED_KILOMETERS_PER_HOUR),
         (SpeedConverter, SPEED_KNOTS),
         (SpeedConverter, SPEED_METERS_PER_SECOND),
         (SpeedConverter, SPEED_MILES_PER_HOUR),
-        (SpeedConverter, SPEED_MILLIMETERS_PER_DAY),
         (TemperatureConverter, TEMP_CELSIUS),
         (TemperatureConverter, TEMP_FAHRENHEIT),
         (TemperatureConverter, TEMP_KELVIN),
@@ -266,6 +267,8 @@ def test_distance_convert(
         (10, ENERGY_KILO_WATT_HOUR, 0.01, ENERGY_MEGA_WATT_HOUR),
         (10, ENERGY_MEGA_WATT_HOUR, 10000000, ENERGY_WATT_HOUR),
         (10, ENERGY_MEGA_WATT_HOUR, 10000, ENERGY_KILO_WATT_HOUR),
+        (10, ENERGY_GIGA_JOULE, 10000 / 3.6, ENERGY_KILO_WATT_HOUR),
+        (10, ENERGY_GIGA_JOULE, 10 / 3.6, ENERGY_MEGA_WATT_HOUR),
     ],
 )
 def test_energy_convert(
@@ -389,17 +392,44 @@ def test_pressure_convert(
         # 5 mi/h * 1.609 km/mi = 8.04672 km/h
         (5, SPEED_MILES_PER_HOUR, 8.04672, SPEED_KILOMETERS_PER_HOUR),
         # 5 in/day * 25.4 mm/in = 127 mm/day
-        (5, SPEED_INCHES_PER_DAY, 127, SPEED_MILLIMETERS_PER_DAY),
+        (
+            5,
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
+            127,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        ),
         # 5 mm/day / 25.4 mm/in = 0.19685 in/day
-        (5, SPEED_MILLIMETERS_PER_DAY, pytest.approx(0.1968504), SPEED_INCHES_PER_DAY),
+        (
+            5,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+            pytest.approx(0.1968504),
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
+        ),
+        # 48 mm/day = 2 mm/h
+        (
+            48,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+            pytest.approx(2),
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        ),
         # 5 in/hr * 24 hr/day = 3048 mm/day
-        (5, SPEED_INCHES_PER_HOUR, 3048, SPEED_MILLIMETERS_PER_DAY),
+        (
+            5,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+            3048,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        ),
         # 5 m/s * 39.3701 in/m * 3600 s/hr = 708661
-        (5, SPEED_METERS_PER_SECOND, pytest.approx(708661.42), SPEED_INCHES_PER_HOUR),
+        (
+            5,
+            SPEED_METERS_PER_SECOND,
+            pytest.approx(708661.42),
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        ),
         # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s
         (
             5000,
-            SPEED_INCHES_PER_HOUR,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
             pytest.approx(0.0352778),
             SPEED_METERS_PER_SECOND,
         ),

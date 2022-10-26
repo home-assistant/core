@@ -14,10 +14,10 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UV_INDEX,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -57,7 +57,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     SENSOR_TYPE_RAINRATE: SensorEntityDescription(
         key=SENSOR_TYPE_RAINRATE,
         name="Rain rate",
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,
     ),

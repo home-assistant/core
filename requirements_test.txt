@@ -7,14 +7,14 @@
 
 -c homeassistant/package_constraints.txt
 -r requirements_test_pre_commit.txt
-astroid==2.12.5
+astroid==2.12.12
 codecov==2.1.12
 coverage==6.4.4
-freezegun==1.2.1
+freezegun==1.2.2
 mock-open==1.4.0
 mypy==0.982
 pre-commit==2.20.0
-pylint==2.15.0
+pylint==2.15.5
 pipdeptree==2.3.1
 pytest-aiohttp==0.3.0
 pytest-cov==3.0.0
