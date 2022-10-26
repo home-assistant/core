@@ -1,7 +1,6 @@
 """Supervisor events monitor."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -27,13 +26,15 @@ from .const import (
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
-    INFO_URL_UNHEALTHY,
-    INFO_URL_UNSUPPORTED,
-    ISSUE_ID_UNHEALTHY,
-    ISSUE_ID_UNSUPPORTED,
     UPDATE_KEY_SUPERVISOR,
 )
 from .handler import HassIO
+
+ISSUE_ID_UNHEALTHY = "unhealthy_system"
+ISSUE_ID_UNSUPPORTED = "unsupported_system"
+
+INFO_URL_UNHEALTHY = "https://www.home-assistant.io/more-info/unhealthy"
+INFO_URL_UNSUPPORTED = "https://www.home-assistant.io/more-info/unsupported"
 
 
 class SupervisorRepairs:
@@ -43,7 +44,6 @@ class SupervisorRepairs:
         """Initialize supervisor repairs."""
         self._hass = hass
         self._client = client
-        self._remove_dispatcher: Callable[[], None] | None = None
         self._unsupported_reasons: set[str] = set()
         self._unhealthy_reasons: set[str] = set()
 
@@ -55,21 +55,20 @@ class SupervisorRepairs:
     @unhealthy_reasons.setter
     def unhealthy_reasons(self, reasons: set[str]) -> None:
         """Set unhealthy reasons. Create or delete repairs as necessary."""
-        if len(reasons) > len(self.unhealthy_reasons):
-            for unhealthy in reasons - self.unhealthy_reasons:
-                async_create_issue(
-                    self._hass,
-                    DOMAIN,
-                    f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
-                    is_fixable=False,
-                    learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
-                    severity=IssueSeverity.CRITICAL,
-                    translation_key="unhealthy",
-                    translation_placeholders={"reason": unhealthy},
-                )
-        else:
-            for fixed in self.unhealthy_reasons - reasons:
-                async_delete_issue(self._hass, DOMAIN, f"{ISSUE_ID_UNHEALTHY}_{fixed}")
+        for unhealthy in reasons - self.unhealthy_reasons:
+            async_create_issue(
+                self._hass,
+                DOMAIN,
+                f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
+                is_fixable=False,
+                learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
+                severity=IssueSeverity.CRITICAL,
+                translation_key="unhealthy",
+                translation_placeholders={"reason": unhealthy},
+            )
+
+        for fixed in self.unhealthy_reasons - reasons:
+            async_delete_issue(self._hass, DOMAIN, f"{ISSUE_ID_UNHEALTHY}_{fixed}")
 
         self._unhealthy_reasons = reasons
 
@@ -81,23 +80,20 @@ class SupervisorRepairs:
     @unsupported_reasons.setter
     def unsupported_reasons(self, reasons: set[str]) -> None:
         """Set unsupported reasons. Create or delete repairs as necessary."""
-        if len(reasons) > len(self.unsupported_reasons):
-            for unsupported in reasons - self.unsupported_reasons:
-                async_create_issue(
-                    self._hass,
-                    DOMAIN,
-                    f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
-                    is_fixable=False,
-                    learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
-                    severity=IssueSeverity.WARNING,
-                    translation_key="unsupported",
-                    translation_placeholders={"reason": unsupported},
-                )
-        else:
-            for fixed in self.unsupported_reasons - reasons:
-                async_delete_issue(
-                    self._hass, DOMAIN, f"{ISSUE_ID_UNSUPPORTED}_{fixed}"
-                )
+        for unsupported in reasons - self.unsupported_reasons:
+            async_create_issue(
+                self._hass,
+                DOMAIN,
+                f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
+                is_fixable=False,
+                learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
+                severity=IssueSeverity.WARNING,
+                translation_key="unsupported",
+                translation_placeholders={"reason": unsupported},
+            )
+
+        for fixed in self.unsupported_reasons - reasons:
+            async_delete_issue(self._hass, DOMAIN, f"{ISSUE_ID_UNSUPPORTED}_{fixed}")
 
         self._unsupported_reasons = reasons
 
@@ -105,7 +101,7 @@ class SupervisorRepairs:
         """Create supervisor events listener."""
         await self.update()
 
-        self._remove_dispatcher = async_dispatcher_connect(
+        async_dispatcher_connect(
             self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_repairs
         )
 

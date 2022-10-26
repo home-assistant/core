@@ -3,19 +3,17 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.components.hassio.const import ATTR_WS_EVENT, EVENT_SUPERVISOR_EVENT
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
-from tests.common import async_mock_signal
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -128,6 +126,27 @@ def mock_resolution_info(
     )
 
 
+def assert_repair_in_list(issues: list[dict[str, Any]], unhealthy: bool, reason: str):
+    """Assert repair for unhealthy/unsupported in list."""
+    repair_type = "unhealthy" if unhealthy else "unsupported"
+    assert {
+        "breaks_in_ha_version": None,
+        "created": ANY,
+        "dismissed_version": None,
+        "domain": "hassio",
+        "ignored": False,
+        "is_fixable": False,
+        "issue_id": f"{repair_type}_system_{reason}",
+        "issue_domain": None,
+        "learn_more_url": f"https://www.home-assistant.io/more-info/{repair_type}/{reason}",
+        "severity": "critical" if unhealthy else "warning",
+        "translation_key": repair_type,
+        "translation_placeholders": {
+            "reason": reason,
+        },
+    } in issues
+
+
 async def test_unhealthy_repairs(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -144,38 +163,9 @@ async def test_unhealthy_repairs(
     await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert {
-        "breaks_in_ha_version": None,
-        "created": ANY,
-        "dismissed_version": None,
-        "domain": "hassio",
-        "ignored": False,
-        "is_fixable": False,
-        "issue_id": "unhealthy_system_docker",
-        "issue_domain": None,
-        "learn_more_url": "https://www.home-assistant.io/more-info/unhealthy/docker",
-        "severity": "critical",
-        "translation_key": "unhealthy",
-        "translation_placeholders": {
-            "reason": "docker",
-        },
-    } in msg["result"]["issues"]
-    assert {
-        "breaks_in_ha_version": None,
-        "created": ANY,
-        "dismissed_version": None,
-        "domain": "hassio",
-        "ignored": False,
-        "is_fixable": False,
-        "issue_id": "unhealthy_system_setup",
-        "issue_domain": None,
-        "learn_more_url": "https://www.home-assistant.io/more-info/unhealthy/setup",
-        "severity": "critical",
-        "translation_key": "unhealthy",
-        "translation_placeholders": {
-            "reason": "setup",
-        },
-    } in msg["result"]["issues"]
+    assert len(msg["result"]["issues"]) == 2
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="docker")
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="setup")
 
 
 async def test_unsupported_repairs(
@@ -194,38 +184,11 @@ async def test_unsupported_repairs(
     await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert {
-        "breaks_in_ha_version": None,
-        "created": ANY,
-        "dismissed_version": None,
-        "domain": "hassio",
-        "ignored": False,
-        "is_fixable": False,
-        "issue_id": "unsupported_system_content_trust",
-        "issue_domain": None,
-        "learn_more_url": "https://www.home-assistant.io/more-info/unsupported/content_trust",
-        "severity": "warning",
-        "translation_key": "unsupported",
-        "translation_placeholders": {
-            "reason": "content_trust",
-        },
-    } in msg["result"]["issues"]
-    assert {
-        "breaks_in_ha_version": None,
-        "created": ANY,
-        "dismissed_version": None,
-        "domain": "hassio",
-        "ignored": False,
-        "is_fixable": False,
-        "issue_id": "unsupported_system_os",
-        "issue_domain": None,
-        "learn_more_url": "https://www.home-assistant.io/more-info/unsupported/os",
-        "severity": "warning",
-        "translation_key": "unsupported",
-        "translation_placeholders": {
-            "reason": "os",
-        },
-    } in msg["result"]["issues"]
+    assert len(msg["result"]["issues"]) == 2
+    assert_repair_in_list(
+        msg["result"]["issues"], unhealthy=False, reason="content_trust"
+    )
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
 
 
 async def test_unhealthy_repairs_add_remove(
@@ -241,57 +204,42 @@ async def test_unhealthy_repairs_add_remove(
 
     client = await hass_ws_client(hass)
 
-    calls = async_mock_signal(hass, EVENT_SUPERVISOR_EVENT)
-    async_dispatcher_send(
-        hass,
-        EVENT_SUPERVISOR_EVENT,
+    await client.send_json(
         {
-            ATTR_WS_EVENT: "health_changed",
+            "id": 1,
+            "type": "supervisor/event",
             "data": {
-                "healthy": False,
-                "unhealthy_reasons": ["docker"],
-            },
-        },
-    )
-    assert len(calls) == 1
-
-    await client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            {
-                "breaks_in_ha_version": None,
-                "created": ANY,
-                "dismissed_version": None,
-                "domain": "hassio",
-                "ignored": False,
-                "is_fixable": False,
-                "issue_id": "unhealthy_system_docker",
-                "issue_domain": None,
-                "learn_more_url": "https://www.home-assistant.io/more-info/unhealthy/docker",
-                "severity": "critical",
-                "translation_key": "unhealthy",
-                "translation_placeholders": {
-                    "reason": "docker",
+                "event": "health_changed",
+                "data": {
+                    "healthy": False,
+                    "unhealthy_reasons": ["docker"],
                 },
             },
-        ]
-    }
-
-    async_dispatcher_send(
-        hass,
-        EVENT_SUPERVISOR_EVENT,
-        {
-            ATTR_WS_EVENT: "health_changed",
-            "data": {
-                "healthy": True,
-            },
-        },
+        }
     )
-    assert len(calls) == 2
+    msg = await client.receive_json()
+    assert msg["success"]
 
     await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="docker")
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "supervisor/event",
+            "data": {
+                "event": "health_changed",
+                "data": {"healthy": True},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"issues": []}
@@ -310,57 +258,42 @@ async def test_unsupported_repairs_add_remove(
 
     client = await hass_ws_client(hass)
 
-    calls = async_mock_signal(hass, EVENT_SUPERVISOR_EVENT)
-    async_dispatcher_send(
-        hass,
-        EVENT_SUPERVISOR_EVENT,
+    await client.send_json(
         {
-            ATTR_WS_EVENT: "supported_changed",
+            "id": 1,
+            "type": "supervisor/event",
             "data": {
-                "supported": False,
-                "unsupported_reasons": ["os"],
-            },
-        },
-    )
-    assert len(calls) == 1
-
-    await client.send_json({"id": 1, "type": "repairs/list_issues"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            {
-                "breaks_in_ha_version": None,
-                "created": ANY,
-                "dismissed_version": None,
-                "domain": "hassio",
-                "ignored": False,
-                "is_fixable": False,
-                "issue_id": "unsupported_system_os",
-                "issue_domain": None,
-                "learn_more_url": "https://www.home-assistant.io/more-info/unsupported/os",
-                "severity": "warning",
-                "translation_key": "unsupported",
-                "translation_placeholders": {
-                    "reason": "os",
+                "event": "supported_changed",
+                "data": {
+                    "supported": False,
+                    "unsupported_reasons": ["os"],
                 },
             },
-        ]
-    }
-
-    async_dispatcher_send(
-        hass,
-        EVENT_SUPERVISOR_EVENT,
-        {
-            ATTR_WS_EVENT: "supported_changed",
-            "data": {
-                "supported": True,
-            },
-        },
+        }
     )
-    assert len(calls) == 2
+    msg = await client.receive_json()
+    assert msg["success"]
 
     await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "supervisor/event",
+            "data": {
+                "event": "supported_changed",
+                "data": {"supported": True},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"issues": []}
@@ -382,54 +315,75 @@ async def test_reset_repairs_supervisor_restart(
     await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert {
-        "breaks_in_ha_version": None,
-        "created": ANY,
-        "dismissed_version": None,
-        "domain": "hassio",
-        "ignored": False,
-        "is_fixable": False,
-        "issue_id": "unhealthy_system_docker",
-        "issue_domain": None,
-        "learn_more_url": "https://www.home-assistant.io/more-info/unhealthy/docker",
-        "severity": "critical",
-        "translation_key": "unhealthy",
-        "translation_placeholders": {
-            "reason": "docker",
-        },
-    } in msg["result"]["issues"]
-    assert {
-        "breaks_in_ha_version": None,
-        "created": ANY,
-        "dismissed_version": None,
-        "domain": "hassio",
-        "ignored": False,
-        "is_fixable": False,
-        "issue_id": "unsupported_system_os",
-        "issue_domain": None,
-        "learn_more_url": "https://www.home-assistant.io/more-info/unsupported/os",
-        "severity": "warning",
-        "translation_key": "unsupported",
-        "translation_placeholders": {
-            "reason": "os",
-        },
-    } in msg["result"]["issues"]
+    assert len(msg["result"]["issues"]) == 2
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="docker")
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
 
     aioclient_mock.clear_requests()
     mock_resolution_info(aioclient_mock)
-    calls = async_mock_signal(hass, EVENT_SUPERVISOR_EVENT)
-    async_dispatcher_send(
-        hass,
-        EVENT_SUPERVISOR_EVENT,
+    await client.send_json(
         {
-            ATTR_WS_EVENT: "supervisor_update",
-            "update_key": "supervisor",
-            "data": {},
-        },
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {},
+            },
+        }
     )
-    assert len(calls) == 1
+    msg = await client.receive_json()
+    assert msg["success"]
 
-    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    await client.send_json({"id": 3, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"issues": []}
+
+
+async def test_reasons_added_and_removed(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client,
+):
+    """Test an unsupported/unhealthy reasons being added and removed at same time."""
+    mock_resolution_info(aioclient_mock, unsupported=["os"], unhealthy=["docker"])
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 2
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="docker")
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
+
+    aioclient_mock.clear_requests()
+    mock_resolution_info(
+        aioclient_mock, unsupported=["content_trust"], unhealthy=["setup"]
+    )
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json({"id": 3, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 2
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="setup")
+    assert_repair_in_list(
+        msg["result"]["issues"], unhealthy=False, reason="content_trust"
+    )

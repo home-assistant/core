@@ -68,12 +68,6 @@ DATA_KEY_OS = "os"
 DATA_KEY_SUPERVISOR = "supervisor"
 DATA_KEY_CORE = "core"
 
-ISSUE_ID_UNHEALTHY = "unhealthy_system"
-ISSUE_ID_UNSUPPORTED = "unsupported_system"
-
-INFO_URL_UNHEALTHY = "https://www.home-assistant.io/more-info/unhealthy"
-INFO_URL_UNSUPPORTED = "https://www.home-assistant.io/more-info/unsupported"
-
 
 class SupervisorEntityModel(str, Enum):
     """Supervisor entity model."""
