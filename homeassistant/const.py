@@ -701,12 +701,28 @@ CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
+
 # Speed units
+class UnitOfSpeed(StrEnum):
+    """Speed units."""
+
+    FEET_PER_SECOND = "ft/s"
+    METERS_PER_SECOND = "m/s"
+    KILOMETERS_PER_HOUR = "km/h"
+    KNOTS = "kn"
+    MILES_PER_HOUR = "mph"
+
+
 SPEED_FEET_PER_SECOND: Final = "ft/s"
+"""Deprecated: please use UnitOfSpeed.FEET_PER_SECOND"""
 SPEED_METERS_PER_SECOND: Final = "m/s"
+"""Deprecated: please use UnitOfSpeed.METERS_PER_SECOND"""
 SPEED_KILOMETERS_PER_HOUR: Final = "km/h"
+"""Deprecated: please use UnitOfSpeed.KILOMETERS_PER_HOUR"""
 SPEED_KNOTS: Final = "kn"
+"""Deprecated: please use UnitOfSpeed.KNOTS"""
 SPEED_MILES_PER_HOUR: Final = "mph"
+"""Deprecated: please use UnitOfSpeed.MILES_PER_HOUR"""
 
 SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
 """Deprecated: please use UnitOfVolumetricFlux.MILLIMETERS_PER_DAY"""
