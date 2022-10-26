@@ -25,10 +25,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PRESSURE_HPA,
     PRESSURE_INHG,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UnitOfSpeed,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -80,7 +79,7 @@ def setup_platform(
                 0.5,
                 TEMP_CELSIUS,
                 PRESSURE_HPA,
-                SPEED_METERS_PER_SECOND,
+                UnitOfSpeed.METERS_PER_SECOND,
                 [
                     [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
                     [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
@@ -100,7 +99,7 @@ def setup_platform(
                 4.8,
                 TEMP_FAHRENHEIT,
                 PRESSURE_INHG,
-                SPEED_MILES_PER_HOUR,
+                UnitOfSpeed.MILES_PER_HOUR,
                 [
                     [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
                     [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],

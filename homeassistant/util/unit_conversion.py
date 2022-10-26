@@ -31,11 +31,6 @@ from homeassistant.const import (
     PRESSURE_MMHG,
     PRESSURE_PA,
     PRESSURE_PSI,
-    SPEED_FEET_PER_SECOND,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_KNOTS,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -46,6 +41,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
+    UnitOfSpeed,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -237,28 +233,28 @@ class SpeedConverter(BaseUnitConverter):
     """Utility to convert speed values."""
 
     UNIT_CLASS = "speed"
-    NORMALIZED_UNIT = SPEED_METERS_PER_SECOND
+    NORMALIZED_UNIT = UnitOfSpeed.METERS_PER_SECOND
     _UNIT_CONVERSION: dict[str, float] = {
         UnitOfVolumetricFlux.INCHES_PER_DAY: _DAYS_TO_SECS / _IN_TO_M,
         UnitOfVolumetricFlux.INCHES_PER_HOUR: _HRS_TO_SECS / _IN_TO_M,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY: _DAYS_TO_SECS / _MM_TO_M,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: _HRS_TO_SECS / _MM_TO_M,
-        SPEED_FEET_PER_SECOND: 1 / _FOOT_TO_M,
-        SPEED_KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
-        SPEED_KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
-        SPEED_METERS_PER_SECOND: 1,
-        SPEED_MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
+        UnitOfSpeed.FEET_PER_SECOND: 1 / _FOOT_TO_M,
+        UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
+        UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
+        UnitOfSpeed.METERS_PER_SECOND: 1,
+        UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
     }
     VALID_UNITS = {
         UnitOfVolumetricFlux.INCHES_PER_DAY,
         UnitOfVolumetricFlux.INCHES_PER_HOUR,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
-        SPEED_FEET_PER_SECOND,
-        SPEED_KILOMETERS_PER_HOUR,
-        SPEED_KNOTS,
-        SPEED_METERS_PER_SECOND,
-        SPEED_MILES_PER_HOUR,
+        UnitOfSpeed.FEET_PER_SECOND,
+        UnitOfSpeed.KILOMETERS_PER_HOUR,
+        UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_SECOND,
+        UnitOfSpeed.MILES_PER_HOUR,
     }
 
 

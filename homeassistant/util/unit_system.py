@@ -27,10 +27,6 @@ from homeassistant.const import (
     PRESSURE,
     PRESSURE_PA,
     PRESSURE_PSI,
-    SPEED_FEET_PER_SECOND,
-    SPEED_KILOMETERS_PER_HOUR,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMPERATURE,
@@ -43,6 +39,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
     WIND_SPEED,
+    UnitOfSpeed,
 )
 from homeassistant.helpers.frame import report
 
@@ -77,23 +74,20 @@ TEMPERATURE_UNITS: set[str] = {TEMP_FAHRENHEIT, TEMP_CELSIUS}
 def _is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
     if unit_type == LENGTH:
-        units = LENGTH_UNITS
-    elif unit_type == ACCUMULATED_PRECIPITATION:
-        units = LENGTH_UNITS
-    elif unit_type == WIND_SPEED:
-        units = WIND_SPEED_UNITS
-    elif unit_type == TEMPERATURE:
-        units = TEMPERATURE_UNITS
-    elif unit_type == MASS:
-        units = MASS_UNITS
-    elif unit_type == VOLUME:
-        units = VOLUME_UNITS
-    elif unit_type == PRESSURE:
-        units = PRESSURE_UNITS
-    else:
-        return False
-
-    return unit in units
+        return unit in LENGTH_UNITS
+    if unit_type == ACCUMULATED_PRECIPITATION:
+        return unit in LENGTH_UNITS
+    if unit_type == WIND_SPEED:
+        return unit in WIND_SPEED_UNITS
+    if unit_type == TEMPERATURE:
+        return unit in TEMPERATURE_UNITS
+    if unit_type == MASS:
+        return unit in MASS_UNITS
+    if unit_type == VOLUME:
+        return unit in VOLUME_UNITS
+    if unit_type == PRESSURE:
+        return unit in PRESSURE_UNITS
+    return False
 
 
 class UnitSystem:
@@ -277,8 +271,8 @@ METRIC_SYSTEM = UnitSystem(
         # Convert non-metric volumes of gas meters
         ("gas", VOLUME_CUBIC_FEET): VOLUME_CUBIC_METERS,
         # Convert non-metric speeds except knots to km/h
-        ("speed", SPEED_FEET_PER_SECOND): SPEED_KILOMETERS_PER_HOUR,
-        ("speed", SPEED_MILES_PER_HOUR): SPEED_KILOMETERS_PER_HOUR,
+        ("speed", UnitOfSpeed.FEET_PER_SECOND): UnitOfSpeed.KILOMETERS_PER_HOUR,
+        ("speed", UnitOfSpeed.MILES_PER_HOUR): UnitOfSpeed.KILOMETERS_PER_HOUR,
         # Convert non-metric volumes
         ("volume", VOLUME_CUBIC_FEET): VOLUME_CUBIC_METERS,
         ("volume", VOLUME_FLUID_OUNCE): VOLUME_MILLILITERS,
@@ -292,7 +286,7 @@ METRIC_SYSTEM = UnitSystem(
     pressure=PRESSURE_PA,
     temperature=TEMP_CELSIUS,
     volume=VOLUME_LITERS,
-    wind_speed=SPEED_METERS_PER_SECOND,
+    wind_speed=UnitOfSpeed.METERS_PER_SECOND,
 )
 
 US_CUSTOMARY_SYSTEM = UnitSystem(
@@ -307,8 +301,8 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         # Convert non-USCS volumes of gas meters
         ("gas", VOLUME_CUBIC_METERS): VOLUME_CUBIC_FEET,
         # Convert non-USCS speeds except knots to mph
-        ("speed", SPEED_METERS_PER_SECOND): SPEED_MILES_PER_HOUR,
-        ("speed", SPEED_KILOMETERS_PER_HOUR): SPEED_MILES_PER_HOUR,
+        ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
+        ("speed", UnitOfSpeed.KILOMETERS_PER_HOUR): UnitOfSpeed.MILES_PER_HOUR,
         # Convert non-USCS volumes
         ("volume", VOLUME_CUBIC_METERS): VOLUME_CUBIC_FEET,
         ("volume", VOLUME_LITERS): VOLUME_GALLONS,
@@ -322,7 +316,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     pressure=PRESSURE_PSI,
     temperature=TEMP_FAHRENHEIT,
     volume=VOLUME_GALLONS,
-    wind_speed=SPEED_MILES_PER_HOUR,
+    wind_speed=UnitOfSpeed.MILES_PER_HOUR,
 )
 
 IMPERIAL_SYSTEM = US_CUSTOMARY_SYSTEM
