@@ -514,9 +514,7 @@ class UnitOfTemperature(StrEnum):
     """Temperature units."""
 
     CELSIUS = "°C"
-
     FAHRENHEIT = "°F"
-
     KELVIN = "K"
 
 
