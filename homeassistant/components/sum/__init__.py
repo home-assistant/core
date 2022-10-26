@@ -1,9 +1,41 @@
 """The sum component."""
+from __future__ import annotations
+
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
-from .const import PLATFORMS
+from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DEFAULT_NAME, DOMAIN, PLATFORMS
+
+PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
+        vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+    }
+)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Sum from yaml config."""
+    if (conf := config.get(DOMAIN)) is None:
+        return True
+
+    for sensor_conf in conf:
+        discovery.load_platform(
+            hass,
+            Platform.SENSOR,
+            DOMAIN,
+            sensor_conf,
+            config,
+        )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

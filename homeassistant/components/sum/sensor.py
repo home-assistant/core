@@ -5,13 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -21,13 +15,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DEFAULT_NAME, DOMAIN, PLATFORMS
+from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,15 +29,6 @@ ICON = "mdi:calculator"
 ATTR_ENTITIES = "entities"
 ATTR_VALID_ENTITIES = "valid_entities"
 ATTR_COUNT_VALID = "count_valid"
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
-        vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-    }
-)
 
 
 async def async_setup_entry(
@@ -77,10 +62,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Sum sensor."""
-    entity_ids: list[str] = config[CONF_ENTITY_IDS]
-    name: str = config[CONF_NAME]
-    round_digits: float = config[CONF_ROUND_DIGITS]
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    if discovery_info is None:
+        return
+    entity_ids: list[str] = discovery_info[CONF_ENTITY_IDS]
+    name: str = discovery_info[CONF_NAME]
+    round_digits: float = discovery_info[CONF_ROUND_DIGITS]
+    unique_id: str | None = discovery_info.get(CONF_UNIQUE_ID)
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
