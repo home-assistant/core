@@ -94,7 +94,6 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         """Initialize the Livisi Switch."""
         self.config_entry = config_entry
         self._attr_unique_id = unique_id
-        self._attr_model = device_type
         self._attr_name = name
         self._capability_id = capability_id
         self.aio_livisi = coordinator.aiolivisi
@@ -102,7 +101,7 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer=manufacturer,
-            model=self._attr_model,
+            model=device_type,
             name=name,
             suggested_area=room,
             via_device=(DOMAIN, config_entry.entry_id),
