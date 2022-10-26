@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_INTERFACE,
@@ -65,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     controller = Velbus(
         entry.data[CONF_PORT],
-        cache_dir=hass.config.path(f".storage/velbuscache-{entry.entry_id}/"),
+        cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id]["cntrl"] = controller
@@ -141,7 +142,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].pop(entry.entry_id)
     await hass.async_add_executor_job(
         shutil.rmtree,
-        hass.config.path(f".storage/velbuscache-{entry.entry_id}/"),
+        hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
