@@ -120,10 +120,10 @@ async def async_setup_platform(
     )
 
 
-def calc_min(sensor_values: list[tuple[str, Any]]):
+def calc_min(sensor_values: list[tuple[str, Any]]) -> tuple[str | None, float | None]:
     """Calculate min value, honoring unknown states."""
-    val = None
-    entity_id = None
+    val: float | None = None
+    entity_id: str | None = None
     for sensor_id, sensor_value in sensor_values:
         if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
             val is None or val > sensor_value
@@ -132,10 +132,10 @@ def calc_min(sensor_values: list[tuple[str, Any]]):
     return entity_id, val
 
 
-def calc_max(sensor_values: list[tuple[str, Any]]):
+def calc_max(sensor_values: list[tuple[str, Any]]) -> tuple[str | None, float | None]:
     """Calculate max value, honoring unknown states."""
-    val = None
-    entity_id = None
+    val: float | None = None
+    entity_id: str | None = None
     for sensor_id, sensor_value in sensor_values:
         if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
             val is None or val < sensor_value
@@ -144,7 +144,7 @@ def calc_max(sensor_values: list[tuple[str, Any]]):
     return entity_id, val
 
 
-def calc_mean(sensor_values: list[tuple[str, Any]], round_digits: int):
+def calc_mean(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
     """Calculate mean value, honoring unknown states."""
     result = [
         sensor_value
@@ -154,10 +154,13 @@ def calc_mean(sensor_values: list[tuple[str, Any]], round_digits: int):
 
     if not result:
         return None
-    return round(statistics.mean(result), round_digits)
+    value: float = round(statistics.mean(result), round_digits)
+    return value
 
 
-def calc_median(sensor_values: list[tuple[str, Any]], round_digits: int):
+def calc_median(
+    sensor_values: list[tuple[str, Any]], round_digits: int
+) -> float | None:
     """Calculate median value, honoring unknown states."""
     result = [
         sensor_value
@@ -167,10 +170,11 @@ def calc_median(sensor_values: list[tuple[str, Any]], round_digits: int):
 
     if not result:
         return None
-    return round(statistics.median(result), round_digits)
+    value: float = round(statistics.median(result), round_digits)
+    return value
 
 
-def calc_range(sensor_values: list[tuple[str, Any]], round_digits: int):
+def calc_range(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
     """Calculate range value, honoring unknown states."""
     result = [
         sensor_value
@@ -180,7 +184,8 @@ def calc_range(sensor_values: list[tuple[str, Any]], round_digits: int):
 
     if not result:
         return None
-    return round(max(result) - min(result), round_digits)
+    value: float = round(max(result) - min(result), round_digits)
+    return value
 
 
 class MinMaxSensor(SensorEntity):
@@ -244,7 +249,8 @@ class MinMaxSensor(SensorEntity):
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
             return None
-        return getattr(self, self._sensor_attr)
+        value: StateType | datetime = getattr(self, self._sensor_attr)
+        return value
 
     @property
     def native_unit_of_measurement(self) -> str | None:
