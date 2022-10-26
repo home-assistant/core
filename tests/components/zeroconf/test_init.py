@@ -145,24 +145,6 @@ def get_zeroconf_info_mock_model(model):
     return mock_zc_info
 
 
-def get_zeroconf_info_mock_am(am):
-    """Return info for get_service_info for an zeroconf device with a specific am."""
-
-    def mock_zc_info(service_type, name):
-        return AsyncServiceInfo(
-            service_type,
-            name,
-            addresses=[b"\n\x00\x00\x14"],
-            port=80,
-            weight=0,
-            priority=0,
-            server="name.local.",
-            properties={b"am": am.encode()},
-        )
-
-    return mock_zc_info
-
-
 async def test_setup(hass, mock_async_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     mock_zc = {
@@ -384,39 +366,6 @@ async def test_zeroconf_match_manufacturer(hass, mock_async_zeroconf):
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "samsungtv"
-
-
-async def test_zeroconf_match_am(hass, mock_async_zeroconf):
-    """Test configured options for a device are loaded via config entry."""
-
-    def http_only_service_update_mock(ipv6, zeroconf, services, handlers):
-        """Call service update handler."""
-        handlers[0](
-            zeroconf,
-            "_raop._tcp.local.",
-            "XXXXXXXXXXXX@Outside Speakers._raop._tcp.local.",
-            ServiceStateChange.Added,
-        )
-
-    with patch.dict(
-        zc_gen.ZEROCONF,
-        {"_raop._tcp.local.": [{"domain": "apple_tv", "am": "audioaccessory*"}]},
-        clear=True,
-    ), patch.object(
-        hass.config_entries.flow, "async_init"
-    ) as mock_config_flow, patch.object(
-        zeroconf, "HaAsyncServiceBrowser", side_effect=http_only_service_update_mock
-    ) as mock_service_browser, patch(
-        "homeassistant.components.zeroconf.AsyncServiceInfo",
-        side_effect=get_zeroconf_info_mock_am("AudioAccessory5,1"),
-    ):
-        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    assert len(mock_service_browser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 1
-    assert mock_config_flow.mock_calls[0][1][0] == "apple_tv"
 
 
 async def test_zeroconf_match_model(hass, mock_async_zeroconf):
@@ -1213,16 +1162,6 @@ async def test_no_name(hass, mock_async_zeroconf):
     assert info.name == "Home._home-assistant._tcp.local."
 
 
-async def test_start_with_frontend(hass, mock_async_zeroconf):
-    """Test we start with the frontend."""
-    with patch("homeassistant.components.zeroconf.HaZeroconf"):
-        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
-        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "frontend"})
-        await hass.async_block_till_done()
-
-    mock_async_zeroconf.async_register_service.assert_called_once()
-
-
 async def test_setup_with_disallowed_characters_in_local_name(
     hass, mock_async_zeroconf, caplog
 ):
@@ -1240,3 +1179,13 @@ async def test_setup_with_disallowed_characters_in_local_name(
 
     calls = mock_async_zeroconf.async_register_service.mock_calls
     assert calls[0][1][0].name == "My House._home-assistant._tcp.local."
+
+
+async def test_start_with_frontend(hass, mock_async_zeroconf):
+    """Test we start with the frontend."""
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "frontend"})
+        await hass.async_block_till_done()
+
+    mock_async_zeroconf.async_register_service.assert_called_once()
