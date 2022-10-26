@@ -58,8 +58,8 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=SENSOR_TYPE_RAINRATE,
         name="Rain rate",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
-        icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SENSOR_TYPE_RAINTOTAL: SensorEntityDescription(
         key=SENSOR_TYPE_RAINTOTAL,

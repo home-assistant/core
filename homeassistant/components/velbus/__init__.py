@@ -1,7 +1,10 @@
 """Support for Velbus devices."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
+import os
+import shutil
 
 from velbusaio.controller import Velbus
 import voluptuous as vol
@@ -12,11 +15,13 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     CONF_INTERFACE,
     CONF_MEMO_TEXT,
     DOMAIN,
+    SERVICE_CLEAR_CACHE,
     SERVICE_SCAN,
     SERVICE_SET_MEMO_TEXT,
     SERVICE_SYNC,
@@ -64,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     controller = Velbus(
         entry.data[CONF_PORT],
-        cache_dir=hass.config.path(".storage/velbuscache/"),
+        cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id]["cntrl"] = controller
@@ -130,6 +135,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
 
+    async def clear_cache(call: ServiceCall) -> None:
+        """Handle a clear cache service call."""
+        # clear the cache
+        with suppress(FileNotFoundError):
+            if call.data[CONF_ADDRESS]:
+                await hass.async_add_executor_job(
+                    os.unlink,
+                    hass.config.path(
+                        STORAGE_DIR,
+                        f"velbuscache-{call.data[CONF_INTERFACE]}/{call.data[CONF_ADDRESS]}.p",
+                    ),
+                )
+            else:
+                await hass.async_add_executor_job(
+                    shutil.rmtree,
+                    hass.config.path(
+                        STORAGE_DIR, f"velbuscache-{call.data[CONF_INTERFACE]}/"
+                    ),
+                )
+        # call a scan to repopulate
+        await scan(call)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_CACHE,
+        clear_cache,
+        vol.Schema(
+            {
+                vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                vol.Optional(CONF_ADDRESS): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=255)
+                ),
+            }
+        ),
+    )
+
     return True
 
 
@@ -138,9 +179,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
     hass.data[DOMAIN].pop(entry.entry_id)
+    await hass.async_add_executor_job(
+        shutil.rmtree,
+        hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
+    )
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
         hass.services.async_remove(DOMAIN, SERVICE_SCAN)
         hass.services.async_remove(DOMAIN, SERVICE_SYNC)
         hass.services.async_remove(DOMAIN, SERVICE_SET_MEMO_TEXT)
+        hass.services.async_remove(DOMAIN, SERVICE_CLEAR_CACHE)
     return unload_ok

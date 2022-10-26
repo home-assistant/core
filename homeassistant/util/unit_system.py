@@ -36,8 +36,12 @@ from homeassistant.const import (
     TEMPERATURE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLUID_OUNCE,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    VOLUME_MILLILITERS,
     WIND_SPEED,
 )
 from homeassistant.helpers.frame import report
@@ -270,9 +274,18 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", LENGTH_INCHES): LENGTH_MILLIMETERS,
         ("distance", LENGTH_MILES): LENGTH_KILOMETERS,
         ("distance", LENGTH_YARD): LENGTH_METERS,
+        # Convert non-metric volumes of gas meters
+        ("gas", VOLUME_CUBIC_FEET): VOLUME_CUBIC_METERS,
         # Convert non-metric speeds except knots to km/h
         ("speed", SPEED_FEET_PER_SECOND): SPEED_KILOMETERS_PER_HOUR,
         ("speed", SPEED_MILES_PER_HOUR): SPEED_KILOMETERS_PER_HOUR,
+        # Convert non-metric volumes
+        ("volume", VOLUME_CUBIC_FEET): VOLUME_CUBIC_METERS,
+        ("volume", VOLUME_FLUID_OUNCE): VOLUME_MILLILITERS,
+        ("volume", VOLUME_GALLONS): VOLUME_LITERS,
+        # Convert non-metric volumes of water meters
+        ("water", VOLUME_CUBIC_FEET): VOLUME_CUBIC_METERS,
+        ("water", VOLUME_GALLONS): VOLUME_LITERS,
     },
     length=LENGTH_KILOMETERS,
     mass=MASS_GRAMS,
@@ -291,9 +304,18 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("distance", LENGTH_KILOMETERS): LENGTH_MILES,
         ("distance", LENGTH_METERS): LENGTH_FEET,
         ("distance", LENGTH_MILLIMETERS): LENGTH_INCHES,
+        # Convert non-USCS volumes of gas meters
+        ("gas", VOLUME_CUBIC_METERS): VOLUME_CUBIC_FEET,
         # Convert non-USCS speeds except knots to mph
         ("speed", SPEED_METERS_PER_SECOND): SPEED_MILES_PER_HOUR,
         ("speed", SPEED_KILOMETERS_PER_HOUR): SPEED_MILES_PER_HOUR,
+        # Convert non-USCS volumes
+        ("volume", VOLUME_CUBIC_METERS): VOLUME_CUBIC_FEET,
+        ("volume", VOLUME_LITERS): VOLUME_GALLONS,
+        ("volume", VOLUME_MILLILITERS): VOLUME_FLUID_OUNCE,
+        # Convert non-USCS volumes of water meters
+        ("water", VOLUME_CUBIC_METERS): VOLUME_CUBIC_FEET,
+        ("water", VOLUME_LITERS): VOLUME_GALLONS,
     },
     length=LENGTH_MILES,
     mass=MASS_POUNDS,

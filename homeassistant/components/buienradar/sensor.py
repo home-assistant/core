@@ -184,8 +184,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="precipitation",
         name="Precipitation",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
-        icon="mdi:weather-pouring",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="irradiance",
@@ -198,7 +198,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="precipitation_forecast_average",
         name="Precipitation forecast average",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
-        icon="mdi:weather-pouring",
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key="precipitation_forecast_total",
