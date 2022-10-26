@@ -6093,7 +6093,7 @@
     "zamg": {
       "name": "Zentralanstalt f\u00fcr Meteorologie und Geodynamik (ZAMG)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "zengge": {
