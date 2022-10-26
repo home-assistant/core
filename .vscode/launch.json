@@ -10,7 +10,7 @@
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "args": ["--debug", "-c", "config"]
+      "args": ["--debug"]
     },
     {
       "name": "Home Assistant (skip pip)",

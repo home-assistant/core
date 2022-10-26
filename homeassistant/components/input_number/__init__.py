@@ -27,15 +27,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-import sqlite3
-from sqlite3 import Error
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_number"
 
 CONF_INITIAL = "initial"
-CONF_AREAID = "areaid"
 CONF_MIN = "min"
 CONF_MAX = "max"
 CONF_STEP = "step"
@@ -54,7 +51,7 @@ SERVICE_INCREMENT = "increment"
 SERVICE_DECREMENT = "decrement"
 
 
-def cv_input_numberd(cfg):
+def _cv_input_number(cfg):
     """Configure validation helper for input number (voluptuous)."""
     minimum = cfg.get(CONF_MIN)
     maximum = cfg.get(CONF_MAX)
@@ -72,24 +69,11 @@ STORAGE_FIELDS = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Required(CONF_MIN): vol.Coerce(float),
     vol.Required(CONF_MAX): vol.Coerce(float),
-    vol.Required(CONF_AREAID): vol.Coerce(int),
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
     vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In([MODE_BOX, MODE_SLIDER]),
-}
-
-UPDATE_FIELDS = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_MIN): vol.Coerce(float),
-    vol.Optional(CONF_MAX): vol.Coerce(float),
-    vol.Optional(CONF_AREAID): vol.Coerce(int),
-    vol.Optional(CONF_INITIAL): vol.Coerce(float),
-    vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-9)),
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_MODE): vol.In([MODE_BOX, MODE_SLIDER]),
 }
 
 CONFIG_SCHEMA = vol.Schema(
@@ -100,7 +84,6 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Required(CONF_MIN): vol.Coerce(float),
                     vol.Required(CONF_MAX): vol.Coerce(float),
-                    vol.Required(CONF_AREAID): vol.Coerce(int),
                     vol.Optional(CONF_INITIAL): vol.Coerce(float),
                     vol.Optional(CONF_STEP, default=1): vol.All(
                         vol.Coerce(float), vol.Range(min=1e-9)
@@ -111,7 +94,7 @@ CONFIG_SCHEMA = vol.Schema(
                         [MODE_BOX, MODE_SLIDER]
                     ),
                 },
-                cv_input_numberd,
+                _cv_input_number,
             )
         )
     },
@@ -186,42 +169,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     return True
 
-class DBAccess:
-    def __init__(self, db_file):
-        self.conn = None
-        try:
-            self.conn = sqlite3.connect(db_file)
-        except Error as e:
-            a=1
-
-    def getValue(self, ID):
-        try:
-            cur = self.conn.cursor()
-            cur.execute("SELECT counted FROM AreaMonitoring WHERE areaid=?", (ID,))
-            rows = cur.fetchall()
-            value = rows[0][0]
-            cur.close()
-            return value
-        except:
-            return "error"
-
-    async def setValue(self, ID, count):
-        try:
-            cur = self.conn.cursor()
-            sql = 'Update AreaMonitoring set counted = ? where areaid = ?'
-            data = (count, ID)
-            cur.execute(sql, data)
-            self.conn.commit()
-            cur.close()
-        except:
-            return False
-        return True
 
 class NumberStorageCollection(collection.StorageCollection):
     """Input storage based collection."""
 
-    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, cv_input_numberd))
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_number))
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
@@ -250,8 +202,8 @@ class NumberStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return cv_input_numberd({**data, **update_data})
+        update_data = self.SCHEMA(update_data)
+        return {CONF_ID: data[CONF_ID]} | update_data
 
 
 class InputNumber(collection.CollectionEntity, RestoreEntity):
@@ -264,7 +216,6 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         """Initialize an input number."""
         self._config = config
         self._current_value: float | None = config.get(CONF_INITIAL)
-        self.theDB = DBAccess('/mnt/GuardFolders/Database/TrackedObjectsDim.db')
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> InputNumber:
@@ -278,13 +229,8 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         """Return entity instance initialized from yaml."""
         input_num = cls(config)
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
-        input_num.editable = True
+        input_num.editable = False
         return input_num
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return True
 
     @property
     def _minimum(self) -> float:
@@ -309,7 +255,6 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
     @property
     def state(self):
         """Return the state of the component."""
-        self._current_value = self.theDB.getValue( self._config.get(CONF_AREAID))
         return self._current_value
 
     @property
@@ -364,7 +309,7 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
             raise vol.Invalid(
                 f"Invalid value for {self.entity_id}: {value} (range {self._minimum} - {self._maximum})"
             )
-        await self.theDB.setValue(self._config.get(CONF_AREAID),num_value)
+
         self._current_value = num_value
         self.async_write_ha_state()
 
