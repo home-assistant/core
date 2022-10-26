@@ -70,8 +70,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 # Avoid syncing super old data on initial syncs. Note that old but active
 # recurring events are still included.
