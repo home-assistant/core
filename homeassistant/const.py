@@ -645,18 +645,18 @@ class UnitOfVolume(StrEnum):
 
 
 VOLUME_LITERS: Final = "L"
-"""Deprecate: please use UnitOfVolume.LITERS"""
+"""Deprecated: please use UnitOfVolume.LITERS"""
 VOLUME_MILLILITERS: Final = "mL"
-"""Deprecate: please use UnitOfVolume.MILLILITERS"""
+"""Deprecated: please use UnitOfVolume.MILLILITERS"""
 VOLUME_CUBIC_METERS: Final = "m³"
-"""Deprecate: please use UnitOfVolume.CUBIC_METERS"""
+"""Deprecated: please use UnitOfVolume.CUBIC_METERS"""
 VOLUME_CUBIC_FEET: Final = "ft³"
-"""Deprecate: please use UnitOfVolume.CUBIC_FEET"""
+"""Deprecated: please use UnitOfVolume.CUBIC_FEET"""
 
 VOLUME_GALLONS: Final = "gal"
-"""Deprecate: please use UnitOfVolume.GALLONS"""
+"""Deprecated: please use UnitOfVolume.GALLONS"""
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
-"""Deprecate: please use UnitOfVolume.FLUID_OUNCES"""
+"""Deprecated: please use UnitOfVolume.FLUID_OUNCES"""
 
 # Volume Flow Rate units
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
