@@ -541,16 +541,40 @@ FREQUENCY_KILOHERTZ: Final = "kHz"
 FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
 
+
 # Pressure units
+class UnitOfPressure(StrEnum):
+    """Pressure units."""
+
+    PA = "Pa"
+    HPA = "hPa"
+    KPA = "kPa"
+    BAR = "bar"
+    CBAR = "cbar"
+    MBAR = "mbar"
+    MMHG = "mmHg"
+    INHG = "inHg"
+    PSI = "psi"
+
+
 PRESSURE_PA: Final = "Pa"
+"""Deprecated: please use UnitOfPressure.PA"""
 PRESSURE_HPA: Final = "hPa"
+"""Deprecated: please use UnitOfPressure.HPA"""
 PRESSURE_KPA: Final = "kPa"
+"""Deprecated: please use UnitOfPressure.KPA"""
 PRESSURE_BAR: Final = "bar"
+"""Deprecated: please use UnitOfPressure.BAR"""
 PRESSURE_CBAR: Final = "cbar"
+"""Deprecated: please use UnitOfPressure.CBAR"""
 PRESSURE_MBAR: Final = "mbar"
+"""Deprecated: please use UnitOfPressure.MBAR"""
 PRESSURE_MMHG: Final = "mmHg"
+"""Deprecated: please use UnitOfPressure.MMHG"""
 PRESSURE_INHG: Final = "inHg"
+"""Deprecated: please use UnitOfPressure.INHG"""
 PRESSURE_PSI: Final = "psi"
+"""Deprecated: please use UnitOfPressure.PSI"""
 
 # Sound pressure units
 SOUND_PRESSURE_DB: Final = "dB"
