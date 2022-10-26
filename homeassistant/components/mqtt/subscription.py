@@ -21,14 +21,17 @@ class EntitySubscription:
     hass: HomeAssistant = attr.ib()
     topic: str = attr.ib()
     message_callback: MessageCallbackType = attr.ib()
-    subscribe_task: Coroutine | None = attr.ib()
+    subscribe_task: Coroutine[Any, Any, Callable[[], None]] | None = attr.ib()
     unsubscribe_callback: Callable[[], None] | None = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str = attr.ib(default="utf-8")
 
-    def resubscribe_if_necessary(self, hass, other):
+    def resubscribe_if_necessary(
+        self, hass: HomeAssistant, other: EntitySubscription | None
+    ) -> None:
         """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
+            assert other
             self.unsubscribe_callback = other.unsubscribe_callback
             return
 
@@ -50,13 +53,13 @@ class EntitySubscription:
             hass, self.topic, self.message_callback, self.qos, self.encoding
         )
 
-    async def subscribe(self):
+    async def subscribe(self) -> None:
         """Subscribe to a topic."""
         if not self.subscribe_task:
             return
         self.unsubscribe_callback = await self.subscribe_task
 
-    def _should_resubscribe(self, other):
+    def _should_resubscribe(self, other: EntitySubscription | None) -> bool:
         """Check if we should re-subscribe to the topic using the old state."""
         if other is None:
             return True

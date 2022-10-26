@@ -75,6 +75,13 @@
             "unknown": "Erro inesperado"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Esta imagem parece boa."
+                },
+                "description": "![Camera Still Image Preview]({preview_url})",
+                "title": "Visualizar"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Tipo de conte\u00fado"

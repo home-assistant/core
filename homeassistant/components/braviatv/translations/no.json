@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "no_ip_control": "IP-kontrollen er deaktivert p\u00e5 TVen eller TV-en st\u00f8ttes ikke.",
             "not_bravia_device": "Enheten er ikke en Bravia TV.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_successful": "Re-autentisering var vellykket",
             "reauth_unsuccessful": "Re-autentisering mislyktes. Fjern integrasjonen og konfigurer den p\u00e5 nytt."
         },
         "error": {

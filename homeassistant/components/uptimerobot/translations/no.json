@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
             "reauth_failed_existing": "Kunne ikke oppdatere konfigurasjonsoppf\u00f8ringen. Fjern integrasjonen og sett den opp igjen.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "reauth_successful": "Re-autentisering var vellykket",
             "unknown": "Uventet feil"
         },
         "error": {

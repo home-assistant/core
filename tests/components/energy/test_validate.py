@@ -4,11 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-)
+from homeassistant.const import UnitOfEnergy
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.setup import async_setup_component
 
@@ -48,7 +44,7 @@ def mock_get_metadata():
 
 
 @pytest.fixture(autouse=True)
-async def mock_energy_manager(hass, recorder_mock):
+async def mock_energy_manager(recorder_mock, hass):
     """Set up energy."""
     assert await async_setup_component(hass, "energy", {"energy": {}})
     manager = await async_get_manager(hass)
@@ -67,12 +63,13 @@ async def test_validation_empty_config(hass):
 @pytest.mark.parametrize(
     "state_class, energy_unit, extra",
     [
-        ("total_increasing", ENERGY_KILO_WATT_HOUR, {}),
-        ("total_increasing", ENERGY_MEGA_WATT_HOUR, {}),
-        ("total_increasing", ENERGY_WATT_HOUR, {}),
-        ("total", ENERGY_KILO_WATT_HOUR, {}),
-        ("total", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
-        ("measurement", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("total_increasing", UnitOfEnergy.KILO_WATT_HOUR, {}),
+        ("total_increasing", UnitOfEnergy.MEGA_WATT_HOUR, {}),
+        ("total_increasing", UnitOfEnergy.WATT_HOUR, {}),
+        ("total", UnitOfEnergy.KILO_WATT_HOUR, {}),
+        ("total", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("measurement", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("total_increasing", UnitOfEnergy.GIGA_JOULE, {}),
     ],
 )
 async def test_validation(

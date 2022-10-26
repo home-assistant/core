@@ -26,7 +26,8 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "pin": "Pincode"
+                    "pin": "Pincode",
+                    "use_psk": "PSK-authenticatie gebruiken"
                 }
             },
             "user": {

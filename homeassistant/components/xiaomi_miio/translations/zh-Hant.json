@@ -5,7 +5,8 @@
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "incomplete_info": "\u6240\u63d0\u4f9b\u4e4b\u88dd\u7f6e\u8cc7\u8a0a\u4e0d\u5b8c\u6574\u3001\u7121\u4e3b\u6a5f\u7aef\u6216\u6b0a\u6756\uff0c\u7121\u6cd5\u8a2d\u5b9a\u88dd\u7f6e\u3002",
             "not_xiaomi_miio": "\u5c0f\u7c73 Miio \uff08\u5c1a\uff09\u4e0d\u652f\u63f4\u8a72\u88dd\u7f6e\u3002",
-            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",

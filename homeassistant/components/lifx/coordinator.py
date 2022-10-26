@@ -7,8 +7,14 @@ from enum import IntEnum
 from functools import partial
 from typing import Any, cast
 
-from aiolifx.aiolifx import Light, MultiZoneDirection, MultiZoneEffectType
+from aiolifx.aiolifx import (
+    Light,
+    MultiZoneDirection,
+    MultiZoneEffectType,
+    TileEffectType,
+)
 from aiolifx.connection import LIFXConnection
+from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -64,6 +70,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.lock = asyncio.Lock()
         self.active_effect = FirmwareEffect.OFF
         update_interval = timedelta(seconds=10)
+        self.last_used_theme: str = ""
 
         super().__init__(
             hass,
@@ -109,6 +116,44 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     def current_infrared_brightness(self) -> str | None:
         """Return the current infrared brightness as a string."""
         return infrared_brightness_value_to_option(self.device.infrared_brightness)
+
+    async def diagnostics(self) -> dict[str, Any]:
+        """Return diagnostic information about the device."""
+        features = lifx_features(self.device)
+        device_data = {
+            "firmware": self.device.host_firmware_version,
+            "vendor": self.device.vendor,
+            "product_id": self.device.product,
+            "features": features,
+            "hue": self.device.color[0],
+            "saturation": self.device.color[1],
+            "brightness": self.device.color[2],
+            "kelvin": self.device.color[3],
+            "power": self.device.power_level,
+        }
+
+        if features["multizone"] is True:
+            zones = {"count": self.device.zones_count, "state": {}}
+            for index, zone_color in enumerate(self.device.color_zones):
+                zones["state"][index] = {
+                    "hue": zone_color[0],
+                    "saturation": zone_color[1],
+                    "brightness": zone_color[2],
+                    "kelvin": zone_color[3],
+                }
+            device_data["zones"] = zones
+
+        if features["hev"] is True:
+            device_data["hev"] = {
+                "hev_cycle": self.device.hev_cycle,
+                "hev_config": self.device.hev_cycle_configuration,
+                "last_result": self.device.last_hev_cycle_result,
+            }
+
+        if features["infrared"] is True:
+            device_data["infrared"] = {"brightness": self.device.infrared_brightness}
+
+        return device_data
 
     def async_get_entity_id(self, platform: Platform, key: str) -> str | None:
         """Return the entity_id from the platform and key provided."""
@@ -279,12 +324,23 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.active_effect = FirmwareEffect[self.device.effect.get("effect", "OFF")]
 
     async def async_set_multizone_effect(
-        self, effect: str, speed: float, direction: str, power_on: bool = True
+        self,
+        effect: str,
+        speed: float = 3.0,
+        direction: str = "RIGHT",
+        theme_name: str | None = None,
+        power_on: bool = True,
     ) -> None:
         """Control the firmware-based Move effect on a multizone device."""
         if lifx_features(self.device)["multizone"] is True:
             if power_on and self.device.power_level == 0:
                 await self.async_set_power(True, 0)
+
+            if theme_name is not None:
+                theme = ThemeLibrary().get_theme(theme_name)
+                await ThemePainter(self.hass.loop).paint(
+                    theme, [self.device], round(speed)
+                )
 
             await async_execute_lifx(
                 partial(
@@ -292,6 +348,31 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                     effect=MultiZoneEffectType[effect.upper()].value,
                     speed=speed,
                     direction=MultiZoneDirection[direction.upper()].value,
+                )
+            )
+            self.active_effect = FirmwareEffect[effect.upper()]
+
+    async def async_set_matrix_effect(
+        self,
+        effect: str,
+        palette: list[tuple[int, int, int, int]] | None = None,
+        speed: float = 3,
+        power_on: bool = True,
+    ) -> None:
+        """Control the firmware-based effects on a matrix device."""
+        if lifx_features(self.device)["matrix"] is True:
+            if power_on and self.device.power_level == 0:
+                await self.async_set_power(True, 0)
+
+            if palette is None:
+                palette = []
+
+            await async_execute_lifx(
+                partial(
+                    self.device.set_tile_effect,
+                    effect=TileEffectType[effect.upper()].value,
+                    speed=speed,
+                    palette=palette,
                 )
             )
             self.active_effect = FirmwareEffect[effect.upper()]
@@ -311,3 +392,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         """Set infrared brightness."""
         infrared_brightness = infrared_brightness_option_to_value(option)
         await async_execute_lifx(partial(self.device.set_infrared, infrared_brightness))
+
+    async def async_apply_theme(self, theme_name: str) -> None:
+        """Apply the selected theme to the device."""
+        self.last_used_theme = theme_name
+        theme = ThemeLibrary().get_theme(theme_name)
+        await ThemePainter(self.hass.loop).paint(theme, [self.device])

@@ -582,9 +582,7 @@ def _compile_hourly_statistics_summary_mean_stmt(
     )
 
 
-def compile_hourly_statistics(
-    instance: Recorder, session: Session, start: datetime
-) -> None:
+def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     """Compile hourly statistics.
 
     This will summarize 5-minute statistics for one hour:
@@ -700,7 +698,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
 
         if start.minute == 55:
             # A full hour is ready, summarize it
-            compile_hourly_statistics(instance, session, start)
+            _compile_hourly_statistics(session, start)
 
         session.add(StatisticsRuns(start=start))
 
@@ -776,7 +774,7 @@ def _update_statistics(
 
 
 def _generate_get_metadata_stmt(
-    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> StatementLambdaElement:
@@ -794,10 +792,9 @@ def _generate_get_metadata_stmt(
 
 
 def get_metadata_with_session(
-    hass: HomeAssistant,
     session: Session,
     *,
-    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -834,14 +831,13 @@ def get_metadata_with_session(
 def get_metadata(
     hass: HomeAssistant,
     *,
-    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
     """Return metadata for statistic_ids."""
     with session_scope(hass=hass) as session:
         return get_metadata_with_session(
-            hass,
             session,
             statistic_ids=statistic_ids,
             statistic_type=statistic_type,
@@ -882,7 +878,7 @@ def update_statistics_metadata(
 
 def list_statistic_ids(
     hass: HomeAssistant,
-    statistic_ids: list[str] | tuple[str] | None = None,
+    statistic_ids: list[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
 ) -> list[dict]:
     """Return all statistic_ids (or filtered one) and unit of measurement.
@@ -896,7 +892,7 @@ def list_statistic_ids(
     # Query the database
     with session_scope(hass=hass) as session:
         metadata = get_metadata_with_session(
-            hass, session, statistic_type=statistic_type, statistic_ids=statistic_ids
+            session, statistic_type=statistic_type, statistic_ids=statistic_ids
         )
 
         result = {
@@ -1018,6 +1014,35 @@ def _reduce_statistics_per_day(
     return _reduce_statistics(stats, same_day, day_start_end, timedelta(days=1))
 
 
+def same_week(time1: datetime, time2: datetime) -> bool:
+    """Return True if time1 and time2 are in the same year and week."""
+    date1 = dt_util.as_local(time1).date()
+    date2 = dt_util.as_local(time2).date()
+    return (date1.year, date1.isocalendar().week) == (
+        date2.year,
+        date2.isocalendar().week,
+    )
+
+
+def week_start_end(time: datetime) -> tuple[datetime, datetime]:
+    """Return the start and end of the period (week) time is within."""
+    time_local = dt_util.as_local(time)
+    start_local = time_local.replace(
+        hour=0, minute=0, second=0, microsecond=0
+    ) - timedelta(days=time_local.weekday())
+    start = dt_util.as_utc(start_local)
+    end = dt_util.as_utc(start_local + timedelta(days=7))
+    return (start, end)
+
+
+def _reduce_statistics_per_week(
+    stats: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[dict[str, Any]]]:
+    """Reduce hourly statistics to weekly statistics."""
+
+    return _reduce_statistics(stats, same_week, week_start_end, timedelta(days=7))
+
+
 def same_month(time1: datetime, time2: datetime) -> bool:
     """Return True if time1 and time2 are in the same year and month."""
     date1 = dt_util.as_local(time1).date()
@@ -1093,7 +1118,7 @@ def statistics_during_period(
     start_time: datetime,
     end_time: datetime | None = None,
     statistic_ids: list[str] | None = None,
-    period: Literal["5minute", "day", "hour", "month"] = "hour",
+    period: Literal["5minute", "day", "hour", "week", "month"] = "hour",
     start_time_as_datetime: bool = False,
     units: dict[str, str] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
@@ -1105,7 +1130,7 @@ def statistics_during_period(
     metadata = None
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given (or all) statistic_ids
-        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
+        metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
 
@@ -1126,7 +1151,7 @@ def statistics_during_period(
         if not stats:
             return {}
         # Return statistics combined with metadata
-        if period not in ("day", "month"):
+        if period not in ("day", "week", "month"):
             return _sorted_statistics_to_dict(
                 hass,
                 session,
@@ -1155,6 +1180,9 @@ def statistics_during_period(
 
         if period == "day":
             return _reduce_statistics_per_day(result)
+
+        if period == "week":
+            return _reduce_statistics_per_week(result)
 
         return _reduce_statistics_per_month(result)
 
@@ -1196,7 +1224,7 @@ def _get_last_statistics(
     statistic_ids = [statistic_id]
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_id
-        metadata = get_metadata_with_session(hass, session, statistic_ids=statistic_ids)
+        metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
         metadata_id = metadata[statistic_id][0]
@@ -1280,9 +1308,7 @@ def get_latest_short_term_statistics(
     with session_scope(hass=hass) as session:
         # Fetch metadata for the given statistic_ids
         if not metadata:
-            metadata = get_metadata_with_session(
-                hass, session, statistic_ids=statistic_ids
-            )
+            metadata = get_metadata_with_session(session, statistic_ids=statistic_ids)
         if not metadata:
             return {}
         metadata_ids = [
@@ -1467,7 +1493,7 @@ def _async_import_statistics(
             statistic["last_reset"] = dt_util.as_utc(last_reset)
 
     # Insert job in recorder's queue
-    get_instance(hass).async_import_statistics(metadata, statistics)
+    get_instance(hass).async_import_statistics(metadata, statistics, Statistics)
 
 
 @callback
@@ -1535,7 +1561,7 @@ def _filter_unique_constraint_integrity_error(
             and err.orig.pgcode == "23505"
         ):
             ignore = True
-        if dialect_name == "mysql" and hasattr(err.orig, "args"):
+        if dialect_name == SupportedDialect.MYSQL and hasattr(err.orig, "args"):
             with contextlib.suppress(TypeError):
                 if err.orig.args[0] == 1062:
                     ignore = True
@@ -1557,6 +1583,7 @@ def import_statistics(
     instance: Recorder,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
+    table: type[Statistics | StatisticsShortTerm],
 ) -> bool:
     """Process an import_statistics job."""
 
@@ -1565,16 +1592,16 @@ def import_statistics(
         exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         old_metadata_dict = get_metadata_with_session(
-            instance.hass, session, statistic_ids=[metadata["statistic_id"]]
+            session, statistic_ids=[metadata["statistic_id"]]
         )
         metadata_id = _update_or_add_metadata(session, metadata, old_metadata_dict)
         for stat in statistics:
             if stat_id := _statistics_exists(
-                session, Statistics, metadata_id, stat["start"]
+                session, table, metadata_id, stat["start"]
             ):
-                _update_statistics(session, Statistics, stat_id, stat)
+                _update_statistics(session, table, stat_id, stat)
             else:
-                _insert_statistics(session, Statistics, metadata_id, stat)
+                _insert_statistics(session, table, metadata_id, stat)
 
     return True
 
@@ -1590,9 +1617,7 @@ def adjust_statistics(
     """Process an add_statistics job."""
 
     with session_scope(session=instance.get_session()) as session:
-        metadata = get_metadata_with_session(
-            instance.hass, session, statistic_ids=(statistic_id,)
-        )
+        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id])
         if statistic_id not in metadata:
             return True
 
@@ -1652,9 +1677,9 @@ def change_statistics_unit(
 ) -> None:
     """Change statistics unit for a statistic_id."""
     with session_scope(session=instance.get_session()) as session:
-        metadata = get_metadata_with_session(
-            instance.hass, session, statistic_ids=(statistic_id,)
-        ).get(statistic_id)
+        metadata = get_metadata_with_session(session, statistic_ids=[statistic_id]).get(
+            statistic_id
+        )
 
         # Guard against the statistics being removed or updated before the
         # change_statistics_unit job executes

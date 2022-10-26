@@ -123,12 +123,15 @@ def _mocked_clean_bulb() -> Light:
     bulb = _mocked_bulb()
     bulb.get_hev_cycle = MockLifxCommand(bulb)
     bulb.set_hev_cycle = MockLifxCommand(bulb)
+    bulb.get_hev_configuration = MockLifxCommand(bulb)
+    bulb.get_last_hev_cycle_result = MockLifxCommand(bulb)
     bulb.hev_cycle_configuration = {"duration": 7200, "indication": False}
     bulb.hev_cycle = {
         "duration": 7200,
         "remaining": 30,
         "last_power": False,
     }
+    bulb.last_hev_cycle_result = 0
     bulb.product = 90
     return bulb
 
@@ -153,6 +156,15 @@ def _mocked_light_strip() -> Light:
     bulb.set_multizone_effect = MockLifxCommand(bulb)
     bulb.get_extended_color_zones = MockLifxCommand(bulb)
     bulb.set_extended_color_zones = MockLifxCommand(bulb)
+    return bulb
+
+
+def _mocked_tile() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 55  # LIFX Tile
+    bulb.effect = {"effect": "OFF"}
+    bulb.get_tile_effect = MockLifxCommand(bulb)
+    bulb.set_tile_effect = MockLifxCommand(bulb)
     return bulb
 
 
