@@ -234,12 +234,20 @@ def _get_announced_addresses(
     return address_list
 
 
+def _filter_disallowed_characters(name: str) -> str:
+    """Filter disallowed characters from a string.
+
+    . is a reversed character for zeroconf.
+    """
+    return name.replace(".", " ")
+
+
 async def _async_register_hass_zc_service(
     hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
 ) -> None:
     # Get instance UUID
     valid_location_name = _truncate_location_name_to_valid(
-        hass.config.location_name or "Home"
+        _filter_disallowed_characters(hass.config.location_name or "Home")
     )
 
     params = {
