@@ -65,6 +65,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key=SENSOR_TYPE_RAINTOTAL,
         name="Rain total",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
+        icon="mdi:water",
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SENSOR_TYPE_WINDDIRECTION: SensorEntityDescription(
