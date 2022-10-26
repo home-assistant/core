@@ -73,11 +73,11 @@ _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
 _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
 _GALLON_TO_CUBIC_METER = 231 * pow(_IN_TO_M, 3)  # US gallon is 231 cubic inches
 _FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
-_UK_GALLON_TO_CUBIC_METER = (
+_IMPERIAL_GALLON_TO_CUBIC_METER = (
     4.54609 * _L_TO_CUBIC_METER  # Imperial gallon is 4.54609 litres
 )
-_UK_FLUID_OUNCE_TO_CUBIC_METER = (
-    _UK_GALLON_TO_CUBIC_METER / 160  # 160 fl. oz. in an Imperial gallon
+_IMPERIAL_FLUID_OUNCE_TO_CUBIC_METER = (
+    _IMPERIAL_GALLON_TO_CUBIC_METER / 160  # 160 fl. oz. in an Imperial gallon
 )
 _CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
 
@@ -367,8 +367,8 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.MILLILITERS: 1 / _ML_TO_CUBIC_METER,
         UnitOfVolume.US_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
         UnitOfVolume.US_FLUID_OUNCES: 1 / _FLUID_OUNCE_TO_CUBIC_METER,
-        UnitOfVolume.UK_GALLONS: 1 / _UK_GALLON_TO_CUBIC_METER,
-        UnitOfVolume.UK_FLUID_OUNCES: 1 / _UK_FLUID_OUNCE_TO_CUBIC_METER,
+        UnitOfVolume.IMPERIAL_GALLONS: 1 / _IMPERIAL_GALLON_TO_CUBIC_METER,
+        UnitOfVolume.IMPERIAL_FLUID_OUNCES: 1 / _IMPERIAL_FLUID_OUNCE_TO_CUBIC_METER,
         UnitOfVolume.CUBIC_METERS: 1,
         UnitOfVolume.CUBIC_FEET: 1 / _CUBIC_FOOT_TO_CUBIC_METER,
         VOLUME_GALLONS: 1 / _GALLON_TO_CUBIC_METER,
@@ -379,8 +379,8 @@ class VolumeConverter(BaseUnitConverter):
         UnitOfVolume.MILLILITERS,
         UnitOfVolume.US_GALLONS,
         UnitOfVolume.US_FLUID_OUNCES,
-        UnitOfVolume.UK_GALLONS,
-        UnitOfVolume.UK_FLUID_OUNCES,
+        UnitOfVolume.IMPERIAL_GALLONS,
+        UnitOfVolume.IMPERIAL_FLUID_OUNCES,
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.CUBIC_FEET,
         VOLUME_GALLONS,

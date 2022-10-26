@@ -634,10 +634,11 @@ class UnitOfVolume(StrEnum):
     CUBIC_METERS: Final = "m³"
     LITERS: Final = "L"
     MILLILITERS: Final = "mL"
-    UK_GALLONS: Final = "gal (UK)"
-    UK_FLUID_OUNCES: Final = "fl. oz. (UK)"
+    IMPERIAL_GALLONS: Final = "gal (Imperial)"
+    IMPERIAL_FLUID_OUNCES: Final = "fl. oz. (Imperial)"
     US_GALLONS: Final = "gal (US)"
     US_FLUID_OUNCES: Final = "fl. oz. (US)"
+
 
 VOLUME_LITERS: Final = "L"
 """Deprecate: please use UnitOfVolume.LITERS"""
@@ -649,9 +650,9 @@ VOLUME_CUBIC_FEET: Final = "ft³"
 """Deprecate: please use UnitOfVolume.CUBIC_FEET"""
 
 VOLUME_GALLONS: Final = "gal"
-"""Deprecate: please use UnitOfVolume.US_GALLONS or UnitOfVolume.UK_GALLONS"""
+"""Deprecate: please use UnitOfVolume.US_GALLONS or UnitOfVolume.IMPERIAL_GALLONS"""
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
-"""Deprecate: please use UnitOfVolume.US_FLUID_OUNCES or UnitOfVolume.UK_FLUID_OUNCES"""
+"""Deprecate: please use UnitOfVolume.US_FLUID_OUNCES or UnitOfVolume.IMPERIAL_FLUID_OUNCES"""
 
 # Volume Flow Rate units
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
