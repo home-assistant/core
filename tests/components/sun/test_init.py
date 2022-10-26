@@ -117,9 +117,7 @@ async def test_state_change(
 
     await hass.async_block_till_done()
 
-    test_time = dt_util.parse_datetime(
-        hass.states.get(sun.ENTITY_ID).attributes[sun.STATE_ATTR_NEXT_RISING]
-    )
+    test_time = dt_util.parse_datetime(hass.states.get("sensor.next_rising").state)
     assert test_time is not None
 
     assert hass.states.get(sun.ENTITY_ID).state == sun.STATE_BELOW_HORIZON
@@ -139,9 +137,7 @@ async def test_state_change(
     assert hass.states.get(sun.ENTITY_ID).state == sun.STATE_ABOVE_HORIZON
 
     # Test listeners are not duplicated after a core configuration change
-    test_time = dt_util.parse_datetime(
-        hass.states.get(sun.ENTITY_ID).attributes[sun.STATE_ATTR_NEXT_DUSK]
-    )
+    test_time = dt_util.parse_datetime(hass.states.get("sensor.next_dusk").state)
     assert test_time is not None
 
     patched_time = test_time + timedelta(seconds=5)
@@ -172,11 +168,11 @@ async def test_norway_in_june(hass: HomeAssistant) -> None:
     assert state is not None
 
     assert dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_RISING]
-    ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC)
+        hass.states.get("sensor.next_rising").state
+    ) == datetime(2016, 7, 24, 22, 59, 45, tzinfo=dt_util.UTC)
     assert dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_SETTING]
-    ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC)
+        hass.states.get("sensor.next_setting").state
+    ) == datetime(2016, 7, 25, 22, 17, 13, tzinfo=dt_util.UTC)
 
     assert state.state == sun.STATE_ABOVE_HORIZON
 
@@ -226,9 +222,7 @@ async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
     state = hass.states.get("sun.sun")
     assert state is not None
 
-    test_time = dt_util.parse_datetime(
-        hass.states.get(sun.ENTITY_ID).attributes[sun.STATE_ATTR_NEXT_RISING]
-    )
+    test_time = dt_util.parse_datetime(hass.states.get("sensor.next_rising").state)
     assert test_time is not None
     assert hass.states.get(sun.ENTITY_ID).state == sun.STATE_BELOW_HORIZON
 
