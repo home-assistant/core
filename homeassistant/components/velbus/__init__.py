@@ -142,14 +142,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await hass.async_add_executor_job(
                     os.unlink,
                     hass.config.path(
-                        f".storage/velbuscache/{call.data[CONF_INTERFACE]}/{call.data[CONF_ADDRESS]}.p"
+                        f".storage/velbuscache-{call.data[CONF_INTERFACE]}/{call.data[CONF_ADDRESS]}.p"
                     ),
                 )
             else:
                 await hass.async_add_executor_job(
                     shutil.rmtree,
                     hass.config.path(
-                        f".storage/velbuscache/{call.data[CONF_INTERFACE]}/"
+                        f".storage/velbuscache-{call.data[CONF_INTERFACE]}/"
                     ),
                 )
         # call a scan to repopulate
