@@ -1,7 +1,6 @@
 """Support gathering system information of hosts which are running netdata."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from netdata import Netdata
@@ -22,7 +21,6 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
