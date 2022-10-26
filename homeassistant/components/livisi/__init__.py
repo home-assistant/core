@@ -32,7 +32,6 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Livisi",
         name=f"SHC {coordinator.controller_type} {coordinator.serial_number}",
-        sw_version=coordinator.os_version,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

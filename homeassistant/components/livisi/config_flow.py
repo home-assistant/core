@@ -51,6 +51,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "shc_unreachable"
             if controller_info:
                 return await self.create_entity(user_input, controller_info)
+            errors["base"] = "shc_unreachable"
 
         return self.async_show_form(
             step_id="user", data_schema=self.data_schema, errors=errors

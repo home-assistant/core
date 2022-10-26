@@ -69,8 +69,6 @@ def create_entity(
         coordinator,
         unique_id=device["id"],
         manufacturer=device["manufacturer"],
-        product=device["product"],
-        serial_number=device["serialNumber"],
         device_type=device["type"],
         name=config_details["name"],
         capability_id=capabilities[0],
@@ -88,35 +86,25 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         coordinator: LivisiDataUpdateCoordinator,
         unique_id: str,
         manufacturer: str,
-        product: str,
-        serial_number: str,
         device_type: str,
         name: str,
         capability_id: str,
         room: str,
-        version: str | None = None,
     ) -> None:
         """Initialize the Livisi Switch."""
         self.config_entry = config_entry
         self._attr_unique_id = unique_id
-        self._manufacturer = manufacturer
-        self._product = product
-        self._serial_number = serial_number
         self._attr_model = device_type
         self._attr_name = name
-        self._state = None
         self._capability_id = capability_id
-        self._room = room
-        self._version = version
         self.aio_livisi = coordinator.aiolivisi
         self._attr_available = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            manufacturer=self._manufacturer,
+            manufacturer=manufacturer,
             model=self._attr_model,
-            name=self._attr_name,
-            suggested_area=self._room,
-            sw_version=self._version,
+            name=name,
+            suggested_area=room,
             via_device=(DOMAIN, config_entry.entry_id),
         )
         super().__init__(coordinator)

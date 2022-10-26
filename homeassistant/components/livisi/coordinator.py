@@ -50,9 +50,8 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.rooms: dict[str, Any] = {}
         self.serial_number: str = ""
         self.controller_type: str = ""
-        self.os_version: str = ""
         self.is_avatar: bool = False
-        self.port: str = ""
+        self.port: int = 0
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Get device configuration from LIVISI."""
