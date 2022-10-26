@@ -486,11 +486,23 @@ POWER_BTU_PER_HOUR: Final = "BTU/h"
 # Reactive power units
 POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
+
 # Energy units
-ENERGY_GIGA_JOULE: Final = "GJ"
+class UnitOfEnergy(StrEnum):
+    """Energy units."""
+
+    GIGA_JOULE = "GJ"
+    KILO_WATT_HOUR = "kWh"
+    MEGA_WATT_HOUR = "MWh"
+    WATT_HOUR = "Wh"
+
+
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
+"""Deprecated: please use UnitOfEnergy.KILO_WATT_HOUR."""
 ENERGY_MEGA_WATT_HOUR: Final = "MWh"
+"""Deprecated: please use UnitOfEnergy.MEGA_WATT_HOUR."""
 ENERGY_WATT_HOUR: Final = "Wh"
+"""Deprecated: please use UnitOfEnergy.WATT_HOUR."""
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
