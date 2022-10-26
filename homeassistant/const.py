@@ -520,10 +520,22 @@ CURRENCY_EURO: Final = "€"
 CURRENCY_DOLLAR: Final = "$"
 CURRENCY_CENT: Final = "¢"
 
+
 # Temperature units
+class UnitOfTemperature(StrEnum):
+    """Temperature units."""
+
+    CELSIUS = "°C"
+    FAHRENHEIT = "°F"
+    KELVIN = "K"
+
+
 TEMP_CELSIUS: Final = "°C"
+"""Deprecated: please use UnitOfTemperature.CELSIUS"""
 TEMP_FAHRENHEIT: Final = "°F"
+"""Deprecated: please use UnitOfTemperature.FAHRENHEIT"""
 TEMP_KELVIN: Final = "K"
+"""Deprecated: please use UnitOfTemperature.KELVIN"""
 
 # Time units
 TIME_MICROSECONDS: Final = "μs"
