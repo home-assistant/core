@@ -38,9 +38,9 @@ from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
 from .const import (
+    CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_DURATION,
     CONF_USE_APP_RUN_TIMES,
-    CONF_ZONE_RUN_TIME,
     DATA_API_VERSIONS,
     DATA_MACHINE_FIRMWARE_UPDATE_STATUS,
     DATA_PROGRAMS,
@@ -238,14 +238,14 @@ async def async_setup_entry(  # noqa: C901
     if not entry.unique_id or is_ip_address(entry.unique_id):
         # If the config entry doesn't already have a unique ID, set one:
         entry_updates["unique_id"] = controller.mac
-    if CONF_ZONE_RUN_TIME in entry.data:
+    if CONF_DEFAULT_ZONE_RUN_TIME in entry.data:
         # If a zone run time exists in the config entry's data, pop it and move it to
         # options:
         data = {**entry.data}
         entry_updates["data"] = data
         entry_updates["options"] = {
             **entry.options,
-            CONF_ZONE_RUN_TIME: data.pop(CONF_ZONE_RUN_TIME),
+            CONF_DEFAULT_ZONE_RUN_TIME: data.pop(CONF_DEFAULT_ZONE_RUN_TIME),
         }
     if CONF_USE_APP_RUN_TIMES not in entry.options:
         entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
@@ -496,15 +496,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return {"new_unique_id": "_".join(unique_id_pieces)}
 
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
-
-    # 2 -> 3: Add option to use zone durations from RainMachine app
-    if version <= 2:
-        version = entry.version = 3
-
-        new = {**entry.options}
-        new[CONF_USE_APP_RUN_TIMES] = False
-
-        hass.config_entries.async_update_entry(entry, options=new)
 
     LOGGER.info("Migration to version %s successful", version)
 

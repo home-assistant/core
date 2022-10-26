@@ -11,7 +11,7 @@ async def test_entry_diagnostics(hass, config_entry, hass_client, setup_rainmach
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "entry_id": config_entry.entry_id,
-            "version": 3,
+            "version": 2,
             "domain": "rainmachine",
             "title": "Mock Title",
             "data": {
@@ -633,7 +633,7 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
             "entry_id": config_entry.entry_id,
-            "version": 3,
+            "version": 2,
             "domain": "rainmachine",
             "title": "Mock Title",
             "data": {

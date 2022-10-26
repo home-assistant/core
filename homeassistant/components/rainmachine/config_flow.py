@@ -17,8 +17,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import (
+    CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_USE_APP_RUN_TIMES,
-    CONF_ZONE_RUN_TIME,
     DEFAULT_PORT,
     DEFAULT_ZONE_RUN,
     DOMAIN,
@@ -48,7 +48,7 @@ async def async_get_controller(
 class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a RainMachine config flow."""
 
-    VERSION = 3
+    VERSION = 2
 
     discovered_ip_address: str | None = None
 
@@ -144,8 +144,8 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_SSL: user_input.get(CONF_SSL, True),
-                        CONF_ZONE_RUN_TIME: user_input.get(
-                            CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
+                        CONF_DEFAULT_ZONE_RUN_TIME: user_input.get(
+                            CONF_DEFAULT_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
                         ),
                     },
                 )
@@ -179,8 +179,10 @@ class RainMachineOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_ZONE_RUN_TIME,
-                        default=self.config_entry.options.get(CONF_ZONE_RUN_TIME),
+                        CONF_DEFAULT_ZONE_RUN_TIME,
+                        default=self.config_entry.options.get(
+                            CONF_DEFAULT_ZONE_RUN_TIME
+                        ),
                     ): cv.positive_int,
                     vol.Optional(
                         CONF_USE_APP_RUN_TIMES,

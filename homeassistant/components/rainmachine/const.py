@@ -6,7 +6,7 @@ LOGGER = logging.getLogger(__package__)
 DOMAIN = "rainmachine"
 
 CONF_DURATION = "duration"
-CONF_ZONE_RUN_TIME = "zone_run_time"
+CONF_DEFAULT_ZONE_RUN_TIME = "zone_run_time"
 CONF_USE_APP_RUN_TIMES = "use_app_run_times"
 
 DATA_API_VERSIONS = "api.versions"
