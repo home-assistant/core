@@ -635,13 +635,13 @@ class UnitOfVolume(StrEnum):
     LITERS = "L"
     MILLILITERS = "mL"
     GALLONS = "gal"
-    """Assumed to be US gallon in conversion utilities.
+    """Assumed to be US gallons in conversion utilities.
 
-    British/Imperial gallon is not yet supported"""
+    British/Imperial gallons are not yet supported"""
     FLUID_OUNCES = "fl. oz."
-    """Assumed to be US fluid ounce in conversion utilities.
+    """Assumed to be US fluid ounces in conversion utilities.
 
-    British/Imperial fluid ounce is not yet supported"""
+    British/Imperial fluid ounces are not yet supported"""
 
 
 VOLUME_LITERS: Final = "L"
