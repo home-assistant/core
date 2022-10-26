@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -346,7 +347,7 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
             await self.coordinator.async_request_refresh()
             self._apply_coordinator_update()
 
-        self.hass.async_create_task(refresh())
+        asyncio.create_task(refresh())
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
