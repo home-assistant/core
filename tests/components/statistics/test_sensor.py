@@ -1052,12 +1052,95 @@ async def test_invalid_state_characteristic(hass: HomeAssistant):
         str(VALUES_NUMERIC[0]),
         {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
     )
+    hass.states.async_set(
+        "binary_sensor.test_monitored",
+        str(VALUES_BINARY[0]),
+        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_numeric")
     assert state is None
     state = hass.states.get("sensor.test_binary")
     assert state is None
+
+
+async def test_attributes(hass: HomeAssistant):
+    """Test the correct addition of attributes."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test_default",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_1_str",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                    "attribute_characteristic": "count",
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_1_list",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                    "attribute_characteristic": ["count"],
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_many",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                    "attribute_characteristic": [
+                        "count",
+                        "datetime_newest",
+                        "variance",
+                    ],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # for value in VALUES_NUMERIC:
+    #    hass.states.async_set(
+    #        "sensor.test_monitored",
+    #        str(value),
+    #        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+    #    )
+    hass.states.async_set(
+        "sensor.test_monitored",
+        str(VALUES_NUMERIC[0]),
+        {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_default")
+    assert state is not None
+    assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
+    assert state.attributes.get("source_value_valid") is True
+    assert "age_coverage_ratio" not in state.attributes
+    state = hass.states.get("sensor.test_1_str")
+    assert state is not None
+    assert state.attributes.get("count") == 1
+    state = hass.states.get("sensor.test_1_list")
+    assert state is not None
+    assert state.attributes.get("count") == 1
+    state = hass.states.get("sensor.test_many")
+    assert state is not None
+    assert state.attributes.get("count") == 1
+    assert type(state.attributes.get("datetime_newest")) is datetime
+    assert "variance" not in state.attributes
 
 
 async def test_initialize_from_database(recorder_mock, hass: HomeAssistant):
