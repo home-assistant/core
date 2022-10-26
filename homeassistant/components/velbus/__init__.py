@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     controller = Velbus(
         entry.data[CONF_PORT],
-        cache_dir=hass.config.path(f".storage/velbuscache/{entry.entry_id}/"),
+        cache_dir=hass.config.path(f".storage/velbuscache-{entry.entry_id}/"),
     )
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id]["cntrl"] = controller
@@ -141,15 +141,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].pop(entry.entry_id)
     await hass.async_add_executor_job(
         shutil.rmtree,
-        hass.config.path(f".storage/velbuscache/{entry.entry_id}/"),
+        hass.config.path(f".storage/velbuscache-{entry.entry_id}/"),
     )
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
         hass.services.async_remove(DOMAIN, SERVICE_SCAN)
         hass.services.async_remove(DOMAIN, SERVICE_SYNC)
         hass.services.async_remove(DOMAIN, SERVICE_SET_MEMO_TEXT)
-        await hass.async_add_executor_job(
-            shutil.rmtree,
-            hass.config.path(".storage/velbuscache/"),
-        )
     return unload_ok
