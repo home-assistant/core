@@ -536,16 +536,37 @@ TIME_WEEKS: Final = "w"
 TIME_MONTHS: Final = "m"
 TIME_YEARS: Final = "y"
 
-# Length units
-LENGTH_MILLIMETERS: Final = "mm"
-LENGTH_CENTIMETERS: Final = "cm"
-LENGTH_METERS: Final = "m"
-LENGTH_KILOMETERS: Final = "km"
 
+# Length units
+class UnitOfLength(StrEnum):
+    """Length units."""
+
+    MILLIMETERS = "mm"
+    CENTIMETERS = "cm"
+    METERS = "m"
+    KILOMETERS = "km"
+    INCHES = "in"
+    FEET = "ft"
+    YARDS = "yd"
+    MILES = "mi"
+
+
+LENGTH_MILLIMETERS: Final = "mm"
+"""Deprecated: please use UnitOfLength.MILLIMETERS."""
+LENGTH_CENTIMETERS: Final = "cm"
+"""Deprecated: please use UnitOfLength.CENTIMETERS."""
+LENGTH_METERS: Final = "m"
+"""Deprecated: please use UnitOfLength.METERS."""
+LENGTH_KILOMETERS: Final = "km"
+"""Deprecated: please use UnitOfLength.KILOMETERS."""
 LENGTH_INCHES: Final = "in"
+"""Deprecated: please use UnitOfLength.INCHES."""
 LENGTH_FEET: Final = "ft"
+"""Deprecated: please use UnitOfLength.FEET."""
 LENGTH_YARD: Final = "yd"
+"""Deprecated: please use UnitOfLength.YARDS."""
 LENGTH_MILES: Final = "mi"
+"""Deprecated: please use UnitOfLength.MILES."""
 
 # Frequency units
 FREQUENCY_HERTZ: Final = "Hz"
