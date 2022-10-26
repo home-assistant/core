@@ -91,6 +91,7 @@ def _mocked_bulb() -> Light:
     bulb.set_power = MockLifxCommand(bulb)
     bulb.set_color = MockLifxCommand(bulb)
     bulb.get_hostfirmware = MockLifxCommand(bulb)
+    bulb.get_wifiinfo = MockLifxCommand(bulb, signal=100)
     bulb.get_version = MockLifxCommand(bulb)
     bulb.set_waveform_optional = MockLifxCommand(bulb)
     bulb.product = 1  # LIFX Original 1000
@@ -165,6 +166,12 @@ def _mocked_tile() -> Light:
     bulb.effect = {"effect": "OFF"}
     bulb.get_tile_effect = MockLifxCommand(bulb)
     bulb.set_tile_effect = MockLifxCommand(bulb)
+    return bulb
+
+
+def _mocked_bulb_old_firmware() -> Light:
+    bulb = _mocked_bulb()
+    bulb.host_firmware_version = "2.77"
     return bulb
 
 

@@ -35,6 +35,7 @@ ATTR_INDICATION = "indication"
 ATTR_INFRARED = "infrared"
 ATTR_POWER = "power"
 ATTR_REMAINING = "remaining"
+ATTR_RSSI = "rssi"
 ATTR_ZONES = "zones"
 
 ATTR_THEME = "theme"
