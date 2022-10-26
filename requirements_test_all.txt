@@ -155,7 +155,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.4
+aiohomekit==2.2.5
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -420,7 +420,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.47.0
+dbus-fast==1.49.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -648,7 +648,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221021.0
+home-assistant-frontend==20221026.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1800,6 +1800,9 @@ yolink-api==0.1.0
 
 # homeassistant.components.youless
 youless-api==0.16
+
+# homeassistant.components.zamg
+zamg==0.1.1
 
 # homeassistant.components.zeroconf
 zeroconf==0.39.2

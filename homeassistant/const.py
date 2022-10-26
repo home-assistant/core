@@ -7,7 +7,7 @@ from .backports.enum import StrEnum
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 11
+MINOR_VERSION: Final = 12
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -478,10 +478,22 @@ ATTR_PERSONS: Final = "persons"
 # Apparent power units
 POWER_VOLT_AMPERE: Final = "VA"
 
+
 # Power units
+class UnitOfPower(StrEnum):
+    """Power units."""
+
+    WATT = "W"
+    KILO_WATT = "kW"
+    BTU_PER_HOUR = "BTU/h"
+
+
 POWER_WATT: Final = "W"
+"""Deprecated: please use UnitOfPower.WATT."""
 POWER_KILO_WATT: Final = "kW"
+"""Deprecated: please use UnitOfPower.KILO_WATT."""
 POWER_BTU_PER_HOUR: Final = "BTU/h"
+"""Deprecated: please use UnitOfPower.BTU_PER_HOUR."""
 
 # Reactive power units
 POWER_VOLT_AMPERE_REACTIVE: Final = "var"
@@ -625,17 +637,38 @@ PRESSURE_PSI: Final = "psi"
 SOUND_PRESSURE_DB: Final = "dB"
 SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
 
+
 # Volume units
+class UnitOfVolume(StrEnum):
+    """Volume units."""
+
+    CUBIC_FEET = "ft³"
+    CUBIC_METERS = "m³"
+    LITERS = "L"
+    MILLILITERS = "mL"
+    GALLONS = "gal"
+    """Assumed to be US gallons in conversion utilities.
+
+    British/Imperial gallons are not yet supported"""
+    FLUID_OUNCES = "fl. oz."
+    """Assumed to be US fluid ounces in conversion utilities.
+
+    British/Imperial fluid ounces are not yet supported"""
+
+
 VOLUME_LITERS: Final = "L"
+"""Deprecated: please use UnitOfVolume.LITERS"""
 VOLUME_MILLILITERS: Final = "mL"
+"""Deprecated: please use UnitOfVolume.MILLILITERS"""
 VOLUME_CUBIC_METERS: Final = "m³"
+"""Deprecated: please use UnitOfVolume.CUBIC_METERS"""
 VOLUME_CUBIC_FEET: Final = "ft³"
+"""Deprecated: please use UnitOfVolume.CUBIC_FEET"""
 
 VOLUME_GALLONS: Final = "gal"
-"""US gallon (British gallon is not yet supported)"""
-
+"""Deprecated: please use UnitOfVolume.GALLONS"""
 VOLUME_FLUID_OUNCE: Final = "fl. oz."
-"""US fluid ounce (British fluid ounce is not yet supported)"""
+"""Deprecated: please use UnitOfVolume.FLUID_OUNCES"""
 
 # Volume Flow Rate units
 VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
@@ -644,14 +677,31 @@ VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = "ft³/m"
 # Area units
 AREA_SQUARE_METERS: Final = "m²"
 
-# Mass units
-MASS_GRAMS: Final = "g"
-MASS_KILOGRAMS: Final = "kg"
-MASS_MILLIGRAMS: Final = "mg"
-MASS_MICROGRAMS: Final = "µg"
 
+# Mass units
+class UnitOfMass(StrEnum):
+    """Mass units."""
+
+    GRAMS = "g"
+    KILOGRAMS = "kg"
+    MILLIGRAMS = "mg"
+    MICROGRAMS = "µg"
+    OUNCES = "oz"
+    POUNDS = "lb"
+
+
+MASS_GRAMS: Final = "g"
+"""Deprecated: please use UnitOfMass.GRAMS"""
+MASS_KILOGRAMS: Final = "kg"
+"""Deprecated: please use UnitOfMass.KILOGRAMS"""
+MASS_MILLIGRAMS: Final = "mg"
+"""Deprecated: please use UnitOfMass.MILLIGRAMS"""
+MASS_MICROGRAMS: Final = "µg"
+"""Deprecated: please use UnitOfMass.MICROGRAMS"""
 MASS_OUNCES: Final = "oz"
+"""Deprecated: please use UnitOfMass.OUNCES"""
 MASS_POUNDS: Final = "lb"
+"""Deprecated: please use UnitOfMass.POUNDS"""
 
 # Conductivity units
 CONDUCTIVITY: Final = "µS/cm"

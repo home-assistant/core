@@ -162,7 +162,12 @@ def mock_list_ports_fixture(serial_port) -> Generator[MagicMock, None, None]:
         another_port.description = "New serial port"
         another_port.serial_number = "5678"
         another_port.pid = 8765
-        mock_list_ports.return_value = [serial_port, another_port]
+        no_vid_port = copy(serial_port)
+        no_vid_port.device = "/no_vid"
+        no_vid_port.description = "Port without vid"
+        no_vid_port.serial_number = "9123"
+        no_vid_port.vid = None
+        mock_list_ports.return_value = [serial_port, another_port, no_vid_port]
         yield mock_list_ports
 
 
