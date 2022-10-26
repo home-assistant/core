@@ -136,17 +136,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Remove the velbus connection."""
+    """Unload (close) the velbus connection."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
     hass.data[DOMAIN].pop(entry.entry_id)
-    await hass.async_add_executor_job(
-        shutil.rmtree,
-        hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
-    )
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
         hass.services.async_remove(DOMAIN, SERVICE_SCAN)
         hass.services.async_remove(DOMAIN, SERVICE_SYNC)
         hass.services.async_remove(DOMAIN, SERVICE_SET_MEMO_TEXT)
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove the velbus entry, so we also have to cleanup the cache dir."""
+    await hass.async_add_executor_job(
+        shutil.rmtree,
+        hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
+    )
