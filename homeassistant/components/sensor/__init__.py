@@ -485,7 +485,7 @@ class SensorEntity(Entity):
         # conversion.
         registry_unit = registry_entry.unit_of_measurement
         if (
-            f"{DOMAIN}" not in registry_entry.options
+            DOMAIN not in registry_entry.options
             and f"{DOMAIN}.private" not in registry_entry.options
             and self.unit_of_measurement != registry_unit
             and (suggested_unit := self._get_initial_suggested_unit()) == registry_unit
