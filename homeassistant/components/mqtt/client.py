@@ -678,7 +678,7 @@ class MQTT:
         _mqttc: mqtt.Client,
         _userdata: None,
         mid: int,
-        _granted_qos: tuple[Any] | None = None,
+        _granted_qos: tuple[Any, ...] | None = None,
     ) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
         self.hass.add_job(self._mqtt_handle_mid, mid)
