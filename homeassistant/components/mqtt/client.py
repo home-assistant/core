@@ -245,7 +245,7 @@ def subscribe(
         async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 
-    def remove():
+    def remove() -> None:
         """Remove listener convert."""
         run_callback_threadsafe(hass.loop, async_remove).result()
 
@@ -341,7 +341,7 @@ class MQTT:
         self._ha_started = asyncio.Event()
         self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
-        self._cleanup_on_unload: list[Callable] = []
+        self._cleanup_on_unload: list[Callable[[], None]] = []
 
         self._paho_lock = asyncio.Lock()  # Prevents parallel calls to the MQTT client
         self._pending_operations: dict[int, asyncio.Event] = {}
@@ -352,14 +352,14 @@ class MQTT:
         else:
 
             @callback
-            def ha_started(_):
+            def ha_started(_: Event) -> None:
                 self._ha_started.set()
 
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, ha_started)
 
         self.init_client()
 
-        async def async_stop_mqtt(_event: Event):
+        async def async_stop_mqtt(_event: Event) -> None:
             """Stop MQTT component."""
             await self.async_disconnect()
 
@@ -506,9 +506,11 @@ class MQTT:
 
         def _client_unsubscribe(topic: str) -> int:
             result: int | None = None
+            mid: int | None = None
             result, mid = self._mqttc.unsubscribe(topic)
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
+            assert mid
             return mid
 
         if any(other.topic == topic for other in self.subscriptions):
@@ -553,7 +555,13 @@ class MQTT:
         if errors:
             _raise_on_errors(errors)
 
-    def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code: int) -> None:
+    def _mqtt_on_connect(
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        _flags: dict[str, Any],
+        result_code: int,
+    ) -> None:
         """On connect callback.
 
         Resubscribe to all topics we were subscribed to and publish birth
@@ -596,7 +604,7 @@ class MQTT:
             and ATTR_TOPIC in self.conf[CONF_BIRTH_MESSAGE]
         ):
 
-            async def publish_birth_message(birth_message):
+            async def publish_birth_message(birth_message: PublishMessage) -> None:
                 await self._ha_started.wait()  # Wait for Home Assistant to start
                 await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
                 await self.async_publish(
@@ -611,7 +619,9 @@ class MQTT:
                 publish_birth_message(birth_message), self.hass.loop
             )
 
-    def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
+    def _mqtt_on_message(
+        self, _mqttc: mqtt.Client, _userdata: None, msg: MQTTMessage
+    ) -> None:
         """Message received callback."""
         self.hass.add_job(self._mqtt_handle_message, msg)
 
@@ -663,7 +673,13 @@ class MQTT:
             )
         self._mqtt_data.state_write_requests.process_write_state_requests()
 
-    def _mqtt_on_callback(self, _mqttc, _userdata, mid, _granted_qos=None) -> None:
+    def _mqtt_on_callback(
+        self,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        mid: int,
+        _granted_qos: tuple[Any, ...] | None = None,
+    ) -> None:
         """Publish / Subscribe / Unsubscribe callback."""
         self.hass.add_job(self._mqtt_handle_mid, mid)
 
@@ -679,7 +695,9 @@ class MQTT:
             if mid not in self._pending_operations:
                 self._pending_operations[mid] = asyncio.Event()
 
-    def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
+    def _mqtt_on_disconnect(
+        self, _mqttc: mqtt.Client, _userdata: None, result_code: int
+    ) -> None:
         """Disconnected callback."""
         self.connected = False
         dispatcher_send(self.hass, MQTT_DISCONNECTED)
@@ -707,7 +725,7 @@ class MQTT:
                 del self._pending_operations[mid]
                 self._pending_operations_condition.notify_all()
 
-    async def _discovery_cooldown(self):
+    async def _discovery_cooldown(self) -> None:
         now = time.time()
         # Reset discovery and subscribe cooldowns
         self._mqtt_data.last_discovery = now
