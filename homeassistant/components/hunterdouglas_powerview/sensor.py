@@ -73,6 +73,7 @@ SENSORS: Final = [
         ),
         create_sensor_fn=lambda shade: bool(ATTR_SIGNAL_STRENGTH in shade.raw_data),
         update_fn=lambda shade: shade.refresh(),
+        entity_registry_enabled_default=False,
     ),
 ]
 
