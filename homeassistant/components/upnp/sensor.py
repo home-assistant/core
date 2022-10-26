@@ -1,14 +1,19 @@
 """Support for UPnP/IGD Sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND, TIME_SECONDS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpnpEntity, UpnpSensorEntityDescription
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
@@ -26,8 +31,16 @@ from .const import (
     ROUTER_UPTIME,
     WAN_STATUS,
 )
+from .coordinator import UpnpDataUpdateCoordinator
+from .entity import UpnpEntity, UpnpEntityDescription
 
-RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
+
+@dataclass
+class UpnpSensorEntityDescription(UpnpEntityDescription, SensorEntityDescription):
+    """A class that describes a sensor UPnP entities."""
+
+
+SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
         key=BYTES_RECEIVED,
         name=f"{DATA_BYTES} received",
@@ -137,14 +150,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the UPnP/IGD sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[UpnpSensor] = [
         UpnpSensor(
             coordinator=coordinator,
             entity_description=entity_description,
         )
-        for entity_description in RAW_SENSORS
+        for entity_description in SENSOR_DESCRIPTIONS
         if coordinator.data.get(entity_description.key) is not None
     ]
 
