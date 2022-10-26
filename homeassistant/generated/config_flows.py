@@ -463,6 +463,7 @@ FLOWS = {
         "yeelight",
         "yolink",
         "youless",
+        "zamg",
         "zerproc",
         "zha",
         "zwave_js",
