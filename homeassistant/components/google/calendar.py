@@ -461,4 +461,4 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
         )
     except ApiException as err:
         raise HomeAssistantError(str(err)) from err
-    await entity.async_update_ha_state(force_refresh=True)
+    entity.async_write_ha_state()
