@@ -2,6 +2,7 @@
     "state": {
         "plugwise__dhw_mode": {
             "auto": "Automatico",
+            "boost": "Velocizza",
             "comfort": "Comfort",
             "off": "Spento"
         },
