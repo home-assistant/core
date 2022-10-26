@@ -71,9 +71,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             client = OVOEnergy()
             try:
                 authenticated = await client.authenticate(
-                    self.username,
-                    user_input[CONF_PASSWORD],
-                    user_input.get(CONF_ACCOUNT, None),
+                    self.username, user_input[CONF_PASSWORD]
                 )
             except aiohttp.ClientError:
                 errors["base"] = "connection_error"
