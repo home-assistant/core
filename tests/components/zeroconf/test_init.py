@@ -13,12 +13,13 @@ from homeassistant.components.zeroconf import (
     _get_announced_addresses,
 )
 from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.generated import zeroconf as zc_gen
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -1178,3 +1179,13 @@ async def test_setup_with_disallowed_characters_in_local_name(
 
     calls = mock_async_zeroconf.async_register_service.mock_calls
     assert calls[0][1][0].name == "My House._home-assistant._tcp.local."
+
+
+async def test_start_with_frontend(hass, mock_async_zeroconf):
+    """Test we start with the frontend."""
+    with patch("homeassistant.components.zeroconf.HaZeroconf"):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "frontend"})
+        await hass.async_block_till_done()
+
+    mock_async_zeroconf.async_register_service.assert_called_once()

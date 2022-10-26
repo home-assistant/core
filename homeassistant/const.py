@@ -644,14 +644,31 @@ VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = "ft³/m"
 # Area units
 AREA_SQUARE_METERS: Final = "m²"
 
-# Mass units
-MASS_GRAMS: Final = "g"
-MASS_KILOGRAMS: Final = "kg"
-MASS_MILLIGRAMS: Final = "mg"
-MASS_MICROGRAMS: Final = "µg"
 
+# Mass units
+class UnitOfMass(StrEnum):
+    """Mass units."""
+
+    GRAMS = "g"
+    KILOGRAMS = "kg"
+    MILLIGRAMS = "mg"
+    MICROGRAMS = "µg"
+    OUNCES = "oz"
+    POUNDS = "lb"
+
+
+MASS_GRAMS: Final = "g"
+"""Deprecated: please use UnitOfMass.GRAMS"""
+MASS_KILOGRAMS: Final = "kg"
+"""Deprecated: please use UnitOfMass.KILOGRAMS"""
+MASS_MILLIGRAMS: Final = "mg"
+"""Deprecated: please use UnitOfMass.MILLIGRAMS"""
+MASS_MICROGRAMS: Final = "µg"
+"""Deprecated: please use UnitOfMass.MICROGRAMS"""
 MASS_OUNCES: Final = "oz"
+"""Deprecated: please use UnitOfMass.OUNCES"""
 MASS_POUNDS: Final = "lb"
+"""Deprecated: please use UnitOfMass.POUNDS"""
 
 # Conductivity units
 CONDUCTIVITY: Final = "µS/cm"
