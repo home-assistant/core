@@ -39,7 +39,6 @@ class PowerviewSensorDescriptionMixin:
     update_fn: Callable[[BaseShade], Any]
     native_value_fn: Callable[[BaseShade], int]
     create_sensor_fn: Callable[[BaseShade], bool]
-    enabled_default: bool
 
 
 @dataclass
@@ -63,7 +62,6 @@ SENSORS: Final = [
         ),
         create_sensor_fn=lambda shade: bool(SHADE_BATTERY_LEVEL in shade.raw_data),
         update_fn=lambda shade: shade.refresh_battery(),
-        enabled_default=True,
     ),
     PowerviewSensorDescription(
         key="signal",
@@ -75,7 +73,7 @@ SENSORS: Final = [
         ),
         create_sensor_fn=lambda shade: bool(ATTR_SIGNAL_STRENGTH in shade.raw_data),
         update_fn=lambda shade: shade.refresh(),
-        enabled_default=False,
+        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -130,7 +128,6 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         self._attr_name = f"{self._shade_name} {description.name}"
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self._attr_entity_registry_enabled_default = description.enabled_default
 
     @property
     def native_value(self) -> int:
