@@ -2,15 +2,21 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
+    LENGTH_CENTIMETERS,
+    LENGTH_FEET,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
+    LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LENGTH_YARD,
     MASS,
     MASS_GRAMS,
     MASS_KILOGRAMS,
@@ -21,6 +27,8 @@ from homeassistant.const import (
     PRESSURE,
     PRESSURE_PA,
     PRESSURE_PSI,
+    SPEED_FEET_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
@@ -41,6 +49,9 @@ from .unit_conversion import (
     TemperatureConverter,
     VolumeConverter,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.sensor import SensorDeviceClass
 
 _CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
 _CONF_UNIT_SYSTEM_METRIC: Final = "metric"
@@ -89,6 +100,7 @@ class UnitSystem:
         name: str,
         *,
         accumulated_precipitation: str,
+        conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str],
         length: str,
         mass: str,
         pressure: str,
@@ -122,6 +134,7 @@ class UnitSystem:
         self.pressure_unit = pressure
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
+        self._conversions = conversions
 
     @property
     def name(self) -> str:
@@ -215,6 +228,14 @@ class UnitSystem:
             WIND_SPEED: self.wind_speed_unit,
         }
 
+    def get_converted_unit(
+        self,
+        device_class: SensorDeviceClass | str | None,
+        original_unit: str | None,
+    ) -> str | None:
+        """Return converted unit given a device class or an original unit."""
+        return self._conversions.get((device_class, original_unit))
+
 
 def get_unit_system(key: str) -> UnitSystem:
     """Get unit system based on key."""
@@ -243,6 +264,16 @@ validate_unit_system = vol.All(
 METRIC_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_METRIC,
     accumulated_precipitation=PRECIPITATION_MILLIMETERS,
+    conversions={
+        # Convert non-metric distances
+        ("distance", LENGTH_FEET): LENGTH_METERS,
+        ("distance", LENGTH_INCHES): LENGTH_MILLIMETERS,
+        ("distance", LENGTH_MILES): LENGTH_KILOMETERS,
+        ("distance", LENGTH_YARD): LENGTH_METERS,
+        # Convert non-metric speeds except knots to km/h
+        ("speed", SPEED_FEET_PER_SECOND): SPEED_KILOMETERS_PER_HOUR,
+        ("speed", SPEED_MILES_PER_HOUR): SPEED_KILOMETERS_PER_HOUR,
+    },
     length=LENGTH_KILOMETERS,
     mass=MASS_GRAMS,
     pressure=PRESSURE_PA,
@@ -254,6 +285,16 @@ METRIC_SYSTEM = UnitSystem(
 US_CUSTOMARY_SYSTEM = UnitSystem(
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     accumulated_precipitation=PRECIPITATION_INCHES,
+    conversions={
+        # Convert non-USCS distances
+        ("distance", LENGTH_CENTIMETERS): LENGTH_INCHES,
+        ("distance", LENGTH_KILOMETERS): LENGTH_MILES,
+        ("distance", LENGTH_METERS): LENGTH_FEET,
+        ("distance", LENGTH_MILLIMETERS): LENGTH_INCHES,
+        # Convert non-USCS speeds except knots to mph
+        ("speed", SPEED_METERS_PER_SECOND): SPEED_MILES_PER_HOUR,
+        ("speed", SPEED_KILOMETERS_PER_HOUR): SPEED_MILES_PER_HOUR,
+    },
     length=LENGTH_MILES,
     mass=MASS_POUNDS,
     pressure=PRESSURE_PSI,

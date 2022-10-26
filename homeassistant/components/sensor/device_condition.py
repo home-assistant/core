@@ -63,7 +63,9 @@ CONF_IS_VALUE = "is_value"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLTAGE = "is_voltage"
 CONF_IS_VOLUME = "is_volume"
+CONF_IS_WATER = "is_water"
 CONF_IS_WEIGHT = "is_weight"
+CONF_IS_WIND_SPEED = "is_wind_speed"
 
 ENTITY_CONDITIONS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
@@ -101,7 +103,9 @@ ENTITY_CONDITIONS = {
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
+    SensorDeviceClass.WATER: [{CONF_TYPE: CONF_IS_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_IS_WEIGHT}],
+    SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_IS_WIND_SPEED}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
 
