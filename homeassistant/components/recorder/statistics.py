@@ -1369,7 +1369,7 @@ def statistic_during_period(
     metadata = None
 
     if not types:
-        types = {"max", "mean", "min", "sum"}
+        types = {"max", "mean", "min", "change"}
 
     result: dict[str, Any] = {}
 
@@ -1439,7 +1439,7 @@ def statistic_during_period(
                 types,
             )
 
-        if "sum" in types:
+        if "change" in types:
             oldest_sum: float | None
             if start_time is None:
                 oldest_sum = 0.0
@@ -1465,9 +1465,9 @@ def statistic_during_period(
             )
             # Calculate the difference between the oldest and newest sum
             if oldest_sum is not None and newest_sum is not None:
-                result["sum"] = newest_sum - oldest_sum
+                result["change"] = newest_sum - oldest_sum
             else:
-                result["sum"] = None
+                result["change"] = None
 
     def no_conversion(val: float | None) -> float | None:
         """Return val."""

@@ -260,7 +260,12 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"max": None, "mean": None, "min": None, "sum": None}
+    assert response["result"] == {
+        "max": None,
+        "mean": None,
+        "min": None,
+        "change": None,
+    }
 
     # This should include imported_statistics_5min[:]
     await client.send_json(
@@ -276,7 +281,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[:]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]),
         "min": min(stat["min"] for stat in imported_stats_5min[:]),
-        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+        "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
     }
 
     # This should also include imported_statistics_5min[:]
@@ -299,7 +304,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[:]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]),
         "min": min(stat["min"] for stat in imported_stats_5min[:]),
-        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+        "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
     }
 
     # This should also include imported_statistics_5min[:]
@@ -322,7 +327,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[:]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]),
         "min": min(stat["min"] for stat in imported_stats_5min[:]),
-        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+        "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
     }
 
     # This should include imported_statistics_5min[26:]
@@ -344,7 +349,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[26:]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[26:]),
         "min": min(stat["min"] for stat in imported_stats_5min[26:]),
-        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[25]["sum"],
+        "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[25]["sum"],
     }
 
     # This should also include imported_statistics_5min[26:]
@@ -365,7 +370,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[26:]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[26:]),
         "min": min(stat["min"] for stat in imported_stats_5min[26:]),
-        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[25]["sum"],
+        "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[25]["sum"],
     }
 
     # This should include imported_statistics_5min[:26]
@@ -387,7 +392,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[:26]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:26]),
         "min": min(stat["min"] for stat in imported_stats_5min[:26]),
-        "sum": imported_stats_5min[25]["sum"] - 0,
+        "change": imported_stats_5min[25]["sum"] - 0,
     }
 
     # This should include imported_statistics_5min[26:32] (less than a full hour)
@@ -412,7 +417,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[26:32]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[26:32]),
         "min": min(stat["min"] for stat in imported_stats_5min[26:32]),
-        "sum": imported_stats_5min[31]["sum"] - imported_stats_5min[25]["sum"],
+        "change": imported_stats_5min[31]["sum"] - imported_stats_5min[25]["sum"],
     }
 
     # This should include imported_statistics[2:] + imported_statistics_5min[36:]
@@ -435,7 +440,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[24:]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[24:]),
         "min": min(stat["min"] for stat in imported_stats_5min[24:]),
-        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[23]["sum"],
+        "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[23]["sum"],
     }
 
     # This should also include imported_statistics[2:] + imported_statistics_5min[36:]
@@ -455,7 +460,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[24:]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[24:]),
         "min": min(stat["min"] for stat in imported_stats_5min[24:]),
-        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[23]["sum"],
+        "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[23]["sum"],
     }
 
     # This should include imported_statistics[2:3]
@@ -476,7 +481,7 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[24:36]),
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[24:36]),
         "min": min(stat["min"] for stat in imported_stats_5min[24:36]),
-        "sum": imported_stats_5min[35]["sum"] - imported_stats_5min[23]["sum"],
+        "change": imported_stats_5min[35]["sum"] - imported_stats_5min[23]["sum"],
     }
 
     # Test we can get only selected types
@@ -485,14 +490,14 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
             "id": next_id(),
             "type": "recorder/statistic_during_period",
             "statistic_id": "sensor.test",
-            "types": ["max", "sum"],
+            "types": ["max", "change"],
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {
         "max": max(stat["max"] for stat in imported_stats_5min[:]),
-        "sum": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+        "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
     }
 
     # Test we can convert units
@@ -510,7 +515,8 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[:]) / 1000,
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]) / 1000,
         "min": min(stat["min"] for stat in imported_stats_5min[:]) / 1000,
-        "sum": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"]) / 1000,
+        "change": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"])
+        / 1000,
     }
 
     # Test we can automatically convert units
@@ -528,7 +534,8 @@ async def test_statistic_during_period(recorder_mock, hass, hass_ws_client):
         "max": max(stat["max"] for stat in imported_stats_5min[:]) * 1000,
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]) * 1000,
         "min": min(stat["min"] for stat in imported_stats_5min[:]) * 1000,
-        "sum": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"]) * 1000,
+        "change": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"])
+        * 1000,
     }
 
 
