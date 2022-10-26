@@ -160,12 +160,12 @@ class ComfoConnectFan(FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if self.preset_modes and preset_mode in self.preset_modes:
-            _LOGGER.debug("Changing preset mode to %s", preset_mode)
-            if preset_mode == PRESET_MODE_AUTO:
-                # force set it to manual first
-                self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_MANUAL)
-                # now set it to auto so any previous percentage set gets undone
-                self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_AUTO)
-        else:
+        if not self.preset_modes or preset_mode not in self.preset_modes:
             raise ValueError(f"Invalid preset mode: {preset_mode}")
+
+        _LOGGER.debug("Changing preset mode to %s", preset_mode)
+        if preset_mode == PRESET_MODE_AUTO:
+            # force set it to manual first
+            self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_MANUAL)
+            # now set it to auto so any previous percentage set gets undone
+            self._ccb.comfoconnect.cmd_rmi_request(CMD_MODE_AUTO)
