@@ -65,6 +65,7 @@ async def test_min_sensor(hass: HomeAssistant) -> None:
             "name": "test_min",
             "type": "min",
             "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id",
         }
     }
 
