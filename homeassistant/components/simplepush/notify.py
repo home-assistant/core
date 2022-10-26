@@ -21,7 +21,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_ACTIONS,
-    ATTR_ATTACHMENTS,
     ATTR_EVENT,
     ATTR_FEEDBACK_ACTION_TIMEOUT,
     CONF_DEVICE_KEY,
@@ -75,7 +74,6 @@ class SimplePushNotificationService(BaseNotificationService):
 
         actions = None
         action_ids = {}
-        attachments = None
         # event can now be passed in the service data
         event = None
         feedback_action_timeout = None
@@ -100,20 +98,6 @@ class SimplePushNotificationService(BaseNotificationService):
                     )
                 except (ValueError, TypeError):
                     feedback_action_timeout = 60
-
-            attachments_data = data.get(ATTR_ATTACHMENTS)
-            if isinstance(attachments_data, list) and attachments_data:
-                attachments = []
-                for attachment in attachments_data:
-                    if "attachment" in attachment and "thumbnail" in attachment:
-                        attachments.append(
-                            {
-                                "video": attachment["attachment"],
-                                "thumbnail": attachment["thumbnail"],
-                            }
-                        )
-                    elif "attachment" in attachment:
-                        attachments.append(attachment["attachment"])
 
         # use event from config until YAML config is removed
         event = event or self._event
@@ -143,7 +127,6 @@ class SimplePushNotificationService(BaseNotificationService):
                         title=title,
                         message=message,
                         actions=actions,
-                        attachments=attachments,
                         event=event,
                         feedback_callback=feedback_action_callback,
                         feedback_callback_timeout=feedback_action_timeout,
@@ -157,7 +140,6 @@ class SimplePushNotificationService(BaseNotificationService):
                         title=title,
                         message=message,
                         actions=actions,
-                        attachments=attachments,
                         event=event,
                         feedback_callback=feedback_action_callback,
                         feedback_callback_timeout=feedback_action_timeout,
