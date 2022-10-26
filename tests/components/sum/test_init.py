@@ -1,9 +1,14 @@
 """Test the Sum integration."""
+from __future__ import annotations
+
 import pytest
 
 from homeassistant.components.sum.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
+
+from . import SUM_VALUE, VALUES
 
 from tests.common import MockConfigEntry
 
@@ -51,3 +56,45 @@ async def test_setup_and_remove_config_entry(
     # Check the state and entity registry entry are removed
     assert hass.states.get(sum_entity_id) is None
     assert registry.async_get(sum_entity_id) is None
+
+
+async def test_sum_sensor_from_yaml(hass: HomeAssistant) -> None:
+    """Test the sum sensor setup from integration yaml."""
+    config = {
+        "sum": [
+            {
+                "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+                "unique_id": "very_unique_id",
+                "name": "My Sum",
+            },
+            {
+                "entity_ids": ["sensor.test_1", "sensor.test_3"],
+                "unique_id": "very_unique_id2",
+                "name": "My Sum2",
+            },
+        ]
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sum"][0]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_sum")
+    state2 = hass.states.get("sensor.my_sum2")
+
+    assert str(float(SUM_VALUE)) == state.state
+    assert str(float(sum([VALUES[0], VALUES[2]]))) == state2.state
+
+
+async def test_sum_sensor_from_yaml_no_config(hass: HomeAssistant) -> None:
+    """Test the sum sensor setup from integration yaml with missing config."""
+    assert await async_setup_component(hass, DOMAIN, {"sum": None})
+    await hass.async_block_till_done()
+
+    entities = er.async_get(hass)
+    assert entities.entities == {}

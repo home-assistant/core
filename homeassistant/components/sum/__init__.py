@@ -1,6 +1,8 @@
 """The sum component."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,9 +25,11 @@ PLATFORM_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Sum from yaml config."""
-    if (conf := config.get(DOMAIN)) is None:
+    conf: list | None
+    if (conf := config.get(DOMAIN)) in [None, []]:
         return True
-
+    if TYPE_CHECKING:
+        assert isinstance(conf, list)
     for sensor_conf in conf:
         discovery.load_platform(
             hass,
