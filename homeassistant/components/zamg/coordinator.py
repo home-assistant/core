@@ -21,7 +21,7 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
         self,
         hass: HomeAssistant,
         *,
-        entry: ConfigEntry | None = None,
+        entry: ConfigEntry,
     ) -> None:
         """Initialize global ZAMG data updater."""
         self.zamg = ZamgDevice(session=async_get_clientsession(hass))
