@@ -153,7 +153,7 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==11.1.1
+aioesphomeapi==11.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -162,7 +162,7 @@ aioflo==2021.11.0
 aioftp==0.21.3
 
 # homeassistant.components.github
-aiogithubapi==22.2.4
+aiogithubapi==22.10.1
 
 # homeassistant.components.guardian
 aioguardian==2022.07.0
@@ -193,7 +193,7 @@ aiokef==0.2.16
 aiolifx==0.8.6
 
 # homeassistant.components.lifx
-aiolifx_effects==0.2.2
+aiolifx_effects==0.3.0
 
 # homeassistant.components.lifx
 aiolifx_themes==0.1.1
@@ -255,7 +255,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==4.1.0
+aioshelly==4.1.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -353,7 +353,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.32.0
+async-upnp-client==0.32.1
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -413,7 +413,7 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.4.0
+bleak-retry-connector==2.4.2
 
 # homeassistant.components.bluetooth
 bleak==0.19.0
@@ -901,7 +901,7 @@ iammeter==0.1.7
 iaqualink==0.5.0
 
 # homeassistant.components.ibeacon
-ibeacon_ble==0.7.4
+ibeacon_ble==1.0.1
 
 # homeassistant.components.watson_tts
 ibm-watson==5.2.2
@@ -1237,6 +1237,9 @@ openwrt-luci-rpc==1.1.11
 # homeassistant.components.ubus
 openwrt-ubus-rpc==0.0.2
 
+# homeassistant.components.oralb
+oralb-ble==0.5.0
+
 # homeassistant.components.oru
 oru==0.1.11
 
@@ -1406,7 +1409,7 @@ pyRFXtrx==0.30.0
 pySwitchmate==0.5.1
 
 # homeassistant.components.tibber
-pyTibber==0.25.4
+pyTibber==0.25.6
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1640,7 +1643,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.7
+pyisy==3.0.8
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -2147,7 +2150,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.09.2
+regenmaschine==2022.10.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -2594,6 +2597,9 @@ youless-api==0.16
 # homeassistant.components.media_extractor
 youtube_dl==2021.12.17
 
+# homeassistant.components.zamg
+zamg==0.1.1
+
 # homeassistant.components.zengge
 zengge==0.2
 
@@ -2601,7 +2607,7 @@ zengge==0.2
 zeroconf==0.39.2
 
 # homeassistant.components.zha
-zha-quirks==0.0.83
+zha-quirks==0.0.84
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

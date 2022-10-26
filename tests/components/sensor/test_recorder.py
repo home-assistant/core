@@ -4000,6 +4000,180 @@ async def test_validate_statistics_unit_change_no_conversion(
     await assert_validation_result(client, expected)
 
 
+@pytest.mark.parametrize(
+    "attributes, unit1, unit2",
+    [
+        (NONE_SENSOR_ATTRIBUTES, "m3", "m³"),
+        (NONE_SENSOR_ATTRIBUTES, "rpm", "RPM"),
+        (NONE_SENSOR_ATTRIBUTES, "RPM", "rpm"),
+    ],
+)
+async def test_validate_statistics_unit_change_equivalent_units(
+    recorder_mock, hass, hass_ws_client, attributes, unit1, unit2
+):
+    """Test validate_statistics.
+
+    This tests no validation issue is created when a sensor's unit changes to an
+    equivalent unit.
+    """
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    async def assert_statistic_ids(expected_result):
+        with session_scope(hass=hass) as session:
+            db_states = list(session.query(StatisticsMeta))
+            assert len(db_states) == len(expected_result)
+            for i in range(len(db_states)):
+                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+                assert (
+                    db_states[i].unit_of_measurement
+                    == expected_result[i]["unit_of_measurement"]
+                )
+
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, original unit - empty response
+    hass.states.async_set(
+        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit1}}
+    )
+    await assert_validation_result(client, {})
+
+    # Run statistics
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+    )
+
+    # Units changed to an equivalent unit - empty response
+    hass.states.async_set(
+        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": unit2}}
+    )
+    await assert_validation_result(client, {})
+
+    # Run statistics one hour later, metadata will be updated
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        [{"statistic_id": "sensor.test", "unit_of_measurement": unit2}]
+    )
+    await assert_validation_result(client, {})
+
+
+@pytest.mark.parametrize(
+    "attributes, unit1, unit2, supported_unit",
+    [
+        (NONE_SENSOR_ATTRIBUTES, "m³", "m3", "L, fl. oz., ft³, gal, mL, m³"),
+    ],
+)
+async def test_validate_statistics_unit_change_equivalent_units_2(
+    recorder_mock, hass, hass_ws_client, attributes, unit1, unit2, supported_unit
+):
+    """Test validate_statistics.
+
+    This tests a validation issue is created when a sensor's unit changes to an
+    equivalent unit which is not known to the unit converters.
+    """
+
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    async def assert_statistic_ids(expected_result):
+        with session_scope(hass=hass) as session:
+            db_states = list(session.query(StatisticsMeta))
+            assert len(db_states) == len(expected_result)
+            for i in range(len(db_states)):
+                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+                assert (
+                    db_states[i].unit_of_measurement
+                    == expected_result[i]["unit_of_measurement"]
+                )
+
+    now = dt_util.utcnow()
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, original unit - empty response
+    hass.states.async_set(
+        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit1}}
+    )
+    await assert_validation_result(client, {})
+
+    # Run statistics
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+    )
+
+    # Units changed to an equivalent unit which is not known by the unit converters
+    hass.states.async_set(
+        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": unit2}}
+    )
+    expected = {
+        "sensor.test": [
+            {
+                "data": {
+                    "metadata_unit": unit1,
+                    "state_unit": unit2,
+                    "statistic_id": "sensor.test",
+                    "supported_unit": supported_unit,
+                },
+                "type": "units_changed",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+    # Run statistics one hour later, metadata will not be updated
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+    )
+    await assert_validation_result(client, expected)
+
+
 async def test_validate_statistics_other_domain(recorder_mock, hass, hass_ws_client):
     """Test sensor does not raise issues for statistics for other domains."""
     id = 1

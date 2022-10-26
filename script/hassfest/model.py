@@ -186,9 +186,9 @@ class Integration:
         return self.manifest.get("iot_class")
 
     @property
-    def iot_standard(self) -> str:
+    def iot_standards(self) -> list[str]:
         """Return the IoT standard supported by this virtual integration."""
-        return self.manifest.get("iot_standard", {})
+        return self.manifest.get("iot_standards", [])
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""

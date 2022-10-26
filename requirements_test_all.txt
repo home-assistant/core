@@ -140,13 +140,13 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==11.1.1
+aioesphomeapi==11.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
 
 # homeassistant.components.github
-aiogithubapi==22.2.4
+aiogithubapi==22.10.1
 
 # homeassistant.components.guardian
 aioguardian==2022.07.0
@@ -171,7 +171,7 @@ aiokafka==0.7.2
 aiolifx==0.8.6
 
 # homeassistant.components.lifx
-aiolifx_effects==0.2.2
+aiolifx_effects==0.3.0
 
 # homeassistant.components.lifx
 aiolifx_themes==0.1.1
@@ -230,7 +230,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==4.1.0
+aioshelly==4.1.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -307,7 +307,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.32.0
+async-upnp-client==0.32.1
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.2.3
@@ -337,7 +337,7 @@ bellows==0.34.2
 bimmer_connected==0.10.4
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.4.0
+bleak-retry-connector==2.4.2
 
 # homeassistant.components.bluetooth
 bleak==0.19.0
@@ -672,7 +672,7 @@ hyperion-py==0.7.5
 iaqualink==0.5.0
 
 # homeassistant.components.ibeacon
-ibeacon_ble==0.7.4
+ibeacon_ble==1.0.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -882,6 +882,9 @@ open-meteo==0.2.1
 # homeassistant.components.openerz
 openerz-api==0.1.0
 
+# homeassistant.components.oralb
+oralb-ble==0.5.0
+
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
 
@@ -1006,7 +1009,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.25.4
+pyTibber==0.25.6
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -1153,7 +1156,7 @@ pyiqvia==2022.04.0
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.7
+pyisy==3.0.8
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1483,7 +1486,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.09.2
+regenmaschine==2022.10.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -1798,11 +1801,14 @@ yolink-api==0.1.0
 # homeassistant.components.youless
 youless-api==0.16
 
+# homeassistant.components.zamg
+zamg==0.1.1
+
 # homeassistant.components.zeroconf
 zeroconf==0.39.2
 
 # homeassistant.components.zha
-zha-quirks==0.0.83
+zha-quirks==0.0.84
 
 # homeassistant.components.zha
 zigpy-deconz==0.19.0

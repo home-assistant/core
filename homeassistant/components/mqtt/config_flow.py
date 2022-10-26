@@ -287,7 +287,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         options_config: dict[str, Any] = {}
         bad_input: bool = False
 
-        def _birth_will(birt_or_will: str) -> dict:
+        def _birth_will(birt_or_will: str) -> dict[str, Any]:
             """Return the user input for birth or will."""
             assert user_input
             return {
@@ -298,8 +298,11 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             }
 
         def _validate(
-            field: str, values: dict[str, Any], error_code: str, schema: Callable
-        ):
+            field: str,
+            values: dict[str, Any],
+            error_code: str,
+            schema: Callable[[Any], Any],
+        ) -> None:
             """Validate the user input."""
             nonlocal bad_input
             try:
@@ -679,7 +682,9 @@ def try_connection(
 
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
-    def on_connect(client_, userdata, flags, result_code):
+    def on_connect(
+        client_: mqtt.Client, userdata: None, flags: dict[str, Any], result_code: int
+    ) -> None:
         """Handle connection result."""
         result.put(result_code == mqtt.CONNACK_ACCEPTED)
 

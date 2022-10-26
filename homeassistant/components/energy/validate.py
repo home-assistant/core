@@ -9,13 +9,11 @@ from typing import Any
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 
@@ -25,9 +23,10 @@ from .const import DOMAIN
 ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
 ENERGY_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
-        ENERGY_KILO_WATT_HOUR,
-        ENERGY_MEGA_WATT_HOUR,
-        ENERGY_WATT_HOUR,
+        UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.WATT_HOUR,
+        UnitOfEnergy.GIGA_JOULE,
     )
 }
 ENERGY_PRICE_UNITS = tuple(
@@ -41,9 +40,10 @@ GAS_USAGE_DEVICE_CLASSES = (
 )
 GAS_USAGE_UNITS = {
     sensor.SensorDeviceClass.ENERGY: (
-        ENERGY_WATT_HOUR,
-        ENERGY_KILO_WATT_HOUR,
-        ENERGY_MEGA_WATT_HOUR,
+        UnitOfEnergy.WATT_HOUR,
+        UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.GIGA_JOULE,
     ),
     sensor.SensorDeviceClass.GAS: (VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
 }

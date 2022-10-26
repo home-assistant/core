@@ -2,9 +2,6 @@
 import pytest
 
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     LENGTH_CENTIMETERS,
     LENGTH_FEET,
     LENGTH_INCHES,
@@ -21,10 +18,6 @@ from homeassistant.const import (
     MASS_POUNDS,
     POWER_KILO_WATT,
     POWER_WATT,
-    PRECIPITATION_INTENSITY_INCHES_PER_DAY,
-    PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
-    PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
-    PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
     PRESSURE_CBAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
@@ -47,6 +40,8 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
+    UnitOfEnergy,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_conversion import (
@@ -75,9 +70,10 @@ INVALID_SYMBOL = "bob"
         (DistanceConverter, LENGTH_YARD),
         (DistanceConverter, LENGTH_FEET),
         (DistanceConverter, LENGTH_INCHES),
-        (EnergyConverter, ENERGY_WATT_HOUR),
-        (EnergyConverter, ENERGY_KILO_WATT_HOUR),
-        (EnergyConverter, ENERGY_MEGA_WATT_HOUR),
+        (EnergyConverter, UnitOfEnergy.WATT_HOUR),
+        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
+        (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
+        (EnergyConverter, UnitOfEnergy.GIGA_JOULE),
         (MassConverter, MASS_GRAMS),
         (MassConverter, MASS_KILOGRAMS),
         (MassConverter, MASS_MICROGRAMS),
@@ -94,10 +90,10 @@ INVALID_SYMBOL = "bob"
         (PressureConverter, PRESSURE_CBAR),
         (PressureConverter, PRESSURE_MMHG),
         (PressureConverter, PRESSURE_PSI),
-        (SpeedConverter, PRECIPITATION_INTENSITY_INCHES_PER_DAY),
-        (SpeedConverter, PRECIPITATION_INTENSITY_INCHES_PER_HOUR),
-        (SpeedConverter, PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY),
-        (SpeedConverter, PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR),
+        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_DAY),
+        (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_HOUR),
+        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_DAY),
+        (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR),
         (SpeedConverter, SPEED_FEET_PER_SECOND),
         (SpeedConverter, SPEED_KILOMETERS_PER_HOUR),
         (SpeedConverter, SPEED_KNOTS),
@@ -121,7 +117,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
     "converter,valid_unit",
     [
         (DistanceConverter, LENGTH_KILOMETERS),
-        (EnergyConverter, ENERGY_KILO_WATT_HOUR),
+        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
         (MassConverter, MASS_GRAMS),
         (PowerConverter, POWER_WATT),
         (PressureConverter, PRESSURE_PA),
@@ -147,7 +143,7 @@ def test_convert_invalid_unit(
     "converter,from_unit,to_unit",
     [
         (DistanceConverter, LENGTH_KILOMETERS, LENGTH_METERS),
-        (EnergyConverter, ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR),
+        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR),
         (MassConverter, MASS_GRAMS, MASS_KILOGRAMS),
         (PowerConverter, POWER_WATT, POWER_KILO_WATT),
         (PressureConverter, PRESSURE_HPA, PRESSURE_INHG),
@@ -168,7 +164,7 @@ def test_convert_nonnumeric_value(
     "converter,from_unit,to_unit,expected",
     [
         (DistanceConverter, LENGTH_KILOMETERS, LENGTH_METERS, 1 / 1000),
-        (EnergyConverter, ENERGY_WATT_HOUR, ENERGY_KILO_WATT_HOUR, 1000),
+        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
         (PowerConverter, POWER_WATT, POWER_KILO_WATT, 1000),
         (PressureConverter, PRESSURE_HPA, PRESSURE_INHG, pytest.approx(33.86389)),
         (
@@ -262,12 +258,14 @@ def test_distance_convert(
 @pytest.mark.parametrize(
     "value,from_unit,expected,to_unit",
     [
-        (10, ENERGY_WATT_HOUR, 0.01, ENERGY_KILO_WATT_HOUR),
-        (10, ENERGY_WATT_HOUR, 0.00001, ENERGY_MEGA_WATT_HOUR),
-        (10, ENERGY_KILO_WATT_HOUR, 10000, ENERGY_WATT_HOUR),
-        (10, ENERGY_KILO_WATT_HOUR, 0.01, ENERGY_MEGA_WATT_HOUR),
-        (10, ENERGY_MEGA_WATT_HOUR, 10000000, ENERGY_WATT_HOUR),
-        (10, ENERGY_MEGA_WATT_HOUR, 10000, ENERGY_KILO_WATT_HOUR),
+        (10, UnitOfEnergy.WATT_HOUR, 0.01, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.WATT_HOUR, 0.00001, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.KILO_WATT_HOUR, 10000, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.KILO_WATT_HOUR, 0.01, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000000, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_JOULE, 10000 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_JOULE, 10 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
     ],
 )
 def test_energy_convert(
@@ -393,42 +391,42 @@ def test_pressure_convert(
         # 5 in/day * 25.4 mm/in = 127 mm/day
         (
             5,
-            PRECIPITATION_INTENSITY_INCHES_PER_DAY,
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
             127,
-            PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         ),
         # 5 mm/day / 25.4 mm/in = 0.19685 in/day
         (
             5,
-            PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
             pytest.approx(0.1968504),
-            PRECIPITATION_INTENSITY_INCHES_PER_DAY,
+            UnitOfVolumetricFlux.INCHES_PER_DAY,
         ),
         # 48 mm/day = 2 mm/h
         (
             48,
-            PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
             pytest.approx(2),
-            PRECIPITATION_INTENSITY_MILLIMETERS_PER_HOUR,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         ),
         # 5 in/hr * 24 hr/day = 3048 mm/day
         (
             5,
-            PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
             3048,
-            PRECIPITATION_INTENSITY_MILLIMETERS_PER_DAY,
+            UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         ),
         # 5 m/s * 39.3701 in/m * 3600 s/hr = 708661
         (
             5,
             SPEED_METERS_PER_SECOND,
             pytest.approx(708661.42),
-            PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
         ),
         # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s
         (
             5000,
-            PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+            UnitOfVolumetricFlux.INCHES_PER_HOUR,
             pytest.approx(0.0352778),
             SPEED_METERS_PER_SECOND,
         ),

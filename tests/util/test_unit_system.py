@@ -1,21 +1,38 @@
 """Test the unit system helper."""
+from __future__ import annotations
+
 import pytest
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
     LENGTH,
+    LENGTH_CENTIMETERS,
+    LENGTH_FEET,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
+    LENGTH_MILES,
     LENGTH_MILLIMETERS,
+    LENGTH_YARD,
     MASS,
     MASS_GRAMS,
     PRESSURE,
     PRESSURE_PA,
+    SPEED_FEET_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMPERATURE,
     VOLUME,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLUID_OUNCE,
+    VOLUME_GALLONS,
     VOLUME_LITERS,
+    VOLUME_MILLILITERS,
     WIND_SPEED,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -40,8 +57,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=INVALID_UNIT,
@@ -53,8 +70,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=INVALID_UNIT,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -66,8 +83,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -79,8 +96,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -92,8 +109,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=INVALID_UNIT,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -105,8 +122,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=LENGTH_MILLIMETERS,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=INVALID_UNIT,
             temperature=TEMP_CELSIUS,
@@ -118,8 +135,8 @@ def test_invalid_units():
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=INVALID_UNIT,
+            conversions={},
             length=LENGTH_METERS,
-            length_conversions={},
             mass=MASS_GRAMS,
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
@@ -374,3 +391,97 @@ def test_get_unit_system_invalid(key: str) -> None:
     """Test get_unit_system with an invalid key."""
     with pytest.raises(ValueError, match=f"`{key}` is not a valid unit system key"):
         _ = get_unit_system(key)
+
+
+@pytest.mark.parametrize(
+    "device_class, original_unit, state_unit",
+    (
+        # Test distance conversion
+        (SensorDeviceClass.DISTANCE, LENGTH_FEET, LENGTH_METERS),
+        (SensorDeviceClass.DISTANCE, LENGTH_INCHES, LENGTH_MILLIMETERS),
+        (SensorDeviceClass.DISTANCE, LENGTH_MILES, LENGTH_KILOMETERS),
+        (SensorDeviceClass.DISTANCE, LENGTH_YARD, LENGTH_METERS),
+        (SensorDeviceClass.DISTANCE, LENGTH_KILOMETERS, None),
+        (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test gas meter conversion
+        (SensorDeviceClass.GAS, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+        (SensorDeviceClass.GAS, VOLUME_CUBIC_METERS, None),
+        (SensorDeviceClass.GAS, "very_much", None),
+        # Test speed conversion
+        (SensorDeviceClass.SPEED, SPEED_FEET_PER_SECOND, SPEED_KILOMETERS_PER_HOUR),
+        (SensorDeviceClass.SPEED, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR),
+        (SensorDeviceClass.SPEED, SPEED_KILOMETERS_PER_HOUR, None),
+        (SensorDeviceClass.SPEED, SPEED_KNOTS, None),
+        (SensorDeviceClass.SPEED, SPEED_METERS_PER_SECOND, None),
+        (SensorDeviceClass.SPEED, "very_fast", None),
+        # Test volume conversion
+        (SensorDeviceClass.VOLUME, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+        (SensorDeviceClass.VOLUME, VOLUME_FLUID_OUNCE, VOLUME_MILLILITERS),
+        (SensorDeviceClass.VOLUME, VOLUME_GALLONS, VOLUME_LITERS),
+        (SensorDeviceClass.VOLUME, VOLUME_CUBIC_METERS, None),
+        (SensorDeviceClass.VOLUME, VOLUME_LITERS, None),
+        (SensorDeviceClass.VOLUME, VOLUME_MILLILITERS, None),
+        (SensorDeviceClass.VOLUME, "very_much", None),
+        # Test water meter conversion
+        (SensorDeviceClass.WATER, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+        (SensorDeviceClass.WATER, VOLUME_GALLONS, VOLUME_LITERS),
+        (SensorDeviceClass.WATER, VOLUME_CUBIC_METERS, None),
+        (SensorDeviceClass.WATER, VOLUME_LITERS, None),
+        (SensorDeviceClass.WATER, "very_much", None),
+    ),
+)
+def test_get_metric_converted_unit_(
+    device_class: SensorDeviceClass,
+    original_unit: str,
+    state_unit: str | None,
+) -> None:
+    """Test unit conversion rules."""
+    unit_system = METRIC_SYSTEM
+    assert unit_system.get_converted_unit(device_class, original_unit) == state_unit
+
+
+@pytest.mark.parametrize(
+    "device_class, original_unit, state_unit",
+    (
+        # Test distance conversion
+        (SensorDeviceClass.DISTANCE, LENGTH_CENTIMETERS, LENGTH_INCHES),
+        (SensorDeviceClass.DISTANCE, LENGTH_KILOMETERS, LENGTH_MILES),
+        (SensorDeviceClass.DISTANCE, LENGTH_METERS, LENGTH_FEET),
+        (SensorDeviceClass.DISTANCE, LENGTH_MILLIMETERS, LENGTH_INCHES),
+        (SensorDeviceClass.DISTANCE, LENGTH_MILES, None),
+        (SensorDeviceClass.DISTANCE, "very_long", None),
+        # Test gas meter conversion
+        (SensorDeviceClass.GAS, VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+        (SensorDeviceClass.GAS, VOLUME_CUBIC_FEET, None),
+        (SensorDeviceClass.GAS, "very_much", None),
+        # Test speed conversion
+        (SensorDeviceClass.SPEED, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR),
+        (SensorDeviceClass.SPEED, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR),
+        (SensorDeviceClass.SPEED, SPEED_FEET_PER_SECOND, None),
+        (SensorDeviceClass.SPEED, SPEED_KNOTS, None),
+        (SensorDeviceClass.SPEED, SPEED_MILES_PER_HOUR, None),
+        (SensorDeviceClass.SPEED, "very_fast", None),
+        # Test volume conversion
+        (SensorDeviceClass.VOLUME, VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+        (SensorDeviceClass.VOLUME, VOLUME_LITERS, VOLUME_GALLONS),
+        (SensorDeviceClass.VOLUME, VOLUME_MILLILITERS, VOLUME_FLUID_OUNCE),
+        (SensorDeviceClass.VOLUME, VOLUME_CUBIC_FEET, None),
+        (SensorDeviceClass.VOLUME, VOLUME_FLUID_OUNCE, None),
+        (SensorDeviceClass.VOLUME, VOLUME_GALLONS, None),
+        (SensorDeviceClass.VOLUME, "very_much", None),
+        # Test water meter conversion
+        (SensorDeviceClass.WATER, VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),
+        (SensorDeviceClass.WATER, VOLUME_LITERS, VOLUME_GALLONS),
+        (SensorDeviceClass.WATER, VOLUME_CUBIC_FEET, None),
+        (SensorDeviceClass.WATER, VOLUME_GALLONS, None),
+        (SensorDeviceClass.WATER, "very_much", None),
+    ),
+)
+def test_get_us_converted_unit(
+    device_class: SensorDeviceClass,
+    original_unit: str,
+    state_unit: str | None,
+) -> None:
+    """Test unit conversion rules."""
+    unit_system = US_CUSTOMARY_SYSTEM
+    assert unit_system.get_converted_unit(device_class, original_unit) == state_unit
