@@ -55,5 +55,5 @@ class OctoprintCamera(MjpegCamera):
             mjpeg_url=camera_settings.stream_url,
             name="OctoPrint Camera",
             still_image_url=camera_settings.external_snapshot_url,
-            unique_id=f"camera-{device_id}",
+            unique_id=device_id,
         )
