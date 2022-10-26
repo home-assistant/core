@@ -384,7 +384,7 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.DISTANCE, UnitOfLength.FEET, UnitOfLength.METERS),
         (SensorDeviceClass.DISTANCE, UnitOfLength.INCHES, UnitOfLength.MILLIMETERS),
         (SensorDeviceClass.DISTANCE, UnitOfLength.MILES, UnitOfLength.KILOMETERS),
-        (SensorDeviceClass.DISTANCE, UnitOfLength.YARD, UnitOfLength.METERS),
+        (SensorDeviceClass.DISTANCE, UnitOfLength.YARDS, UnitOfLength.METERS),
         (SensorDeviceClass.DISTANCE, UnitOfLength.KILOMETERS, None),
         (SensorDeviceClass.DISTANCE, "very_long", None),
         # Test gas meter conversion
@@ -408,7 +408,7 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.SPEED, "very_fast", None),
         # Test volume conversion
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
-        (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCE, UnitOfVolume.MILLILITERS),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, UnitOfVolume.MILLILITERS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.LITERS, None),
@@ -466,7 +466,7 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.VOLUME, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, UnitOfVolume.FLUID_OUNCE),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, None),
-        (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCE, None),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, None),
         (SensorDeviceClass.VOLUME, "very_much", None),
         # Test water meter conversion
