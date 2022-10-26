@@ -57,11 +57,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ir.async_create_issue(
         hass,
         DOMAIN,
-        "remove_yaml",
+        "deprecated_yaml",
         breaks_in_ha_version="2022.12.0",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="removed_yaml",
+        translation_key="deprecated_yaml",
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
