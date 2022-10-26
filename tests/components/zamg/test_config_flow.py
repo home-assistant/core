@@ -111,3 +111,84 @@ async def test_user_flow_duplicate(
     )
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+
+
+async def test_import_flow_duplicate(
+    hass: HomeAssistant,
+    mock_zamg: MagicMock,
+    mock_setup_entry: None,
+) -> None:
+    """Test import flow with duplicate entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") == FlowResultType.FORM
+    assert "flow_id" in result
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
+    )
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert "data" in result
+    assert result["data"][CONF_STATION_ID] == TEST_STATION_ID
+    assert "result" in result
+    assert result["result"].unique_id == TEST_STATION_ID
+    # try to add another instance
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION_ID: TEST_STATION_ID, CONF_NAME: TEST_STATION_NAME},
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+
+async def test_import_flow_duplicate_after_position(
+    hass: HomeAssistant,
+    mock_zamg: MagicMock,
+    mock_setup_entry: None,
+) -> None:
+    """Test import flow with duplicate entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result.get("step_id") == "user"
+    assert result.get("type") == FlowResultType.FORM
+    assert "flow_id" in result
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_STATION_ID: int(TEST_STATION_ID)},
+    )
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert "data" in result
+    assert result["data"][CONF_STATION_ID] == TEST_STATION_ID
+    assert "result" in result
+    assert result["result"].unique_id == TEST_STATION_ID
+    # try to add another instance
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION_ID: "123", CONF_NAME: TEST_STATION_NAME},
+    )
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+
+async def test_import_flow_no_name(
+    hass: HomeAssistant,
+    mock_zamg: MagicMock,
+    mock_setup_entry: None,
+) -> None:
+    """Test the full import flow from start to finish."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION_ID: TEST_STATION_ID},
+    )
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("data") == {CONF_STATION_ID: TEST_STATION_ID}

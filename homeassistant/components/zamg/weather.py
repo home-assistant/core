@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import voluptuous as vol
-from zamg import ZamgData
 
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -17,15 +16,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, LOGGER, MANUFACTURER_URL
+from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, MANUFACTURER_URL
 from .coordinator import ZamgDataUpdateCoordinator
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -49,38 +46,11 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ZAMG weather platform."""
-
-    probe = ZamgData(session=async_get_clientsession(hass))
-
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    station_id = config.get(CONF_STATION_ID)
-    if station_id not in await probe.zamg_stations():
-        LOGGER.warning(
-            "Configured station_id %s could not be found at zamg, adding the nearest weather station instead",
-            station_id,
-        )
-        station_id = await probe.closest_station(latitude, longitude)
-    probe.set_default_station(station_id)
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.1.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-
-    # No config entry exists and configuration.yaml config exists, trigger the import flow.
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data.get(CONF_STATION_ID):
-            return
+    # trigger import flow
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={CONF_STATION_ID: station_id, CONF_NAME: config.get(CONF_NAME, "")},
+        data=config,
     )
 
 
