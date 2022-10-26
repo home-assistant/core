@@ -174,6 +174,7 @@ STAT_BINARY_PERCENTAGE = {
 }
 
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
+CONF_ATTRIBUTE_CHARACTERISTIC = "attribute_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
@@ -208,15 +209,18 @@ def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str
             learn_more_url="https://github.com/home-assistant/core/pull/60402",
         )
 
-    characteristic = cast(str, config[CONF_STATE_CHARACTERISTIC])
-    if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
-        not is_binary and characteristic not in STATS_NUMERIC_SUPPORT
-    ):
-        raise vol.ValueInvalid(
-            "The configured characteristic '{}' is not supported for the configured source sensor".format(
-                characteristic
+    characteristics = set(
+        [config[CONF_STATE_CHARACTERISTIC]] + config[CONF_ATTRIBUTE_CHARACTERISTIC]
+    )
+    for characteristic in characteristics:
+        if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
+            not is_binary and characteristic not in STATS_NUMERIC_SUPPORT
+        ):
+            raise vol.ValueInvalid(
+                "The selected characteristic '{}' is not supported for the configured source sensor".format(
+                    characteristic
+                )
             )
-        )
     return config
 
 
@@ -245,6 +249,11 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_STATE_CHARACTERISTIC): cv.string,
+        vol.Optional(CONF_ATTRIBUTE_CHARACTERISTIC, default=[]): vol.All(
+            cv.ensure_list,
+            [cv.string],
+            vol.Unique(),
+        ),
         vol.Optional(CONF_SAMPLES_MAX_BUFFER_SIZE): vol.Coerce(int),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
@@ -280,6 +289,7 @@ async def async_setup_platform(
                 name=config[CONF_NAME],
                 unique_id=config.get(CONF_UNIQUE_ID),
                 state_characteristic=config[CONF_STATE_CHARACTERISTIC],
+                attribute_characteristic=config[CONF_ATTRIBUTE_CHARACTERISTIC],
                 samples_max_buffer_size=config[CONF_SAMPLES_MAX_BUFFER_SIZE],
                 samples_max_age=config.get(CONF_MAX_AGE),
                 precision=config[CONF_PRECISION],
@@ -300,6 +310,7 @@ class StatisticsSensor(SensorEntity):
         name: str,
         unique_id: str | None,
         state_characteristic: str,
+        attribute_characteristic: list[str],
         samples_max_buffer_size: int,
         samples_max_age: timedelta | None,
         precision: int,
@@ -316,6 +327,7 @@ class StatisticsSensor(SensorEntity):
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
         self._state_characteristic: str = state_characteristic
+        self._attribute_characteristic: list[str] = attribute_characteristic
         self._samples_max_buffer_size: int = samples_max_buffer_size
         self._samples_max_age: timedelta | None = samples_max_age
         self._precision: int = precision
@@ -326,21 +338,18 @@ class StatisticsSensor(SensorEntity):
         self._available: bool = False
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
-        self.attributes: dict[str, StateType] = {
-            STAT_AGE_COVERAGE_RATIO: None,
-            STAT_BUFFER_USAGE_RATIO: None,
-            STAT_SOURCE_VALUE_VALID: None,
-        }
+        self.attributes: dict[str, StateType | datetime] = {}
 
-        self._state_characteristic_fn: Callable[[], StateType | datetime]
-        if self.is_binary:
-            self._state_characteristic_fn = getattr(
-                self, f"_stat_binary_{self._state_characteristic}"
-            )
-        else:
-            self._state_characteristic_fn = getattr(
-                self, f"_stat_{self._state_characteristic}"
-            )
+        self._state_characteristic_fn: Callable[
+            [], StateType | datetime
+        ] = self._callable_characteristic_fn(self._state_characteristic)
+
+        self._attribute_characteristic_fn_dict: dict[
+            str, Callable[[], StateType | datetime]
+        ] = {
+            characteristic: self._callable_characteristic_fn(characteristic)
+            for characteristic in self._attribute_characteristic
+        }
 
         self._update_listener: CALLBACK_TYPE | None = None
 
@@ -459,7 +468,7 @@ class StatisticsSensor(SensorEntity):
         return self._available
 
     @property
-    def extra_state_attributes(self) -> dict[str, StateType] | None:
+    def extra_state_attributes(self) -> dict[str, StateType | datetime] | None:
         """Return the state attributes of the sensor."""
         return {
             key: value for key, value in self.attributes.items() if value is not None
@@ -572,6 +581,9 @@ class StatisticsSensor(SensorEntity):
 
     def _update_attributes(self) -> None:
         """Calculate and update the various attributes."""
+        if STAT_SOURCE_VALUE_VALID not in self.attributes:
+            self.attributes[STAT_SOURCE_VALUE_VALID] = None
+
         self.attributes[STAT_BUFFER_USAGE_RATIO] = round(
             len(self.states) / self._samples_max_buffer_size, 2
         )
@@ -584,6 +596,9 @@ class StatisticsSensor(SensorEntity):
             )
         else:
             self.attributes[STAT_AGE_COVERAGE_RATIO] = None
+
+        for name, function in self._attribute_characteristic_fn_dict.items():
+            self.attributes[name] = function()
 
     def _update_value(self) -> None:
         """Front to call the right statistical characteristics functions.
@@ -599,6 +614,18 @@ class StatisticsSensor(SensorEntity):
                 if self._precision == 0:
                     value = int(value)
         self._value = value
+
+    def _callable_characteristic_fn(
+        self, characteristic: str
+    ) -> Callable[[], StateType | datetime]:
+        """Return the function callable of one characteristic function."""
+        function: Callable[[], StateType | datetime] = getattr(
+            self,
+            f"_stat_binary_{characteristic}"
+            if self.is_binary
+            else f"_stat_{characteristic}",
+        )
+        return function
 
     # Statistics for numeric sensor
 
