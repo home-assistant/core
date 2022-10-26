@@ -209,7 +209,7 @@ def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
         and config.get(CONF_MAX_AGE) is None
     ):
         raise vol.RequiredFieldInvalid(
-            "The statistics sensor configuration must provide either 'max_age' and/or 'sampling_size'"
+            "The sensor configuration must provide either 'max_age' and/or 'sampling_size'"
         )
     return config
 
