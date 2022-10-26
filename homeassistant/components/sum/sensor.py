@@ -82,7 +82,8 @@ def calc_sum(sensor_values: list[tuple[str, Any]], round_digits: int) -> float |
             continue
         result.append(sensor_value)
 
-    return round(sum(result), round_digits)
+    value: float = round(sum(result), round_digits)
+    return value
 
 
 class SumSensor(SensorEntity):
