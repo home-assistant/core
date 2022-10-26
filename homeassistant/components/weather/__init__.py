@@ -22,9 +22,13 @@ from homeassistant.const import (
     PRESSURE_INHG,
     PRESSURE_MBAR,
     PRESSURE_MMHG,
+    SPEED_FEET_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UnitOfSpeed,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -115,11 +119,11 @@ VALID_UNITS_VISIBILITY: set[str] = {
     LENGTH_MILES,
 }
 VALID_UNITS_WIND_SPEED: set[str] = {
-    UnitOfSpeed.FEET_PER_SECOND,
-    UnitOfSpeed.KILOMETERS_PER_HOUR,
-    UnitOfSpeed.KNOTS,
-    UnitOfSpeed.METERS_PER_SECOND,
-    UnitOfSpeed.MILES_PER_HOUR,
+    SPEED_FEET_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
 }
 
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
@@ -481,9 +485,9 @@ class WeatherEntity(Entity):
         Should not be set by integrations.
         """
         return (
-            UnitOfSpeed.KILOMETERS_PER_HOUR
+            SPEED_KILOMETERS_PER_HOUR
             if self.hass.config.units is METRIC_SYSTEM
-            else UnitOfSpeed.MILES_PER_HOUR
+            else SPEED_MILES_PER_HOUR
         )
 
     @final

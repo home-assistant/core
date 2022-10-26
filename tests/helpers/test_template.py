@@ -17,10 +17,10 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     MASS_GRAMS,
     PRESSURE_PA,
+    SPEED_KILOMETERS_PER_HOUR,
     STATE_ON,
     TEMP_CELSIUS,
     VOLUME_LITERS,
-    UnitOfSpeed,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -50,7 +50,7 @@ def _set_up_units(hass):
         pressure=PRESSURE_PA,
         temperature=TEMP_CELSIUS,
         volume=VOLUME_LITERS,
-        wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        wind_speed=SPEED_KILOMETERS_PER_HOUR,
     )
 
 

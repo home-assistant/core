@@ -19,6 +19,11 @@ from homeassistant.const import (
     MASS_GRAMS,
     PRESSURE,
     PRESSURE_PA,
+    SPEED_FEET_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMPERATURE,
     VOLUME,
@@ -29,7 +34,6 @@ from homeassistant.const import (
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
     WIND_SPEED,
-    UnitOfSpeed,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import (
@@ -59,7 +63,7 @@ def test_invalid_units():
             pressure=PRESSURE_PA,
             temperature=INVALID_UNIT,
             volume=VOLUME_LITERS,
-            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
@@ -72,7 +76,7 @@ def test_invalid_units():
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
             volume=VOLUME_LITERS,
-            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
@@ -98,7 +102,7 @@ def test_invalid_units():
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
             volume=INVALID_UNIT,
-            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
@@ -111,7 +115,7 @@ def test_invalid_units():
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
             volume=VOLUME_LITERS,
-            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
@@ -124,7 +128,7 @@ def test_invalid_units():
             pressure=INVALID_UNIT,
             temperature=TEMP_CELSIUS,
             volume=VOLUME_LITERS,
-            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
     with pytest.raises(ValueError):
@@ -137,7 +141,7 @@ def test_invalid_units():
             pressure=PRESSURE_PA,
             temperature=TEMP_CELSIUS,
             volume=VOLUME_LITERS,
-            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+            wind_speed=SPEED_METERS_PER_SECOND,
         )
 
 
@@ -148,7 +152,7 @@ def test_invalid_value():
     with pytest.raises(TypeError):
         METRIC_SYSTEM.temperature("50K", TEMP_CELSIUS)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.wind_speed("50km/h", UnitOfSpeed.METERS_PER_SECOND)
+        METRIC_SYSTEM.wind_speed("50km/h", SPEED_METERS_PER_SECOND)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.volume("50L", VOLUME_LITERS)
     with pytest.raises(TypeError):
@@ -161,7 +165,7 @@ def test_as_dict():
     """Test that the as_dict() method returns the expected dictionary."""
     expected = {
         LENGTH: LENGTH_KILOMETERS,
-        WIND_SPEED: UnitOfSpeed.METERS_PER_SECOND,
+        WIND_SPEED: SPEED_METERS_PER_SECOND,
         TEMPERATURE: TEMP_CELSIUS,
         VOLUME: VOLUME_LITERS,
         MASS: MASS_GRAMS,
@@ -315,7 +319,7 @@ def test_accumulated_precipitation_to_imperial():
 def test_properties():
     """Test the unit properties are returned as expected."""
     assert METRIC_SYSTEM.length_unit == LENGTH_KILOMETERS
-    assert METRIC_SYSTEM.wind_speed_unit == UnitOfSpeed.METERS_PER_SECOND
+    assert METRIC_SYSTEM.wind_speed_unit == SPEED_METERS_PER_SECOND
     assert METRIC_SYSTEM.temperature_unit == TEMP_CELSIUS
     assert METRIC_SYSTEM.mass_unit == MASS_GRAMS
     assert METRIC_SYSTEM.volume_unit == VOLUME_LITERS
@@ -404,19 +408,11 @@ def test_get_unit_system_invalid(key: str) -> None:
         (SensorDeviceClass.GAS, VOLUME_CUBIC_METERS, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test speed conversion
-        (
-            SensorDeviceClass.SPEED,
-            UnitOfSpeed.FEET_PER_SECOND,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-        ),
-        (
-            SensorDeviceClass.SPEED,
-            UnitOfSpeed.MILES_PER_HOUR,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-        ),
-        (SensorDeviceClass.SPEED, UnitOfSpeed.KILOMETERS_PER_HOUR, None),
-        (SensorDeviceClass.SPEED, UnitOfSpeed.KNOTS, None),
-        (SensorDeviceClass.SPEED, UnitOfSpeed.METERS_PER_SECOND, None),
+        (SensorDeviceClass.SPEED, SPEED_FEET_PER_SECOND, SPEED_KILOMETERS_PER_HOUR),
+        (SensorDeviceClass.SPEED, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR),
+        (SensorDeviceClass.SPEED, SPEED_KILOMETERS_PER_HOUR, None),
+        (SensorDeviceClass.SPEED, SPEED_KNOTS, None),
+        (SensorDeviceClass.SPEED, SPEED_METERS_PER_SECOND, None),
         (SensorDeviceClass.SPEED, "very_fast", None),
         # Test volume conversion
         (SensorDeviceClass.VOLUME, VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
@@ -459,19 +455,11 @@ def test_get_metric_converted_unit_(
         (SensorDeviceClass.GAS, VOLUME_CUBIC_FEET, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test speed conversion
-        (
-            SensorDeviceClass.SPEED,
-            UnitOfSpeed.METERS_PER_SECOND,
-            UnitOfSpeed.MILES_PER_HOUR,
-        ),
-        (
-            SensorDeviceClass.SPEED,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-            UnitOfSpeed.MILES_PER_HOUR,
-        ),
-        (SensorDeviceClass.SPEED, UnitOfSpeed.FEET_PER_SECOND, None),
-        (SensorDeviceClass.SPEED, UnitOfSpeed.KNOTS, None),
-        (SensorDeviceClass.SPEED, UnitOfSpeed.MILES_PER_HOUR, None),
+        (SensorDeviceClass.SPEED, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR),
+        (SensorDeviceClass.SPEED, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR),
+        (SensorDeviceClass.SPEED, SPEED_FEET_PER_SECOND, None),
+        (SensorDeviceClass.SPEED, SPEED_KNOTS, None),
+        (SensorDeviceClass.SPEED, SPEED_MILES_PER_HOUR, None),
         (SensorDeviceClass.SPEED, "very_fast", None),
         # Test volume conversion
         (SensorDeviceClass.VOLUME, VOLUME_CUBIC_METERS, VOLUME_CUBIC_FEET),

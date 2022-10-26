@@ -30,6 +30,11 @@ from homeassistant.const import (
     PRESSURE_MMHG,
     PRESSURE_PA,
     PRESSURE_PSI,
+    SPEED_FEET_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
@@ -39,7 +44,6 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
-    UnitOfSpeed,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -93,11 +97,11 @@ INVALID_SYMBOL = "bob"
         (SpeedConverter, UnitOfVolumetricFlux.INCHES_PER_HOUR),
         (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_DAY),
         (SpeedConverter, UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR),
-        (SpeedConverter, UnitOfSpeed.FEET_PER_SECOND),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
-        (SpeedConverter, UnitOfSpeed.KNOTS),
-        (SpeedConverter, UnitOfSpeed.METERS_PER_SECOND),
-        (SpeedConverter, UnitOfSpeed.MILES_PER_HOUR),
+        (SpeedConverter, SPEED_FEET_PER_SECOND),
+        (SpeedConverter, SPEED_KILOMETERS_PER_HOUR),
+        (SpeedConverter, SPEED_KNOTS),
+        (SpeedConverter, SPEED_METERS_PER_SECOND),
+        (SpeedConverter, SPEED_MILES_PER_HOUR),
         (TemperatureConverter, TEMP_CELSIUS),
         (TemperatureConverter, TEMP_FAHRENHEIT),
         (TemperatureConverter, TEMP_KELVIN),
@@ -120,7 +124,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
         (MassConverter, MASS_GRAMS),
         (PowerConverter, POWER_WATT),
         (PressureConverter, PRESSURE_PA),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR),
+        (SpeedConverter, SPEED_KILOMETERS_PER_HOUR),
         (TemperatureConverter, TEMP_CELSIUS),
         (TemperatureConverter, TEMP_FAHRENHEIT),
         (TemperatureConverter, TEMP_KELVIN),
@@ -146,7 +150,7 @@ def test_convert_invalid_unit(
         (MassConverter, MASS_GRAMS, MASS_KILOGRAMS),
         (PowerConverter, POWER_WATT, POWER_KILO_WATT),
         (PressureConverter, PRESSURE_HPA, PRESSURE_INHG),
-        (SpeedConverter, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR),
+        (SpeedConverter, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR),
         (TemperatureConverter, TEMP_CELSIUS, TEMP_FAHRENHEIT),
         (VolumeConverter, VOLUME_GALLONS, VOLUME_LITERS),
     ],
@@ -168,8 +172,8 @@ def test_convert_nonnumeric_value(
         (PressureConverter, PRESSURE_HPA, PRESSURE_INHG, pytest.approx(33.86389)),
         (
             SpeedConverter,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-            UnitOfSpeed.MILES_PER_HOUR,
+            SPEED_KILOMETERS_PER_HOUR,
+            SPEED_MILES_PER_HOUR,
             pytest.approx(1.609343),
         ),
         (TemperatureConverter, TEMP_CELSIUS, TEMP_FAHRENHEIT, 1 / 1.8),
@@ -384,14 +388,9 @@ def test_pressure_convert(
     "value,from_unit,expected,to_unit",
     [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
-        (
-            5,
-            UnitOfSpeed.KILOMETERS_PER_HOUR,
-            pytest.approx(3.106856),
-            UnitOfSpeed.MILES_PER_HOUR,
-        ),
+        (5, SPEED_KILOMETERS_PER_HOUR, pytest.approx(3.106856), SPEED_MILES_PER_HOUR),
         # 5 mi/h * 1.609 km/mi = 8.04672 km/h
-        (5, UnitOfSpeed.MILES_PER_HOUR, 8.04672, UnitOfSpeed.KILOMETERS_PER_HOUR),
+        (5, SPEED_MILES_PER_HOUR, 8.04672, SPEED_KILOMETERS_PER_HOUR),
         # 5 in/day * 25.4 mm/in = 127 mm/day
         (
             5,
@@ -423,7 +422,7 @@ def test_pressure_convert(
         # 5 m/s * 39.3701 in/m * 3600 s/hr = 708661
         (
             5,
-            UnitOfSpeed.METERS_PER_SECOND,
+            SPEED_METERS_PER_SECOND,
             pytest.approx(708661.42),
             UnitOfVolumetricFlux.INCHES_PER_HOUR,
         ),
@@ -432,17 +431,12 @@ def test_pressure_convert(
             5000,
             UnitOfVolumetricFlux.INCHES_PER_HOUR,
             pytest.approx(0.0352778),
-            UnitOfSpeed.METERS_PER_SECOND,
+            SPEED_METERS_PER_SECOND,
         ),
         # 5 kt * 1852 m/nmi / 3600 s/h = 2.5722 m/s
-        (5, UnitOfSpeed.KNOTS, pytest.approx(2.57222), UnitOfSpeed.METERS_PER_SECOND),
+        (5, SPEED_KNOTS, pytest.approx(2.57222), SPEED_METERS_PER_SECOND),
         # 5 ft/s * 0.3048 m/ft = 1.524 m/s
-        (
-            5,
-            UnitOfSpeed.FEET_PER_SECOND,
-            pytest.approx(1.524),
-            UnitOfSpeed.METERS_PER_SECOND,
-        ),
+        (5, SPEED_FEET_PER_SECOND, pytest.approx(1.524), SPEED_METERS_PER_SECOND),
     ],
 )
 def test_speed_convert(
