@@ -563,15 +563,30 @@ def test_temperature_convert_with_interval(
             UnitOfVolume.CUBIC_METERS,
         ),
         (500, UnitOfVolume.US_FLUID_OUNCES, 3.90625, UnitOfVolume.US_GALLONS),
-        (500, UnitOfVolume.US_FLUID_OUNCES, pytest.approx(14.786764), UnitOfVolume.LITERS),
+        (
+            500,
+            UnitOfVolume.US_FLUID_OUNCES,
+            pytest.approx(14.786764),
+            UnitOfVolume.LITERS,
+        ),
         (
             500,
             UnitOfVolume.US_FLUID_OUNCES,
             pytest.approx(14786.764),
             UnitOfVolume.MILLILITERS,
         ),
-        (500, UnitOfVolume.US_GALLONS, pytest.approx(66.84027), UnitOfVolume.CUBIC_FEET),
-        (500, UnitOfVolume.US_GALLONS, pytest.approx(1.892706), UnitOfVolume.CUBIC_METERS),
+        (
+            500,
+            UnitOfVolume.US_GALLONS,
+            pytest.approx(66.84027),
+            UnitOfVolume.CUBIC_FEET,
+        ),
+        (
+            500,
+            UnitOfVolume.US_GALLONS,
+            pytest.approx(1.892706),
+            UnitOfVolume.CUBIC_METERS,
+        ),
         (500, UnitOfVolume.US_GALLONS, 64000, UnitOfVolume.US_FLUID_OUNCES),
         (500, UnitOfVolume.US_GALLONS, pytest.approx(1892.70589), UnitOfVolume.LITERS),
         (
@@ -633,7 +648,12 @@ def test_temperature_convert_with_interval(
             pytest.approx(16.907),
             UnitOfVolume.US_FLUID_OUNCES,
         ),
-        (500, UnitOfVolume.MILLILITERS, pytest.approx(0.132086), UnitOfVolume.US_GALLONS),
+        (
+            500,
+            UnitOfVolume.MILLILITERS,
+            pytest.approx(0.132086),
+            UnitOfVolume.US_GALLONS,
+        ),
         (500, UnitOfVolume.MILLILITERS, 0.5, UnitOfVolume.LITERS),
         (500, VOLUME_FLUID_OUNCE, pytest.approx(0.52218967), UnitOfVolume.CUBIC_FEET),
         (

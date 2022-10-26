@@ -26,8 +26,7 @@ from homeassistant.components.recorder.models import (
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     REVOLUTIONS_PER_MINUTE,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -54,8 +53,10 @@ DEFAULT_STATISTICS = {
 
 EQUIVALENT_UNITS = {
     "RPM": REVOLUTIONS_PER_MINUTE,
-    "ft3": VOLUME_CUBIC_FEET,
-    "m3": VOLUME_CUBIC_METERS,
+    "ft3": UnitOfVolume.CUBIC_FEET,
+    "m3": UnitOfVolume.CUBIC_METERS,
+    "gal": UnitOfVolume.US_GALLONS,
+    "fl. oz.": UnitOfVolume.US_FLUID_OUNCES,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
