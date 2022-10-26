@@ -486,11 +486,23 @@ POWER_BTU_PER_HOUR: Final = "BTU/h"
 # Reactive power units
 POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
+
 # Energy units
-ENERGY_GIGA_JOULE: Final = "GJ"
+class UnitOfEnergy(StrEnum):
+    """Energy units."""
+
+    GIGA_JOULE = "GJ"
+    KILO_WATT_HOUR = "kWh"
+    MEGA_WATT_HOUR = "MWh"
+    WATT_HOUR = "Wh"
+
+
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
+"""Deprecated: please use UnitOfEnergy.KILO_WATT_HOUR."""
 ENERGY_MEGA_WATT_HOUR: Final = "MWh"
+"""Deprecated: please use UnitOfEnergy.MEGA_WATT_HOUR."""
 ENERGY_WATT_HOUR: Final = "Wh"
+"""Deprecated: please use UnitOfEnergy.WATT_HOUR."""
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
@@ -508,10 +520,22 @@ CURRENCY_EURO: Final = "€"
 CURRENCY_DOLLAR: Final = "$"
 CURRENCY_CENT: Final = "¢"
 
+
 # Temperature units
+class UnitOfTemperature(StrEnum):
+    """Temperature units."""
+
+    CELSIUS = "°C"
+    FAHRENHEIT = "°F"
+    KELVIN = "K"
+
+
 TEMP_CELSIUS: Final = "°C"
+"""Deprecated: please use UnitOfTemperature.CELSIUS"""
 TEMP_FAHRENHEIT: Final = "°F"
+"""Deprecated: please use UnitOfTemperature.FAHRENHEIT"""
 TEMP_KELVIN: Final = "K"
+"""Deprecated: please use UnitOfTemperature.KELVIN"""
 
 # Time units
 TIME_MICROSECONDS: Final = "μs"
@@ -524,16 +548,37 @@ TIME_WEEKS: Final = "w"
 TIME_MONTHS: Final = "m"
 TIME_YEARS: Final = "y"
 
-# Length units
-LENGTH_MILLIMETERS: Final = "mm"
-LENGTH_CENTIMETERS: Final = "cm"
-LENGTH_METERS: Final = "m"
-LENGTH_KILOMETERS: Final = "km"
 
+# Length units
+class UnitOfLength(StrEnum):
+    """Length units."""
+
+    MILLIMETERS = "mm"
+    CENTIMETERS = "cm"
+    METERS = "m"
+    KILOMETERS = "km"
+    INCHES = "in"
+    FEET = "ft"
+    YARDS = "yd"
+    MILES = "mi"
+
+
+LENGTH_MILLIMETERS: Final = "mm"
+"""Deprecated: please use UnitOfLength.MILLIMETERS."""
+LENGTH_CENTIMETERS: Final = "cm"
+"""Deprecated: please use UnitOfLength.CENTIMETERS."""
+LENGTH_METERS: Final = "m"
+"""Deprecated: please use UnitOfLength.METERS."""
+LENGTH_KILOMETERS: Final = "km"
+"""Deprecated: please use UnitOfLength.KILOMETERS."""
 LENGTH_INCHES: Final = "in"
+"""Deprecated: please use UnitOfLength.INCHES."""
 LENGTH_FEET: Final = "ft"
+"""Deprecated: please use UnitOfLength.FEET."""
 LENGTH_YARD: Final = "yd"
+"""Deprecated: please use UnitOfLength.YARDS."""
 LENGTH_MILES: Final = "mi"
+"""Deprecated: please use UnitOfLength.MILES."""
 
 # Frequency units
 FREQUENCY_HERTZ: Final = "Hz"
@@ -541,16 +586,40 @@ FREQUENCY_KILOHERTZ: Final = "kHz"
 FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
 
+
 # Pressure units
+class UnitOfPressure(StrEnum):
+    """Pressure units."""
+
+    PA = "Pa"
+    HPA = "hPa"
+    KPA = "kPa"
+    BAR = "bar"
+    CBAR = "cbar"
+    MBAR = "mbar"
+    MMHG = "mmHg"
+    INHG = "inHg"
+    PSI = "psi"
+
+
 PRESSURE_PA: Final = "Pa"
+"""Deprecated: please use UnitOfPressure.PA"""
 PRESSURE_HPA: Final = "hPa"
+"""Deprecated: please use UnitOfPressure.HPA"""
 PRESSURE_KPA: Final = "kPa"
+"""Deprecated: please use UnitOfPressure.KPA"""
 PRESSURE_BAR: Final = "bar"
+"""Deprecated: please use UnitOfPressure.BAR"""
 PRESSURE_CBAR: Final = "cbar"
+"""Deprecated: please use UnitOfPressure.CBAR"""
 PRESSURE_MBAR: Final = "mbar"
+"""Deprecated: please use UnitOfPressure.MBAR"""
 PRESSURE_MMHG: Final = "mmHg"
+"""Deprecated: please use UnitOfPressure.MMHG"""
 PRESSURE_INHG: Final = "inHg"
+"""Deprecated: please use UnitOfPressure.INHG"""
 PRESSURE_PSI: Final = "psi"
+"""Deprecated: please use UnitOfPressure.PSI"""
 
 # Sound pressure units
 SOUND_PRESSURE_DB: Final = "dB"
@@ -575,14 +644,31 @@ VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = "ft³/m"
 # Area units
 AREA_SQUARE_METERS: Final = "m²"
 
-# Mass units
-MASS_GRAMS: Final = "g"
-MASS_KILOGRAMS: Final = "kg"
-MASS_MILLIGRAMS: Final = "mg"
-MASS_MICROGRAMS: Final = "µg"
 
+# Mass units
+class UnitOfMass(StrEnum):
+    """Mass units."""
+
+    GRAMS = "g"
+    KILOGRAMS = "kg"
+    MILLIGRAMS = "mg"
+    MICROGRAMS = "µg"
+    OUNCES = "oz"
+    POUNDS = "lb"
+
+
+MASS_GRAMS: Final = "g"
+"""Deprecated: please use UnitOfMass.GRAMS"""
+MASS_KILOGRAMS: Final = "kg"
+"""Deprecated: please use UnitOfMass.KILOGRAMS"""
+MASS_MILLIGRAMS: Final = "mg"
+"""Deprecated: please use UnitOfMass.MILLIGRAMS"""
+MASS_MICROGRAMS: Final = "µg"
+"""Deprecated: please use UnitOfMass.MICROGRAMS"""
 MASS_OUNCES: Final = "oz"
+"""Deprecated: please use UnitOfMass.OUNCES"""
 MASS_POUNDS: Final = "lb"
+"""Deprecated: please use UnitOfMass.POUNDS"""
 
 # Conductivity units
 CONDUCTIVITY: Final = "µS/cm"
@@ -644,12 +730,28 @@ CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
+
 # Speed units
+class UnitOfSpeed(StrEnum):
+    """Speed units."""
+
+    FEET_PER_SECOND = "ft/s"
+    METERS_PER_SECOND = "m/s"
+    KILOMETERS_PER_HOUR = "km/h"
+    KNOTS = "kn"
+    MILES_PER_HOUR = "mph"
+
+
 SPEED_FEET_PER_SECOND: Final = "ft/s"
+"""Deprecated: please use UnitOfSpeed.FEET_PER_SECOND"""
 SPEED_METERS_PER_SECOND: Final = "m/s"
+"""Deprecated: please use UnitOfSpeed.METERS_PER_SECOND"""
 SPEED_KILOMETERS_PER_HOUR: Final = "km/h"
+"""Deprecated: please use UnitOfSpeed.KILOMETERS_PER_HOUR"""
 SPEED_KNOTS: Final = "kn"
+"""Deprecated: please use UnitOfSpeed.KNOTS"""
 SPEED_MILES_PER_HOUR: Final = "mph"
+"""Deprecated: please use UnitOfSpeed.MILES_PER_HOUR"""
 
 SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
 """Deprecated: please use UnitOfVolumetricFlux.MILLIMETERS_PER_DAY"""

@@ -567,11 +567,11 @@ async def test_custom_unit(
             SensorDeviceClass.VOLUME,
         ),
         (
+            VOLUME_LITERS,
             VOLUME_FLUID_OUNCE,
-            VOLUME_LITERS,
-            VOLUME_LITERS,
-            78,
+            VOLUME_FLUID_OUNCE,
             2.3,
+            77.8,
             SensorDeviceClass.VOLUME,
         ),
         (

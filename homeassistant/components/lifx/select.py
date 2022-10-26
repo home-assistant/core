@@ -15,8 +15,8 @@ from .const import (
     INFRARED_BRIGHTNESS,
     INFRARED_BRIGHTNESS_VALUES_MAP,
 )
-from .coordinator import LIFXUpdateCoordinator
-from .entity import LIFXEntity
+from .coordinator import LIFXSensorUpdateCoordinator, LIFXUpdateCoordinator
+from .entity import LIFXSensorEntity
 from .util import lifx_features
 
 THEME_NAMES = [theme_name.lower() for theme_name in ThemeLibrary().themes]
@@ -41,36 +41,41 @@ async def async_setup_entry(
 ) -> None:
     """Set up LIFX from a config entry."""
     coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[LIFXEntity] = []
+
+    entities: list[LIFXSensorEntity] = []
 
     if lifx_features(coordinator.device)["infrared"]:
         entities.append(
             LIFXInfraredBrightnessSelectEntity(
-                coordinator=coordinator, description=INFRARED_BRIGHTNESS_ENTITY
+                coordinator.sensor_coordinator, description=INFRARED_BRIGHTNESS_ENTITY
             )
         )
 
     if lifx_features(coordinator.device)["multizone"] is True:
         entities.append(
-            LIFXThemeSelectEntity(coordinator=coordinator, description=THEME_ENTITY)
+            LIFXThemeSelectEntity(
+                coordinator.sensor_coordinator, description=THEME_ENTITY
+            )
         )
 
     async_add_entities(entities)
 
 
-class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
+class LIFXInfraredBrightnessSelectEntity(LIFXSensorEntity, SelectEntity):
     """LIFX Nightvision infrared brightness configuration entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: LIFXUpdateCoordinator, description: SelectEntityDescription
+        self,
+        coordinator: LIFXSensorUpdateCoordinator,
+        description: SelectEntityDescription,
     ) -> None:
         """Initialise the IR brightness config entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
         self._attr_current_option = coordinator.current_infrared_brightness
 
     @callback
@@ -89,21 +94,22 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
         await self.coordinator.async_set_infrared_brightness(option)
 
 
-class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
+class LIFXThemeSelectEntity(LIFXSensorEntity, SelectEntity):
     """Theme entity for LIFX multizone devices."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
-        self, coordinator: LIFXUpdateCoordinator, description: SelectEntityDescription
+        self,
+        coordinator: LIFXSensorUpdateCoordinator,
+        description: SelectEntityDescription,
     ) -> None:
         """Initialise the theme selection entity."""
 
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = description.name
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        self._attr_unique_id = f"{coordinator.parent.serial_number}_{description.key}"
         self._attr_current_option = None
 
     @callback
