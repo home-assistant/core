@@ -19,7 +19,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
-    UnitOfEnergy,
+    UnitEnergy,
 )
 from homeassistant.core import (
     HomeAssistant,
@@ -43,10 +43,10 @@ SUPPORTED_STATE_CLASSES = [
     SensorStateClass.TOTAL_INCREASING,
 ]
 VALID_ENERGY_UNITS = [
-    UnitOfEnergy.WATT_HOUR,
-    UnitOfEnergy.KILO_WATT_HOUR,
-    UnitOfEnergy.MEGA_WATT_HOUR,
-    UnitOfEnergy.GIGA_JOULE,
+    UnitEnergy.WATT_HOUR,
+    UnitEnergy.KILO_WATT_HOUR,
+    UnitEnergy.MEGA_WATT_HOUR,
+    UnitEnergy.GIGA_JOULE,
 ]
 VALID_ENERGY_UNITS_GAS = [VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS] + VALID_ENERGY_UNITS
 _LOGGER = logging.getLogger(__name__)
@@ -283,17 +283,17 @@ class EnergyCostSensor(SensorEntity):
                 return
 
             if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
-                f"/{UnitOfEnergy.WATT_HOUR}"
+                f"/{UnitEnergy.WATT_HOUR}"
             ):
                 energy_price *= 1000.0
 
             if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
-                f"/{UnitOfEnergy.MEGA_WATT_HOUR}"
+                f"/{UnitEnergy.MEGA_WATT_HOUR}"
             ):
                 energy_price /= 1000.0
 
             if energy_price_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, "").endswith(
-                f"/{UnitOfEnergy.GIGA_JOULE}"
+                f"/{UnitEnergy.GIGA_JOULE}"
             ):
                 energy_price /= 1000 / 3.6
 
@@ -316,11 +316,11 @@ class EnergyCostSensor(SensorEntity):
             if energy_unit not in VALID_ENERGY_UNITS_GAS:
                 energy_unit = None
 
-        if energy_unit == UnitOfEnergy.WATT_HOUR:
+        if energy_unit == UnitEnergy.WATT_HOUR:
             energy_price /= 1000
-        elif energy_unit == UnitOfEnergy.MEGA_WATT_HOUR:
+        elif energy_unit == UnitEnergy.MEGA_WATT_HOUR:
             energy_price *= 1000
-        elif energy_unit == UnitOfEnergy.GIGA_JOULE:
+        elif energy_unit == UnitEnergy.GIGA_JOULE:
             energy_price *= 1000 / 3.6
 
         if energy_unit is None:

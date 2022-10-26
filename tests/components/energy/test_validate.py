@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
-from homeassistant.const import UnitOfEnergy
+from homeassistant.const import UnitEnergy
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.setup import async_setup_component
 
@@ -63,13 +63,13 @@ async def test_validation_empty_config(hass):
 @pytest.mark.parametrize(
     "state_class, energy_unit, extra",
     [
-        ("total_increasing", UnitOfEnergy.KILO_WATT_HOUR, {}),
-        ("total_increasing", UnitOfEnergy.MEGA_WATT_HOUR, {}),
-        ("total_increasing", UnitOfEnergy.WATT_HOUR, {}),
-        ("total", UnitOfEnergy.KILO_WATT_HOUR, {}),
-        ("total", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
-        ("measurement", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
-        ("total_increasing", UnitOfEnergy.GIGA_JOULE, {}),
+        ("total_increasing", UnitEnergy.KILO_WATT_HOUR, {}),
+        ("total_increasing", UnitEnergy.MEGA_WATT_HOUR, {}),
+        ("total_increasing", UnitEnergy.WATT_HOUR, {}),
+        ("total", UnitEnergy.KILO_WATT_HOUR, {}),
+        ("total", UnitEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("measurement", UnitEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("total_increasing", UnitEnergy.GIGA_JOULE, {}),
     ],
 )
 async def test_validation(

@@ -40,7 +40,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
-    UnitOfEnergy,
+    UnitEnergy,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -70,10 +70,10 @@ INVALID_SYMBOL = "bob"
         (DistanceConverter, LENGTH_YARD),
         (DistanceConverter, LENGTH_FEET),
         (DistanceConverter, LENGTH_INCHES),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.MEGA_WATT_HOUR),
-        (EnergyConverter, UnitOfEnergy.GIGA_JOULE),
+        (EnergyConverter, UnitEnergy.WATT_HOUR),
+        (EnergyConverter, UnitEnergy.KILO_WATT_HOUR),
+        (EnergyConverter, UnitEnergy.MEGA_WATT_HOUR),
+        (EnergyConverter, UnitEnergy.GIGA_JOULE),
         (MassConverter, MASS_GRAMS),
         (MassConverter, MASS_KILOGRAMS),
         (MassConverter, MASS_MICROGRAMS),
@@ -117,7 +117,7 @@ def test_convert_same_unit(converter: type[BaseUnitConverter], valid_unit: str) 
     "converter,valid_unit",
     [
         (DistanceConverter, LENGTH_KILOMETERS),
-        (EnergyConverter, UnitOfEnergy.KILO_WATT_HOUR),
+        (EnergyConverter, UnitEnergy.KILO_WATT_HOUR),
         (MassConverter, MASS_GRAMS),
         (PowerConverter, POWER_WATT),
         (PressureConverter, PRESSURE_PA),
@@ -143,7 +143,7 @@ def test_convert_invalid_unit(
     "converter,from_unit,to_unit",
     [
         (DistanceConverter, LENGTH_KILOMETERS, LENGTH_METERS),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR),
+        (EnergyConverter, UnitEnergy.WATT_HOUR, UnitEnergy.KILO_WATT_HOUR),
         (MassConverter, MASS_GRAMS, MASS_KILOGRAMS),
         (PowerConverter, POWER_WATT, POWER_KILO_WATT),
         (PressureConverter, PRESSURE_HPA, PRESSURE_INHG),
@@ -164,7 +164,7 @@ def test_convert_nonnumeric_value(
     "converter,from_unit,to_unit,expected",
     [
         (DistanceConverter, LENGTH_KILOMETERS, LENGTH_METERS, 1 / 1000),
-        (EnergyConverter, UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
+        (EnergyConverter, UnitEnergy.WATT_HOUR, UnitEnergy.KILO_WATT_HOUR, 1000),
         (PowerConverter, POWER_WATT, POWER_KILO_WATT, 1000),
         (PressureConverter, PRESSURE_HPA, PRESSURE_INHG, pytest.approx(33.86389)),
         (
@@ -258,14 +258,14 @@ def test_distance_convert(
 @pytest.mark.parametrize(
     "value,from_unit,expected,to_unit",
     [
-        (10, UnitOfEnergy.WATT_HOUR, 0.01, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.WATT_HOUR, 0.00001, UnitOfEnergy.MEGA_WATT_HOUR),
-        (10, UnitOfEnergy.KILO_WATT_HOUR, 10000, UnitOfEnergy.WATT_HOUR),
-        (10, UnitOfEnergy.KILO_WATT_HOUR, 0.01, UnitOfEnergy.MEGA_WATT_HOUR),
-        (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000000, UnitOfEnergy.WATT_HOUR),
-        (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.GIGA_JOULE, 10000 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.GIGA_JOULE, 10 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitEnergy.WATT_HOUR, 0.01, UnitEnergy.KILO_WATT_HOUR),
+        (10, UnitEnergy.WATT_HOUR, 0.00001, UnitEnergy.MEGA_WATT_HOUR),
+        (10, UnitEnergy.KILO_WATT_HOUR, 10000, UnitEnergy.WATT_HOUR),
+        (10, UnitEnergy.KILO_WATT_HOUR, 0.01, UnitEnergy.MEGA_WATT_HOUR),
+        (10, UnitEnergy.MEGA_WATT_HOUR, 10000000, UnitEnergy.WATT_HOUR),
+        (10, UnitEnergy.MEGA_WATT_HOUR, 10000, UnitEnergy.KILO_WATT_HOUR),
+        (10, UnitEnergy.GIGA_JOULE, 10000 / 3.6, UnitEnergy.KILO_WATT_HOUR),
+        (10, UnitEnergy.GIGA_JOULE, 10 / 3.6, UnitEnergy.MEGA_WATT_HOUR),
     ],
 )
 def test_energy_convert(

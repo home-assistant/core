@@ -42,7 +42,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
-    UnitOfEnergy,
+    UnitEnergy,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -148,18 +148,18 @@ class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
     UNIT_CLASS = "energy"
-    NORMALIZED_UNIT = UnitOfEnergy.KILO_WATT_HOUR
+    NORMALIZED_UNIT = UnitEnergy.KILO_WATT_HOUR
     _UNIT_CONVERSION: dict[str, float] = {
-        UnitOfEnergy.WATT_HOUR: 1 * 1000,
-        UnitOfEnergy.KILO_WATT_HOUR: 1,
-        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
-        UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
+        UnitEnergy.WATT_HOUR: 1 * 1000,
+        UnitEnergy.KILO_WATT_HOUR: 1,
+        UnitEnergy.MEGA_WATT_HOUR: 1 / 1000,
+        UnitEnergy.GIGA_JOULE: 3.6 / 1000,
     }
     VALID_UNITS = {
-        UnitOfEnergy.WATT_HOUR,
-        UnitOfEnergy.KILO_WATT_HOUR,
-        UnitOfEnergy.MEGA_WATT_HOUR,
-        UnitOfEnergy.GIGA_JOULE,
+        UnitEnergy.WATT_HOUR,
+        UnitEnergy.KILO_WATT_HOUR,
+        UnitEnergy.MEGA_WATT_HOUR,
+        UnitEnergy.GIGA_JOULE,
     }
 
 

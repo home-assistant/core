@@ -488,7 +488,7 @@ POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 
 # Energy units
-class UnitOfEnergy(StrEnum):
+class UnitEnergy(StrEnum):
     """Energy units."""
 
     GIGA_JOULE = "GJ"
@@ -498,11 +498,11 @@ class UnitOfEnergy(StrEnum):
 
 
 ENERGY_KILO_WATT_HOUR: Final = "kWh"
-"""Deprecated: please use UnitOfEnergy.KILO_WATT_HOUR."""
+"""Deprecated: please use UnitEnergy.KILO_WATT_HOUR."""
 ENERGY_MEGA_WATT_HOUR: Final = "MWh"
-"""Deprecated: please use UnitOfEnergy.MEGA_WATT_HOUR."""
+"""Deprecated: please use UnitEnergy.MEGA_WATT_HOUR."""
 ENERGY_WATT_HOUR: Final = "Wh"
-"""Deprecated: please use UnitOfEnergy.WATT_HOUR."""
+"""Deprecated: please use UnitEnergy.WATT_HOUR."""
 
 # Electric_current units
 ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"

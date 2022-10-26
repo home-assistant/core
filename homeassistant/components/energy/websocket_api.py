@@ -13,7 +13,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import recorder, websocket_api
-from homeassistant.const import UnitOfEnergy
+from homeassistant.const import UnitEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -273,7 +273,7 @@ async def ws_get_fossil_energy_consumption(
         statistic_ids,
         "hour",
         True,
-        {"energy": UnitOfEnergy.KILO_WATT_HOUR},
+        {"energy": UnitEnergy.KILO_WATT_HOUR},
     )
 
     def _combine_sum_statistics(
