@@ -1718,7 +1718,7 @@
           "name": "AVM FRITZ!SmartHome"
         },
         "fritzbox_callmonitor": {
-          "integration_type": "service",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "AVM FRITZ!Box Call Monitor"
