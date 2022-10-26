@@ -6,5 +6,6 @@
   "requirements": ["elmax_api==0.0.3rc2"],
   "codeowners": ["@albertogeniola"],
   "iot_class": "cloud_polling",
-  "loggers": ["elmax_api"]
+  "loggers": ["elmax_api"],
+  "zeroconf": ["VideoBox._elmax._tcp.local."]
 }
