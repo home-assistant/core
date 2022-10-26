@@ -62,16 +62,19 @@ FLUME_QUERIES_SENSOR: tuple[SensorEntityDescription, ...] = (
         key="last_60_min",
         name="60 Minutes",
         native_unit_of_measurement=f"{VOLUME_GALLONS}/h",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="last_24_hrs",
         name="24 Hours",
         native_unit_of_measurement=f"{VOLUME_GALLONS}/d",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="last_30_days",
         name="30 Days",
         native_unit_of_measurement=f"{VOLUME_GALLONS}/mo",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
