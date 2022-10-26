@@ -71,8 +71,7 @@ async def async_setup_entry(
                         device_id,
                     )
                 )
-        if new_tools:
-            async_add_entities(new_tools)
+        async_add_entities(new_tools)
 
     config_entry.async_on_unload(coordinator.async_add_listener(async_add_tool_sensors))
 

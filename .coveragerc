@@ -161,6 +161,8 @@ omit =
     homeassistant/components/brunt/const.py
     homeassistant/components/brunt/cover.py
     homeassistant/components/bsblan/climate.py
+    homeassistant/components/bsblan/const.py
+    homeassistant/components/bsblan/entity.py
     homeassistant/components/bt_home_hub_5/device_tracker.py
     homeassistant/components/bt_smarthub/device_tracker.py
     homeassistant/components/buienradar/sensor.py
@@ -538,6 +540,7 @@ omit =
     homeassistant/components/hunterdouglas_powerview/entity.py
     homeassistant/components/hunterdouglas_powerview/model.py
     homeassistant/components/hunterdouglas_powerview/scene.py
+    homeassistant/components/hunterdouglas_powerview/select.py
     homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/shade_data.py
     homeassistant/components/hunterdouglas_powerview/util.py
@@ -857,6 +860,7 @@ omit =
     homeassistant/components/noaa_tides/sensor.py
     homeassistant/components/nobo_hub/__init__.py
     homeassistant/components/nobo_hub/climate.py
+    homeassistant/components/nobo_hub/sensor.py
     homeassistant/components/norway_air/air_quality.py
     homeassistant/components/notify_events/notify.py
     homeassistant/components/notion/__init__.py
@@ -1103,7 +1107,6 @@ omit =
     homeassistant/components/sesame/lock.py
     homeassistant/components/seven_segments/image_processing.py
     homeassistant/components/seventeentrack/sensor.py
-    homeassistant/components/shelly/__init__.py
     homeassistant/components/shelly/binary_sensor.py
     homeassistant/components/shelly/climate.py
     homeassistant/components/shelly/coordinator.py

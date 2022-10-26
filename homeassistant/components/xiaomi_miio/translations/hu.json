@@ -5,7 +5,8 @@
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "incomplete_info": "Az eszk\u00f6z be\u00e1ll\u00edt\u00e1s\u00e1hoz sz\u00fcks\u00e9ges inform\u00e1ci\u00f3k hi\u00e1nyosak, nincs megadva \u00e1llom\u00e1s vagy token.",
             "not_xiaomi_miio": "Az eszk\u00f6zt (m\u00e9g) nem t\u00e1mogatja a Xiaomi Miio integr\u00e1ci\u00f3.",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",

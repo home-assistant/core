@@ -141,6 +141,9 @@ iso4217!=1.10.20220401
 
 # Pandas 1.4.4 has issues with wheels om armhf + Py3.10
 pandas==1.4.3
+
+# uamqp 1.6.1, has 1 failing test during built on armv7/armhf
+uamqp==1.6.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

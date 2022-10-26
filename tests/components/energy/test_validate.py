@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
 from homeassistant.const import (
+    ENERGY_GIGA_JOULE,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
@@ -48,7 +49,7 @@ def mock_get_metadata():
 
 
 @pytest.fixture(autouse=True)
-async def mock_energy_manager(hass, recorder_mock):
+async def mock_energy_manager(recorder_mock, hass):
     """Set up energy."""
     assert await async_setup_component(hass, "energy", {"energy": {}})
     manager = await async_get_manager(hass)
@@ -73,6 +74,7 @@ async def test_validation_empty_config(hass):
         ("total", ENERGY_KILO_WATT_HOUR, {}),
         ("total", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
         ("measurement", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("total_increasing", ENERGY_GIGA_JOULE, {}),
     ],
 )
 async def test_validation(

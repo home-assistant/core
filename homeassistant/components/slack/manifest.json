@@ -6,5 +6,6 @@
   "requirements": ["slackclient==2.5.0"],
   "codeowners": ["@bachya", "@tkdrob"],
   "iot_class": "cloud_push",
-  "loggers": ["slack"]
+  "loggers": ["slack"],
+  "integration_type": "service"
 }
