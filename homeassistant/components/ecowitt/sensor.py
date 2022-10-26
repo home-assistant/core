@@ -158,11 +158,13 @@ ECOWITT_SENSORS_MAPPING: Final = {
         key="RAIN_RATE_MM",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     EcoWittSensorTypes.RAIN_RATE_INCHES: SensorEntityDescription(
         key="RAIN_RATE_INCHES",
         native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_KM: SensorEntityDescription(
         key="LIGHTNING_DISTANCE_KM",

@@ -171,7 +171,7 @@ aiokafka==0.7.2
 aiolifx==0.8.6
 
 # homeassistant.components.lifx
-aiolifx_effects==0.2.2
+aiolifx_effects==0.3.0
 
 # homeassistant.components.lifx
 aiolifx_themes==0.1.1
@@ -1012,7 +1012,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
-pyTibber==0.25.4
+pyTibber==0.25.6
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -1808,7 +1808,7 @@ youless-api==0.16
 zeroconf==0.39.2
 
 # homeassistant.components.zha
-zha-quirks==0.0.83
+zha-quirks==0.0.84
 
 # homeassistant.components.zha
 zigpy-deconz==0.19.0

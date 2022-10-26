@@ -2,10 +2,6 @@
 from __future__ import annotations
 
 from homeassistant.const import (
-    ENERGY_GIGA_JOULE,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
     LENGTH_CENTIMETERS,
     LENGTH_FEET,
     LENGTH_INCHES,
@@ -46,6 +42,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
+    UnitOfEnergy,
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -151,18 +148,18 @@ class EnergyConverter(BaseUnitConverter):
     """Utility to convert energy values."""
 
     UNIT_CLASS = "energy"
-    NORMALIZED_UNIT = ENERGY_KILO_WATT_HOUR
+    NORMALIZED_UNIT = UnitOfEnergy.KILO_WATT_HOUR
     _UNIT_CONVERSION: dict[str, float] = {
-        ENERGY_WATT_HOUR: 1 * 1000,
-        ENERGY_KILO_WATT_HOUR: 1,
-        ENERGY_MEGA_WATT_HOUR: 1 / 1000,
-        ENERGY_GIGA_JOULE: 3.6 / 1000,
+        UnitOfEnergy.WATT_HOUR: 1 * 1000,
+        UnitOfEnergy.KILO_WATT_HOUR: 1,
+        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
+        UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
     }
     VALID_UNITS = {
-        ENERGY_WATT_HOUR,
-        ENERGY_KILO_WATT_HOUR,
-        ENERGY_MEGA_WATT_HOUR,
-        ENERGY_GIGA_JOULE,
+        UnitOfEnergy.WATT_HOUR,
+        UnitOfEnergy.KILO_WATT_HOUR,
+        UnitOfEnergy.MEGA_WATT_HOUR,
+        UnitOfEnergy.GIGA_JOULE,
     }
 
 
