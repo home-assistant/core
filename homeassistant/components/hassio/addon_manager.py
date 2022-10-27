@@ -14,7 +14,8 @@ from typing_extensions import Concatenate, ParamSpec
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from . import (
+from .handler import (
+    HassioAPIError,
     async_create_backup,
     async_get_addon_discovery_info,
     async_get_addon_info,
@@ -27,7 +28,6 @@ from . import (
     async_uninstall_addon,
     async_update_addon,
 )
-from .handler import HassioAPIError
 
 _AddonManagerT = TypeVar("_AddonManagerT", bound="AddonManager")
 _R = TypeVar("_R")
