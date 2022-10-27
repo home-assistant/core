@@ -183,7 +183,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
     ):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
-        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._unit_of_measurement = unit_of_measurement
         if sensor_type in SENSOR_TYPES_DICT:
             self.entity_description = SENSOR_TYPES_DICT[sensor_type]
         super().__init__(device_id, initial_event=initial_event, **kwargs)
@@ -229,6 +229,14 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         # Process the initial event now that the entity is created
         if self._initial_event:
             self.handle_event_callback(self._initial_event)
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return measurement unit."""
+        if self._unit_of_measurement:
+            return self._unit_of_measurement
+        if self.entity_description:
+            return self.entity_description.native_unit_of_measurement
 
     @property
     def native_value(self):
