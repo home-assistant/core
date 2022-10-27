@@ -9,13 +9,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import selector
 
 from .const import DEFAULT_NAME, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
+        vol.Required(CONF_API_KEY): selector.TextSelector(),
     }
 )
 

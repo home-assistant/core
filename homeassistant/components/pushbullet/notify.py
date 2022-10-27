@@ -26,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_FILE, ATTR_FILE_URL, ATTR_LIST, ATTR_URL, DOMAIN
+from .const import ATTR_FILE, ATTR_FILE_URL, ATTR_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ async def async_get_service(
             hass,
             DOMAIN,
             "deprecated_yaml",
-            breaks_in_ha_version="2022.11.0",
+            breaks_in_ha_version="2023.1.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
@@ -69,32 +69,18 @@ class PushBulletNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.hass = hass
         self.pushbullet = pushbullet
-        self.pbtargets: dict[str, dict[str, Device | Channel]] = {
+
+    @property
+    def pbtargets(self) -> dict[str, dict[str, Device | Channel]]:
+        """Return device and channel detected targets."""
+        return {
             "device": {tgt.nickname.lower(): tgt for tgt in self.pushbullet.devices},
             "channel": {
                 tgt.channel_tag.lower(): tgt for tgt in self.pushbullet.channels
             },
         }
 
-    def refresh(self):
-        """Refresh devices, contacts, etc.
-
-        pbtargets stores all targets available from this Pushbullet instance
-        into a dict. These are Pushbullet objects!. It sacrifices a bit of
-        memory for faster processing at send_message.
-
-        As of sept 2015, contacts were replaced by chats. This is not
-        implemented in the module yet.
-        """
-        self.pushbullet.refresh()
-        self.pbtargets: dict[str, dict[str, Device | Channel]] = {
-            "device": {tgt.nickname.lower(): tgt for tgt in self.pushbullet.devices},
-            "channel": {
-                tgt.channel_tag.lower(): tgt for tgt in self.pushbullet.channels
-            },
-        }
-
-    def send_message(self, message: str, **kwargs) -> None:
+    def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a specified target.
 
         If no target specified, a 'normal' push will be sent to all devices
@@ -105,13 +91,16 @@ class PushBulletNotificationService(BaseNotificationService):
         targets: list[str] = kwargs.get(ATTR_TARGET, [])
         title: str = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data: dict[str, Any] = kwargs.get(ATTR_DATA, {})
-        refreshed = False
+        # refreshed = False
 
         if not targets:
             # Backward compatibility, notify all devices in own account.
             self._push_data(message, title, data, self.pushbullet)
             _LOGGER.info("Sent notification to self")
             return
+
+        # refresh device and channel targets
+        self.pushbullet.refresh()
 
         # Main loop, process all targets specified.
         for target in targets:
@@ -135,25 +124,18 @@ class PushBulletNotificationService(BaseNotificationService):
                 _LOGGER.info("Sent sms notification to %s", tname)
                 continue
 
-            # Refresh if name not found. While awaiting periodic refresh
-            # solution in component, poor mans refresh.
             if ttype not in self.pbtargets:
                 raise ValueError(f"Invalid target syntax: {target}")
 
             tname = tname.lower()
 
-            if tname not in self.pbtargets[ttype] and not refreshed:
-                self.refresh()
-                refreshed = True
+            if tname not in self.pbtargets[ttype]:
+                raise ValueError(f"Target: {target} doesn't exist")
 
             # Attempt push_note on a dict value. Keys are types & target
             # name. Dict pbtargets has all *actual* targets.
-            try:
-                self._push_data(message, title, data, self.pbtargets[ttype][tname])
-                _LOGGER.info("Sent notification to %s/%s", ttype, tname)
-            except KeyError:
-                _LOGGER.error("No such target: %s/%s", ttype, tname)
-                continue
+            self._push_data(message, title, data, self.pbtargets[ttype][tname])
+            _LOGGER.info("Sent notification to %s/%s", ttype, tname)
 
     def _push_data(
         self,
@@ -165,48 +147,34 @@ class PushBulletNotificationService(BaseNotificationService):
         phonenumber: str | None = None,
     ):
         """Create the message content."""
+        kwargs = {"body": message, "title": title}
+        if email:
+            kwargs["email"] = email
 
-        if data is None:
-            data = {}
-        data_list = data.get(ATTR_LIST)
-        url = data.get(ATTR_URL)
-        filepath = data.get(ATTR_FILE)
-        file_url = data.get(ATTR_FILE_URL)
         try:
-            email_kwargs = {}
-            if email:
-                email_kwargs["email"] = email
-            if phonenumber:
-                device = pusher.devices[0]
-                pusher.push_sms(device, phonenumber, message)
-            elif url:
-                pusher.push_link(title, url, body=message, **email_kwargs)
-            elif filepath:
+            if phonenumber and pusher.devices:
+                pusher.push_sms(pusher.devices[0], phonenumber, message)
+                return
+            if url := data.get(ATTR_URL):
+                pusher.push_link(url=url, **kwargs)
+                return
+            if filepath := data.get(ATTR_FILE):
                 if not self.hass.config.is_allowed_path(filepath):
-                    _LOGGER.error("Filepath is not valid or allowed")
-                    return
+                    raise ValueError("Filepath is not valid or allowed")
                 with open(filepath, "rb") as fileh:
                     filedata = self.pushbullet.upload_file(fileh, filepath)
-                    if filedata.get("file_type") == "application/x-empty":
-                        _LOGGER.error("Can not send an empty file")
-                        return
-                    filedata.update(email_kwargs)
-                    pusher.push_file(title=title, body=message, **filedata)
-            elif file_url:
-                if not file_url.startswith("http"):
-                    _LOGGER.error("URL should start with http or https")
-                    return
+                if filedata.get("file_type") == "application/x-empty":
+                    raise ValueError("Cannot send an empty file")
+                kwargs.update(filedata)
+                pusher.push_file(**kwargs)
+            elif (file_url := data.get(ATTR_FILE_URL)) and vol.Url(file_url):
                 pusher.push_file(
-                    title=title,
-                    body=message,
                     file_name=file_url,
                     file_url=file_url,
                     file_type=(mimetypes.guess_type(file_url)[0]),
-                    **email_kwargs,
+                    **kwargs,
                 )
-            elif data_list:
-                pusher.push_list(title, data_list, **email_kwargs)
             else:
-                pusher.push_note(title, message, **email_kwargs)
+                pusher.push_note(**kwargs)
         except PushError as err:
             raise HomeAssistantError(f"Notify failed: {err}") from err

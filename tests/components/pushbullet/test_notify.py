@@ -143,21 +143,3 @@ async def test_pushbullet_push_mixed(hass, requests_mock, mock_service):
         "type": "note",
     }
     assert requests_mock.request_history[-1].json() == expected_body
-
-
-async def test_pushbullet_push_no_file(hass, requests_mock, mock_service):
-    """Test pushbullet push to default target."""
-    requests_mock.register_uri(
-        "POST",
-        "https://api.pushbullet.com/v2/pushes",
-        status_code=HTTPStatus.OK,
-        json={"mock_response": "Ok"},
-    )
-    data = {
-        "title": "Test Title",
-        "message": "Test Message",
-        "target": ["device/DESKTOP", "device/My iPhone"],
-        "data": {"file": "not_a_file"},
-    }
-    mock_service.send_message(**data)
-    await hass.async_block_till_done()
