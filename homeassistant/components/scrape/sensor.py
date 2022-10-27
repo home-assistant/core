@@ -91,7 +91,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             "moved_yaml",
-            breaks_in_ha_version="2022.11.0",
+            breaks_in_ha_version="2022.12.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="moved_yaml",
