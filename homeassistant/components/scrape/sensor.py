@@ -5,10 +5,9 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import httpx
 import voluptuous as vol
 
-from homeassistant.components.rest.data import RestData
+from homeassistant.components.rest import RESOURCE_SCHEMA, create_rest_data_from_config
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
@@ -82,12 +81,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
+    resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(config)
+    rest = create_rest_data_from_config(hass, resource_config)
+
+    coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
+    await coordinator.async_refresh()
+    if coordinator.data is None:
+        raise PlatformNotReady
+
     name: str = config[CONF_NAME]
-    resource: str = config[CONF_RESOURCE]
-    method: str = "GET"
-    payload: str | None = None
-    headers: dict[str, str] | None = config.get(CONF_HEADERS)
-    verify_ssl: bool = config[CONF_VERIFY_SSL]
     select: str | None = config.get(CONF_SELECT)
     attr: str | None = config.get(CONF_ATTR)
     index: int = config[CONF_INDEX]
@@ -95,26 +97,10 @@ async def async_setup_platform(
     device_class: str | None = config.get(CONF_DEVICE_CLASS)
     state_class: str | None = config.get(CONF_STATE_CLASS)
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
-    username: str | None = config.get(CONF_USERNAME)
-    password: str | None = config.get(CONF_PASSWORD)
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
 
     if value_template is not None:
         value_template.hass = hass
-
-    auth: httpx.DigestAuth | tuple[str, str] | None = None
-    if username and password:
-        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
-        else:
-            auth = (username, password)
-
-    rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
-
-    coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
-    await coordinator.async_refresh()
-    if coordinator.data is None:
-        raise PlatformNotReady
 
     async_add_entities(
         [
