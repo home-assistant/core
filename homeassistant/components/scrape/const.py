@@ -5,7 +5,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "scrape"
 DEFAULT_NAME = "Web scrape"
-DEFAULT_VERIFY_SSL = True
 
 PLATFORMS = [Platform.SENSOR]
 
