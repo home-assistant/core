@@ -196,7 +196,7 @@ aiolifx==0.8.6
 aiolifx_effects==0.3.0
 
 # homeassistant.components.lifx
-aiolifx_themes==0.1.1
+aiolifx_themes==0.2.0
 
 # homeassistant.components.lookin
 aiolookin==0.1.1
@@ -419,7 +419,7 @@ bleak-retry-connector==2.4.2
 bleak==0.19.0
 
 # homeassistant.components.blebox
-blebox_uniapi==2.1.0
+blebox_uniapi==2.1.3
 
 # homeassistant.components.ble_parser
 bleparser==3.3.0
@@ -1727,7 +1727,7 @@ pymochad==0.2.0
 pymodbus==2.5.3
 
 # homeassistant.components.monoprice
-pymonoprice==0.3
+pymonoprice==0.4
 
 # homeassistant.components.msteams
 pymsteams==0.1.12
@@ -2244,7 +2244,7 @@ sensorpro-ble==0.5.0
 sensorpush-ble==1.5.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.10.0
+sentry-sdk==1.10.1
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
@@ -2631,7 +2631,7 @@ zigpy-zigate==0.10.2
 zigpy-znp==0.9.1
 
 # homeassistant.components.zha
-zigpy==0.51.3
+zigpy==0.51.4
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
