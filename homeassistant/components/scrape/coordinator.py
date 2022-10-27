@@ -6,7 +6,7 @@ import logging
 
 from bs4 import BeautifulSoup
 
-from homeassistant.components.rest.data import RestData
+from homeassistant.components.rest import RestData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
