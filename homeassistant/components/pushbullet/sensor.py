@@ -8,8 +8,6 @@ from typing import Any
 from pushbullet import Listener, PushBullet
 import voluptuous as vol
 
-from homeassistant.components.repairs.issue_handler import async_create_issue
-from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
@@ -23,6 +21,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DATA_UPDATED, DOMAIN

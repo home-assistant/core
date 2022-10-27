@@ -18,13 +18,12 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.repairs.issue_handler import async_create_issue
-from homeassistant.components.repairs.models import IssueSeverity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_FILE, ATTR_FILE_URL, ATTR_LIST, ATTR_URL, DOMAIN
