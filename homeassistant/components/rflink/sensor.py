@@ -235,7 +235,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         """Return measurement unit."""
         if self._unit_of_measurement:
             return self._unit_of_measurement
-        if self.entity_description:
+        if hasattr(self, "entity_description"):
             return self.entity_description.native_unit_of_measurement
 
     @property
