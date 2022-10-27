@@ -1,6 +1,6 @@
 {
   "domain": "lutron_caseta",
-  "name": "Lutron Caséta",
+  "name": "Lutron Cas\u00e9ta",
   "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
   "requirements": ["pylutron-caseta==0.17.1"],
   "config_flow": true,
@@ -23,9 +23,5 @@
   },
   "codeowners": ["@swails", "@bdraco", "@danaues"],
   "iot_class": "local_push",
-  "loggers": ["pylutron_caseta"],
-  "supported_brands": {
-    "lutron_caseta_pro": "Lutron Caséta Pro",
-    "lutron_ra2_select": "Lutron RA2 Select"
-  }
+  "loggers": ["pylutron_caseta"]
 }

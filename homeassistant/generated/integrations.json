@@ -508,6 +508,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "ble_parser": {
+      "name": "BLE Parser",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_push"
+    },
     "blebox": {
       "name": "BleBox devices",
       "integration_type": "hub",
@@ -569,7 +575,7 @@
     "bluetooth_le_tracker": {
       "name": "Bluetooth LE Tracker",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "bluetooth_tracker": {
@@ -679,7 +685,7 @@
     "caldav": {
       "name": "CalDAV",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "canary": {

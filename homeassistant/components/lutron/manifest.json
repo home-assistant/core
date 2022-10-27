@@ -5,9 +5,5 @@
   "requirements": ["pylutron==0.2.8"],
   "codeowners": ["@JonGilmore"],
   "iot_class": "local_polling",
-  "loggers": ["pylutron"],
-  "supported_brands": {
-    "lutron_homeworks_qs": "Lutron HomeWorks QS",
-    "lutron_ra2": "Lutron RA2"
-  }
+  "loggers": ["pylutron"]
 }
