@@ -38,7 +38,9 @@ from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
 from .const import (
-    CONF_ZONE_RUN_TIME,
+    CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_DURATION,
+    CONF_USE_APP_RUN_TIMES,
     DATA_API_VERSIONS,
     DATA_MACHINE_FIRMWARE_UPDATE_STATUS,
     DATA_PROGRAMS,
@@ -67,7 +69,6 @@ PLATFORMS = [
 
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
-CONF_DURATION = "duration"
 CONF_ET = "et"
 CONF_MAXRH = "maxrh"
 CONF_MAXTEMP = "maxtemp"
@@ -237,15 +238,17 @@ async def async_setup_entry(  # noqa: C901
     if not entry.unique_id or is_ip_address(entry.unique_id):
         # If the config entry doesn't already have a unique ID, set one:
         entry_updates["unique_id"] = controller.mac
-    if CONF_ZONE_RUN_TIME in entry.data:
+    if CONF_DEFAULT_ZONE_RUN_TIME in entry.data:
         # If a zone run time exists in the config entry's data, pop it and move it to
         # options:
         data = {**entry.data}
         entry_updates["data"] = data
         entry_updates["options"] = {
             **entry.options,
-            CONF_ZONE_RUN_TIME: data.pop(CONF_ZONE_RUN_TIME),
+            CONF_DEFAULT_ZONE_RUN_TIME: data.pop(CONF_DEFAULT_ZONE_RUN_TIME),
         }
+    if CONF_USE_APP_RUN_TIMES not in entry.options:
+        entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
     if entry_updates:
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
