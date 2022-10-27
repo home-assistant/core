@@ -3,8 +3,10 @@ from functools import partial
 import logging
 import mimetypes
 import os
+from urllib.parse import urlparse
 
 from matrix_client.client import MatrixClient, MatrixRequestError
+import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
@@ -196,6 +198,11 @@ class MatrixBot:
 
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
+    def _is_url(self, url):
+        """Validate the URL can be parsed and at least has scheme + netloc."""
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+
     def _handle_room_message(self, room_id, room, event):
         """Handle a message sent to a Matrix room."""
         if event["content"]["msgtype"] != "m.text":
@@ -359,11 +366,20 @@ class MatrixBot:
     def _send_image(self, img, target_rooms):
         _LOGGER.debug("Uploading file from path, %s", img)
 
-        if not self.hass.config.is_allowed_path(img):
-            _LOGGER.error("Path not allowed: %s", img)
-            return
-        with open(img, "rb") as upfile:
-            imgfile = upfile.read()
+        if self._is_url(img):
+            if not self.hass.config.is_allowed_external_url(img):
+                _LOGGER.error("URL not allowed: %s", img)
+                return
+
+            response = requests.get(img, timeout=5)
+            imgfile = response.content
+        else:
+            if not self.hass.config.is_allowed_path(img):
+                _LOGGER.error("Path not allowed: %s", img)
+                return
+            with open(img, "rb") as upfile:
+                imgfile = upfile.read()
+
         content_type = mimetypes.guess_type(img)[0]
         mxc = self._client.upload(imgfile, content_type)
         for target_room in target_rooms:
