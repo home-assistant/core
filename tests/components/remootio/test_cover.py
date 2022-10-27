@@ -256,7 +256,7 @@ async def test_event_left_open(remootio_create_client: Mock, hass: HomeAssistant
     assert hass.states.get(TDV_ENTITY_ID).state == STATE_OPEN
 
     await _remootio_client_trigger_event(
-        Event(EventSource.WIFI, EventType.LEFT_OPEN, None)
+        Event(EventSource.DEVICE_OVER_WIFI, EventType.LEFT_OPEN, None)
     )
     await hass.async_block_till_done()
 
