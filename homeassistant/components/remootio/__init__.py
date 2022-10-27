@@ -65,7 +65,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if platforms_unloaded and DOMAIN in hass.data.keys():
-        hass.data[DOMAIN].pop(entry.entry_id, None)
+        hass_data = hass.data[DOMAIN].pop(entry.entry_id, {})
+        if REMOOTIO_CLIENT in hass_data:
+            remootio_client: RemootioClient = hass_data.pop(REMOOTIO_CLIENT, None)
+            if remootio_client is not None:
+                terminated: bool = await remootio_client.terminate()
+                if terminated:
+                    _LOGGER.debug(
+                        "Remootio client successfully terminated. entry [%s]",
+                        entry.as_dict(),
+                    )
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

@@ -78,7 +78,11 @@ class RemootioCover(cover.CoverEntity):
     async def async_added_to_hass(self) -> None:
         """Register listeners to the used Remootio client to be notified on state changes and events."""
 
-        _LOGGER.debug("Doing async_added_to_hass")
+        _LOGGER.debug(
+            "Doing async_added_to_hass for %s with entity id %s",
+            self.__class__,
+            self.entity_id,
+        )
 
         await self._remootio_client.add_state_change_listener(
             RemootioCoverStateChangeListener(self)
@@ -91,9 +95,19 @@ class RemootioCover(cover.CoverEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Terminate the used Remootio client."""
 
-        _LOGGER.debug("Doing async_will_remove_from_hass")
+        _LOGGER.debug(
+            "Doing async_will_remove_from_hass for %s with entity id %s",
+            self.__class__,
+            self.entity_id,
+        )
 
-        await self._remootio_client.terminate()
+        terminated: bool = await self._remootio_client.terminate()
+        if terminated:
+            _LOGGER.debug(
+                "Remootio client successfully terminated for %s with entity id %s",
+                self.__class__,
+                self.entity_id,
+            )
 
     async def async_update(self) -> None:
         """Trigger state update of the used Remootio client."""
