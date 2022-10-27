@@ -6,7 +6,13 @@ import pytest
 
 from homeassistant.components import mqtt, update
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -128,6 +134,111 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get("latest_version") == "1.9.0"
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0.0"}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_ON
+    assert state.attributes.get("installed_version") == "1.9.0"
+    assert state.attributes.get("latest_version") == "2.0.0"
+
+
+async def test_empty_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
+    """Test an empty JSON payload."""
+    state_topic = "test/state-topic"
+    await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                update.DOMAIN: {
+                    "state_topic": state_topic,
+                    "name": "Test Update",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    async_fire_mqtt_message(hass, state_topic, "{}")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
+    """Test whether it fetches data from a JSON payload."""
+    state_topic = "test/state-topic"
+    await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                update.DOMAIN: {
+                    "state_topic": state_topic,
+                    "name": "Test Update",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    async_fire_mqtt_message(
+        hass, state_topic, '{"installed_version":"1.9.0","latest_version":"1.9.0"}'
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("installed_version") == "1.9.0"
+    assert state.attributes.get("latest_version") == "1.9.0"
+
+    async_fire_mqtt_message(
+        hass, state_topic, '{"installed_version":"1.9.0","latest_version":"2.0.0"}'
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_ON
+    assert state.attributes.get("installed_version") == "1.9.0"
+    assert state.attributes.get("latest_version") == "2.0.0"
+
+
+async def test_json_state_message_with_template(hass, mqtt_mock_entry_with_yaml_config):
+    """Test whether it fetches data from a JSON payload with template."""
+    state_topic = "test/state-topic"
+    await async_setup_component(
+        hass,
+        mqtt.DOMAIN,
+        {
+            mqtt.DOMAIN: {
+                update.DOMAIN: {
+                    "state_topic": state_topic,
+                    "value_template": '{{ {"installed_version": value_json.installed, "latest_version": value_json.latest} | to_json }}',
+                    "name": "Test Update",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    async_fire_mqtt_message(hass, state_topic, '{"installed":"1.9.0","latest":"1.9.0"}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.test_update")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("installed_version") == "1.9.0"
+    assert state.attributes.get("latest_version") == "1.9.0"
+
+    async_fire_mqtt_message(hass, state_topic, '{"installed":"1.9.0","latest":"2.0.0"}')
 
     await hass.async_block_till_done()
 

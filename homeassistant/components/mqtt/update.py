@@ -19,6 +19,7 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLAT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -30,6 +31,7 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    PAYLOAD_EMPTY_JSON,
 )
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
@@ -50,7 +52,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
-        vol.Required(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_INSTALL): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
@@ -138,15 +140,43 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def handle_installed_version_received(msg: ReceiveMessage) -> None:
-            """Handle receiving installed version via MQTT."""
-            installed_version = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
+        def handle_state_message_received(msg: ReceiveMessage) -> None:
+            """Handle receiving state message via MQTT."""
+            payload = self._templates[CONF_VALUE_TEMPLATE](msg.payload)
 
-            if isinstance(installed_version, str) and installed_version != "":
-                self._attr_installed_version = installed_version
+            if not payload or payload == PAYLOAD_EMPTY_JSON:
+                _LOGGER.debug(
+                    "Ignoring empty payload '%s' after rendering for topic %s",
+                    payload,
+                    msg.topic,
+                )
+                return
+
+            json_payload = {}
+            try:
+                json_payload = json_loads(payload)
+                _LOGGER.debug(
+                    "JSON payload detected after processing payload '%s' on topic %s",
+                    json_payload,
+                    msg.topic,
+                )
+            except JSON_DECODE_EXCEPTIONS:
+                _LOGGER.warning(
+                    "No valid (JSON) payload detected after processing payload '%s' on topic %s",
+                    json_payload,
+                    msg.topic,
+                )
+                json_payload["installed_version"] = payload
+
+            if "installed_version" in json_payload:
+                self._attr_installed_version = json_payload["installed_version"]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-        add_subscription(topics, CONF_STATE_TOPIC, handle_installed_version_received)
+            if "latest_version" in json_payload:
+                self._attr_latest_version = json_payload["latest_version"]
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+        add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)
 
         @callback
         @log_messages(self.hass, self.entity_id)
