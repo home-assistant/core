@@ -443,6 +443,7 @@ bluetooth-adapters==0.6.0
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==0.3.6
 
+# homeassistant.components.bluetooth
 # homeassistant.components.led_ble
 bluetooth-data-tools==0.2.0
 
