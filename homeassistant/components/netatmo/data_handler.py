@@ -176,8 +176,8 @@ class NetatmoDataHandler:
     @callback
     def async_force_update(self, signal_name: str) -> None:
         """Prioritize data retrieval for given data class entry."""
-        # self.publisher[signal_name].next_scan = time()
-        # self._queue.rotate(-(self._queue.index(self.publisher[signal_name])))
+        self.publisher[signal_name].next_scan = time()
+        self._queue.rotate(-(self._queue.index(self.publisher[signal_name])))
 
     async def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
