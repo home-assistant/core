@@ -1,6 +1,7 @@
 {
   "domain": "samsungtv",
   "name": "Samsung Smart TV",
+  "integration_type": "device",
   "documentation": "https://www.home-assistant.io/integrations/samsungtv",
   "requirements": [
     "getmac==0.8.2",
