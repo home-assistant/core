@@ -35,7 +35,6 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest data from the Glances REST API."""
-
         try:
             await self.api.get_data("all")
         except exceptions.GlancesApiError as err:

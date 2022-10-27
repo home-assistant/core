@@ -19,7 +19,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from . import get_api
-from .const import CONF_VERSION, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_VERSION, DOMAIN
+from .const import (
+    CONF_VERSION,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_VERSION,
+    DOMAIN,
+    SUPPORTED_VERSIONS,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -36,8 +43,8 @@ DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
+    api = get_api(hass, data)
     try:
-        api = get_api(hass, data)
         await api.get_data("all")
     except GlancesApiError as err:
         raise CannotConnect from err
