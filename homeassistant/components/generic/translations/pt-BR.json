@@ -77,9 +77,9 @@
         "step": {
             "confirm_still": {
                 "data": {
-                    "confirmed_ok": "Esta imagem parece boa."
+                    "confirmed_ok": "Essa imagem parece boa."
                 },
-                "description": "![Camera Still Image Preview]({preview_url})",
+                "description": "![Visualiza\u00e7\u00e3o da imagem est\u00e1tica da c\u00e2mera]({preview_url})",
                 "title": "Visualizar"
             },
             "content_type": {
