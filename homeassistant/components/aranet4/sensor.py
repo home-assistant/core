@@ -38,49 +38,46 @@ from .const import DOMAIN
 SENSOR_DESCRIPTIONS = {
     "temperature": SensorEntityDescription(
         key="temperature",
+        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
+        name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
+        name="Pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": SensorEntityDescription(
         key="co2",
+        name="Carbon Dioxide",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": SensorEntityDescription(
         key="battery",
+        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "interval": SensorEntityDescription(
         key="update_interval",
+        name="Update Interval",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=TIME_SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-}
-
-SENSOR_NAMES = {
-    "temperature": "Temperature",
-    "humidity": "Humidity",
-    "pressure": "Pressure",
-    "co2": "Carbon Dioxide",
-    "battery": "Battery",
-    "interval": "Update Interval",
 }
 
 
@@ -121,8 +118,8 @@ def sensor_update_to_bluetooth_data_update(
             for key in SENSOR_DESCRIPTIONS
         },
         entity_names={
-            _device_key_to_bluetooth_entity_key(adv.device, key): SENSOR_NAMES[key]
-            for key in SENSOR_DESCRIPTIONS
+            _device_key_to_bluetooth_entity_key(adv.device, key): desc.name
+            for key, desc in SENSOR_DESCRIPTIONS.items()
         },
     )
 
