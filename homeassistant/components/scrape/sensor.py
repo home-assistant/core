@@ -46,10 +46,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
-# Old Platform Schema - falls under ADR-0007
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
-        # Linked to the loading of the page
+        # Linked to the loading of the page (can be linked to RestData)
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -58,12 +57,12 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_RESOURCE): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        # Linked to the parsing of the page
+        # Linked to the parsing of the page (specific to scrape)
         vol.Optional(CONF_ATTRIBUTE): cv.string,
         vol.Optional(CONF_INDEX, default=0): cv.positive_int,
         vol.Required(CONF_SELECT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        # Linked to the sensor definition
+        # Linked to the sensor definition (can be linked to TemplateSensor)
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
