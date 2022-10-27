@@ -49,7 +49,7 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                         data={
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            CONF_ACCOUNT: user_input.get(CONF_ACCOUNT, None),
+                            CONF_ACCOUNT: client.account_id,
                         },
                     )
 
