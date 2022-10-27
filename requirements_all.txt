@@ -2604,7 +2604,7 @@ zamg==0.1.1
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.39.2
+zeroconf==0.39.3
 
 # homeassistant.components.zha
 zha-quirks==0.0.84
@@ -2628,7 +2628,7 @@ zigpy-zigate==0.10.2
 zigpy-znp==0.9.1
 
 # homeassistant.components.zha
-zigpy==0.51.3
+zigpy==0.51.4
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

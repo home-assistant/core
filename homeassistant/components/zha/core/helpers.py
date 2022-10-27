@@ -14,7 +14,6 @@ import enum
 import functools
 import itertools
 import logging
-import operator
 from random import uniform
 import re
 from typing import TYPE_CHECKING, Any, TypeVar
@@ -163,25 +162,16 @@ def convert_to_zcl_values(
         if field.name not in fields:
             continue
         value = fields[field.name]
-        if issubclass(field.type, enum.Flag):
-            if isinstance(value, list):
-                value = field.type(
-                    functools.reduce(
-                        operator.ior,
-                        [
-                            field.type[flag.replace(" ", "_")]
-                            if isinstance(flag, str)
-                            else field.type(flag)
-                            for flag in value
-                        ],
-                    )
-                )
-            else:
-                value = (
-                    field.type[value.replace(" ", "_")]
-                    if isinstance(value, str)
-                    else field.type(value)
-                )
+        if issubclass(field.type, enum.Flag) and isinstance(value, list):
+            new_value = 0
+
+            for flag in value:
+                if isinstance(flag, str):
+                    new_value |= field.type[flag.replace(" ", "_")]
+                else:
+                    new_value |= flag
+
+            value = field.type(new_value)
         elif issubclass(field.type, enum.Enum):
             value = (
                 field.type[value.replace(" ", "_")]
