@@ -1,7 +1,8 @@
 """Tests for Z-Wave JS addon module."""
 import pytest
 
-from homeassistant.components.zwave_js.addon import AddonError, get_addon_manager
+from homeassistant.components.hassio import AddonError
+from homeassistant.components.zwave_js.addon import get_addon_manager
 from homeassistant.components.zwave_js.const import (
     CONF_ADDON_DEVICE,
     CONF_ADDON_S0_LEGACY_KEY,
