@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
+    CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
@@ -38,38 +39,35 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL
 from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
-CONF_ATTR = "attribute"
-CONF_SELECT = "select"
-CONF_INDEX = "index"
-
-DEFAULT_NAME = "Web scrape"
-DEFAULT_VERIFY_SSL = True
-
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.string,
-        vol.Required(CONF_SELECT): cv.string,
-        vol.Optional(CONF_ATTR): cv.string,
-        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
+        # Linked to the loading of the page (can be linked to RestData)
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Required(CONF_RESOURCE): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        # Linked to the parsing of the page (specific to scrape)
+        vol.Optional(CONF_ATTRIBUTE): cv.string,
+        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
+        vol.Required(CONF_SELECT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        # Linked to the sensor definition (can be linked to TemplateSensor)
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
@@ -91,7 +89,7 @@ async def async_setup_platform(
 
     name: str = config[CONF_NAME]
     select: str | None = config.get(CONF_SELECT)
-    attr: str | None = config.get(CONF_ATTR)
+    attr: str | None = config.get(CONF_ATTRIBUTE)
     index: int = config[CONF_INDEX]
     unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
     device_class: str | None = config.get(CONF_DEVICE_CLASS)
