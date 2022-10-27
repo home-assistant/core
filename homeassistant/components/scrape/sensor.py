@@ -7,7 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.rest import DEFAULT_VERIFY_SSL, RESOURCE_SCHEMA, create_rest_data_from_config
+from homeassistant.components.rest import RESOURCE_SCHEMA, create_rest_data_from_config
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
@@ -39,7 +39,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL
 from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)

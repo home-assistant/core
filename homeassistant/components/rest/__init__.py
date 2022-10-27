@@ -39,15 +39,7 @@ from homeassistant.helpers.reload import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (  # noqa: F401
-    COORDINATOR,
-    DEFAULT_VERIFY_SSL,
-    DOMAIN,
-    PLATFORM_IDX,
-    REST,
-    REST_DATA,
-    REST_IDX,
-)
+from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_DATA, REST_IDX
 from .data import RestData
 from .schema import CONFIG_SCHEMA, RESOURCE_SCHEMA  # noqa: F401
 

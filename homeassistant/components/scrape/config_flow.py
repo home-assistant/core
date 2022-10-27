@@ -6,7 +6,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.rest import DEFAULT_VERIFY_SSL
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -48,7 +47,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DOMAIN
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
 
 SCHEMA_SETUP = {
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
