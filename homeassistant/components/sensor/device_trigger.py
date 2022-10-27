@@ -62,7 +62,9 @@ CONF_VALUE = "value"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 CONF_VOLTAGE = "voltage"
 CONF_VOLUME = "volume"
+CONF_WATER = "water"
 CONF_WEIGHT = "weight"
+CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
@@ -100,7 +102,9 @@ ENTITY_TRIGGERS = {
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_VOLTAGE}],
     SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_VOLUME}],
+    SensorDeviceClass.WATER: [{CONF_TYPE: CONF_WATER}],
     SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_WEIGHT}],
+    SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_WIND_SPEED}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_VALUE}],
 }
 

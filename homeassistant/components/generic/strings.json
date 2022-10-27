@@ -59,6 +59,13 @@
         "data_description": {
           "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
         }
+      },
+      "confirm_still": {
+        "title": "[%key:component::generic::config::step::user_confirm_still::title%]",
+        "description": "[%key:component::generic::config::step::user_confirm_still::description%]",
+        "data": {
+          "confirmed_ok": "[%key:component::generic::config::step::user_confirm_still::data::confirmed_ok%]"
+        }
       }
     },
     "error": {

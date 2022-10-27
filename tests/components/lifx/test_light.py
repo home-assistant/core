@@ -801,6 +801,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_light_strip()
+    bulb.product = 38
     bulb.power_level = 0
     bulb.color = [65535, 65535, 65535, 65535]
     with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
@@ -828,6 +829,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
         "speed": 3.0,
         "direction": 0,
     }
+
     bulb.get_multizone_effect.reset_mock()
     bulb.set_multizone_effect.reset_mock()
     bulb.set_power.reset_mock()
@@ -836,7 +838,12 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_EFFECT_MOVE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 4.5, ATTR_DIRECTION: "left"},
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_SPEED: 4.5,
+            ATTR_DIRECTION: "left",
+            ATTR_THEME: "sports",
+        },
         blocking=True,
     )
 
@@ -849,6 +856,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
 
     assert len(bulb.set_power.calls) == 1
+    assert len(bulb.set_extended_color_zones.calls) == 1
     assert len(bulb.set_multizone_effect.calls) == 1
     call_dict = bulb.set_multizone_effect.calls[0][1]
     call_dict.pop("callb")

@@ -104,7 +104,11 @@ def _populate_brand_integrations(
     brand_metadata.setdefault("integrations", {})
     for domain in sub_integrations:
         integration = integrations.get(domain)
-        if not integration or integration.integration_type in ("entity", "system"):
+        if not integration or integration.integration_type in (
+            "entity",
+            "hardware",
+            "system",
+        ):
             continue
         metadata = {
             "integration_type": integration.integration_type,
@@ -113,6 +117,10 @@ def _populate_brand_integrations(
             metadata["config_flow"] = integration.config_flow
         if integration.iot_class:
             metadata["iot_class"] = integration.iot_class
+        if integration.supported_by:
+            metadata["supported_by"] = integration.supported_by
+        if integration.iot_standards:
+            metadata["iot_standards"] = integration.iot_standards
         if integration.translated_name:
             integration_data["translated_name"].add(domain)
         else:
@@ -127,7 +135,6 @@ def _generate_integrations(
 
     result = {
         "integration": {},
-        "hardware": {},
         "helper": {},
         "translated_name": set(),
     }
@@ -172,7 +179,7 @@ def _generate_integrations(
             result["integration"][domain] = metadata
         else:  # integration
             integration = integrations[domain]
-            if integration.integration_type in ("entity", "system"):
+            if integration.integration_type in ("entity", "system", "hardware"):
                 continue
 
             if integration.translated_name:
@@ -185,8 +192,8 @@ def _generate_integrations(
             if integration.integration_type == "virtual":
                 if integration.supported_by:
                     metadata["supported_by"] = integration.supported_by
-                if integration.iot_standard:
-                    metadata["iot_standard"] = integration.iot_standard
+                if integration.iot_standards:
+                    metadata["iot_standards"] = integration.iot_standards
             else:
                 metadata["config_flow"] = integration.config_flow
                 if integration.iot_class:

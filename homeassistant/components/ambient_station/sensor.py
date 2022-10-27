@@ -19,10 +19,10 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     PRECIPITATION_INCHES,
-    PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
     PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
@@ -194,9 +194,9 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_HOURLYRAININ,
         name="Hourly rain rate",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INTENSITY_INCHES_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,

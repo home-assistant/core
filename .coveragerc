@@ -860,6 +860,7 @@ omit =
     homeassistant/components/noaa_tides/sensor.py
     homeassistant/components/nobo_hub/__init__.py
     homeassistant/components/nobo_hub/climate.py
+    homeassistant/components/nobo_hub/sensor.py
     homeassistant/components/norway_air/air_quality.py
     homeassistant/components/notify_events/notify.py
     homeassistant/components/notion/__init__.py
@@ -1581,6 +1582,9 @@ omit =
     homeassistant/components/youless/const.py
     homeassistant/components/youless/sensor.py
     homeassistant/components/zabbix/*
+    homeassistant/components/zamg/__init__.py
+    homeassistant/components/zamg/const.py
+    homeassistant/components/zamg/coordinator.py
     homeassistant/components/zamg/sensor.py
     homeassistant/components/zamg/weather.py
     homeassistant/components/zengge/light.py
