@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -42,7 +43,6 @@ API_DATA = "api_data"
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = "pam"
-DEFAULT_VERIFY_SSL = True
 TYPE_VM = 0
 TYPE_CONTAINER = 1
 UPDATE_INTERVAL = 60

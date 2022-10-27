@@ -3,7 +3,6 @@ from datetime import timedelta
 
 DOMAIN = "syncthing"
 
-DEFAULT_VERIFY_SSL = True
 DEFAULT_URL = "http://127.0.0.1:8384"
 
 RECONNECT_INTERVAL = timedelta(seconds=10)

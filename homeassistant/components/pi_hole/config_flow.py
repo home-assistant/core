@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
 )
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,7 +28,6 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_SSL,
     DEFAULT_STATISTICS_ONLY,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
 

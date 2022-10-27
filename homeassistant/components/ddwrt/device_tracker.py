@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -30,7 +31,6 @@ _DDWRT_DATA_REGEX = re.compile(r"\{(\w+)::([^\}]*)\}")
 _MAC_REGEX = re.compile(r"(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})")
 
 DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
 CONF_WIRELESS_ONLY = "wireless_only"
 DEFAULT_WIRELESS_ONLY = True
 

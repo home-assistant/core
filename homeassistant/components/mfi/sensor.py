@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
     STATE_OFF,
     STATE_ON,
     TEMP_CELSIUS,
@@ -31,7 +32,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSL = True
-DEFAULT_VERIFY_SSL = True
 
 DIGITS = {"volts": 1, "amps": 1, "active_power": 0, "temperature": 1}
 

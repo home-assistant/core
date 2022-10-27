@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -36,7 +37,6 @@ from .const import (
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
 )

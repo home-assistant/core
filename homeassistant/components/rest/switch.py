@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
@@ -48,7 +49,6 @@ DEFAULT_BODY_OFF = "OFF"
 DEFAULT_BODY_ON = "ON"
 DEFAULT_NAME = "REST Switch"
 DEFAULT_TIMEOUT = 10
-DEFAULT_VERIFY_SSL = True
 
 SUPPORT_REST_METHODS = ["post", "put", "patch"]
 

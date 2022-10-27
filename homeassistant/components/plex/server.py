@@ -13,7 +13,13 @@ from requests import Session
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaType
-from homeassistant.const import CONF_CLIENT_ID, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -26,7 +32,6 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
     DEBOUNCE_TIMEOUT,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
     GDM_DEBOUNCER,
     GDM_SCANNER,

@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -34,7 +35,6 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_SSL,
     DEFAULT_TIMEOUT,
-    DEFAULT_VERIFY_SSL,
 )
 from .model import TcpSensorConfig
 

@@ -266,6 +266,7 @@ CONF_ALLOWLIST_EXTERNAL_DIRS: Final = "allowlist_external_dirs"
 LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
+DEFAULT_VERIFY_SSL: Final = True
 
 # #### EVENTS ####
 EVENT_CALL_SERVICE: Final = "call_service"

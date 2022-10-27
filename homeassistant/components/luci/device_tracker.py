@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +26,6 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {

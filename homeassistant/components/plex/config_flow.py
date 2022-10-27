@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -45,7 +46,6 @@ from .const import (
     CONF_USE_EPISODE_ART,
     DEFAULT_PORT,
     DEFAULT_SSL,
-    DEFAULT_VERIFY_SSL,
     DOMAIN,
     MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,

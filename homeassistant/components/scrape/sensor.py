@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
@@ -43,7 +44,7 @@ from homeassistant.helpers.template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DOMAIN
 from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)

@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
@@ -47,7 +48,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DOMAIN
 
 SCHEMA_SETUP = {
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),

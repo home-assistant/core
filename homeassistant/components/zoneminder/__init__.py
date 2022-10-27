@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -28,7 +29,6 @@ DEFAULT_PATH = "/zm/"
 DEFAULT_PATH_ZMS = "/zm/cgi-bin/nph-zms"
 DEFAULT_SSL = False
 DEFAULT_TIMEOUT = 10
-DEFAULT_VERIFY_SSL = True
 DOMAIN = "zoneminder"
 
 HOST_CONFIG_SCHEMA = vol.Schema(

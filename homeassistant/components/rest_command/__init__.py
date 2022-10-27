@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -28,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_METHOD = "get"
-DEFAULT_VERIFY_SSL = True
 
 SUPPORT_REST_METHODS = ["get", "patch", "post", "put", "delete"]
 

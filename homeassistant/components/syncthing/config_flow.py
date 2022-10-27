@@ -3,9 +3,14 @@ import aiosyncthing
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
+)
 
-from .const import DEFAULT_URL, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import DEFAULT_URL, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
