@@ -1,7 +1,7 @@
 """Support for getting data from websites with scraping."""
 from __future__ import annotations
-from datetime import timedelta
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
@@ -137,8 +136,6 @@ async def async_setup_platform(
 
 class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
     """Representation of a web scrape sensor."""
-
-    _attr_icon = ICON
 
     def __init__(
         self,
