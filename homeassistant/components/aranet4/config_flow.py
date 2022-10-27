@@ -5,8 +5,6 @@ import logging
 from typing import Any
 
 from aranet4.client import Aranet4Advertisement, Version as AranetVersion
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -58,28 +56,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if address in current_addresses or address in self._discovered_devices:
                 continue
 
-            # The aranet4 library expects the bleak format of objects, so if
-            # they haven't been passed through from hass (often they are), we
-            # generate them out of the discovery info.
-            if hasattr(discovery_info, "device"):
-                device = discovery_info.device
-            else:
-                device = BLEDevice(discovery_info.address, name=discovery_info.name)
-
-            if hasattr(discovery_info, "advertisement"):
-                ad_data = discovery_info.advertisement
-            else:
-                ad_data = AdvertisementData(
-                    local_name=None,
-                    manufacturer_data=discovery_info.manufacturer_data,
-                    service_data=discovery_info.service_data,
-                    service_uuids=discovery_info.service_uuids,
-                    rssi=discovery_info.rssi,
-                    tx_power=-127,
-                    platform_data=(),
-                )
-
-            adv = Aranet4Advertisement(device, ad_data)
+            adv = Aranet4Advertisement(
+                discovery_info.device, discovery_info.advertisement
+            )
             if adv.manufacturer_data:
                 self._discovered_devices[address] = (
                     adv.readings.name if adv.readings else discovery_info.name,
