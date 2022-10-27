@@ -69,7 +69,7 @@ async def test_default_setup(hass, monkeypatch):
     assert new_sensor
     assert new_sensor.state == "0"
     assert new_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
-    assert new_sensor.attributes["icon"] == "mdi:thermometer"
+    assert "icon" not in new_sensor.attributes  # temperature uses SensorEntityDescription
 
 
 async def test_disable_automatic_add(hass, monkeypatch):
