@@ -31,7 +31,7 @@
         "description": "Select how you want to configure KNX/IP Secure.",
         "menu_options": {
           "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
-          "secure_manual": "Configure IP secure keys manually"
+          "secure_tunnel_manual": "Configure IP secure keys manually"
         }
       },
       "secure_knxkeys": {
@@ -45,7 +45,7 @@
           "knxkeys_password": "This was set when exporting the file from ETS."
         }
       },
-      "secure_manual": {
+      "secure_tunnel_manual": {
         "description": "Please enter your IP secure information.",
         "data": {
           "user_id": "User ID",

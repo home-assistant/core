@@ -586,23 +586,23 @@ async def test_get_secure_menu_step_manual_tunnelling(
     assert result3["step_id"] == "secure_tunneling"
 
 
-async def test_configure_secure_manual(hass: HomeAssistant):
-    """Test configure secure manual."""
+async def test_configure_secure_tunnel_manual(hass: HomeAssistant):
+    """Test configure tunnelling secure keys manually."""
     menu_step = await _get_menu_step(hass)
 
     result = await hass.config_entries.flow.async_configure(
         menu_step["flow_id"],
-        {"next_step_id": "secure_manual"},
+        {"next_step_id": "secure_tunnel_manual"},
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "secure_manual"
+    assert result["step_id"] == "secure_tunnel_manual"
     assert not result["errors"]
 
     with patch(
         "homeassistant.components.knx.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        secure_manual = await hass.config_entries.flow.async_configure(
+        secure_tunnel_manual = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_KNX_SECURE_USER_ID: 2,
@@ -611,8 +611,8 @@ async def test_configure_secure_manual(hass: HomeAssistant):
             },
         )
         await hass.async_block_till_done()
-        assert secure_manual["type"] == FlowResultType.CREATE_ENTRY
-        assert secure_manual["data"] == {
+        assert secure_tunnel_manual["type"] == FlowResultType.CREATE_ENTRY
+        assert secure_tunnel_manual["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
             CONF_KNX_SECURE_USER_ID: 2,

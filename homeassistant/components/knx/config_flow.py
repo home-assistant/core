@@ -11,8 +11,7 @@ from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
 from xknx.secure import load_key_ring
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -95,7 +94,7 @@ class KNXCommonFlow(ABC):
         """Finish the flow."""
 
 
-class KNXConfigFlow(KNXCommonFlow, config_entries.ConfigFlow, domain=DOMAIN):
+class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
     """Handle a KNX config flow."""
 
     VERSION = 1
@@ -118,9 +117,11 @@ class KNXConfigFlow(KNXCommonFlow, config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-        return await self.async_step_type()
+        return await self.async_step_connection_type()
 
-    async def async_step_type(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_connection_type(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
         """Handle connection type configuration."""
         if user_input is not None:
             connection_type = user_input[CONF_KNX_CONNECTION_TYPE]
@@ -163,7 +164,9 @@ class KNXConfigFlow(KNXCommonFlow, config_entries.ConfigFlow, domain=DOMAIN):
         fields = {
             vol.Required(CONF_KNX_CONNECTION_TYPE): vol.In(supported_connection_types)
         }
-        return self.async_show_form(step_id="type", data_schema=vol.Schema(fields))
+        return self.async_show_form(
+            step_id="connection_type", data_schema=vol.Schema(fields)
+        )
 
     async def async_step_tunnel(self, user_input: dict | None = None) -> FlowResult:
         """Select a tunnel from a list. Will be skipped if the gateway scan was unsuccessful or if only one gateway was found."""
@@ -194,7 +197,7 @@ class KNXConfigFlow(KNXCommonFlow, config_entries.ConfigFlow, domain=DOMAIN):
             if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
                 return self.async_show_menu(
                     step_id="secure_tunneling",
-                    menu_options=["secure_knxkeys", "secure_manual"],
+                    menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                 )
             return self.finish_flow(
                 entry_data=self._tunneling_config,
@@ -253,7 +256,7 @@ class KNXConfigFlow(KNXCommonFlow, config_entries.ConfigFlow, domain=DOMAIN):
                 if connection_type == CONF_KNX_TUNNELING_TCP_SECURE:
                     return self.async_show_menu(
                         step_id="secure_tunneling",
-                        menu_options=["secure_knxkeys", "secure_manual"],
+                        menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                     )
                 return self.finish_flow(
                     entry_data=self._tunneling_config,
@@ -298,7 +301,7 @@ class KNXConfigFlow(KNXCommonFlow, config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_secure_manual(
+    async def async_step_secure_tunnel_manual(
         self, user_input: dict | None = None
     ) -> FlowResult:
         """Configure ip secure manually."""
@@ -335,7 +338,9 @@ class KNXConfigFlow(KNXCommonFlow, config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="secure_manual", data_schema=vol.Schema(fields), errors=errors
+            step_id="secure_tunnel_manual",
+            data_schema=vol.Schema(fields),
+            errors=errors,
         )
 
     async def async_step_secure_knxkeys(
@@ -436,7 +441,7 @@ class KNXConfigFlow(KNXCommonFlow, config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class KNXOptionsFlow(OptionsFlow):
+class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
     """Handle KNX options."""
 
     general_settings: dict
