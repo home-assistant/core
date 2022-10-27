@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "edl21"
 CONF_SERIAL_PORT = "serial_port"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
