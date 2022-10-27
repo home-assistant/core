@@ -1544,7 +1544,7 @@ sensorpro-ble==0.5.0
 sensorpush-ble==1.5.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.10.0
+sentry-sdk==1.10.1
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
