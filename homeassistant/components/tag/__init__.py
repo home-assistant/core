@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Protocol
 import uuid
 
 import voluptuous as vol
@@ -104,6 +105,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ).async_setup(hass)
 
     return True
+
+
+class TagProtocol(Protocol):
+    """Protocol for type checking."""
+
+    async def async_scan_tag(
+        self, tag_id: str, device_id: str, context: Context | None = None
+    ) -> None:
+        """Handle when a tag is scanned."""
 
 
 @bind_hass
