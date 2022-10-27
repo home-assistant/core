@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -16,6 +17,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -40,19 +43,67 @@ from . import (
 SENSOR_ICONS = {
     "humidity": "mdi:water-percent",
     "battery": "mdi:battery",
-    "temperature": "mdi:thermometer",
 }
 
-DEVICE_CLASS_TYPES = {
-    "distance": SensorDeviceClass.DISTANCE,
-    "barometric_pressure": SensorDeviceClass.PRESSURE,
-    "average_windspeed": SensorDeviceClass.SPEED,
-    "windgusts": SensorDeviceClass.SPEED,
-    "windspeed": SensorDeviceClass.SPEED,
-    "temperature": SensorDeviceClass.TEMPERATURE,
-    "windtemp": SensorDeviceClass.TEMPERATURE,
-    "windchill": SensorDeviceClass.TEMPERATURE,
-}
+SENSOR_TYPES = (
+    # check new descriptors against PACKET_FIELDS & UNITS from rflink.parser
+    SensorEntityDescription(
+        key="distance",
+        name="Distance",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="barometric_pressure",
+        name="Barometric pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="average_windspeed",
+        name="Average windspeed",
+        device_class=SensorDeviceClass.SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="windgusts",
+        name="Wind gusts",
+        device_class=SensorDeviceClass.SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="windspeed",
+        name="Windspeed",
+        device_class=SensorDeviceClass.SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="windtemp",
+        name="Wind temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="windchill",
+        name="Wind chill",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=TEMP_CELSIUS,
+    ),
+)
+
+SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -132,11 +183,9 @@ class RflinkSensor(RflinkDevice, SensorEntity):
     ):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
-        self._unit_of_measurement = unit_of_measurement
-        if sensor_type in DEVICE_CLASS_TYPES:
-            # better with a SensorEntityDescription
-            self._attr_device_class = DEVICE_CLASS_TYPES[sensor_type]
-            self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        if sensor_type in SENSOR_TYPES_DICT:
+            self.entity_description = SENSOR_TYPES_DICT[sensor_type]
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
     def _handle_event(self, event):
@@ -180,11 +229,6 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         # Process the initial event now that the entity is created
         if self._initial_event:
             self.handle_event_callback(self._initial_event)
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return measurement unit."""
-        return self._unit_of_measurement
 
     @property
     def native_value(self):
