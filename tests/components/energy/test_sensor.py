@@ -933,6 +933,57 @@ async def test_cost_sensor_handle_gas_kwh(
     assert state.state == "50.0"
 
 
+@pytest.mark.parametrize("unit", (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS))
+async def test_cost_sensor_handle_water(
+    setup_integration, hass, hass_storage, unit
+) -> None:
+    """Test water cost price from sensor entity."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: unit,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "water",
+            "stat_energy_from": "sensor.water_consumption",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+
+    hass.states.async_set(
+        "sensor.water_consumption",
+        100,
+        energy_attributes,
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.water_consumption_cost")
+    assert state.state == "0.0"
+
+    # water use bumped to 200 ft³/m³
+    hass.states.async_set(
+        "sensor.water_consumption",
+        200,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.water_consumption_cost")
+    assert state.state == "50.0"
+
+
 @pytest.mark.parametrize("state_class", [None])
 async def test_cost_sensor_wrong_state_class(
     setup_integration, hass, hass_storage, caplog, state_class

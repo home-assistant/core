@@ -14,20 +14,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS, VOLUME_LITERS
+from homeassistant.const import VOLUME_CUBIC_METERS, VOLUME_LITERS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 from . import RainMachineData, RainMachineEntity
-from .const import (
-    DATA_PROGRAMS,
-    DATA_PROVISION_SETTINGS,
-    DATA_RESTRICTIONS_UNIVERSAL,
-    DATA_ZONES,
-    DOMAIN,
-)
+from .const import DATA_PROGRAMS, DATA_PROVISION_SETTINGS, DATA_ZONES, DOMAIN
 from .model import (
     RainMachineEntityDescription,
     RainMachineEntityDescriptionMixinDataKey,
@@ -49,7 +43,6 @@ TYPE_FLOW_SENSOR_LEAK_CLICKS = "flow_sensor_leak_clicks"
 TYPE_FLOW_SENSOR_LEAK_VOLUME = "flow_sensor_leak_volume"
 TYPE_FLOW_SENSOR_START_INDEX = "flow_sensor_start_index"
 TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
-TYPE_FREEZE_TEMP = "freeze_protect_temp"
 TYPE_LAST_LEAK_DETECTED = "last_leak_detected"
 TYPE_PROGRAM_RUN_COMPLETION_TIME = "program_run_completion_time"
 TYPE_RAIN_SENSOR_RAIN_START = "rain_sensor_rain_start"
@@ -141,17 +134,6 @@ SENSOR_DESCRIPTIONS = (
         data_key="flowSensorWateringClicks",
     ),
     RainMachineSensorDataDescription(
-        key=TYPE_FREEZE_TEMP,
-        name="Freeze protect temperature",
-        icon="mdi:thermometer",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        api_category=DATA_RESTRICTIONS_UNIVERSAL,
-        data_key="freezeProtectTemp",
-    ),
-    RainMachineSensorDataDescription(
         key=TYPE_LAST_LEAK_DETECTED,
         name="Last leak detected",
         icon="mdi:pipe-leak",
@@ -191,17 +173,16 @@ async def async_setup_entry(
                 f"{data.controller.mac}_freeze_protect_temp",
                 f"select.{data.controller.name.lower()}_freeze_protect_temperature",
                 breaks_in_ha_version="2022.12.0",
-                remove_old_entity=False,
+                remove_old_entity=True,
             ),
         ),
     )
 
     api_category_sensor_map = {
         DATA_PROVISION_SETTINGS: ProvisionSettingsSensor,
-        DATA_RESTRICTIONS_UNIVERSAL: UniversalRestrictionsSensor,
     }
 
-    sensors = [
+    sensors: list[ProvisionSettingsSensor | TimeRemainingSensor] = [
         api_category_sensor_map[description.api_category](entry, data, description)
         for description in SENSOR_DESCRIPTIONS
         if (
@@ -371,18 +352,6 @@ class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
 
         # Return all other sensor values or None
         self._attr_native_value = new_value
-
-
-class UniversalRestrictionsSensor(RainMachineEntity, SensorEntity):
-    """Define a sensor that handles universal restrictions data."""
-
-    entity_description: RainMachineSensorDataDescription
-
-    @callback
-    def update_from_latest_data(self) -> None:
-        """Update the state."""
-        if self.entity_description.key == TYPE_FREEZE_TEMP:
-            self._attr_native_value = self.coordinator.data.get("freezeProtectTemp")
 
 
 class ZoneTimeRemainingSensor(TimeRemainingSensor):

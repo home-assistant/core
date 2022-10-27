@@ -5,10 +5,9 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-import httpx
 import voluptuous as vol
 
-from homeassistant.components.rest.data import RestData
+from homeassistant.components.rest import RESOURCE_SCHEMA, create_rest_data_from_config
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
@@ -17,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
+    CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
@@ -39,38 +39,35 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL
 from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
-CONF_ATTR = "attribute"
-CONF_SELECT = "select"
-CONF_INDEX = "index"
-
-DEFAULT_NAME = "Web scrape"
-DEFAULT_VERIFY_SSL = True
-
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.string,
-        vol.Required(CONF_SELECT): cv.string,
-        vol.Optional(CONF_ATTR): cv.string,
-        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
+        # Linked to the loading of the page (can be linked to RestData)
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Required(CONF_RESOURCE): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        # Linked to the parsing of the page (specific to scrape)
+        vol.Optional(CONF_ATTRIBUTE): cv.string,
+        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
+        vol.Required(CONF_SELECT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        # Linked to the sensor definition (can be linked to TemplateSensor)
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
@@ -82,39 +79,26 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    name: str = config[CONF_NAME]
-    resource: str = config[CONF_RESOURCE]
-    method: str = "GET"
-    payload: str | None = None
-    headers: dict[str, str] | None = config.get(CONF_HEADERS)
-    verify_ssl: bool = config[CONF_VERIFY_SSL]
-    select: str | None = config.get(CONF_SELECT)
-    attr: str | None = config.get(CONF_ATTR)
-    index: int = config[CONF_INDEX]
-    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
-    device_class: str | None = config.get(CONF_DEVICE_CLASS)
-    state_class: str | None = config.get(CONF_STATE_CLASS)
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
-    username: str | None = config.get(CONF_USERNAME)
-    password: str | None = config.get(CONF_PASSWORD)
-    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-
-    if value_template is not None:
-        value_template.hass = hass
-
-    auth: httpx.DigestAuth | tuple[str, str] | None = None
-    if username and password:
-        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
-        else:
-            auth = (username, password)
-
-    rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
+    resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(config)
+    rest = create_rest_data_from_config(hass, resource_config)
 
     coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
     await coordinator.async_refresh()
     if coordinator.data is None:
         raise PlatformNotReady
+
+    name: str = config[CONF_NAME]
+    select: str | None = config.get(CONF_SELECT)
+    attr: str | None = config.get(CONF_ATTRIBUTE)
+    index: int = config[CONF_INDEX]
+    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
+    device_class: str | None = config.get(CONF_DEVICE_CLASS)
+    state_class: str | None = config.get(CONF_STATE_CLASS)
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+
+    if value_template is not None:
+        value_template.hass = hass
 
     async_add_entities(
         [

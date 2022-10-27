@@ -126,15 +126,20 @@ def get_usb_ports() -> dict[str, str]:
     ports = list_ports.comports()
     port_descriptions = {}
     for port in ports:
-        usb_device = usb.usb_device_from_port(port)
-        dev_path = usb.get_serial_by_id(usb_device.device)
+        vid: str | None = None
+        pid: str | None = None
+        if port.vid is not None and port.pid is not None:
+            usb_device = usb.usb_device_from_port(port)
+            vid = usb_device.vid
+            pid = usb_device.pid
+        dev_path = usb.get_serial_by_id(port.device)
         human_name = usb.human_readable_device_name(
             dev_path,
-            usb_device.serial_number,
-            usb_device.manufacturer,
-            usb_device.description,
-            usb_device.vid,
-            usb_device.pid,
+            port.serial_number,
+            port.manufacturer,
+            port.description,
+            vid,
+            pid,
         )
         port_descriptions[dev_path] = human_name
     return port_descriptions

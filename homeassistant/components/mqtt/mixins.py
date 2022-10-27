@@ -53,7 +53,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_loads
-from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import debug_info, subscription
@@ -82,7 +81,12 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import MqttValueTemplate, PublishPayloadType, ReceiveMessage
+from .models import (
+    MqttValueTemplate,
+    PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
