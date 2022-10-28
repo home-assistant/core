@@ -139,7 +139,9 @@ async def test_dupe(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("invalidate_config_entry")
-async def test_invalid_config_entry(hass: HomeAssistant, caplog) -> None:
+async def test_invalid_config_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -164,7 +166,7 @@ async def test_reset_filters(hass: HomeAssistant) -> None:
     options[CONF_INCL_FILTER] = "test"
     options[CONF_EXCL_FILTER] = "test"
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG, options=DEFAULT_OPTIONS, entry_id="test"
+        domain=DOMAIN, data=MOCK_CONFIG, options=options, entry_id="test"
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
