@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     SOURCE_TYPES,
+    AsyncSeeCallback,
     SourceType,
 )
 from homeassistant.const import CONF_DEVICES, STATE_HOME, STATE_NOT_HOME
@@ -52,7 +53,7 @@ class MQTTLegacyDeviceTrackerData:
 async def async_setup_scanner_from_yaml(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Coroutine[Any, Any, None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the MQTT tracker."""
