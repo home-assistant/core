@@ -124,6 +124,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     """Representation a binary sensor that is updated by MQTT."""
 
     _entity_id_format = binary_sensor.ENTITY_ID_FORMAT
+    _expired: bool | None
 
     def __init__(
         self,
@@ -136,11 +137,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         self._expired: bool | None
         self._expiration_trigger: Callable[..., None] | None = None
         self._delay_listener: Callable[..., None] | None = None
-        expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
-        if expire_after is not None and expire_after > 0:
-            self._expired = True
-        else:
-            self._expired = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -191,6 +187,11 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
+        if expire_after is not None and expire_after > 0:
+            self._expired = True
+        else:
+            self._expired = None
         self._attr_force_update = config[CONF_FORCE_UPDATE]
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
