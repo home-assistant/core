@@ -1320,6 +1320,8 @@ build.json @home-assistant/supervisor
 /tests/components/yolink/ @matrixd2
 /homeassistant/components/youless/ @gjong
 /tests/components/youless/ @gjong
+/homeassistant/components/zamg/ @killer0071234
+/tests/components/zamg/ @killer0071234
 /homeassistant/components/zengge/ @emontnemery
 /homeassistant/components/zeroconf/ @bdraco
 /tests/components/zeroconf/ @bdraco

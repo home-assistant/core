@@ -1718,7 +1718,7 @@
           "name": "AVM FRITZ!SmartHome"
         },
         "fritzbox_callmonitor": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "AVM FRITZ!Box Call Monitor"
@@ -4468,7 +4468,7 @@
           "name": "Samsung Family Hub"
         },
         "samsungtv": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Samsung Smart TV"
@@ -5627,7 +5627,7 @@
     },
     "upnp": {
       "name": "UPnP/IGD",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6093,7 +6093,7 @@
     "zamg": {
       "name": "Zentralanstalt f\u00fcr Meteorologie und Geodynamik (ZAMG)",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "zengge": {

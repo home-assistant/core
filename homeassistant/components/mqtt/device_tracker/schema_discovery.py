@@ -7,7 +7,10 @@ import voluptuous as vol
 
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import SOURCE_TYPES
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker.config_entry import (
+    SourceType,
+    TrackerEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -35,12 +38,16 @@ CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 CONF_SOURCE_TYPE = "source_type"
 
+DEFAULT_SOURCE_TYPE = SourceType.GPS
+
 PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
-        vol.Optional(CONF_SOURCE_TYPE): vol.In(SOURCE_TYPES),
+        vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.In(
+            SOURCE_TYPES
+        ),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -161,6 +168,6 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         return self._location_name
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType | str:
         """Return the source type, eg gps or router, of the device."""
-        return self._config.get(CONF_SOURCE_TYPE)
+        return self._config[CONF_SOURCE_TYPE]

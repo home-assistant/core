@@ -182,7 +182,7 @@ MQTT_PUBLISH_SCHEMA = vol.All(
 
 
 async def _async_setup_discovery(
-    hass: HomeAssistant, conf: ConfigType, config_entry
+    hass: HomeAssistant, conf: ConfigType, config_entry: ConfigEntry
 ) -> None:
     """Try to start the discovery of MQTT devices.
 
@@ -377,7 +377,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retain: bool = call.data[ATTR_RETAIN]
         if msg_topic_template is not None:
             try:
-                rendered_topic = template.Template(
+                rendered_topic: Any = template.Template(
                     msg_topic_template, hass
                 ).async_render(parse_result=False)
                 msg_topic = valid_publish_topic(rendered_topic)
@@ -620,12 +620,12 @@ def async_subscribe_connection_status(
     """Subscribe to MQTT connection changes."""
     connection_status_callback_job = HassJob(connection_status_callback)
 
-    async def connected():
+    async def connected() -> None:
         task = hass.async_run_hass_job(connection_status_callback_job, True)
         if task:
             await task
 
-    async def disconnected():
+    async def disconnected() -> None:
         task = hass.async_run_hass_job(connection_status_callback_job, False)
         if task:
             await task
@@ -636,7 +636,7 @@ def async_subscribe_connection_status(
     }
 
     @callback
-    def unsubscribe():
+    def unsubscribe() -> None:
         subscriptions["connect"]()
         subscriptions["disconnect"]()
 
