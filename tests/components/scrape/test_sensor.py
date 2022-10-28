@@ -244,7 +244,6 @@ async def test_scrape_sensor_authentication(hass: HomeAssistant) -> None:
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
-        assert await async_setup_component(hass, DOMAIN, config2)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.auth_page")
@@ -325,9 +324,6 @@ async def test_scrape_sensor_attribute_and_tag(hass: HomeAssistant) -> None:
             ),
         ]
     }
-    config2 = {
-        DOMAIN: [return_integration_config(select="template", name="HA template")]
-    }
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
@@ -335,7 +331,6 @@ async def test_scrape_sensor_attribute_and_tag(hass: HomeAssistant) -> None:
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
-        assert await async_setup_component(hass, DOMAIN, config2)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_class")
@@ -372,7 +367,6 @@ async def test_scrape_sensor_errors(hass: HomeAssistant) -> None:
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
-        assert await async_setup_component(hass, DOMAIN, config2)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_class")
