@@ -81,6 +81,7 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
         icon="mdi:theme-light-dark",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.solar_elevation,
+        entity_registry_enabled_default=False,
     ),
     SunSensorEntityDescription(
         key="solar_azimuth",
@@ -88,6 +89,7 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
         icon="mdi:sun-angle",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.solar_azimuth,
+        entity_registry_enabled_default=False,
     ),
     SunSensorEntityDescription(
         key="rising",
