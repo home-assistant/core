@@ -237,7 +237,7 @@ aiopvpc==3.0.0
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
-aiopyarr==22.9.0
+aiopyarr==22.10.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.2.2
@@ -811,7 +811,7 @@ greenwavereality==0.5.1
 gridnet==4.0.0
 
 # homeassistant.components.growatt_server
-growattServer==1.2.2
+growattServer==1.2.3
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
@@ -1245,7 +1245,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.8.0
+oralb-ble==0.9.0
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -2635,7 +2635,7 @@ zigpy-zigate==0.10.2
 zigpy-znp==0.9.1
 
 # homeassistant.components.zha
-zigpy==0.51.4
+zigpy==0.51.5
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
