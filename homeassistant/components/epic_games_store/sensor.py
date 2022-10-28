@@ -70,7 +70,6 @@ class EGSSensor(SensorEntity):
         """Return additional sensor state attributes."""
         if self.coordinator.data:
             return {
-                "title": self.coordinator.data[self.entity_description.key]["title"],
                 "publisher": self.coordinator.data[self.entity_description.key][
                     "publisher"
                 ],
