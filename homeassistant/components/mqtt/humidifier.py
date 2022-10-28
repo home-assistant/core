@@ -217,6 +217,15 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     _entity_id_format = humidifier.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED
 
+    _command_templates: dict[str, Callable[..., PublishPayloadType]]
+    _optimistic: bool
+    _optimistic_target_humidity: bool
+    _optimistic_mode: bool
+    _payload: dict[str, str]
+    _supported_features: int
+    _topic: dict[str, Any]
+    _value_templates: dict[str, Callable[..., ReceivePayloadType]]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -226,14 +235,6 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
     ) -> None:
         """Initialize the MQTT humidifier."""
         self._attr_mode = None
-
-        self._topic: dict[str, Any]
-        self._payload: dict[str, str]
-        self._value_templates: dict[str, Callable[..., ReceivePayloadType]]
-        self._command_templates: dict[str, Callable[..., PublishPayloadType]]
-        self._optimistic: bool
-        self._optimistic_target_humidity: bool
-        self._optimistic_mode: bool
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
