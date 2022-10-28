@@ -168,6 +168,10 @@ class MqttNumber(MqttEntity, RestoreNumber):
     _attributes_extra_blocked = MQTT_NUMBER_ATTRIBUTES_BLOCKED
     _templates: dict[str, Callable[..., Any]]
 
+    _config: ConfigType
+    _optimistic: bool
+    _templates: dict[str, Callable[..., Any]]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -176,8 +180,6 @@ class MqttNumber(MqttEntity, RestoreNumber):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT Number."""
-        self._optimistic: bool = False
-
         RestoreNumber.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -188,6 +190,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._config = config
         self._optimistic = config[CONF_OPTIMISTIC]
 
         self._templates = {
