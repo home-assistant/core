@@ -22,9 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Epic Game Store."""
 
-    def __init__(self, hass: HomeAssistant, api: EpicGamesStoreAPI) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: EpicGamesStoreAPI, locale: str
+    ) -> None:
         """Initialize."""
         self._api = api
+        self.locale = locale
 
         super().__init__(
             hass,
@@ -61,7 +64,7 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for game in promo_games:
             game_title = game["title"]
             game_publisher = game["seller"]["name"]
-            game_url = f"https://store.epicgames.com/fr/p/{game['catalogNs']['mappings'][0]['pageSlug']}"
+            game_url = f"https://store.epicgames.com/{self.locale}/p/{game['catalogNs']['mappings'][0]['pageSlug']}"
             game_img_portrait = None
             game_img_landscape = None
 

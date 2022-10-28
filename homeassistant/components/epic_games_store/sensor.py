@@ -54,7 +54,9 @@ class EGSSensor(SensorEntity):
         """Initialize the sensor."""
         self.coordinator = coordinator
         self.entity_description = entity_description
-        self._attr_unique_id = self.entity_description.key
+        self._attr_unique_id = (
+            f"{self.entity_description.key}-{self.coordinator.locale}"
+        )
 
     @property
     def native_value(self) -> str | None:
