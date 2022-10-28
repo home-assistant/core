@@ -69,7 +69,7 @@ async def _async_setup_entity(
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
     config_entry: ConfigEntry,
-    discovery_data: dict | None = None,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT Device Tracker entity."""
     async_add_entities([MqttDeviceTracker(hass, config, config_entry, discovery_data)])
@@ -79,6 +79,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     """Representation of a device tracker using MQTT."""
 
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
+    _location_name: str | None = None
+    _value_template: Callable[..., ReceivePayloadType]
 
     def __init__(
         self,
@@ -88,8 +90,6 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the tracker."""
-        self._location_name: str | None = None
-        self._value_template: Callable[..., ReceivePayloadType]
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
