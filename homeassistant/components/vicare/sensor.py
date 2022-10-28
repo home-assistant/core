@@ -448,7 +448,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
     ViCareSensorEntityDescription(
         key="buffer top temperature",
-        name="Buffer Top Temperature",
+        name="Buffer top temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getBufferTopTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
