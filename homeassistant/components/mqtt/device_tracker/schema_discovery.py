@@ -79,7 +79,6 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     """Representation of a device tracker using MQTT."""
 
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
-    _location_name: str | None = None
     _value_template: Callable[..., ReceivePayloadType]
 
     def __init__(
@@ -90,6 +89,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the tracker."""
+        self._location_name: str | None = None
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
