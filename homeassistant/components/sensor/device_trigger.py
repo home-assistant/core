@@ -30,6 +30,7 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 DEVICE_CLASS_NONE = "none"
 
+CONF_ACCUMULATED_PRECIPITATION = "accumulated_precipitation"
 CONF_APPARENT_POWER = "apparent_power"
 CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
@@ -67,6 +68,9 @@ CONF_WEIGHT = "weight"
 CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
+    SensorDeviceClass.ACCUMULATED_PRECIPITATION: [
+        {CONF_TYPE: CONF_ACCUMULATED_PRECIPITATION}
+    ],
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
