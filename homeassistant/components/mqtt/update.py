@@ -45,6 +45,7 @@ DEFAULT_NAME = "MQTT Update"
 CONF_LATEST_VERSION_TEMPLATE = "latest_version_template"
 CONF_LATEST_VERSION_TOPIC = "latest_version_topic"
 CONF_PAYLOAD_INSTALL = "payload_install"
+CONF_RELEASE_URL = "release_url"
 CONF_TITLE = "title"
 
 
@@ -58,6 +59,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_INSTALL): cv.string,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_TITLE): cv.string,
+        vol.Optional(CONF_RELEASE_URL): cv.string,
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -104,6 +106,7 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         self._config = config
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
         self._attr_title = self._config.get(CONF_TITLE)
+        self._attr_release_url = self._config.get(CONF_RELEASE_URL)
 
         UpdateEntity.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
@@ -181,6 +184,10 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
             if CONF_TITLE in json_payload:
                 self._attr_title = json_payload[CONF_TITLE]
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+            if CONF_RELEASE_URL in json_payload:
+                self._attr_release_url = json_payload[CONF_RELEASE_URL]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)
