@@ -90,7 +90,7 @@ class KNXCommonFlow(ABC):
         self._tunneling_config: KNXConfigEntryData | None = None
 
     @abstractmethod
-    def finish_flow(self, entry_data: KNXConfigEntryData, title: str) -> FlowResult:
+    def finish_flow(self, new_entry_data: KNXConfigEntryData, title: str) -> FlowResult:
         """Finish the flow."""
 
 
@@ -106,11 +106,11 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
         return KNXOptionsFlow(config_entry)
 
     @callback
-    def finish_flow(self, entry_data: KNXConfigEntryData, title: str) -> FlowResult:
+    def finish_flow(self, new_entry_data: KNXConfigEntryData, title: str) -> FlowResult:
         """Create the ConfigEntry."""
         return self.async_create_entry(
             title=title,
-            data=entry_data,
+            data=DEFAULT_ENTRY_DATA | new_entry_data,
         )
 
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
@@ -142,11 +142,9 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
                 return await self.async_step_tunnel()
 
             # Automatic connection type
-            entry_data = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
-                connection_type=CONF_KNX_AUTOMATIC
-            )
+            entry_data = KNXConfigEntryData(connection_type=CONF_KNX_AUTOMATIC)
             return self.finish_flow(
-                entry_data=entry_data,
+                new_entry_data=entry_data,
                 title=CONF_KNX_AUTOMATIC.capitalize(),
             )
 
@@ -188,7 +186,7 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
                 if self._selected_tunnel.supports_tunnelling_tcp
                 else CONF_KNX_TUNNELING
             )
-            self._tunneling_config = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+            self._tunneling_config = KNXConfigEntryData(
                 host=self._selected_tunnel.ip_addr,
                 port=self._selected_tunnel.port,
                 route_back=False,
@@ -200,7 +198,7 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
                     menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                 )
             return self.finish_flow(
-                entry_data=self._tunneling_config,
+                new_entry_data=self._tunneling_config,
                 title=f"Tunneling @ {self._selected_tunnel}",
             )
 
@@ -243,7 +241,7 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
                     if _user_tunnel_type == CONF_KNX_LABEL_TUNNELING_TCP
                     else CONF_KNX_TUNNELING
                 )
-                self._tunneling_config = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+                self._tunneling_config = KNXConfigEntryData(
                     host=_host,
                     port=user_input[CONF_PORT],
                     route_back=(
@@ -259,7 +257,7 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
                         menu_options=["secure_knxkeys", "secure_tunnel_manual"],
                     )
                 return self.finish_flow(
-                    entry_data=self._tunneling_config,
+                    new_entry_data=self._tunneling_config,
                     title=f"Tunneling @ {_host}",
                 )
 
@@ -316,7 +314,7 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
                 user_password=user_input[CONF_KNX_SECURE_USER_PASSWORD],
             )
             return self.finish_flow(
-                entry_data=entry_data,
+                new_entry_data=entry_data,
                 title=f"Secure Tunneling @ {self._tunneling_config[CONF_HOST]}",
             )
 
@@ -369,7 +367,7 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
                     knxkeys_password=user_input[CONF_KNX_KNXKEY_PASSWORD],
                 )
                 return self.finish_flow(
-                    entry_data=entry_data,
+                    new_entry_data=entry_data,
                     title=f"Secure Tunneling @ {self._tunneling_config[CONF_HOST]}",
                 )
 
@@ -410,7 +408,7 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             if not errors:
-                entry_data = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+                entry_data = KNXConfigEntryData(
                     connection_type=CONF_KNX_ROUTING,
                     individual_address=_individual_address,
                     multicast_group=_multicast_group,
@@ -418,7 +416,7 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
                     local_ip=_local_ip,
                 )
                 return self.finish_flow(
-                    entry_data=entry_data,
+                    new_entry_data=entry_data,
                     title=CONF_KNX_ROUTING.capitalize(),
                 )
 
@@ -445,19 +443,20 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
     """Handle KNX options."""
 
     general_settings: dict
-    current_config: dict
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize KNX options flow."""
         self.config_entry = config_entry
+        self.initial_data: KNXConfigEntryData = self.config_entry.data  # type: ignore[assignment]
         super().__init__()
 
     @callback
-    def finish_flow(self, entry_data: KNXConfigEntryData, title: str) -> FlowResult:
+    def finish_flow(self, new_entry_data: KNXConfigEntryData, title: str) -> FlowResult:
         """Update the ConfigEntry and finish the flow."""
+        new_data = DEFAULT_ENTRY_DATA | self.initial_data | new_entry_data
         self.hass.config_entries.async_update_entry(
             self.config_entry,
-            data=entry_data,
+            data=new_data,
             title=title,
         )
         return self.async_create_entry(title="", data={})
@@ -475,38 +474,35 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             CONF_KNX_TUNNELING,
             CONF_KNX_ROUTING,
         ]
-        self.current_config = self.config_entry.data  # type: ignore[assignment]
 
         data_schema = {
             vol.Required(
                 CONF_KNX_CONNECTION_TYPE,
                 default=(
                     CONF_KNX_TUNNELING
-                    if self.current_config.get(CONF_KNX_CONNECTION_TYPE)
+                    if self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
                     == CONF_KNX_TUNNELING_TCP
-                    else self.current_config.get(CONF_KNX_CONNECTION_TYPE)
+                    else self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
                 ),
             ): vol.In(supported_connection_types),
             vol.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS,
-                default=self.current_config[CONF_KNX_INDIVIDUAL_ADDRESS],
+                default=self.initial_data[CONF_KNX_INDIVIDUAL_ADDRESS],
             ): selector.TextSelector(),
             vol.Required(
                 CONF_KNX_MCAST_GRP,
-                default=self.current_config.get(CONF_KNX_MCAST_GRP, DEFAULT_MCAST_GRP),
+                default=self.initial_data.get(CONF_KNX_MCAST_GRP, DEFAULT_MCAST_GRP),
             ): _IP_SELECTOR,
             vol.Required(
                 CONF_KNX_MCAST_PORT,
-                default=self.current_config.get(
-                    CONF_KNX_MCAST_PORT, DEFAULT_MCAST_PORT
-                ),
+                default=self.initial_data.get(CONF_KNX_MCAST_PORT, DEFAULT_MCAST_PORT),
             ): _PORT_SELECTOR,
         }
 
         if self.show_advanced_options:
             local_ip = (
-                self.current_config.get(CONF_KNX_LOCAL_IP)
-                if self.current_config.get(CONF_KNX_LOCAL_IP) is not None
+                self.initial_data.get(CONF_KNX_LOCAL_IP)
+                if self.initial_data.get(CONF_KNX_LOCAL_IP) is not None
                 else CONF_DEFAULT_LOCAL_IP
             )
             data_schema[
@@ -518,7 +514,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             data_schema[
                 vol.Required(
                     CONF_KNX_STATE_UPDATER,
-                    default=self.current_config.get(
+                    default=self.initial_data.get(
                         CONF_KNX_STATE_UPDATER,
                         CONF_KNX_DEFAULT_STATE_UPDATER,
                     ),
@@ -527,7 +523,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             data_schema[
                 vol.Required(
                     CONF_KNX_RATE_LIMIT,
-                    default=self.current_config.get(
+                    default=self.initial_data.get(
                         CONF_KNX_RATE_LIMIT,
                         CONF_KNX_DEFAULT_RATE_LIMIT,
                     ),
@@ -546,7 +542,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(data_schema),
-            last_step=self.current_config.get(CONF_KNX_CONNECTION_TYPE)
+            last_step=self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
             != CONF_KNX_TUNNELING,
         )
 
@@ -569,13 +565,13 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
                     {
                         vol.Required(
                             CONF_KNX_TUNNELING_TYPE,
-                            default=get_knx_tunneling_type(self.current_config),
+                            default=get_knx_tunneling_type(self.initial_data),
                         ): vol.In(connection_methods),
                         vol.Required(
-                            CONF_HOST, default=self.current_config.get(CONF_HOST)
+                            CONF_HOST, default=self.initial_data.get(CONF_HOST)
                         ): _IP_SELECTOR,
                         vol.Required(
-                            CONF_PORT, default=self.current_config.get(CONF_PORT, 3671)
+                            CONF_PORT, default=self.initial_data.get(CONF_PORT, 3671)
                         ): _PORT_SELECTOR,
                     }
                 ),
@@ -587,7 +583,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             DEFAULT_ENTRY_DATA
             | self.general_settings  # type: ignore[assignment]
             | KNXConfigEntryData(
-                host=self.current_config.get(CONF_HOST, ""),
+                host=self.initial_data.get(CONF_HOST, ""),
                 local_ip=_local_ip if _local_ip != CONF_DEFAULT_LOCAL_IP else None,
             )
         )
@@ -610,10 +606,13 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
             entry_title = f"Tunneling @ {entry_data[CONF_HOST]}"
         if entry_data[CONF_KNX_CONNECTION_TYPE] == CONF_KNX_TUNNELING_TCP:
             entry_title = f"Tunneling @ {entry_data[CONF_HOST]} (TCP)"
-        return self.finish_flow(entry_data=entry_data, title=entry_title)
+        return self.finish_flow(
+            new_entry_data=entry_data,
+            title=entry_title,
+        )
 
 
-def get_knx_tunneling_type(config_entry_data: dict) -> str:
+def get_knx_tunneling_type(config_entry_data: KNXConfigEntryData) -> str:
     """Obtain the knx tunneling type based on the data in the config entry data."""
     connection_type = config_entry_data[CONF_KNX_CONNECTION_TYPE]
     route_back = config_entry_data.get(CONF_KNX_ROUTE_BACK, False)
