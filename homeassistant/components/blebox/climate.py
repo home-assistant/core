@@ -69,12 +69,6 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
             return BLEBOX_TO_HVACMode[self._feature.mode]
         return HVACMode.HEAT if self._feature.is_on else HVACMode.OFF
 
-    def supported_mode(self):
-        """Return supported mode."""
-        if self._feature.mode is not None:
-            return [HVACMode.OFF, BLEBOX_TO_HVACMode[self._feature.mode]]
-        return [HVACMode.OFF, HVACMode.HEAT]
-
     @property
     def hvac_action(self):
         """Return the actual current HVAC action."""
