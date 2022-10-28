@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
-    SensorEntity,
 )
 from homeassistant.const import (
     CONF_ATTRIBUTE,
@@ -36,6 +35,10 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import (
+    TEMPLATE_SENSOR_BASE_SCHEMA,
+    TemplateSensor,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -87,14 +90,16 @@ async def async_setup_platform(
     if coordinator.data is None:
         raise PlatformNotReady
 
+    sensor_config = vol.Schema(
+        TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
+    )(config)
+
     name: str = config[CONF_NAME]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+
     select: str | None = config.get(CONF_SELECT)
     attr: str | None = config.get(CONF_ATTRIBUTE)
     index: int = config[CONF_INDEX]
-    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
-    device_class: str | None = config.get(CONF_DEVICE_CLASS)
-    state_class: str | None = config.get(CONF_STATE_CLASS)
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
 
     if value_template is not None:
@@ -103,49 +108,48 @@ async def async_setup_platform(
     async_add_entities(
         [
             ScrapeSensor(
+                hass,
                 coordinator,
-                unique_id,
+                sensor_config,
                 name,
+                unique_id,
                 select,
                 attr,
                 index,
                 value_template,
-                unit,
-                device_class,
-                state_class,
             )
         ],
     )
 
 
-class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], SensorEntity):
+class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
     """Representation of a web scrape sensor."""
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: ScrapeCoordinator,
-        unique_id: str | None,
+        config: ConfigType,
         name: str,
+        unique_id: str | None,
         select: str | None,
         attr: str | None,
         index: int,
         value_template: Template | None,
-        unit: str | None,
-        device_class: str | None,
-        state_class: str | None,
     ) -> None:
         """Initialize a web scrape sensor."""
-        super().__init__(coordinator)
-        self._attr_native_value = None
+        CoordinatorEntity.__init__(self, coordinator)
+        TemplateSensor.__init__(
+            self,
+            hass,
+            config=config,
+            fallback_name=name,
+            unique_id=unique_id,
+        )
         self._select = select
         self._attr = attr
         self._index = index
         self._value_template = value_template
-        self._attr_name = name
-        self._attr_unique_id = unique_id
-        self._attr_native_unit_of_measurement = unit
-        self._attr_device_class = device_class
-        self._attr_state_class = state_class
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
