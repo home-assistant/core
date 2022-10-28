@@ -84,8 +84,10 @@ class EGSSensor(SensorEntity):
         if self.coordinator.data:
             return {
                 "title": self.coordinator.data[self.entity_description.key]["title"],
+                "publisher": self.coordinator.data[self.entity_description.key]["publisher"],
                 "url": self.coordinator.data[self.entity_description.key]["url"],
-                "thumbnail": self.coordinator.data[self.entity_description.key]["thumbnail"],
+                "img_portrait": self.coordinator.data[self.entity_description.key]["img_portrait"],
+                "img_landscape": self.coordinator.data[self.entity_description.key]["img_landscape"],
                 "start_at": self.coordinator.data[self.entity_description.key]["start_at"],
                 "end_at": self.coordinator.data[self.entity_description.key]["end_at"],
             }

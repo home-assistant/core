@@ -1,0 +1,217 @@
+{
+    "title": "Rising Storm 2: Vietnam",
+    "id": "b19d810d322240e7b37bcf84ffac60ce",
+    "namespace": "3542a1df211e492bb2abecb7c734f7f9",
+    "description": "La série Red Orchestra au Vietnam : parties à 64 joueurs, plus de 20 cartes, Armée américaine et Corps des Marines, PAVN/NVA, NLF/Vietcong, forces australiennes et ARVN, plus de 50 armes, 4 hélicoptères pilotables, mines, pièges et tunnels. Brutal. Authentique. Exigeant. Perso...",
+    "effectiveDate": "2020-10-08T15:00:00.000Z",
+    "offerType": "BASE_GAME",
+    "expiryDate": null,
+    "status": "ACTIVE",
+    "isCodeRedemptionOnly": false,
+    "keyImages": [
+        {
+            "type": "OfferImageWide",
+            "url": "https://cdn1.epicgames.com/3542a1df211e492bb2abecb7c734f7f9/offer/EGS_RisingStorm2Vietnam_AntimatterGamesTripwireInteractive_S3-2560x1440-e08edd93cb71bf15b50a74f3de2d17b0.jpg"
+        },
+        {
+            "type": "OfferImageTall",
+            "url": "https://cdn1.epicgames.com/3542a1df211e492bb2abecb7c734f7f9/offer/EGS_RisingStorm2Vietnam_AntimatterGamesTripwireInteractive_S4-1200x1600-5e3b2f8107e17cc008237e52761d67e5.jpg"
+        },
+        {
+            "type": "DieselStoreFrontWide",
+            "url": "https://cdn1.epicgames.com/3542a1df211e492bb2abecb7c734f7f9/offer/EGS_RisingStorm2Vietnam_AntimatterGamesTripwireInteractive_S3-2560x1440-e08edd93cb71bf15b50a74f3de2d17b0.jpg"
+        },
+        {
+            "type": "DieselStoreFrontTall",
+            "url": "https://cdn1.epicgames.com/3542a1df211e492bb2abecb7c734f7f9/offer/EGS_RisingStorm2Vietnam_AntimatterGamesTripwireInteractive_S4-1200x1600-5e3b2f8107e17cc008237e52761d67e5.jpg"
+        },
+        {
+            "type": "Thumbnail",
+            "url": "https://cdn1.epicgames.com/3542a1df211e492bb2abecb7c734f7f9/offer/EGS_RisingStorm2Vietnam_AntimatterGamesTripwireInteractive_S4-1200x1600-5e3b2f8107e17cc008237e52761d67e5.jpg"
+        },
+        {
+            "type": "CodeRedemption_340x440",
+            "url": "https://cdn1.epicgames.com/3542a1df211e492bb2abecb7c734f7f9/offer/EGS_RisingStorm2Vietnam_AntimatterGamesTripwireInteractive_S4-1200x1600-5e3b2f8107e17cc008237e52761d67e5.jpg"
+        }
+    ],
+    "seller": {
+        "id": "o-2baznhy8tfh7fmyb55ul656v7ggt7r",
+        "name": "Tripwire Interactive"
+    },
+    "productSlug": "rising-storm-2-vietnam/home",
+    "urlSlug": "risingstorm2vietnam",
+    "url": null,
+    "items": [
+        {
+            "id": "685765c3f37049c49b45bea4173725d2",
+            "namespace": "3542a1df211e492bb2abecb7c734f7f9"
+        },
+        {
+            "id": "c7c6d65ac4cc4ef0ae12e8e89f134684",
+            "namespace": "3542a1df211e492bb2abecb7c734f7f9"
+        }
+    ],
+    "customAttributes": [
+        {
+            "key": "com.epicgames.app.blacklist",
+            "value": "[]"
+        },
+        {
+            "key": "publisherName",
+            "value": "Tripwire Interactive"
+        },
+        {
+            "key": "developerName",
+            "value": "Antimatter Games"
+        },
+        {
+            "key": "com.epicgames.app.productSlug",
+            "value": "rising-storm-2-vietnam/home"
+        }
+    ],
+    "categories": [
+        {
+            "path": "freegames"
+        },
+        {
+            "path": "games"
+        },
+        {
+            "path": "games/edition"
+        },
+        {
+            "path": "games/edition/base"
+        },
+        {
+            "path": "applications"
+        }
+    ],
+    "tags": [
+        {
+            "id": "1216"
+        },
+        {
+            "id": "21122"
+        },
+        {
+            "id": "21125"
+        },
+        {
+            "id": "21129"
+        },
+        {
+            "id": "14346"
+        },
+        {
+            "id": "9547"
+        },
+        {
+            "id": "16011"
+        },
+        {
+            "id": "15375"
+        },
+        {
+            "id": "21135"
+        },
+        {
+            "id": "21138"
+        },
+        {
+            "id": "1299"
+        },
+        {
+            "id": "16979"
+        },
+        {
+            "id": "21139"
+        },
+        {
+            "id": "21140"
+        },
+        {
+            "id": "17493"
+        },
+        {
+            "id": "21141"
+        },
+        {
+            "id": "22485"
+        },
+        {
+            "id": "18777"
+        },
+        {
+            "id": "18778"
+        },
+        {
+            "id": "1115"
+        },
+        {
+            "id": "21148"
+        },
+        {
+            "id": "21149"
+        },
+        {
+            "id": "14944"
+        },
+        {
+            "id": "19242"
+        },
+        {
+            "id": "18607"
+        },
+        {
+            "id": "1203"
+        }
+    ],
+    "catalogNs": {
+        "mappings": [
+            {
+                "pageSlug": "rising-storm-2-vietnam",
+                "pageType": "productHome"
+            }
+        ]
+    },
+    "offerMappings": [],
+    "price": {
+        "totalPrice": {
+            "discountPrice": 2199,
+            "originalPrice": 2199,
+            "voucherDiscount": 0,
+            "discount": 0,
+            "currencyCode": "EUR",
+            "currencyInfo": {
+                "decimals": 2
+            },
+            "fmtPrice": {
+                "originalPrice": "21,99 €",
+                "discountPrice": "21,99 €",
+                "intermediatePrice": "21,99 €"
+            }
+        },
+        "lineOffers": [
+            {
+                "appliedRules": []
+            }
+        ]
+    },
+    "promotions": {
+        "promotionalOffers": [],
+        "upcomingPromotionalOffers": [
+            {
+                "promotionalOffers": [
+                    {
+                        "startDate": "2022-11-03T15:00:00.000Z",
+                        "endDate": "2022-11-10T16:00:00.000Z",
+                        "discountSetting": {
+                            "discountType": "PERCENTAGE",
+                            "discountPercentage": 0
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

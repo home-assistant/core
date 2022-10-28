@@ -43,54 +43,58 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except Exception as error:
             raise UpdateFailed(error) from error
 
-        promo_games = list(sorted(filter(lambda x: x.get('promotions'), data["data"]["Catalog"]["searchStore"][
-            "elements"
-        ]), key=lambda g: g['title']))
+        promo_games = list(sorted(
+            filter(
+                lambda g: g.get('promotions') and 
+                    (
+                        (g['promotions']['promotionalOffers'] and g['price']['totalPrice']['discountPrice'] == 0)
+                        or
+                        (game['promotions']['upcomingPromotionalOffers'])
+                    ),
+                data["data"]["Catalog"]["searchStore"]["elements"]
+            ),
+            key=lambda g: g['title']
+        ))
 
 
         return_data = self.data or {}
         for game in promo_games:
             prefix = ''
-            # _LOGGER.error("-"*50)
-            # _LOGGER.info(game)
+            _LOGGER.error("-"*50)
+            _LOGGER.info(game)
             game_title = game['title']
-            game_thumbnail = None
+            game_publisher = game['seller']['name']
+            game_portrait = None
+            game_landscape = None
             game_url = game["catalogNs"]["mappings"][0]['pageSlug']
             game_url = f"https://store.epicgames.com/fr/p/{game_url}"
             game_promotion_data = {}
 
             for image in game['keyImages']:
-                if image['type'] == 'Thumbnail':
-                    game_thumbnail = image['url']
+                if image['type'] == 'OfferImageTall':
+                    game_portrait = image['url']
+                if image['type'] == 'OfferImageWide':
+                    game_landscape = image['url']
 
-            # _LOGGER.warning(game_thumbnail)
+            # _LOGGER.warning(game_portrait)
             # _LOGGER.warning(game_url)
-            # _LOGGER.error("-"*50)
+            _LOGGER.error("-"*50)
             game_price = game['price']['totalPrice']['fmtPrice']['originalPrice']
-            try:
-                game_promotions = game['promotions']['promotionalOffers']
-                upcoming_promotions = game['promotions']['upcomingPromotionalOffers']
-                if not game_promotions and upcoming_promotions:
-                    # Promotion is not active yet, but will be active soon.
-                    game_promotion_data = upcoming_promotions[0]['promotionalOffers'][0]
-                    print('{} ({}) will be free from {} to {} UTC.'.format(
-                        game_title, game_price, game_promotion_data['startDate'], game_promotion_data['endDate']
-                    ))
+            game_promotions = game['promotions']['promotionalOffers']
+            upcoming_promotions = game['promotions']['upcomingPromotionalOffers']
+            if not game_promotions and upcoming_promotions:
+                # Promotion is not active yet, but will be active soon.
+                game_promotion_data = upcoming_promotions[0]['promotionalOffers'][0]
+                print('{} ({}) will be free from {} to {} UTC.'.format(
+                    game_title, game_price, game_promotion_data['startDate'], game_promotion_data['endDate']
+                ))
 
-                    prefix = "next_"
-                elif len(game_promotions) > 0:
-                    print('{} ({}) is FREE now.'.format(
-                        game_title, game_price
-                    ))
-                    _LOGGER.error(game_promotions)
-                    _LOGGER.warning("-"*100)
-
-                    game_promotion_data = game_promotions[0]['promotionalOffers'][0]
-            except TypeError:
-                pass
-                # or
-                #print('No discounts for this game')
-                # your choice
+                prefix = "next_"
+            elif len(game_promotions) > 0:
+                game_promotion_data = game_promotions[0]['promotionalOffers'][0]
+                print('{} ({}) is FREE now.'.format(
+                    game_title, game_price
+                ))
 
             if game_promotion_data:
                 suffix="1"
@@ -99,8 +103,10 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 
                 return_data[f"{prefix}free_game_{suffix}"]={
                     'title': game_title,
+                    'publisher': game_publisher,
                     'url': game_url,
-                    'thumbnail': game_thumbnail,
+                    'img_portrait': game_portrait,
+                    'img_landscape': game_landscape,
                     'original_price': game_price,
                     'start_at': dt.parse_datetime(game_promotion_data['startDate']),
                     'end_at': dt.parse_datetime(game_promotion_data['endDate']),
