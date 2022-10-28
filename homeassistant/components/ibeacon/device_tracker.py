@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from ibeacon_ble import iBeaconAdvertisement
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import BaseTrackerEntity
+from homeassistant.components.device_tracker import BaseTrackerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
