@@ -90,8 +90,7 @@ async def async_setup_scanner_from_yaml(
             elif msg.payload == payload_not_home:
                 location_name = STATE_NOT_HOME
             else:
-                assert isinstance(msg.payload, str)
-                location_name = msg.payload
+                location_name = str(msg.payload)
 
             see_args: dict[str, Any] = {
                 "dev_id": dev_id,

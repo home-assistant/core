@@ -7,8 +7,11 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker import SOURCE_TYPES, SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import (
+    SOURCE_TYPES,
+    SourceType,
+    TrackerEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
