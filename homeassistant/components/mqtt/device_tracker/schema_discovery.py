@@ -144,8 +144,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self.extra_state_attributes is not None
             and ATTR_LATITUDE in self.extra_state_attributes
         ):
-            lat: float = self.extra_state_attributes[ATTR_LATITUDE]
-            return lat
+            latitude: float = self.extra_state_attributes[ATTR_LATITUDE]
+            return latitude
         return None
 
     @property
@@ -166,8 +166,8 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self.extra_state_attributes is not None
             and ATTR_LONGITUDE in self.extra_state_attributes
         ):
-            long: float = self.extra_state_attributes[ATTR_LONGITUDE]
-            return long
+            longitude: float = self.extra_state_attributes[ATTR_LONGITUDE]
+            return longitude
         return None
 
     @property
