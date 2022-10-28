@@ -1078,6 +1078,7 @@ omit =
     homeassistant/components/saj/sensor.py
     homeassistant/components/satel_integra/*
     homeassistant/components/schluter/*
+    homeassistant/components/scrape/config_flow.py
     homeassistant/components/screenlogic/__init__.py
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
