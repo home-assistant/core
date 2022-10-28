@@ -8,6 +8,7 @@ from homeassistant.loader import bind_hass
 
 from .config_entry import (  # noqa: F401
     BaseTrackerEntity,
+    ScannerEntity,
     TrackerEntity,
     async_setup_entry,
     async_unload_entry,
