@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
@@ -29,7 +30,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import entity_registry as er, extract_domain_configs
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
@@ -180,7 +181,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
         await async_get_blueprints(hass).async_reset_cache()
-        if (conf := await component.async_prepare_reload()) is None:
+        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
         await _async_process_config(hass, conf, component)
 
@@ -231,45 +232,130 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _async_process_config(hass, config, component) -> None:
-    """Process script configuration.
+@dataclass
+class ScriptEntityConfig:
+    """Container for prepared script entity configuration."""
 
-    Return true, if Blueprints were used.
-    """
+    config_block: ConfigType
+    key: str
+    raw_blueprint_inputs: ConfigType | None
+    raw_config: ConfigType | None
+
+
+async def _prepare_script_config(
+    hass: HomeAssistant,
+    config: ConfigType,
+) -> list[ScriptEntityConfig]:
+    """Parse configuration and prepare script entity configuration."""
+    script_configs: list[ScriptEntityConfig] = []
+
+    conf: dict[str, dict[str, Any] | BlueprintInputs] = config[DOMAIN]
+
+    for key, config_block in conf.items():
+        raw_blueprint_inputs = None
+        raw_config = None
+
+        if isinstance(config_block, BlueprintInputs):
+            blueprint_inputs = config_block
+            raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+
+            try:
+                raw_config = blueprint_inputs.async_substitute()
+                config_block = cast(
+                    dict[str, Any],
+                    await async_validate_config_item(hass, raw_config),
+                )
+            except vol.Invalid as err:
+                LOGGER.error(
+                    "Blueprint %s generated invalid script with input %s: %s",
+                    blueprint_inputs.blueprint.name,
+                    blueprint_inputs.inputs,
+                    humanize_error(config_block, err),
+                )
+                continue
+        else:
+            raw_config = cast(ScriptConfig, config_block).raw_config
+
+        script_configs.append(
+            ScriptEntityConfig(config_block, key, raw_blueprint_inputs, raw_config)
+        )
+
+    return script_configs
+
+
+async def _create_script_entities(
+    hass: HomeAssistant, script_configs: list[ScriptEntityConfig]
+) -> list[ScriptEntity]:
+    """Create script entities from prepared configuration."""
+    entities: list[ScriptEntity] = []
+
+    for script_config in script_configs:
+
+        entity = ScriptEntity(
+            hass,
+            script_config.key,
+            script_config.config_block,
+            script_config.raw_config,
+            script_config.raw_blueprint_inputs,
+        )
+        entities.append(entity)
+
+    return entities
+
+
+async def _async_process_config(hass, config, component) -> None:
+    """Process script configuration."""
     entities = []
 
-    for config_key in extract_domain_configs(config, DOMAIN):
-        conf: dict[str, dict[str, Any] | BlueprintInputs] = config[config_key]
+    def script_matches_config(script: ScriptEntity, config: ScriptEntityConfig) -> bool:
+        return script.unique_id == config.key and script.raw_config == config.raw_config
 
-        for key, config_block in conf.items():
-            raw_blueprint_inputs = None
-            raw_config = None
+    def find_matches(
+        scripts: list[ScriptEntity],
+        script_configs: list[ScriptEntityConfig],
+    ) -> tuple[set[int], set[int]]:
+        """Find matches between a list of script entities and a list of configurations.
 
-            if isinstance(config_block, BlueprintInputs):
-                blueprint_inputs = config_block
-                raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+        A script or configuration is only allowed to match at most once to handle
+        the case of multiple scripts with identical configuration.
 
-                try:
-                    raw_config = blueprint_inputs.async_substitute()
-                    config_block = cast(
-                        dict[str, Any],
-                        await async_validate_config_item(hass, raw_config),
-                    )
-                except vol.Invalid as err:
-                    LOGGER.error(
-                        "Blueprint %s generated invalid script with input %s: %s",
-                        blueprint_inputs.blueprint.name,
-                        blueprint_inputs.inputs,
-                        humanize_error(config_block, err),
-                    )
+        Returns a tuple of sets of indices: ({script_matches}, {config_matches})
+        """
+        script_matches: set[int] = set()
+        config_matches: set[int] = set()
+
+        for script_idx, script in enumerate(scripts):
+            for config_idx, config in enumerate(script_configs):
+                if config_idx in config_matches:
+                    # Only allow a script config to match at most once
                     continue
-            else:
-                raw_config = cast(ScriptConfig, config_block).raw_config
+                if script_matches_config(script, config):
+                    script_matches.add(script_idx)
+                    config_matches.add(config_idx)
+                    # Only allow a script to match at most once
+                    break
 
-            entities.append(
-                ScriptEntity(hass, key, config_block, raw_config, raw_blueprint_inputs)
-            )
+        return script_matches, config_matches
 
+    script_configs = await _prepare_script_config(hass, config)
+    scripts: list[ScriptEntity] = list(component.entities)
+
+    # Find scripts and configurations which have matches
+    script_matches, config_matches = find_matches(scripts, script_configs)
+
+    # Remove scripts which have changed config or no longer exist
+    tasks = [
+        script.async_remove()
+        for idx, script in enumerate(scripts)
+        if idx not in script_matches
+    ]
+    await asyncio.gather(*tasks)
+
+    # Create scripts which have changed config or have been added
+    updated_script_configs = [
+        config for idx, config in enumerate(script_configs) if idx not in config_matches
+    ]
+    entities = await _create_script_entities(hass, updated_script_configs)
     await component.async_add_entities(entities)
 
 

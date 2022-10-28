@@ -15,7 +15,7 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.service import BleakGATTServiceCollection
 from bleak.exc import BleakError
 
-from homeassistant.core import CALLBACK_TYPE, async_get_hass
+from homeassistant.core import CALLBACK_TYPE
 
 from ..domain_data import DomainData
 from .characteristic import BleakGATTCharacteristicESPHome
@@ -47,9 +47,23 @@ def verify_connected(func: _WrapFuncType) -> _WrapFuncType:
     async def _async_wrap_bluetooth_connected_operation(
         self: "ESPHomeClient", *args: Any, **kwargs: Any
     ) -> Any:
-        if not self._is_connected:  # pylint: disable=protected-access
+        disconnected_event = (
+            self._disconnected_event  # pylint: disable=protected-access
+        )
+        if not disconnected_event:
             raise BleakError("Not connected")
-        return await func(self, *args, **kwargs)
+        task = asyncio.create_task(func(self, *args, **kwargs))
+        done, _ = await asyncio.wait(
+            (task, disconnected_event.wait()),
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if disconnected_event.is_set():
+            task.cancel()
+            raise BleakError(
+                f"{self._ble_device.name} ({self._ble_device.address}): "  # pylint: disable=protected-access
+                "Disconnected during operation"
+            )
+        return next(iter(done)).result()
 
     return cast(_WrapFuncType, _async_wrap_bluetooth_connected_operation)
 
@@ -83,7 +97,7 @@ class ESPHomeClient(BaseBleakClient):
         self._address_as_int = mac_to_int(self._ble_device.address)
         assert self._ble_device.details is not None
         self._source = self._ble_device.details["source"]
-        self.domain_data = DomainData.get(async_get_hass())
+        self.domain_data = DomainData.get(kwargs["hass"])
         config_entry = self.domain_data.get_by_unique_id(self._source)
         self.entry_data = self.domain_data.get_entry_data(config_entry)
         self._client = self.entry_data.client
@@ -91,6 +105,7 @@ class ESPHomeClient(BaseBleakClient):
         self._mtu: int | None = None
         self._cancel_connection_state: CALLBACK_TYPE | None = None
         self._notify_cancels: dict[int, Callable[[], Coroutine[Any, Any, None]]] = {}
+        self._disconnected_event: asyncio.Event | None = None
 
     def __str__(self) -> str:
         """Return the string representation of the client."""
@@ -114,6 +129,9 @@ class ESPHomeClient(BaseBleakClient):
         _LOGGER.debug("%s: BLE device disconnected", self._source)
         self._is_connected = False
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
+        if self._disconnected_event:
+            self._disconnected_event.set()
+            self._disconnected_event = None
         self._async_call_bleak_disconnected_callback()
         self._unsubscribe_connection_state()
 
@@ -184,6 +202,7 @@ class ESPHomeClient(BaseBleakClient):
         )
         await connected_future
         await self.get_services(dangerous_use_bleak_cache=dangerous_use_bleak_cache)
+        self._disconnected_event = asyncio.Event()
         return True
 
     @api_error_as_bleak_error

@@ -11,6 +11,7 @@ import time
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
+from bleak_retry_connector import NO_RSSI_VALUE, RSSI_SWITCH_THRESHOLD
 
 from homeassistant import config_entries
 from homeassistant.core import (
@@ -27,7 +28,6 @@ from .const import (
     ADAPTER_ADDRESS,
     ADAPTER_PASSIVE_SCAN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
-    NO_RSSI_VALUE,
     UNAVAILABLE_TRACK_SECONDS,
     AdapterDetails,
 )
@@ -61,13 +61,13 @@ APPLE_MFR_ID: Final = 76
 APPLE_IBEACON_START_BYTE: Final = 0x02  # iBeacon (tilt_ble)
 APPLE_HOMEKIT_START_BYTE: Final = 0x06  # homekit_controller
 APPLE_DEVICE_ID_START_BYTE: Final = 0x10  # bluetooth_le_tracker
+APPLE_HOMEKIT_NOTIFY_START_BYTE: Final = 0x11  # homekit_controller
 APPLE_START_BYTES_WANTED: Final = {
     APPLE_IBEACON_START_BYTE,
     APPLE_HOMEKIT_START_BYTE,
+    APPLE_HOMEKIT_NOTIFY_START_BYTE,
     APPLE_DEVICE_ID_START_BYTE,
 }
-
-RSSI_SWITCH_THRESHOLD = 6
 
 MONOTONIC_TIME: Final = time.monotonic
 
@@ -123,7 +123,6 @@ class BluetoothManager:
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
         self._all_history: dict[str, BluetoothServiceInfoBleak] = {}
-        self._non_connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
         self._connectable_history: dict[str, BluetoothServiceInfoBleak] = {}
         self._non_connectable_scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
@@ -157,9 +156,8 @@ class BluetoothManager:
                 service_info.as_dict()
                 for service_info in self._connectable_history.values()
             ],
-            "non_connectable_history": [
-                service_info.as_dict()
-                for service_info in self._non_connectable_history.values()
+            "all_history": [
+                service_info.as_dict() for service_info in self._all_history.values()
             ],
             "advertisement_tracker": self._advertisement_tracker.async_diagnostics(),
         }
@@ -256,7 +254,6 @@ class BluetoothManager:
         """Watch for unavailable devices and cleanup state history."""
         monotonic_now = MONOTONIC_TIME()
         connectable_history = self._connectable_history
-        non_connectable_history = self._non_connectable_history
         all_history = self._all_history
         tracker = self._advertisement_tracker
         intervals = tracker.intervals
@@ -279,8 +276,6 @@ class BluetoothManager:
                         time_since_seen = monotonic_now - all_history[address].time
                         if time_since_seen <= advertising_interval:
                             continue
-
-                    non_connectable_history.pop(address, None)
 
                     # The second loop (connectable=False) is responsible for removing
                     # the device from all the interval tracking since it is no longer
@@ -363,8 +358,24 @@ class BluetoothManager:
         device = service_info.device
         address = device.address
         all_history = self._all_history
+        connectable = service_info.connectable
+        connectable_history = self._connectable_history
 
         source = service_info.source
+        # This logic is complex due to the many combinations of scanners that are supported.
+        #
+        # We need to handle multiple connectable and non-connectable scanners
+        # and we need to handle the case where a device is connectable on one scanner
+        # but not on another.
+        #
+        # The device may also be connectable only by a scanner that has worse signal strength
+        # than a non-connectable scanner.
+        #
+        # all_history - the history of all advertisements from all scanners with the best
+        #               advertisement from each scanner
+        # connectable_history - the history of all connectable advertisements from all scanners
+        #                       with the best advertisement from each connectable scanner
+        #
         if (
             (old_service_info := all_history.get(address))
             and source != old_service_info.source
@@ -372,12 +383,35 @@ class BluetoothManager:
                 old_service_info, service_info
             )
         ):
+            # If we are rejecting the new advertisement and the device is connectable
+            # but not in the connectable history or the connectable source is the same
+            # as the new source, we need to add it to the connectable history
+            if connectable:
+                old_connectable_service_info = connectable_history.get(address)
+                if old_connectable_service_info and (
+                    # If its the same as the preferred source, we are done
+                    # as we know we prefer the old advertisement
+                    # from the check above
+                    (old_connectable_service_info is old_service_info)
+                    # If the old connectable source is different from the preferred
+                    # source, we need to check it as well to see if we prefer
+                    # the old connectable advertisement
+                    or (
+                        source != old_connectable_service_info.source
+                        and self._prefer_previous_adv_from_different_source(
+                            old_connectable_service_info, service_info
+                        )
+                    )
+                ):
+                    return
+
+                connectable_history[address] = service_info
+
             return
 
-        if connectable := service_info.connectable:
-            self._connectable_history[address] = service_info
-        else:
-            self._non_connectable_history[address] = service_info
+        if connectable:
+            connectable_history[address] = service_info
+
         all_history[address] = service_info
 
         # Track advertisement intervals to determine when we need to
@@ -399,11 +433,7 @@ class BluetoothManager:
         ):
             return
 
-        if is_connectable_by_any_source := address in self._connectable_history:
-            # Bleak callbacks must get a connectable device
-            for callback_filters in self._bleak_callbacks:
-                _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
-
+        is_connectable_by_any_source = address in self._connectable_history
         if not connectable and is_connectable_by_any_source:
             # Since we have a connectable path and our BleakClient will
             # route any connection attempts to the connectable path, we
@@ -421,6 +451,11 @@ class BluetoothManager:
             matched_domains,
             advertisement_data.rssi,
         )
+
+        if is_connectable_by_any_source:
+            # Bleak callbacks must get a connectable device
+            for callback_filters in self._bleak_callbacks:
+                _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
 
         for match in self._callback_index.match_callbacks(service_info):
             callback = match[CALLBACK]

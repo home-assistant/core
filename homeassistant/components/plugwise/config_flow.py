@@ -41,20 +41,22 @@ from .const import (
 )
 
 
-def _base_gw_schema(discovery_info):
+def _base_gw_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
     """Generate base schema for gateways."""
-    base_gw_schema = {}
+    base_gw_schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
     if not discovery_info:
-        base_gw_schema[vol.Required(CONF_HOST)] = str
-        base_gw_schema[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
-        base_gw_schema[vol.Required(CONF_USERNAME, default=SMILE)] = vol.In(
-            {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
+        base_gw_schema = base_gw_schema.extend(
+            {
+                vol.Required(CONF_HOST): str,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                vol.Required(CONF_USERNAME, default=SMILE): vol.In(
+                    {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
+                ),
+            }
         )
 
-    base_gw_schema.update({vol.Required(CONF_PASSWORD): str})
-
-    return vol.Schema(base_gw_schema)
+    return base_gw_schema
 
 
 async def validate_gw_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:

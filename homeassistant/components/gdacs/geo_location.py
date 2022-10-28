@@ -16,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import GdacsFeedEntityManager
 from .const import DEFAULT_ICON, DOMAIN, FEED
@@ -107,7 +107,7 @@ class GdacsEvent(GeolocationEvent):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        if self.hass.config.units is IMPERIAL_SYSTEM:
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_unit_of_measurement = LENGTH_MILES
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass, f"gdacs_delete_{self._external_id}", self._delete_callback
@@ -149,7 +149,7 @@ class GdacsEvent(GeolocationEvent):
             event_name = f"{feed_entry.country} ({feed_entry.event_id})"
         self._attr_name = f"{feed_entry.event_type}: {event_name}"
         # Convert distance if not metric system.
-        if self.hass.config.units is IMPERIAL_SYSTEM:
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_distance = DistanceConverter.convert(
                 feed_entry.distance_to_home, LENGTH_KILOMETERS, LENGTH_MILES
             )

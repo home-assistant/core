@@ -6,5 +6,6 @@
   "requirements": ["forecast_solar==2.2.0"],
   "codeowners": ["@klaasnicolaas", "@frenck"],
   "quality_scale": "platinum",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "integration_type": "service"
 }

@@ -18,7 +18,11 @@
                     "listening_port": "Yerel dinleme ba\u011flant\u0131 noktas\u0131",
                     "remote_read_port": "Uzaktan okuma ba\u011flant\u0131 noktas\u0131",
                     "remote_write_port": "Uzaktan yazma ba\u011flant\u0131 noktas\u0131"
-                }
+                },
+                "data_description": {
+                    "remote_write_port": "NibeGW biriminin yazma isteklerini dinledi\u011fi ba\u011flant\u0131 noktas\u0131."
+                },
+                "description": "Entegrasyonu yap\u0131land\u0131rmaya \u00e7al\u0131\u015fmadan \u00f6nce \u015funlar\u0131 do\u011frulay\u0131n:\n - NibeGW \u00fcnitesi bir \u0131s\u0131 pompas\u0131na ba\u011fl\u0131d\u0131r.\n - Is\u0131 pompas\u0131 konfig\u00fcrasyonunda MODBUS40 aksesuar\u0131 etkinle\u015ftirildi.\n - Pompa, eksik MODBUS40 aksesuar\u0131 ile ilgili alarm durumuna ge\u00e7medi."
             }
         }
     }
