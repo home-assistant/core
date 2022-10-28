@@ -58,19 +58,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if config.get(DOMAIN) in [None, []]:
         return True
 
-    for schema in config[DOMAIN]:
-        resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(schema)
+    for resource_config in config[DOMAIN]:
         rest = create_rest_data_from_config(hass, resource_config)
         coordinator = ScrapeCoordinator(
             hass,
             rest,
-            timedelta(seconds=schema.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)),
+            timedelta(
+                seconds=resource_config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            ),
         )
         await coordinator.async_refresh()
         if coordinator.data is None:
             raise PlatformNotReady
 
-        for sensor_config in schema["sensor"]:
+        if not resource_config.get(SENSOR_DOMAIN):
+            raise PlatformNotReady("No sensors configured")
+
+        for sensor_config in resource_config["sensor"]:
             discovery.load_platform(
                 hass,
                 Platform.SENSOR,
