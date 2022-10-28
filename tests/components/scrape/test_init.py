@@ -10,21 +10,14 @@ from homeassistant.setup import async_setup_component
 
 from . import MockRestData, return_integration_config
 
-TEST_CONFIG = {
-    "resource": "https://www.home-assistant.io",
-    "name": "Release",
-    "select": ".current-version h1",
-    "value_template": "{{ value.split(':')[1] }}",
-    "index": 0,
-    "verify_ssl": True,
-}
-
 
 async def test_setup_config(hass: HomeAssistant) -> None:
     """Test setup from yaml."""
     config = {
-        "scrape": [
-            return_integration_config(select=".current-version h1", name="HA version")
+        DOMAIN: [
+            return_integration_config(
+                sensors=[{"select": ".current-version h1", "name": "HA version"}]
+            )
         ]
     }
 
@@ -45,8 +38,10 @@ async def test_setup_config(hass: HomeAssistant) -> None:
 async def test_setup_no_data_fails(hass: HomeAssistant) -> None:
     """Test setup entry no data fails."""
     config = {
-        "scrape": [
-            return_integration_config(select=".current-version h1", name="HA version"),
+        DOMAIN: [
+            return_integration_config(
+                sensors=[{"select": ".current-version h1", "name": "HA version"}]
+            ),
         ]
     }
 
@@ -63,7 +58,7 @@ async def test_setup_no_data_fails(hass: HomeAssistant) -> None:
 
 async def test_setup_config_no_configuration(hass: HomeAssistant) -> None:
     """Test setup from yaml missing configuration options."""
-    config = {"scrape": None}
+    config = {DOMAIN: None}
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()

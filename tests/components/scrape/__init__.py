@@ -5,33 +5,19 @@ from typing import Any
 
 
 def return_integration_config(
-    select,
-    name,
     *,
-    attribute=None,
-    index=None,
-    template=None,
-    uom=None,
-    device_class=None,
-    state_class=None,
     authentication=None,
     username=None,
     password=None,
     headers=None,
-    unique_id=None,
+    sensors=None,
 ) -> dict[str, dict[str, Any]]:
     """Return config."""
     config = {
         "resource": "https://www.home-assistant.io",
         "verify_ssl": True,
-        "sensor": {
-            "select": select,
-            "name": name,
-            "index": 0,
-        },
+        "sensor": sensors,
     }
-    if index:
-        config["index"] = index
     if authentication:
         config["authentication"] = authentication
     if username:
@@ -39,19 +25,7 @@ def return_integration_config(
         config["password"] = password
     if headers:
         config["headers"] = headers
-
-    if attribute:
-        config["sensor"]["attribute"] = attribute
-    if template:
-        config["sensor"]["value_template"] = template
-    if uom:
-        config["sensor"]["unit_of_measurement"] = uom
-    if device_class:
-        config["sensor"]["device_class"] = device_class
-    if state_class:
-        config["sensor"]["state_class"] = state_class
-    if unique_id:
-        config["sensor"]["unique_id"] = unique_id
+    print(config)
     return config
 
 

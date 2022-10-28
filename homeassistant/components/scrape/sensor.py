@@ -102,14 +102,15 @@ async def async_setup_platform(
             raise PlatformNotReady
 
         conf = config
+        sensor_config = vol.Schema(
+            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
+        )(conf)
 
     else:
         coordinator = discovery_info["coordinator"]
         conf = discovery_info["config"]
+        sensor_config = conf
 
-    sensor_config = vol.Schema(
-        TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
-    )(conf)
     name: str = conf[CONF_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
     select: str | None = conf.get(CONF_SELECT)
@@ -119,7 +120,8 @@ async def async_setup_platform(
 
     if value_template is not None:
         value_template.hass = hass
-
+    print(sensor_config)
+    print(conf)
     async_add_entities(
         [
             ScrapeSensor(
