@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Appareil déjà configuré"
+        },
+        "error": {
+            "cannot_connect": "Connexion échouée",
+            "invalid_auth": "Authentication invalide",
+            "unknown": "Erreur inconnue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Adresse de l'appareil",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

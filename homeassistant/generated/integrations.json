@@ -2934,6 +2934,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "maico": {
+      "name": "Maico",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "mailgun": {
       "name": "Mailgun",
       "integration_type": "hub",

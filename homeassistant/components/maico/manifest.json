@@ -1,0 +1,13 @@
+{
+  "domain": "maico",
+  "name": "Maico",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/maico",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@cquad"],
+  "iot_class": "local_polling"
+}

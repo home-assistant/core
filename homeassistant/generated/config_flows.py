@@ -220,6 +220,7 @@ FLOWS = {
         "luftdaten",
         "lutron_caseta",
         "lyric",
+        "maico",
         "mailgun",
         "mazda",
         "meater",
