@@ -337,6 +337,7 @@ class RflinkDevice(Entity):
         # Rflink specific attributes for every component type
         self._initial_event = initial_event
         self._device_id = device_id
+        self._attr_unique_id = device_id
         if name:
             self._name = name
         else:
@@ -371,11 +372,6 @@ class RflinkDevice(Entity):
     def _handle_event(self, event):
         """Platform specific event handler."""
         raise NotImplementedError()
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this entity."""
-        return self._device_id
 
     @property
     def name(self):

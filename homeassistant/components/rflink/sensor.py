@@ -237,6 +237,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
             return self._unit_of_measurement
         if hasattr(self, "entity_description"):
             return self.entity_description.native_unit_of_measurement
+        return None
 
     @property
     def native_value(self):
