@@ -25,7 +25,7 @@ def return_integration_config(
         config["password"] = password
     if headers:
         config["headers"] = headers
-    print(config)
+
     return config
 
 
