@@ -671,7 +671,7 @@ async def test_async_detect_interfaces_setting_empty_route(
 
     ssdp_listeners = hass.data[ssdp.DOMAIN][ssdp.SSDP_SCANNER]._ssdp_listeners
     sources = {ssdp_listener.source for ssdp_listener in ssdp_listeners}
-    assert sources == {("2001:db8::%1", 0, 0, 1), ("192.168.1.5", 0)}
+    assert sources == {("2001:db8::", 0, 0, 1), ("192.168.1.5", 0)}
 
 
 @pytest.mark.usefixtures("mock_get_source_ip")
@@ -695,7 +695,7 @@ async def test_bind_failure_skips_adapter(
     """Test that an adapter with a bind failure is skipped."""
 
     async def _async_start(self):
-        if self.source == ("2001:db8::%1", 0, 0, 1):
+        if self.source == ("2001:db8::", 0, 0, 1):
             raise OSError
 
     SsdpListener.async_start = _async_start

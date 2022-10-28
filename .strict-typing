@@ -260,6 +260,7 @@ homeassistant.components.tag.*
 homeassistant.components.tailscale.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
+homeassistant.components.tibber.*
 homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
 homeassistant.components.tolo.*
@@ -271,6 +272,7 @@ homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
+homeassistant.components.unifi.update
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.update.*

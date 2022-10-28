@@ -29,6 +29,10 @@
         "deprecated_yaml": {
             "description": "Configuring Pushover using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Pushover YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
             "title": "The Pushover YAML configuration is being removed"
+        },
+        "removed_yaml": {
+            "description": "Configuring Pushover using YAML has been removed.\n\nYour existing YAML configuration is not used by Home Assistant.\n\nRemove the Pushover YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+            "title": "The Pushover YAML configuration has been removed"
         }
     }
 }

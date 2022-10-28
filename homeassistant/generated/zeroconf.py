@@ -242,14 +242,29 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
-    "_leap._tcp.local.": [
-        {
-            "domain": "lutron_caseta",
-        },
-    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",
+        },
+    ],
+    "_lutron._tcp.local.": [
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "radiora3*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "smartbridge*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "ra2select*",
+            },
         },
     ],
     "_mediaremotetv._tcp.local.": [

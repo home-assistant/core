@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il processo di configurazione \u00e8 gi\u00e0 in corso",
+            "no_devices_found": "Nessun dispositivo trovato in rete",
+            "not_supported": "Dispositivo non supportato"
+        },
+        "flow_title": "{nome}",
+        "step": {
+            "bluetooth_confirm": {
+                "description": "Vuoi impostare {nome}?"
+            },
+            "user": {
+                "data": {
+                    "address": "Dispositivo"
+                },
+                "description": "Scegliere un dispositivo da configurare"
+            }
+        }
+    }
+}

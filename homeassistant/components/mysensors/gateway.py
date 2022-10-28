@@ -13,8 +13,8 @@ import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
-from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.models import (
+from homeassistant.components.mqtt import (
+    DOMAIN as MQTT_DOMAIN,
     ReceiveMessage as MQTTReceiveMessage,
     ReceivePayloadType,
 )
