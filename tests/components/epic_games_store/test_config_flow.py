@@ -1,14 +1,13 @@
 """Test the Epic Games Store config flow."""
+from http.client import HTTPException
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.epic_games_store.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-)
-from homeassistant.components.epic_games_store.const import DOMAIN
+from homeassistant.components.epic_games_store.const import CONF_LOCALE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .const import DATA_ERROR_WRONG_COUNTRY, DATA_FREE_GAMES, MOCK_LOCALE
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -20,8 +19,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.epic_games_store.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "homeassistant.components.epic_games_store.config_flow.EpicGamesStoreAPI.get_free_games",
+        return_value=DATA_FREE_GAMES,
     ), patch(
         "homeassistant.components.epic_games_store.async_setup_entry",
         return_value=True,
@@ -29,44 +28,17 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_LOCALE: MOCK_LOCALE,
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == f"Epic Games Store {MOCK_LOCALE}"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_LOCALE: MOCK_LOCALE,
     }
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.epic_games_store.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -76,15 +48,34 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.epic_games_store.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.epic_games_store.config_flow.EpicGamesStoreAPI.get_free_games",
+        side_effect=HTTPException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_LOCALE: MOCK_LOCALE,
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_cannot_connect_wrong_param(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.epic_games_store.config_flow.EpicGamesStoreAPI.get_free_games",
+        return_value=DATA_ERROR_WRONG_COUNTRY,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LOCALE: MOCK_LOCALE,
             },
         )
 
