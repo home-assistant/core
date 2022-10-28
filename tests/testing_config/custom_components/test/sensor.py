@@ -112,6 +112,11 @@ class MockSensor(MockEntity, SensorEntity):
         """Return the state class of this sensor."""
         return self._handle("state_class")
 
+    @property
+    def suggested_unit_of_measurement(self):
+        """Return the state class of this sensor."""
+        return self._handle("suggested_unit_of_measurement")
+
 
 class MockRestoreSensor(MockSensor, RestoreSensor):
     """Mock RestoreSensor class."""

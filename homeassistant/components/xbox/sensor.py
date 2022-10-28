@@ -64,8 +64,7 @@ def async_update_friends(
         ]
         new_entities = new_entities + current[xuid]
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
 
     # Process deleted favorites, remove them from Home Assistant
     for xuid in current_ids - new_ids:

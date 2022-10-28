@@ -5,25 +5,24 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from bs4 import BeautifulSoup
-import httpx
 import voluptuous as vol
 
-from homeassistant.components.rest.data import RestData
+from homeassistant.components.rest import RESOURCE_SCHEMA, create_rest_data_from_config
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
-    SensorEntity,
 )
 from homeassistant.const import (
+    CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -31,42 +30,47 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import (
+    TEMPLATE_SENSOR_BASE_SCHEMA,
+    TemplateSensor,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL
+from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
-CONF_ATTR = "attribute"
-CONF_SELECT = "select"
-CONF_INDEX = "index"
-
-DEFAULT_NAME = "Web scrape"
-DEFAULT_VERIFY_SSL = True
-
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.string,
-        vol.Required(CONF_SELECT): cv.string,
-        vol.Optional(CONF_ATTR): cv.string,
-        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
+        # Linked to the loading of the page (can be linked to RestData)
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        vol.Required(CONF_RESOURCE): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        # Linked to the parsing of the page (specific to scrape)
+        vol.Optional(CONF_ATTRIBUTE): cv.string,
+        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
+        vol.Required(CONF_SELECT): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        # Linked to the sensor definition (can be linked to TemplateSensor)
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
 
@@ -78,88 +82,79 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
+    resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(config)
+    rest = create_rest_data_from_config(hass, resource_config)
+
+    coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
+    await coordinator.async_refresh()
+    if coordinator.data is None:
+        raise PlatformNotReady
+
+    sensor_config = vol.Schema(
+        TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
+    )(config)
+
     name: str = config[CONF_NAME]
-    resource: str = config[CONF_RESOURCE]
-    method: str = "GET"
-    payload: str | None = None
-    headers: str | None = config.get(CONF_HEADERS)
-    verify_ssl: bool = config[CONF_VERIFY_SSL]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+
     select: str | None = config.get(CONF_SELECT)
-    attr: str | None = config.get(CONF_ATTR)
+    attr: str | None = config.get(CONF_ATTRIBUTE)
     index: int = config[CONF_INDEX]
-    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
-    device_class: str | None = config.get(CONF_DEVICE_CLASS)
-    state_class: str | None = config.get(CONF_STATE_CLASS)
-    username: str | None = config.get(CONF_USERNAME)
-    password: str | None = config.get(CONF_PASSWORD)
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
 
     if value_template is not None:
         value_template.hass = hass
 
-    auth: httpx.DigestAuth | tuple[str, str] | None = None
-    if username and password:
-        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
-        else:
-            auth = (username, password)
-
-    rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
-    await rest.async_update()
-
-    if rest.data is None:
-        raise PlatformNotReady
-
     async_add_entities(
         [
             ScrapeSensor(
-                rest,
+                hass,
+                coordinator,
+                sensor_config,
                 name,
+                unique_id,
                 select,
                 attr,
                 index,
                 value_template,
-                unit,
-                device_class,
-                state_class,
             )
         ],
-        True,
     )
 
 
-class ScrapeSensor(SensorEntity):
+class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
     """Representation of a web scrape sensor."""
 
     def __init__(
         self,
-        rest: RestData,
+        hass: HomeAssistant,
+        coordinator: ScrapeCoordinator,
+        config: ConfigType,
         name: str,
+        unique_id: str | None,
         select: str | None,
         attr: str | None,
         index: int,
         value_template: Template | None,
-        unit: str | None,
-        device_class: str | None,
-        state_class: str | None,
     ) -> None:
         """Initialize a web scrape sensor."""
-        self.rest = rest
-        self._attr_native_value = None
+        CoordinatorEntity.__init__(self, coordinator)
+        TemplateSensor.__init__(
+            self,
+            hass,
+            config=config,
+            fallback_name=name,
+            unique_id=unique_id,
+        )
         self._select = select
         self._attr = attr
         self._index = index
         self._value_template = value_template
-        self._attr_name = name
-        self._attr_native_unit_of_measurement = unit
-        self._attr_device_class = device_class
-        self._attr_state_class = state_class
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
-        raw_data = BeautifulSoup(self.rest.data, "lxml")
-        _LOGGER.debug(raw_data)
-
+        raw_data = self.coordinator.data
+        _LOGGER.debug("Raw beautiful soup: %s", raw_data)
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
@@ -170,32 +165,24 @@ class ScrapeSensor(SensorEntity):
                 else:
                     value = tag.text
         except IndexError:
-            _LOGGER.warning("Index '%s' not found in %s", self._attr, self.entity_id)
+            _LOGGER.warning("Index '%s' not found in %s", self._index, self.entity_id)
             value = None
         except KeyError:
             _LOGGER.warning(
                 "Attribute '%s' not found in %s", self._attr, self.entity_id
             )
             value = None
-        _LOGGER.debug(value)
+        _LOGGER.debug("Parsed value: %s", value)
         return value
-
-    async def async_update(self) -> None:
-        """Get the latest data from the source and updates the state."""
-        await self.rest.async_update()
-        await self._async_update_from_rest_data()
 
     async def async_added_to_hass(self) -> None:
         """Ensure the data from the initial update is reflected in the state."""
-        await self._async_update_from_rest_data()
+        await super().async_added_to_hass()
+        self._async_update_from_rest_data()
 
-    async def _async_update_from_rest_data(self) -> None:
+    def _async_update_from_rest_data(self) -> None:
         """Update state from the rest data."""
-        if self.rest.data is None:
-            _LOGGER.error("Unable to retrieve data for %s", self.name)
-            return
-
-        value = await self.hass.async_add_executor_job(self._extract_value)
+        value = self._extract_value()
 
         if self._value_template is not None:
             self._attr_native_value = (
@@ -203,3 +190,9 @@ class ScrapeSensor(SensorEntity):
             )
         else:
             self._attr_native_value = value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_from_rest_data()
+        super()._handle_coordinator_update()

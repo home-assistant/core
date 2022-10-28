@@ -340,6 +340,18 @@ class Entity(ABC):
         """
         return self._attr_capability_attributes
 
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options.
+
+        These will be stored in the entity registry the first time the entity is seen,
+        and then never updated.
+
+        Implemented by component base class, should not be extended by integrations.
+
+        Note: Not a property to avoid calculating unless needed.
+        """
+        return None
+
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes.

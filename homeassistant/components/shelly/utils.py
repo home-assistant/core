@@ -4,10 +4,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any, cast
 
+from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import BLOCK_VALUE_UNIT, COAP, Block, BlockDevice
 from aioshelly.const import MODEL_NAMES
-from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device import RpcDevice, WsServer
 
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
@@ -21,7 +23,6 @@ from .const import (
     DEFAULT_COAP_PORT,
     DOMAIN,
     LOGGER,
-    MAX_RPC_KEY_INSTANCES,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
@@ -213,7 +214,7 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
 
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass: HomeAssistant) -> COAP:
-    """Get CoAP context to be used in all Shelly devices."""
+    """Get CoAP context to be used in all Shelly Gen1 devices."""
     context = COAP()
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
@@ -227,8 +228,31 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
         context.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
-
     return context
+
+
+class ShellyReceiver(HomeAssistantView):
+    """Handle pushes from Shelly Gen2 devices."""
+
+    requires_auth = False
+    url = "/api/shelly/ws"
+    name = "api:shelly:ws"
+
+    def __init__(self, ws_server: WsServer) -> None:
+        """Initialize the Shelly receiver view."""
+        self._ws_server = ws_server
+
+    async def get(self, request: Request) -> WebSocketResponse:
+        """Start a get request."""
+        return await self._ws_server.websocket_handler(request)
+
+
+@singleton.singleton("shelly_ws_server")
+async def get_ws_context(hass: HomeAssistant) -> WsServer:
+    """Get websocket server context to be used in all Shelly Gen2 devices."""
+    ws_server = WsServer()
+    hass.http.register_view(ShellyReceiver(ws_server))
+    return ws_server
 
 
 def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
@@ -241,6 +265,16 @@ def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
             sleep_period *= 60  # hours to minutes
 
     return sleep_period * 60  # minutes to seconds
+
+
+def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
+    """Return the device sleep period in seconds or 0 for non sleeping devices."""
+    return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
+
+
+def get_rpc_device_wakeup_period(status: dict[str, Any]) -> int:
+    """Return the device wakeup period in seconds or 0 for non sleeping devices."""
+    return cast(int, status["sys"].get("wakeup_period", 0))
 
 
 def get_info_auth(info: dict[str, Any]) -> bool:
@@ -303,28 +337,12 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
 
-    keys_list: list[str] = []
-    for i in range(MAX_RPC_KEY_INSTANCES):
-        key_inst = f"{key}:{i}"
-        if key_inst not in keys_dict:
-            return keys_list
-
-        keys_list.append(key_inst)
-
-    return keys_list
+    return [k for k in keys_dict if k.startswith(key)]
 
 
 def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     """Return list of key ids for RPC device from a dict."""
-    key_ids: list[int] = []
-    for i in range(MAX_RPC_KEY_INSTANCES):
-        key_inst = f"{key}:{i}"
-        if key_inst not in keys_dict:
-            return key_ids
-
-        key_ids.append(i)
-
-    return key_ids
+    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(key)]
 
 
 def is_rpc_momentary_input(

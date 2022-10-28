@@ -42,7 +42,7 @@ def setup_comp(hass):
     """Initialize components."""
     hass.config.set_time_zone(hass.config.time_zone)
     hass.loop.run_until_complete(
-        async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
     )
 
 

@@ -15,8 +15,6 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -26,7 +24,7 @@ from homeassistant.helpers.selector import (
     LocationSelector,
     TimeSelector,
 )
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     CONF_ARRIVAL_TIME,
@@ -43,6 +41,8 @@ from .const import (
     CONF_TRAFFIC_MODE,
     DEFAULT_NAME,
     DOMAIN,
+    IMPERIAL_UNITS,
+    METRIC_UNITS,
     ROUTE_MODE_FASTEST,
     ROUTE_MODES,
     TRAFFIC_MODE_ENABLED,
@@ -96,10 +96,10 @@ def default_options(hass: HomeAssistant) -> dict[str, str | None]:
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: None,
         CONF_DEPARTURE_TIME: None,
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+        CONF_UNIT_SYSTEM: METRIC_UNITS,
     }
-    if hass.config.units is IMPERIAL_SYSTEM:
-        default[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
+        default[CONF_UNIT_SYSTEM] = IMPERIAL_UNITS
     return default
 
 
