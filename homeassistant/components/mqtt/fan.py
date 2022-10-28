@@ -271,6 +271,19 @@ class MqttFan(MqttEntity, FanEntity):
     _entity_id_format = fan.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 
+    _command_templates: dict[str, Callable[..., PublishPayloadType]]
+    _feature_percentage: bool
+    _feature_preset_mode: bool
+    _topic: dict[str, Any]
+    _optimistic: bool
+    _optimistic_oscillation: bool
+    _optimistic_percentage: bool
+    _optimistic_preset_mode: bool
+    _payload: dict[str, Any]
+    _speed_range: tuple[int, int]
+    _supported_features: int
+    _value_templates: dict[str, Callable[..., ReceivePayloadType]]
+
     def __init__(
         self,
         hass: HomeAssistant,
