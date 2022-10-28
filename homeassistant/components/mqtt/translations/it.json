@@ -70,12 +70,17 @@
         "deprecated_yaml": {
             "description": "{platform} MQTT configurata manualmente trovata sotto la voce della piattaforma `{platform}`. \n\nSposta la configurazione sulla voce di integrazione `mqtt` e riavvia Home Assistant per risolvere questo problema. Consulta la [documentazione]({more_info_url}), per ulteriori informazioni.",
             "title": "La/e tua/e {platform} MQTT configurata/e manualmente ha/hanno bisogno di attenzione"
+        },
+        "deprecated_yaml_broker_settings": {
+            "description": "Le seguenti impostazioni trovate in 'configuration.yaml' sono state migrate alla voce di configurazione MQTT e ora sovrascriveranno le impostazioni in 'configuration.yaml':\n'{deprecated_settings}'\n\nRimuovi queste impostazioni da 'configuration.yaml' e riavvia Home Assistant per risolvere il problema. Per ulteriori informazioni, vedere la [documentazione]({more_info_url}).",
+            "title": "Impostazioni MQTT obsolete trovate in `configuration.yaml`"
         }
     },
     "options": {
         "error": {
             "bad_birth": "Argomento birth non valido.",
             "bad_certificate": "Certificato CA non valido",
+            "bad_client_cert": "Certificato cliente non valido, assicurarsi che venga fornito un file con codice PEM",
             "bad_client_cert_key": "Il certificato del client e il certificato privato non sono accoppiati in modo valido",
             "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
             "bad_discovery_prefix": "Prefisso di ricerca non valido",
@@ -92,6 +97,7 @@
                     "client_cert": "Carica il file del certificato cliente",
                     "client_id": "ID cliente (lasciare vuoto per generarne uno in modo casuale)",
                     "client_key": "Carica il file della chiave privata",
+                    "keepalive": "Il tempo che intercorre tra l'invio di messaggi di mantenimento comunicazioni",
                     "password": "Password",
                     "port": "Porta",
                     "protocol": "Protocollo MQTT",
