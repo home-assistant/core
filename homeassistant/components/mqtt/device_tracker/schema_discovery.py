@@ -1,13 +1,14 @@
 """Support for tracking MQTT enabled devices identified through discovery."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 
 import voluptuous as vol
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker import SOURCE_TYPES
-from homeassistant.components.device_tracker.config_entry import (
+from homeassistant.components.device_tracker import (
+    SOURCE_TYPES,
     SourceType,
     TrackerEntity,
 )
@@ -24,14 +25,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .. import subscription
 from ..config import MQTT_RO_SCHEMA
 from ..const import CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
-from ..models import MqttValueTemplate
+from ..models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
 from ..util import get_mqtt_data
 
 CONF_PAYLOAD_HOME = "payload_home"
@@ -70,8 +71,8 @@ async def _async_setup_entity(
     hass: HomeAssistant,
     async_add_entities: AddEntitiesCallback,
     config: ConfigType,
-    config_entry: ConfigEntry | None = None,
-    discovery_data: dict | None = None,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the MQTT Device Tracker entity."""
     async_add_entities([MqttDeviceTracker(hass, config, config_entry, discovery_data)])
@@ -81,37 +82,44 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     """Representation of a device tracker using MQTT."""
 
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
+    _value_template: Callable[..., ReceivePayloadType]
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize the tracker."""
-        self._location_name = None
-
+        self._location_name: str | None = None
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._value_template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE), entity=self
+            config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def message_received(msg):
+        def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            payload = self._value_template(msg.payload)
+            payload: ReceivePayloadType = self._value_template(msg.payload)
             if payload == self._config[CONF_PAYLOAD_HOME]:
                 self._location_name = STATE_HOME
             elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:
                 self._location_name = STATE_NOT_HOME
             else:
+                assert isinstance(msg.payload, str)
                 self._location_name = msg.payload
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
@@ -128,46 +136,50 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             },
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def latitude(self):
+    def latitude(self) -> float | None:
         """Return latitude if provided in extra_state_attributes or None."""
         if (
             self.extra_state_attributes is not None
             and ATTR_LATITUDE in self.extra_state_attributes
         ):
-            return self.extra_state_attributes[ATTR_LATITUDE]
+            latitude: float = self.extra_state_attributes[ATTR_LATITUDE]
+            return latitude
         return None
 
     @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> int:
         """Return location accuracy if provided in extra_state_attributes or None."""
         if (
             self.extra_state_attributes is not None
             and ATTR_GPS_ACCURACY in self.extra_state_attributes
         ):
-            return self.extra_state_attributes[ATTR_GPS_ACCURACY]
-        return None
+            accuracy: int = self.extra_state_attributes[ATTR_GPS_ACCURACY]
+            return accuracy
+        return 0
 
     @property
-    def longitude(self):
+    def longitude(self) -> float | None:
         """Return longitude if provided in extra_state_attributes or None."""
         if (
             self.extra_state_attributes is not None
             and ATTR_LONGITUDE in self.extra_state_attributes
         ):
-            return self.extra_state_attributes[ATTR_LONGITUDE]
+            longitude: float = self.extra_state_attributes[ATTR_LONGITUDE]
+            return longitude
         return None
 
     @property
-    def location_name(self):
+    def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         return self._location_name
 
     @property
     def source_type(self) -> SourceType | str:
         """Return the source type, eg gps or router, of the device."""
-        return self._config[CONF_SOURCE_TYPE]
+        source_type: SourceType | str = self._config[CONF_SOURCE_TYPE]
+        return source_type
