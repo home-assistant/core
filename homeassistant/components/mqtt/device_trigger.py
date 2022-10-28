@@ -42,6 +42,7 @@ from .mixins import (
     send_discovery_done,
     update_device,
 )
+from .models import MqttData
 from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -193,16 +194,16 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         hass: HomeAssistant,
         config: ConfigType,
         device_id: str,
-        discovery_data: dict[str, Any],
+        discovery_data: DiscoveryInfoType,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
-        self._config = config
-        self._config_entry = config_entry
-        self.device_id = device_id
-        self.discovery_data = discovery_data
-        self.hass = hass
-        self._mqtt_data = get_mqtt_data(hass)
+        self._config: ConfigType = config
+        self._config_entry: ConfigEntry = config_entry
+        self.device_id: str = device_id
+        self.discovery_data: DiscoveryInfoType = discovery_data
+        self.hass: HomeAssistant = hass
+        self._mqtt_data: MqttData = get_mqtt_data(hass)
 
         MqttDiscoveryDeviceUpdate.__init__(
             self,
