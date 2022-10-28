@@ -121,6 +121,11 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
     _entity_id_format = switch.ENTITY_ID_FORMAT
 
+    _optimistic: bool
+    _state_on: str
+    _state_off: str
+    _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -129,11 +134,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT switch."""
-        self._state_on = None
-        self._value_template: Callable[..., ReceivePayloadType]
-        self._state_on: str
-        self._state_off: str
-        self._optimistic: bool
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
