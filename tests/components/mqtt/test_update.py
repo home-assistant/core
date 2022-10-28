@@ -204,7 +204,7 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
         state_topic,
         '{"installed_version":"1.9.0","latest_version":"1.9.0",'
         '"title":"Test Update Title","release_url":"https://example.com/release",'
-        '"release_summary":"Test release rummary"}',
+        '"release_summary":"Test release summary"}',
     )
 
     await hass.async_block_till_done()
@@ -213,7 +213,7 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "1.9.0"
-    assert state.attributes.get("release_summary") == "Test release rummary"
+    assert state.attributes.get("release_summary") == "Test release summary"
     assert state.attributes.get("release_url") == "https://example.com/release"
     assert state.attributes.get("title") == "Test Update Title"
 
