@@ -92,15 +92,3 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await asyncio.gather(*load_coroutines)
 
     return True
-
-
-async def create_coordinator(
-    hass: HomeAssistant, rest: RestData, update_interval: int
-) -> ScrapeCoordinator:
-    """Get Scrape Coordinator."""
-
-    coordinator = ScrapeCoordinator(hass, rest, timedelta(seconds=update_interval))
-    await coordinator.async_refresh()
-    if coordinator.data is None:
-        raise PlatformNotReady
-    return coordinator
