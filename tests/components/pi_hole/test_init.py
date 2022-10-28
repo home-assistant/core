@@ -10,7 +10,6 @@ from homeassistant.components.pi_hole.const import (
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
-    DEFAULT_VERIFY_SSL,
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
 )
@@ -22,6 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    DEFAULT_VERIFY_SSL,
 )
 from homeassistant.setup import async_setup_component
 
