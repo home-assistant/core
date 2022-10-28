@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import MockRestData, return_config
+from . import MockRestData, return_integration_config
 
 TEST_CONFIG = {
     "resource": "https://www.home-assistant.io",
@@ -24,21 +24,13 @@ async def test_setup_config(hass: HomeAssistant) -> None:
     """Test setup from yaml."""
     config = {
         "scrape": [
-            return_config(
-                select=".current-version h1", name="HA version", remove_platform=True
-            ),
-            return_config(
-                select=".current-version h1", name="HA version", remove_platform=True
-            ),
+            return_integration_config(select=".current-version h1", name="HA version")
         ]
     }
 
     mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.scrape.coordinator.RestData",
-        return_value=mocker,
-    ), patch(
-        "homeassistant.components.scrape.RestData",
+        "homeassistant.components.rest.RestData",
         return_value=mocker,
     ) as mock_setup:
         assert await async_setup_component(hass, DOMAIN, config)
@@ -47,21 +39,19 @@ async def test_setup_config(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
 
-    assert len(mock_setup.mock_calls) == 2
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_setup_no_data_fails(hass: HomeAssistant) -> None:
     """Test setup entry no data fails."""
     config = {
         "scrape": [
-            return_config(
-                select=".current-version h1", name="HA version", remove_platform=True
-            ),
+            return_integration_config(select=".current-version h1", name="HA version"),
         ]
     }
 
     with patch(
-        "homeassistant.components.scrape.RestData",
+        "homeassistant.components.scrape.coordinator.RestData",
         return_value=MockRestData("test_scrape_sensor_no_data"),
     ):
         assert not await async_setup_component(hass, DOMAIN, config)
