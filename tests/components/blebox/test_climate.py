@@ -256,3 +256,29 @@ async def test_update_failure(saunabox, hass, config, caplog):
     await async_setup_entity(hass, config, entity_id)
 
     assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
+
+
+async def test_reding_hvac_actions(saunabox, hass, config, caplog):
+    """Test hvac action for given device(mock) state."""
+
+    caplog.set_level(logging.ERROR)
+
+    feature_mock, entity_id = saunabox
+    await async_setup_entity(hass, config, entity_id)
+
+    def set_heating():
+        feature_mock.is_on = True
+        feature_mock.hvac_action = 1
+        feature_mock.mode = 1
+
+    feature_mock.async_update = AsyncMock(side_effect=set_heating)
+
+    await hass.services.async_call(
+        "climate",
+        SERVICE_SET_TEMPERATURE,
+        {"entity_id": entity_id, ATTR_TEMPERATURE: 43.21},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.HEAT]
