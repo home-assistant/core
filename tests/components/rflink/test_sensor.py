@@ -14,6 +14,7 @@ from homeassistant.components.rflink import (
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
+    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNKNOWN,
@@ -64,14 +65,27 @@ async def test_default_setup(hass, monkeypatch):
     )
     await hass.async_block_till_done()
 
-    # test  state of new sensor
-    new_sensor = hass.states.get("sensor.test2")
-    assert new_sensor
-    assert new_sensor.state == "0"
-    assert new_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    # test state of temp sensor
+    temp_sensor = hass.states.get("sensor.test2")
+    assert temp_sensor
+    assert temp_sensor.state == "0"
+    assert temp_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert (
-        "icon" not in new_sensor.attributes
+        ATTR_ICON not in temp_sensor.attributes
     )  # temperature uses SensorEntityDescription
+
+    # test event for new unconfigured sensor
+    event_callback(
+        {"id": "test3", "sensor": "humidity", "value": 43, "unit": PERCENTAGE}
+    )
+    await hass.async_block_till_done()
+
+    # test state of hum sensor
+    hum_sensor = hass.states.get("sensor.test3")
+    assert hum_sensor
+    assert hum_sensor.state == "43"
+    assert hum_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert hum_sensor.attributes[ATTR_ICON] == "mdi:water-percent"
 
 
 async def test_disable_automatic_add(hass, monkeypatch):
@@ -240,8 +254,10 @@ async def test_sensor_attributes(hass, monkeypatch):
     assert humidity_state
     assert "device_class" not in humidity_state.attributes
     assert "state_class" not in humidity_state.attributes
+    assert humidity_state.attributes["unit_of_measurement"] == PERCENTAGE
 
     temperature_state = hass.states.get("sensor.temperature_device")
     assert temperature_state
     assert temperature_state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
     assert temperature_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    assert temperature_state.attributes["unit_of_measurement"] == TEMP_CELSIUS
