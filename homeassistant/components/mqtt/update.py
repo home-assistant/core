@@ -42,6 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Update"
 
+CONF_ENTITY_PICTURE = "entity_picture"
 CONF_LATEST_VERSION_TEMPLATE = "latest_version_template"
 CONF_LATEST_VERSION_TOPIC = "latest_version_topic"
 CONF_PAYLOAD_INSTALL = "payload_install"
@@ -54,6 +55,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_ENTITY_PICTURE): cv.string,
         vol.Optional(CONF_LATEST_VERSION_TEMPLATE): cv.template,
         vol.Optional(CONF_LATEST_VERSION_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -110,9 +112,18 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
         self._attr_release_summary = self._config.get(CONF_RELEASE_SUMMARY)
         self._attr_release_url = self._config.get(CONF_RELEASE_URL)
         self._attr_title = self._config.get(CONF_TITLE)
+        self._entity_picture: str | None = self._config.get(CONF_ENTITY_PICTURE)
 
         UpdateEntity.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend."""
+        if self._entity_picture is not None:
+            return self._entity_picture
+
+        return super().entity_picture
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -195,6 +206,10 @@ class MqttUpdate(MqttEntity, UpdateEntity, RestoreEntity):
 
             if CONF_RELEASE_URL in json_payload and not self._attr_release_url:
                 self._attr_release_url = json_payload[CONF_RELEASE_URL]
+                get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
+
+            if CONF_ENTITY_PICTURE in json_payload and not self._entity_picture:
+                self._entity_picture = json_payload[CONF_ENTITY_PICTURE]
                 get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         add_subscription(topics, CONF_STATE_TOPIC, handle_state_message_received)

@@ -77,6 +77,7 @@ async def test_run_update_setup(hass, mqtt_mock_entry_with_yaml_config):
                     "release_summary": "Test release summary",
                     "release_url": "https://example.com/release",
                     "title": "Test Update Title",
+                    "entity_picture": "https://example.com/icon.png",
                 }
             }
         },
@@ -96,6 +97,7 @@ async def test_run_update_setup(hass, mqtt_mock_entry_with_yaml_config):
     assert state.attributes.get("release_summary") == "Test release summary"
     assert state.attributes.get("release_url") == "https://example.com/release"
     assert state.attributes.get("title") == "Test Update Title"
+    assert state.attributes.get("entity_picture") == "https://example.com/icon.png"
 
     async_fire_mqtt_message(hass, latest_version_topic, "2.0.0")
 
@@ -138,6 +140,10 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "1.9.0"
+    assert (
+        state.attributes.get("entity_picture")
+        == "https://brands.home-assistant.io/_/mqtt/icon.png"
+    )
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0.0"}')
 
