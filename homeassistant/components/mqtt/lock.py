@@ -126,6 +126,9 @@ class MqttLock(MqttEntity, LockEntity):
     _entity_id_format = lock.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LOCK_ATTRIBUTES_BLOCKED
 
+    _optimistic: bool
+    _value_template: Callable[..., ReceivePayloadType]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -135,9 +138,6 @@ class MqttLock(MqttEntity, LockEntity):
     ) -> None:
         """Initialize the lock."""
         self._state: bool | None = False
-        self._optimistic: bool = False
-        self._value_template: Callable[..., ReceivePayloadType]
-
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
