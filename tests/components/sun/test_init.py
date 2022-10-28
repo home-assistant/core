@@ -2,10 +2,12 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from astral import LocationInfo
+import astral.sun
 from freezegun import freeze_time
 import pytest
 
-import homeassistant.components.sun as sun
+from homeassistant.components import sun
 from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
