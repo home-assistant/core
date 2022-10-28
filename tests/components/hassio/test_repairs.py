@@ -219,6 +219,7 @@ async def test_unhealthy_repairs_add_remove(
     )
     msg = await client.receive_json()
     assert msg["success"]
+    await hass.async_block_till_done()
 
     await client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await client.receive_json()
@@ -238,6 +239,7 @@ async def test_unhealthy_repairs_add_remove(
     )
     msg = await client.receive_json()
     assert msg["success"]
+    await hass.async_block_till_done()
 
     await client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await client.receive_json()
@@ -273,6 +275,7 @@ async def test_unsupported_repairs_add_remove(
     )
     msg = await client.receive_json()
     assert msg["success"]
+    await hass.async_block_till_done()
 
     await client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await client.receive_json()
@@ -292,6 +295,7 @@ async def test_unsupported_repairs_add_remove(
     )
     msg = await client.receive_json()
     assert msg["success"]
+    await hass.async_block_till_done()
 
     await client.send_json({"id": 4, "type": "repairs/list_issues"})
     msg = await client.receive_json()
@@ -334,6 +338,7 @@ async def test_reset_repairs_supervisor_restart(
     )
     msg = await client.receive_json()
     assert msg["success"]
+    await hass.async_block_till_done()
 
     await client.send_json({"id": 3, "type": "repairs/list_issues"})
     msg = await client.receive_json()
@@ -378,6 +383,7 @@ async def test_reasons_added_and_removed(
     )
     msg = await client.receive_json()
     assert msg["success"]
+    await hass.async_block_till_done()
 
     await client.send_json({"id": 3, "type": "repairs/list_issues"})
     msg = await client.receive_json()
