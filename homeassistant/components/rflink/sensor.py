@@ -14,13 +14,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     CONF_NAME,
     CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
-    SPEED_KILOMETERS_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -66,42 +65,42 @@ SENSOR_TYPES = (
         name="Average windspeed",
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
     ),
     SensorEntityDescription(
         key="windgusts",
         name="Wind gusts",
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
     ),
     SensorEntityDescription(
         key="windspeed",
         name="Wind speed",
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
     ),
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="windtemp",
         name="Wind temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="windchill",
         name="Wind chill",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
 )
 
@@ -141,13 +140,6 @@ def devices_from_config(domain_config):
     """Parse configuration and add Rflink sensor devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
-        if ATTR_UNIT_OF_MEASUREMENT not in config:
-            if (
-                config[CONF_SENSOR_TYPE] not in SENSOR_TYPES_DICT
-            ):  # only if not SensorEntityDescription
-                config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
-                    config[CONF_SENSOR_TYPE]
-                )
         device = RflinkSensor(device_id, **config)
         devices.append(device)
 
@@ -196,6 +188,9 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         if sensor_type in SENSOR_TYPES_DICT:
             self.entity_description = SENSOR_TYPES_DICT[sensor_type]
+        elif not unit_of_measurement:
+            self._unit_of_measurement = lookup_unit_for_sensor_type(sensor_type)
+
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
     def _handle_event(self, event):

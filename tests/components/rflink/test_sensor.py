@@ -18,7 +18,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 
 from .test_init import mock_rflink
@@ -49,11 +49,18 @@ async def test_default_setup(hass, monkeypatch):
     config_sensor = hass.states.get("sensor.test")
     assert config_sensor
     assert config_sensor.state == "unknown"
-    assert config_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert (
+        config_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    )
 
     # test event for config sensor
     event_callback(
-        {"id": "test", "sensor": "temperature", "value": 1, "unit": TEMP_CELSIUS}
+        {
+            "id": "test",
+            "sensor": "temperature",
+            "value": 1,
+            "unit": UnitOfTemperature.CELSIUS,
+        }
     )
     await hass.async_block_till_done()
 
@@ -61,7 +68,12 @@ async def test_default_setup(hass, monkeypatch):
 
     # test event for new unconfigured sensor
     event_callback(
-        {"id": "test2", "sensor": "temperature", "value": 0, "unit": TEMP_CELSIUS}
+        {
+            "id": "test2",
+            "sensor": "temperature",
+            "value": 0,
+            "unit": UnitOfTemperature.CELSIUS,
+        }
     )
     await hass.async_block_till_done()
 
@@ -69,7 +81,7 @@ async def test_default_setup(hass, monkeypatch):
     temp_sensor = hass.states.get("sensor.test2")
     assert temp_sensor
     assert temp_sensor.state == "0"
-    assert temp_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert temp_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert (
         ATTR_ICON not in temp_sensor.attributes
     )  # temperature uses SensorEntityDescription
@@ -100,7 +112,12 @@ async def test_disable_automatic_add(hass, monkeypatch):
 
     # test event for new unconfigured sensor
     event_callback(
-        {"id": "test2", "sensor": "temperature", "value": 0, "unit": TEMP_CELSIUS}
+        {
+            "id": "test2",
+            "sensor": "temperature",
+            "value": 0,
+            "unit": UnitOfTemperature.CELSIUS,
+        }
     )
     await hass.async_block_till_done()
 
@@ -235,12 +252,15 @@ async def test_sensor_attributes(hass, monkeypatch):
                 "my_humidity_device_unique_id": {
                     "name": "humidity_device",
                     "sensor_type": "humidity",
-                    "aliases": ["test_alias_02_0"],
                 },
                 "my_temperature_device_unique_id": {
                     "name": "temperature_device",
                     "sensor_type": "temperature",
-                    "aliases": ["test_alias_02_0"],
+                },
+                "another_temperature_device_unique_id": {
+                    "name": "fahrenheit_device",
+                    "sensor_type": "temperature",
+                    "unit_of_measurement": "F",
                 },
             },
         },
@@ -260,4 +280,12 @@ async def test_sensor_attributes(hass, monkeypatch):
     assert temperature_state
     assert temperature_state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
     assert temperature_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
-    assert temperature_state.attributes["unit_of_measurement"] == TEMP_CELSIUS
+    assert (
+        temperature_state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
+    )
+
+    fahrenheit_state = hass.states.get("sensor.fahrenheit_device")
+    assert fahrenheit_state
+    assert fahrenheit_state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
+    assert fahrenheit_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    assert fahrenheit_state.attributes["unit_of_measurement"] == "F"
