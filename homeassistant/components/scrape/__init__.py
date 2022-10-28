@@ -55,10 +55,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Scrape from yaml config."""
-    if config.get(DOMAIN) in [None, []]:
+    if not (scrape_config := config.get(DOMAIN)):
         return True
 
-    for resource_config in config[DOMAIN]:
+    for resource_config in scrape_config:
         rest = create_rest_data_from_config(hass, resource_config)
         coordinator = ScrapeCoordinator(
             hass,
@@ -71,10 +71,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if coordinator.data is None:
             raise PlatformNotReady
 
-        if not resource_config.get(SENSOR_DOMAIN):
+        if not (sensors := resource_config.get(SENSOR_DOMAIN)):
             raise PlatformNotReady("No sensors configured")
 
-        for sensor_config in resource_config["sensor"]:
+        for sensor_config in sensors:
             discovery.load_platform(
                 hass,
                 Platform.SENSOR,
