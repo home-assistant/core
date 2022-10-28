@@ -13,8 +13,7 @@ from homeassistant.util import dt
 
 from .const import DOMAIN
 
-# SCAN_INTERVAL = timedelta(days=1)
-SCAN_INTERVAL = timedelta(minutes=2)
+SCAN_INTERVAL = timedelta(days=1)
 
 _LOGGER = logging.getLogger(__name__)
 
