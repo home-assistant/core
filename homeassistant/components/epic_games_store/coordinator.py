@@ -98,6 +98,5 @@ class EGSUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "start_at": dt.parse_datetime(promotion_data["startDate"]),
                     "end_at": dt.parse_datetime(promotion_data["endDate"]),
                 }
-        _LOGGER.warning("-" * 200)
 
         return return_data
