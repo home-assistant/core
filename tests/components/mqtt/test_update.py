@@ -116,6 +116,7 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
                     "latest_version_topic": latest_version_topic,
                     "latest_version_template": "{{ value_json.latest }}",
                     "name": "Test Update",
+                    "title": "Test Update Title",
                 }
             }
         },
@@ -132,6 +133,7 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "1.9.0"
+    assert state.attributes.get("title") == "Test Update Title"
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0.0"}')
 
@@ -188,7 +190,9 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
     await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(
-        hass, state_topic, '{"installed_version":"1.9.0","latest_version":"1.9.0"}'
+        hass,
+        state_topic,
+        '{"installed_version":"1.9.0","latest_version":"1.9.0","title":"Test Update Title"}',
     )
 
     await hass.async_block_till_done()
@@ -197,9 +201,12 @@ async def test_json_state_message(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "1.9.0"
+    assert state.attributes.get("title") == "Test Update Title"
 
     async_fire_mqtt_message(
-        hass, state_topic, '{"installed_version":"1.9.0","latest_version":"2.0.0"}'
+        hass,
+        state_topic,
+        '{"installed_version":"1.9.0","latest_version":"2.0.0","title":"Test Update Title"}',
     )
 
     await hass.async_block_till_done()
