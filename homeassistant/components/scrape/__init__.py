@@ -59,6 +59,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     for resource_config in scrape_config:
+        if not (sensors := resource_config.get(SENSOR_DOMAIN)):
+            raise PlatformNotReady("No sensors configured")
+
         rest = create_rest_data_from_config(hass, resource_config)
         coordinator = ScrapeCoordinator(
             hass,
@@ -70,9 +73,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await coordinator.async_refresh()
         if coordinator.data is None:
             raise PlatformNotReady
-
-        if not (sensors := resource_config.get(SENSOR_DOMAIN)):
-            raise PlatformNotReady("No sensors configured")
 
         for sensor_config in sensors:
             discovery.load_platform(
