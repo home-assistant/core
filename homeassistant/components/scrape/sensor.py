@@ -36,14 +36,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
-<<<<<<< HEAD
 from homeassistant.helpers.template_entity import (
     TEMPLATE_SENSOR_BASE_SCHEMA,
     TemplateSensor,
 )
-=======
-from homeassistant.helpers.template_entity import TemplateSensor
->>>>>>> 5c6d8ebe5b (Reconfig)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -111,10 +107,10 @@ async def async_setup_platform(
         )(config)
 
         name: str = config[CONF_NAME]
+        unique_id: str | None = config.get(CONF_UNIQUE_ID)
         select: str | None = config.get(CONF_SELECT)
         attr: str | None = config.get(CONF_ATTRIBUTE)
         index: int = config[CONF_INDEX]
-        unique_id: str | None = config.get(CONF_UNIQUE_ID)
         value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
@@ -124,14 +120,14 @@ async def async_setup_platform(
             [
                 ScrapeSensor(
                     hass,
-                coordinator,
-                sensor_config,
-                name,
-                unique_id,
-                select,
-                attr,
-                index,
-                value_template,
+                    coordinator,
+                    sensor_config,
+                    name,
+                    unique_id,
+                    select,
+                    attr,
+                    index,
+                    value_template,
                 )
             ],
         )
