@@ -171,6 +171,17 @@ class MqttSiren(MqttEntity, SirenEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_SIREN_ATTRIBUTES_BLOCKED
+    _attr_should_poll: bool = False
+
+    _attr_is_on: bool | None
+    _attr_extra_state_attributes: dict[str, Any]
+    _attr_name: str
+    _command_templates: dict[str, Callable[..., PublishPayloadType] | None]
+    _state_on: str
+    _state_off: str
+    _supported_features: int
+    _optimistic: bool
+    _value_template: Callable[..., ReceivePayloadType]
 
     def __init__(
         self,
@@ -180,21 +191,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT siren."""
-        self._command_templates: dict[str, Callable[..., PublishPayloadType] | None]
-        self._value_template: Callable[..., ReceivePayloadType]
-        self._attr_name = config[CONF_NAME]
-        self._attr_should_poll = False
-        self._supported_features: int = SUPPORTED_BASE
-        self._attr_is_on = None
-        self._state_on: str
-        self._state_off: str
-        self._optimistic: bool
-
-        self._attr_extra_state_attributes: dict[str, Any] = {}
-
-        self.target = None
-
-        super().__init__(hass, config, config_entry, discovery_data)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -210,6 +207,9 @@ class MqttSiren(MqttEntity, SirenEntity):
         state_off = config.get(CONF_STATE_OFF)
         self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
+        self._attr_extra_state_attributes = {}
+
+        self._supported_features: int = SUPPORTED_BASE
         if config[CONF_SUPPORT_DURATION]:
             self._supported_features |= SirenEntityFeature.DURATION
             self._attr_extra_state_attributes[ATTR_DURATION] = None
