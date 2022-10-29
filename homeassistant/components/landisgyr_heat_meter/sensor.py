@@ -49,7 +49,7 @@ class HeatMeterSensor(CoordinatorEntity, RestoreSensor):
         """Set up the sensor with the initial values."""
         super().__init__(coordinator)
         self.key = description.key
-        self._attr_unique_id = f"{DOMAIN}_{unique_id}_{description.key}"
+        self._attr_unique_id = f"heat_meter_{coordinator.config_entry.data['device_number']}_{description.key}"
         self._attr_name = f"Heat Meter {description.name}"
         self.entity_description = description
 
