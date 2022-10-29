@@ -16,7 +16,9 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_COMMAND_STATE,
     CONF_FRIENDLY_NAME,
+    CONF_ICON,
     CONF_ICON_TEMPLATE,
+    CONF_NAME,
     CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -24,8 +26,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import (
+    TEMPLATE_ENTITY_BASE_SCHEMA,
+    TemplateEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import call_shell_with_timeout, check_output_or_log
@@ -51,37 +57,44 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     devices: dict[str, Any] = config.get(CONF_SWITCHES, {})
     switches = []
 
     for object_id, device_config in devices.items():
+        new_config = {
+            **device_config,
+            CONF_NAME: device_config.get(CONF_FRIENDLY_NAME, object_id),
+        }
+        if icon := device_config.get(CONF_ICON_TEMPLATE):
+            new_config[CONF_ICON] = icon.template
+        switch_config = vol.Schema(
+            TEMPLATE_ENTITY_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
+        )(new_config)
+
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
             value_template.hass = hass
 
-        icon_template: Template | None = device_config.get(CONF_ICON_TEMPLATE)
-        if icon_template is not None:
-            icon_template.hass = hass
-
         switches.append(
             CommandSwitch(
+                hass,
+                switch_config,
                 object_id,
                 device_config.get(CONF_FRIENDLY_NAME, object_id),
                 device_config[CONF_COMMAND_ON],
                 device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
-                icon_template,
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
                 device_config.get(CONF_UNIQUE_ID),
@@ -92,35 +105,40 @@ def setup_platform(
         _LOGGER.error("No switches added")
         return
 
-    add_entities(switches)
+    async_add_entities(switches)
 
 
-class CommandSwitch(SwitchEntity):
+class CommandSwitch(TemplateEntity, SwitchEntity):
     """Representation a switch that can be toggled using shell commands."""
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        config: ConfigType,
         object_id: str,
-        friendly_name: str,
+        name: str,
         command_on: str,
         command_off: str,
         command_state: str | None,
-        icon_template: Template | None,
         value_template: Template | None,
         timeout: int,
         unique_id: str | None,
     ) -> None:
         """Initialize the switch."""
+        TemplateEntity.__init__(
+            self,
+            hass,
+            config=config,
+            fallback_name=name,
+            unique_id=unique_id,
+        )
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._attr_name = friendly_name
         self._attr_is_on = False
         self._command_on = command_on
         self._command_off = command_off
         self._command_state = command_state
-        self._icon_template = icon_template
         self._value_template = value_template
         self._timeout = timeout
-        self._attr_unique_id = unique_id
         self._attr_should_poll = bool(command_state)
 
     def _switch(self, command: str) -> bool:
@@ -160,16 +178,18 @@ class CommandSwitch(SwitchEntity):
         if TYPE_CHECKING:
             return None
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update device state."""
         if self._command_state:
-            payload = str(self._query_state())
+            payload = str(await self.hass.async_add_executor_job(self._query_state))
             if self._icon_template:
-                self._attr_icon = self._icon_template.render_with_possible_json_value(
-                    payload
+                self._attr_icon = await self.hass.async_add_executor_job(
+                    self._icon_template.render_with_possible_json_value, payload
                 )
             if self._value_template:
-                payload = self._value_template.render_with_possible_json_value(payload)
+                payload = await self.hass.async_add_executor_job(
+                    self._value_template.render_with_possible_json_value, payload
+                )
             self._attr_is_on = payload.lower() == "true"
 
     def turn_on(self, **kwargs: Any) -> None:
