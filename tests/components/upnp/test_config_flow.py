@@ -63,6 +63,7 @@ async def test_flow_ssdp(hass: HomeAssistant):
         CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        CONFIG_ENTRY_HOST: TEST_HOST,
     }
 
 
@@ -138,6 +139,7 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant):
         CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: None,
+        CONFIG_ENTRY_HOST: TEST_HOST,
     }
 
 
@@ -382,6 +384,7 @@ async def test_flow_user(hass: HomeAssistant):
         CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
         CONFIG_ENTRY_LOCATION: TEST_LOCATION,
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
+        CONFIG_ENTRY_HOST: TEST_HOST,
     }
 
 

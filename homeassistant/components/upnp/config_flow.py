@@ -244,5 +244,6 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_ORIGINAL_UDN: discovery.upnp[ssdp.ATTR_UPNP_UDN],
             CONFIG_ENTRY_LOCATION: discovery.ssdp_location,
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
+            CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
         }
         return self.async_create_entry(title=title, data=data)
