@@ -1,11 +1,13 @@
 """Adds config flow for Scrape integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.rest import create_rest_data_from_config
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD, METHODS
 from homeassistant.components.sensor import (
@@ -33,8 +35,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import async_get_hass
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
     SchemaOptionsFlowHandler,
@@ -128,12 +132,32 @@ def return_sensor_step(user_input: dict[str, Any]) -> str:
     return "sensor"
 
 
+def validate_rest_setup(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Validate rest setup."""
+    hass = async_get_hass()
+    rest_config = {
+        **dict(user_input),
+        CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
+        CONF_TIMEOUT: int(user_input[CONF_TIMEOUT]),
+    }
+    try:
+        rest = create_rest_data_from_config(hass, rest_config)
+        asyncio.run_coroutine_threadsafe(rest.async_update(), hass.loop)
+    except Exception as err:
+        raise SchemaFlowError("resource_error") from err
+    return user_input
+
+
 DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
 DATA_SCHEMA_SENSOR = vol.Schema({**SENSOR_SETUP, **SENSOR_SETUP_OPT})
 DATA_SCHEMA_SENSOR_OPT = vol.Schema(SENSOR_SETUP_OPT)
 
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowFormStep(RESOURCE_SETUP, next_step=return_sensor_step),
+    "user": SchemaFlowFormStep(
+        schema=DATA_SCHEMA_RESOURCE,
+        next_step=return_sensor_step,
+        validate_user_input=validate_rest_setup,
+    ),
     "sensor": SchemaFlowFormStep(DATA_SCHEMA_SENSOR),
 }
 OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
