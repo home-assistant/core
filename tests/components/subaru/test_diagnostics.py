@@ -1,9 +1,10 @@
 """Test Subaru diagnostics."""
 import json
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.subaru.const import DOMAIN, ENTRY_COORDINATOR
+from homeassistant.components.subaru.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -13,6 +14,11 @@ from tests.common import load_fixture
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
+)
+from tests.components.subaru.conftest import (
+    MOCK_API_FETCH,
+    MOCK_API_GET_DATA,
+    advance_time_to_next_fetch,
 )
 
 
@@ -66,8 +72,10 @@ async def test_device_diagnostics_vehicle_not_found(
     )
     assert reg_device is not None
 
-    # Remove vehicle info from hass.data so that vehicle will not be found
-    hass.data[DOMAIN][config_entry.entry_id][ENTRY_COORDINATOR].data.pop(TEST_VIN_2_EV)
+    # Simulate case where Subaru API does not return vehicle data
+    with patch(MOCK_API_FETCH), patch(MOCK_API_GET_DATA, return_value=None):
+        advance_time_to_next_fetch(hass)
+        await hass.async_block_till_done()
 
     with pytest.raises(AssertionError):
         await get_diagnostics_for_device(hass, hass_client, config_entry, reg_device)
