@@ -697,7 +697,7 @@ class Server:
         udn = await self._async_get_instance_udn()
         system_info = await async_get_system_info(self.hass)
         model_name = system_info["installation_type"]
-        presentation_url = get_url(self.hass)
+        presentation_url = get_url(self.hass, allow_ip=True, prefer_external=False)
         serial_number = await async_get_instance_id(self.hass)
         HassUpnpServiceDevice.DEVICE_DEFINITION = (
             HassUpnpServiceDevice.DEVICE_DEFINITION._replace(
