@@ -226,6 +226,13 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             "40",
             {ATTR_DEVICE_CLASS: "pm25"},
         ),
+        ("NitrogenDioxideSensor", "sensor.air_quality_nitrogen_dioxide", "50", {}),
+        (
+            "VolatileOrganicCompoundsSensor",
+            "sensor.air_quality_volatile_organic_compounds",
+            "55",
+            {},
+        ),
         (
             "CarbonMonoxideSensor",
             "sensor.co",
