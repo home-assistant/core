@@ -2053,7 +2053,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 self.tests[name] = test
             if filt is not None:
                 self.filters[name] = (
-                    pass_context(hassfunction(filt)) if require_hass and valid else filt
+                    pass_context(hassfunction(filt))
+                    if require_hass and valid and name != "states"
+                    else filt
                 )
             if glob is not None:
                 self.globals[name] = (
@@ -2119,9 +2121,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         add_ext("min", glob=min_max_from_filter(self.filters["min"], "min"))
         add_ext("version", filt=version, glob=version)
         add_ext(
-            "entry_id",
-            filt=entry_id,
-            glob=entry_id,
+            "config_entry_id",
+            filt=config_entry_id,
+            glob=config_entry_id,
             require_hass=True,
         )
         add_ext(
@@ -2204,24 +2206,28 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         add_ext(
             "is_state",
             glob=is_state,
+            test=pass_eval_context(hassfunction(is_state)),
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "is_state_attr",
             glob=is_state_attr,
+            test=pass_eval_context(hassfunction(is_state_attr)),
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "state_attr",
             glob=state_attr,
+            filt=state_attr,
             support_limited=False,
             require_hass=True,
         )
         add_ext(
             "states",
             glob=AllStates(hass),
+            filt=AllStates(hass),
             support_limited=False,
             require_hass=True,
         )
