@@ -119,7 +119,6 @@ class CommandCover(TemplateEntity, CoverEntity):
             fallback_name=name,
             unique_id=unique_id,
         )
-        self._attr_name = name
         self._state: int | None = None
         self._command_open = command_open
         self._command_close = command_close
@@ -127,7 +126,6 @@ class CommandCover(TemplateEntity, CoverEntity):
         self._command_state = command_state
         self._value_template = value_template
         self._timeout = timeout
-        self._attr_unique_id = unique_id
         self._attr_should_poll = bool(command_state)
 
     def _move_cover(self, command: str) -> bool:
