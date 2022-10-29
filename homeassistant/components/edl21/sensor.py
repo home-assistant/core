@@ -398,7 +398,7 @@ class EDL21Entity(SensorEntity):
         self._name = name
         self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
-        self._min_time = timedelta(min_time)
+        self._min_time = timedelta(seconds=min_time)
         self._last_update = utcnow()
         self._state_attrs = {
             "status": "status",
