@@ -10,8 +10,8 @@ from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD, METHODS
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
-    DEVICE_CLASSES_SCHEMA,
-    STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_ATTRIBUTE,
@@ -99,12 +99,14 @@ SENSOR_SETUP_OPT = {
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
     vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=DEVICE_CLASSES_SCHEMA, mode=SelectSelectorMode.DROPDOWN
+            options=[cls.value for cls in SensorDeviceClass],
+            mode=SelectSelectorMode.DROPDOWN,
         )
     ),
     vol.Optional(CONF_STATE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=STATE_CLASSES_SCHEMA, mode=SelectSelectorMode.DROPDOWN
+            options=[cls.value for cls in SensorStateClass],
+            mode=SelectSelectorMode.DROPDOWN,
         )
     ),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
