@@ -248,6 +248,26 @@ class TuyaPowerOnStateSelectEntity(ZCLEnumSelectEntity, id_suffix="power_on_stat
     _attr_name = "Power on state"
 
 
+class TuyaBacklightMode(types.enum8):
+    """Tuya switch backlight mode enum."""
+
+    Off = 0x00
+    LightWhenOn = 0x01
+    LightWhenOff = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
+)
+class TuyaBacklightModeSelectEntity(ZCLEnumSelectEntity, id_suffix="backlight_mode"):
+    """Representation of a ZHA backlight mode select entity."""
+
+    _select_attr = "backlight_mode"
+    _enum = TuyaBacklightMode
+    _attr_name = "Backlight mode"
+
+
 class AqaraMotionSensitivities(types.enum8):
     """Aqara motion sensitivities."""
 
