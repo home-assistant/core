@@ -66,20 +66,24 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         device_number = config_entry.data["device_number"]
 
+        # add label to prevent other devices with same number to conflict
+        new_unique_id = f"heat_meter_{device_number}"
+
         @callback
         def update_entity_unique_id(entity_entry):
             """Update unique ID of entity entry."""
-            return {
-                "new_unique_id": entity_entry.unique_id.replace(
-                    f"{entity_entry.platform}_{entity_entry.config_entry_id}",
-                    f"heat_meter_{device_number}",
-                )
-            }
+            if entity_entry.platform in entity_entry.unique_id:
+                return {
+                    "new_unique_id": entity_entry.unique_id.replace(
+                        f"{entity_entry.platform}_{entity_entry.config_entry_id}",
+                        f"heat_meter_{device_number}",
+                    )
+                }
 
         await async_migrate_entries(
             hass, config_entry.entry_id, update_entity_unique_id
         )
-        hass.config_entries.async_update_entry(config_entry)
+        hass.config_entries.async_update_entry(config_entry, unique_id=new_unique_id)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
