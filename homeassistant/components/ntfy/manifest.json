@@ -1,0 +1,7 @@
+{
+  "domain": "ntfy",
+  "name": "ntfy",
+  "documentation": "https://www.home-assistant.io/integrations/ntfy",
+  "codeowners": ["@nwithan8"],
+  "iot_class": "cloud_push"
+}
