@@ -57,8 +57,8 @@ from .const import (
 from .util import (
     convert_to_float,
     density_to_air_quality,
-    density_to_air_quality_pm10,
     density_to_air_quality_nitrogen_dioxide,
+    density_to_air_quality_pm10,
     density_to_air_quality_voc,
     temperature_to_homekit,
 )
@@ -258,7 +258,9 @@ class NitrogenDioxideSensor(AirQualitySensor):
             SERV_AIR_QUALITY_SENSOR, [CHAR_NITROGEN_DIOXIDE_DENSITY]
         )
         self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
-        self.char_density = serv_air_quality.configure_char(CHAR_NITROGEN_DIOXIDE_DENSITY, value=0)
+        self.char_density = serv_air_quality.configure_char(
+            CHAR_NITROGEN_DIOXIDE_DENSITY, value=0
+        )
 
     @callback
     def async_update_state(self, new_state):
