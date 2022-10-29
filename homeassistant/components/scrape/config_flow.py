@@ -6,25 +6,32 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT
+from homeassistant.components.rest.schema import DEFAULT_METHOD, METHODS
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
+    DEVICE_CLASSES_SCHEMA,
+    STATE_CLASSES_SCHEMA,
 )
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
     CONF_HEADERS,
+    CONF_METHOD,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
+    CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -47,20 +54,18 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_INDEX,
+    CONF_SELECT,
+    DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 
-SCHEMA_SETUP = {
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+RESOURCE_SETUP = {
     vol.Required(CONF_RESOURCE): TextSelector(
         TextSelectorConfig(type=TextSelectorType.URL)
-    ),
-    vol.Required(CONF_SELECT): TextSelector(),
-}
-
-SCHEMA_OPT = {
-    vol.Optional(CONF_ATTRIBUTE): TextSelector(),
-    vol.Optional(CONF_INDEX, default=0): NumberSelector(
-        NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
     ),
     vol.Optional(CONF_AUTHENTICATION): SelectSelector(
         SelectSelectorConfig(
@@ -68,37 +73,69 @@ SCHEMA_OPT = {
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
+    vol.Optional(CONF_HEADERS): ObjectSelector(),
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
+        SelectSelectorConfig(options=METHODS, mode=SelectSelectorMode.DROPDOWN)
+    ),
     vol.Optional(CONF_USERNAME): TextSelector(),
     vol.Optional(CONF_PASSWORD): TextSelector(
         TextSelectorConfig(type=TextSelectorType.PASSWORD)
     ),
-    vol.Optional(CONF_HEADERS): ObjectSelector(),
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): TextSelector(),
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): BooleanSelector(),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
+        NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+    ),
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): NumberSelector(
+        NumberSelectorConfig(min=15, step=15, mode=NumberSelectorMode.BOX)
+    ),
+}
+
+SENSOR_SETUP_OPT = {
+    vol.Optional(CONF_ATTRIBUTE): TextSelector(),
+    vol.Optional(CONF_INDEX, default=0): NumberSelector(
+        NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
+    ),
+    vol.Required(CONF_SELECT): TextSelector(),
+    vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
     vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[e.value for e in SensorDeviceClass],
-            mode=SelectSelectorMode.DROPDOWN,
+            options=DEVICE_CLASSES_SCHEMA, mode=SelectSelectorMode.DROPDOWN
         )
     ),
     vol.Optional(CONF_STATE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[e.value for e in SensorStateClass],
+            options=STATE_CLASSES_SCHEMA, mode=SelectSelectorMode.DROPDOWN
+        )
+    ),
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
+        SelectSelectorConfig(
+            options=[TEMP_CELSIUS, TEMP_FAHRENHEIT],
+            custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
         )
     ),
-    vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): BooleanSelector(),
 }
 
-DATA_SCHEMA = vol.Schema({**SCHEMA_SETUP, **SCHEMA_OPT})
-DATA_SCHEMA_OPT = vol.Schema({**SCHEMA_OPT})
+SENSOR_SETUP = {
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+}
+
+
+def return_sensor_step(user_input: dict[str, Any]) -> str:
+    """Return sensor step."""
+    return "sensor"
+
+
+DATA_SCHEMA_RESOURCE = vol.Schema(RESOURCE_SETUP)
+DATA_SCHEMA_SENSOR = vol.Schema({**SENSOR_SETUP, **SENSOR_SETUP_OPT})
+DATA_SCHEMA_SENSOR_OPT = vol.Schema(SENSOR_SETUP_OPT)
 
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "user": SchemaFlowFormStep(DATA_SCHEMA),
-    "import": SchemaFlowFormStep(DATA_SCHEMA),
+    "user": SchemaFlowFormStep(RESOURCE_SETUP, next_step=return_sensor_step),
+    "sensor": SchemaFlowFormStep(DATA_SCHEMA_SENSOR),
 }
 OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
-    "init": SchemaFlowFormStep(DATA_SCHEMA_OPT),
+    "init": SchemaFlowFormStep(DATA_SCHEMA_SENSOR_OPT),
 }
 
 
