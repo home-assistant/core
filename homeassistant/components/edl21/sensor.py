@@ -39,13 +39,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "edl21"
 CONF_SERIAL_PORT = "serial_port"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+CONF_MIN_TIME = "min_time_between_updates"
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL_PORT): cv.string,
         vol.Optional(CONF_NAME, default=""): cv.string,
+        vol.Optional(CONF_MIN_TIME, default=60): int,
     },
 )
 
@@ -299,6 +300,7 @@ class EDL21:
         self._hass = hass
         self._async_add_entities = async_add_entities
         self._name = config[CONF_NAME]
+        self._min_time = config[CONF_MIN_TIME]
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
@@ -338,7 +340,12 @@ class EDL21:
 
                     new_entities.append(
                         EDL21Entity(
-                            electricity_id, obis, name, entity_description, telegram
+                            electricity_id,
+                            obis,
+                            name,
+                            self._min_time,
+                            entity_description,
+                            telegram,
                         )
                     )
                     self._registered_obis.add((electricity_id, obis))
@@ -382,14 +389,16 @@ class EDL21Entity(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, electricity_id, obis, name, entity_description, telegram):
+    def __init__(
+        self, electricity_id, obis, name, min_time, entity_description, telegram
+    ):
         """Initialize an EDL21Entity."""
         self._electricity_id = electricity_id
         self._obis = obis
         self._name = name
         self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
-        self._min_time = MIN_TIME_BETWEEN_UPDATES
+        self._min_time = timedelta(min_time)
         self._last_update = utcnow()
         self._state_attrs = {
             "status": "status",
