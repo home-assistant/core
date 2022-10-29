@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_AFTER,
     CONF_BEFORE,
     CONF_NAME,
-    CONF_UNIQUE_ID,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
@@ -48,7 +47,6 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
         vol.Optional(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -91,8 +89,7 @@ async def async_setup_platform(
     before = config[CONF_BEFORE]
     before_offset = config[CONF_BEFORE_OFFSET]
     name = config[CONF_NAME]
-    unique_id = config.get(CONF_UNIQUE_ID)
-    sensor = TodSensor(name, after, after_offset, before, before_offset, unique_id)
+    sensor = TodSensor(name, after, after_offset, before, before_offset, None)
 
     async_add_entities([sensor])
 
