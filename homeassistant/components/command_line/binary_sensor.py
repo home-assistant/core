@@ -25,6 +25,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import (
+    TEMPLATE_ENTITY_BASE_SCHEMA,
+    TemplateEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
@@ -39,14 +43,13 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
         vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -60,6 +63,10 @@ def setup_platform(
     """Set up the Command line Binary Sensor."""
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
+
+    binary_sensor_config = vol.Schema(
+        TEMPLATE_ENTITY_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
+    )(config)
 
     name: str = config[CONF_NAME]
     command: str = config[CONF_COMMAND]
@@ -76,6 +83,8 @@ def setup_platform(
     add_entities(
         [
             CommandBinarySensor(
+                hass,
+                binary_sensor_config,
                 data,
                 name,
                 device_class,
@@ -89,11 +98,13 @@ def setup_platform(
     )
 
 
-class CommandBinarySensor(BinarySensorEntity):
+class CommandBinarySensor(TemplateEntity, BinarySensorEntity):
     """Representation of a command line binary sensor."""
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        config: ConfigType,
         data: CommandSensorData,
         name: str,
         device_class: BinarySensorDeviceClass | None,
@@ -103,14 +114,19 @@ class CommandBinarySensor(BinarySensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the Command line binary sensor."""
+        TemplateEntity.__init__(
+            self,
+            hass,
+            config=config,
+            fallback_name=name,
+            unique_id=unique_id,
+        )
         self.data = data
-        self._attr_name = name
         self._attr_device_class = device_class
         self._attr_is_on = None
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._value_template = value_template
-        self._attr_unique_id = unique_id
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
