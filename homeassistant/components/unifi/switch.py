@@ -7,7 +7,7 @@ Support for controlling deep packet inspection (DPI) restriction groups.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
@@ -18,7 +18,6 @@ from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
 from aiounifi.models.client import Client, ClientBlockRequest
 from aiounifi.models.device import (
-    Device,
     DeviceSetOutletRelayRequest,
     DeviceSetPoePortModeRequest,
 )
@@ -70,9 +69,11 @@ class UnifiEntityLoader(Generic[T, V]):
 
     allowed_fn: Callable[[UniFiController, str], bool]
     available_fn: Callable[[UniFiController, str], bool]
-    entity_cls: type[UnifiBlockClientSwitch] | type[UnifiDPIRestrictionSwitch] | type[
-        UnifiOutletSwitch
-    ] | type[UnifiPoePortSwitch] | type[UnifiDPIRestrictionSwitch]
+    control_fn: Callable[[UniFiController, str, bool], Coroutine[Any, Any, None]]
+    device_info: Callable[[UniFiController, str], DeviceInfo]
+    entity_cls: type[UnifiSwitchEntity] | type[UnifiBlockClientSwitch] | type[
+        UnifiDPIRestrictionSwitch
+    ]
     handler_fn: Callable[[UniFiController], T]
     is_on_fn: Callable[[UniFiController, V], bool]
     name_fn: Callable[[V], str | None]
@@ -84,9 +85,6 @@ class UnifiEntityLoader(Generic[T, V]):
 @dataclass
 class UnifiEntityDescription(SwitchEntityDescription, UnifiEntityLoader[T, V]):
     """Class describing UniFi switch entity."""
-
-    device_subclass: bool = False
-    device_available: Callable[[Device], bool] = lambda device: not device.disabled
 
 
 def calculate_enabled_dpi_apps(
@@ -106,6 +104,88 @@ def sub_device_disabled(controller: UniFiController, obj_id: str) -> bool:
     device_id = obj_id.split("_", 1)[0]
     device = controller.api.devices[device_id]
     return controller.available and not device.disabled
+
+
+def client_registry_entry(controller: UniFiController, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for client."""
+    client = controller.api.clients[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, obj_id)},
+        default_manufacturer=client.oui,
+        default_name=client.name or client.hostname,
+    )
+
+
+def device_registry_entry(controller: UniFiController, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for device."""
+    if "_" in obj_id:  # Sub device
+        obj_id = obj_id.split("_", 1)[0]
+
+    device = controller.api.devices[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, device.mac)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=device.model,
+        name=device.name or None,
+        sw_version=device.version,
+        hw_version=device.board_revision,
+    )
+
+
+def dpi_group_registry_entry(controller: UniFiController, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for DPI group."""
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, f"unifi_controller_{obj_id}")},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi Network",
+        name="UniFi Network",
+    )
+
+
+async def async_control_block_client(
+    controller: UniFiController, obj_id: str, target: bool
+) -> None:
+    """Control network access of client."""
+    await controller.api.request(ClientBlockRequest.create(obj_id, not target))
+
+
+async def async_control_dpi_group(
+    controller: UniFiController, obj_id: str, target: bool
+) -> None:
+    """Enable or disable DPI group."""
+    dpi_group = controller.api.dpi_groups[obj_id]
+    await asyncio.gather(
+        *[
+            controller.api.request(
+                DPIRestrictionAppEnableRequest.create(app_id, target)
+            )
+            for app_id in dpi_group.dpiapp_ids
+        ]
+    )
+
+
+async def async_control_outlet(
+    controller: UniFiController, obj_id: str, target: bool
+) -> None:
+    """Control outlet relay."""
+    mac, index = obj_id.split("_", 1)
+    device = controller.api.devices[mac]
+    await controller.api.request(
+        DeviceSetOutletRelayRequest.create(device, int(index), target)
+    )
+
+
+async def async_control_poe_port(
+    controller: UniFiController, obj_id: str, target: bool
+) -> None:
+    """Control poe state."""
+    mac, index = obj_id.split("_", 1)
+    device = controller.api.devices[mac]
+    state = "auto" if target else "off"
+    await controller.api.request(
+        DeviceSetPoePortModeRequest.create(device, int(index), state)
+    )
 
 
 async def async_setup_entry(
@@ -363,12 +443,21 @@ class UnifiSwitchEntity(SwitchEntity):
         self._removed = False
 
         self._attr_available = description.available_fn(controller, obj_id)
+        self._attr_device_info = description.device_info(controller, obj_id)
         self._attr_unique_id = description.unique_id_fn(obj_id)
 
         self.handler = description.handler_fn(controller)
         obj = description.object_fn(self.handler, obj_id)
         self._attr_is_on = description.is_on_fn(controller, obj)
         self._attr_name = description.name_fn(obj)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on connectivity for client."""
+        await self.entity_description.control_fn(self.controller, self._obj_id, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off connectivity for client."""
+        await self.entity_description.control_fn(self.controller, self._obj_id, False)
 
     async def async_added_to_hass(self) -> None:
         """Register callback to known apps."""
@@ -447,13 +536,6 @@ class UnifiBlockClientSwitch(UnifiSwitchEntity):
         super().__init__(obj_id, controller, description)
         controller.entities[DOMAIN][BLOCK_SWITCH].add(obj_id)
 
-        client = controller.api.clients[obj_id]
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, obj_id)},
-            default_manufacturer=client.oui,
-            default_name=client.name or client.hostname,
-        )
-
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         self.async_on_remove(
@@ -477,16 +559,6 @@ class UnifiBlockClientSwitch(UnifiSwitchEntity):
         self._attr_available = self.controller.available
         self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on connectivity for client."""
-        await self.controller.api.request(
-            ClientBlockRequest.create(self._obj_id, False)
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off connectivity for client."""
-        await self.controller.api.request(ClientBlockRequest.create(self._obj_id, True))
-
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
@@ -507,14 +579,6 @@ class UnifiDPIRestrictionSwitch(UnifiSwitchEntity):
         """Set up dpi switch."""
         super().__init__(obj_id, controller, description)
         controller.entities[DOMAIN][DPI_SWITCH].add(obj_id)
-
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"unifi_controller_{obj_id}")},
-            manufacturer=ATTR_MANUFACTURER,
-            model="UniFi Network",
-            name="UniFi Network",
-        )
 
     async def async_added_to_hass(self) -> None:
         """Register callback to known apps."""
@@ -550,108 +614,6 @@ class UnifiDPIRestrictionSwitch(UnifiSwitchEntity):
             return "mdi:network"
         return "mdi:network-off"
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Restrict access of apps related to DPI group."""
-        dpi_group = self.controller.api.dpi_groups[self._obj_id]
-        return await asyncio.gather(
-            *[
-                self.controller.api.request(
-                    DPIRestrictionAppEnableRequest.create(app_id, True)
-                )
-                for app_id in dpi_group.dpiapp_ids
-            ]
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Remove restriction of apps related to DPI group."""
-        dpi_group = self.controller.api.dpi_groups[self._obj_id]
-        return await asyncio.gather(
-            *[
-                self.controller.api.request(
-                    DPIRestrictionAppEnableRequest.create(app_id, False)
-                )
-                for app_id in dpi_group.dpiapp_ids
-            ]
-        )
-
-
-class UnifiOutletSwitch(UnifiSwitchEntity):
-    """Representation of a outlet relay."""
-
-    def __init__(
-        self,
-        obj_id: str,
-        controller: UniFiController,
-        description: UnifiEntityDescription,
-    ) -> None:
-        """Set up UniFi Network entity base."""
-        super().__init__(obj_id, controller, description)
-        self._device_mac, index = obj_id.split("_", 1)
-        self._index = int(index)
-
-        device = self.controller.api.devices[self._device_mac]
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, device.mac)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=device.model,
-            name=device.name or None,
-            sw_version=device.version,
-            hw_version=device.board_revision,
-        )
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Enable outlet relay."""
-        device = self.controller.api.devices[self._device_mac]
-        await self.controller.api.request(
-            DeviceSetOutletRelayRequest.create(device, self._index, True)
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Disable outlet relay."""
-        device = self.controller.api.devices[self._device_mac]
-        await self.controller.api.request(
-            DeviceSetOutletRelayRequest.create(device, self._index, False)
-        )
-
-
-class UnifiPoePortSwitch(UnifiSwitchEntity):
-    """Representation of a Power-over-Ethernet source port on an UniFi device."""
-
-    def __init__(
-        self,
-        obj_id: str,
-        controller: UniFiController,
-        description: UnifiEntityDescription,
-    ) -> None:
-        """Set up UniFi Network entity base."""
-        super().__init__(obj_id, controller, description)
-        self._device_mac, index = obj_id.split("_", 1)
-        self._index = int(index)
-
-        device = self.controller.api.devices[self._device_mac]
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, device.mac)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=device.model,
-            name=device.name or None,
-            sw_version=device.version,
-            hw_version=device.board_revision,
-        )
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Enable POE for client."""
-        device = self.controller.api.devices[self._device_mac]
-        await self.controller.api.request(
-            DeviceSetPoePortModeRequest.create(device, self._index, "auto")
-        )
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Disable POE for client."""
-        device = self.controller.api.devices[self._device_mac]
-        await self.controller.api.request(
-            DeviceSetPoePortModeRequest.create(device, self._index, "off")
-        )
-
 
 UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
     UnifiEntityDescription[Clients, Client](
@@ -662,7 +624,8 @@ UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
         icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
         available_fn=lambda controller, obj_id: controller.available,
-        device_subclass=False,
+        control_fn=async_control_block_client,
+        device_info=client_registry_entry,
         entity_cls=UnifiBlockClientSwitch,
         is_on_fn=lambda controller, client: not client.blocked,
         name_fn=lambda client: None,
@@ -676,7 +639,8 @@ UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         allowed_fn=lambda controller, obj_id: controller.option_dpi_restrictions,
         available_fn=lambda controller, obj_id: controller.available,
-        device_subclass=False,
+        control_fn=async_control_dpi_group,
+        device_info=dpi_group_registry_entry,
         entity_cls=UnifiDPIRestrictionSwitch,
         is_on_fn=calculate_enabled_dpi_apps,
         name_fn=lambda group: group.name,
@@ -691,8 +655,9 @@ UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
         has_entity_name=True,
         allowed_fn=lambda controller, obj_id: True,
         available_fn=sub_device_disabled,
-        device_subclass=True,
-        entity_cls=UnifiOutletSwitch,
+        control_fn=async_control_outlet,
+        device_info=device_registry_entry,
+        entity_cls=UnifiSwitchEntity,
         is_on_fn=lambda controller, outlet: outlet.relay_state,
         name_fn=lambda outlet: outlet.name,
         object_fn=lambda handler, obj_id: handler[obj_id],
@@ -709,8 +674,9 @@ UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
         icon="mdi:ethernet",
         allowed_fn=lambda controller, obj_id: True,
         available_fn=sub_device_disabled,
-        device_subclass=True,
-        entity_cls=UnifiPoePortSwitch,
+        control_fn=async_control_poe_port,
+        device_info=device_registry_entry,
+        entity_cls=UnifiSwitchEntity,
         is_on_fn=lambda controller, port: port.poe_mode != "off",
         name_fn=lambda port: f"{port.name} PoE",
         object_fn=lambda handler, obj_id: handler[obj_id],
