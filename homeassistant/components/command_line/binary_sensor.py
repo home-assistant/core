@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import (
     TEMPLATE_ENTITY_BASE_SCHEMA,
@@ -43,32 +43,33 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
         vol.Required(CONF_COMMAND): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command line Binary Sensor."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     binary_sensor_config = vol.Schema(
         TEMPLATE_ENTITY_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
     )(config)
 
-    name: str = config[CONF_NAME]
+    name: str = config.get(CONF_NAME, DEFAULT_NAME)
     command: str = config[CONF_COMMAND]
     payload_off: str = config[CONF_PAYLOAD_OFF]
     payload_on: str = config[CONF_PAYLOAD_ON]
@@ -80,7 +81,7 @@ def setup_platform(
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
 
-    add_entities(
+    async_add_entities(
         [
             CommandBinarySensor(
                 hass,
@@ -128,13 +129,15 @@ class CommandBinarySensor(TemplateEntity, BinarySensorEntity):
         self._payload_off = payload_off
         self._value_template = value_template
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data and updates the state."""
-        self.data.update()
+        await self.hass.async_add_executor_job(self.data.update)
         value = self.data.value
 
         if self._value_template is not None:
-            value = self._value_template.render_with_possible_json_value(value, False)
+            value = await self.hass.async_add_executor_job(
+                self._value_template.render_with_possible_json_value, value, False
+            )
         if value == self._payload_on:
             self._attr_is_on = True
         elif value == self._payload_off:
