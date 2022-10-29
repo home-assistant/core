@@ -159,7 +159,7 @@ async def async_setup_entry(
     unique_id: str = entry.entry_id
     select: str | None = config.get(CONF_SELECT)
     attr: str | None = config.get(CONF_ATTRIBUTE)
-    index: int = config[CONF_INDEX]
+    index: int = int(config[CONF_INDEX])
     value_string: str | None = config.get(CONF_VALUE_TEMPLATE)
 
     value_template: Template | None = (

@@ -25,10 +25,6 @@ def return_integration_config(
         config["password"] = password
     if headers:
         config["headers"] = headers
-<<<<<<< HEAD
-=======
-
->>>>>>> 6f2e4e1f4f (Remove print)
     return config
 
 

@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
@@ -98,7 +99,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Scrape from a config entry."""
 
-    rest = create_rest_data_from_config(hass, dict(entry.options))
+    rest_config = {
+        **dict(entry.options),
+        CONF_SCAN_INTERVAL: int(entry.options[CONF_SCAN_INTERVAL]),
+        CONF_TIMEOUT: int(entry.options[CONF_TIMEOUT]),
+    }
+    rest = create_rest_data_from_config(hass, rest_config)
 
     coordinator = ScrapeCoordinator(
         hass,
