@@ -1393,6 +1393,7 @@ async def test_poe_port_switches(hass, aioclient_mock, mock_unifi_websocket):
     device_1["port_table"][0]["poe_mode"] = "off"
     mock_unifi_websocket(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
+    print("sss")
     assert hass.states.get("switch.mock_name_port_1_poe").state == STATE_OFF
 
     # Turn off PoE
