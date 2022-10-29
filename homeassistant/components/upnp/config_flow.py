@@ -169,6 +169,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONFIG_ENTRY_MAC_ADDRESS: mac_address,
                 CONFIG_ENTRY_LOCATION: discovery_info.ssdp_location,
                 CONFIG_ENTRY_HOST: host,
+                CONFIG_ENTRY_ST: discovery_info.ssdp_st,
             },
         )
 
