@@ -169,25 +169,32 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
+    mocker = MockRestData("test_scrape_sensor")
     with patch(
-        "homeassistant.components.scrape.async_setup_entry",
-        return_value=True,
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "Current Version: 2021.12.10"
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_SELECT: ".current-version h3",
-            CONF_INDEX: 0,
-        },
-    )
+    mocker2 = MockRestData("test_scrape_sensor_authentication")
+    with patch("homeassistant.components.rest.RestData", return_value=mocker2):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_SELECT: ".return",
+                CONF_INDEX: 0,
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -197,6 +204,15 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_TIMEOUT: 10.0,
         CONF_SCAN_INTERVAL: 600.0,
         CONF_NAME: "Current version",
-        CONF_SELECT: ".current-version h3",
+        CONF_SELECT: ".return",
         CONF_INDEX: 0.0,
     }
+
+    await hass.async_block_till_done()
+
+    # Check the entity was updated, no new entity was created
+    assert len(hass.states.async_all()) == 1
+
+    # Check the state of the entity has changed as expected
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "secret text"
