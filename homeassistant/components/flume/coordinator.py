@@ -112,7 +112,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
             device_id = notification["device_id"]
             rule = notification["extra"]["event_rule_name"]
             time = parse_datetime(notification["created_datetime"])
-            age = utcnow() - (utcnow() - time)
+            age = - time
             active_notifications_by_device_with_time.setdefault(device_id, {})[
                 rule
             ] = age
