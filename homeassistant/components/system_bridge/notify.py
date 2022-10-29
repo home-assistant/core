@@ -8,10 +8,10 @@ from systembridgeconnector.models.notification import Notification
 
 from homeassistant.components.notify import (
     ATTR_DATA,
+    ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.components.notify.const import ATTR_TITLE
 from homeassistant.const import ATTR_ICON, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
