@@ -1,6 +1,9 @@
 """Support for MQTT JSON lights."""
+from __future__ import annotations
+
 from contextlib import suppress
 import logging
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -29,6 +32,7 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
     valid_supported_color_modes,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BRIGHTNESS,
     CONF_COLOR_TEMP,
@@ -40,11 +44,12 @@ from homeassistant.const import (
     CONF_XY,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps, json_loads
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from .. import subscription
@@ -58,6 +63,7 @@ from ..const import (
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..models import ReceiveMessage
 from ..util import get_mqtt_data, valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
@@ -98,9 +104,9 @@ CONF_MIN_MIREDS = "min_mireds"
 CONF_WHITE_VALUE = "white_value"
 
 
-def valid_color_configuration(config):
+def valid_color_configuration(config: ConfigType) -> ConfigType:
     """Test color_mode is not combined with deprecated config."""
-    deprecated = {CONF_COLOR_TEMP, CONF_HS, CONF_RGB, CONF_XY}
+    deprecated: set[str] = {CONF_COLOR_TEMP, CONF_HS, CONF_RGB, CONF_XY}
     if config[CONF_COLOR_MODE] and any(config.get(key) for key in deprecated):
         raise vol.Invalid(f"color_mode must not be combined with any of {deprecated}")
     return config
@@ -174,8 +180,12 @@ PLATFORM_SCHEMA_MODERN_JSON = vol.All(
 
 
 async def async_setup_entity_json(
-    hass, config: ConfigType, async_add_entities, config_entry, discovery_data
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None,
+) -> None:
     """Set up a MQTT JSON Light."""
     async_add_entities([MqttLightJson(hass, config, config_entry, discovery_data)])
 
@@ -186,21 +196,29 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
-    def __init__(self, hass, config, config_entry, discovery_data):
-        """Initialize MQTT JSON light."""
-        self._topic = None
-        self._optimistic = False
-        self._fixed_color_mode = None
-        self._flash_times = None
+    _flash_times: dict[str, Any]
+    _supported_features: LightEntityFeature | int
+    _topic: dict[str, Any]
+    _optimistic: bool
+    _supported_color_modes: set[ColorMode]
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
+        """Initialize MQTT JSON light."""
+        self._fixed_color_mode: ColorMode | None = None
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_JSON
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
         self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
@@ -209,7 +227,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._topic = {
             key: config.get(key) for key in (CONF_STATE_TOPIC, CONF_COMMAND_TOPIC)
         }
-        optimistic = config[CONF_OPTIMISTIC]
+        optimistic: bool = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
 
         self._flash_times = {
@@ -224,7 +242,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             config[CONF_EFFECT] and LightEntityFeature.EFFECT
         )
         if not self._config[CONF_COLOR_MODE]:
-            color_modes = {ColorMode.ONOFF}
+            color_modes: set[ColorMode] = {ColorMode.ONOFF}
             if config[CONF_BRIGHTNESS]:
                 color_modes.add(ColorMode.BRIGHTNESS)
             if config[CONF_COLOR_TEMP]:
@@ -239,7 +257,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             if len(self.supported_color_modes) == 1:
                 self._attr_color_mode = next(iter(self.supported_color_modes))
 
-    def _update_color(self, values):
+    def _update_color(self, values: dict[str, Any]) -> None:
         if not self._config[CONF_COLOR_MODE]:
             # Deprecated color handling
             try:
@@ -279,7 +297,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 )
                 return
         else:
-            color_mode = values["color_mode"]
+            color_mode: str = values["color_mode"]
             if not self._supports_color_mode(color_mode):
                 _LOGGER.warning(
                     "Invalid color mode received for entity %s", self.entity_id
@@ -328,14 +346,16 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     self.entity_id,
                 )
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_received(msg):
+        def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            values = json_loads(msg.payload)
+            payload: Any = json_loads(msg.payload)
+            assert isinstance(payload, dict)
+            values: dict[str, Any] = payload
 
             if values["state"] == "ON":
                 self._attr_is_on = True
@@ -411,7 +431,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 },
             )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
@@ -440,12 +460,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_xy_color = last_attributes.get(ATTR_XY_COLOR, self.xy_color)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode | str | None:
         """Return current color mode."""
         if self._config[CONF_COLOR_MODE]:
             return self._attr_color_mode
@@ -457,41 +477,52 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             return ColorMode.HS
         return ColorMode.COLOR_TEMP
 
-    def _set_flash_and_transition(self, message, **kwargs):
+    def _set_flash_and_transition(self, message: dict[str, Any], **kwargs: Any) -> None:
         if ATTR_TRANSITION in kwargs:
             message["transition"] = kwargs[ATTR_TRANSITION]
 
         if ATTR_FLASH in kwargs:
-            flash = kwargs.get(ATTR_FLASH)
+            flash: Any = kwargs.get(ATTR_FLASH)
 
             if flash == FLASH_LONG:
                 message["flash"] = self._flash_times[CONF_FLASH_TIME_LONG]
             elif flash == FLASH_SHORT:
                 message["flash"] = self._flash_times[CONF_FLASH_TIME_SHORT]
 
-    def _scale_rgbxx(self, rgbxx, kwargs):
+    def _scale_rgbxx(
+        self,
+        rgbxx: tuple[int, ...],
+        kwargs: dict[str, Any],
+    ) -> tuple[int, ...]:
         # If there's a brightness topic set, we don't want to scale the
         # RGBxx values given using the brightness.
         if self._config[CONF_BRIGHTNESS]:
             brightness = 255
         else:
             brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        return tuple(round(i / 255 * brightness) for i in rgbxx)
+        scaled_rgb: tuple[int, ...] = tuple(round(i / 255 * brightness) for i in rgbxx)
+        return scaled_rgb
 
-    def _supports_color_mode(self, color_mode):
+    def _supports_color_mode(self, color_mode: ColorMode | str) -> bool:
         """Return True if the light natively supports a color mode."""
+        assert self.supported_color_modes
         return (
             self._config[CONF_COLOR_MODE] and color_mode in self.supported_color_modes
         )
 
-    async def async_turn_on(self, **kwargs):  # noqa: C901
+    async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901
         """Turn the device on.
 
         This method is a coroutine.
         """
-        should_update = False
-
-        message = {"state": "ON"}
+        brightness: int
+        should_update: bool = False
+        hs_color: tuple[float, float]
+        message: dict[str, Any] = {"state": "ON"}
+        rgb: tuple[int, int, int]
+        rgbw: tuple[int, int, int, int]
+        rgbcw: tuple[int, int, int, int, int]
+        xy_color: tuple[float, float]
 
         if ATTR_HS_COLOR in kwargs and (
             self._config[CONF_HS] or self._config[CONF_RGB] or self._config[CONF_XY]
@@ -534,7 +565,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 should_update = True
 
         if ATTR_RGB_COLOR in kwargs and self._supports_color_mode(ColorMode.RGB):
-            rgb = self._scale_rgbxx(kwargs[ATTR_RGB_COLOR], kwargs)
+            rgb = cast(
+                tuple[int, int, int], self._scale_rgbxx(kwargs[ATTR_RGB_COLOR], kwargs)
+            )
             message["color"] = {"r": rgb[0], "g": rgb[1], "b": rgb[2]}
             if self._optimistic:
                 self._attr_color_mode = ColorMode.RGB
@@ -542,33 +575,39 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 should_update = True
 
         if ATTR_RGBW_COLOR in kwargs and self._supports_color_mode(ColorMode.RGBW):
-            rgb = self._scale_rgbxx(kwargs[ATTR_RGBW_COLOR], kwargs)
-            message["color"] = {"r": rgb[0], "g": rgb[1], "b": rgb[2], "w": rgb[3]}
+            rgbw = cast(
+                tuple[int, int, int, int],
+                self._scale_rgbxx(kwargs[ATTR_RGBW_COLOR], kwargs),
+            )
+            message["color"] = {"r": rgbw[0], "g": rgbw[1], "b": rgbw[2], "w": rgbw[3]}
             if self._optimistic:
                 self._attr_color_mode = ColorMode.RGBW
-                self._attr_rgbw_color = rgb
+                self._attr_rgbw_color = rgbw
                 should_update = True
 
         if ATTR_RGBWW_COLOR in kwargs and self._supports_color_mode(ColorMode.RGBWW):
-            rgb = self._scale_rgbxx(kwargs[ATTR_RGBWW_COLOR], kwargs)
+            rgbcw = cast(
+                tuple[int, int, int, int, int],
+                self._scale_rgbxx(kwargs[ATTR_RGBWW_COLOR], kwargs),
+            )
             message["color"] = {
-                "r": rgb[0],
-                "g": rgb[1],
-                "b": rgb[2],
-                "c": rgb[3],
-                "w": rgb[4],
+                "r": rgbcw[0],
+                "g": rgbcw[1],
+                "b": rgbcw[2],
+                "c": rgbcw[3],
+                "w": rgbcw[4],
             }
             if self._optimistic:
                 self._attr_color_mode = ColorMode.RGBWW
-                self._attr_rgbww_color = rgb
+                self._attr_rgbww_color = rgbcw
                 should_update = True
 
         if ATTR_XY_COLOR in kwargs and self._supports_color_mode(ColorMode.XY):
-            xy = kwargs[ATTR_XY_COLOR]  # pylint: disable=invalid-name
-            message["color"] = {"x": xy[0], "y": xy[1]}
+            xy_color = kwargs[ATTR_XY_COLOR]
+            message["color"] = {"x": xy_color[0], "y": xy_color[1]}
             if self._optimistic:
                 self._attr_color_mode = ColorMode.XY
-                self._attr_xy_color = xy
+                self._attr_xy_color = xy_color
                 should_update = True
 
         self._set_flash_and_transition(message, **kwargs)
@@ -632,12 +671,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         if should_update:
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 
         This method is a coroutine.
         """
-        message = {"state": "OFF"}
+        message: dict[str, Any] = {"state": "OFF"}
 
         self._set_flash_and_transition(message, **kwargs)
 
