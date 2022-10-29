@@ -1,4 +1,16 @@
 {
+    "issues": {
+        "bad_psu": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "De voeding moet worden vervangen"
+                    }
+                }
+            },
+            "title": "De voeding is niet stabiel"
+        }
+    },
     "options": {
         "step": {
             "init": {

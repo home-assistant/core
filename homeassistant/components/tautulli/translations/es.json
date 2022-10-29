@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
@@ -15,7 +16,7 @@
                     "api_key": "Clave API"
                 },
                 "description": "Para encontrar tu clave API, abre la p\u00e1gina web de Tautulli y navega a Configuraci\u00f3n y luego a Interfaz web. La clave API estar\u00e1 en la parte inferior de esa p\u00e1gina.",
-                "title": "Re-autenticaci\u00f3n de Tautulli"
+                "title": "Volver a autenticar Tautulli"
             },
             "user": {
                 "data": {

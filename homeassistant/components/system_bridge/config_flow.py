@@ -7,12 +7,13 @@ import logging
 from typing import Any
 
 import async_timeout
-from systembridgeconnector.const import EVENT_MODULE, EVENT_TYPE, TYPE_DATA_UPDATE
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgeconnector.models.get_data import GetData
+from systembridgeconnector.models.system import System
 from systembridgeconnector.websocket_client import WebSocketClient
 import voluptuous as vol
 
@@ -38,7 +39,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(
+async def _validate_input(
     hass: HomeAssistant,
     data: dict[str, Any],
 ) -> dict[str, str]:
@@ -56,15 +57,12 @@ async def validate_input(
     try:
         async with async_timeout.timeout(30):
             await websocket_client.connect(session=async_get_clientsession(hass))
-            await websocket_client.get_data(["system"])
-            while True:
-                message = await websocket_client.receive_message()
-                _LOGGER.debug("Message: %s", message)
-                if (
-                    message[EVENT_TYPE] == TYPE_DATA_UPDATE
-                    and message[EVENT_MODULE] == "system"
-                ):
-                    break
+            hass.async_create_task(websocket_client.listen())
+            response = await websocket_client.get_data(GetData(modules=["system"]))
+            _LOGGER.debug("Got response: %s", response.json())
+            if response.data is None or not isinstance(response.data, System):
+                raise CannotConnect("No data received")
+            system: System = response.data
     except AuthenticationException as exception:
         _LOGGER.warning(
             "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
@@ -81,14 +79,12 @@ async def validate_input(
     except asyncio.TimeoutError as exception:
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
+    except ValueError as exception:
+        raise CannotConnect from exception
 
-    _LOGGER.debug("%s Message: %s", TYPE_DATA_UPDATE, message)
+    _LOGGER.debug("Got System data: %s", system.json())
 
-    if "uuid" not in message["data"]:
-        error = "No UUID in result!"
-        raise CannotConnect(error)
-
-    return {"hostname": host, "uuid": message["data"]["uuid"]}
+    return {"hostname": host, "uuid": system.uuid}
 
 
 async def _async_get_info(
@@ -98,7 +94,7 @@ async def _async_get_info(
     errors = {}
 
     try:
-        info = await validate_input(hass, user_input)
+        info = await _validate_input(hass, user_input)
     except CannotConnect:
         errors["base"] = "cannot_connect"
     except InvalidAuth:

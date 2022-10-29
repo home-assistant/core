@@ -3,11 +3,17 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
+from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
 
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_last_service_info,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,7 +31,10 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    SOUND_PRESSURE_DB,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
@@ -36,6 +45,8 @@ from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity, HomeKitEntity
 from .utils import folded_name
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -299,6 +310,12 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         format=thread_status_to_str,
     ),
+    CharacteristicsTypes.VENDOR_NETATMO_NOISE: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.VENDOR_NETATMO_NOISE,
+        name="Noise",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SOUND_PRESSURE_DB,
+    ),
 }
 
 
@@ -410,6 +427,7 @@ class HomeKitBatterySensor(HomeKitSensor):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
@@ -517,6 +535,55 @@ ENTITY_TYPES = {
     ServicesTypes.BATTERY_SERVICE: HomeKitBatterySensor,
 }
 
+# Only create the entity if it has the required characteristic
+REQUIRED_CHAR_BY_TYPE = {
+    ServicesTypes.BATTERY_SERVICE: CharacteristicsTypes.BATTERY_LEVEL,
+}
+
+
+class RSSISensor(HomeKitEntity, SensorEntity):
+    """HomeKit Controller RSSI sensor."""
+
+    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+    _attr_has_entity_name = True
+    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    _attr_should_poll = False
+
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity cares about."""
+        return []
+
+    @property
+    def available(self) -> bool:
+        """Return if the bluetooth device is available."""
+        address = self._accessory.pairing_data["AccessoryAddress"]
+        return async_ble_device_from_address(self.hass, address) is not None
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return "Signal strength"
+
+    @property
+    def old_unique_id(self) -> str:
+        """Return the old ID of this device."""
+        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        return f"homekit-{serial}-rssi"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        return f"{self._accessory.unique_id}_rssi"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the current rssi value."""
+        address = self._accessory.pairing_data["AccessoryAddress"]
+        last_service_info = async_last_service_info(self.hass, address)
+        return last_service_info.rssi if last_service_info else None
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -525,14 +592,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up Homekit sensors."""
     hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
+    conn: HKDevice = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service: Service) -> bool:
         if not (entity_class := ENTITY_TYPES.get(service.type)):
             return False
+        if (
+            required_char := REQUIRED_CHAR_BY_TYPE.get(service.type)
+        ) and not service.has(required_char):
+            return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
-        async_add_entities([entity_class(conn, info)], True)
+        entity: HomeKitSensor = entity_class(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.SENSOR
+        )
+        async_add_entities([entity])
         return True
 
     conn.add_listener(async_add_service)
@@ -544,8 +619,30 @@ async def async_setup_entry(
         if description.probe and not description.probe(char):
             return False
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
-        async_add_entities([SimpleSensor(conn, info, char, description)], True)
+        entity = SimpleSensor(conn, info, char, description)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.SENSOR
+        )
+        async_add_entities([entity])
 
         return True
 
     conn.add_char_factory(async_add_characteristic)
+
+    @callback
+    def async_add_accessory(accessory: Accessory) -> bool:
+        if conn.pairing.transport != Transport.BLE:
+            return False
+
+        accessory_info = accessory.services.first(
+            service_type=ServicesTypes.ACCESSORY_INFORMATION
+        )
+        info = {"aid": accessory.aid, "iid": accessory_info.iid}
+        entity = RSSISensor(conn, info)
+        conn.async_migrate_unique_id(
+            entity.old_unique_id, entity.unique_id, Platform.SENSOR
+        )
+        async_add_entities([entity])
+        return True
+
+    conn.add_accessory_factory(async_add_accessory)

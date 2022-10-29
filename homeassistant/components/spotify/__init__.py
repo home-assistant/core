@@ -9,7 +9,6 @@ import aiohttp
 import requests
 from spotipy import Spotify, SpotifyException
 
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -19,6 +18,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 

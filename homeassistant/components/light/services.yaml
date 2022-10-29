@@ -531,14 +531,6 @@ toggle:
           max: 6500
           step: 100
           unit_of_measurement: K
-    white_value:
-      name: White level
-      description: Number indicating level of white.
-      advanced: true
-      selector:
-        number:
-          min: 0
-          max: 255
     brightness:
       name: Brightness value
       description: Number indicating brightness, where 0 turns the light

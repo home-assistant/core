@@ -16,7 +16,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import CONF_ZONE_RUN_TIME, DEFAULT_PORT, DEFAULT_ZONE_RUN, DOMAIN
+from .const import (
+    CONF_DEFAULT_ZONE_RUN_TIME,
+    CONF_USE_APP_RUN_TIMES,
+    DEFAULT_PORT,
+    DEFAULT_ZONE_RUN,
+    DOMAIN,
+)
 
 
 @callback
@@ -132,14 +138,14 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # access token without using the IP address and password, so we have to
                 # store it:
                 return self.async_create_entry(
-                    title=str(controller.name),
+                    title=controller.name.capitalize(),
                     data={
                         CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_SSL: user_input.get(CONF_SSL, True),
-                        CONF_ZONE_RUN_TIME: user_input.get(
-                            CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
+                        CONF_DEFAULT_ZONE_RUN_TIME: user_input.get(
+                            CONF_DEFAULT_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
                         ),
                     },
                 )
@@ -173,9 +179,15 @@ class RainMachineOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_ZONE_RUN_TIME,
-                        default=self.config_entry.options.get(CONF_ZONE_RUN_TIME),
-                    ): cv.positive_int
+                        CONF_DEFAULT_ZONE_RUN_TIME,
+                        default=self.config_entry.options.get(
+                            CONF_DEFAULT_ZONE_RUN_TIME
+                        ),
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_USE_APP_RUN_TIMES,
+                        default=self.config_entry.options.get(CONF_USE_APP_RUN_TIMES),
+                    ): bool,
                 }
             ),
         )

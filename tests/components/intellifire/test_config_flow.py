@@ -11,8 +11,9 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import mock_api_connection_error
+
 from tests.common import MockConfigEntry
-from tests.components.intellifire.conftest import mock_api_connection_error
 
 
 @patch.multiple(

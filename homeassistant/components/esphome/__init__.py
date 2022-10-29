@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
 import functools
 import logging
 import math
@@ -47,67 +46,18 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
+
+from .bluetooth import async_connect_scanner
+from .domain_data import DOMAIN, DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
-DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
-_DomainDataSelfT = TypeVar("_DomainDataSelfT", bound="DomainData")
-
-STORAGE_VERSION = 1
-
-
-@dataclass
-class DomainData:
-    """Define a class that stores global esphome data in hass.data[DOMAIN]."""
-
-    _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
-    _stores: dict[str, Store] = field(default_factory=dict)
-
-    def get_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
-        """Return the runtime entry data associated with this config entry.
-
-        Raises KeyError if the entry isn't loaded yet.
-        """
-        return self._entry_datas[entry.entry_id]
-
-    def set_entry_data(self, entry: ConfigEntry, entry_data: RuntimeEntryData) -> None:
-        """Set the runtime entry data associated with this config entry."""
-        if entry.entry_id in self._entry_datas:
-            raise ValueError("Entry data for this entry is already set")
-        self._entry_datas[entry.entry_id] = entry_data
-
-    def pop_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
-        """Pop the runtime entry data instance associated with this config entry."""
-        return self._entry_datas.pop(entry.entry_id)
-
-    def is_entry_loaded(self, entry: ConfigEntry) -> bool:
-        """Check whether the given entry is loaded."""
-        return entry.entry_id in self._entry_datas
-
-    def get_or_create_store(self, hass: HomeAssistant, entry: ConfigEntry) -> Store:
-        """Get or create a Store instance for the given config entry."""
-        return self._stores.setdefault(
-            entry.entry_id,
-            Store(
-                hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
-            ),
-        )
-
-    @classmethod
-    def get(cls: type[_DomainDataSelfT], hass: HomeAssistant) -> _DomainDataSelfT:
-        """Get the global DomainData instance stored in hass.data."""
-        # Don't use setdefault - this is a hot code path
-        if DOMAIN in hass.data:
-            return cast(_DomainDataSelfT, hass.data[DOMAIN])
-        ret = hass.data[DOMAIN] = cls()
-        return ret
+_R = TypeVar("_R")
 
 
 async def async_setup_entry(  # noqa: C901
@@ -286,6 +236,10 @@ async def async_setup_entry(  # noqa: C901
             await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
+            if entry_data.device_info.bluetooth_proxy_version:
+                entry_data.disconnect_callbacks.append(
+                    await async_connect_scanner(hass, entry, cli, entry_data)
+                )
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
@@ -328,6 +282,10 @@ async def async_setup_entry(  # noqa: C901
     if entry_data.device_info is not None and entry_data.device_info.name:
         cli.expected_name = entry_data.device_info.name
         reconnect_logic.name = entry_data.device_info.name
+        if entry.unique_id is None:
+            hass.config_entries.async_update_entry(
+                entry, unique_id=entry_data.device_info.name
+            )
 
     await reconnect_logic.start()
     entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
@@ -349,6 +307,8 @@ def _async_setup_device_registry(
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
 
     manufacturer = "espressif"
+    if device_info.manufacturer:
+        manufacturer = device_info.manufacturer
     model = device_info.model
     hw_version = None
     if device_info.project_name:
@@ -510,6 +470,7 @@ async def _cleanup_instance(
     """Cleanup the esphome client if it exists."""
     domain_data = DomainData.get(hass)
     data = domain_data.pop_entry_data(entry)
+    data.available = False
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
     data.disconnect_callbacks = []
@@ -595,20 +556,18 @@ async def platform_async_setup_entry(
     )
 
 
-_PropT = TypeVar("_PropT", bound=Callable[..., Any])
-
-
-def esphome_state_property(func: _PropT) -> _PropT:
+def esphome_state_property(
+    func: Callable[[_EntityT], _R]
+) -> Callable[[_EntityT], _R | None]:
     """Wrap a state property of an esphome entity.
 
     This checks if the state object in the entity is set, and
     prevents writing NAN values to the Home Assistant state machine.
     """
 
-    @property  # type: ignore[misc]
     @functools.wraps(func)
-    def _wrapper(self):  # type: ignore[no-untyped-def]
-        # pylint: disable=protected-access
+    def _wrapper(self: _EntityT) -> _R | None:
+        # pylint: disable-next=protected-access
         if not self._has_state:
             return None
         val = func(self)
@@ -618,7 +577,7 @@ def esphome_state_property(func: _PropT) -> _PropT:
             return None
         return val
 
-    return cast(_PropT, _wrapper)
+    return _wrapper
 
 
 _EnumT = TypeVar("_EnumT", bound=APIIntEnum)
@@ -670,6 +629,8 @@ ENTITY_CATEGORIES: EsphomeEnumMapper[
 
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -799,11 +760,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             return None
 
         return cast(str, ICON_SCHEMA(self._static_info.icon))
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling."""
-        return False
 
     @property
     def entity_registry_enabled_default(self) -> bool:

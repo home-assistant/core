@@ -3,9 +3,9 @@
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en curso",
-            "no_h264": "No hab\u00eda transmisiones H264 disponibles. Verifica la configuraci\u00f3n del perfil en tu dispositivo.",
+            "no_h264": "No hab\u00eda transmisiones H264 disponibles. Comprueba la configuraci\u00f3n del perfil en tu dispositivo.",
             "no_mac": "No se pudo configurar un ID \u00fanico para el dispositivo ONVIF.",
-            "onvif_error": "Error al configurar el dispositivo ONVIF. Consulta los registros para obtener m\u00e1s informaci\u00f3n."
+            "onvif_error": "Error al configurar el dispositivo ONVIF. Revisa los registros para obtener m\u00e1s informaci\u00f3n."
         },
         "error": {
             "cannot_connect": "No se pudo conectar"
@@ -38,7 +38,7 @@
                 "data": {
                     "auto": "Buscar autom\u00e1ticamente"
                 },
-                "description": "Al hacer clic en enviar, buscaremos en tu red dispositivos ONVIF compatibles con el perfil S. \n\nAlgunos fabricantes han comenzado a deshabilitar ONVIF por defecto. Aseg\u00farate de que ONVIF est\u00e9 habilitado en la configuraci\u00f3n de tu c\u00e1mara.",
+                "description": "Al hacer clic en enviar, buscaremos en tu red dispositivos ONVIF compatibles con el perfil S. \n\nAlgunos fabricantes han comenzado a deshabilitar ONVIF por defecto. Por favor, aseg\u00farate de que ONVIF est\u00e9 habilitado en la configuraci\u00f3n de tu c\u00e1mara.",
                 "title": "Configuraci\u00f3n del dispositivo ONVIF"
             }
         }

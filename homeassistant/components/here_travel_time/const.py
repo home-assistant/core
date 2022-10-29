@@ -1,17 +1,13 @@
 """Constants for the HERE Travel Time integration."""
-from homeassistant.const import (
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-)
-
 DOMAIN = "here_travel_time"
 DEFAULT_SCAN_INTERVAL = 300
 
 
+CONF_DESTINATION = "destination"
 CONF_DESTINATION_LATITUDE = "destination_latitude"
 CONF_DESTINATION_LONGITUDE = "destination_longitude"
 CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
+CONF_ORIGIN = "origin"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
@@ -63,15 +59,16 @@ ICONS = {
     TRAVEL_MODE_TRUCK: ICON_TRUCK,
 }
 
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
+IMPERIAL_UNITS = "imperial"
+METRIC_UNITS = "metric"
+UNITS = [METRIC_UNITS, IMPERIAL_UNITS]
 
 ATTR_DURATION = "duration"
 ATTR_DISTANCE = "distance"
-ATTR_ROUTE = "route"
 ATTR_ORIGIN = "origin"
 ATTR_DESTINATION = "destination"
 
-ATTR_UNIT_SYSTEM = CONF_UNIT_SYSTEM
+ATTR_UNIT_SYSTEM = "unit_system"
 ATTR_TRAFFIC_MODE = CONF_TRAFFIC_MODE
 
 ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"

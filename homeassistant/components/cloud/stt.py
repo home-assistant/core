@@ -5,13 +5,15 @@ from aiohttp import StreamReader
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import VoiceError
 
-from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
-from homeassistant.components.stt.const import (
+from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
+    Provider,
+    SpeechMetadata,
+    SpeechResult,
     SpeechResultState,
 )
 

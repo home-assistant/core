@@ -1,12 +1,13 @@
 """The tests for notify services that change targets."""
 
+import asyncio
 from unittest.mock import Mock, patch
 
 import yaml
 
 from homeassistant import config as hass_config
 from homeassistant.components import notify
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -330,3 +331,99 @@ async def test_setup_platform_and_reload(hass, caplog, tmp_path):
     # Check if the dynamically notify services from setup were removed
     assert not hass.services.has_service(notify.DOMAIN, "testnotify2_c")
     assert not hass.services.has_service(notify.DOMAIN, "testnotify2_d")
+
+
+async def test_setup_platform_before_notify_setup(hass, caplog, tmp_path):
+    """Test trying to setup a platform before notify is setup."""
+    get_service_called = Mock()
+
+    async def async_get_service(hass, config, discovery_info=None):
+        """Get notify service for mocked platform."""
+        get_service_called(config, discovery_info)
+        targetlist = {"a": 1, "b": 2}
+        return NotificationService(hass, targetlist, "testnotify")
+
+    async def async_get_service2(hass, config, discovery_info=None):
+        """Get notify service for mocked platform."""
+        get_service_called(config, discovery_info)
+        targetlist = {"c": 3, "d": 4}
+        return NotificationService(hass, targetlist, "testnotify2")
+
+    # Mock first platform
+    mock_notify_platform(
+        hass, tmp_path, "testnotify", async_get_service=async_get_service
+    )
+
+    # Initialize a second platform testnotify2
+    mock_notify_platform(
+        hass, tmp_path, "testnotify2", async_get_service=async_get_service2
+    )
+
+    hass_config = {"notify": [{"platform": "testnotify"}]}
+
+    # Setup the second testnotify2 platform from discovery
+    load_coro = async_load_platform(
+        hass, Platform.NOTIFY, "testnotify2", {}, hass_config=hass_config
+    )
+
+    # Setup the testnotify platform
+    setup_coro = async_setup_component(hass, "notify", hass_config)
+
+    load_task = asyncio.create_task(load_coro)
+    setup_task = asyncio.create_task(setup_coro)
+
+    await asyncio.gather(load_task, setup_task)
+
+    await hass.async_block_till_done()
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_c")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_d")
+
+
+async def test_setup_platform_after_notify_setup(hass, caplog, tmp_path):
+    """Test trying to setup a platform after notify is setup."""
+    get_service_called = Mock()
+
+    async def async_get_service(hass, config, discovery_info=None):
+        """Get notify service for mocked platform."""
+        get_service_called(config, discovery_info)
+        targetlist = {"a": 1, "b": 2}
+        return NotificationService(hass, targetlist, "testnotify")
+
+    async def async_get_service2(hass, config, discovery_info=None):
+        """Get notify service for mocked platform."""
+        get_service_called(config, discovery_info)
+        targetlist = {"c": 3, "d": 4}
+        return NotificationService(hass, targetlist, "testnotify2")
+
+    # Mock first platform
+    mock_notify_platform(
+        hass, tmp_path, "testnotify", async_get_service=async_get_service
+    )
+
+    # Initialize a second platform testnotify2
+    mock_notify_platform(
+        hass, tmp_path, "testnotify2", async_get_service=async_get_service2
+    )
+
+    hass_config = {"notify": [{"platform": "testnotify"}]}
+
+    # Setup the second testnotify2 platform from discovery
+    load_coro = async_load_platform(
+        hass, Platform.NOTIFY, "testnotify2", {}, hass_config=hass_config
+    )
+
+    # Setup the testnotify platform
+    setup_coro = async_setup_component(hass, "notify", hass_config)
+
+    setup_task = asyncio.create_task(setup_coro)
+    load_task = asyncio.create_task(load_coro)
+
+    await asyncio.gather(load_task, setup_task)
+
+    await hass.async_block_till_done()
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_c")
+    assert hass.services.has_service(notify.DOMAIN, "testnotify2_d")

@@ -9,6 +9,9 @@
                     "host": "Sunucu",
                     "name": "Ad"
                 },
+                "data_description": {
+                    "host": "P1 Monitor kurulumunuzun IP adresi veya ana bilgisayar ad\u0131."
+                },
                 "description": "Home Assistant ile entegre etmek i\u00e7in P1 Monitor'\u00fc kurun."
             }
         }

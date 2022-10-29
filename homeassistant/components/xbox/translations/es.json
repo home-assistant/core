@@ -16,7 +16,7 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "La configuraci\u00f3n de Xbox en configuration.yaml se eliminar\u00e1 en Home Assistant 2022.9. \n\nTus credenciales OAuth de aplicaci\u00f3n existentes y la configuraci\u00f3n de acceso se han importado a la IU autom\u00e1ticamente. Elimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "description": "Se va a eliminar la configuraci\u00f3n de Xbox en configuration.yaml en Home Assistant 2022.9. \n\nTus credenciales OAuth de aplicaci\u00f3n existentes y la configuraci\u00f3n de acceso se han importado a la IU autom\u00e1ticamente. Elimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
             "title": "Se va a eliminar la configuraci\u00f3n YAML de Xbox"
         }
     }

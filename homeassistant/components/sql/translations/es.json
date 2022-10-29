@@ -19,7 +19,7 @@
                 },
                 "data_description": {
                     "column": "Columna de respuesta de la consulta para presentar como estado",
-                    "db_url": "URL de la base de datos, d\u00e9jalo en blanco para utilizar la predeterminada de HA",
+                    "db_url": "URL de la base de datos, d\u00e9jalo en blanco para usar la predeterminada de HA",
                     "name": "Nombre que se usar\u00e1 para la entrada de configuraci\u00f3n y tambi\u00e9n para el sensor",
                     "query": "Consulta a ejecutar, debe empezar por 'SELECT'",
                     "unit_of_measurement": "Unidad de medida (opcional)",
@@ -45,7 +45,7 @@
                 },
                 "data_description": {
                     "column": "Columna de respuesta de la consulta para presentar como estado",
-                    "db_url": "URL de la base de datos, d\u00e9jalo en blanco para utilizar la predeterminada de HA",
+                    "db_url": "URL de la base de datos, d\u00e9jalo en blanco para usar la predeterminada de HA",
                     "name": "Nombre que se usar\u00e1 para la entrada de configuraci\u00f3n y tambi\u00e9n para el sensor",
                     "query": "Consulta a ejecutar, debe empezar por 'SELECT'",
                     "unit_of_measurement": "Unidad de medida (opcional)",

@@ -62,7 +62,11 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
 
     resp = await client.post(
         f"/auth/login_flow/{step['flow_id']}",
-        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
     )
 
     assert resp.status == HTTPStatus.OK
@@ -126,7 +130,11 @@ async def test_auth_code_checks_local_only_user(hass, aiohttp_client):
 
     resp = await client.post(
         f"/auth/login_flow/{step['flow_id']}",
-        json={"client_id": CLIENT_ID, "username": "test-user", "password": "test-pass"},
+        json={
+            "client_id": CLIENT_ID,
+            "username": "test-user",
+            "password": "test-pass",
+        },
     )
 
     assert resp.status == HTTPStatus.OK
@@ -358,7 +366,10 @@ async def test_refresh_token_provider_rejected(
     assert result["error_description"] == "Invalid access"
 
 
-async def test_revoking_refresh_token(hass, aiohttp_client):
+@pytest.mark.parametrize(
+    "url,base_data", [("/auth/token", {"action": "revoke"}), ("/auth/revoke", {})]
+)
+async def test_revoking_refresh_token(url, base_data, hass, aiohttp_client):
     """Test that we can revoke refresh tokens."""
     client = await async_setup_auth(hass, aiohttp_client)
     refresh_token = await async_setup_user_refresh_token(hass)
@@ -380,9 +391,7 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
     )
 
     # Revoke refresh token
-    resp = await client.post(
-        "/auth/token", data={"token": refresh_token.token, "action": "revoke"}
-    )
+    resp = await client.post(url, data={**base_data, "token": refresh_token.token})
     assert resp.status == HTTPStatus.OK
 
     # Old access token should be no longer valid

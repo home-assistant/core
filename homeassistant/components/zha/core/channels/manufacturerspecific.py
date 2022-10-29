@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from zigpy import types
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 
@@ -61,7 +62,7 @@ class PhillipsRemote(ZigbeeChannel):
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFCC0)
 class OppleRemote(ZigbeeChannel):
-    """Opple button channel."""
+    """Opple channel."""
 
     REPORT_CONFIG = ()
 
@@ -80,6 +81,10 @@ class OppleRemote(ZigbeeChannel):
                 "monitoring_mode": True,
                 "motion_sensitivity": True,
                 "approach_distance": True,
+            }
+        elif self.cluster.endpoint.model in ("lumi.plug.mmeu01", "lumi.plug.maeu01"):
+            self.ZCL_INIT_ATTRS = {
+                "power_outage_memory": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
@@ -126,12 +131,105 @@ class SmartThingsAcceleration(ZigbeeChannel):
         )
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(0xFC31)
 @registries.CLIENT_CHANNELS_REGISTRY.register(0xFC31)
-class InovelliCluster(ClientChannel):
-    """Inovelli Button Press Event channel."""
+class InovelliNotificationChannel(ClientChannel):
+    """Inovelli Notification channel."""
+
+    @callback
+    def attribute_updated(self, attrid, value):
+        """Handle an attribute updated on this cluster."""
+
+    @callback
+    def cluster_command(self, tsn, command_id, args):
+        """Handle a cluster command received on this cluster."""
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFC31)
+class InovelliConfigEntityChannel(ZigbeeChannel):
+    """Inovelli Configuration Entity channel."""
+
+    class LEDEffectType(types.enum8):
+        """Effect type for Inovelli Blue Series switch."""
+
+        Off = 0x00
+        Solid = 0x01
+        Fast_Blink = 0x02
+        Slow_Blink = 0x03
+        Pulse = 0x04
+        Chase = 0x05
+        Open_Close = 0x06
+        Small_To_Big = 0x07
+        Clear = 0xFF
 
     REPORT_CONFIG = ()
+    ZCL_INIT_ATTRS = {
+        "dimming_speed_up_remote": False,
+        "dimming_speed_up_local": False,
+        "ramp_rate_off_to_on_local": False,
+        "ramp_rate_off_to_on_remote": False,
+        "dimming_speed_down_remote": False,
+        "dimming_speed_down_local": False,
+        "ramp_rate_on_to_off_local": False,
+        "ramp_rate_on_to_off_remote": False,
+        "minimum_level": False,
+        "maximum_level": False,
+        "invert_switch": False,
+        "auto_off_timer": False,
+        "default_level_local": False,
+        "default_level_remote": False,
+        "state_after_power_restored": False,
+        "load_level_indicator_timeout": False,
+        "active_power_reports": False,
+        "periodic_power_and_energy_reports": False,
+        "active_energy_reports": False,
+        "power_type": False,
+        "switch_type": False,
+        "button_delay": False,
+        "smart_bulb_mode": False,
+        "double_tap_up_for_full_brightness": False,
+        "led_color_when_on": False,
+        "led_color_when_off": False,
+        "led_intensity_when_on": False,
+        "led_intensity_when_off": False,
+        "local_protection": False,
+        "output_mode": False,
+        "on_off_led_mode": False,
+        "firmware_progress_led": False,
+        "relay_click_in_on_off_mode": False,
+    }
+
+    async def issue_all_led_effect(
+        self,
+        effect_type: LEDEffectType | int = LEDEffectType.Fast_Blink,
+        color: int = 200,
+        level: int = 100,
+        duration: int = 3,
+        **kwargs: Any,
+    ) -> None:
+        """Issue all LED effect command.
+
+        This command is used to issue an LED effect to all LEDs on the device.
+        """
+
+        await self.led_effect(effect_type, color, level, duration, expect_reply=False)
+
+    async def issue_individual_led_effect(
+        self,
+        led_number: int = 1,
+        effect_type: LEDEffectType | int = LEDEffectType.Fast_Blink,
+        color: int = 200,
+        level: int = 100,
+        duration: int = 3,
+        **kwargs: Any,
+    ) -> None:
+        """Issue individual LED effect command.
+
+        This command is used to issue an LED effect to the specified LED on the device.
+        """
+
+        await self.individual_led_effect(
+            led_number, effect_type, color, level, duration, expect_reply=False
+        )
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(registries.IKEA_AIR_PURIFIER_CLUSTER)

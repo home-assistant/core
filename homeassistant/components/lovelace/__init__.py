@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
 from . import dashboard, resources, websocket
-from .const import (
+from .const import (  # noqa: F401
     CONF_ICON,
     CONF_REQUIRE_ADMIN,
     CONF_SHOW_IN_SIDEBAR,
@@ -23,6 +23,7 @@ from .const import (
     DASHBOARD_BASE_CREATE_FIELDS,
     DEFAULT_ICON,
     DOMAIN,
+    EVENT_LOVELACE_UPDATED,
     MODE_STORAGE,
     MODE_YAML,
     RESOURCE_CREATE_FIELDS,

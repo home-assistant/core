@@ -225,7 +225,7 @@ class EmonCmsSensor(SensorEntity):
             ATTR_LASTUPDATETIMESTR: template.timestamp_local(float(self._elem["time"])),
         }
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
         self._data.update()
 

@@ -131,6 +131,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         name="Total water usage",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         icon="mdi:gauge",
+        device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )

@@ -5,11 +5,11 @@
                 "no_available_service": "No hay servicios de notificaci\u00f3n disponibles."
             },
             "error": {
-                "invalid_code": "C\u00f3digo no v\u00e1lido, por favor, vuelve a intentarlo."
+                "invalid_code": "C\u00f3digo no v\u00e1lido, por favor, int\u00e9ntalo de nuevo."
             },
             "step": {
                 "init": {
-                    "description": "Selecciona uno de los servicios de notificaci\u00f3n:",
+                    "description": "Por favor, selecciona uno de los servicios de notificaci\u00f3n:",
                     "title": "Configurar una contrase\u00f1a de un solo uso entregada por el componente de notificaci\u00f3n"
                 },
                 "setup": {
@@ -21,7 +21,7 @@
         },
         "totp": {
             "error": {
-                "invalid_code": "C\u00f3digo no v\u00e1lido, por favor, vuelve a intentarlo. Si recibes este error constantemente, aseg\u00farate de que el reloj de tu sistema Home Assistant sea exacto."
+                "invalid_code": "C\u00f3digo no v\u00e1lido, por favor, int\u00e9ntalo de nuevo. Si recibes este error constantemente, aseg\u00farate de que el reloj de tu sistema Home Assistant sea exacto."
             },
             "step": {
                 "init": {

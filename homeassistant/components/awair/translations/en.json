@@ -29,7 +29,13 @@
                 "data": {
                     "host": "IP Address"
                 },
-                "description": "Awair Local API must be enabled following these steps: {url}"
+                "description": "Follow [these instructions]({url}) on how to enable the Awair Local API.\n\nClick submit when done."
+            },
+            "local_pick": {
+                "data": {
+                    "device": "Device",
+                    "host": "IP Address"
+                }
             },
             "reauth": {
                 "data": {

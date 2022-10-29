@@ -3,24 +3,23 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.const import ATTR_ATTRIBUTION
+from pyatmo.modules.device_types import (
+    DEVICE_DESCRIPTION_MAP,
+    DeviceType as NetatmoDeviceType,
+)
+
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import (
-    DATA_DEVICE_IDS,
-    DEFAULT_ATTRIBUTION,
-    DOMAIN,
-    MANUFACTURER,
-    MODELS,
-    SIGNAL_NAME,
-)
-from .data_handler import PUBLICDATA_DATA_CLASS_NAME, NetatmoDataHandler
+from .const import DATA_DEVICE_IDS, DEFAULT_ATTRIBUTION, DOMAIN, SIGNAL_NAME
+from .data_handler import PUBLIC, NetatmoDataHandler
 
 
 class NetatmoBase(Entity):
     """Netatmo entity base class."""
+
+    _attr_attribution = DEFAULT_ATTRIBUTION
 
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
@@ -30,43 +29,45 @@ class NetatmoBase(Entity):
         self._device_name: str = ""
         self._id: str = ""
         self._model: str = ""
-        self._netatmo_type: str = ""
+        self._config_url: str = ""
         self._attr_name = None
         self._attr_unique_id = None
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        for data_class in self._publishers:
-            signal_name = data_class[SIGNAL_NAME]
+        for publisher in self._publishers:
+            signal_name = publisher[SIGNAL_NAME]
 
-            if "home_id" in data_class:
+            if "home_id" in publisher:
                 await self.data_handler.subscribe(
-                    data_class["name"],
+                    publisher["name"],
                     signal_name,
                     self.async_update_callback,
-                    home_id=data_class["home_id"],
+                    home_id=publisher["home_id"],
                 )
 
-            elif data_class["name"] == PUBLICDATA_DATA_CLASS_NAME:
+            elif publisher["name"] == PUBLIC:
                 await self.data_handler.subscribe(
-                    data_class["name"],
+                    publisher["name"],
                     signal_name,
                     self.async_update_callback,
-                    lat_ne=data_class["lat_ne"],
-                    lon_ne=data_class["lon_ne"],
-                    lat_sw=data_class["lat_sw"],
-                    lon_sw=data_class["lon_sw"],
+                    lat_ne=publisher["lat_ne"],
+                    lon_ne=publisher["lon_ne"],
+                    lat_sw=publisher["lat_sw"],
+                    lon_sw=publisher["lon_sw"],
                 )
 
             else:
                 await self.data_handler.subscribe(
-                    data_class["name"], signal_name, self.async_update_callback
+                    publisher["name"], signal_name, self.async_update_callback
                 )
 
-            for sub in self.data_handler.publisher[signal_name].subscriptions:
-                if sub is None:
-                    await self.data_handler.unsubscribe(signal_name, None)
+            if any(
+                sub is None
+                for sub in self.data_handler.publisher[signal_name].subscriptions
+            ):
+                await self.data_handler.unsubscribe(signal_name, None)
 
         registry = dr.async_get(self.hass)
         if device := registry.async_get_device({(DOMAIN, self._id)}):
@@ -78,9 +79,9 @@ class NetatmoBase(Entity):
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
 
-        for data_class in self._publishers:
+        for publisher in self._publishers:
             await self.data_handler.unsubscribe(
-                data_class[SIGNAL_NAME], self.async_update_callback
+                publisher[SIGNAL_NAME], self.async_update_callback
             )
 
     @callback
@@ -91,10 +92,13 @@ class NetatmoBase(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info for the sensor."""
+        manufacturer, model = DEVICE_DESCRIPTION_MAP[
+            getattr(NetatmoDeviceType, self._model)
+        ]
         return DeviceInfo(
-            configuration_url=f"https://my.netatmo.com/app/{self._netatmo_type}",
+            configuration_url=self._config_url,
             identifiers={(DOMAIN, self._id)},
             name=self._device_name,
-            manufacturer=MANUFACTURER,
-            model=MODELS[self._model],
+            manufacturer=manufacturer,
+            model=model,
         )

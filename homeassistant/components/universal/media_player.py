@@ -2,16 +2,11 @@
 from __future__ import annotations
 
 from copy import copy
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    MediaPlayerEntity,
-    MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
@@ -38,11 +33,16 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
+    PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -52,6 +52,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_STATE_TEMPLATE,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -69,13 +70,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_BUFFERING,
-    STATE_IDLE,
-    STATE_OFF,
     STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -101,14 +96,17 @@ CONF_COMMANDS = "commands"
 STATES_ORDER = [
     STATE_UNKNOWN,
     STATE_UNAVAILABLE,
-    STATE_OFF,
-    STATE_IDLE,
-    STATE_STANDBY,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_BUFFERING,
-    STATE_PLAYING,
+    MediaPlayerState.OFF,
+    MediaPlayerState.IDLE,
+    MediaPlayerState.STANDBY,
+    MediaPlayerState.ON,
+    MediaPlayerState.PAUSED,
+    MediaPlayerState.BUFFERING,
+    MediaPlayerState.PLAYING,
 ]
+STATES_ORDER_LOOKUP = {state: idx for idx, state in enumerate(STATES_ORDER)}
+STATES_ORDER_IDLE = STATES_ORDER_LOOKUP[MediaPlayerState.IDLE]
+
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
@@ -120,6 +118,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ATTRS, default={}): vol.Or(
             cv.ensure_list(ATTRS_SCHEMA), ATTRS_SCHEMA
         ),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_TEMPLATE): cv.template,
     },
@@ -142,6 +141,7 @@ async def async_setup_platform(
         config.get(CONF_CHILDREN),
         config.get(CONF_COMMANDS),
         config.get(CONF_ATTRS),
+        config.get(CONF_UNIQUE_ID),
         config.get(CONF_DEVICE_CLASS),
         config.get(CONF_STATE_TEMPLATE),
     )
@@ -152,6 +152,8 @@ async def async_setup_platform(
 class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -159,6 +161,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         children,
         commands,
         attributes,
+        unique_id=None,
         device_class=None,
         state_template=None,
     ):
@@ -177,8 +180,9 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._state_template_result = None
         self._state_template = state_template
         self._device_class = device_class
+        self._attr_unique_id = unique_id
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to children and template state changes."""
 
         @callback
@@ -275,11 +279,6 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         )
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def device_class(self) -> str | None:
         """Return the class of this device."""
         return self._device_class
@@ -293,7 +292,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1]
             )
-            return master_state if master_state else STATE_OFF
+            return master_state if master_state else MediaPlayerState.OFF
 
         return None
 
@@ -311,13 +310,13 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         else master state or off
         """
         master_state = self.master_state  # avoid multiple lookups
-        if (master_state == STATE_OFF) or (self._state_template is not None):
+        if (master_state == MediaPlayerState.OFF) or (self._state_template is not None):
             return master_state
 
         if active_child := self._child_state:
             return active_child.state
 
-        return master_state if master_state else STATE_OFF
+        return master_state if master_state else MediaPlayerState.OFF
 
     @property
     def volume_level(self):
@@ -529,95 +528,97 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """When was the position of the current playing media valid."""
         return self._child_attr(ATTR_MEDIA_POSITION_UPDATED_AT)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._async_call_service(SERVICE_TURN_ON, allow_override=True)
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_call_service(SERVICE_TURN_OFF, allow_override=True)
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         data = {ATTR_MEDIA_VOLUME_MUTED: mute}
         await self._async_call_service(SERVICE_VOLUME_MUTE, data, allow_override=True)
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
         await self._async_call_service(SERVICE_VOLUME_SET, data, allow_override=True)
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self._async_call_service(SERVICE_MEDIA_PLAY, allow_override=True)
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._async_call_service(SERVICE_MEDIA_PAUSE, allow_override=True)
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._async_call_service(SERVICE_MEDIA_STOP, allow_override=True)
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._async_call_service(
             SERVICE_MEDIA_PREVIOUS_TRACK, allow_override=True
         )
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._async_call_service(SERVICE_MEDIA_NEXT_TRACK, allow_override=True)
 
-    async def async_media_seek(self, position):
+    async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         data = {ATTR_MEDIA_SEEK_POSITION: position}
         await self._async_call_service(SERVICE_MEDIA_SEEK, data)
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
         await self._async_call_service(SERVICE_PLAY_MEDIA, data, allow_override=True)
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self._async_call_service(SERVICE_VOLUME_UP, allow_override=True)
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         await self._async_call_service(SERVICE_VOLUME_DOWN, allow_override=True)
 
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE, allow_override=True)
 
-    async def async_select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         data = {ATTR_SOUND_MODE: sound_mode}
         await self._async_call_service(
             SERVICE_SELECT_SOUND_MODE, data, allow_override=True
         )
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Set the input source."""
         data = {ATTR_INPUT_SOURCE: source}
         await self._async_call_service(SERVICE_SELECT_SOURCE, data, allow_override=True)
 
-    async def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._async_call_service(SERVICE_CLEAR_PLAYLIST, allow_override=True)
 
-    async def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffling."""
         data = {ATTR_MEDIA_SHUFFLE: shuffle}
         await self._async_call_service(SERVICE_SHUFFLE_SET, data, allow_override=True)
 
-    async def async_set_repeat(self, repeat):
+    async def async_set_repeat(self, repeat: str) -> None:
         """Set repeat mode."""
         data = {ATTR_MEDIA_REPEAT: repeat}
         await self._async_call_service(SERVICE_REPEAT_SET, data, allow_override=True)
 
-    async def async_toggle(self):
+    async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
         if SERVICE_TOGGLE in self._cmds:
             await self._async_call_service(SERVICE_TOGGLE, allow_override=True)
@@ -625,16 +626,16 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             # Delegate to turn_on or turn_off by default
             await super().async_toggle()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update state in HA."""
         self._child_state = None
         for child_name in self._children:
-            if (child_state := self.hass.states.get(child_name)) and STATES_ORDER.index(
-                child_state.state
-            ) >= STATES_ORDER.index(STATE_IDLE):
+            if (child_state := self.hass.states.get(child_name)) and (
+                child_state_order := STATES_ORDER_LOOKUP.get(child_state.state, 0)
+            ) >= STATES_ORDER_IDLE:
                 if self._child_state:
-                    if STATES_ORDER.index(child_state.state) > STATES_ORDER.index(
-                        self._child_state.state
+                    if child_state_order > STATES_ORDER_LOOKUP.get(
+                        self._child_state.state, 0
                     ):
                         self._child_state = child_state
                 else:

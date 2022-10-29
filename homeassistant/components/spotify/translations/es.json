@@ -3,7 +3,7 @@
         "abort": {
             "authorize_url_timeout": "Se agot\u00f3 el tiempo de espera para generar la URL de autorizaci\u00f3n.",
             "missing_configuration": "La integraci\u00f3n de Spotify no est\u00e1 configurada. Por favor, sigue la documentaci\u00f3n.",
-            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [revisa la secci\u00f3n de ayuda]({docs_url})",
             "reauth_account_mismatch": "La cuenta de Spotify con la que est\u00e1s autenticado, no coincide con la cuenta necesaria para re-autenticaci\u00f3n."
         },
         "create_entry": {
@@ -21,7 +21,7 @@
     },
     "issues": {
         "removed_yaml": {
-            "description": "Se elimin\u00f3 la configuraci\u00f3n de Spotify usando YAML. \n\nHome Assistant no utiliza tu configuraci\u00f3n YAML existente. \n\nElimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
+            "description": "Se ha eliminado la configuraci\u00f3n de Spotify usando YAML. \n\nHome Assistant no utiliza tu configuraci\u00f3n YAML existente. \n\nElimina la configuraci\u00f3n YAML de tu archivo configuration.yaml y reinicia Home Assistant para solucionar este problema.",
             "title": "Se ha eliminado la configuraci\u00f3n YAML de Spotify"
         }
     },

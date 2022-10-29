@@ -18,10 +18,24 @@
             }
         }
     },
+    "issues": {
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aktualisiere alle Automatisierungen oder Skripte, die diese Entit\u00e4t verwenden, um stattdessen `{replacement_entity_id}` zu verwenden.",
+                        "title": "Die Entit\u00e4t {old_entity_id} wird entfernt"
+                    }
+                }
+            },
+            "title": "Die Entit\u00e4t {old_entity_id} wird entfernt"
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "use_app_run_times": "Zonenlaufzeiten aus der RainMachine App verwenden",
                     "zone_run_time": "Standard-Zonenlaufzeit (in Sekunden)"
                 },
                 "title": "RainMachine konfigurieren"

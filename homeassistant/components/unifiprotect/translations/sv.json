@@ -42,11 +42,16 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_mac_list": "M\u00e5ste vara en lista \u00f6ver MAC-adresser separerade med kommatecken"
+        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Realtidsm\u00e4tningar (VARNING: \u00d6kar CPU-anv\u00e4ndningen avsev\u00e4rt)",
                     "disable_rtsp": "Inaktivera RTSP-str\u00f6mmen",
+                    "ignored_devices": "Kommaseparerad lista \u00f6ver MAC-adresser f\u00f6r enheter att ignorera",
+                    "max_media": "Max antal h\u00e4ndelser som ska laddas f\u00f6r Media Browser (\u00f6kar RAM-anv\u00e4ndning)",
                     "override_connection_host": "\u00c5sidos\u00e4tt anslutningsv\u00e4rd"
                 },
                 "description": "Alternativet Realtidsm\u00e4tv\u00e4rden b\u00f6r endast aktiveras om du har aktiverat diagnostiksensorerna och vill att de ska uppdateras i realtid. Om det inte \u00e4r aktiverat kommer de bara att uppdateras en g\u00e5ng var 15:e minut.",

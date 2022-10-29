@@ -47,7 +47,9 @@ def blueprint_2():
 @pytest.fixture
 def domain_bps(hass):
     """Domain blueprints fixture."""
-    return models.DomainBlueprints(hass, "automation", logging.getLogger(__name__))
+    return models.DomainBlueprints(
+        hass, "automation", logging.getLogger(__name__), None
+    )
 
 
 def test_blueprint_model_init():
@@ -222,7 +224,7 @@ async def test_domain_blueprints_caching(domain_bps):
     assert await domain_bps.async_get_blueprint("something") is obj
 
     obj_2 = object()
-    domain_bps.async_reset_cache()
+    await domain_bps.async_reset_cache()
 
     # Now we call this method again.
     with patch.object(domain_bps, "_load_blueprint", return_value=obj_2):

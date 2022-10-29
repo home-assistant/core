@@ -21,6 +21,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import (
     CHANNEL_IAS_WD,
+    CHANNEL_INOVELLI,
+    CHANNEL_OCCUPANCY,
     CHANNEL_ON_OFF,
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
@@ -68,7 +70,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     """Representation of a ZHA select entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name: str
+    _attribute: str
     _enum: type[Enum]
 
     def __init__(
@@ -79,7 +81,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         **kwargs: Any,
     ) -> None:
         """Init this select entity."""
-        self._attr_name = self._enum.__name__
+        self._attribute = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         self._channel: ZigbeeChannel = channels[0]
         super().__init__(unique_id, zha_device, channels, **kwargs)
@@ -87,21 +89,21 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        option = self._channel.data_cache.get(self._attr_name)
+        option = self._channel.data_cache.get(self._attribute)
         if option is None:
             return None
         return option.name.replace("_", " ")
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._channel.data_cache[self._attr_name] = self._enum[option.replace(" ", "_")]
+        self._channel.data_cache[self._attribute] = self._enum[option.replace(" ", "_")]
         self.async_write_ha_state()
 
     @callback
     def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
         if last_state.state and last_state.state != STATE_UNKNOWN:
-            self._channel.data_cache[self._attr_name] = self._enum[
+            self._channel.data_cache[self._attribute] = self._enum[
                 last_state.state.replace(" ", "_")
             ]
 
@@ -122,6 +124,7 @@ class ZHADefaultToneSelectEntity(
     """Representation of a ZHA default siren tone select entity."""
 
     _enum = IasWd.Warning.WarningMode
+    _attr_name = "Default siren tone"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -131,6 +134,7 @@ class ZHADefaultSirenLevelSelectEntity(
     """Representation of a ZHA default siren level select entity."""
 
     _enum = IasWd.Warning.SirenLevel
+    _attr_name = "Default siren level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -140,6 +144,7 @@ class ZHADefaultStrobeLevelSelectEntity(
     """Representation of a ZHA default siren strobe level select entity."""
 
     _enum = IasWd.StrobeLevel
+    _attr_name = "Default strobe level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -147,6 +152,7 @@ class ZHADefaultStrobeSelectEntity(ZHANonZCLSelectEntity, id_suffix=Strobe.__nam
     """Representation of a ZHA default siren strobe select entity."""
 
     _enum = Strobe
+    _attr_name = "Default strobe"
 
 
 class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
@@ -219,6 +225,27 @@ class ZHAStartupOnOffSelectEntity(
 
     _select_attr = "start_up_on_off"
     _enum = OnOff.StartUpOnOff
+    _attr_name = "Start-up behavior"
+
+
+class TuyaPowerOnState(types.enum8):
+    """Tuya power on state enum."""
+
+    Off = 0x00
+    On = 0x01
+    LastState = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    models={"TS011F", "TS0121", "TS0001", "TS0002", "TS0003", "TS0004"},
+)
+class TuyaPowerOnStateSelectEntity(ZCLEnumSelectEntity, id_suffix="power_on_state"):
+    """Representation of a ZHA power on state select entity."""
+
+    _select_attr = "power_on_state"
+    _enum = TuyaPowerOnState
+    _attr_name = "Power on state"
 
 
 class AqaraMotionSensitivities(types.enum8):
@@ -233,10 +260,55 @@ class AqaraMotionSensitivities(types.enum8):
     channel_names="opple_cluster", models={"lumi.motion.ac01", "lumi.motion.ac02"}
 )
 class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
-    """Representation of a ZHA on off transition time configuration entity."""
+    """Representation of a ZHA motion sensitivity configuration entity."""
 
     _select_attr = "motion_sensitivity"
     _enum = AqaraMotionSensitivities
+    _attr_name = "Motion sensitivity"
+
+
+class HueV1MotionSensitivities(types.enum8):
+    """Hue v1 motion sensitivities."""
+
+    Low = 0x00
+    Medium = 0x01
+    High = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_OCCUPANCY,
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML001"},
+)
+class HueV1MotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
+    """Representation of a ZHA motion sensitivity configuration entity."""
+
+    _select_attr = "sensitivity"
+    _attr_name = "Hue motion sensitivity"
+    _enum = HueV1MotionSensitivities
+
+
+class HueV2MotionSensitivities(types.enum8):
+    """Hue v2 motion sensitivities."""
+
+    Lowest = 0x00
+    Low = 0x01
+    Medium = 0x02
+    High = 0x03
+    Highest = 0x04
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_OCCUPANCY,
+    manufacturers={"Philips", "Signify Netherlands B.V."},
+    models={"SML002", "SML003", "SML004"},
+)
+class HueV2MotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
+    """Representation of a ZHA motion sensitivity configuration entity."""
+
+    _select_attr = "sensitivity"
+    _attr_name = "Hue motion sensitivity"
+    _enum = HueV2MotionSensitivities
 
 
 class AqaraMonitoringModess(types.enum8):
@@ -252,6 +324,7 @@ class AqaraMonitoringMode(ZCLEnumSelectEntity, id_suffix="monitoring_mode"):
 
     _select_attr = "monitoring_mode"
     _enum = AqaraMonitoringModess
+    _attr_name = "Monitoring mode"
 
 
 class AqaraApproachDistances(types.enum8):
@@ -268,6 +341,7 @@ class AqaraApproachDistance(ZCLEnumSelectEntity, id_suffix="approach_distance"):
 
     _select_attr = "approach_distance"
     _enum = AqaraApproachDistances
+    _attr_name = "Approach distance"
 
 
 class AqaraE1ReverseDirection(types.enum8):
@@ -285,3 +359,41 @@ class AqaraCurtainMode(ZCLEnumSelectEntity, id_suffix="window_covering_mode"):
 
     _select_attr = "window_covering_mode"
     _enum = AqaraE1ReverseDirection
+    _attr_name = "Curtain mode"
+
+
+class InovelliOutputMode(types.enum1):
+    """Inovelli output mode."""
+
+    Dimmer = 0x00
+    OnOff = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliOutputModeEntity(ZCLEnumSelectEntity, id_suffix="output_mode"):
+    """Inovelli output mode control."""
+
+    _select_attr = "output_mode"
+    _enum = InovelliOutputMode
+    _attr_name: str = "Output mode"
+
+
+class InovelliSwitchType(types.enum8):
+    """Inovelli output mode."""
+
+    Load_Only = 0x00
+    Three_Way_Dumb = 0x01
+    Three_Way_AUX = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names=CHANNEL_INOVELLI,
+)
+class InovelliSwitchTypeEntity(ZCLEnumSelectEntity, id_suffix="switch_type"):
+    """Inovelli switch type control."""
+
+    _select_attr = "switch_type"
+    _enum = InovelliSwitchType
+    _attr_name: str = "Switch type"

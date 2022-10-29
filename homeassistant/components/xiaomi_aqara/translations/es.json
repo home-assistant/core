@@ -10,7 +10,7 @@
             "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos , consulta https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Interfaz de red no v\u00e1lida",
             "invalid_key": "Clave de puerta de enlace no v\u00e1lida",
-            "invalid_mac": "Direcci\u00f3n Mac no v\u00e1lida"
+            "invalid_mac": "Direcci\u00f3n MAC no v\u00e1lida"
         },
         "flow_title": "{name}",
         "step": {
@@ -32,9 +32,9 @@
                 "data": {
                     "host": "Direcci\u00f3n IP (opcional)",
                     "interface": "La interfaz de la red a usar",
-                    "mac": "Direcci\u00f3n Mac (opcional)"
+                    "mac": "Direcci\u00f3n MAC (opcional)"
                 },
-                "description": "Si las direcciones IP y MAC se dejan vac\u00edas, se utiliza la detecci\u00f3n autom\u00e1tica"
+                "description": "Si las direcciones IP y MAC se dejan vac\u00edas, se usa la detecci\u00f3n autom\u00e1tica"
             }
         }
     }

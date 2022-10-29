@@ -280,7 +280,7 @@ class SolarEdgeSensor(SensorEntity):
                 pass
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the sensor and update the state."""
         self._data.update()
         self._attr_native_value = self._data.data[self.entity_description.key]

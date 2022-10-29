@@ -7,10 +7,13 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.here_travel_time.const import (
-    CONF_ARRIVAL,
     CONF_ARRIVAL_TIME,
-    CONF_DEPARTURE,
     CONF_DEPARTURE_TIME,
+    CONF_DESTINATION_ENTITY_ID,
+    CONF_DESTINATION_LATITUDE,
+    CONF_DESTINATION_LONGITUDE,
+    CONF_ORIGIN_LATITUDE,
+    CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
     CONF_TRAFFIC_MODE,
     DOMAIN,
@@ -19,25 +22,20 @@ from homeassistant.components.here_travel_time.const import (
     TRAVEL_MODE_CAR,
     TRAVEL_MODE_PUBLIC_TIME_TABLE,
 )
-from homeassistant.components.here_travel_time.sensor import (
-    CONF_DESTINATION_ENTITY_ID,
-    CONF_DESTINATION_LATITUDE,
-    CONF_DESTINATION_LONGITUDE,
-    CONF_ORIGIN_ENTITY_ID,
-    CONF_ORIGIN_LATITUDE,
-    CONF_ORIGIN_LONGITUDE,
-)
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_ENTITY_NAMESPACE,
     CONF_MODE,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .const import (
     API_KEY,
@@ -234,10 +232,21 @@ async def test_step_destination_coordinates(
 
 
 @pytest.mark.usefixtures("valid_response")
+@pytest.mark.parametrize(
+    "unit_system, expected_unit_option",
+    [
+        (METRIC_SYSTEM, CONF_UNIT_SYSTEM_METRIC),
+        (US_CUSTOMARY_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL),
+    ],
+)
 async def test_step_destination_entity(
-    hass: HomeAssistant, origin_step_result: data_entry_flow.FlowResult
+    hass: HomeAssistant,
+    origin_step_result: data_entry_flow.FlowResult,
+    unit_system: UnitSystem,
+    expected_unit_option: str,
 ) -> None:
     """Test the origin coordinates step."""
+    hass.config.units = unit_system
     menu_result = await hass.config_entries.flow.async_configure(
         origin_step_result["flow_id"], {"next_step_id": "destination_entity"}
     )
@@ -256,6 +265,13 @@ async def test_step_destination_entity(
         CONF_ORIGIN_LONGITUDE: float(CAR_ORIGIN_LONGITUDE),
         CONF_DESTINATION_ENTITY_ID: "zone.home",
         CONF_MODE: TRAVEL_MODE_CAR,
+    }
+    assert entry.options == {
+        CONF_UNIT_SYSTEM: expected_unit_option,
+        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
+        CONF_ARRIVAL_TIME: None,
+        CONF_DEPARTURE_TIME: None,
     }
 
 
@@ -412,194 +428,3 @@ async def test_options_flow_no_time_step(
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
     }
-
-
-@pytest.mark.usefixtures("valid_response")
-async def test_import_flow_entity_id(hass: HomeAssistant) -> None:
-    """Test import_flow with entity ids."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: CONF_API_KEY,
-            CONF_ORIGIN_ENTITY_ID: "sensor.origin",
-            CONF_DESTINATION_ENTITY_ID: "sensor.destination",
-            CONF_NAME: "test_name",
-            CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_DEPARTURE: "08:00:00",
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-            CONF_ENTITY_NAMESPACE: "namespace",
-            CONF_SCAN_INTERVAL: 2678400,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "namespace test_name"
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data == {
-        CONF_NAME: "namespace test_name",
-        CONF_API_KEY: CONF_API_KEY,
-        CONF_ORIGIN_ENTITY_ID: "sensor.origin",
-        CONF_DESTINATION_ENTITY_ID: "sensor.destination",
-        CONF_MODE: TRAVEL_MODE_CAR,
-    }
-    assert entry.options == {
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
-        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        CONF_DEPARTURE_TIME: "08:00:00",
-        CONF_ARRIVAL_TIME: None,
-    }
-
-
-@pytest.mark.usefixtures("valid_response")
-async def test_import_flow_coordinates(hass: HomeAssistant) -> None:
-    """Test import_flow with coordinates."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: CONF_API_KEY,
-            CONF_ORIGIN_LATITUDE: CAR_ORIGIN_LATITUDE,
-            CONF_ORIGIN_LONGITUDE: CAR_ORIGIN_LONGITUDE,
-            CONF_DESTINATION_LATITUDE: CAR_DESTINATION_LATITUDE,
-            CONF_DESTINATION_LONGITUDE: CAR_DESTINATION_LONGITUDE,
-            CONF_NAME: "test_name",
-            CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_ARRIVAL: "08:00:00",
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test_name"
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data == {
-        CONF_NAME: "test_name",
-        CONF_API_KEY: CONF_API_KEY,
-        CONF_ORIGIN_LATITUDE: CAR_ORIGIN_LATITUDE,
-        CONF_ORIGIN_LONGITUDE: CAR_ORIGIN_LONGITUDE,
-        CONF_DESTINATION_LATITUDE: CAR_DESTINATION_LATITUDE,
-        CONF_DESTINATION_LONGITUDE: CAR_DESTINATION_LONGITUDE,
-        CONF_MODE: TRAVEL_MODE_CAR,
-    }
-    assert entry.options == {
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-        CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        CONF_DEPARTURE_TIME: None,
-        CONF_ARRIVAL_TIME: "08:00:00",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-    }
-
-
-@pytest.mark.usefixtures("valid_response")
-async def test_dupe_import(hass: HomeAssistant) -> None:
-    """Test duplicate import."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: CONF_API_KEY,
-            CONF_ORIGIN_LATITUDE: CAR_ORIGIN_LATITUDE,
-            CONF_ORIGIN_LONGITUDE: CAR_ORIGIN_LONGITUDE,
-            CONF_DESTINATION_LATITUDE: CAR_DESTINATION_LATITUDE,
-            CONF_DESTINATION_LONGITUDE: CAR_DESTINATION_LONGITUDE,
-            CONF_NAME: "test_name",
-            CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_ARRIVAL: "08:00:00",
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: CONF_API_KEY,
-            CONF_ORIGIN_LATITUDE: CAR_ORIGIN_LATITUDE,
-            CONF_ORIGIN_LONGITUDE: CAR_ORIGIN_LONGITUDE,
-            CONF_DESTINATION_LATITUDE: CAR_DESTINATION_LATITUDE,
-            CONF_DESTINATION_LONGITUDE: CAR_DESTINATION_LONGITUDE,
-            CONF_NAME: "test_name2",
-            CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_ARRIVAL: "08:00:00",
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: CONF_API_KEY,
-            CONF_ORIGIN_LATITUDE: CAR_ORIGIN_LATITUDE,
-            CONF_ORIGIN_LONGITUDE: CAR_ORIGIN_LONGITUDE,
-            CONF_DESTINATION_LATITUDE: CAR_DESTINATION_LATITUDE,
-            CONF_DESTINATION_LONGITUDE: CAR_DESTINATION_LONGITUDE,
-            CONF_NAME: "test_name",
-            CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_ARRIVAL: "08:00:01",
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: CONF_API_KEY,
-            CONF_ORIGIN_LATITUDE: CAR_ORIGIN_LATITUDE,
-            CONF_ORIGIN_LONGITUDE: CAR_ORIGIN_LONGITUDE,
-            CONF_DESTINATION_LATITUDE: "40.0",
-            CONF_DESTINATION_LONGITUDE: CAR_DESTINATION_LONGITUDE,
-            CONF_NAME: "test_name",
-            CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_ARRIVAL: "08:00:01",
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: CONF_API_KEY,
-            CONF_ORIGIN_LATITUDE: CAR_ORIGIN_LATITUDE,
-            CONF_ORIGIN_LONGITUDE: CAR_ORIGIN_LONGITUDE,
-            CONF_DESTINATION_LATITUDE: CAR_DESTINATION_LATITUDE,
-            CONF_DESTINATION_LONGITUDE: CAR_DESTINATION_LONGITUDE,
-            CONF_NAME: "test_name",
-            CONF_MODE: TRAVEL_MODE_CAR,
-            CONF_ARRIVAL: "08:00:00",
-            CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
-            CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-        },
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_configured"

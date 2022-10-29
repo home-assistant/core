@@ -10,7 +10,6 @@ from aioguardian import Client
 from aioguardian.errors import GuardianError
 import voluptuous as vol
 
-from homeassistant.components.repairs import IssueSeverity, async_create_issue
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -26,6 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -44,20 +44,12 @@ from .util import GuardianDataUpdateCoordinator
 
 DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 
-SERVICE_NAME_DISABLE_AP = "disable_ap"
-SERVICE_NAME_ENABLE_AP = "enable_ap"
 SERVICE_NAME_PAIR_SENSOR = "pair_sensor"
-SERVICE_NAME_REBOOT = "reboot"
-SERVICE_NAME_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
 
 SERVICES = (
-    SERVICE_NAME_DISABLE_AP,
-    SERVICE_NAME_ENABLE_AP,
     SERVICE_NAME_PAIR_SENSOR,
-    SERVICE_NAME_REBOOT,
-    SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
     SERVICE_NAME_UNPAIR_SENSOR,
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
@@ -103,12 +95,16 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
-    if device_entry := device_registry.async_get(device_id):
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.entry_id in device_entry.config_entries:
-                return entry.entry_id
+    if (device_entry := device_registry.async_get(device_id)) is None:
+        raise ValueError(f"Invalid Guardian device ID: {device_id}")
 
-    raise ValueError(f"No client for device ID: {device_id}")
+    for entry_id in device_entry.config_entries:
+        if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
+            continue
+        if entry.domain == DOMAIN:
+            return entry_id
+
+    raise ValueError(f"No config entry for device ID: {device_id}")
 
 
 @callback
@@ -232,47 +228,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return wrapper
 
     @call_with_data
-    async def async_disable_ap(call: ServiceCall, data: GuardianData) -> None:
-        """Disable the onboard AP."""
-        await data.client.wifi.disable_ap()
-
-    @call_with_data
-    async def async_enable_ap(call: ServiceCall, data: GuardianData) -> None:
-        """Enable the onboard AP."""
-        await data.client.wifi.enable_ap()
-
-    @call_with_data
     async def async_pair_sensor(call: ServiceCall, data: GuardianData) -> None:
         """Add a new paired sensor."""
         uid = call.data[CONF_UID]
         await data.client.sensor.pair_sensor(uid)
         await data.paired_sensor_manager.async_pair_sensor(uid)
-
-    @call_with_data
-    async def async_reboot(call: ServiceCall, data: GuardianData) -> None:
-        """Reboot the valve controller."""
-        async_log_deprecated_service_call(
-            hass,
-            call,
-            "button.press",
-            f"button.guardian_valve_controller_{data.entry.data[CONF_UID]}_reboot",
-            "2022.10.0",
-        )
-        await data.client.system.reboot()
-
-    @call_with_data
-    async def async_reset_valve_diagnostics(
-        call: ServiceCall, data: GuardianData
-    ) -> None:
-        """Fully reset system motor diagnostics."""
-        async_log_deprecated_service_call(
-            hass,
-            call,
-            "button.press",
-            f"button.guardian_valve_controller_{data.entry.data[CONF_UID]}_reset_valve_diagnostics",
-            "2022.10.0",
-        )
-        await data.client.valve.reset()
 
     @call_with_data
     async def async_unpair_sensor(call: ServiceCall, data: GuardianData) -> None:
@@ -291,18 +251,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     for service_name, schema, method in (
-        (SERVICE_NAME_DISABLE_AP, SERVICE_BASE_SCHEMA, async_disable_ap),
-        (SERVICE_NAME_ENABLE_AP, SERVICE_BASE_SCHEMA, async_enable_ap),
         (
             SERVICE_NAME_PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
-        ),
-        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot),
-        (
-            SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
-            SERVICE_BASE_SCHEMA,
-            async_reset_valve_diagnostics,
         ),
         (
             SERVICE_NAME_UNPAIR_SENSOR,

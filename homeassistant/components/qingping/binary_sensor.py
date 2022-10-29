@@ -35,6 +35,14 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=QingpingBinarySensorDeviceClass.LIGHT,
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
+    QingpingBinarySensorDeviceClass.DOOR: BinarySensorEntityDescription(
+        key=QingpingBinarySensorDeviceClass.DOOR,
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    QingpingBinarySensorDeviceClass.PROBLEM: BinarySensorEntityDescription(
+        key=QingpingBinarySensorDeviceClass.PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
 }
 
 

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "no_devices_found": "V\u00f5rgust seadmeid ei leitud",
             "no_unconfigured_devices": "H\u00e4\u00e4lestamata seadmeid ei leitud."
         },
@@ -23,7 +24,7 @@
                     "key": "V\u00f5rgu\u00fchenduseta v\u00f5ti (32-baidine kuueteistk\u00fcmnebaidine string)",
                     "slot": "V\u00f5rgu\u00fchenduseta v\u00f5tmepesa (t\u00e4isarv vahemikus 0 kuni 255)"
                 },
-                "description": "V\u00f5rgu\u00fchenduseta v\u00f5tme leidmise kohta vaata dokumentatsiooni aadressil {docs_url} ."
+                "description": "V\u00f5rgu\u00fchenduseta v\u00f5tme leidmise kohta vaata dokumentatsiooni."
             }
         }
     }

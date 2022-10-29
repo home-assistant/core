@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Actualiza cualquier automatizaci\u00f3n o script que use este servicio para usar en su lugar el servicio `{alternate_service}` con uno de estos ID de entidad como objetivo: `{alternate_targets}`.",
+            "title": "Se va a eliminar el servicio {deprecated_service}"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Actualiza cualquier automatizaci\u00f3n o script que use este servicio para usar en su lugar el servicio `{alternate_service}` con `{alternate_targets}` como destino.",
+            "title": "Se va a eliminar el servicio {deprecated_service}"
+        }
+    },
     "options": {
         "step": {
             "init": {

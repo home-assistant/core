@@ -44,6 +44,7 @@ class ColorChannel(ZigbeeChannel):
         "color_temp_physical_max": True,
         "color_capabilities": True,
         "color_loop_active": False,
+        "start_up_color_temperature": True,
     }
 
     @cached_property

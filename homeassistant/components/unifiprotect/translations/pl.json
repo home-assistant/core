@@ -42,11 +42,15 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_mac_list": "Musi to by\u0107 lista adres\u00f3w MAC oddzielonych przecinkami"
+        },
         "step": {
             "init": {
                 "data": {
                     "all_updates": "Metryki w czasie rzeczywistym (UWAGA: Znacznie zwi\u0119ksza u\u017cycie CPU)",
                     "disable_rtsp": "Wy\u0142\u0105cz strumie\u0144 RTSP",
+                    "ignored_devices": "Oddzielona przecinkami lista adres\u00f3w MAC urz\u0105dze\u0144 do zignorowania",
                     "max_media": "Maksymalna liczba zdarze\u0144 do za\u0142adowania dla przegl\u0105darki medi\u00f3w (zwi\u0119ksza u\u017cycie pami\u0119ci RAM)",
                     "override_connection_host": "Zast\u0105p host po\u0142\u0105czenia"
                 },

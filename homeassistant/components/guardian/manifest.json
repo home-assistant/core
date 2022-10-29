@@ -3,7 +3,6 @@
   "name": "Elexa Guardian",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/guardian",
-  "dependencies": ["repairs"],
   "requirements": ["aioguardian==2022.07.0"],
   "zeroconf": ["_api._udp.local."],
   "codeowners": ["@bachya"],
@@ -22,5 +21,6 @@
       "macaddress": "30AEA4*"
     }
   ],
-  "loggers": ["aioguardian"]
+  "loggers": ["aioguardian"],
+  "integration_type": "device"
 }

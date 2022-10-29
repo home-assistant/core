@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "address": "Endere\u00e7o remoto inv\u00e1lido especificado. O endere\u00e7o deve ser um endere\u00e7o IP ou um nome de host resolv\u00edvel.",
+            "address_in_use": "A porta de escuta selecionada j\u00e1 est\u00e1 em uso neste sistema.",
+            "model": "O modelo selecionado parece n\u00e3o suportar modbus40",
+            "read": "Erro na solicita\u00e7\u00e3o de leitura da bomba. Verifique sua `Porta de leitura remota` ou `Endere\u00e7o IP remoto`.",
+            "unknown": "Erro inesperado",
+            "write": "Erro na solicita\u00e7\u00e3o de grava\u00e7\u00e3o para bombear. Verifique sua `Porta de grava\u00e7\u00e3o remota` ou `Endere\u00e7o IP remoto`."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Endere\u00e7o IP remoto",
+                    "listening_port": "Porta de escuta local",
+                    "remote_read_port": "Porta de leitura remota",
+                    "remote_write_port": "Porta de grava\u00e7\u00e3o remota"
+                },
+                "data_description": {
+                    "ip_address": "O endere\u00e7o da unidade NibeGW. O dispositivo deve ter sido configurado com um endere\u00e7o est\u00e1tico.",
+                    "listening_port": "A porta local neste sistema para a qual a unidade NibeGW est\u00e1 configurada para enviar dados.",
+                    "remote_read_port": "A porta na qual a unidade NibeGW est\u00e1 escutando solicita\u00e7\u00f5es de leitura.",
+                    "remote_write_port": "A porta na qual a unidade NibeGW est\u00e1 escutando solicita\u00e7\u00f5es de grava\u00e7\u00e3o."
+                },
+                "description": "Antes de tentar configurar a integra\u00e7\u00e3o, verifique se:\n - A unidade NibeGW est\u00e1 conectada a uma bomba de calor.\n - O acess\u00f3rio MODBUS40 foi habilitado na configura\u00e7\u00e3o da bomba de calor.\n - A bomba n\u00e3o entrou em estado de alarme por falta de acess\u00f3rio MODBUS40."
+            }
+        }
+    }
+}

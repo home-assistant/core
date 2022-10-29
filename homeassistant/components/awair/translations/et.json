@@ -29,7 +29,13 @@
                 "data": {
                     "host": "IP aadress"
                 },
-                "description": "Awairi kohalik API tuleb lubada j\u00e4rgmiste sammude abil: {url}"
+                "description": "J\u00e4rgi [neid juhiseid]({url}) Awair Local API lubamise kohta.\n\nKui oled l\u00f5petanud, kl\u00f5psa nuppu Esita."
+            },
+            "local_pick": {
+                "data": {
+                    "device": "Seade",
+                    "host": "IP aadress"
+                }
             },
             "reauth": {
                 "data": {

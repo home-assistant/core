@@ -1,19 +1,15 @@
 """Base Entity for JustNimbus sensors."""
 from __future__ import annotations
 
-import justnimbus
-
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import JustNimbusCoordinator
 from .const import DOMAIN
+from .coordinator import JustNimbusCoordinator
 
 
 class JustNimbusEntity(
-    update_coordinator.CoordinatorEntity[justnimbus.JustNimbusModel],
-    SensorEntity,
+    CoordinatorEntity[JustNimbusCoordinator],
 ):
     """Defines a base JustNimbus entity."""
 

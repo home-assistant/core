@@ -68,6 +68,7 @@ def mock_all(aioclient_mock, request):
                 "result": "ok",
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
+                "auto_update": True,
                 "addons": [
                     {
                         "name": "test",

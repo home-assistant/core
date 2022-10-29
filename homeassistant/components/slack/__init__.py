@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, discovery
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DATA_HASS_CONFIG, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +21,8 @@ PLATFORMS = [Platform.NOTIFY]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Slack component."""
+    hass.data[DATA_HASS_CONFIG] = config
+
     # Iterate all entries for notify to only get Slack
     if Platform.NOTIFY in config:
         for entry in config[Platform.NOTIFY]:
@@ -55,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Platform.NOTIFY,
             DOMAIN,
             hass.data[DOMAIN][entry.entry_id],
-            hass.data[DOMAIN],
+            hass.data[DATA_HASS_CONFIG],
         )
     )
 

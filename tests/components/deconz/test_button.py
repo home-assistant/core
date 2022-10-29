@@ -48,6 +48,49 @@ TEST_DATA = [
                 "friendly_name": "Light group Scene Store Current Scene",
             },
             "request": "/groups/1/scenes/1/store",
+            "request_data": {},
+        },
+    ),
+    (  # Presence reset button
+        {
+            "sensors": {
+                "1": {
+                    "config": {
+                        "devicemode": "undirected",
+                        "on": True,
+                        "reachable": True,
+                        "sensitivity": 3,
+                        "triggerdistance": "medium",
+                    },
+                    "etag": "13ff209f9401b317987d42506dd4cd79",
+                    "lastannounced": None,
+                    "lastseen": "2022-06-28T23:13Z",
+                    "manufacturername": "aqara",
+                    "modelid": "lumi.motion.ac01",
+                    "name": "Aqara FP1",
+                    "state": {
+                        "lastupdated": "2022-06-28T23:13:38.577",
+                        "presence": True,
+                        "presenceevent": "leave",
+                    },
+                    "swversion": "20210121",
+                    "type": "ZHAPresence",
+                    "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
+                }
+            }
+        },
+        {
+            "entity_count": 5,
+            "device_count": 3,
+            "entity_id": "button.aqara_fp1_reset_presence",
+            "unique_id": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406-reset_presence",
+            "entity_category": EntityCategory.CONFIG,
+            "attributes": {
+                "device_class": "restart",
+                "friendly_name": "Aqara FP1 Reset Presence",
+            },
+            "request": "/sensors/1/config",
+            "request_data": {"resetpresence": True},
         },
     ),
 ]
@@ -92,7 +135,7 @@ async def test_button(hass, aioclient_mock, raw_data, expected):
         {ATTR_ENTITY_ID: expected["entity_id"]},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[1][2] == {}
+    assert aioclient_mock.mock_calls[1][2] == expected["request_data"]
 
     # Unload entry
 

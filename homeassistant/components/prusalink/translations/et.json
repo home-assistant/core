@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "not_supported": "Toetatud on ainult PrusaLink API v2",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

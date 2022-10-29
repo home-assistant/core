@@ -6,12 +6,63 @@
             "usb_probe_failed": "Error al sondear el dispositivo USB"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar"
+            "cannot_connect": "No se pudo conectar",
+            "invalid_backup_json": "Copia de seguridad JSON no v\u00e1lida"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Elige una copia de seguridad autom\u00e1tica"
+                },
+                "description": "Restaura la configuraci\u00f3n de tu red desde una copia de seguridad autom\u00e1tica",
+                "title": "Restaurar copia de seguridad autom\u00e1tica"
+            },
+            "choose_formation_strategy": {
+                "description": "Elige la configuraci\u00f3n de red para tu radio.",
+                "menu_options": {
+                    "choose_automatic_backup": "Restaurar una copia de seguridad autom\u00e1tica",
+                    "form_new_network": "Borrar la configuraci\u00f3n de red y formar una nueva red",
+                    "reuse_settings": "Mantener la configuraci\u00f3n de red de la radio",
+                    "upload_manual_backup": "Subir una copia de seguridad manual"
+                },
+                "title": "Formaci\u00f3n de la red"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Ruta del Dispositivo Serie"
+                },
+                "description": "Selecciona el puerto serie para tu radio Zigbee",
+                "title": "Selecciona un puerto serie"
+            },
             "confirm": {
                 "description": "\u00bfQuieres configurar {name} ?"
+            },
+            "confirm_hardware": {
+                "description": "\u00bfQuieres configurar {name}?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Tipo de Radio"
+                },
+                "description": "Elige tu tipo de radio Zigbee",
+                "title": "Tipo de Radio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "velocidad del puerto",
+                    "flow_control": "control de flujo de datos",
+                    "path": "Ruta del dispositivo serie"
+                },
+                "description": "Introduce la configuraci\u00f3n del puerto serie",
+                "title": "Configuraci\u00f3n del puerto serie"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Reemplazar permanentemente la direcci\u00f3n IEEE de la radio"
+                },
+                "description": "Tu copia de seguridad tiene una direcci\u00f3n IEEE diferente a la de tu radio. Para que tu red funcione correctamente, tambi\u00e9n debes cambiar la direcci\u00f3n IEEE de tu radio. \n\nEsta es una operaci\u00f3n permanente.",
+                "title": "Sobrescribir la direcci\u00f3n IEEE de la radio"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +79,13 @@
                 },
                 "description": "Introduce los ajustes espec\u00edficos del puerto",
                 "title": "Configuraci\u00f3n"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Subir un archivo"
+                },
+                "description": "Restaura la configuraci\u00f3n de tu red desde un archivo JSON de copia de seguridad subido. Puedes descargar uno de una instalaci\u00f3n diferente de ZHA desde **Configuraci\u00f3n de red**, o usar un archivo `coordinator_backup.json` de Zigbee2MQTT.",
+                "title": "Subir una copia de seguridad manual"
             },
             "user": {
                 "data": {
@@ -58,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Efecto de emisi\u00f3n para todos los LEDs",
+            "issue_individual_led_effect": "Efecto de emisi\u00f3n para LED individual",
             "squawk": "Squawk",
             "warn": "Advertir"
         },
@@ -110,6 +170,94 @@
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",
             "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" pulsado tres veces"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "Este dispositivo no es un dispositivo zha",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n.",
+            "usb_probe_failed": "Error al sondear el dispositivo USB"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_backup_json": "Copia de seguridad JSON no v\u00e1lida"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Elige una copia de seguridad autom\u00e1tica"
+                },
+                "description": "Restaura la configuraci\u00f3n de tu red desde una copia de seguridad autom\u00e1tica",
+                "title": "Restaurar copia de seguridad autom\u00e1tica"
+            },
+            "choose_formation_strategy": {
+                "description": "Elige la configuraci\u00f3n de red para tu radio.",
+                "menu_options": {
+                    "choose_automatic_backup": "Restaurar una copia de seguridad autom\u00e1tica",
+                    "form_new_network": "Borrar la configuraci\u00f3n de red y formar una nueva red",
+                    "reuse_settings": "Mantener la configuraci\u00f3n de red de la radio",
+                    "upload_manual_backup": "Subir una copia de seguridad manual"
+                },
+                "title": "Formaci\u00f3n de la red"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Ruta del Dispositivo Serie"
+                },
+                "description": "Selecciona el puerto serie para tu radio Zigbee",
+                "title": "Selecciona un puerto serie"
+            },
+            "init": {
+                "description": "ZHA se detendr\u00e1. \u00bfDeseas continuar?",
+                "title": "Reconfigurar ZHA"
+            },
+            "instruct_unplug": {
+                "description": "Tu antigua radio ha sido reiniciada. Si ya no necesitas el hardware, puedes desconectarlo ahora.",
+                "title": "Desconecta tu antigua radio"
+            },
+            "intent_migrate": {
+                "description": "Tu antigua radio se restablecer\u00e1 de f\u00e1brica. Si est\u00e1s utilizando un adaptador combinado de Z-Wave y Zigbee como el HUSBZB-1, esto solo restablecer\u00e1 la parte de Zigbee. \n\n\u00bfDeseas continuar?",
+                "title": "Migrar a una nueva radio"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Tipo de Radio"
+                },
+                "description": "Elige tu tipo de radio Zigbee",
+                "title": "Tipo de Radio"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "velocidad del puerto",
+                    "flow_control": "control de flujo de datos",
+                    "path": "Ruta del dispositivo serie"
+                },
+                "description": "Introduce la configuraci\u00f3n del puerto serie",
+                "title": "Configuraci\u00f3n del puerto serie"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Reemplazar permanentemente la direcci\u00f3n IEEE de la radio"
+                },
+                "description": "Tu copia de seguridad tiene una direcci\u00f3n IEEE diferente a la de tu radio. Para que tu red funcione correctamente, tambi\u00e9n debes cambiar la direcci\u00f3n IEEE de tu radio. \n\nEsta es una operaci\u00f3n permanente.",
+                "title": "Sobrescribir la direcci\u00f3n IEEE de la radio"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "\u00bfEst\u00e1s migrando a una nueva radio o volviendo a configurar la radio actual?",
+                "menu_options": {
+                    "intent_migrate": "Migrar a una nueva radio",
+                    "intent_reconfigure": "Volver a configurar la radio actual"
+                },
+                "title": "Migrar o volver a configurar"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Subir un archivo"
+                },
+                "description": "Restaura la configuraci\u00f3n de tu red desde un archivo JSON de copia de seguridad subido. Puedes descargar uno de una instalaci\u00f3n diferente de ZHA desde **Configuraci\u00f3n de red**, o usar un archivo `coordinator_backup.json` de Zigbee2MQTT.",
+                "title": "Subir una copia de seguridad manual"
+            }
         }
     }
 }

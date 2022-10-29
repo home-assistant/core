@@ -9,10 +9,13 @@
         }
       },
       "local": {
+        "description": "Follow [these instructions]({url}) on how to enable the Awair Local API.\n\nClick submit when done."
+      },
+      "local_pick": {
         "data": {
+          "device": "[%key:common::config_flow::data::device%]",
           "host": "[%key:common::config_flow::data::ip%]"
-        },
-        "description": "Awair Local API must be enabled following these steps: {url}"
+        }
       },
       "reauth_confirm": {
         "description": "Please re-enter your Awair developer access token.",

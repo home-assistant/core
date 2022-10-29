@@ -41,7 +41,7 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 
 if TYPE_CHECKING:
-    from .deconz_event import DeconzAlarmEvent, DeconzEvent
+    from .deconz_event import DeconzAlarmEvent, DeconzEvent, DeconzPresenceEvent
 
 SENSORS = (
     sensors.SensorResourceManager,
@@ -93,7 +93,7 @@ class DeconzGateway:
 
         self.deconz_ids: dict[str, str] = {}
         self.entities: dict[str, set[str]] = {}
-        self.events: list[DeconzAlarmEvent | DeconzEvent] = []
+        self.events: list[DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent] = []
         self.clip_sensors: set[tuple[Callable[[EventType, str], None], str]] = set()
         self.deconz_groups: set[tuple[Callable[[EventType, str], None], str]] = set()
         self.ignored_devices: set[tuple[Callable[[EventType, str], None], str]] = set()

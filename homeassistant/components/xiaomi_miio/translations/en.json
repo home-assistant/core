@@ -5,7 +5,8 @@
             "already_in_progress": "Configuration flow is already in progress",
             "incomplete_info": "Incomplete information to setup device, no host or token supplied.",
             "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio.",
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
         },
         "error": {
             "cannot_connect": "Failed to connect",

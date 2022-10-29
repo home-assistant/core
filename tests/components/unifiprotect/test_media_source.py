@@ -4,7 +4,9 @@ from datetime import datetime, timedelta
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 import pytest
+import pytz
 from pyunifiprotect.data import (
     Bootstrap,
     Camera,
@@ -15,11 +17,7 @@ from pyunifiprotect.data import (
 )
 from pyunifiprotect.exceptions import NvrError
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import MediaSourceItem
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.media_source import (
@@ -28,6 +26,7 @@ from homeassistant.components.unifiprotect.media_source import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockUFPFixture
 from .utils import init_entry
@@ -430,13 +429,52 @@ async def test_browse_media_event_type(
     assert browse.children[3].identifier == "test_id:browse:all:smart"
 
 
+ONE_MONTH_SIMPLE = (
+    datetime(
+        year=2022,
+        month=9,
+        day=1,
+        hour=3,
+        minute=0,
+        second=0,
+        microsecond=0,
+        tzinfo=pytz.timezone("US/Pacific"),
+    ),
+    1,
+)
+TWO_MONTH_SIMPLE = (
+    datetime(
+        year=2022,
+        month=8,
+        day=31,
+        hour=3,
+        minute=0,
+        second=0,
+        microsecond=0,
+        tzinfo=pytz.timezone("US/Pacific"),
+    ),
+    2,
+)
+
+
+@pytest.mark.parametrize(
+    "start,months",
+    [ONE_MONTH_SIMPLE, TWO_MONTH_SIMPLE],
+)
+@freeze_time("2022-09-15 03:00:00-07:00")
 async def test_browse_media_time(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    start: datetime,
+    months: int,
 ):
     """Test browsing time selector level media."""
 
-    last_month = fixed_now.replace(day=1) - timedelta(days=1)
-    ufp.api.bootstrap._recording_start = last_month
+    end = datetime.fromisoformat("2022-09-15 03:00:00-07:00")
+    end_local = dt_util.as_local(end)
+
+    ufp.api.bootstrap._recording_start = dt_util.as_utc(start)
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
@@ -449,17 +487,89 @@ async def test_browse_media_time(
 
     assert browse.title == f"UnifiProtect > {doorbell.name} > All Events"
     assert browse.identifier == base_id
-    assert len(browse.children) == 4
+    assert len(browse.children) == 3 + months
     assert browse.children[0].title == "Last 24 Hours"
     assert browse.children[0].identifier == f"{base_id}:recent:1"
     assert browse.children[1].title == "Last 7 Days"
     assert browse.children[1].identifier == f"{base_id}:recent:7"
     assert browse.children[2].title == "Last 30 Days"
     assert browse.children[2].identifier == f"{base_id}:recent:30"
-    assert browse.children[3].title == f"{fixed_now.strftime('%B %Y')}"
+    assert browse.children[3].title == f"{end_local.strftime('%B %Y')}"
     assert (
         browse.children[3].identifier
-        == f"{base_id}:range:{fixed_now.year}:{fixed_now.month}"
+        == f"{base_id}:range:{end_local.year}:{end_local.month}"
+    )
+
+
+ONE_MONTH_TIMEZONE = (
+    datetime(
+        year=2022,
+        month=8,
+        day=1,
+        hour=3,
+        minute=0,
+        second=0,
+        microsecond=0,
+        tzinfo=pytz.timezone("US/Pacific"),
+    ),
+    1,
+)
+TWO_MONTH_TIMEZONE = (
+    datetime(
+        year=2022,
+        month=7,
+        day=31,
+        hour=21,
+        minute=0,
+        second=0,
+        microsecond=0,
+        tzinfo=pytz.timezone("US/Pacific"),
+    ),
+    2,
+)
+
+
+@pytest.mark.parametrize(
+    "start,months",
+    [ONE_MONTH_TIMEZONE, TWO_MONTH_TIMEZONE],
+)
+@freeze_time("2022-08-31 21:00:00-07:00")
+async def test_browse_media_time_timezone(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    start: datetime,
+    months: int,
+):
+    """Test browsing time selector level media."""
+
+    end = datetime.fromisoformat("2022-08-31 21:00:00-07:00")
+    end_local = dt_util.as_local(end)
+
+    ufp.api.bootstrap._recording_start = dt_util.as_utc(start)
+
+    ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    base_id = f"test_id:browse:{doorbell.id}:all"
+    source = await async_get_media_source(hass)
+    media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
+
+    browse = await source.async_browse_media(media_item)
+
+    assert browse.title == f"UnifiProtect > {doorbell.name} > All Events"
+    assert browse.identifier == base_id
+    assert len(browse.children) == 3 + months
+    assert browse.children[0].title == "Last 24 Hours"
+    assert browse.children[0].identifier == f"{base_id}:recent:1"
+    assert browse.children[1].title == "Last 7 Days"
+    assert browse.children[1].identifier == f"{base_id}:recent:7"
+    assert browse.children[2].title == "Last 30 Days"
+    assert browse.children[2].identifier == f"{base_id}:recent:30"
+    assert browse.children[3].title == f"{end_local.strftime('%B %Y')}"
+    assert (
+        browse.children[3].identifier
+        == f"{base_id}:range:{end_local.year}:{end_local.month}"
     )
 
 
@@ -565,7 +675,7 @@ async def test_browse_media_event(
 
     assert browse.identifier == "test_id:event:test_event_id"
     assert browse.children is None
-    assert browse.media_class == MEDIA_CLASS_VIDEO
+    assert browse.media_class == MediaClass.VIDEO
 
 
 async def test_browse_media_eventthumb(
@@ -596,23 +706,23 @@ async def test_browse_media_eventthumb(
 
     assert browse.identifier == "test_id:eventthumb:test_event_id"
     assert browse.children is None
-    assert browse.media_class == MEDIA_CLASS_IMAGE
+    assert browse.media_class == MediaClass.IMAGE
 
 
+@freeze_time("2022-09-15 03:00:00-07:00")
 async def test_browse_media_day(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test browsing day selector level media."""
 
-    last_month = fixed_now.replace(day=1) - timedelta(days=1)
-    ufp.api.bootstrap._recording_start = last_month
+    start = datetime.fromisoformat("2022-09-03 03:00:00-07:00")
+    end = datetime.fromisoformat("2022-09-15 03:00:00-07:00")
+    ufp.api.bootstrap._recording_start = dt_util.as_utc(start)
 
     ufp.api.get_bootstrap = AsyncMock(return_value=ufp.api.bootstrap)
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
-    base_id = (
-        f"test_id:browse:{doorbell.id}:all:range:{fixed_now.year}:{fixed_now.month}"
-    )
+    base_id = f"test_id:browse:{doorbell.id}:all:range:{end.year}:{end.month}"
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -620,10 +730,10 @@ async def test_browse_media_day(
 
     assert (
         browse.title
-        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')}"
+        == f"UnifiProtect > {doorbell.name} > All Events > {end.strftime('%B %Y')}"
     )
     assert browse.identifier == base_id
-    assert len(browse.children) in (29, 30, 31, 32)
+    assert len(browse.children) == 14
     assert browse.children[0].title == "Whole Month"
     assert browse.children[0].identifier == f"{base_id}:all"
 
@@ -673,7 +783,7 @@ async def test_browse_media_browse_whole_month(
 ):
     """Test events for a specific day."""
 
-    fixed_now = fixed_now.replace(month=11)
+    fixed_now = fixed_now.replace(month=10)
     last_month = fixed_now.replace(day=1) - timedelta(days=1)
     ufp.api.bootstrap._recording_start = last_month
 

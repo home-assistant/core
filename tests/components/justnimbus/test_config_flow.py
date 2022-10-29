@@ -10,6 +10,8 @@ from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -30,8 +32,12 @@ async def test_form(hass: HomeAssistant) -> None:
             {"base": "invalid_auth"},
         ),
         (
-            JustNimbusError(),
+            JustNimbusError,
             {"base": "cannot_connect"},
+        ),
+        (
+            RuntimeError,
+            {"base": "unknown"},
         ),
     ),
 )
@@ -60,6 +66,34 @@ async def test_form_errors(
     assert result2["errors"] == errors
 
     await _set_up_justnimbus(hass=hass, flow_id=result["flow_id"])
+
+
+async def test_abort_already_configured(hass: HomeAssistant) -> None:
+    """Test we abort when the device is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="JustNimbus",
+        data={CONF_CLIENT_ID: "test_id"},
+        unique_id="test_id",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("errors") is None
+    assert "flow_id" in result
+
+    result2 = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"],
+        user_input={
+            CONF_CLIENT_ID: "test_id",
+        },
+    )
+
+    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("reason") == "already_configured"
 
 
 async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str) -> None:

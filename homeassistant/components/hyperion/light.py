@@ -125,6 +125,7 @@ class HyperionBaseLight(LightEntity):
     """A Hyperion light base class."""
 
     _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT
 
@@ -177,11 +178,6 @@ class HyperionBaseLight(LightEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Whether or not the entity is enabled by default."""
         return True
-
-    @property
-    def should_poll(self) -> bool:
-        """Return whether or not this entity should be polled."""
-        return False
 
     @property
     def name(self) -> str:

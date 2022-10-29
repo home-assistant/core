@@ -184,7 +184,7 @@ class EBoxSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
         self.ebox_data = ebox_data
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from EBox and update the state."""
         await self.ebox_data.async_update()
         if self.entity_description.key in self.ebox_data.data:

@@ -12,12 +12,22 @@
             "enable_bluetooth": {
                 "description": "Wilt u Bluetooth instellen?"
             },
+            "multiple_adapters": {
+                "data": {
+                    "adapter": "Adapter"
+                }
+            },
             "user": {
                 "data": {
                     "address": "Apparaat"
                 },
                 "description": "Kies een apparaat om in te stellen"
             }
+        }
+    },
+    "issues": {
+        "haos_outdated": {
+            "title": "Update naar het Home Assistant-besturingssysteem versie 9.0 of hoger"
         }
     },
     "options": {

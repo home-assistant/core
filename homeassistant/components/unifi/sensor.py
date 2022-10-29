@@ -67,8 +67,7 @@ def add_bandwidth_entities(controller, async_add_entities, clients):
             client = controller.api.clients[mac]
             sensors.append(sensor_class(client, controller))
 
-    if sensors:
-        async_add_entities(sensors)
+    async_add_entities(sensors)
 
 
 @callback
@@ -83,8 +82,7 @@ def add_uptime_entities(controller, async_add_entities, clients):
         client = controller.api.clients[mac]
         sensors.append(UniFiUpTimeSensor(client, controller))
 
-    if sensors:
-        async_add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class UniFiBandwidthSensor(UniFiClient, SensorEntity):

@@ -1,8 +1,13 @@
 """Test the Z-Wave JS climate platform."""
 import pytest
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.thermostat import (
+    THERMOSTAT_OPERATING_STATE_PROPERTY,
+)
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -25,6 +30,7 @@ from homeassistant.components.climate.const import (
     HVACMode,
 )
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
+from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -37,6 +43,7 @@ from .common import (
     CLIMATE_FLOOR_THERMOSTAT_ENTITY,
     CLIMATE_MAIN_HEAT_ACTIONNER,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
+    replace_value_of_zwave_value,
 )
 
 
@@ -58,6 +65,8 @@ async def test_thermostat_v2(
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 30
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.2
     assert state.attributes[ATTR_TEMPERATURE] == 22.2
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert state.attributes[ATTR_FAN_MODE] == "Auto low"
     assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
@@ -86,21 +95,9 @@ async def test_thermostat_v2(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Mode",
         "commandClass": 64,
         "endpoint": 1,
         "property": "mode",
-        "propertyName": "mode",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 31,
-            "label": "Thermostat mode",
-            "states": {"0": "Off", "1": "Heat", "2": "Cool", "3": "Auto"},
-        },
-        "value": 1,
     }
     assert args["value"] == 2
 
@@ -123,42 +120,19 @@ async def test_thermostat_v2(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Mode",
         "commandClass": 64,
         "endpoint": 1,
         "property": "mode",
-        "propertyName": "mode",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 31,
-            "label": "Thermostat mode",
-            "states": {"0": "Off", "1": "Heat", "2": "Cool", "3": "Auto"},
-        },
-        "value": 1,
     }
     assert args["value"] == 2
     args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Setpoint",
         "commandClass": 67,
         "endpoint": 1,
         "property": "setpoint",
         "propertyKey": 1,
-        "propertyName": "setpoint",
-        "propertyKeyName": "Heating",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "unit": "°F",
-            "ccSpecific": {"setpointType": 1},
-        },
-        "value": 72,
     }
     assert args["value"] == 77
 
@@ -187,6 +161,8 @@ async def test_thermostat_v2(
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
     assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_TEMPERATURE] == 22.8
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] is None
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] is None
 
     # Test heat_cool mode update from value updated event
     event = Event(
@@ -210,6 +186,7 @@ async def test_thermostat_v2(
 
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
     assert state.state == HVACMode.HEAT_COOL
+    assert state.attributes[ATTR_TEMPERATURE] is None
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 22.8
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
 
@@ -232,21 +209,10 @@ async def test_thermostat_v2(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Setpoint",
         "commandClass": 67,
         "endpoint": 1,
         "property": "setpoint",
         "propertyKey": 1,
-        "propertyName": "setpoint",
-        "propertyKeyName": "Heating",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "unit": "°F",
-            "ccSpecific": {"setpointType": 1},
-        },
-        "value": 72,
     }
     assert args["value"] == 77
 
@@ -254,21 +220,10 @@ async def test_thermostat_v2(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Setpoint",
         "commandClass": 67,
         "endpoint": 1,
         "property": "setpoint",
         "propertyKey": 2,
-        "propertyName": "setpoint",
-        "propertyKeyName": "Cooling",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "unit": "°F",
-            "ccSpecific": {"setpointType": 2},
-        },
-        "value": 73,
     }
     assert args["value"] == 86
 
@@ -306,20 +261,7 @@ async def test_thermostat_v2(
     assert args["valueId"] == {
         "endpoint": 1,
         "commandClass": 68,
-        "commandClassName": "Thermostat Fan Mode",
         "property": "mode",
-        "propertyName": "mode",
-        "ccVersion": 0,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 255,
-            "states": {"0": "Auto low", "1": "Low"},
-            "label": "Thermostat fan mode",
-        },
-        "value": 0,
     }
     assert args["value"] == 1
 
@@ -408,20 +350,8 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 67,
-        "commandClassName": "Thermostat Setpoint",
         "property": "setpoint",
-        "propertyName": "setpoint",
         "propertyKey": 1,
-        "propertyKeyName": "Heating",
-        "ccVersion": 2,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "unit": "\u00b0C",
-            "ccSpecific": {"setpointType": 1},
-        },
-        "value": 14,
     }
     assert args["value"] == 21.5
 
@@ -627,27 +557,9 @@ async def test_preset_and_no_setpoint(
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 8
     assert args["valueId"] == {
-        "commandClassName": "Thermostat Mode",
         "commandClass": 64,
         "endpoint": 0,
         "property": "mode",
-        "propertyName": "mode",
-        "ccVersion": 3,
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 31,
-            "label": "Thermostat mode",
-            "states": {
-                "0": "Off",
-                "1": "Heat",
-                "11": "Energy heat",
-                "15": "Full power",
-            },
-        },
-        "value": 1,
     }
     assert args["value"] == 15
 
@@ -732,3 +644,25 @@ async def test_temp_unit_fix(
     state = hass.states.get("climate.z_wave_thermostat")
     assert state
     assert state.attributes["current_temperature"] == 21.1
+
+
+async def test_thermostat_unknown_values(
+    hass, client, climate_radio_thermostat_ct100_plus_state, integration
+):
+    """Test a thermostat v2 with unknown values."""
+    node_state = replace_value_of_zwave_value(
+        climate_radio_thermostat_ct100_plus_state,
+        [
+            ZwaveValueMatcher(
+                THERMOSTAT_OPERATING_STATE_PROPERTY,
+                command_class=CommandClass.THERMOSTAT_OPERATING_STATE,
+            )
+        ],
+        None,
+    )
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+    state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
+
+    assert ATTR_HVAC_ACTION not in state.attributes

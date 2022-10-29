@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
+from blebox_uniapi.box import Box
 import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
 
@@ -22,7 +24,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity, create_blebox_entities
+from . import BleBoxEntity
+from .const import DOMAIN, PRODUCT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,10 +38,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
-
-    create_blebox_entities(
-        hass, config_entry, async_add_entities, BleBoxLightEntity, "lights"
-    )
+    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
+    entities = [
+        BleBoxLightEntity(feature) for feature in product.features.get("lights", [])
+    ]
+    async_add_entities(entities, True)
 
 
 COLOR_MODE_MAP = {
@@ -52,14 +56,15 @@ COLOR_MODE_MAP = {
 }
 
 
-class BleBoxLightEntity(BleBoxEntity, LightEntity):
+class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     """Representation of BleBox lights."""
 
-    def __init__(self, feature):
+    def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
         super().__init__(feature)
         self._attr_supported_color_modes = {self.color_mode}
-        self._attr_supported_features = LightEntityFeature.EFFECT
+        if feature.effect_list:
+            self._attr_supported_features = LightEntityFeature.EFFECT
 
     @property
     def is_on(self) -> bool:
@@ -90,7 +95,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
         return color_mode_tmp
 
     @property
-    def effect_list(self) -> list[str] | None:
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._feature.effect_list
 
@@ -124,7 +129,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
             return None
         return tuple(blebox_uniapi.light.Light.rgb_hex_to_rgb_list(rgbww_hex))
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
 
         rgbw = kwargs.get(ATTR_RGBW_COLOR)
@@ -175,6 +180,6 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
                     f"Turning on with effect '{self.name}' failed: {effect} not in effect list."
                 ) from exc
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._feature.async_off()

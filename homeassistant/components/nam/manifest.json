@@ -3,7 +3,7 @@
   "name": "Nettigo Air Monitor",
   "documentation": "https://www.home-assistant.io/integrations/nam",
   "codeowners": ["@bieniu"],
-  "requirements": ["nettigo-air-monitor==1.4.2"],
+  "requirements": ["nettigo-air-monitor==1.5.0"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
@@ -17,5 +17,6 @@
   "config_flow": true,
   "quality_scale": "platinum",
   "iot_class": "local_polling",
-  "loggers": ["nettigo_air_monitor"]
+  "loggers": ["nettigo_air_monitor"],
+  "integration_type": "device"
 }
