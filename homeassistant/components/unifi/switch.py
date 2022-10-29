@@ -45,14 +45,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    ATTR_MANUFACTURER,
-    BLOCK_SWITCH,
-    DOMAIN as UNIFI_DOMAIN,
-    DPI_SWITCH,
-    OUTLET_SWITCH,
-    POE_SWITCH,
-)
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN, POE_SWITCH
 from .controller import UniFiController
 from .unifi_client import UniFiClient
 
@@ -71,9 +64,9 @@ class UnifiEntityLoader(Generic[T, V]):
     available_fn: Callable[[UniFiController, str], bool]
     control_fn: Callable[[UniFiController, str, bool], Coroutine[Any, Any, None]]
     device_info: Callable[[UniFiController, str], DeviceInfo]
-    entity_cls: type[UnifiSwitchEntity] | type[UnifiBlockClientSwitch] | type[
-        UnifiDPIRestrictionSwitch
-    ]
+    entity_cls: type[UnifiSwitchEntity] | type[UnifiDPIRestrictionSwitch]
+    event_is_on: tuple[EventKey, ...] | None
+    event_to_subscribe: tuple[EventKey, ...] | None
     handler_fn: Callable[[UniFiController], T]
     is_on_fn: Callable[[UniFiController, V], bool]
     name_fn: Callable[[V], str | None]
@@ -193,17 +186,9 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches for UniFi Network integration.
-
-    Switches are controlling network access and switch ports with POE.
-    """
+    """Set up switches for UniFi Network integration."""
     controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.entities[DOMAIN] = {
-        BLOCK_SWITCH: set(),
-        POE_SWITCH: set(),
-        DPI_SWITCH: set(),
-        OUTLET_SWITCH: set(),
-    }
+    controller.entities[DOMAIN] = {POE_SWITCH: set()}
 
     if controller.site_role != "admin":
         return
@@ -487,6 +472,13 @@ class UnifiSwitchEntity(SwitchEntity):
                 self.remove_item,
             )
         )
+        if self.entity_description.event_to_subscribe is not None:
+            self.async_on_remove(
+                self.controller.api.events.subscribe(
+                    self.async_event_callback,
+                    self.entity_description.event_to_subscribe,
+                )
+            )
 
     @callback
     def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
@@ -507,6 +499,18 @@ class UnifiSwitchEntity(SwitchEntity):
         """Call when controller connection state change."""
         self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
 
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Event subscription callback."""
+        if event.mac != self._obj_id:
+            return
+        assert isinstance(self.entity_description.event_to_subscribe, tuple)
+        assert isinstance(self.entity_description.event_is_on, tuple)
+        if event.key in self.entity_description.event_to_subscribe:
+            self._attr_is_on = event.key in self.entity_description.event_is_on
+        self._attr_available = self.controller.available
+        self.async_write_ha_state()
+
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.entity_description.allowed_fn(self.controller, self._obj_id):
@@ -523,62 +527,8 @@ class UnifiSwitchEntity(SwitchEntity):
             await self.async_remove(force_remove=True)
 
 
-class UnifiBlockClientSwitch(UnifiSwitchEntity):
-    """Representation of a blockable client."""
-
-    def __init__(
-        self,
-        obj_id: str,
-        controller: UniFiController,
-        description: UnifiEntityDescription,
-    ) -> None:
-        """Set up block switch."""
-        super().__init__(obj_id, controller, description)
-        controller.entities[DOMAIN][BLOCK_SWITCH].add(obj_id)
-
-    async def async_added_to_hass(self) -> None:
-        """Entity created."""
-        self.async_on_remove(
-            self.controller.api.events.subscribe(
-                self.async_event_callback, CLIENT_BLOCKED + CLIENT_UNBLOCKED
-            )
-        )
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect object when removed."""
-        self.controller.entities[DOMAIN][BLOCK_SWITCH].remove(self._obj_id)
-
-    @callback
-    def async_event_callback(self, event: Event) -> None:
-        """Event subscription callback."""
-        if event.mac != self._obj_id:
-            return
-        if event.key in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
-            self._attr_is_on = event.key in CLIENT_UNBLOCKED
-        self._attr_available = self.controller.available
-        self.async_write_ha_state()
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        if not self.is_on:
-            return "mdi:network-off"
-        return "mdi:network"
-
-
 class UnifiDPIRestrictionSwitch(UnifiSwitchEntity):
     """Representation of a DPI restriction group."""
-
-    def __init__(
-        self,
-        obj_id: str,
-        controller: UniFiController,
-        description: UnifiEntityDescription,
-    ) -> None:
-        """Set up dpi switch."""
-        super().__init__(obj_id, controller, description)
-        controller.entities[DOMAIN][DPI_SWITCH].add(obj_id)
 
     async def async_added_to_hass(self) -> None:
         """Register callback to known apps."""
@@ -588,10 +538,6 @@ class UnifiDPIRestrictionSwitch(UnifiSwitchEntity):
             ),
         )
         await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect object when removed."""
-        self.controller.entities[DOMAIN][DPI_SWITCH].remove(self._obj_id)
 
     @callback
     def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
@@ -607,13 +553,6 @@ class UnifiDPIRestrictionSwitch(UnifiSwitchEntity):
 
         super().async_signalling_callback(event, self._obj_id)
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        if self.is_on:
-            return "mdi:network"
-        return "mdi:network-off"
-
 
 UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
     UnifiEntityDescription[Clients, Client](
@@ -626,13 +565,15 @@ UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
         available_fn=lambda controller, obj_id: controller.available,
         control_fn=async_control_block_client,
         device_info=client_registry_entry,
-        entity_cls=UnifiBlockClientSwitch,
+        entity_cls=UnifiSwitchEntity,
+        event_is_on=CLIENT_UNBLOCKED,
+        event_to_subscribe=CLIENT_BLOCKED + CLIENT_UNBLOCKED,
         is_on_fn=lambda controller, client: not client.blocked,
         name_fn=lambda client: None,
         object_fn=lambda handler, obj_id: handler[obj_id],
         handler_fn=lambda contrlr: contrlr.api.clients,
         supported_fn=lambda handler, obj_id: True,
-        unique_id_fn=lambda obj_id: f"{BLOCK_SWITCH}-{obj_id}",
+        unique_id_fn=lambda obj_id: f"block-{obj_id}",
     ),
     UnifiEntityDescription[DPIRestrictionGroups, DPIRestrictionGroup](
         key="DPI restriction",
@@ -642,6 +583,8 @@ UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
         control_fn=async_control_dpi_group,
         device_info=dpi_group_registry_entry,
         entity_cls=UnifiDPIRestrictionSwitch,
+        event_is_on=None,
+        event_to_subscribe=None,
         is_on_fn=calculate_enabled_dpi_apps,
         name_fn=lambda group: group.name,
         object_fn=lambda handler, obj_id: handler[obj_id],
@@ -658,6 +601,8 @@ UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
         control_fn=async_control_outlet,
         device_info=device_registry_entry,
         entity_cls=UnifiSwitchEntity,
+        event_is_on=None,
+        event_to_subscribe=None,
         is_on_fn=lambda controller, outlet: outlet.relay_state,
         name_fn=lambda outlet: outlet.name,
         object_fn=lambda handler, obj_id: handler[obj_id],
@@ -677,6 +622,8 @@ UNIFI_LOADERS: tuple[UnifiEntityDescription, ...] = (
         control_fn=async_control_poe_port,
         device_info=device_registry_entry,
         entity_cls=UnifiSwitchEntity,
+        event_is_on=None,
+        event_to_subscribe=None,
         is_on_fn=lambda controller, port: port.poe_mode != "off",
         name_fn=lambda port: f"{port.name} PoE",
         object_fn=lambda handler, obj_id: handler[obj_id],
