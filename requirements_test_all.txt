@@ -155,7 +155,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.6
+aiohomekit==2.2.8
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -212,7 +212,7 @@ aiopvpc==3.0.0
 # homeassistant.components.lidarr
 # homeassistant.components.radarr
 # homeassistant.components.sonarr
-aiopyarr==22.9.0
+aiopyarr==22.10.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.2.2
@@ -337,10 +337,10 @@ bellows==0.34.2
 bimmer_connected==0.10.4
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.4.2
+bleak-retry-connector==2.5.0
 
 # homeassistant.components.bluetooth
-bleak==0.19.0
+bleak==0.19.1
 
 # homeassistant.components.blebox
 blebox_uniapi==2.1.3
@@ -420,7 +420,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.51.0
+dbus-fast==1.59.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -599,7 +599,7 @@ greeneye_monitor==3.0.3
 gridnet==4.0.0
 
 # homeassistant.components.growatt_server
-growattServer==1.2.2
+growattServer==1.2.3
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
@@ -822,7 +822,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.4.2
+nettigo-air-monitor==1.5.0
 
 # homeassistant.components.nexia
 nexia==2.0.5
@@ -883,7 +883,7 @@ open-meteo==0.2.1
 openerz-api==0.1.0
 
 # homeassistant.components.oralb
-oralb-ble==0.8.0
+oralb-ble==0.9.0
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
@@ -1081,7 +1081,7 @@ pyeconet==0.1.15
 pyefergy==22.1.1
 
 # homeassistant.components.eight_sleep
-pyeight==0.3.0
+pyeight==0.3.2
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1331,7 +1331,7 @@ pysiaalarm==3.0.2
 pysignalclirestapi==0.3.18
 
 # homeassistant.components.sma
-pysma==0.7.1
+pysma==0.7.2
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -1823,7 +1823,7 @@ zigpy-zigate==0.10.2
 zigpy-znp==0.9.1
 
 # homeassistant.components.zha
-zigpy==0.51.4
+zigpy==0.51.5
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.43.0
