@@ -230,13 +230,13 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             "NitrogenDioxideSensor",
             "sensor.air_quality_nitrogen_dioxide",
             "50",
-            {ATTR_DEVICE_CLASS: "nitrogen_dioxide"},
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.NITROGEN_DIOXIDE},
         ),
         (
             "VolatileOrganicCompoundsSensor",
             "sensor.air_quality_volatile_organic_compounds",
             "55",
-            {ATTR_DEVICE_CLASS: "volatile_organic_compounds"},
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS},
         ),
         (
             "CarbonMonoxideSensor",
