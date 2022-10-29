@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "no_ip_control": "Le contr\u00f4le IP est d\u00e9sactiv\u00e9 sur votre t\u00e9l\u00e9viseur ou le t\u00e9l\u00e9viseur n'est pas pris en charge.",
-            "not_bravia_device": "L'appareil n'est pas un t\u00e9l\u00e9viseur Bravia."
+            "not_bravia_device": "L'appareil n'est pas un t\u00e9l\u00e9viseur Bravia.",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
+            "reauth_unsuccessful": "La r\u00e9authentification a \u00e9chou\u00e9, veuillez supprimer l'int\u00e9gration puis la configurer \u00e0 nouveau."
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
@@ -22,6 +24,12 @@
             },
             "confirm": {
                 "description": "Voulez-vous commencer la configuration\u00a0?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "Code PIN",
+                    "use_psk": "Utiliser l'authentification PSK"
+                }
             },
             "user": {
                 "data": {

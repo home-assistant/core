@@ -1,8 +1,18 @@
 """Constants for the UniFi Network integration."""
+
 import logging
+
+from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "unifi"
+
+PLATFORMS = [
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 CONF_CONTROLLER = "controller"
 CONF_SITE_ID = "site"
@@ -32,3 +42,8 @@ DEFAULT_TRACK_WIRED_CLIENTS = True
 DEFAULT_DETECTION_TIME = 300
 
 ATTR_MANUFACTURER = "Ubiquiti Networks"
+
+BLOCK_SWITCH = "block"
+DPI_SWITCH = "dpi"
+POE_SWITCH = "poe"
+OUTLET_SWITCH = "outlet"

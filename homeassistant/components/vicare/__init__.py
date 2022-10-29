@@ -34,6 +34,14 @@ class ViCareRequiredKeysMixin:
     value_getter: Callable[[Device], bool]
 
 
+@dataclass()
+class ViCareRequiredKeysMixinWithSet:
+    """Mixin for required keys with setter."""
+
+    value_getter: Callable[[Device], bool]
+    value_setter: Callable[[Device], bool]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")

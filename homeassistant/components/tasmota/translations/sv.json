@@ -16,5 +16,15 @@
                 "description": "Vill du konfigurera Tasmota?"
             }
         }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "Flera Tasmota-enheter delar \u00e4mnet {topic} . \n\n Tasmota-enheter med detta problem: {offenders} .",
+            "title": "Flera Tasmota-enheter delar samma \u00e4mne"
+        },
+        "topic_no_prefix": {
+            "description": "Tasmota-enhet {name} med IP {ip} inkluderar inte ` %prefix% ` i hela \u00e4mnet. \n\n Entiteter f\u00f6r denna enhet \u00e4r inaktiverade tills konfigurationen har korrigerats.",
+            "title": "Tasmota-enheten {name} har ett ogiltigt MQTT-\u00e4mne"
+        }
     }
 }

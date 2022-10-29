@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -39,6 +40,7 @@ ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
+ATTR_RANGE = "range"
 
 ICON = "mdi:calculator"
 
@@ -48,6 +50,7 @@ SENSOR_TYPES = {
     ATTR_MEAN: "mean",
     ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
+    ATTR_RANGE: "range",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -59,6 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
         vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
+        vol.Optional(CONF_UNIQUE_ID): str,
     }
 )
 
@@ -100,11 +104,12 @@ async def async_setup_platform(
     name = config.get(CONF_NAME)
     sensor_type = config.get(CONF_TYPE)
     round_digits = config.get(CONF_ROUND_DIGITS)
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     async_add_entities(
-        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, None)]
+        [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]
     )
 
 
@@ -158,6 +163,19 @@ def calc_median(sensor_values, round_digits):
     return round(statistics.median(result), round_digits)
 
 
+def calc_range(sensor_values, round_digits):
+    """Calculate range value, honoring unknown states."""
+    result = [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+    if not result:
+        return None
+    return round(max(result) - min(result), round_digits)
+
+
 class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
@@ -180,6 +198,7 @@ class MinMaxSensor(SensorEntity):
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = self.last = self.median = None
+        self.range = None
         self.min_entity_id = self.max_entity_id = self.last_entity_id = None
         self.count_sensors = len(self._entity_ids)
         self.states = {}
@@ -288,3 +307,4 @@ class MinMaxSensor(SensorEntity):
         self.max_entity_id, self.max_value = calc_max(sensor_values)
         self.mean = calc_mean(sensor_values, self._round_digits)
         self.median = calc_median(sensor_values, self._round_digits)
+        self.range = calc_range(sensor_values, self._round_digits)

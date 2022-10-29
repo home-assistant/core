@@ -19,10 +19,10 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     PRECIPITATION_INCHES,
-    PRECIPITATION_INCHES_PER_HOUR,
     PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
@@ -194,9 +194,9 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_HOURLYRAININ,
         name="Hourly rain rate",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,
@@ -308,6 +308,7 @@ SENSOR_DESCRIPTIONS = (
         name="Max gust",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -631,6 +632,7 @@ SENSOR_DESCRIPTIONS = (
         name="Wind gust",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -638,18 +640,21 @@ SENSOR_DESCRIPTIONS = (
         name="Wind avg 10m",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG2M,
         name="Wind avg 2m",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPEEDMPH,
         name="Wind speed",
         icon="mdi:weather-windy",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

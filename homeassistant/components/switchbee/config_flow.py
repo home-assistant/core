@@ -29,7 +29,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass, verify_ssl=False)
@@ -45,6 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
 
         raise CannotConnect from exp
 
+    assert api.mac is not None
     return format_mac(api.mac)
 
 
@@ -53,7 +54,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Show the setup form to the user."""
         errors: dict[str, str] = {}
 
@@ -63,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            mac_formated = await validate_input(self.hass, user_input)
+            mac_formatted = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -73,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         else:
-            await self.async_set_unique_id(mac_formated)
+            await self.async_set_unique_id(mac_formatted)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 

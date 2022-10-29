@@ -171,7 +171,160 @@ effect_colorloop:
       default: true
       selector:
         boolean:
-
+effect_move:
+  name: Move effect
+  description: Start the firmware-based Move effect on a LIFX Z, Lightstrip or Beam.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How long in seconds for the effect to move across the length of the light.
+      default: 3.0
+      example: 3.0
+      selector:
+        number:
+          min: 0.1
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
+    direction:
+      name: Direction
+      description: Direction the effect will move across the device.
+      default: right
+      example: right
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - right
+            - left
+    theme:
+      name: Theme
+      description: (Optional) set one of the predefined themes onto the device before starting the effect.
+      example: exciting
+      default: exciting
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - "autumn"
+            - "blissful"
+            - "cheerful"
+            - "dream"
+            - "energizing"
+            - "epic"
+            - "exciting"
+            - "focusing"
+            - "halloween"
+            - "hanukkah"
+            - "holly"
+            - "independence_day"
+            - "intense"
+            - "mellow"
+            - "peaceful"
+            - "powerful"
+            - "relaxing"
+            - "santa"
+            - "serene"
+            - "soothing"
+            - "sports"
+            - "spring"
+            - "tranquil"
+            - "warming"
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
+effect_flame:
+  name: Flame effect
+  description: Start the firmware-based Flame effect on LIFX Tiles or Candle.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How fast the flames will move.
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 25
+          step: 1
+          unit_of_measurement: seconds
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
+effect_morph:
+  name: Morph effect
+  description: Start the firmware-based Morph effect on LIFX Tiles on Candle.
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    speed:
+      name: Speed
+      description: How fast the colors will move.
+      default: 3
+      selector:
+        number:
+          min: 1
+          max: 25
+          step: 1
+          unit_of_measurement: seconds
+    palette:
+      name: Palette
+      description: List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-900) values to use for this effect. Overrides the theme attribute.
+      example:
+        - "[[0, 100, 100, 3500], [60, 100, 100, 3500]]"
+      selector:
+        object:
+    theme:
+      name: Theme
+      description: Predefined color theme to use for the effect. Overridden by the palette attribute.
+      selector:
+        select:
+          options:
+            - "autumn"
+            - "blissful"
+            - "cheerful"
+            - "dream"
+            - "energizing"
+            - "epic"
+            - "exciting"
+            - "focusing"
+            - "halloween"
+            - "hanukkah"
+            - "holly"
+            - "independence_day"
+            - "intense"
+            - "mellow"
+            - "peaceful"
+            - "powerful"
+            - "relaxing"
+            - "santa"
+            - "serene"
+            - "soothing"
+            - "sports"
+            - "spring"
+            - "tranquil"
+            - "warming"
+    power_on:
+      name: Power on
+      description: Powered off lights will be turned on before starting the effect.
+      default: true
+      selector:
+        boolean:
 effect_stop:
   name: Stop effect
   description: Stop a running effect.

@@ -20,7 +20,6 @@ from . import (
     requirements,
     services,
     ssdp,
-    supported_brands,
     translations,
     usb,
     zeroconf,
@@ -31,7 +30,6 @@ INTEGRATION_PLUGINS = [
     application_credentials,
     bluetooth,
     codeowners,
-    config_flow,
     dependencies,
     dhcp,
     json,
@@ -40,10 +38,10 @@ INTEGRATION_PLUGINS = [
     requirements,
     services,
     ssdp,
-    supported_brands,
     translations,
     usb,
     zeroconf,
+    config_flow,
 ]
 HASS_PLUGINS = [
     coverage,

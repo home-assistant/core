@@ -115,7 +115,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == TONE_ID_VALUE_ID
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 255
 
     client.async_send_command.reset_mock()
@@ -159,7 +163,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {**TONE_ID_VALUE_ID, "value": 255}
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 1
     assert args["options"] == {"volume": 50}
 
@@ -181,7 +189,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {**TONE_ID_VALUE_ID, "value": 255}
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 1
     assert args["options"] == {"volume": 50}
 
@@ -199,7 +211,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == {**TONE_ID_VALUE_ID, "value": 255}
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()

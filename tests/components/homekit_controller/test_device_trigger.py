@@ -98,7 +98,7 @@ async def test_enumerate_remote(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-            "metadata": {"secondary": False},
+            "metadata": {"secondary": True},
         },
         {
             "device_id": device.id,
@@ -146,7 +146,7 @@ async def test_enumerate_button(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-            "metadata": {"secondary": False},
+            "metadata": {"secondary": True},
         },
         {
             "device_id": device.id,
@@ -193,7 +193,7 @@ async def test_enumerate_doorbell(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-            "metadata": {"secondary": False},
+            "metadata": {"secondary": True},
         },
         {
             "device_id": device.id,

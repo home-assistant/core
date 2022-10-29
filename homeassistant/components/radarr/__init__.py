@@ -1,12 +1,15 @@
 """The Radarr component."""
 from __future__ import annotations
 
+from typing import Any, cast
+
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_URL,
@@ -16,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -24,12 +27,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import (
     DiskSpaceDataUpdateCoordinator,
+    HealthDataUpdateCoordinator,
     MoviesDataUpdateCoordinator,
     RadarrDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
+    T,
 )
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -48,15 +53,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_yaml",
             )
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "removed_attributes",
-                breaks_in_ha_version="2022.10.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="removed_attributes",
-            )
 
     return True
 
@@ -72,18 +68,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host_configuration=host_configuration,
         session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
     )
-    coordinators: dict[str, RadarrDataUpdateCoordinator] = {
+    coordinators: dict[str, RadarrDataUpdateCoordinator[Any]] = {
         "status": StatusDataUpdateCoordinator(hass, host_configuration, radarr),
         "disk_space": DiskSpaceDataUpdateCoordinator(hass, host_configuration, radarr),
+        "health": HealthDataUpdateCoordinator(hass, host_configuration, radarr),
         "movie": MoviesDataUpdateCoordinator(hass, host_configuration, radarr),
     }
-    # Temporary, until we add diagnostic entities
-    _version = None
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
-        if isinstance(coordinator, StatusDataUpdateCoordinator):
-            _version = coordinator.data
-        coordinator.system_version = _version
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -97,19 +89,34 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator]):
+class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator[T]]):
     """Defines a base Radarr entity."""
 
-    coordinator: RadarrDataUpdateCoordinator
+    _attr_has_entity_name = True
+    coordinator: RadarrDataUpdateCoordinator[T]
+
+    def __init__(
+        self,
+        coordinator: RadarrDataUpdateCoordinator[T],
+        description: EntityDescription,
+    ) -> None:
+        """Create Radarr entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about the Radarr instance."""
-        return DeviceInfo(
+        device_info = DeviceInfo(
             configuration_url=self.coordinator.host_configuration.url,
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
             manufacturer=DEFAULT_NAME,
             name=self.coordinator.config_entry.title,
-            sw_version=self.coordinator.system_version,
         )
+        if isinstance(self.coordinator, StatusDataUpdateCoordinator):
+            device_info[ATTR_SW_VERSION] = cast(
+                StatusDataUpdateCoordinator, self.coordinator
+            ).data.version
+        return device_info

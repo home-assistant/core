@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from aiohttp import ClientConnectorError
-from aiopyarr import SystemStatus, exceptions
+from aiopyarr import exceptions
 from aiopyarr.lidarr_client import LidarrClient
 import voluptuous as vol
 
@@ -54,15 +54,16 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         else:
             try:
-                result = await validate_input(self.hass, user_input)
-                if isinstance(result, tuple):
+                if result := await validate_input(self.hass, user_input):
                     user_input[CONF_API_KEY] = result[1]
-                elif isinstance(result, str):
-                    errors = {"base": result}
             except exceptions.ArrAuthenticationException:
                 errors = {"base": "invalid_auth"}
             except (ClientConnectorError, exceptions.ArrConnectionException):
                 errors = {"base": "cannot_connect"}
+            except exceptions.ArrWrongAppException:
+                errors = {"base": "wrong_app"}
+            except exceptions.ArrZeroConfException:
+                errors = {"base": "zeroconf_failed"}
             except exceptions.ArrException:
                 errors = {"base": "unknown"}
             if not errors:
@@ -95,7 +96,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
 async def validate_input(
     hass: HomeAssistant, data: dict[str, Any]
-) -> tuple[str, str, str] | str | SystemStatus:
+) -> tuple[str, str, str] | None:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -108,4 +109,5 @@ async def validate_input(
     )
     if CONF_API_KEY not in data:
         return await lidarr.async_try_zeroconf()
-    return await lidarr.async_get_system_status()
+    await lidarr.async_get_system_status()
+    return None

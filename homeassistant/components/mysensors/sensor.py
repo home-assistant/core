@@ -35,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
@@ -94,12 +95,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "V_WEIGHT": SensorEntityDescription(
         key="V_WEIGHT",
         native_unit_of_measurement=MASS_KILOGRAMS,
-        icon="mdi:weight-kilogram",
+        device_class=SensorDeviceClass.WEIGHT,
     ),
     "V_DISTANCE": SensorEntityDescription(
         key="V_DISTANCE",
         native_unit_of_measurement=LENGTH_METERS,
-        icon="mdi:ruler",
+        device_class=SensorDeviceClass.DISTANCE,
     ),
     "V_IMPEDANCE": SensorEntityDescription(
         key="V_IMPEDANCE",
@@ -242,7 +243,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
             return custom_unit
 
         if set_req(self.value_type) == set_req.V_TEMP:
-            if self.hass.config.units.is_metric:
+            if self.hass.config.units is METRIC_SYSTEM:
                 return TEMP_CELSIUS
             return TEMP_FAHRENHEIT
 

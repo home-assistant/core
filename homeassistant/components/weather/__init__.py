@@ -44,6 +44,7 @@ from homeassistant.util.unit_conversion import (
     SpeedConverter,
     TemperatureConverter,
 )
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,31 +100,31 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
 
-VALID_UNITS_PRESSURE: tuple[str, ...] = (
+VALID_UNITS_PRESSURE: set[str] = {
     PRESSURE_HPA,
     PRESSURE_MBAR,
     PRESSURE_INHG,
     PRESSURE_MMHG,
-)
-VALID_UNITS_TEMPERATURE: tuple[str, ...] = (
+}
+VALID_UNITS_TEMPERATURE: set[str] = {
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-)
-VALID_UNITS_PRECIPITATION: tuple[str, ...] = (
+}
+VALID_UNITS_PRECIPITATION: set[str] = {
     LENGTH_MILLIMETERS,
     LENGTH_INCHES,
-)
-VALID_UNITS_VISIBILITY: tuple[str, ...] = (
+}
+VALID_UNITS_VISIBILITY: set[str] = {
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-)
-VALID_UNITS_WIND_SPEED: tuple[str, ...] = (
+}
+VALID_UNITS_WIND_SPEED: set[str] = {
     SPEED_FEET_PER_SECOND,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
-)
+}
 
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
     ATTR_WEATHER_PRESSURE_UNIT: PressureConverter.convert,
@@ -133,7 +134,7 @@ UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
     ATTR_WEATHER_WIND_SPEED_UNIT: SpeedConverter.convert,
 }
 
-VALID_UNITS: dict[str, tuple[str, ...]] = {
+VALID_UNITS: dict[str, set[str]] = {
     ATTR_WEATHER_PRESSURE_UNIT: VALID_UNITS_PRESSURE,
     ATTR_WEATHER_TEMPERATURE_UNIT: VALID_UNITS_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY_UNIT: VALID_UNITS_VISIBILITY,
@@ -419,7 +420,9 @@ class WeatherEntity(Entity):
 
         Should not be set by integrations.
         """
-        return PRESSURE_HPA if self.hass.config.units.is_metric else PRESSURE_INHG
+        return (
+            PRESSURE_HPA if self.hass.config.units is METRIC_SYSTEM else PRESSURE_INHG
+        )
 
     @final
     @property
@@ -483,7 +486,7 @@ class WeatherEntity(Entity):
         """
         return (
             SPEED_KILOMETERS_PER_HOUR
-            if self.hass.config.units.is_metric
+            if self.hass.config.units is METRIC_SYSTEM
             else SPEED_MILES_PER_HOUR
         )
 

@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "reauth_unsuccessful": "A reautentica\u00e7\u00e3o falhou. Remova a integra\u00e7\u00e3o e configure-a novamente.",
             "unsupported_firmware": "O dispositivo est\u00e1 usando uma vers\u00e3o de firmware n\u00e3o compat\u00edvel."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "Deseja configurar o {model} em {host} ? \n\n Os dispositivos alimentados por bateria que s\u00e3o protegidos por senha devem ser ativados antes de continuar com a configura\u00e7\u00e3o.\n Dispositivos alimentados por bateria que n\u00e3o s\u00e3o protegidos por senha ser\u00e3o adicionados quando o dispositivo for ativado, agora voc\u00ea pode ativar manualmente o dispositivo usando um bot\u00e3o ou aguardar a pr\u00f3xima atualiza\u00e7\u00e3o de dados do dispositivo."
             },
             "credentials": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Senha",
                     "username": "Usu\u00e1rio"

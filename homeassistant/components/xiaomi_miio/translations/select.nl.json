@@ -1,5 +1,9 @@
 {
     "state": {
+        "xiaomi_miio__display_orientation": {
+            "left": "Links",
+            "right": "Rechts"
+        },
         "xiaomi_miio__led_brightness": {
             "bright": "Helder",
             "dim": "Dim",

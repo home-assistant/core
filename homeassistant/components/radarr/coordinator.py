@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from datetime import timedelta
-from typing import Generic, TypeVar, cast
+from typing import Generic, TypeVar, Union, cast
 
-from aiopyarr import RootFolder, exceptions
+from aiopyarr import Health, RadarrMovie, RootFolder, SystemStatus, exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
@@ -16,10 +16,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-T = TypeVar("T", str, list[RootFolder], int)
+T = TypeVar("T", bound=Union[SystemStatus, list[RootFolder], list[Health], int])
 
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
+class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T]):
     """Data update coordinator for the Radarr integration."""
 
     config_entry: ConfigEntry
@@ -39,7 +39,6 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
-        self.system_version: str | None = None
 
     async def _async_update_data(self) -> T:
         """Get the latest data from Radarr."""
@@ -59,25 +58,33 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
         raise NotImplementedError
 
 
-class StatusDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+class StatusDataUpdateCoordinator(RadarrDataUpdateCoordinator[SystemStatus]):
     """Status update coordinator for Radarr."""
 
-    async def _fetch_data(self) -> str:
+    async def _fetch_data(self) -> SystemStatus:
         """Fetch the data."""
-        return (await self.api_client.async_get_system_status()).version
+        return await self.api_client.async_get_system_status()
 
 
-class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder]]):
     """Disk space update coordinator for Radarr."""
 
     async def _fetch_data(self) -> list[RootFolder]:
         """Fetch the data."""
-        return cast(list, await self.api_client.async_get_root_folders())
+        return cast(list[RootFolder], await self.api_client.async_get_root_folders())
 
 
-class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator):
+class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
+    """Health update coordinator."""
+
+    async def _fetch_data(self) -> list[Health]:
+        """Fetch the health data."""
+        return await self.api_client.async_get_failed_health_checks()
+
+
+class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
     """Movies update coordinator."""
 
     async def _fetch_data(self) -> int:
         """Fetch the movies data."""
-        return len(cast(list, await self.api_client.async_get_movies()))
+        return len(cast(list[RadarrMovie], await self.api_client.async_get_movies()))

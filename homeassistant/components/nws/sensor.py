@@ -17,10 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.dt import utcnow
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.speed import convert as convert_speed
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+)
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import base_unique_id, device_info
 from .const import (
@@ -78,7 +81,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
         self._attr_name = f"{station} {description.name}"
-        if not hass.config.units.is_metric:
+        if hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_native_unit_of_measurement = description.unit_convert
 
     @property
@@ -91,12 +94,16 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
         unit_of_measurement = self.native_unit_of_measurement
         if unit_of_measurement == SPEED_MILES_PER_HOUR:
             return round(
-                convert_speed(value, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
+                SpeedConverter.convert(
+                    value, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR
+                )
             )
         if unit_of_measurement == LENGTH_MILES:
-            return round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
+            return round(DistanceConverter.convert(value, LENGTH_METERS, LENGTH_MILES))
         if unit_of_measurement == PRESSURE_INHG:
-            return round(convert_pressure(value, PRESSURE_PA, PRESSURE_INHG), 2)
+            return round(
+                PressureConverter.convert(value, PRESSURE_PA, PRESSURE_INHG), 2
+            )
         if unit_of_measurement == TEMP_CELSIUS:
             return round(value, 1)
         if unit_of_measurement == PERCENTAGE:

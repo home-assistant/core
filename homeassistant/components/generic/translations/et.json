@@ -45,6 +45,13 @@
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 },
                 "description": "Sisesta s\u00e4tted kaameraga \u00fchenduse loomiseks."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "See pilt n\u00e4eb hea v\u00e4lja."
+                },
+                "description": "![Kaamera pildi eelvaade]( {preview_url} )",
+                "title": "Eelvaade"
             }
         }
     },
@@ -68,6 +75,13 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Pilt tundub OK"
+                },
+                "description": "![Camera Still Image Preview]({preview_url})",
+                "title": "Eelvaade"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Sisu t\u00fc\u00fcp"

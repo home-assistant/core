@@ -116,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Efecto de emisi\u00f3n para todos los LEDs",
+            "issue_individual_led_effect": "Efecto de emisi\u00f3n para LED individual",
             "squawk": "Squawk",
             "warn": "Advertir"
         },
@@ -210,6 +212,14 @@
                 "description": "ZHA se detendr\u00e1. \u00bfDeseas continuar?",
                 "title": "Reconfigurar ZHA"
             },
+            "instruct_unplug": {
+                "description": "Tu antigua radio ha sido reiniciada. Si ya no necesitas el hardware, puedes desconectarlo ahora.",
+                "title": "Desconecta tu antigua radio"
+            },
+            "intent_migrate": {
+                "description": "Tu antigua radio se restablecer\u00e1 de f\u00e1brica. Si est\u00e1s utilizando un adaptador combinado de Z-Wave y Zigbee como el HUSBZB-1, esto solo restablecer\u00e1 la parte de Zigbee. \n\n\u00bfDeseas continuar?",
+                "title": "Migrar a una nueva radio"
+            },
             "manual_pick_radio_type": {
                 "data": {
                     "radio_type": "Tipo de Radio"
@@ -232,6 +242,14 @@
                 },
                 "description": "Tu copia de seguridad tiene una direcci\u00f3n IEEE diferente a la de tu radio. Para que tu red funcione correctamente, tambi\u00e9n debes cambiar la direcci\u00f3n IEEE de tu radio. \n\nEsta es una operaci\u00f3n permanente.",
                 "title": "Sobrescribir la direcci\u00f3n IEEE de la radio"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "\u00bfEst\u00e1s migrando a una nueva radio o volviendo a configurar la radio actual?",
+                "menu_options": {
+                    "intent_migrate": "Migrar a una nueva radio",
+                    "intent_reconfigure": "Volver a configurar la radio actual"
+                },
+                "title": "Migrar o volver a configurar"
             },
             "upload_manual_backup": {
                 "data": {

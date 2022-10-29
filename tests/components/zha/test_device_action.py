@@ -1,7 +1,8 @@
 """The test for zha device automation actions."""
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
+from zhaquirks.inovelli.VZM31SN import InovelliVZM31SNv11
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
@@ -16,7 +17,12 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
-from tests.common import async_get_device_automations, async_mock_service, mock_coro
+from tests.common import (
+    assert_lists_same,
+    async_get_device_automations,
+    async_mock_service,
+    mock_coro,
+)
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 SHORT_PRESS = "remote_button_short_press"
@@ -31,10 +37,13 @@ def required_platforms_only():
         "homeassistant.components.zha.PLATFORMS",
         (
             Platform.BINARY_SENSOR,
+            Platform.BUTTON,
             Platform.DEVICE_TRACKER,
+            Platform.LIGHT,
             Platform.NUMBER,
             Platform.SELECT,
             Platform.SENSOR,
+            Platform.SWITCH,
             Platform.SIREN,
         ),
     ):
@@ -57,6 +66,36 @@ async def device_ias(hass, zigpy_device_mock, zha_device_joined_restored):
     )
 
     zha_device = await zha_device_joined_restored(zigpy_device)
+    zha_device.update_available(True)
+    await hass.async_block_till_done()
+    return zigpy_device, zha_device
+
+
+@pytest.fixture
+async def device_inovelli(hass, zigpy_device_mock, zha_device_joined):
+    """Inovelli device fixture."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    general.Identify.cluster_id,
+                    general.OnOff.cluster_id,
+                    general.LevelControl.cluster_id,
+                    0xFC31,
+                ],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT,
+            }
+        },
+        ieee="00:1d:8f:08:0c:90:69:6b",
+        manufacturer="Inovelli",
+        model="VZM31-SN",
+        quirk=InovelliVZM31SNv11,
+    )
+
+    zha_device = await zha_device_joined(zigpy_device)
     zha_device.update_available(True)
     await hass.async_block_till_done()
     return zigpy_device, zha_device
@@ -86,47 +125,134 @@ async def test_get_actions(hass, device_ias):
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_defaulttoneselect",
+            "entity_id": "select.fakemanufacturer_fakemodel_default_siren_tone",
             "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_defaultsirenlevelselect",
+            "entity_id": "select.fakemanufacturer_fakemodel_default_siren_level",
             "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_defaultstrobelevelselect",
+            "entity_id": "select.fakemanufacturer_fakemodel_default_strobe_level",
             "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
-            "entity_id": "select.fakemanufacturer_fakemodel_defaultstrobeselect",
+            "entity_id": "select.fakemanufacturer_fakemodel_default_strobe",
             "metadata": {"secondary": True},
         },
     ]
 
-    assert actions == expected_actions
+    assert_lists_same(actions, expected_actions)
 
 
-async def test_action(hass, device_ias):
+async def test_get_inovelli_actions(hass, device_inovelli):
+    """Test we get the expected actions from a zha device."""
+
+    inovelli_ieee_address = str(device_inovelli[0].ieee)
+    ha_device_registry = dr.async_get(hass)
+    inovelli_reg_device = ha_device_registry.async_get_device(
+        {(DOMAIN, inovelli_ieee_address)}
+    )
+
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, inovelli_reg_device.id
+    )
+
+    expected_actions = [
+        {
+            "device_id": inovelli_reg_device.id,
+            "domain": DOMAIN,
+            "metadata": {},
+            "type": "issue_all_led_effect",
+        },
+        {
+            "device_id": inovelli_reg_device.id,
+            "domain": DOMAIN,
+            "metadata": {},
+            "type": "issue_individual_led_effect",
+        },
+        {
+            "device_id": inovelli_reg_device.id,
+            "domain": Platform.BUTTON,
+            "entity_id": "button.inovelli_vzm31_sn_identify",
+            "metadata": {"secondary": True},
+            "type": "press",
+        },
+        {
+            "device_id": inovelli_reg_device.id,
+            "domain": Platform.LIGHT,
+            "entity_id": "light.inovelli_vzm31_sn_light",
+            "metadata": {"secondary": False},
+            "type": "turn_off",
+        },
+        {
+            "device_id": inovelli_reg_device.id,
+            "domain": Platform.LIGHT,
+            "entity_id": "light.inovelli_vzm31_sn_light",
+            "metadata": {"secondary": False},
+            "type": "turn_on",
+        },
+        {
+            "device_id": inovelli_reg_device.id,
+            "domain": Platform.LIGHT,
+            "entity_id": "light.inovelli_vzm31_sn_light",
+            "metadata": {"secondary": False},
+            "type": "toggle",
+        },
+        {
+            "device_id": inovelli_reg_device.id,
+            "domain": Platform.LIGHT,
+            "entity_id": "light.inovelli_vzm31_sn_light",
+            "metadata": {"secondary": False},
+            "type": "brightness_increase",
+        },
+        {
+            "device_id": inovelli_reg_device.id,
+            "domain": Platform.LIGHT,
+            "entity_id": "light.inovelli_vzm31_sn_light",
+            "metadata": {"secondary": False},
+            "type": "brightness_decrease",
+        },
+        {
+            "device_id": inovelli_reg_device.id,
+            "domain": Platform.LIGHT,
+            "entity_id": "light.inovelli_vzm31_sn_light",
+            "metadata": {"secondary": False},
+            "type": "flash",
+        },
+    ]
+
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_action(hass, device_ias, device_inovelli):
     """Test for executing a zha device action."""
     zigpy_device, zha_device = device_ias
+    inovelli_zigpy_device, inovelli_zha_device = device_inovelli
 
     zigpy_device.device_automation_triggers = {
         (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE}
     }
 
     ieee_address = str(zha_device.ieee)
+    inovelli_ieee_address = str(inovelli_zha_device.ieee)
 
     ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
+    inovelli_reg_device = ha_device_registry.async_get_device(
+        {(DOMAIN, inovelli_ieee_address)}
+    )
+
+    cluster = inovelli_zigpy_device.endpoints[1].in_clusters[0xFC31]
 
     with patch(
         "zigpy.zcl.Cluster.request",
@@ -145,11 +271,32 @@ async def test_action(hass, device_ias):
                             "type": SHORT_PRESS,
                             "subtype": SHORT_PRESS,
                         },
-                        "action": {
-                            "domain": DOMAIN,
-                            "device_id": reg_device.id,
-                            "type": "warn",
-                        },
+                        "action": [
+                            {
+                                "domain": DOMAIN,
+                                "device_id": reg_device.id,
+                                "type": "warn",
+                            },
+                            {
+                                "domain": DOMAIN,
+                                "device_id": inovelli_reg_device.id,
+                                "type": "issue_all_led_effect",
+                                "effect_type": "Open_Close",
+                                "duration": 5,
+                                "level": 10,
+                                "color": 41,
+                            },
+                            {
+                                "domain": DOMAIN,
+                                "device_id": inovelli_reg_device.id,
+                                "type": "issue_individual_led_effect",
+                                "effect_type": "Open_Close",
+                                "led_number": 1,
+                                "duration": 5,
+                                "level": 10,
+                                "color": 41,
+                            },
+                        ],
                     }
                 ]
             },
@@ -166,6 +313,41 @@ async def test_action(hass, device_ias):
         assert calls[0].domain == DOMAIN
         assert calls[0].service == "warning_device_warn"
         assert calls[0].data["ieee"] == ieee_address
+
+        assert len(cluster.request.mock_calls) == 2
+        assert (
+            call(
+                False,
+                cluster.commands_by_name["led_effect"].id,
+                cluster.commands_by_name["led_effect"].schema,
+                6,
+                41,
+                10,
+                5,
+                expect_reply=False,
+                manufacturer=4151,
+                tries=1,
+                tsn=None,
+            )
+            in cluster.request.call_args_list
+        )
+        assert (
+            call(
+                False,
+                cluster.commands_by_name["individual_led_effect"].id,
+                cluster.commands_by_name["individual_led_effect"].schema,
+                1,
+                6,
+                41,
+                10,
+                5,
+                expect_reply=False,
+                manufacturer=4151,
+                tries=1,
+                tsn=None,
+            )
+            in cluster.request.call_args_list
+        )
 
 
 async def test_invalid_zha_event_type(hass, device_ias):

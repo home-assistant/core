@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.forked_daapd.browse_media import create_media_content_id
 from homeassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
     CONF_TTS_VOLUME,
-    DOMAIN,
     SIGNAL_UPDATE_OUTPUTS,
     SIGNAL_UPDATE_PLAYER,
     SIGNAL_UPDATE_QUEUE,
@@ -54,25 +54,21 @@ from homeassistant.components.media_player import (
     MediaPlayerEnqueue,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     STATE_ON,
     STATE_PAUSED,
     STATE_UNAVAILABLE,
 )
 
-from tests.common import MockConfigEntry, async_mock_signal
+from tests.common import async_mock_signal
 
-TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
+TEST_MASTER_ENTITY_NAME = "media_player.owntone_server"
 TEST_ZONE_ENTITY_NAMES = [
-    "media_player.forked_daapd_output_" + x
-    for x in ["kitchen", "computer", "daapd_fifo"]
+    "media_player.owntone_output_" + x for x in ("kitchen", "computer", "daapd_fifo")
 ]
 
 OPTIONS_DATA = {
@@ -290,25 +286,6 @@ SAMPLE_PIPES = [
 SAMPLE_PLAYLISTS = [{"id": 7, "name": "test_playlist", "uri": "library:playlist:2"}]
 
 
-@pytest.fixture(name="config_entry")
-def config_entry_fixture():
-    """Create hass config_entry fixture."""
-    data = {
-        CONF_HOST: "192.168.1.1",
-        CONF_PORT: "2345",
-        CONF_PASSWORD: "",
-    }
-    return MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        title="",
-        data=data,
-        options={CONF_TTS_PAUSE_TIME: 0},
-        source=SOURCE_USER,
-        entry_id=1,
-    )
-
-
 @pytest.fixture(name="get_request_return_values")
 async def get_request_return_values_fixture():
     """Get request return values we can change later."""
@@ -338,7 +315,7 @@ async def mock_api_object_fixture(hass, config_entry, get_request_return_values)
         mock_api.return_value.get_pipes.return_value = SAMPLE_PIPES
         mock_api.return_value.get_playlists.return_value = SAMPLE_PLAYLISTS
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     mock_api.return_value.start_websocket_handler.assert_called_once()
@@ -376,7 +353,7 @@ def test_master_state(hass, mock_api_object):
     """Test master state attributes."""
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert state.state == STATE_PAUSED
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "forked-daapd server"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Owntone server"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES
     assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
@@ -435,7 +412,7 @@ async def test_zone(hass, mock_api_object):
     """Test zone attributes and methods."""
     zone_entity_name = TEST_ZONE_ENTITY_NAMES[0]
     state = hass.states.get(zone_entity_name)
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "forked-daapd output (kitchen)"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Owntone output (kitchen)"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES_ZONE
     assert state.state == STATE_ON
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.5
@@ -798,7 +775,7 @@ async def test_invalid_websocket_port(hass, config_entry):
     ) as mock_api:
         mock_api.return_value.get_request.return_value = SAMPLE_CONFIG_NO_WEBSOCKET
         config_entry.add_to_hass(hass)
-        await config_entry.async_setup(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert hass.states.get(TEST_MASTER_ENTITY_NAME).state == STATE_UNAVAILABLE
 
@@ -887,4 +864,82 @@ async def test_async_play_media_enqueue(hass, mock_api_object):
     )
     mock_api_object.add_to_queue.assert_called_with(
         uris="http://example.com/next.mp3", playback="start", position=1
+    )
+
+
+async def test_play_owntone_media(hass, mock_api_object):
+    """Test async play media with an owntone source."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: create_media_content_id(
+                "some song", "library:track:456"
+            ),
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="library:track:456",
+        playback="start",
+        position=0,
+        playback_from_position=0,
+    )
+
+
+async def test_play_spotify_media(hass, mock_api_object):
+    """Test async play media with a spotify source."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: "spotify://track",
+            ATTR_MEDIA_CONTENT_ID: "spotify://open.spotify.com/spotify:track:abcdefghi",
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="spotify:track:abcdefghi",
+        playback="start",
+        position=0,
+        playback_from_position=0,
+    )
+
+
+async def test_play_media_source(hass, mock_api_object):
+    """Test async play media with a spotify source."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    with patch(
+        "homeassistant.components.media_source.async_resolve_media",
+        return_value=PlayMedia("http://my_hass/song.m4a", "audio/aac"),
+    ):
+        await _service_call(
+            hass,
+            TEST_MASTER_ENTITY_NAME,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_MEDIA_CONTENT_TYPE: "audio/aac",
+                ATTR_MEDIA_CONTENT_ID: "media-source://media_source/test_dir/song.m4a",
+                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+            },
+        )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+    mock_api_object.add_to_queue.assert_called_with(
+        uris="http://my_hass/song.m4a",
+        playback="start",
+        position=0,
+        playback_from_position=0,
     )

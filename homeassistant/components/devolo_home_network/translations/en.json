@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "home_control": "The devolo Home Control Central Unit does not work with this integration."
+            "home_control": "The devolo Home Control Central Unit does not work with this integration.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -10,6 +11,11 @@
         },
         "flow_title": "{product} ({name})",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                }
+            },
             "user": {
                 "data": {
                     "ip_address": "IP Address"
