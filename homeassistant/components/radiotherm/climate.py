@@ -7,13 +7,14 @@ from typing import Any
 import radiotherm
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_OFF,
     FAN_ON,
+    PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_HOME,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

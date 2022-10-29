@@ -53,7 +53,7 @@ from .models import StatisticData, StatisticMetaData, process_timestamp
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 29
+SCHEMA_VERSION = 30
 
 _StatisticsBaseSelfT = TypeVar("_StatisticsBaseSelfT", bound="StatisticsBase")
 
@@ -511,10 +511,10 @@ class RecorderRuns(Base):  # type: ignore[misc,valid-type]
     __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
     __tablename__ = TABLE_RECORDER_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
-    start = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    end = Column(DateTime(timezone=True))
+    start = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    end = Column(DATETIME_TYPE)
     closed_incorrect = Column(Boolean, default=False)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -561,7 +561,7 @@ class SchemaChanges(Base):  # type: ignore[misc,valid-type]
     __tablename__ = TABLE_SCHEMA_CHANGES
     change_id = Column(Integer, Identity(), primary_key=True)
     schema_version = Column(Integer)
-    changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
@@ -578,7 +578,7 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
 
     __tablename__ = TABLE_STATISTICS_RUNS
     run_id = Column(Integer, Identity(), primary_key=True)
-    start = Column(DateTime(timezone=True), index=True)
+    start = Column(DATETIME_TYPE, index=True)
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""

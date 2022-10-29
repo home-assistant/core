@@ -23,7 +23,8 @@
       "init": {
         "title": "Configure RainMachine",
         "data": {
-          "zone_run_time": "Default zone run time (in seconds)"
+          "zone_run_time": "Default zone run time (in seconds)",
+          "use_app_run_times": "Use zone run times from RainMachine app"
         }
       }
     }

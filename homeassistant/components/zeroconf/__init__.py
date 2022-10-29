@@ -20,14 +20,9 @@ from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import MDNS_TARGET_IP
+from homeassistant.components.network import MDNS_TARGET_IP, async_get_source_ip
 from homeassistant.components.network.models import Adapter
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    __version__,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, instance_id
@@ -41,6 +36,7 @@ from homeassistant.loader import (
     async_get_zeroconf,
     bind_hass,
 )
+from homeassistant.setup import async_when_setup_or_start
 
 from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
@@ -195,7 +191,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     discovery = ZeroconfDiscovery(hass, zeroconf, zeroconf_types, homekit_models, ipv6)
     await discovery.async_setup()
 
-    async def _async_zeroconf_hass_start(_event: Event) -> None:
+    async def _async_zeroconf_hass_start(hass: HomeAssistant, comp: str) -> None:
         """Expose Home Assistant on zeroconf when it starts.
 
         Wait till started or otherwise HTTP is not up and running.
@@ -207,7 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await discovery.async_stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_zeroconf_hass_stop)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_zeroconf_hass_start)
+    async_when_setup_or_start(hass, "frontend", _async_zeroconf_hass_start)
 
     return True
 
@@ -238,12 +234,20 @@ def _get_announced_addresses(
     return address_list
 
 
+def _filter_disallowed_characters(name: str) -> str:
+    """Filter disallowed characters from a string.
+
+    . is a reversed character for zeroconf.
+    """
+    return name.replace(".", " ")
+
+
 async def _async_register_hass_zc_service(
     hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
 ) -> None:
     # Get instance UUID
     valid_location_name = _truncate_location_name_to_valid(
-        hass.config.location_name or "Home"
+        _filter_disallowed_characters(hass.config.location_name or "Home")
     )
 
     params = {
@@ -405,6 +409,7 @@ class ZeroconfDiscovery:
 
         _LOGGER.debug("Discovered new device %s %s", name, info)
         props: dict[str, str] = info.properties
+        domain = None
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES and (
@@ -459,10 +464,17 @@ class ZeroconfDiscovery:
 
             matcher_domain = matcher["domain"]
             assert isinstance(matcher_domain, str)
+            context = {
+                "source": config_entries.SOURCE_ZEROCONF,
+            }
+            if domain:
+                # Domain of integration that offers alternative API to handle this device.
+                context["alternative_domain"] = domain
+
             discovery_flow.async_create_flow(
                 self.hass,
                 matcher_domain,
-                {"source": config_entries.SOURCE_ZEROCONF},
+                context,
                 info,
             )
 

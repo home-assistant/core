@@ -5,15 +5,13 @@ import asyncio
 import logging
 
 from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
+    MODE_AWAY,
+    MODE_NORMAL,
     PLATFORM_SCHEMA,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
-)
-from homeassistant.components.humidifier.const import (
-    ATTR_HUMIDITY,
-    MODE_AWAY,
-    MODE_NORMAL,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -284,7 +282,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             return
 
         self._target_humidity = humidity
-        await self._async_operate(force=True)
+        await self._async_operate()
         await self.async_update_ha_state()
 
     @property

@@ -8,7 +8,6 @@ import async_timeout
 from pyipma.api import IPMA_API
 from pyipma.forecast import Forecast
 from pyipma.location import Location
-import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -33,13 +32,10 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    PLATFORM_SCHEMA,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
     PRESSURE_HPA,
@@ -47,11 +43,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
+
+from .const import DATA_API, DATA_LOCATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,15 +76,6 @@ CONDITION_CLASSES = {
 
 FORECAST_MODE = ["hourly", "daily"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_MODE, default="daily"): vol.In(FORECAST_MODE),
-    }
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -95,12 +83,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    latitude = config_entry.data[CONF_LATITUDE]
-    longitude = config_entry.data[CONF_LONGITUDE]
+    api = hass.data[DOMAIN][config_entry.entry_id][DATA_API]
+    location = hass.data[DOMAIN][config_entry.entry_id][DATA_LOCATION]
     mode = config_entry.data[CONF_MODE]
-
-    api = await async_get_api(hass)
-    location = await async_get_location(hass, api, latitude, longitude)
 
     # Migrate old unique_id
     @callback
@@ -125,29 +110,6 @@ async def async_setup_entry(
     )
 
     async_add_entities([IPMAWeather(location, api, config_entry.data)], True)
-
-
-async def async_get_api(hass):
-    """Get the pyipma api object."""
-    websession = async_get_clientsession(hass)
-    return IPMA_API(websession)
-
-
-async def async_get_location(hass, api, latitude, longitude):
-    """Retrieve pyipma location, location name to be used as the entity name."""
-    async with async_timeout.timeout(30):
-        location = await Location.get(api, float(latitude), float(longitude))
-
-    _LOGGER.debug(
-        "Initializing for coordinates %s, %s -> station %s (%d, %d)",
-        latitude,
-        longitude,
-        location.station,
-        location.id_station,
-        location.global_id_local,
-    )
-
-    return location
 
 
 class IPMAWeather(WeatherEntity):

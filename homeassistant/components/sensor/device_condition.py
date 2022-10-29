@@ -29,8 +29,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 DEVICE_CLASS_NONE = "none"
 
 CONF_IS_APPARENT_POWER = "is_apparent_power"
@@ -38,6 +36,7 @@ CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
 CONF_IS_CURRENT = "is_current"
+CONF_IS_DISTANCE = "is_distance"
 CONF_IS_ENERGY = "is_energy"
 CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
@@ -53,14 +52,20 @@ CONF_IS_PM10 = "is_pm10"
 CONF_IS_PM25 = "is_pm25"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
+CONF_IS_PRECIPITATION_INTENSITY = "is_precipitation_intensity"
 CONF_IS_PRESSURE = "is_pressure"
+CONF_IS_SPEED = "is_speed"
 CONF_IS_REACTIVE_POWER = "is_reactive_power"
 CONF_IS_SIGNAL_STRENGTH = "is_signal_strength"
 CONF_IS_SULPHUR_DIOXIDE = "is_sulphur_dioxide"
 CONF_IS_TEMPERATURE = "is_temperature"
+CONF_IS_VALUE = "is_value"
 CONF_IS_VOLATILE_ORGANIC_COMPOUNDS = "is_volatile_organic_compounds"
 CONF_IS_VOLTAGE = "is_voltage"
-CONF_IS_VALUE = "is_value"
+CONF_IS_VOLUME = "is_volume"
+CONF_IS_WATER = "is_water"
+CONF_IS_WEIGHT = "is_weight"
+CONF_IS_WIND_SPEED = "is_wind_speed"
 
 ENTITY_CONDITIONS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
@@ -68,6 +73,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_IS_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_IS_CO2}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
+    SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_IS_DISTANCE}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
@@ -83,15 +89,23 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_IS_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
+    SensorDeviceClass.PRECIPITATION_INTENSITY: [
+        {CONF_TYPE: CONF_IS_PRECIPITATION_INTENSITY}
+    ],
     SensorDeviceClass.PRESSURE: [{CONF_TYPE: CONF_IS_PRESSURE}],
     SensorDeviceClass.REACTIVE_POWER: [{CONF_TYPE: CONF_IS_REACTIVE_POWER}],
     SensorDeviceClass.SIGNAL_STRENGTH: [{CONF_TYPE: CONF_IS_SIGNAL_STRENGTH}],
+    SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_IS_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_IS_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_IS_TEMPERATURE}],
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_IS_VOLATILE_ORGANIC_COMPOUNDS}
     ],
     SensorDeviceClass.VOLTAGE: [{CONF_TYPE: CONF_IS_VOLTAGE}],
+    SensorDeviceClass.VOLUME: [{CONF_TYPE: CONF_IS_VOLUME}],
+    SensorDeviceClass.WATER: [{CONF_TYPE: CONF_IS_WATER}],
+    SensorDeviceClass.WEIGHT: [{CONF_TYPE: CONF_IS_WEIGHT}],
+    SensorDeviceClass.WIND_SPEED: [{CONF_TYPE: CONF_IS_WIND_SPEED}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_IS_VALUE}],
 }
 
@@ -106,6 +120,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_CO,
                     CONF_IS_CO2,
                     CONF_IS_CURRENT,
+                    CONF_IS_DISTANCE,
                     CONF_IS_ENERGY,
                     CONF_IS_FREQUENCY,
                     CONF_IS_GAS,

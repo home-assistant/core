@@ -4,11 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.energy import async_get_manager, validate
-from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_MEGA_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-)
+from homeassistant.const import UnitOfEnergy
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.setup import async_setup_component
 
@@ -48,7 +44,7 @@ def mock_get_metadata():
 
 
 @pytest.fixture(autouse=True)
-async def mock_energy_manager(hass, recorder_mock):
+async def mock_energy_manager(recorder_mock, hass):
     """Set up energy."""
     assert await async_setup_component(hass, "energy", {"energy": {}})
     manager = await async_get_manager(hass)
@@ -67,12 +63,13 @@ async def test_validation_empty_config(hass):
 @pytest.mark.parametrize(
     "state_class, energy_unit, extra",
     [
-        ("total_increasing", ENERGY_KILO_WATT_HOUR, {}),
-        ("total_increasing", ENERGY_MEGA_WATT_HOUR, {}),
-        ("total_increasing", ENERGY_WATT_HOUR, {}),
-        ("total", ENERGY_KILO_WATT_HOUR, {}),
-        ("total", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
-        ("measurement", ENERGY_KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("total_increasing", UnitOfEnergy.KILO_WATT_HOUR, {}),
+        ("total_increasing", UnitOfEnergy.MEGA_WATT_HOUR, {}),
+        ("total_increasing", UnitOfEnergy.WATT_HOUR, {}),
+        ("total", UnitOfEnergy.KILO_WATT_HOUR, {}),
+        ("total", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("measurement", UnitOfEnergy.KILO_WATT_HOUR, {"last_reset": "abc"}),
+        ("total_increasing", UnitOfEnergy.GIGA_JOULE, {}),
     ],
 )
 async def test_validation(
@@ -580,7 +577,6 @@ async def test_validation_grid_price_not_exist(
                     "flow_from": [
                         {
                             "stat_energy_from": "sensor.grid_consumption_1",
-                            "entity_energy_from": "sensor.grid_consumption_1",
                             "entity_energy_price": "sensor.grid_price_1",
                             "number_energy_price": None,
                         }
@@ -588,7 +584,6 @@ async def test_validation_grid_price_not_exist(
                     "flow_to": [
                         {
                             "stat_energy_to": "sensor.grid_production_1",
-                            "entity_energy_to": "sensor.grid_production_1",
                             "entity_energy_price": None,
                             "number_energy_price": 0.10,
                         }
@@ -657,7 +652,6 @@ async def test_validation_grid_auto_cost_entity_errors(
                     "flow_from": [
                         {
                             "stat_energy_from": "sensor.grid_consumption_1",
-                            "entity_energy_from": None,
                             "entity_energy_price": None,
                             "number_energy_price": 0.20,
                         }
@@ -665,7 +659,6 @@ async def test_validation_grid_auto_cost_entity_errors(
                     "flow_to": [
                         {
                             "stat_energy_to": "sensor.grid_production_1",
-                            "entity_energy_to": "invalid",
                             "entity_energy_price": None,
                             "number_energy_price": 0.10,
                         }
@@ -731,7 +724,6 @@ async def test_validation_grid_price_errors(
                     "flow_from": [
                         {
                             "stat_energy_from": "sensor.grid_consumption_1",
-                            "entity_energy_from": "sensor.grid_consumption_1",
                             "entity_energy_price": "sensor.grid_price_1",
                             "number_energy_price": None,
                         }
@@ -778,13 +770,11 @@ async def test_validation_gas(
                 {
                     "type": "gas",
                     "stat_energy_from": "sensor.gas_consumption_4",
-                    "entity_energy_from": "sensor.gas_consumption_4",
                     "entity_energy_price": "sensor.gas_price_1",
                 },
                 {
                     "type": "gas",
                     "stat_energy_from": "sensor.gas_consumption_3",
-                    "entity_energy_from": "sensor.gas_consumption_3",
                     "entity_energy_price": "sensor.gas_price_2",
                 },
             ]
@@ -890,7 +880,6 @@ async def test_validation_gas_no_costs_tracking(
                     "type": "gas",
                     "stat_energy_from": "sensor.gas_consumption_1",
                     "stat_cost": None,
-                    "entity_energy_from": None,
                     "entity_energy_price": None,
                     "number_energy_price": None,
                 },
@@ -926,7 +915,6 @@ async def test_validation_grid_no_costs_tracking(
                         {
                             "stat_energy_from": "sensor.grid_energy",
                             "stat_cost": None,
-                            "entity_energy_from": "sensor.grid_energy",
                             "entity_energy_price": None,
                             "number_energy_price": None,
                         },
@@ -935,7 +923,6 @@ async def test_validation_grid_no_costs_tracking(
                         {
                             "stat_energy_to": "sensor.grid_energy",
                             "stat_cost": None,
-                            "entity_energy_to": "sensor.grid_energy",
                             "entity_energy_price": None,
                             "number_energy_price": None,
                         },
@@ -951,6 +938,165 @@ async def test_validation_grid_no_costs_tracking(
         {
             "device_class": "energy",
             "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [[]],
+        "device_consumption": [],
+    }
+
+
+async def test_validation_water(
+    hass, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
+):
+    """Test validating water with sensors for energy and cost/compensation."""
+    mock_is_entity_recorded["sensor.water_cost_1"] = False
+    mock_is_entity_recorded["sensor.water_compensation_1"] = False
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_1",
+                    "stat_cost": "sensor.water_cost_1",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_2",
+                    "stat_cost": "sensor.water_cost_2",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_3",
+                    "stat_cost": "sensor.water_cost_2",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_4",
+                    "entity_energy_price": "sensor.water_price_1",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_3",
+                    "entity_energy_price": "sensor.water_price_2",
+                },
+            ]
+        }
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "sensor.water_consumption_1",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_2",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "ft³",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_3",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "m³",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_4",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.water_cost_2",
+        "10.10",
+        {"unit_of_measurement": "EUR/kWh", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.water_price_1",
+        "10.10",
+        {"unit_of_measurement": "EUR/m³", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.water_price_2",
+        "10.10",
+        {"unit_of_measurement": "EUR/invalid", "state_class": "total_increasing"},
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [
+            [
+                {
+                    "type": "entity_unexpected_unit_water",
+                    "identifier": "sensor.water_consumption_1",
+                    "value": "beers",
+                },
+                {
+                    "type": "recorder_untracked",
+                    "identifier": "sensor.water_cost_1",
+                    "value": None,
+                },
+                {
+                    "type": "entity_not_defined",
+                    "identifier": "sensor.water_cost_1",
+                    "value": None,
+                },
+            ],
+            [],
+            [],
+            [
+                {
+                    "type": "entity_unexpected_device_class",
+                    "identifier": "sensor.water_consumption_4",
+                    "value": None,
+                },
+            ],
+            [
+                {
+                    "type": "entity_unexpected_unit_water_price",
+                    "identifier": "sensor.water_price_2",
+                    "value": "EUR/invalid",
+                },
+            ],
+        ],
+        "device_consumption": [],
+    }
+
+
+async def test_validation_water_no_costs_tracking(
+    hass, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
+):
+    """Test validating water with sensors without cost tracking."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_1",
+                    "stat_cost": None,
+                    "entity_energy_price": None,
+                    "number_energy_price": None,
+                },
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_1",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "m³",
             "state_class": "total_increasing",
         },
     )

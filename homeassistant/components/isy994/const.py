@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
@@ -37,20 +37,17 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_KILO_WATT,
     POWER_WATT,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_MBAR,
+    REVOLUTIONS_PER_MINUTE,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     SOUND_PRESSURE_DB,
     SOUND_PRESSURE_WEIGHTED_DBA,
-    SPEED_INCHES_PER_DAY,
-    SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
-    SPEED_MILLIMETERS_PER_DAY,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_LOCKED,
@@ -79,6 +76,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
     Platform,
+    UnitOfVolumetricFlux,
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -341,7 +339,7 @@ UOM_FRIENDLY_NAME = {
     "21": "%AH",
     "22": "%RH",
     "23": PRESSURE_INHG,
-    "24": SPEED_INCHES_PER_HOUR,
+    "24": UnitOfVolumetricFlux.INCHES_PER_HOUR,
     UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value
     "26": TEMP_KELVIN,
     "27": "keyword",
@@ -363,7 +361,7 @@ UOM_FRIENDLY_NAME = {
     "43": ELECTRIC_POTENTIAL_MILLIVOLT,
     "44": TIME_MINUTES,
     "45": TIME_MINUTES,
-    "46": PRECIPITATION_MILLIMETERS_PER_HOUR,
+    "46": UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     "47": TIME_MONTHS,
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
@@ -396,7 +394,7 @@ UOM_FRIENDLY_NAME = {
     "86": "kΩ",
     "87": f"{VOLUME_CUBIC_METERS}/{VOLUME_CUBIC_METERS}",
     "88": "Water activity",
-    "89": "RPM",
+    "89": REVOLUTIONS_PER_MINUTE,
     "90": FREQUENCY_HERTZ,
     "91": DEGREE,
     "92": f"{DEGREE} South",
@@ -406,7 +404,7 @@ UOM_FRIENDLY_NAME = {
     "103": CURRENCY_DOLLAR,
     "104": CURRENCY_CENT,
     "105": LENGTH_INCHES,
-    "106": SPEED_MILLIMETERS_PER_DAY,
+    "106": UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
     "107": "",  # raw 1-byte unsigned value
     "108": "",  # raw 2-byte unsigned value
     "109": "",  # raw 3-byte unsigned value
@@ -419,7 +417,7 @@ UOM_FRIENDLY_NAME = {
     "117": PRESSURE_MBAR,
     "118": PRESSURE_HPA,
     "119": ENERGY_WATT_HOUR,
-    "120": SPEED_INCHES_PER_DAY,
+    "120": UnitOfVolumetricFlux.INCHES_PER_DAY,
 }
 
 UOM_TO_STATES = {

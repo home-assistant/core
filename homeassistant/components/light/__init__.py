@@ -8,7 +8,7 @@ from datetime import timedelta
 from enum import IntEnum
 import logging
 import os
-from typing import cast, final
+from typing import Any, cast, final
 
 import voluptuous as vol
 
@@ -20,7 +20,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -33,8 +33,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -114,6 +112,8 @@ COLOR_MODES_COLOR = {
     ColorMode.XY,
 }
 
+# mypy: disallow-any-generics
+
 
 def filter_supported_color_modes(color_modes: Iterable[ColorMode]) -> set[ColorMode]:
     """Filter the given color modes."""
@@ -169,7 +169,7 @@ def color_temp_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
     return ColorMode.COLOR_TEMP in color_modes
 
 
-def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set | None:
+def get_supported_color_modes(hass: HomeAssistant, entity_id: str) -> set[str] | None:
     """Get supported color modes for a light entity.
 
     First try the statemachine, then entity registry.
@@ -196,10 +196,13 @@ ATTR_RGBW_COLOR = "rgbw_color"
 ATTR_RGBWW_COLOR = "rgbww_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_HS_COLOR = "hs_color"
-ATTR_COLOR_TEMP = "color_temp"
-ATTR_KELVIN = "kelvin"
-ATTR_MIN_MIREDS = "min_mireds"
-ATTR_MAX_MIREDS = "max_mireds"
+ATTR_COLOR_TEMP = "color_temp"  # Deprecated in HA Core 2022.11
+ATTR_KELVIN = "kelvin"  # Deprecated in HA Core 2022.11
+ATTR_MIN_MIREDS = "min_mireds"  # Deprecated in HA Core 2022.11
+ATTR_MAX_MIREDS = "max_mireds"  # Deprecated in HA Core 2022.11
+ATTR_COLOR_TEMP_KELVIN = "color_temp_kelvin"
+ATTR_MIN_COLOR_TEMP_KELVIN = "min_color_temp_kelvin"
+ATTR_MAX_COLOR_TEMP_KELVIN = "max_color_temp_kelvin"
 ATTR_COLOR_NAME = "color_name"
 ATTR_WHITE = "white"
 
@@ -249,6 +252,7 @@ LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
         vol.Coerce(int), vol.Range(min=1)
     ),
+    vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): cv.positive_int,
     vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
     vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
         vol.Coerce(tuple),
@@ -288,7 +292,9 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-def preprocess_turn_on_alternatives(hass, params):
+def preprocess_turn_on_alternatives(
+    hass: HomeAssistant, params: dict[str, Any]
+) -> None:
     """Process extra data for turn light on request.
 
     Async friendly.
@@ -307,16 +313,29 @@ def preprocess_turn_on_alternatives(hass, params):
             _LOGGER.warning("Got unknown color %s, falling back to white", color_name)
             params[ATTR_RGB_COLOR] = (255, 255, 255)
 
+    if (mired := params.pop(ATTR_COLOR_TEMP, None)) is not None:
+        kelvin = color_util.color_temperature_mired_to_kelvin(mired)
+        params[ATTR_COLOR_TEMP] = int(mired)
+        params[ATTR_COLOR_TEMP_KELVIN] = int(kelvin)
+
     if (kelvin := params.pop(ATTR_KELVIN, None)) is not None:
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
         params[ATTR_COLOR_TEMP] = int(mired)
+        params[ATTR_COLOR_TEMP_KELVIN] = int(kelvin)
+
+    if (kelvin := params.pop(ATTR_COLOR_TEMP_KELVIN, None)) is not None:
+        mired = color_util.color_temperature_kelvin_to_mired(kelvin)
+        params[ATTR_COLOR_TEMP] = int(mired)
+        params[ATTR_COLOR_TEMP_KELVIN] = int(kelvin)
 
     brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
     if brightness_pct is not None:
         params[ATTR_BRIGHTNESS] = round(255 * brightness_pct / 100)
 
 
-def filter_turn_off_params(light, params):
+def filter_turn_off_params(
+    light: LightEntity, params: dict[str, Any]
+) -> dict[str, Any]:
     """Filter out params not used in turn off or not supported by the light."""
     supported_features = light.supported_features
 
@@ -328,7 +347,7 @@ def filter_turn_off_params(light, params):
     return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
 
 
-def filter_turn_on_params(light, params):
+def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[str, Any]:
     """Filter out params not supported by the light."""
     supported_features = light.supported_features
 
@@ -346,6 +365,7 @@ def filter_turn_on_params(light, params):
         params.pop(ATTR_BRIGHTNESS, None)
     if ColorMode.COLOR_TEMP not in supported_color_modes:
         params.pop(ATTR_COLOR_TEMP, None)
+        params.pop(ATTR_COLOR_TEMP_KELVIN, None)
     if ColorMode.HS not in supported_color_modes:
         params.pop(ATTR_HS_COLOR, None)
     if ColorMode.RGB not in supported_color_modes:
@@ -364,7 +384,7 @@ def filter_turn_on_params(light, params):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Expose light control via state machine and services."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[LightEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -372,9 +392,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     profiles = hass.data[DATA_PROFILES] = Profiles(hass)
     await profiles.async_initialize()
 
-    def preprocess_data(data):
+    def preprocess_data(data: dict[str, Any]) -> dict[str | vol.Optional, Any]:
         """Preprocess the service data."""
-        base = {
+        base: dict[str | vol.Optional, Any] = {
             entity_field: data.pop(entity_field)
             for entity_field in cv.ENTITY_SERVICE_FIELDS
             if entity_field in data
@@ -384,18 +404,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         base["params"] = data
         return base
 
-    async def async_handle_light_on_service(light, call):
+    async def async_handle_light_on_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
         """Handle turning a light on.
 
         If brightness is set to 0, this service will turn the light off.
         """
-        params = dict(call.data["params"])
+        params: dict[str, Any] = dict(call.data["params"])
 
         # Only process params once we processed brightness step
         if params and (
             ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
         ):
-            brightness = light.brightness if light.is_on else 0
+            brightness = light.brightness if light.is_on and light.brightness else 0
 
             if ATTR_BRIGHTNESS_STEP in params:
                 brightness += params.pop(ATTR_BRIGHTNESS_STEP)
@@ -418,26 +440,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         supported_color_modes = light.supported_color_modes
 
         # If a color temperature is specified, emulate it if not supported by the light
-        if ATTR_COLOR_TEMP in params:
+        if ATTR_COLOR_TEMP_KELVIN in params:
             if (
                 supported_color_modes
                 and ColorMode.COLOR_TEMP not in supported_color_modes
                 and ColorMode.RGBWW in supported_color_modes
             ):
-                color_temp = params.pop(ATTR_COLOR_TEMP)
+                params.pop(ATTR_COLOR_TEMP)
+                color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
                 brightness = params.get(ATTR_BRIGHTNESS, light.brightness)
                 params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
-                    color_temp, brightness, light.min_mireds, light.max_mireds
+                    color_temp,
+                    brightness,
+                    light.min_color_temp_kelvin,
+                    light.max_color_temp_kelvin,
                 )
             elif ColorMode.COLOR_TEMP not in legacy_supported_color_modes:
-                color_temp = params.pop(ATTR_COLOR_TEMP)
+                params.pop(ATTR_COLOR_TEMP)
+                color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
                 if color_supported(legacy_supported_color_modes):
-                    temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
-                    params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
+                    params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(
+                        color_temp
+                    )
 
         # If a color is specified, convert to the color space supported by the light
         # Backwards compatibility: Fall back to hs color if light.supported_color_modes
         # is not implemented
+        rgb_color: tuple[int, int, int] | None
+        rgbww_color: tuple[int, int, int, int, int] | None
         if not supported_color_modes:
             if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
@@ -447,8 +477,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif (rgbww_color := params.pop(ATTR_RGBWW_COLOR, None)) is not None:
-                rgb_color = color_util.color_rgbww_to_rgb(
-                    *rgbww_color, light.min_mireds, light.max_mireds
+                # https://github.com/python/mypy/issues/13673
+                rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
+                    *rgbww_color,
+                    light.min_color_temp_kelvin,
+                    light.max_color_temp_kelvin,
                 )
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
         elif ATTR_HS_COLOR in params and ColorMode.HS not in supported_color_modes:
@@ -461,17 +494,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             elif ColorMode.RGBWW in supported_color_modes:
                 rgb_color = color_util.color_hs_to_RGB(*hs_color)
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color, light.min_mireds, light.max_mireds
+                    *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
                 )
             elif ColorMode.XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
         elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
-            rgb_color = params.pop(ATTR_RGB_COLOR)
+            assert (rgb_color := params.pop(ATTR_RGB_COLOR)) is not None
             if ColorMode.RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif ColorMode.RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color, light.min_mireds, light.max_mireds
+                # https://github.com/python/mypy/issues/13673
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(  # type: ignore[call-arg]
+                    *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
                 )
             elif ColorMode.HS in supported_color_modes:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
@@ -489,7 +523,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             elif ColorMode.RGBWW in supported_color_modes:
                 rgb_color = color_util.color_xy_to_RGB(*xy_color)
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color, light.min_mireds, light.max_mireds
+                    *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
                 )
         elif ATTR_RGBW_COLOR in params and ColorMode.RGBW not in supported_color_modes:
             rgbw_color = params.pop(ATTR_RGBW_COLOR)
@@ -498,7 +532,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_RGB_COLOR] = rgb_color
             elif ColorMode.RGBWW in supported_color_modes:
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color, light.min_mireds, light.max_mireds
+                    *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
                 )
             elif ColorMode.HS in supported_color_modes:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
@@ -507,9 +541,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         elif (
             ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
         ):
-            rgbww_color = params.pop(ATTR_RGBWW_COLOR)
-            rgb_color = color_util.color_rgbww_to_rgb(
-                *rgbww_color, light.min_mireds, light.max_mireds
+            assert (rgbww_color := params.pop(ATTR_RGBWW_COLOR)) is not None
+            # https://github.com/python/mypy/issues/13673
+            rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
+                *rgbww_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
             )
             if ColorMode.RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = rgb_color
@@ -534,7 +569,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         else:
             await light.async_turn_on(**filter_turn_on_params(light, params))
 
-    async def async_handle_light_off_service(light, call):
+    async def async_handle_light_off_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
         """Handle turning off a light."""
         params = dict(call.data["params"])
 
@@ -543,7 +580,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         await light.async_turn_off(**filter_turn_off_params(light, params))
 
-    async def async_handle_toggle_service(light, call):
+    async def async_handle_toggle_service(
+        light: LightEntity, call: ServiceCall
+    ) -> None:
         """Handle toggling a light."""
         if light.is_on:
             await async_handle_light_off_service(light, call)
@@ -575,13 +614,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component = cast(EntityComponent, hass.data[DOMAIN])
+    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component = cast(EntityComponent, hass.data[DOMAIN])
+    component: EntityComponent[LightEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -689,7 +728,9 @@ class Profiles:
         self.data = await self.hass.async_add_executor_job(self._load_profile_data)
 
     @callback
-    def apply_default(self, entity_id: str, state_on: bool, params: dict) -> None:
+    def apply_default(
+        self, entity_id: str, state_on: bool | None, params: dict[str, Any]
+    ) -> None:
         """Return the default profile for the given light."""
         for _entity_id in (entity_id, "group.all_lights"):
             name = f"{_entity_id}.default"
@@ -700,7 +741,7 @@ class Profiles:
                     params.setdefault(ATTR_TRANSITION, self.data[name].transition)
 
     @callback
-    def apply_profile(self, name: str, params: dict) -> None:
+    def apply_profile(self, name: str, params: dict[str, Any]) -> None:
         """Apply a profile."""
         if (profile := self.data.get(name)) is None:
             return
@@ -738,11 +779,16 @@ class LightEntity(ToggleEntity):
     _attr_brightness: int | None = None
     _attr_color_mode: ColorMode | str | None = None
     _attr_color_temp: int | None = None
+    _attr_color_temp_kelvin: int | None = None
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
     _attr_hs_color: tuple[float, float] | None = None
-    _attr_max_mireds: int = 500
-    _attr_min_mireds: int = 153
+    # Default to the Philips Hue value that HA has always assumed
+    # https://developers.meethue.com/documentation/core-concepts
+    _attr_max_color_temp_kelvin: int | None = None
+    _attr_min_color_temp_kelvin: int | None = None
+    _attr_max_mireds: int = 500  # 2000 K
+    _attr_min_mireds: int = 153  # 6500 K
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
@@ -770,7 +816,7 @@ class LightEntity(ToggleEntity):
 
             if ColorMode.HS in supported and self.hs_color is not None:
                 return ColorMode.HS
-            if ColorMode.COLOR_TEMP in supported and self.color_temp is not None:
+            if ColorMode.COLOR_TEMP in supported and self.color_temp_kelvin is not None:
                 return ColorMode.COLOR_TEMP
             if ColorMode.BRIGHTNESS in supported and self.brightness is not None:
                 return ColorMode.BRIGHTNESS
@@ -817,18 +863,35 @@ class LightEntity(ToggleEntity):
         return self._attr_color_temp
 
     @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the CT color value in Kelvin."""
+        if self._attr_color_temp_kelvin is None and self.color_temp:
+            return color_util.color_temperature_mired_to_kelvin(self.color_temp)
+        return self._attr_color_temp_kelvin
+
+    @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
-        # Default to the Philips Hue value that HA has always assumed
-        # https://developers.meethue.com/documentation/core-concepts
         return self._attr_min_mireds
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
-        # Default to the Philips Hue value that HA has always assumed
-        # https://developers.meethue.com/documentation/core-concepts
         return self._attr_max_mireds
+
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        if self._attr_min_color_temp_kelvin is None:
+            return color_util.color_temperature_mired_to_kelvin(self.max_mireds)
+        return self._attr_min_color_temp_kelvin
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        if self._attr_max_color_temp_kelvin is None:
+            return color_util.color_temperature_mired_to_kelvin(self.min_mireds)
+        return self._attr_max_color_temp_kelvin
 
     @property
     def effect_list(self) -> list[str] | None:
@@ -841,16 +904,27 @@ class LightEntity(ToggleEntity):
         return self._attr_effect
 
     @property
-    def capability_attributes(self):
+    def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
-        data = {}
+        data: dict[str, Any] = {}
         supported_features = self.supported_features
         supported_color_modes = self._light_internal_supported_color_modes
 
         if ColorMode.COLOR_TEMP in supported_color_modes:
-            data[ATTR_MIN_MIREDS] = self.min_mireds
-            data[ATTR_MAX_MIREDS] = self.max_mireds
-
+            data[ATTR_MIN_COLOR_TEMP_KELVIN] = self.min_color_temp_kelvin
+            data[ATTR_MAX_COLOR_TEMP_KELVIN] = self.max_color_temp_kelvin
+            if not self.max_color_temp_kelvin:
+                data[ATTR_MIN_MIREDS] = None
+            else:
+                data[ATTR_MIN_MIREDS] = color_util.color_temperature_kelvin_to_mired(
+                    self.max_color_temp_kelvin
+                )
+            if not self.min_color_temp_kelvin:
+                data[ATTR_MAX_MIREDS] = None
+            else:
+                data[ATTR_MAX_MIREDS] = color_util.color_temperature_kelvin_to_mired(
+                    self.min_color_temp_kelvin
+                )
         if supported_features & LightEntityFeature.EFFECT:
             data[ATTR_EFFECT_LIST] = self.effect_list
 
@@ -858,8 +932,10 @@ class LightEntity(ToggleEntity):
 
         return data
 
-    def _light_internal_convert_color(self, color_mode: ColorMode | str) -> dict:
-        data: dict[str, tuple] = {}
+    def _light_internal_convert_color(
+        self, color_mode: ColorMode | str
+    ) -> dict[str, tuple[float, ...]]:
+        data: dict[str, tuple[float, ...]] = {}
         if color_mode == ColorMode.HS and self.hs_color:
             hs_color = self.hs_color
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
@@ -885,16 +961,14 @@ class LightEntity(ToggleEntity):
         elif color_mode == ColorMode.RGBWW and self.rgbww_color:
             rgbww_color = self.rgbww_color
             rgb_color = color_util.color_rgbww_to_rgb(
-                *rgbww_color, self.min_mireds, self.max_mireds
+                *rgbww_color, self.min_color_temp_kelvin, self.max_color_temp_kelvin
             )
             data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_RGBWW_COLOR] = tuple(int(x) for x in rgbww_color[0:5])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
-        elif color_mode == ColorMode.COLOR_TEMP and self.color_temp:
-            hs_color = color_util.color_temperature_to_hs(
-                color_util.color_temperature_mired_to_kelvin(self.color_temp)
-            )
+        elif color_mode == ColorMode.COLOR_TEMP and self.color_temp_kelvin:
+            hs_color = color_util.color_temperature_to_hs(self.color_temp_kelvin)
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
             data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
             data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
@@ -902,12 +976,12 @@ class LightEntity(ToggleEntity):
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if not self.is_on:
             return None
 
-        data = {}
+        data: dict[str, Any] = {}
         supported_features = self.supported_features
         color_mode = self._light_internal_color_mode
 
@@ -930,7 +1004,13 @@ class LightEntity(ToggleEntity):
             data[ATTR_BRIGHTNESS] = self.brightness
 
         if color_mode == ColorMode.COLOR_TEMP:
-            data[ATTR_COLOR_TEMP] = self.color_temp
+            data[ATTR_COLOR_TEMP_KELVIN] = self.color_temp_kelvin
+            if not self.color_temp_kelvin:
+                data[ATTR_COLOR_TEMP] = None
+            else:
+                data[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
+                    self.color_temp_kelvin
+                )
 
         if color_mode in COLOR_MODES_COLOR or color_mode == ColorMode.COLOR_TEMP:
             data.update(self._light_internal_convert_color(color_mode))
@@ -938,7 +1018,13 @@ class LightEntity(ToggleEntity):
         if supported_features & SUPPORT_COLOR_TEMP and not self.supported_color_modes:
             # Backwards compatibility
             # Add warning in 2021.6, remove in 2021.10
-            data[ATTR_COLOR_TEMP] = self.color_temp
+            data[ATTR_COLOR_TEMP_KELVIN] = self.color_temp_kelvin
+            if not self.color_temp_kelvin:
+                data[ATTR_COLOR_TEMP] = None
+            else:
+                data[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
+                    self.color_temp_kelvin
+                )
 
         if supported_features & LightEntityFeature.EFFECT:
             data[ATTR_EFFECT] = self.effect

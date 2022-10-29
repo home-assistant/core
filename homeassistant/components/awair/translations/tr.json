@@ -56,7 +56,7 @@
                     "access_token": "Eri\u015fim Anahtar\u0131",
                     "email": "E-posta"
                 },
-                "description": "Awair geli\u015ftirici eri\u015fim belirteci i\u00e7in \u015fu adresten kaydolmal\u0131s\u0131n\u0131z: https://developer.getawair.com/onboard/login",
+                "description": "En iyi deneyim i\u00e7in yerel se\u00e7in. Bulutu yaln\u0131zca cihaz Home Assistant ile ayn\u0131 a\u011fa ba\u011fl\u0131 de\u011filse veya eski bir cihaz\u0131n\u0131z varsa kullan\u0131n.",
                 "menu_options": {
                     "cloud": "Bulut \u00fczerinden ba\u011flan\u0131n",
                     "local": "Yerel olarak ba\u011flan (tercih edilen)"

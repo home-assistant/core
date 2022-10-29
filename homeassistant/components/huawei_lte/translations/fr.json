@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "not_huawei_lte": "Pas un appareil Huawei LTE"
+            "not_huawei_lte": "Pas un appareil Huawei LTE",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
             "connection_timeout": "D\u00e9lai de connexion d\u00e9pass\u00e9",
@@ -15,6 +16,14 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Saisissez les informations d'identification permettant d'acc\u00e9der \u00e0 l'appareil.",
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
+            },
             "user": {
                 "data": {
                     "password": "Mot de passe",

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "address": "Se especific\u00f3 una direcci\u00f3n remota no v\u00e1lida. La direcci\u00f3n debe ser una direcci\u00f3n IP o un nombre de host resoluble.",
+            "address_in_use": "El puerto de escucha seleccionado ya est\u00e1 en uso en este sistema.",
+            "model": "El modelo seleccionado no parece ser compatible con modbus40",
+            "read": "Error en la solicitud de lectura de la bomba. Verifica tu `Puerto de lectura remoto` o `Direcci\u00f3n IP remota`.",
+            "unknown": "Error inesperado",
+            "write": "Error en la solicitud de escritura a la bomba. Verifica tu `Puerto de escritura remoto` o `Direcci\u00f3n IP remota`."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n remota",
+                    "listening_port": "Puerto de escucha local",
+                    "remote_read_port": "Puerto de lectura remoto",
+                    "remote_write_port": "Puerto de escritura remoto"
+                },
+                "data_description": {
+                    "ip_address": "La direcci\u00f3n de la unidad NibeGW. El dispositivo deber\u00eda haber sido configurado con una direcci\u00f3n est\u00e1tica.",
+                    "listening_port": "El puerto local en este sistema, al que la unidad NibeGW est\u00e1 configurada para enviar datos.",
+                    "remote_read_port": "El puerto en el que la unidad NibeGW est\u00e1 escuchando las peticiones de lectura.",
+                    "remote_write_port": "El puerto en el que la unidad NibeGW est\u00e1 escuchando peticiones de escritura."
+                },
+                "description": "Antes de intentar configurar la integraci\u00f3n, verifica que:\n- La unidad NibeGW est\u00e1 conectada a una bomba de calor.\n- Se ha habilitado el accesorio MODBUS40 en la configuraci\u00f3n de la bomba de calor.\n- La bomba no ha entrado en estado de alarma por falta del accesorio MODBUS40."
+            }
+        }
+    }
+}

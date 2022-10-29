@@ -2,7 +2,7 @@
   "domain": "hunterdouglas_powerview",
   "name": "Hunter Douglas PowerView",
   "documentation": "https://www.home-assistant.io/integrations/hunterdouglas_powerview",
-  "requirements": ["aiopvapi==2.0.1"],
+  "requirements": ["aiopvapi==2.0.3"],
   "codeowners": ["@bdraco", "@kingy444", "@trullock"],
   "config_flow": true,
   "homekit": {
@@ -17,8 +17,5 @@
   ],
   "zeroconf": ["_powerview._tcp.local."],
   "iot_class": "local_polling",
-  "loggers": ["aiopvapi"],
-  "supported_brands": {
-    "luxaflex": "Luxaflex"
-  }
+  "loggers": ["aiopvapi"]
 }

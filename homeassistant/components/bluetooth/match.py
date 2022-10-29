@@ -173,7 +173,7 @@ class BluetoothMatcherIndexBase(Generic[_T]):
         self.service_data_uuid_set: set[str] = set()
         self.manufacturer_id_set: set[int] = set()
 
-    def add(self, matcher: _T) -> None:
+    def add(self, matcher: _T) -> bool:
         """Add a matcher to the index.
 
         Matchers must end up only in one bucket.
@@ -185,26 +185,28 @@ class BluetoothMatcherIndexBase(Generic[_T]):
             self.local_name.setdefault(
                 _local_name_to_index_key(matcher[LOCAL_NAME]), []
             ).append(matcher)
-            return
+            return True
 
         # Manufacturer data is 2nd cheapest since its all ints
         if MANUFACTURER_ID in matcher:
             self.manufacturer_id.setdefault(matcher[MANUFACTURER_ID], []).append(
                 matcher
             )
-            return
+            return True
 
         if SERVICE_UUID in matcher:
             self.service_uuid.setdefault(matcher[SERVICE_UUID], []).append(matcher)
-            return
+            return True
 
         if SERVICE_DATA_UUID in matcher:
             self.service_data_uuid.setdefault(matcher[SERVICE_DATA_UUID], []).append(
                 matcher
             )
-            return
+            return True
 
-    def remove(self, matcher: _T) -> None:
+        return False
+
+    def remove(self, matcher: _T) -> bool:
         """Remove a matcher from the index.
 
         Matchers only end up in one bucket, so once we have
@@ -214,19 +216,21 @@ class BluetoothMatcherIndexBase(Generic[_T]):
             self.local_name[_local_name_to_index_key(matcher[LOCAL_NAME])].remove(
                 matcher
             )
-            return
+            return True
 
         if MANUFACTURER_ID in matcher:
             self.manufacturer_id[matcher[MANUFACTURER_ID]].remove(matcher)
-            return
+            return True
 
         if SERVICE_UUID in matcher:
             self.service_uuid[matcher[SERVICE_UUID]].remove(matcher)
-            return
+            return True
 
         if SERVICE_DATA_UUID in matcher:
             self.service_data_uuid[matcher[SERVICE_DATA_UUID]].remove(matcher)
-            return
+            return True
+
+        return False
 
     def build(self) -> None:
         """Rebuild the index sets."""
@@ -284,8 +288,11 @@ class BluetoothCallbackMatcherIndex(
         """Initialize the matcher index."""
         super().__init__()
         self.address: dict[str, list[BluetoothCallbackMatcherWithCallback]] = {}
+        self.connectable: list[BluetoothCallbackMatcherWithCallback] = []
 
-    def add_with_address(self, matcher: BluetoothCallbackMatcherWithCallback) -> None:
+    def add_callback_matcher(
+        self, matcher: BluetoothCallbackMatcherWithCallback
+    ) -> None:
         """Add a matcher to the index.
 
         Matchers must end up only in one bucket.
@@ -296,10 +303,15 @@ class BluetoothCallbackMatcherIndex(
             self.address.setdefault(matcher[ADDRESS], []).append(matcher)
             return
 
-        super().add(matcher)
-        self.build()
+        if super().add(matcher):
+            self.build()
+            return
 
-    def remove_with_address(
+        if CONNECTABLE in matcher:
+            self.connectable.append(matcher)
+            return
+
+    def remove_callback_matcher(
         self, matcher: BluetoothCallbackMatcherWithCallback
     ) -> None:
         """Remove a matcher from the index.
@@ -311,8 +323,13 @@ class BluetoothCallbackMatcherIndex(
             self.address[matcher[ADDRESS]].remove(matcher)
             return
 
-        super().remove(matcher)
-        self.build()
+        if super().remove(matcher):
+            self.build()
+            return
+
+        if CONNECTABLE in matcher:
+            self.connectable.remove(matcher)
+            return
 
     def match_callbacks(
         self, service_info: BluetoothServiceInfoBleak
@@ -320,6 +337,9 @@ class BluetoothCallbackMatcherIndex(
         """Check for a match."""
         matches = self.match(service_info)
         for matcher in self.address.get(service_info.address, []):
+            if ble_device_matches(matcher, service_info):
+                matches.append(matcher)
+        for matcher in self.connectable:
             if ble_device_matches(matcher, service_info):
                 matches.append(matcher)
         return matches
@@ -355,7 +375,6 @@ def ble_device_matches(
     # Don't check address here since all callers already
     # check the address and we don't want to double check
     # since it would result in an unreachable reject case.
-
     if matcher.get(CONNECTABLE, True) and not service_info.connectable:
         return False
 

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
 import functools
 import logging
 import math
@@ -47,70 +46,18 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 
 from .bluetooth import async_connect_scanner
+from .domain_data import DOMAIN, DomainData
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
-DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
-_DomainDataSelfT = TypeVar("_DomainDataSelfT", bound="DomainData")
-
-STORAGE_VERSION = 1
-
-
-@dataclass
-class DomainData:
-    """Define a class that stores global esphome data in hass.data[DOMAIN]."""
-
-    _entry_datas: dict[str, RuntimeEntryData] = field(default_factory=dict)
-    _stores: dict[str, Store] = field(default_factory=dict)
-
-    def get_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
-        """Return the runtime entry data associated with this config entry.
-
-        Raises KeyError if the entry isn't loaded yet.
-        """
-        return self._entry_datas[entry.entry_id]
-
-    def set_entry_data(self, entry: ConfigEntry, entry_data: RuntimeEntryData) -> None:
-        """Set the runtime entry data associated with this config entry."""
-        if entry.entry_id in self._entry_datas:
-            raise ValueError("Entry data for this entry is already set")
-        self._entry_datas[entry.entry_id] = entry_data
-
-    def pop_entry_data(self, entry: ConfigEntry) -> RuntimeEntryData:
-        """Pop the runtime entry data instance associated with this config entry."""
-        return self._entry_datas.pop(entry.entry_id)
-
-    def is_entry_loaded(self, entry: ConfigEntry) -> bool:
-        """Check whether the given entry is loaded."""
-        return entry.entry_id in self._entry_datas
-
-    def get_or_create_store(self, hass: HomeAssistant, entry: ConfigEntry) -> Store:
-        """Get or create a Store instance for the given config entry."""
-        return self._stores.setdefault(
-            entry.entry_id,
-            Store(
-                hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
-            ),
-        )
-
-    @classmethod
-    def get(cls: type[_DomainDataSelfT], hass: HomeAssistant) -> _DomainDataSelfT:
-        """Get the global DomainData instance stored in hass.data."""
-        # Don't use setdefault - this is a hot code path
-        if DOMAIN in hass.data:
-            return cast(_DomainDataSelfT, hass.data[DOMAIN])
-        ret = hass.data[DOMAIN] = cls()
-        return ret
 
 
 async def async_setup_entry(  # noqa: C901
@@ -289,8 +236,10 @@ async def async_setup_entry(  # noqa: C901
             await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
-            if entry_data.device_info.has_bluetooth_proxy:
-                await async_connect_scanner(hass, entry, cli)
+            if entry_data.device_info.bluetooth_proxy_version:
+                entry_data.disconnect_callbacks.append(
+                    await async_connect_scanner(hass, entry, cli, entry_data)
+                )
 
             hass.async_create_task(entry_data.async_save_to_store())
         except APIConnectionError as err:
@@ -358,6 +307,8 @@ def _async_setup_device_registry(
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
 
     manufacturer = "espressif"
+    if device_info.manufacturer:
+        manufacturer = device_info.manufacturer
     model = device_info.model
     hw_version = None
     if device_info.project_name:
@@ -519,6 +470,7 @@ async def _cleanup_instance(
     """Cleanup the esphome client if it exists."""
     domain_data = DomainData.get(hass)
     data = domain_data.pop_entry_data(entry)
+    data.available = False
     for disconnect_cb in data.disconnect_callbacks:
         disconnect_cb()
     data.disconnect_callbacks = []

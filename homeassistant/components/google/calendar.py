@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from gcal_sync.api import GoogleCalendarService, ListEventsRequest
+from gcal_sync.api import SyncEventsRequest
 from gcal_sync.exceptions import ApiException
 from gcal_sync.model import DateOrDatetime, Event
+from gcal_sync.store import ScopedCalendarStore
+from gcal_sync.sync import CalendarEventSyncManager
+from gcal_sync.timeline import Timeline
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -34,12 +38,12 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import dt as dt_util
 
 from . import (
     CONF_IGNORE_AVAILABILITY,
     CONF_SEARCH,
     CONF_TRACK,
-    DATA_SERVICE,
     DEFAULT_CONF_OFFSET,
     DOMAIN,
     YAML_DEVICES,
@@ -49,6 +53,8 @@ from . import (
 )
 from .api import get_feature_access
 from .const import (
+    DATA_SERVICE,
+    DATA_STORE,
     EVENT_DESCRIPTION,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
@@ -65,6 +71,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+
+# Avoid syncing super old data on initial syncs. Note that old but active
+# recurring events are still included.
+SYNC_EVENT_MIN_TIME = timedelta(days=-90)
 
 # Events have a transparency that determine whether or not they block time on calendar.
 # When an event is opaque, it means "Show me as busy" which is the default.  Events that
@@ -115,6 +125,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the google calendar platform."""
     calendar_service = hass.data[DOMAIN][config_entry.entry_id][DATA_SERVICE]
+    store = hass.data[DOMAIN][config_entry.entry_id][DATA_STORE]
     try:
         result = await calendar_service.async_list_calendars()
     except ApiException as err:
@@ -185,12 +196,20 @@ async def async_setup_entry(
                     entity_registry.async_remove(
                         entity_entry.entity_id,
                     )
+            request_template = SyncEventsRequest(
+                calendar_id=calendar_id,
+                search=data.get(CONF_SEARCH),
+                start_time=dt_util.now() + SYNC_EVENT_MIN_TIME,
+            )
+            sync = CalendarEventSyncManager(
+                calendar_service,
+                store=ScopedCalendarStore(store, unique_id or entity_name),
+                request_template=request_template,
+            )
             coordinator = CalendarUpdateCoordinator(
                 hass,
-                calendar_service,
+                sync,
                 data[CONF_NAME],
-                calendar_id,
-                data.get(CONF_SEARCH),
             )
             entities.append(
                 GoogleCalendarEntity(
@@ -203,7 +222,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
     if calendars and new_calendars:
 
@@ -223,16 +242,14 @@ async def async_setup_entry(
         )
 
 
-class CalendarUpdateCoordinator(DataUpdateCoordinator):
+class CalendarUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     """Coordinator for calendar RPC calls."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        calendar_service: GoogleCalendarService,
+        sync: CalendarEventSyncManager,
         name: str,
-        calendar_id: str,
-        search: str | None,
     ) -> None:
         """Create the Calendar event device."""
         super().__init__(
@@ -241,38 +258,18 @@ class CalendarUpdateCoordinator(DataUpdateCoordinator):
             name=name,
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
-        self.calendar_service = calendar_service
-        self.calendar_id = calendar_id
-        self._search = search
+        self.sync = sync
 
-    async def async_get_events(
-        self, start_date: datetime, end_date: datetime
-    ) -> list[Event]:
-        """Get all events in a specific time frame."""
-        request = ListEventsRequest(
-            calendar_id=self.calendar_id,
-            start_time=start_date,
-            end_time=end_date,
-            search=self._search,
-        )
-        result_items = []
-        try:
-            result = await self.calendar_service.async_list_events(request)
-            async for result_page in result:
-                result_items.extend(result_page.items)
-        except ApiException as err:
-            self.async_set_update_error(err)
-            raise HomeAssistantError(str(err)) from err
-        return result_items
-
-    async def _async_update_data(self) -> list[Event]:
+    async def _async_update_data(self) -> Timeline:
         """Fetch data from API endpoint."""
-        request = ListEventsRequest(calendar_id=self.calendar_id, search=self._search)
         try:
-            result = await self.calendar_service.async_list_events(request)
+            await self.sync.run()
         except ApiException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        return result.items
+
+        return await self.sync.store_service.async_get_timeline(
+            dt_util.DEFAULT_TIME_ZONE
+        )
 
 
 class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
@@ -341,16 +338,28 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+
         # We do not ask for an update with async_add_entities()
-        # because it will update disabled entities
-        await self.coordinator.async_request_refresh()
-        self._apply_coordinator_update()
+        # because it will update disabled entities. This is started as a
+        # task to let if sync in the background without blocking startup
+        async def refresh() -> None:
+            await self.coordinator.async_request_refresh()
+            self._apply_coordinator_update()
+
+        asyncio.create_task(refresh())
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        result_items = await self.coordinator.async_get_events(start_date, end_date)
+        if not (timeline := self.coordinator.data):
+            raise HomeAssistantError(
+                "Unable to get events: Sync from server has not completed"
+            )
+        result_items = timeline.overlapping(
+            dt_util.as_local(start_date),
+            dt_util.as_local(end_date),
+        )
         return [
             _get_calendar_event(event)
             for event in filter(self._event_filter, result_items)
@@ -358,12 +367,21 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
 
     def _apply_coordinator_update(self) -> None:
         """Copy state from the coordinator to this entity."""
-        events = self.coordinator.data
-        self._event = _get_calendar_event(next(iter(events))) if events else None
-        if self._event:
+        if (timeline := self.coordinator.data) and (
+            api_event := next(
+                filter(
+                    self._event_filter,
+                    timeline.active_after(dt_util.now()),
+                ),
+                None,
+            )
+        ):
+            self._event = _get_calendar_event(api_event)
             (self._event.summary, self._offset_value) = extract_offset(
                 self._event.summary, self._offset
             )
+        else:
+            self._event = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -431,7 +449,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
         raise ValueError("Missing required fields to set start or end date/datetime")
 
     try:
-        await entity.coordinator.calendar_service.async_create_event(
+        await entity.coordinator.sync.api.async_create_event(
             entity.calendar_id,
             Event(
                 summary=call.data[EVENT_SUMMARY],
@@ -442,3 +460,4 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
         )
     except ApiException as err:
         raise HomeAssistantError(str(err)) from err
+    entity.async_write_ha_state()

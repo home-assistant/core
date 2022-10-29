@@ -7,7 +7,10 @@
             "link_local_address": "Link local addresses are not supported",
             "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
             "no_devices": "The authorized user has no LaMetric devices",
-            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})"
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
         },
         "error": {
             "cannot_connect": "Failed to connect",

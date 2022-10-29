@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Invalid API key",
+            "no_site": "No site provided",
+            "unknown_error": "Unexpected error"
+        },
         "step": {
             "site": {
                 "data": {
@@ -15,11 +20,6 @@
                 },
                 "description": "Go to {api_url} to generate an API key"
             }
-        },
-        "error": {
-          "invalid_api_token": "Invalid API key",
-          "no_site": "No site provided",
-          "unknown_error": "Unexpected error"
         }
     }
 }

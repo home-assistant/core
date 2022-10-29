@@ -2,8 +2,8 @@
   "domain": "led_ble",
   "name": "LED BLE",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/ble_ble",
-  "requirements": ["led-ble==0.7.1"],
+  "documentation": "https://www.home-assistant.io/integrations/led_ble/",
+  "requirements": ["led-ble==1.0.0"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@bdraco"],
   "bluetooth": [

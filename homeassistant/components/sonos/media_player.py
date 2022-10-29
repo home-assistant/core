@@ -29,7 +29,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.components.plex.const import PLEX_URI_SCHEME
+from homeassistant.components.plex import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME
@@ -438,7 +438,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.play_uri(uri, title=favorite.title)
         else:
             soco.clear_queue()
-            soco.add_to_queue(favorite.reference)
+            soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)
             soco.play_from_queue(0)
 
     @property
@@ -586,13 +586,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, media_id)
 
             if enqueue == MediaPlayerEnqueue.ADD:
-                soco.add_uri_to_queue(media_id)
+                soco.add_uri_to_queue(media_id, timeout=LONG_SERVICE_TIMEOUT)
             elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
-                new_pos = soco.add_uri_to_queue(media_id, position=pos)
+                new_pos = soco.add_uri_to_queue(
+                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
@@ -609,7 +611,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
             else:
                 soco.clear_queue()
-                soco.add_to_queue(playlist)
+                soco.add_to_queue(playlist, timeout=LONG_SERVICE_TIMEOUT)
                 soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
             item = media_browser.get_media(self.media.library, media_id, media_type)

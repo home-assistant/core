@@ -33,7 +33,12 @@ from homeassistant.util import ssl as ssl_util
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
+from .const import (  # noqa: F401
+    KEY_AUTHENTICATED,
+    KEY_HASS,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    KEY_HASS_USER,
+)
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
 from .request_context import current_request, setup_request_context

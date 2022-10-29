@@ -3,7 +3,7 @@
   "name": "Z-Wave",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zwave_js",
-  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.41.1"],
+  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.43.0"],
   "codeowners": ["@home-assistant/z-wave"],
   "dependencies": ["usb", "http", "websocket_api"],
   "iot_class": "local_push",
@@ -22,7 +22,5 @@
   ],
   "zeroconf": ["_zwave-js-server._tcp.local."],
   "loggers": ["zwave_js_server"],
-  "supported_brands": {
-    "leviton_z_wave": "Leviton Z-Wave"
-  }
+  "integration_type": "hub"
 }

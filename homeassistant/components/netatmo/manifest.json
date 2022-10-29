@@ -2,7 +2,7 @@
   "domain": "netatmo",
   "name": "Netatmo",
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
-  "requirements": ["pyatmo==6.2.4"],
+  "requirements": ["pyatmo==7.2.0"],
   "after_dependencies": ["cloud", "media_source"],
   "dependencies": ["application_credentials", "webhook"],
   "codeowners": ["@cgtobi"],

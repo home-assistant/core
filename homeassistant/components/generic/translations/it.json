@@ -45,6 +45,13 @@
                     "verify_ssl": "Verifica il certificato SSL"
                 },
                 "description": "Inserisci le impostazioni per connetterti alla fotocamera."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Questa immagine sembra buona."
+                },
+                "description": "![Anteprima immagine fissa fotocamera]({preview_url})",
+                "title": "Anteprima"
             }
         }
     },
@@ -68,6 +75,13 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Questa immagine appare bene"
+                },
+                "description": "![Anteprima dell' immagine fissa della fotocamera]({preview_url})",
+                "title": "Anteprima"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Tipo di contenuto"

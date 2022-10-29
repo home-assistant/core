@@ -24,9 +24,9 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
-    if "myLights" in instance["coordinator"].data:
-        for light in instance["coordinator"].data["myLights"]["lights"].values():
+    entities: list[LightEntity] = []
+    if my_lights := instance["coordinator"].data.get("myLights"):
+        for light in my_lights["lights"].values():
             if light.get("relay"):
                 entities.append(AdvantageAirLight(instance, light))
             else:
@@ -39,11 +39,11 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(self, instance, light):
+    def __init__(self, instance: dict[str, Any], light: dict[str, Any]) -> None:
         """Initialize an Advantage Air Light."""
         super().__init__(instance)
-        self.async_set_light = instance["async_set_light"]
-        self._id = light["id"]
+        self.lights = instance["lights"]
+        self._id: str = light["id"]
         self._attr_unique_id += f"-{self._id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(ADVANTAGE_AIR_DOMAIN, self._attr_unique_id)},
@@ -54,7 +54,7 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
         )
 
     @property
-    def _light(self):
+    def _light(self) -> dict[str, Any]:
         """Return the light object."""
         return self.coordinator.data["myLights"]["lights"][self._id]
 
@@ -65,11 +65,11 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        await self.async_set_light({"id": self._id, "state": ADVANTAGE_AIR_STATE_ON})
+        await self.lights({"id": self._id, "state": ADVANTAGE_AIR_STATE_ON})
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.async_set_light({"id": self._id, "state": ADVANTAGE_AIR_STATE_OFF})
+        await self.lights({"id": self._id, "state": ADVANTAGE_AIR_STATE_OFF})
 
 
 class AdvantageAirLightDimmable(AdvantageAirLight):
@@ -84,7 +84,7 @@ class AdvantageAirLightDimmable(AdvantageAirLight):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on and optionally set the brightness."""
-        data = {"id": self._id, "state": ADVANTAGE_AIR_STATE_ON}
+        data: dict[str, Any] = {"id": self._id, "state": ADVANTAGE_AIR_STATE_ON}
         if ATTR_BRIGHTNESS in kwargs:
             data["value"] = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-        await self.async_set_light(data)
+        await self.lights(data)

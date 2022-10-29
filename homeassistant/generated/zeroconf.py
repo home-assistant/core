@@ -3,419 +3,438 @@
 To update, run python3 -m script.hassfest
 """
 
-# fmt: off
-
 ZEROCONF = {
     "_Volumio._tcp.local.": [
         {
-            "domain": "volumio"
-        }
+            "domain": "volumio",
+        },
     ],
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
             "properties": {
-                "model": "appletv*"
-            }
+                "model": "appletv*",
+            },
         },
         {
             "domain": "apple_tv",
             "properties": {
-                "model": "audioaccessory*"
-            }
+                "model": "audioaccessory*",
+            },
         },
         {
             "domain": "apple_tv",
             "properties": {
-                "am": "airport*"
-            }
+                "am": "airport*",
+            },
         },
         {
             "domain": "samsungtv",
             "properties": {
-                "manufacturer": "samsung*"
-            }
-        }
+                "manufacturer": "samsung*",
+            },
+        },
     ],
     "_airport._tcp.local.": [
         {
-            "domain": "apple_tv"
-        }
+            "domain": "apple_tv",
+        },
     ],
     "_api._tcp.local.": [
         {
             "domain": "baf",
             "properties": {
-                "model": "haiku*"
-            }
+                "model": "haiku*",
+            },
         },
         {
             "domain": "baf",
             "properties": {
-                "model": "i6*"
-            }
-        }
+                "model": "i6*",
+            },
+        },
     ],
     "_api._udp.local.": [
         {
-            "domain": "guardian"
-        }
+            "domain": "guardian",
+        },
     ],
     "_appletv-v2._tcp.local.": [
         {
-            "domain": "apple_tv"
-        }
+            "domain": "apple_tv",
+        },
     ],
     "_axis-video._tcp.local.": [
         {
             "domain": "axis",
             "properties": {
-                "macaddress": "00408c*"
-            }
+                "macaddress": "00408c*",
+            },
         },
         {
             "domain": "axis",
             "properties": {
-                "macaddress": "accc8e*"
-            }
+                "macaddress": "accc8e*",
+            },
         },
         {
             "domain": "axis",
             "properties": {
-                "macaddress": "b8a44f*"
-            }
+                "macaddress": "b8a44f*",
+            },
         },
         {
             "domain": "doorbird",
             "properties": {
-                "macaddress": "1ccae3*"
-            }
-        }
+                "macaddress": "1ccae3*",
+            },
+        },
     ],
     "_bond._tcp.local.": [
         {
-            "domain": "bond"
-        }
+            "domain": "bond",
+        },
     ],
     "_companion-link._tcp.local.": [
         {
-            "domain": "apple_tv"
-        }
+            "domain": "apple_tv",
+        },
     ],
     "_daap._tcp.local.": [
         {
-            "domain": "forked_daapd"
-        }
+            "domain": "forked_daapd",
+        },
     ],
     "_dkapi._tcp.local.": [
         {
-            "domain": "daikin"
-        }
+            "domain": "daikin",
+        },
     ],
     "_dvl-deviceapi._tcp.local.": [
         {
-            "domain": "devolo_home_control"
+            "domain": "devolo_home_control",
         },
         {
             "domain": "devolo_home_network",
             "properties": {
-                "MT": "*"
-            }
-        }
+                "MT": "*",
+            },
+        },
     ],
     "_easylink._tcp.local.": [
         {
             "domain": "modern_forms",
-            "name": "wac*"
-        }
+            "name": "wac*",
+        },
     ],
     "_elg._tcp.local.": [
         {
-            "domain": "elgato"
-        }
+            "domain": "elgato",
+        },
     ],
     "_enphase-envoy._tcp.local.": [
         {
-            "domain": "enphase_envoy"
-        }
+            "domain": "enphase_envoy",
+        },
     ],
     "_esphomelib._tcp.local.": [
         {
-            "domain": "esphome"
+            "domain": "esphome",
         },
         {
             "domain": "zha",
-            "name": "tube*"
-        }
+            "name": "tube*",
+        },
     ],
     "_fbx-api._tcp.local.": [
         {
-            "domain": "freebox"
-        }
+            "domain": "freebox",
+        },
     ],
     "_googlecast._tcp.local.": [
         {
-            "domain": "cast"
-        }
+            "domain": "cast",
+        },
     ],
     "_hap._tcp.local.": [
         {
-            "domain": "homekit_controller"
+            "domain": "homekit_controller",
         },
         {
             "domain": "zwave_me",
-            "name": "*z.wave-me*"
-        }
+            "name": "*z.wave-me*",
+        },
     ],
     "_hap._udp.local.": [
         {
-            "domain": "homekit_controller"
-        }
+            "domain": "homekit_controller",
+        },
     ],
     "_homekit._tcp.local.": [
         {
-            "domain": "homekit"
-        }
+            "domain": "homekit",
+        },
     ],
     "_hscp._tcp.local.": [
         {
-            "domain": "apple_tv"
-        }
+            "domain": "apple_tv",
+        },
     ],
     "_http._tcp.local.": [
         {
             "domain": "awair",
-            "name": "awair*"
+            "name": "awair*",
         },
         {
             "domain": "bosch_shc",
-            "name": "bosch shc*"
+            "name": "bosch shc*",
         },
         {
             "domain": "nam",
-            "name": "nam-*"
+            "name": "nam-*",
         },
         {
             "domain": "nam",
             "properties": {
-                "manufacturer": "nettigo"
-            }
+                "manufacturer": "nettigo",
+            },
         },
         {
             "domain": "pure_energie",
-            "name": "smartbridge*"
+            "name": "smartbridge*",
         },
         {
             "domain": "rachio",
-            "name": "rachio*"
+            "name": "rachio*",
         },
         {
             "domain": "rainmachine",
-            "name": "rainmachine*"
+            "name": "rainmachine*",
         },
         {
             "domain": "shelly",
-            "name": "shelly*"
-        }
+            "name": "shelly*",
+        },
     ],
     "_hue._tcp.local.": [
         {
-            "domain": "hue"
-        }
+            "domain": "hue",
+        },
     ],
     "_hwenergy._tcp.local.": [
         {
-            "domain": "homewizard"
-        }
+            "domain": "homewizard",
+        },
     ],
     "_ipp._tcp.local.": [
         {
-            "domain": "ipp"
-        }
+            "domain": "ipp",
+        },
     ],
     "_ipps._tcp.local.": [
         {
-            "domain": "ipp"
-        }
+            "domain": "ipp",
+        },
     ],
     "_kizbox._tcp.local.": [
         {
             "domain": "overkiz",
-            "name": "gateway*"
-        }
-    ],
-    "_leap._tcp.local.": [
-        {
-            "domain": "lutron_caseta"
-        }
+            "name": "gateway*",
+        },
     ],
     "_lookin._tcp.local.": [
         {
-            "domain": "lookin"
-        }
+            "domain": "lookin",
+        },
+    ],
+    "_lutron._tcp.local.": [
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "radiora3*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "smartbridge*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
+                "SYSTYPE": "ra2select*",
+            },
+        },
     ],
     "_mediaremotetv._tcp.local.": [
         {
-            "domain": "apple_tv"
-        }
+            "domain": "apple_tv",
+        },
     ],
     "_miio._udp.local.": [
         {
-            "domain": "xiaomi_aqara"
+            "domain": "xiaomi_aqara",
         },
         {
-            "domain": "xiaomi_miio"
+            "domain": "xiaomi_miio",
         },
         {
             "domain": "yeelight",
-            "name": "yeelink-*"
-        }
+            "name": "yeelink-*",
+        },
     ],
     "_nanoleafapi._tcp.local.": [
         {
-            "domain": "nanoleaf"
-        }
+            "domain": "nanoleaf",
+        },
     ],
     "_nanoleafms._tcp.local.": [
         {
-            "domain": "nanoleaf"
-        }
+            "domain": "nanoleaf",
+        },
     ],
     "_nut._tcp.local.": [
         {
-            "domain": "nut"
-        }
+            "domain": "nut",
+        },
     ],
     "_octoprint._tcp.local.": [
         {
-            "domain": "octoprint"
-        }
+            "domain": "octoprint",
+        },
     ],
     "_plexmediasvr._tcp.local.": [
         {
-            "domain": "plex"
-        }
+            "domain": "plex",
+        },
     ],
     "_plugwise._tcp.local.": [
         {
-            "domain": "plugwise"
-        }
+            "domain": "plugwise",
+        },
     ],
     "_powerview._tcp.local.": [
         {
-            "domain": "hunterdouglas_powerview"
-        }
+            "domain": "hunterdouglas_powerview",
+        },
     ],
     "_printer._tcp.local.": [
         {
             "domain": "brother",
-            "name": "brother*"
-        }
+            "name": "brother*",
+        },
     ],
     "_raop._tcp.local.": [
         {
             "domain": "apple_tv",
             "properties": {
-                "am": "appletv*"
-            }
+                "am": "appletv*",
+            },
         },
         {
             "domain": "apple_tv",
             "properties": {
-                "am": "audioaccessory*"
-            }
+                "am": "audioaccessory*",
+            },
         },
         {
             "domain": "apple_tv",
             "properties": {
-                "am": "airport*"
-            }
-        }
+                "am": "airport*",
+            },
+        },
     ],
     "_sideplay._tcp.local.": [
         {
             "domain": "ecobee",
             "properties": {
-                "mdl": "eb-*"
-            }
+                "mdl": "eb-*",
+            },
         },
         {
             "domain": "ecobee",
             "properties": {
-                "mdl": "ecobee*"
-            }
-        }
+                "mdl": "ecobee*",
+            },
+        },
     ],
     "_sleep-proxy._udp.local.": [
         {
-            "domain": "apple_tv"
-        }
+            "domain": "apple_tv",
+        },
     ],
     "_sonos._tcp.local.": [
         {
-            "domain": "sonos"
-        }
+            "domain": "sonos",
+        },
     ],
     "_soundtouch._tcp.local.": [
         {
-            "domain": "soundtouch"
-        }
+            "domain": "soundtouch",
+        },
     ],
     "_spotify-connect._tcp.local.": [
         {
-            "domain": "spotify"
-        }
+            "domain": "spotify",
+        },
     ],
     "_ssh._tcp.local.": [
         {
             "domain": "smappee",
-            "name": "smappee1*"
+            "name": "smappee1*",
         },
         {
             "domain": "smappee",
-            "name": "smappee2*"
+            "name": "smappee2*",
         },
         {
             "domain": "smappee",
-            "name": "smappee50*"
-        }
+            "name": "smappee50*",
+        },
     ],
     "_system-bridge._tcp.local.": [
         {
-            "domain": "system_bridge"
-        }
+            "domain": "system_bridge",
+        },
     ],
     "_touch-able._tcp.local.": [
         {
-            "domain": "apple_tv"
-        }
+            "domain": "apple_tv",
+        },
     ],
     "_viziocast._tcp.local.": [
         {
-            "domain": "vizio"
-        }
+            "domain": "vizio",
+        },
     ],
     "_wled._tcp.local.": [
         {
-            "domain": "wled"
-        }
+            "domain": "wled",
+        },
     ],
     "_xbmc-jsonrpc-h._tcp.local.": [
         {
-            "domain": "kodi"
-        }
+            "domain": "kodi",
+        },
     ],
     "_zigate-zigbee-gateway._tcp.local.": [
         {
             "domain": "zha",
-            "name": "*zigate*"
-        }
+            "name": "*zigate*",
+        },
+    ],
+    "_zigstar_gw._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*zigstar*",
+        },
     ],
     "_zwave-js-server._tcp.local.": [
         {
-            "domain": "zwave_js"
-        }
-    ]
+            "domain": "zwave_js",
+        },
+    ],
 }
 
 HOMEKIT = {
@@ -477,5 +496,5 @@ HOMEKIT = {
     "ecobee*": "ecobee",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
-    "tado": "tado"
+    "tado": "tado",
 }

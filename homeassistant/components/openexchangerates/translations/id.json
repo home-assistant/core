@@ -19,15 +19,15 @@
                     "base": "Mata uang dasar"
                 },
                 "data_description": {
-                    "base": "Menggunakan mata uang dasar selain USD memerlukan [paket berbayar]({daftar})."
+                    "base": "Menggunakan mata uang dasar selain USD memerlukan [paket berbayar]({signup})."
                 }
             }
         }
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "Proses konfigurasi Open Exchange Rates lewat YAML dalam proses penghapusan.\n\nKonfigurasi YAML yang ada telah diimpor ke antarmuka secara otomatis.\n\nHapus konfigurasi YAML Open Exchange Rates dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Konfigurasi YAML Open Exchange Rates dalam proses penghapusan"
+            "description": "Proses konfigurasi Integrasi Open Exchange Rates lewat YAML telah dihapus.\n\nHapus konfigurasi YAML Integrasi Open Exchange Rates dari file configuration.yaml dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Integrasi Open Exchange Rates telah dihapus"
         }
     }
 }

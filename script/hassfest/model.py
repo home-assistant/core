@@ -40,6 +40,62 @@ class Config:
 
 
 @attr.s
+class Brand:
+    """Represent a brand in our validator."""
+
+    @classmethod
+    def load_dir(cls, path: pathlib.Path, config: Config):
+        """Load all brands in a directory."""
+        assert path.is_dir()
+        brands = {}
+        for fil in path.iterdir():
+            brand = cls(fil)
+            brand.load_brand(config)
+            brands[brand.domain] = brand
+
+        return brands
+
+    path: pathlib.Path = attr.ib()
+    brand: dict[str, Any] | None = attr.ib(default=None)
+
+    @property
+    def domain(self) -> str:
+        """Integration domain."""
+        return self.path.stem
+
+    @property
+    def name(self) -> str | None:
+        """Return name of the integration."""
+        return self.brand.get("name")
+
+    @property
+    def integrations(self) -> list[str]:
+        """Return the sub integrations of this brand."""
+        return self.brand.get("integrations")
+
+    @property
+    def iot_standards(self) -> list[str]:
+        """Return list of supported IoT standards."""
+        return self.brand.get("iot_standards", [])
+
+    def load_brand(self, config: Config) -> None:
+        """Load brand file."""
+        if not self.path.is_file():
+            config.add_error("model", f"Brand file {self.path} not found")
+            return
+
+        try:
+            brand = json.loads(self.path.read_text())
+        except ValueError as err:
+            config.add_error(
+                "model", f"Brand file {self.path.name} contains invalid JSON: {err}"
+            )
+            return
+
+        self.brand = brand
+
+
+@attr.s
 class Integration:
     """Represent an integration in our validator."""
 
@@ -53,11 +109,12 @@ class Integration:
                 continue
 
             init = fil / "__init__.py"
-            if not init.exists():
+            manifest = fil / "manifest.json"
+            if not init.exists() and not manifest.exists():
                 print(
-                    f"Warning: {init} missing, skipping directory. "
-                    "If this is your development environment, "
-                    "you can safely delete this folder."
+                    f"Warning: {init} and manifest.json missing, "
+                    "skipping directory. If this is your development "
+                    "environment, you can safely delete this folder."
                 )
                 continue
 
@@ -71,6 +128,7 @@ class Integration:
     manifest: dict[str, Any] | None = attr.ib(default=None)
     errors: list[Error] = attr.ib(factory=list)
     warnings: list[Error] = attr.ib(factory=list)
+    translated_name: bool = attr.ib(default=False)
 
     @property
     def domain(self) -> str:
@@ -113,21 +171,31 @@ class Integration:
         return self.manifest.get("dependencies", [])
 
     @property
-    def supported_brands(self) -> dict[str]:
-        """Return dict of supported brands."""
-        return self.manifest.get("supported_brands", {})
+    def supported_by(self) -> str:
+        """Return the integration supported by this virtual integration."""
+        return self.manifest.get("supported_by", {})
 
     @property
     def integration_type(self) -> str:
         """Get integration_type."""
-        return self.manifest.get("integration_type", "integration")
+        return self.manifest.get("integration_type", "hub")
+
+    @property
+    def iot_class(self) -> str | None:
+        """Return the integration IoT Class."""
+        return self.manifest.get("iot_class")
+
+    @property
+    def iot_standards(self) -> list[str]:
+        """Return the IoT standard supported by this virtual integration."""
+        return self.manifest.get("iot_standards", [])
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
     def add_warning(self, *args: Any, **kwargs: Any) -> None:
-        """Add an warning."""
+        """Add a warning."""
         self.warnings.append(Error(*args, **kwargs))
 
     def load_manifest(self) -> None:

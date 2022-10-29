@@ -3,5 +3,6 @@
   "name": "Alarm Control Panel",
   "documentation": "https://www.home-assistant.io/integrations/alarm_control_panel",
   "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "integration_type": "entity"
 }

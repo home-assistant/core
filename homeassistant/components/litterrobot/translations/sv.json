@@ -24,5 +24,11 @@
                 }
             }
         }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Vakuuminneh\u00e5llet \u00e4r nu tillg\u00e4ngligt som diagnostiska sensorer.\n\nV\u00e4nligen justera eventuella automatiseringar eller skript som anv\u00e4nder dessa attribut.",
+            "title": "Litter-Robots attribut \u00e4r nu deras egna sensorer"
+        }
     }
 }

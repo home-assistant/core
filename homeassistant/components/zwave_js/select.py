@@ -11,7 +11,6 @@ from zwave_js_server.model.driver import Driver
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -107,9 +106,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
         )
 
         # Entity class attributes
-        self._attr_name = self.generate_name(
-            include_value_name=True, alternate_value_name=info.platform_hint
-        )
+        self._attr_name = self.generate_name(alternate_value_name=info.platform_hint)
 
     @property
     def options(self) -> list[str]:
@@ -175,7 +172,6 @@ class ZwaveMultilevelSwitchSelectEntity(ZWaveBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if (target_value := self._target_value) is None:
-            raise HomeAssistantError("Missing target value on device.")
+        assert self._target_value is not None
         key = next(key for key, val in self._lookup_map.items() if val == option)
-        await self.info.node.async_set_value(target_value, int(key))
+        await self.info.node.async_set_value(self._target_value, int(key))

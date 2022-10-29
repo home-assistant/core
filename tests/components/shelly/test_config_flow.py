@@ -1,15 +1,17 @@
 """Test the Shelly config flow."""
-import asyncio
-from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
-import aiohttp
-import aioshelly
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    FirmwareUnsupported,
+    InvalidAuthError,
+)
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 
 from tests.common import MockConfigEntry
 
@@ -206,7 +208,7 @@ async def test_form_auth(hass, test_data):
 
 
 @pytest.mark.parametrize(
-    "error", [(asyncio.TimeoutError, "cannot_connect"), (ValueError, "unknown")]
+    "error", [(DeviceConnectionError, "cannot_connect"), (ValueError, "unknown")]
 )
 async def test_form_errors_get_info(hass, error):
     """Test we handle errors."""
@@ -323,7 +325,7 @@ async def test_form_missing_model_key_zeroconf(hass, caplog):
 
 
 @pytest.mark.parametrize(
-    "error", [(asyncio.TimeoutError, "cannot_connect"), (ValueError, "unknown")]
+    "error", [(DeviceConnectionError, "cannot_connect"), (ValueError, "unknown")]
 )
 async def test_form_errors_test_connection(hass, error):
     """Test we handle errors."""
@@ -430,10 +432,7 @@ async def test_form_firmware_unsupported(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "aioshelly.common.get_info",
-        side_effect=aioshelly.exceptions.FirmwareUnsupported,
-    ):
+    with patch("aioshelly.common.get_info", side_effect=FirmwareUnsupported):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
@@ -446,15 +445,8 @@ async def test_form_firmware_unsupported(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (
-            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
-            "cannot_connect",
-        ),
-        (
-            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.UNAUTHORIZED),
-            "invalid_auth",
-        ),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (InvalidAuthError, "invalid_auth"),
+        (DeviceConnectionError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
 )
@@ -489,15 +481,8 @@ async def test_form_auth_errors_test_connection_gen1(hass, error):
 @pytest.mark.parametrize(
     "error",
     [
-        (
-            aioshelly.exceptions.JSONRPCError(code=400),
-            "cannot_connect",
-        ),
-        (
-            aioshelly.exceptions.InvalidAuthError(code=401),
-            "invalid_auth",
-        ),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (DeviceConnectionError, "cannot_connect"),
+        (InvalidAuthError, "invalid_auth"),
         (ValueError, "unknown"),
     ],
 )
@@ -646,20 +631,8 @@ async def test_zeroconf_sleeping_device(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(
-    "error",
-    [
-        (
-            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
-            "cannot_connect",
-        ),
-        (asyncio.TimeoutError, "cannot_connect"),
-    ],
-)
-async def test_zeroconf_sleeping_device_error(hass, error):
+async def test_zeroconf_sleeping_device_error(hass):
     """Test sleeping device configuration via zeroconf with error."""
-    exc = error
-
     with patch(
         "aioshelly.common.get_info",
         return_value={
@@ -670,7 +643,7 @@ async def test_zeroconf_sleeping_device_error(hass, error):
         },
     ), patch(
         "aioshelly.block_device.BlockDevice.create",
-        new=AsyncMock(side_effect=exc),
+        new=AsyncMock(side_effect=DeviceConnectionError),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -707,10 +680,7 @@ async def test_zeroconf_already_configured(hass):
 
 async def test_zeroconf_firmware_unsupported(hass):
     """Test we abort if device firmware is unsupported."""
-    with patch(
-        "aioshelly.common.get_info",
-        side_effect=aioshelly.exceptions.FirmwareUnsupported,
-    ):
+    with patch("aioshelly.common.get_info", side_effect=FirmwareUnsupported):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DISCOVERY_INFO,
@@ -723,7 +693,7 @@ async def test_zeroconf_firmware_unsupported(hass):
 
 async def test_zeroconf_cannot_connect(hass):
     """Test we get the form."""
-    with patch("aioshelly.common.get_info", side_effect=asyncio.TimeoutError):
+    with patch("aioshelly.common.get_info", side_effect=DeviceConnectionError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DISCOVERY_INFO,
@@ -780,3 +750,133 @@ async def test_zeroconf_require_auth(hass):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (1, {"username": "test user", "password": "test1 password"}),
+        (2, {"password": "test2 password"}),
+    ],
+)
+async def test_reauth_successful(hass, test_data):
+    """Test starting a reauthentication flow."""
+    gen, user_input = test_data
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True, "gen": gen},
+    ), patch(
+        "aioshelly.block_device.BlockDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                model="SHSW-1",
+                settings=MOCK_SETTINGS,
+            )
+        ),
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                shelly={"model": "SHSW-1", "gen": gen},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (1, {"username": "test user", "password": "test1 password"}),
+        (2, {"password": "test2 password"}),
+    ],
+)
+async def test_reauth_unsuccessful(hass, test_data):
+    """Test reauthentication flow failed."""
+    gen, user_input = test_data
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True, "gen": gen},
+    ), patch(
+        "aioshelly.block_device.BlockDevice.create",
+        new=AsyncMock(side_effect=InvalidAuthError),
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(side_effect=InvalidAuthError),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "reauth_unsuccessful"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [DeviceConnectionError, FirmwareUnsupported],
+)
+async def test_reauth_get_info_error(hass, error):
+    """Test reauthentication flow failed with error in get_info()."""
+    entry = MockConfigEntry(
+        domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": 2}
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "aioshelly.common.get_info",
+        side_effect=error,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"password": "test2 password"},
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "reauth_unsuccessful"

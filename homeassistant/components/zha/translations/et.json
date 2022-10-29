@@ -6,15 +6,63 @@
             "usb_probe_failed": "USB seadme k\u00fcsitlemine eba\u00f5nnestus"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_backup_json": "Sobimatu varukoopia JSON"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Vali automaatne varundamine"
+                },
+                "description": "Taasta v\u00f5rgu seaded automaatsest varukoopiast",
+                "title": "Taastamine automaatsest varukoopiast"
+            },
+            "choose_formation_strategy": {
+                "description": "Vali raadio v\u00f5rguseaded.",
+                "menu_options": {
+                    "choose_automatic_backup": "Taastamine automaatsest varukoopiast",
+                    "form_new_network": "Kustuta v\u00f5rgu seaded ja moodusta uus v\u00f5rk",
+                    "reuse_settings": "Raadiov\u00f5rgu s\u00e4tete s\u00e4ilitamine",
+                    "upload_manual_backup": "Varukoopia \u00fcleslaadimine"
+                },
+                "title": "V\u00f5rgu moodustamine"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Jadaseadme tee"
+                },
+                "description": "Vali Zigbee raadio jadaport",
+                "title": "Vali jadaport"
+            },
             "confirm": {
                 "description": "Kas soovid seadistada teenust {name} ?"
             },
             "confirm_hardware": {
                 "description": "Kas seadistada {name} ?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Seadme raadio t\u00fc\u00fcp"
+                },
+                "description": "Vali Zigbee raadio t\u00fc\u00fcp",
+                "title": "Seadme raadio t\u00fc\u00fcp"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "pordi kiirus",
+                    "flow_control": "andmevoo juhtimine",
+                    "path": "Jadaseadme tee"
+                },
+                "description": "Sisesta jadapordi s\u00e4tted",
+                "title": "Jadapordi s\u00e4tted"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Raadio IEEE-aadressi p\u00fcsiv asendamine"
+                },
+                "description": "Varukoopial on erinev IEEE aadress kui raadiol.  V\u00f5rgu n\u00f5uetekohaseks toimimiseks tuleks muuta ka raadio IEEE aadressi.\n\nSee on p\u00fcsiv toiming.",
+                "title": "Raadio IEEE aadressi \u00fclekirjutamine"
             },
             "pick_radio": {
                 "data": {
@@ -31,6 +79,13 @@
                 },
                 "description": "Sisesta pordispetsiifilised seaded",
                 "title": "Seaded"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Faili \u00fcleslaadimine"
+                },
+                "description": "Taasta oma v\u00f5rgus\u00e4tted \u00fcleslaaditud JSON-varufailist. Saad selle alla laadida teisest ZHA paigaldusest **V\u00f5rguseaded** v\u00f5i kasutada Zigbee2MQTT 'coordinator_backup.json' faili.",
+                "title": "K\u00e4sitsi varundamise \u00fcleslaadimine"
             },
             "user": {
                 "data": {
@@ -61,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "K\u00f5igi LED-ide efekt",
+            "issue_individual_led_effect": "Efekt \u00fcksikute LEDide puhul",
             "squawk": "Pr\u00e4\u00e4ksata",
             "warn": "Hoiata"
         },
@@ -116,12 +173,89 @@
         }
     },
     "options": {
+        "abort": {
+            "not_zha_device": "See ei ole zha seade",
+            "single_instance_allowed": "Juba h\u00e4\u00e4lestatud. V\u00f5imalik on ainult \u00fcks sidumine.",
+            "usb_probe_failed": "USB seadme k\u00fcsitlemine nurjus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_backup_json": "Sobimatu JSON varundus kirje"
+        },
+        "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Vali automaatse varunduse kirje"
+                },
+                "description": "Taasta v\u00f5rgus\u00e4tted automaatvarunduse kirjest",
+                "title": "Taasta automaatvarundusest"
+            },
+            "choose_formation_strategy": {
+                "description": "Vali raadiov\u00f5rgu s\u00e4tted",
+                "menu_options": {
+                    "choose_automatic_backup": "Taasta automaatvarundusest",
+                    "form_new_network": "Kustuta vana v\u00f5rk ja loo uus",
+                    "reuse_settings": "S\u00e4ilita raadiov\u00f5rgu s\u00e4tted",
+                    "upload_manual_backup": "Lae varukoopia \u00fcles"
+                },
+                "title": "V\u00f5rgu \u00fclesehitus"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "Jadapordi seadme rada"
+                },
+                "description": "Vali Zigbee raadio jadaport",
+                "title": "Vali jadaport"
+            },
             "init": {
                 "description": "ZHA peatatakse.  Kas soovid j\u00e4tkata?",
                 "title": "Seadista ZHA uuesti"
             },
+            "instruct_unplug": {
+                "description": "Teie vana raadio on l\u00e4htestatud. Kui riistvara pole enam vaja, saad selle n\u00fc\u00fcd lahti \u00fchendada.",
+                "title": "\u00dchenda vana raadio lahti"
+            },
+            "intent_migrate": {
+                "description": "Vana raadio l\u00e4htestatakse tehaseseadetele. Kui kasutad kombineeritud Z-Wave ja Zigbee adapterit, n\u00e4iteks HUSBZB-1, l\u00e4htestab see ainult Zigbee osa. \n\n Kas soovid j\u00e4tkata?",
+                "title": "Teisalda uuele seadmele"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Raadio t\u00fc\u00fcp"
+                },
+                "description": "Vali Zigbee raadio t\u00fc\u00fcp",
+                "title": "Raadioseadme t\u00fc\u00fcp"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "Pordi kiirus",
+                    "flow_control": "Andmevoo kontroll",
+                    "path": "Jadapordi seadme aadress"
+                },
+                "description": "Sisesta jadapordi s\u00e4tted",
+                "title": "Jadapordi s\u00e4tted"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Asenda IEEE aadress j\u00e4\u00e4davalt"
+                },
+                "description": "Varukoopial on erinev IEEE aadress kui raadiol.  V\u00f5rgu n\u00f5uetekohaseks toimimiseks tuleks muuta ka raadio IEEE aadressi.\n\nSee on p\u00fcsiv toiming.",
+                "title": "Kirjuta IEEE aadress \u00fcle"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "Kas l\u00e4hed \u00fcle uuele raadiole v\u00f5i seadistad praegust raadiot \u00fcmber?",
+                "menu_options": {
+                    "intent_migrate": "Teisalda uuele seadmele",
+                    "intent_reconfigure": "Taasseadista praegune seade"
+                },
+                "title": "Teisaldamine v\u00f5i uuesti seadistamine"
+            },
             "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Lae kirje \u00fcles"
+                },
+                "description": "Taasta oma v\u00f5rgus\u00e4tted \u00fcleslaaditud JSON-varufailist. Saad selle alla laadida teisest ZHA paigaldusest **V\u00f5rguseaded** v\u00f5i kasutada Zigbee2MQTT 'coordinator_backup.json' faili.",
                 "title": "Lae k\u00e4sitsi loodud varukoopia \u00fcles"
             }
         }

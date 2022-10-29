@@ -5,7 +5,7 @@ from __future__ import annotations
 from pychromecast import Chromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
-from homeassistant.components.cast.const import DOMAIN as CAST_DOMAIN
+from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.cast.home_assistant_cast import (
     ATTR_URL_PATH,
     ATTR_VIEW_PATH,

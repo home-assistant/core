@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     PRESET_COMFORT,
     PRESET_ECO,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

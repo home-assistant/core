@@ -25,13 +25,13 @@ async def async_get_device_diagnostics(
         "device": {
             "name": station.station,
             "model": station.model,
-            "frequency": station.frequency,
+            "frequency": station.frequence,
             "version": station.version,
         },
         "raw": ecowitt.last_values[station_id],
         "sensors": {
             sensor.key: sensor.value
-            for sensor in station.sensors
+            for sensor in ecowitt.sensors.values()
             if sensor.station.key == station_id
         },
     }

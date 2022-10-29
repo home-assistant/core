@@ -7,7 +7,7 @@ from typing import Any, TypedDict, overload
 
 from sqlalchemy.engine.row import Row
 
-from homeassistant.components.websocket_api.const import (
+from homeassistant.components.websocket_api import (
     COMPRESSED_STATE_ATTRIBUTES,
     COMPRESSED_STATE_LAST_CHANGED,
     COMPRESSED_STATE_LAST_UPDATED,
@@ -149,7 +149,7 @@ class LazyState(State):
         self.attr_cache = attr_cache
 
     @property  # type: ignore[override]
-    def attributes(self) -> dict[str, Any]:  # type: ignore[override]
+    def attributes(self) -> dict[str, Any]:
         """State attributes."""
         if self._attributes is None:
             self._attributes = decode_attributes_from_row(self._row, self.attr_cache)
@@ -161,7 +161,7 @@ class LazyState(State):
         self._attributes = value
 
     @property  # type: ignore[override]
-    def context(self) -> Context:  # type: ignore[override]
+    def context(self) -> Context:
         """State context."""
         if self._context is None:
             self._context = Context(id=None)
@@ -173,7 +173,7 @@ class LazyState(State):
         self._context = value
 
     @property  # type: ignore[override]
-    def last_changed(self) -> datetime:  # type: ignore[override]
+    def last_changed(self) -> datetime:
         """Last changed datetime."""
         if self._last_changed is None:
             if (last_changed := self._row.last_changed) is not None:
@@ -188,7 +188,7 @@ class LazyState(State):
         self._last_changed = value
 
     @property  # type: ignore[override]
-    def last_updated(self) -> datetime:  # type: ignore[override]
+    def last_updated(self) -> datetime:
         """Last updated datetime."""
         if self._last_updated is None:
             self._last_updated = process_timestamp(self._row.last_updated)

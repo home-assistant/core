@@ -17,7 +17,8 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Username"
+                    "username": "Username",
+                    "account": "OVO account id (only add if you have multiple accounts)"
                 },
                 "description": "Set up an OVO Energy instance to access your energy usage.",
                 "title": "Add OVO Energy Account"

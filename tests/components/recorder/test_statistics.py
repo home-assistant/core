@@ -35,10 +35,9 @@ from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import async_wait_recording_done, do_adhoc_statistics
+from .common import async_wait_recording_done, do_adhoc_statistics, wait_recording_done
 
 from tests.common import get_test_home_assistant, mock_registry
-from tests.components.recorder.common import wait_recording_done
 
 ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
@@ -157,11 +156,11 @@ def mock_sensor_statistics():
         """Generate fake statistics."""
         return {
             "meta": {
-                "statistic_id": entity_id,
-                "unit_of_measurement": "dogs",
                 "has_mean": True,
                 "has_sum": False,
                 "name": None,
+                "statistic_id": entity_id,
+                "unit_of_measurement": "dogs",
             },
             "stat": {"start": start},
         }
@@ -449,9 +448,9 @@ def test_statistics_duplicated(hass_recorder, caplog):
     ),
 )
 async def test_import_statistics(
+    recorder_mock,
     hass,
     hass_ws_client,
-    recorder_mock,
     caplog,
     source,
     statistic_id,
@@ -524,13 +523,13 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy",
             "source": source,
             "statistics_unit_of_measurement": "kWh",
+            "unit_class": "energy",
         }
     ]
     metadata = get_metadata(hass, statistic_ids=(statistic_id,))
@@ -617,13 +616,13 @@ async def test_import_statistics(
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
         {
-            "display_unit_of_measurement": "kWh",
             "has_mean": False,
             "has_sum": True,
             "statistic_id": statistic_id,
             "name": "Total imported energy renamed",
             "source": source,
             "statistics_unit_of_measurement": "kWh",
+            "unit_class": "energy",
         }
     ]
     metadata = get_metadata(hass, statistic_ids=(statistic_id,))
@@ -668,7 +667,7 @@ async def test_import_statistics(
         ]
     }
 
-    # Adjust the statistics
+    # Adjust the statistics in a different unit
     await client.send_json(
         {
             "id": 1,
@@ -676,6 +675,7 @@ async def test_import_statistics(
             "statistic_id": statistic_id,
             "start_time": period2.isoformat(),
             "adjustment": 1000.0,
+            "adjustment_unit_of_measurement": "MWh",
         }
     )
     response = await client.receive_json()
@@ -705,7 +705,7 @@ async def test_import_statistics(
                 "min": None,
                 "last_reset": last_reset_utc_str,
                 "state": approx(1.0),
-                "sum": approx(1003.0),
+                "sum": approx(1000 * 1000 + 3.0),
             },
         ]
     }
@@ -886,9 +886,147 @@ def test_import_statistics_errors(hass_recorder, caplog):
 
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
+@pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
+def test_weekly_statistics(hass_recorder, caplog, timezone):
+    """Test weekly statistics."""
+    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
+
+    hass = hass_recorder()
+    wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2022-10-03 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2022-10-09 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2022-10-10 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2022-10-16 23:00:00"))
+
+    external_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+    )
+    external_metadata = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(hass, external_metadata, external_statistics)
+    wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="week")
+    week1_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-03 00:00:00"))
+    week1_end = dt_util.as_utc(dt_util.parse_datetime("2022-10-10 00:00:00"))
+    week2_start = dt_util.as_utc(dt_util.parse_datetime("2022-10-10 00:00:00"))
+    week2_end = dt_util.as_utc(dt_util.parse_datetime("2022-10-17 00:00:00"))
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": week1_start.isoformat(),
+                "end": week1_end.isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": 1.0,
+                "sum": 3.0,
+            },
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": week2_start.isoformat(),
+                "end": week2_end.isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": 3.0,
+                "sum": 5.0,
+            },
+        ]
+    }
+
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["not", "the", "same", "test:total_energy_import"],
+        period="week",
+    )
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": week1_start.isoformat(),
+                "end": week1_end.isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": 1.0,
+                "sum": 3.0,
+            },
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": week2_start.isoformat(),
+                "end": week2_end.isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": 3.0,
+                "sum": 5.0,
+            },
+        ]
+    }
+
+    # Use 5minute to ensure table switch works
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["test:total_energy_import", "with_other"],
+        period="5minute",
+    )
+    assert stats == {}
+
+    # Ensure future date has not data
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(
+        hass, start_time=future, end_time=future, period="month"
+    )
+    assert stats == {}
+
+    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
+
+
+@pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 def test_monthly_statistics(hass_recorder, caplog, timezone):
-    """Test inserting external statistics."""
+    """Test monthly statistics."""
     dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
 
     hass = hass_recorder()

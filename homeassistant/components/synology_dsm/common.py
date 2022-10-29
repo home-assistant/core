@@ -94,6 +94,16 @@ class SynoApi:
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
+        if self._with_surveillance_station:
+            try:
+                self.dsm.surveillance_station.update()
+            except SYNOLOGY_CONNECTION_EXCEPTIONS:
+                self._with_surveillance_station = False
+                self.dsm.reset(SynoSurveillanceStation.API_KEY)
+                LOGGER.info(
+                    "Surveillance Station found, but disabled due to missing user permissions"
+                )
+
         LOGGER.debug(
             "State of Surveillance_station during setup of '%s': %s",
             self._entry.unique_id,
@@ -103,7 +113,7 @@ class SynoApi:
         # check if upgrade is available
         try:
             self.dsm.upgrade.update()
-        except SynologyDSMAPIErrorException as ex:
+        except SYNOLOGY_CONNECTION_EXCEPTIONS as ex:
             self._with_upgrade = False
             self.dsm.reset(SynoCoreUpgrade.API_KEY)
             LOGGER.debug("Disabled fetching upgrade data during setup: %s", ex)

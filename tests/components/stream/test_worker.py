@@ -48,9 +48,10 @@ from homeassistant.components.stream.worker import (
 )
 from homeassistant.setup import async_setup_component
 
+from .common import generate_h264_video, generate_h265_video
+from .test_ll_hls import TEST_PART_DURATION
+
 from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
-from tests.components.stream.common import generate_h264_video, generate_h265_video
-from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
@@ -241,7 +242,7 @@ class FakePyAvBuffer:
         # Forward to appropriate FakeStream
         packet.stream.mux(packet)
         # Make new init/part data available to the worker
-        self.memory_file.write(b"0")
+        self.memory_file.write(b"\x00\x00\x00\x00moov")
 
     def close(self):
         """Close the buffer."""
@@ -793,7 +794,7 @@ async def test_durations(hass, worker_finished_stream):
             assert math.isclose(
                 (av_part.duration - av_part.start_time) / av.time_base,
                 part.duration,
-                abs_tol=2 / av_part.streams.video[0].rate + 1e-6,
+                abs_tol=2 / av_part.streams.video[0].average_rate + 1e-6,
             )
             # Also check that the sum of the durations so far matches the last dts
             # in the media.

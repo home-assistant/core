@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from datetime import timedelta
 import logging
+from time import monotonic
 from typing import Generic, TypeVar
 
 import async_timeout
@@ -11,7 +12,7 @@ from pyprusalink import InvalidAuth, JobInfo, PrinterInfo, PrusaLink, PrusaLinkE
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -22,7 +23,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.CAMERA]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -63,29 +64,45 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T]):
     """Update coordinator for the printer."""
 
     config_entry: ConfigEntry
+    expect_change_until = 0.0
 
     def __init__(self, hass: HomeAssistant, api: PrusaLink) -> None:
         """Initialize the update coordinator."""
         self.api = api
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
+            hass, _LOGGER, name=DOMAIN, update_interval=self._get_update_interval(None)
         )
 
     async def _async_update_data(self) -> T:
         """Update the data."""
         try:
             with async_timeout.timeout(5):
-                return await self._fetch_data()
+                data = await self._fetch_data()
         except InvalidAuth:
             raise UpdateFailed("Invalid authentication") from None
         except PrusaLinkError as err:
             raise UpdateFailed(str(err)) from err
 
+        self.update_interval = self._get_update_interval(data)
+        return data
+
     @abstractmethod
     async def _fetch_data(self) -> T:
         """Fetch the actual data."""
         raise NotImplementedError
+
+    @callback
+    def expect_change(self) -> None:
+        """Expect a change."""
+        self.expect_change_until = monotonic() + 30
+
+    def _get_update_interval(self, data: T) -> timedelta:
+        """Get new update interval."""
+        if self.expect_change_until > monotonic():
+            return timedelta(seconds=5)
+
+        return timedelta(seconds=30)
 
 
 class PrinterUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
@@ -94,6 +111,15 @@ class PrinterUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
     async def _fetch_data(self) -> PrinterInfo:
         """Fetch the printer data."""
         return await self.api.get_printer()
+
+    def _get_update_interval(self, data: T) -> timedelta:
+        """Get new update interval."""
+        if data and any(
+            data["state"]["flags"][key] for key in ("pausing", "cancelling")
+        ):
+            return timedelta(seconds=5)
+
+        return super()._get_update_interval(data)
 
 
 class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):

@@ -1,19 +1,18 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pynobo import nobo
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -24,7 +23,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_VIA_DEVICE,
-    PRECISION_WHOLE,
+    PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -52,8 +51,6 @@ PRESET_MODES = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
 MIN_TEMPERATURE = 7
 MAX_TEMPERATURE = 40
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -72,10 +69,7 @@ async def async_setup_entry(
     )
 
     # Add zones as entities
-    async_add_entities(
-        [NoboZone(zone_id, hub, override_type) for zone_id in hub.zones],
-        True,
-    )
+    async_add_entities(NoboZone(zone_id, hub, override_type) for zone_id in hub.zones)
 
 
 class NoboZone(ClimateEntity):
@@ -87,11 +81,12 @@ class NoboZone(ClimateEntity):
 
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
-    _attr_precision = PRECISION_WHOLE
+    _attr_precision = PRECISION_TENTHS
     _attr_preset_modes = PRESET_MODES
-    # Need to poll to get preset change when in HVACMode.AUTO.
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = TEMP_CELSIUS
+    _attr_target_temperature_step = 1
+    # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
 
     def __init__(self, zone_id, hub: nobo, override_type):
         """Initialize the climate device."""
@@ -109,6 +104,7 @@ class NoboZone(ClimateEntity):
             ATTR_VIA_DEVICE: (DOMAIN, hub.hub_info[ATTR_SERIAL]),
             ATTR_SUGGESTED_AREA: hub.zones[zone_id][ATTR_NAME],
         }
+        self._read_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callback from hub."""

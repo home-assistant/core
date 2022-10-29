@@ -16,5 +16,15 @@
                 "description": "Vil du sette opp Tasmota?"
             }
         }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "Flere Tasmota-enheter deler emnet {topic} . \n\n Tasmota-enheter med dette problemet: {offenders} .",
+            "title": "Flere Tasmota-enheter deler samme emne"
+        },
+        "topic_no_prefix": {
+            "description": "Tasmota-enhet {name} med IP {ip} inkluderer ikke ` %prefix% ` i hele emnet. \n\n Entiteter for denne enheten er deaktivert til konfigurasjonen er korrigert.",
+            "title": "Tasmota-enheten {name} har et ugyldig MQTT-emne"
+        }
     }
 }

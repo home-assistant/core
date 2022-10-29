@@ -33,7 +33,7 @@
             },
             "target_config": {
                 "data": {
-                    "reverse": "A bor\u00edt\u00f3 megfordult"
+                    "reverse": "Ford\u00edtott \u00e1rny\u00e9kol\u00f3"
                 },
                 "description": "`{target_name}` be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa",
                 "title": "MyLink \u00e1rny\u00e9kol\u00f3 konfigur\u00e1l\u00e1sa"

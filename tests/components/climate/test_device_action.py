@@ -3,7 +3,7 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.climate import DOMAIN, const, device_action
+from homeassistant.components.climate import DOMAIN, HVACMode, const, device_action
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.entity import EntityCategory
@@ -152,9 +152,9 @@ async def test_action(hass):
     """Test for actions."""
     hass.states.async_set(
         "climate.entity",
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
-            const.ATTR_HVAC_MODES: [const.HVAC_MODE_COOL, const.HVAC_MODE_OFF],
+            const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
             const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY],
         },
     )
@@ -174,7 +174,7 @@ async def test_action(hass):
                         "device_id": "abcdefgh",
                         "entity_id": "climate.entity",
                         "type": "set_hvac_mode",
-                        "hvac_mode": const.HVAC_MODE_OFF,
+                        "hvac_mode": HVACMode.OFF,
                     },
                 },
                 {
@@ -213,7 +213,7 @@ async def test_action(hass):
     [
         (
             False,
-            {const.ATTR_HVAC_MODES: [const.HVAC_MODE_COOL, const.HVAC_MODE_OFF]},
+            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
             {},
             "set_hvac_mode",
             [
@@ -242,7 +242,7 @@ async def test_action(hass):
         (
             True,
             {},
-            {const.ATTR_HVAC_MODES: [const.HVAC_MODE_COOL, const.HVAC_MODE_OFF]},
+            {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
             "set_hvac_mode",
             [
                 {
@@ -296,7 +296,7 @@ async def test_capabilities(
     if set_state:
         hass.states.async_set(
             f"{DOMAIN}.test_5678",
-            const.HVAC_MODE_COOL,
+            HVACMode.COOL,
             capabilities_state,
         )
 

@@ -13,15 +13,15 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.modbus import get_hub
-from homeassistant.components.modbus.const import (
+from homeassistant.components.modbus import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CALL_TYPE_WRITE_REGISTER,
     CONF_HUB,
     DEFAULT_HUB,
+    ModbusHub,
+    get_hub,
 )
-from homeassistant.components.modbus.modbus import ModbusHub
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,

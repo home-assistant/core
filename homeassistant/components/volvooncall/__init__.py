@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -22,6 +23,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -38,6 +40,9 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     RESOURCES,
+    UNIT_SYSTEM_IMPERIAL,
+    UNIT_SYSTEM_METRIC,
+    UNIT_SYSTEM_SCANDINAVIAN_MILES,
     VOLVO_DISCOVERY_NEW,
 )
 from .errors import InvalidAuth
@@ -109,6 +114,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Volvo On Call component from a ConfigEntry."""
+
+    # added CONF_UNIT_SYSTEM / deprecated CONF_SCANDINAVIAN_MILES in 2022.10 to support imperial units
+    if CONF_UNIT_SYSTEM not in entry.data:
+        new_conf = {**entry.data}
+
+        scandinavian_miles: bool = entry.data[CONF_SCANDINAVIAN_MILES]
+
+        new_conf[CONF_UNIT_SYSTEM] = (
+            UNIT_SYSTEM_SCANDINAVIAN_MILES if scandinavian_miles else UNIT_SYSTEM_METRIC
+        )
+
+        hass.config_entries.async_update_entry(entry, data=new_conf)
+
     session = async_get_clientsession(hass)
 
     connection = Connection(
@@ -183,7 +201,13 @@ class VolvoData:
 
         dashboard = vehicle.dashboard(
             mutable=self.config_entry.data[CONF_MUTABLE],
-            scandinavian_miles=self.config_entry.data[CONF_SCANDINAVIAN_MILES],
+            scandinavian_miles=(
+                self.config_entry.data[CONF_UNIT_SYSTEM]
+                == UNIT_SYSTEM_SCANDINAVIAN_MILES
+            ),
+            usa_units=(
+                self.config_entry.data[CONF_UNIT_SYSTEM] == UNIT_SYSTEM_IMPERIAL
+            ),
         )
 
         for instrument in (
@@ -290,6 +314,16 @@ class VolvoEntity(CoordinatorEntity):
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return True
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a inique set of attributes for each vehicle."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.vehicle.vin)},
+            name=self._vehicle_name,
+            model=self.vehicle.vehicle_type,
+            manufacturer="Volvo",
+        )
 
     @property
     def extra_state_attributes(self):

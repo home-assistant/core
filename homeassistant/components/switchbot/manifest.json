@@ -2,7 +2,7 @@
   "domain": "switchbot",
   "name": "SwitchBot",
   "documentation": "https://www.home-assistant.io/integrations/switchbot",
-  "requirements": ["PySwitchbot==0.18.27"],
+  "requirements": ["PySwitchbot==0.20.2"],
   "config_flow": true,
   "dependencies": ["bluetooth"],
   "codeowners": [
@@ -13,6 +13,10 @@
     "@Eloston"
   ],
   "bluetooth": [
+    {
+      "service_data_uuid": "00000d00-0000-1000-8000-00805f9b34fb",
+      "connectable": false
+    },
     {
       "service_data_uuid": "0000fd3d-0000-1000-8000-00805f9b34fb",
       "connectable": false

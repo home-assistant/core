@@ -116,7 +116,6 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._playing: bool = True
 
         self._attr_name: str | None = config_entry.data.get(CONF_NAME)
-        self._attr_state: str | None = None
         self._attr_unique_id = config_entry.unique_id
         self._attr_is_volume_muted: bool = False
         self._attr_device_class = MediaPlayerDeviceClass.TV
@@ -198,7 +197,7 @@ class SamsungTVDevice(MediaPlayerEntity):
                 else MediaPlayerState.OFF
             )
         if self._attr_state != old_state:
-            LOGGER.debug("TV %s state updated to %s", self._host, self._attr_state)
+            LOGGER.debug("TV %s state updated to %s", self._host, self.state)
 
         if self._attr_state != MediaPlayerState.ON:
             if self._dmr_device and self._dmr_device.is_subscribed:
@@ -357,7 +356,7 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._auth_failed:
             return False
         return (
-            self._attr_state == MediaPlayerState.ON
+            self.state == MediaPlayerState.ON
             or self._on_script is not None
             or self._mac is not None
             or self._power_off_in_progress()

@@ -40,7 +40,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.temperature import fahrenheit_to_celsius
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -348,7 +348,9 @@ class PrometheusMetrics:
         with suppress(ValueError):
             value = self.state_as_number(state)
             if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-                value = fahrenheit_to_celsius(value)
+                value = TemperatureConverter.convert(
+                    value, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                )
             metric.labels(**self._labels(state)).set(value)
 
     def _handle_device_tracker(self, state):
@@ -394,7 +396,7 @@ class PrometheusMetrics:
     def _handle_climate_temp(self, state, attr, metric_name, metric_description):
         if temp := state.attributes.get(attr):
             if self._climate_units == TEMP_FAHRENHEIT:
-                temp = fahrenheit_to_celsius(temp)
+                temp = TemperatureConverter.convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
             metric = self._metric(
                 metric_name,
                 self.prometheus_cli.Gauge,
@@ -507,7 +509,9 @@ class PrometheusMetrics:
             try:
                 value = self.state_as_number(state)
                 if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-                    value = fahrenheit_to_celsius(value)
+                    value = TemperatureConverter.convert(
+                        value, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                    )
                 _metric.labels(**self._labels(state)).set(value)
             except ValueError:
                 pass

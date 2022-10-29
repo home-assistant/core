@@ -8,8 +8,6 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 CONF_HOURS = "hours"
 CONF_MINUTES = "minutes"
 CONF_SECONDS = "seconds"

@@ -7,12 +7,15 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
+    ATTR_SWING_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_MODE,
     ATTR_STATE,
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
@@ -23,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
@@ -34,12 +37,22 @@ SERVICE_ENABLE_TIMER = "enable_timer"
 ATTR_MINUTES = "minutes"
 SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
 SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
+SERVICE_FULL_STATE = "full_state"
+SERVICE_ENABLE_CLIMATE_REACT = "enable_climate_react"
+ATTR_HIGH_TEMPERATURE_THRESHOLD = "high_temperature_threshold"
+ATTR_HIGH_TEMPERATURE_STATE = "high_temperature_state"
+ATTR_LOW_TEMPERATURE_THRESHOLD = "low_temperature_threshold"
+ATTR_LOW_TEMPERATURE_STATE = "low_temperature_state"
+ATTR_SMART_TYPE = "smart_type"
 
 ATTR_AC_INTEGRATION = "ac_integration"
 ATTR_GEO_INTEGRATION = "geo_integration"
 ATTR_INDOOR_INTEGRATION = "indoor_integration"
 ATTR_OUTDOOR_INTEGRATION = "outdoor_integration"
 ATTR_SENSITIVITY = "sensitivity"
+ATTR_TARGET_TEMPERATURE = "target_temperature"
+ATTR_HORIZONTAL_SWING_MODE = "horizontal_swing_mode"
+ATTR_LIGHT = "light"
 BOOST_INCLUSIVE = "boost_inclusive"
 
 PARALLEL_UPDATES = 0
@@ -118,6 +131,34 @@ async def async_setup_entry(
         },
         "async_enable_pure_boost",
     )
+    platform.async_register_entity_service(
+        SERVICE_FULL_STATE,
+        {
+            vol.Required(ATTR_MODE): vol.In(
+                ["cool", "heat", "fan", "auto", "dry", "off"]
+            ),
+            vol.Optional(ATTR_TARGET_TEMPERATURE): int,
+            vol.Optional(ATTR_FAN_MODE): str,
+            vol.Optional(ATTR_SWING_MODE): str,
+            vol.Optional(ATTR_HORIZONTAL_SWING_MODE): str,
+            vol.Optional(ATTR_LIGHT): vol.In(["on", "off"]),
+        },
+        "async_full_ac_state",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_ENABLE_CLIMATE_REACT,
+        {
+            vol.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_HIGH_TEMPERATURE_STATE): dict,
+            vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
+            vol.Required(ATTR_SMART_TYPE): vol.In(
+                ["temperature", "feelsLike", "humidity"]
+            ),
+        },
+        "async_enable_climate_react",
+    )
 
 
 class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
@@ -169,7 +210,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.device_data.temp:
-            return convert_temperature(
+            return TemperatureConverter.convert(
                 self.device_data.temp,
                 TEMP_CELSIUS,
                 self.temperature_unit,
@@ -335,6 +376,37 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             assumed_state=True,
         )
 
+    async def async_full_ac_state(
+        self,
+        mode: str,
+        target_temperature: int | None = None,
+        fan_mode: str | None = None,
+        swing_mode: str | None = None,
+        horizontal_swing_mode: str | None = None,
+        light: str | None = None,
+    ) -> None:
+        """Set full AC state."""
+        new_ac_state = self.device_data.ac_states
+        new_ac_state.pop("timestamp")
+        new_ac_state["on"] = False
+        if mode != "off":
+            new_ac_state["on"] = True
+            new_ac_state["mode"] = mode
+        if target_temperature:
+            new_ac_state["targetTemperature"] = target_temperature
+        if fan_mode:
+            new_ac_state["fanLevel"] = fan_mode
+        if swing_mode:
+            new_ac_state["swing"] = swing_mode
+        if horizontal_swing_mode:
+            new_ac_state["horizontalSwing"] = horizontal_swing_mode
+        if light:
+            new_ac_state["light"] = light
+
+        await self.api_call_custom_service_full_ac_state(
+            key="hvac_mode", value=mode, data=new_ac_state
+        )
+
     async def async_enable_timer(self, minutes: int) -> None:
         """Enable the timer."""
         new_state = bool(self.device_data.ac_states["on"] is False)
@@ -378,6 +450,42 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             data=params,
         )
 
+    async def async_enable_climate_react(
+        self,
+        high_temperature_threshold: float,
+        high_temperature_state: dict[str, Any],
+        low_temperature_threshold: float,
+        low_temperature_state: dict[str, Any],
+        smart_type: str,
+    ) -> None:
+        """Enable Climate React Configuration."""
+        high_temp = high_temperature_threshold
+        low_temp = low_temperature_threshold
+
+        if high_temperature_state.get("temperatureUnit") == "F":
+            high_temp = TemperatureConverter.convert(
+                high_temperature_threshold, TEMP_FAHRENHEIT, TEMP_CELSIUS
+            )
+            low_temp = TemperatureConverter.convert(
+                low_temperature_threshold, TEMP_FAHRENHEIT, TEMP_CELSIUS
+            )
+
+        params: dict[str, str | bool | float | dict] = {
+            "enabled": True,
+            "deviceUid": self._device_id,
+            "highTemperatureState": high_temperature_state,
+            "highTemperatureThreshold": high_temp,
+            "lowTemperatureState": low_temperature_state,
+            "lowTemperatureThreshold": low_temp,
+            "type": smart_type,
+        }
+
+        await self.api_call_custom_service_climate_react(
+            key="smart_on",
+            value=True,
+            data=params,
+        )
+
     @async_handle_api_call
     async def async_send_api_call(
         self,
@@ -404,7 +512,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         data: dict,
     ) -> bool:
         """Make service call to api."""
-        result = {}
         result = await self._client.async_set_timer(self._device_id, data)
         return bool(result.get("status") == "success")
 
@@ -416,6 +523,27 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         data: dict,
     ) -> bool:
         """Make service call to api."""
-        result = {}
         result = await self._client.async_set_pureboost(self._device_id, data)
         return bool(result.get("status") == "success")
+
+    @async_handle_api_call
+    async def api_call_custom_service_climate_react(
+        self,
+        key: str,
+        value: Any,
+        data: dict,
+    ) -> bool:
+        """Make service call to api."""
+        result = await self._client.async_set_climate_react(self._device_id, data)
+        return bool(result.get("status") == "success")
+
+    @async_handle_api_call
+    async def api_call_custom_service_full_ac_state(
+        self,
+        key: str,
+        value: Any,
+        data: dict,
+    ) -> bool:
+        """Make service call to api."""
+        result = await self._client.async_set_ac_states(self._device_id, data)
+        return bool(result.get("result", {}).get("status") == "Success")

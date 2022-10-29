@@ -1,5 +1,10 @@
 {
     "config": {
+        "error": {
+            "invalid_api_token": "Clave API no v\u00e1lida",
+            "no_site": "No se proporciona ning\u00fan sitio",
+            "unknown_error": "Error inesperado"
+        },
         "step": {
             "site": {
                 "data": {

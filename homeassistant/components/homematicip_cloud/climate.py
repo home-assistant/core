@@ -9,12 +9,12 @@ from homematicip.base.enums import AbsenceType
 from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -51,8 +51,7 @@ async def async_setup_entry(
         if isinstance(device, AsyncHeatingGroup):
             entities.append(HomematicipHeatingGroup(hap, device))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
 class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):

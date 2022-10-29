@@ -20,15 +20,16 @@ from homeassistant.components.stream.core import Part
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.stream.common import (
+from .common import (
     FAKE_TIME,
     DefaultSegment as Segment,
     assert_mp4_has_transform_matrix,
 )
 
+from tests.common import async_fire_time_changed
+
 STREAM_SOURCE = "some-stream-source"
-INIT_BYTES = b"init"
+INIT_BYTES = b"\x00\x00\x00\x08moov"
 FAKE_PAYLOAD = b"fake-payload"
 SEGMENT_DURATION = 10
 TEST_TIMEOUT = 5.0  # Lower than 9s home assistant timeout

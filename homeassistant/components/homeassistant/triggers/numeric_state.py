@@ -27,9 +27,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
-
 
 def validate_above_below(value):
     """Validate that above and below can co-exist."""

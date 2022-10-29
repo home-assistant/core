@@ -12,6 +12,7 @@ from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
     CONF_CONFIDENCE,
     PLATFORM_SCHEMA,
+    ImageProcessingDeviceClass,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -102,6 +103,8 @@ async def async_setup_platform(
 class ImageProcessingAlprEntity(ImageProcessingEntity):
     """Base entity class for ALPR image processing."""
 
+    _attr_device_class = ImageProcessingDeviceClass.ALPR
+
     def __init__(self) -> None:
         """Initialize base ALPR entity."""
         self.plates: dict[str, float] = {}
@@ -119,11 +122,6 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
                 confidence = i_co
                 plate = i_pl
         return plate
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return "alpr"
 
     @property
     def extra_state_attributes(self):
@@ -148,7 +146,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         plates = {
             plate: confidence
             for plate, confidence in plates.items()
-            if confidence >= self.confidence
+            if self.confidence is None or confidence >= self.confidence
         }
         new_plates = set(plates) - set(self.plates)
 
