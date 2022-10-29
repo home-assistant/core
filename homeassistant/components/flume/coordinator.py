@@ -9,7 +9,7 @@ from pyflume import FlumeDeviceList
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.dt import parse_datetime, utcnow
+from homeassistant.util.dt import parse_datetime
 
 from .const import (
     _LOGGER,
@@ -112,7 +112,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
             device_id = notification["device_id"]
             rule = notification["extra"]["event_rule_name"]
             time = parse_datetime(notification["created_datetime"])
-            age = -1 * time
+            age = time
             active_notifications_by_device_with_time.setdefault(device_id, {})[
                 rule
             ] = age
