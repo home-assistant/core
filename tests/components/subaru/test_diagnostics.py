@@ -24,7 +24,6 @@ from tests.components.subaru.conftest import (
 
 async def test_config_entry_diagnostics(hass: HomeAssistant, hass_client, ev_entry):
     """Test config entry diagnostics."""
-    assert hass.data[DOMAIN]
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
