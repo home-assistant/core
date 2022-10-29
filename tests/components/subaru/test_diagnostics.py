@@ -60,7 +60,6 @@ async def test_device_diagnostics_vehicle_not_found(
     hass: HomeAssistant, hass_client, ev_entry
 ):
     """Test device diagnostics when the vehicle cannot be found."""
-    assert hass.data[DOMAIN]
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
