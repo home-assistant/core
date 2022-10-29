@@ -39,7 +39,6 @@ async def test_config_entry_diagnostics(hass: HomeAssistant, hass_client, ev_ent
 
 async def test_device_diagnostics(hass: HomeAssistant, hass_client, ev_entry):
     """Test device diagnostics."""
-    assert hass.data[DOMAIN]
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
