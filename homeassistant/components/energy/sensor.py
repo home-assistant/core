@@ -19,6 +19,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
     UnitOfEnergy,
 )
 from homeassistant.core import (
@@ -49,6 +51,12 @@ VALID_ENERGY_UNITS = [
     UnitOfEnergy.GIGA_JOULE,
 ]
 VALID_ENERGY_UNITS_GAS = [VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS] + VALID_ENERGY_UNITS
+VALID_VOLUME_UNITS_WATER = [
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
+]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -67,7 +75,7 @@ async def async_setup_platform(
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
-    source_type: Literal["grid", "gas"]
+    source_type: Literal["grid", "gas", "water"]
     flow_type: Literal["flow_from", "flow_to", None]
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
@@ -94,6 +102,14 @@ SOURCE_ADAPTERS: Final = (
     ),
     SourceAdapter(
         "gas",
+        None,
+        "stat_energy_from",
+        "stat_cost",
+        "Cost",
+        "cost",
+    ),
+    SourceAdapter(
+        "water",
         None,
         "stat_energy_from",
         "stat_cost",
@@ -314,6 +330,10 @@ class EnergyCostSensor(SensorEntity):
 
         elif self._adapter.source_type == "gas":
             if energy_unit not in VALID_ENERGY_UNITS_GAS:
+                energy_unit = None
+
+        elif self._adapter.source_type == "water":
+            if energy_unit not in VALID_VOLUME_UNITS_WATER:
                 energy_unit = None
 
         if energy_unit == UnitOfEnergy.WATT_HOUR:

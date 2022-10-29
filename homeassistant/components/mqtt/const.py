@@ -19,6 +19,7 @@ CONF_ENCODING = "encoding"
 CONF_KEEPALIVE = "keepalive"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
+CONF_SCHEMA = "schema"
 CONF_STATE_TOPIC = "state_topic"
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_TOPIC = "topic"

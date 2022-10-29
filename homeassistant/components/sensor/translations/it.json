@@ -32,6 +32,7 @@
             "is_volatile_organic_compounds": "Attuale livello di concentrazione di composti organici volatili di {entity_name}",
             "is_voltage": "Tensione attuale di {entity_name}",
             "is_volume": "Volume attuale di {entity_name}",
+            "is_water": "Attuale {entity_name} acqua",
             "is_weight": "Peso attuale di {entity_name}"
         },
         "trigger_type": {
@@ -66,6 +67,7 @@
             "volatile_organic_compounds": "Variazioni della concentrazione di composti organici volatili di {entity_name}",
             "voltage": "variazioni di tensione di {entity_name}",
             "volume": "Variazioni di volume di {entity_name}",
+            "water": "{entity_name} variazioni d'acqua",
             "weight": "Variazioni di peso di {entity_name}"
         }
     },
