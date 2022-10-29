@@ -829,7 +829,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.4.2
+nettigo-air-monitor==1.5.0
 
 # homeassistant.components.nexia
 nexia==2.0.5
@@ -1088,7 +1088,7 @@ pyeconet==0.1.15
 pyefergy==22.1.1
 
 # homeassistant.components.eight_sleep
-pyeight==0.3.0
+pyeight==0.3.2
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1338,7 +1338,7 @@ pysiaalarm==3.0.2
 pysignalclirestapi==0.3.18
 
 # homeassistant.components.sma
-pysma==0.7.1
+pysma==0.7.2
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
