@@ -11,6 +11,7 @@
             "bad_client_cert_key": "Il certificato del client e il privato non sono accoppiati in modo valido",
             "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
             "bad_discovery_prefix": "Prefisso di ricerca non valido",
+            "bad_will": "Argomento testamento non valido",
             "cannot_connect": "Impossibile connettersi",
             "invalid_inclusion": "Il certificato del client e la chiave privata devono essere configurati insieme"
         },
@@ -72,19 +73,19 @@
             "title": "La/e tua/e {platform} MQTT configurata/e manualmente ha/hanno bisogno di attenzione"
         },
         "deprecated_yaml_broker_settings": {
-            "description": "Le seguenti impostazioni trovate in 'configuration.yaml' sono state migrate alla voce di configurazione MQTT e ora sovrascriveranno le impostazioni in 'configuration.yaml':\n'{deprecated_settings}'\n\nRimuovi queste impostazioni da 'configuration.yaml' e riavvia Home Assistant per risolvere il problema. Per ulteriori informazioni, vedere la [documentazione]({more_info_url}).",
+            "description": "Le seguenti impostazioni trovate in 'configuration.yaml' sono state migrate alla voce di configurazione MQTT e ora sovrascriveranno le impostazioni in 'configuration.yaml':\n`{deprecated_settings}`\n\nRimuovi queste impostazioni da 'configuration.yaml' e riavvia Home Assistant per risolvere il problema. Per ulteriori informazioni, vedere la [documentazione]({more_info_url}).",
             "title": "Impostazioni MQTT obsolete trovate in `configuration.yaml`"
         }
     },
     "options": {
         "error": {
-            "bad_birth": "Argomento birth non valido.",
+            "bad_birth": "Argomento di nascita non valido",
             "bad_certificate": "Certificato CA non valido",
             "bad_client_cert": "Certificato cliente non valido, assicurarsi che venga fornito un file con codice PEM",
             "bad_client_cert_key": "Il certificato del client e il certificato privato non sono accoppiati in modo valido",
             "bad_client_key": "Chiave privata non valida, assicurarsi che venga fornito un file codificato PEM senza password",
             "bad_discovery_prefix": "Prefisso di ricerca non valido",
-            "bad_will": "Argomento will non valido.",
+            "bad_will": "Argomento di testamento non valido",
             "cannot_connect": "Impossibile connettersi",
             "invalid_inclusion": "Il certificato e la chiave privata del client devono essere configurati insieme"
         },
@@ -124,7 +125,7 @@
                     "will_retain": "Persistenza del messaggio will",
                     "will_topic": "Argomento del messaggio will"
                 },
-                "description": "Rilevamento: se il rilevamento \u00e8 abilitato (consigliato), Home Assistant rilever\u00e0 automaticamente i dispositivi e le entit\u00e0 che pubblicano la loro configurazione sul broker MQTT. Se il rilevamento \u00e8 disabilitato, tutta la configurazione deve essere eseguita manualmente.\nMessaggio di nascita: il messaggio di nascita verr\u00e0 inviato ogni volta che Home Assistant si (ri)collega al broker MQTT.\nMessaggio testamento: Il messaggio testamento verr\u00e0 inviato ogni volta che Home Assistant perde la connessione al broker, sia in caso di buona (es. arresto di Home Assistant) sia in caso di cattiva (es. Home Assistant in crash o perdita della connessione di rete) disconnessione.",
+                "description": "Rilevamento - Se il rilevamento \u00e8 abilitato (consigliato), Home Assistant rilever\u00e0 automaticamente i dispositivi e le entit\u00e0 che pubblicano la loro configurazione sul broker MQTT. Se il rilevamento \u00e8 disabilitato, tutta la configurazione deve essere fatta manualmente.\nPrefisso di rilevamento - Il prefisso con cui deve iniziare un argomento di configurazione per il rilevamento automatico.\nMessaggio di nascita - Il messaggio di nascita viene inviato ogni volta che Home Assistant si (ri)connette al broker MQTT.\nMessaggio di testamento - Il messaggio di testamento verr\u00e0 inviato ogni volta che Home Assistant perde la connessione al broker, sia in caso di disconnessione pulita (ad esempio, Home Assistant si spegne) sia in caso di disconnessione non pulita (ad esempio, Home Assistant si blocca o perde la connessione di rete).",
                 "title": "Opzioni MQTT"
             }
         }
