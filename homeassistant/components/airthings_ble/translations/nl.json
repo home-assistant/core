@@ -10,13 +10,13 @@
         "flow_title": "Nederlands",
         "step": {
             "bluetooth_confirm": {
-                "description": "Nederlands"
+                "description": "Wilt u {name} instellen?"
             },
             "user": {
                 "data": {
-                    "address": "Nederlands"
+                    "address": "Apparaat"
                 },
-                "description": "Nederlands"
+                "description": "Kies een apparaat om in te stellen"
             }
         }
     }
