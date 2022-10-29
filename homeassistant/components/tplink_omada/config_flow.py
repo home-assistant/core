@@ -7,8 +7,8 @@ from typing import Any
 
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
+    LoginFailed,
     OmadaClientException,
-    RequestFailed,
     UnsupportedControllerVersion,
 )
 from tplink_omada_client.omadaclient import OmadaClient
@@ -48,7 +48,7 @@ class OmadaHub:
         self.password = data[CONF_PASSWORD]
         self.client = None
 
-    async def get_client(self) -> OmadaClient:
+    def get_client(self) -> OmadaClient:
         """Get the client api for the hub."""
         if not self.client:
             websession = async_get_clientsession(self.hass, verify_ssl=self.verify_ssl)
@@ -64,10 +64,16 @@ class OmadaHub:
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the host."""
 
-        client = await self.get_client()
+        client = self.get_client()
         await client.login()
 
         return True
+
+    async def get_controller_name(self) -> str:
+        """Get the display name of the controller."""
+        client = self.get_client()
+        name = await client.get_controller_name()
+        return str(name)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -76,9 +82,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     hub = OmadaHub(hass, MappingProxyType(data))
 
     await hub.authenticate()
+    name = await hub.get_controller_name()
 
     # Return info that you want to store in the config entry.
-    return {"title": f"Omada Controller ({data['site']})"}
+    return {"title": f"TP-Link Omada {name} ({data['site']})"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -101,11 +108,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except ConnectionFailed:
             errors["base"] = "cannot_connect"
-        except RequestFailed:
+        except LoginFailed:
             errors["base"] = "invalid_auth"
         except UnsupportedControllerVersion:
             errors["base"] = "unsupported_controller"
-        except OmadaClientException:
+        except OmadaClientException as ex:
+            _LOGGER.exception("Unexpected API error: %s", ex)
             errors["base"] = "unknown"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")

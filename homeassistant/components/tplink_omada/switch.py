@@ -33,7 +33,9 @@ async def async_setup_entry(
     network_switches = await omada_client.get_switches()
 
     entities: list = []
-    for switch in network_switches:
+    for switch in [
+        ns for ns in network_switches if ns.device_capabilities.supports_poe
+    ]:
 
         def make_update_func(
             network_switch: OmadaSwitch,
@@ -52,12 +54,13 @@ async def async_setup_entry(
 
         await coordinator.async_config_entry_first_refresh()
 
-        for port_id in coordinator.data:
-            entities.append(
-                OmadaNetworkSwitchPortPoEControl(
-                    coordinator, switch, omada_client, port_id
+        for idx, port_id in enumerate(coordinator.data):
+            if idx < switch.device_capabilities.poe_ports:
+                entities.append(
+                    OmadaNetworkSwitchPortPoEControl(
+                        coordinator, switch, omada_client, port_id
+                    )
                 )
-            )
 
     async_add_entities(entities)
 

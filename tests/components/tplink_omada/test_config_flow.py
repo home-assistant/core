@@ -1,7 +1,11 @@
 """Test the TP-Link Omada config flow."""
 from unittest.mock import patch
 
-from tplink_omada_client.exceptions import ConnectionFailed, RequestFailed
+from tplink_omada_client.exceptions import (
+    ConnectionFailed,
+    LoginFailed,
+    OmadaClientException,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.tplink_omada.const import DOMAIN
@@ -56,7 +60,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tplink_omada.config_flow.PlaceholderHub.authenticate",
-        side_effect=RequestFailed,
+        side_effect=LoginFailed,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -71,6 +75,31 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_api_error(hass: HomeAssistant) -> None:
+    """Test we handle unknown API error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.tplink_omada.config_flow.PlaceholderHub.authenticate",
+        side_effect=OmadaClientException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "site": "Test",
+                "verify_ssl": False,
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:

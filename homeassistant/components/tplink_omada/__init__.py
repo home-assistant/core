@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Omada controller could not be reached: {ex}"
         ) from ex
 
-    hass.data[DOMAIN][entry.entry_id] = await hub.get_client()
+    hass.data[DOMAIN][entry.entry_id] = hub.get_client()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

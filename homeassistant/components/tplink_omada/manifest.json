@@ -3,7 +3,7 @@
   "name": "TP-Link Omada",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tplink_omada",
-  "requirements": ["tplink-omada-client==1.0.0"],
+  "requirements": ["tplink-omada-client==1.0.1"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
