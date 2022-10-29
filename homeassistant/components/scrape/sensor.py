@@ -154,8 +154,11 @@ async def async_setup_entry(
 
     coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
     config = dict(entry.options)
+    template_config = vol.Schema(
+        TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
+    )(config)
 
-    name: str = config[CONF_NAME]
+    name: str = template_config[CONF_NAME]
     unique_id: str = entry.entry_id
     select: str | None = config.get(CONF_SELECT)
     attr: str | None = config.get(CONF_ATTRIBUTE)
@@ -171,7 +174,7 @@ async def async_setup_entry(
             ScrapeSensor(
                 hass,
                 coordinator,
-                config,
+                template_config,
                 name,
                 unique_id,
                 select,
