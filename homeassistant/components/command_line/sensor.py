@@ -129,11 +129,8 @@ class CommandSensor(TemplateSensor, SensorEntity):
         self.data = data
         self._attr_extra_state_attributes = {}
         self._json_attributes = json_attributes
-        self._attr_name = name
         self._attr_native_value = None
-        self._attr_native_unit_of_measurement = unit_of_measurement
         self._value_template = value_template
-        self._attr_unique_id = unique_id
 
     async def async_update(self) -> None:
         """Get the latest data and updates the state."""
