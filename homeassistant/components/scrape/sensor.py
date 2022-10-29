@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
@@ -144,6 +145,42 @@ async def async_setup_platform(
         )
 
     async_add_entities(entities)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Scrape sensor entry."""
+
+    coordinator: ScrapeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    config = dict(entry.options)
+
+    name: str = config[CONF_NAME]
+    unique_id: str = entry.entry_id
+    select: str | None = config.get(CONF_SELECT)
+    attr: str | None = config.get(CONF_ATTRIBUTE)
+    index: int = config[CONF_INDEX]
+    value_string: str | None = config.get(CONF_VALUE_TEMPLATE)
+
+    value_template: Template | None = (
+        Template(value_string, hass) if value_string is not None else None
+    )
+
+    async_add_entities(
+        [
+            ScrapeSensor(
+                hass,
+                coordinator,
+                config,
+                name,
+                unique_id,
+                select,
+                attr,
+                index,
+                value_template,
+            )
+        ]
+    )
 
 
 class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
