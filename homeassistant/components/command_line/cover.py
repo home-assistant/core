@@ -20,8 +20,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import (
+    TEMPLATE_ENTITY_BASE_SCHEMA,
+    TemplateEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import call_shell_with_timeout, check_output_or_log
@@ -47,15 +51,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover controlled by shell commands."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     devices: dict[str, Any] = config.get(CONF_COVERS, {})
     covers = []
@@ -65,8 +69,14 @@ def setup_platform(
         if value_template is not None:
             value_template.hass = hass
 
+        cover_config = vol.Schema(
+            TEMPLATE_ENTITY_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
+        )(device_config)
+
         covers.append(
             CommandCover(
+                hass,
+                cover_config,
                 device_config.get(CONF_FRIENDLY_NAME, device_name),
                 device_config[CONF_COMMAND_OPEN],
                 device_config[CONF_COMMAND_CLOSE],
@@ -82,14 +92,16 @@ def setup_platform(
         _LOGGER.error("No covers added")
         return
 
-    add_entities(covers)
+    async_add_entities(covers)
 
 
-class CommandCover(CoverEntity):
+class CommandCover(TemplateEntity, CoverEntity):
     """Representation a command line cover."""
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        config: ConfigType,
         name: str,
         command_open: str,
         command_close: str,
@@ -100,6 +112,13 @@ class CommandCover(CoverEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the cover."""
+        TemplateEntity.__init__(
+            self,
+            hass,
+            config=config,
+            fallback_name=name,
+            unique_id=unique_id,
+        )
         self._attr_name = name
         self._state: int | None = None
         self._command_open = command_open
@@ -148,12 +167,14 @@ class CommandCover(CoverEntity):
         if TYPE_CHECKING:
             return None
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update device state."""
         if self._command_state:
-            payload = str(self._query_state())
+            payload = str(await self.hass.async_add_executor_job(self._query_state))
             if self._value_template:
-                payload = self._value_template.render_with_possible_json_value(payload)
+                payload = await self.hass.async_add_executor_job(
+                    self._value_template.render_with_possible_json_value, payload
+                )
             self._state = int(payload)
 
     def open_cover(self, **kwargs: Any) -> None:
