@@ -7,6 +7,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 import itertools
 import logging
+import time
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak.backends.scanner import AdvertisementDataCallback
@@ -21,7 +22,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.dt import cached_loop_time
 
 from .advertisement_tracker import AdvertisementTracker
 from .const import (
@@ -69,7 +69,7 @@ APPLE_START_BYTES_WANTED: Final = {
     APPLE_DEVICE_ID_START_BYTE,
 }
 
-MONOTONIC_TIME: Final = cached_loop_time
+MONOTONIC_TIME: Final = time.monotonic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -252,7 +252,7 @@ class BluetoothManager:
     @hass_callback
     def _async_check_unavailable(self, now: datetime) -> None:
         """Watch for unavailable devices and cleanup state history."""
-        monotonic_now = MONOTONIC_TIME(self.hass.loop)
+        monotonic_now = MONOTONIC_TIME()
         connectable_history = self._connectable_history
         all_history = self._all_history
         tracker = self._advertisement_tracker

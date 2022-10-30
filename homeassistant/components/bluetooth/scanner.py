@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import datetime
 import logging
 import platform
+import time
 from typing import Any
 
 import async_timeout
@@ -21,7 +22,6 @@ from dbus_fast import InvalidMessageError
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.dt import cached_loop_time
 from homeassistant.util.package import is_docker_env
 
 from .const import (
@@ -35,7 +35,7 @@ from .models import BaseHaScanner, BluetoothScanningMode, BluetoothServiceInfoBl
 from .util import adapter_human_name, async_reset_adapter
 
 OriginalBleakScanner = bleak.BleakScanner
-MONOTONIC_TIME = cached_loop_time
+MONOTONIC_TIME = time.monotonic
 
 # or_patterns is a workaround for the fact that passive scanning
 # needs at least one matcher to be set. The below matcher
@@ -195,7 +195,7 @@ class HaScanner(BaseHaScanner):
         Currently this is used to feed the callbacks into the
         central manager.
         """
-        callback_time = MONOTONIC_TIME(self.hass.loop)
+        callback_time = MONOTONIC_TIME()
         if (
             advertisement_data.local_name
             or advertisement_data.manufacturer_data
@@ -331,7 +331,7 @@ class HaScanner(BaseHaScanner):
     @hass_callback
     def _async_setup_scanner_watchdog(self) -> None:
         """If Dbus gets restarted or updated, we need to restart the scanner."""
-        self._start_time = self._last_detection = MONOTONIC_TIME(self.hass.loop)
+        self._start_time = self._last_detection = MONOTONIC_TIME()
         if not self._cancel_watchdog:
             self._cancel_watchdog = async_track_time_interval(
                 self.hass, self._async_scanner_watchdog, SCANNER_WATCHDOG_INTERVAL
@@ -339,9 +339,7 @@ class HaScanner(BaseHaScanner):
 
     async def _async_scanner_watchdog(self, now: datetime) -> None:
         """Check if the scanner is running."""
-        time_since_last_detection = (
-            MONOTONIC_TIME(self.hass.loop) - self._last_detection
-        )
+        time_since_last_detection = MONOTONIC_TIME() - self._last_detection
         _LOGGER.debug(
             "%s: Scanner watchdog time_since_last_detection: %s",
             self.name,
