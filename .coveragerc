@@ -598,10 +598,12 @@ omit =
     homeassistant/components/keymitt_ble/coordinator.py
     homeassistant/components/kiwi/lock.py
     homeassistant/components/kodi/__init__.py
+    homeassistant/components/kodi/binary_sensor.py
     homeassistant/components/kodi/browse_media.py
+    homeassistant/components/kodi/const.py
+    homeassistant/components/kodi/kodi_connman.py
     homeassistant/components/kodi/media_player.py
     homeassistant/components/kodi/notify.py
-    homeassistant/components/kodi/binary_sensor.py
     homeassistant/components/konnected/__init__.py
     homeassistant/components/konnected/panel.py
     homeassistant/components/konnected/switch.py
