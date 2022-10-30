@@ -144,8 +144,20 @@ class FibaroSensor(FibaroDevice, SensorEntity):
 
     def update(self) -> None:
         """Update the state."""
-        with suppress(KeyError, ValueError):
-            self._attr_native_value = float(self.fibaro_device.properties.value)
+        with suppress(KeyError):
+            raw_value = self.fibaro_device.properties.value
+
+        if raw_value is None:
+            return raw_value
+
+        try:
+            # most sensors provide a number (HC2 as string, HC3 as float or int value)
+            self._attr_native_value = float(raw_value)
+        except (TypeError, ValueError):
+            # some sensors like accelerator provides a complex value,
+            # e.g. a accelerator provides {"x": 0.0, "y": 0.0, "z": 0.0}
+            # (HC2 as string HC3 as structure which is converted to RecursiveDict by the fiblary)
+            self._attr_native_value = str(raw_value)
 
 
 class FibaroAdditionalSensor(FibaroDevice, SensorEntity):
