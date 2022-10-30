@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.7
+aiohomekit==2.2.8
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -413,10 +413,10 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.4.2
+bleak-retry-connector==2.5.0
 
 # homeassistant.components.bluetooth
-bleak==0.19.0
+bleak==0.19.1
 
 # homeassistant.components.blebox
 blebox_uniapi==2.1.3
@@ -540,7 +540,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.56.0
+dbus-fast==1.59.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1129,7 +1129,7 @@ netdisco==3.0.0
 netmap==0.7.0.2
 
 # homeassistant.components.nam
-nettigo-air-monitor==1.4.2
+nettigo-air-monitor==1.5.0
 
 # homeassistant.components.neurio_energy
 neurio==0.3.1
@@ -1604,7 +1604,7 @@ pyhaversion==22.8.0
 pyheos==0.7.2
 
 # homeassistant.components.hikvision
-pyhik==0.3.0
+pyhik==0.3.1
 
 # homeassistant.components.hive
 pyhiveapi==0.5.14
@@ -1890,7 +1890,7 @@ pysignalclirestapi==0.3.18
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==0.7.1
+pysma==0.7.2
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -1920,7 +1920,7 @@ pysoma==0.0.10
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.6.0
+pysqueezebox==0.6.1
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
@@ -2455,7 +2455,7 @@ twitchAPI==2.5.2
 uasiren==0.0.1
 
 # homeassistant.components.landisgyr_heat_meter
-ultraheat-api==0.5.0
+ultraheat-api==0.5.1
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.7
