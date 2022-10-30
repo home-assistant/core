@@ -5,7 +5,6 @@ from collections.abc import Callable
 import datetime
 from datetime import timedelta
 import re
-import time
 
 from aioesphomeapi import BluetoothLEAdvertisement
 from bleak.backends.device import BLEDevice
@@ -19,6 +18,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import cached_loop_time
 
 TWO_CHAR = re.compile("..")
 
@@ -56,7 +56,8 @@ class ESPHomeScanner(BaseHaScanner):
 
     def _async_expire_devices(self, _datetime: datetime.datetime) -> None:
         """Expire old devices."""
-        now = time.monotonic()
+        now = cached_loop_time(self.hass.loop)
+
         expired = [
             address
             for address, timestamp in self._discovered_device_timestamps.items()
@@ -84,7 +85,7 @@ class ESPHomeScanner(BaseHaScanner):
     @callback
     def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
         """Call the registered callback."""
-        now = time.monotonic()
+        now = cached_loop_time(self.hass.loop)
         address = ":".join(TWO_CHAR.findall("%012X" % adv.address))  # must be upper
         name = adv.name
         if prev_discovery := self._discovered_device_advertisement_datas.get(address):
