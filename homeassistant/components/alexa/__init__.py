@@ -1,4 +1,8 @@
 """Support for Alexa skill service end point."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -92,7 +96,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if flash_briefings_config := config.get(CONF_FLASH_BRIEFINGS):
         flash_briefings.async_setup(hass, flash_briefings_config)
 
-    if smart_home_config := config.get(CONF_SMART_HOME):
+    # smart_home being absent is not the ame as smart_home being None
+    if CONF_SMART_HOME in config:
+        smart_home_config: dict[str, Any] | None = config[CONF_SMART_HOME]
         smart_home_config = smart_home_config or SMART_HOME_SCHEMA({})
         await smart_home_http.async_setup(hass, smart_home_config)
 
