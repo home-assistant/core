@@ -45,7 +45,7 @@ def validate_sql_select(value: str) -> str | None:
 def validate_query(db_url: str, query: str, column: str) -> bool:
     """Validate SQL query."""
     if "pyodbc" in db_url:
-        import pyodbc  # noqa: F401 pylint: disable=import-outside-toplevel,unused-import
+        import pyodbc  # noqa: F401 # pylint: disable=import-outside-toplevel,unused-import
 
     engine = sqlalchemy.create_engine(db_url, future=True)
     sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
