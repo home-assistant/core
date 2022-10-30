@@ -1,6 +1,6 @@
 {
   "domain": "aranet",
-  "name": "Aranet4",
+  "name": "Aranet",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aranet",
   "requirements": ["aranet4==2.1.3"],

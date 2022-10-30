@@ -1,4 +1,4 @@
-"""Support for Aranet4 sensors."""
+"""Support for Aranet sensors."""
 from __future__ import annotations
 
 from typing import Optional, Union
@@ -129,7 +129,7 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Aranet4 sensors."""
+    """Set up the Aranet sensors."""
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
@@ -148,7 +148,7 @@ class Aranet4BluetoothSensorEntity(
     ],
     SensorEntity,
 ):
-    """Representation of an Aranet4 sensor."""
+    """Representation of an Aranet sensor."""
 
     @property
     def available(self) -> bool:
@@ -156,7 +156,7 @@ class Aranet4BluetoothSensorEntity(
         # Our superclass covers "did the device disappear entirely", but if the
         # device has smart home integrations disabled, it will send BLE beacons
         # without data, which we turn into Nones here. Because None is never a
-        # valid value for any of the Aranet4 sensors, that means the entity is
+        # valid value for any of the Aranet sensors, that means the entity is
         # actually unavailable.
         return (
             super().available

@@ -1,4 +1,4 @@
-"""The Aranet4 integration."""
+"""The Aranet integration."""
 from __future__ import annotations
 
 import logging
@@ -28,7 +28,7 @@ def _service_info_to_adv(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Aranet4 from a config entry."""
+    """Set up Aranet from a config entry."""
 
     address = entry.unique_id
     assert address is not None
