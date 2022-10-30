@@ -111,6 +111,8 @@ async def async_setup_entry(
         if value_template is not None:
             value_template.hass = hass
 
+    if "pyodbc" in db_url:
+        import pyodbc  # noqa: F401 pylint: disable=import-outside-toplevel,unused-import
     try:
         engine = sqlalchemy.create_engine(db_url, future=True)
         sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
