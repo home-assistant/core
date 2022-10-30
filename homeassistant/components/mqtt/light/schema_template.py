@@ -310,7 +310,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 },
             )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
@@ -328,16 +328,16 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_effect = last_state.attributes.get(ATTR_EFFECT)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return self._optimistic
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on.
 
         This method is a coroutine.
         """
-        values = {"state": True}
+        values: dict[str, Any] = {"state": True}
         if self._optimistic:
             self._attr_is_on = True
 
@@ -404,12 +404,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if self._optimistic:
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off.
 
         This method is a coroutine.
         """
-        values = {"state": False}
+        values: dict[str, Any] = {"state": False}
         if self._optimistic:
             self._attr_is_on = False
 
