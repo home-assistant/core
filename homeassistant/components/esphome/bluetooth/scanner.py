@@ -19,7 +19,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.dt import monotonic_time_course
+from homeassistant.util.dt import monotonic_time_coarse
 
 TWO_CHAR = re.compile("..")
 
@@ -85,7 +85,7 @@ class ESPHomeScanner(BaseHaScanner):
     @callback
     def async_on_advertisement(self, adv: BluetoothLEAdvertisement) -> None:
         """Call the registered callback."""
-        now = monotonic_time_course()
+        now = monotonic_time_coarse()
         address = ":".join(TWO_CHAR.findall("%012X" % adv.address))  # must be upper
         name = adv.name
         if prev_discovery := self._discovered_device_advertisement_datas.get(address):

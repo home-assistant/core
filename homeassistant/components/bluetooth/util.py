@@ -6,7 +6,7 @@ import platform
 from bluetooth_auto_recovery import recover_adapter
 
 from homeassistant.core import callback
-from homeassistant.util.dt import monotonic_time_course
+from homeassistant.util.dt import monotonic_time_coarse
 
 from .const import (
     DEFAULT_ADAPTER_BY_PLATFORM,
@@ -29,7 +29,7 @@ async def async_load_history_from_system() -> dict[str, BluetoothServiceInfoBlea
 
     bluez_dbus = BlueZDBusObjects()
     await bluez_dbus.load()
-    now = monotonic_time_course()
+    now = monotonic_time_coarse()
     return {
         address: BluetoothServiceInfoBleak(
             name=history.advertisement_data.local_name
