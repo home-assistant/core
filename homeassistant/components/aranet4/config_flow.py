@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import DOMAIN
 
@@ -33,17 +33,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device: Aranet4Advertisement | None = None
         self._discovered_devices: dict[str, tuple[str, Aranet4Advertisement]] = {}
 
-    def _errors_from_adv(self, adv: Aranet4Advertisement) -> FlowResult | None:
-        """Get any configuration errors that apply to an advertisement."""
+    def _raise_for_advertisement_errors(self, adv: Aranet4Advertisement) -> None:
+        """Raise any configuration errors that apply to an advertisement."""
         # Old versions of firmware don't expose sensor data in advertisements.
         if not adv.manufacturer_data or adv.manufacturer_data.version < MIN_VERSION:
-            return self.async_abort(reason="outdated_version")
+            raise AbortFlow("outdated_version")
 
         # If integrations are disabled, we get no sensor data.
         if not adv.manufacturer_data.integrations:
-            return self.async_abort(reason="integrations_disabled")
-
-        return None
+            raise AbortFlow("integrations_disabled")
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -52,9 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         adv = Aranet4Advertisement(discovery_info.device, discovery_info.advertisement)
-        errors = self._errors_from_adv(adv)
-        if errors:
-            return errors
+        self._raise_for_advertisement_errors(adv)
 
         self._discovery_info = discovery_info
         self._discovered_device = adv
@@ -86,9 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             adv = self._discovered_devices[address][1]
-            errors = self._errors_from_adv(adv)
-            if errors:
-                return errors
+            self._raise_for_advertisement_errors(adv)
 
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
