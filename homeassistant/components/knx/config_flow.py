@@ -47,7 +47,6 @@ from .schema import ia_validator, ip_v4_validator
 
 CONF_KNX_GATEWAY: Final = "gateway"
 CONF_MAX_RATE_LIMIT: Final = 60
-CONF_DEFAULT_LOCAL_IP: Final = "0.0.0.0"
 
 DEFAULT_ENTRY_DATA = KNXConfigEntryData(
     individual_address=XKNX.DEFAULT_ADDRESS,

@@ -172,6 +172,13 @@
           "local_ip": "[%key:component::knx::config::step::routing::data_description::local_ip%]"
         }
       }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_individual_address": "[%key:component::knx::config::error::invalid_individual_address%]",
+      "invalid_ip_address": "[%key:component::knx::config::error::invalid_ip_address%]",
+      "invalid_signature": "[%key:component::knx::config::error::invalid_signature%]",
+      "file_not_found": "[%key:component::knx::config::error::file_not_found%]"
     }
   }
 }
