@@ -2,12 +2,16 @@
   "config": {
     "step": {
       "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:common::config_flow::data::device%]"
-        },
-        "description": "Choose a device to set up:"
+          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
       }
     },
+    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

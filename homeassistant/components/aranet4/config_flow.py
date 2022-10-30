@@ -8,7 +8,10 @@ from aranet4.client import Aranet4Advertisement, Version as AranetVersion
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth import async_discovered_service_info
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfoBleak,
+    async_discovered_service_info,
+)
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
@@ -26,7 +29,55 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Set up a new config flow for Aranet4."""
+        self._discovery_info: BluetoothServiceInfoBleak | None = None
+        self._discovered_device: Aranet4Advertisement | None = None
         self._discovered_devices: dict[str, tuple[str, Aranet4Advertisement]] = {}
+
+    def _errors_from_adv(self, adv: Aranet4Advertisement) -> FlowResult | None:
+        """Get any configuration errors that apply to an advertisement."""
+        # Old versions of firmware don't expose sensor data in advertisements.
+        if not adv.manufacturer_data or adv.manufacturer_data.version < MIN_VERSION:
+            return self.async_abort(reason="outdated_version")
+
+        # If integrations are disabled, we get no sensor data.
+        if not adv.manufacturer_data.integrations:
+            return self.async_abort(reason="integrations_disabled")
+
+        return None
+
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> FlowResult:
+        """Handle the Bluetooth discovery step."""
+        await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
+        adv = Aranet4Advertisement(discovery_info.device, discovery_info.advertisement)
+        errors = self._errors_from_adv(adv)
+        if errors:
+            return errors
+
+        self._discovery_info = discovery_info
+        self._discovered_device = adv
+        return await self.async_step_bluetooth_confirm()
+
+    async def async_step_bluetooth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm discovery."""
+        assert self._discovered_device is not None
+        adv = self._discovered_device
+        assert self._discovery_info is not None
+        discovery_info = self._discovery_info
+        title = adv.readings.name if adv.readings else discovery_info.name
+        if user_input is not None:
+            return self.async_create_entry(title=title, data={})
+
+        self._set_confirm_only()
+        placeholders = {"name": title}
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_form(
+            step_id="bluetooth_confirm", description_placeholders=placeholders
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -35,13 +86,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             adv = self._discovered_devices[address][1]
-            # Old versions of firmware don't expose sensor data in advertisements.
-            if not adv.manufacturer_data or adv.manufacturer_data.version < MIN_VERSION:
-                return self.async_abort(reason="outdated_version")
-
-            # If integrations are disabled, we get no sensor data.
-            if not adv.manufacturer_data.integrations:
-                return self.async_abort(reason="integrations_disabled")
+            errors = self._errors_from_adv(adv)
+            if errors:
+                return errors
 
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
@@ -52,7 +99,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         current_addresses = self._async_current_ids()
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
-            print(discovery_info)
             if address in current_addresses or address in self._discovered_devices:
                 continue
 
