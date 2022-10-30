@@ -11,6 +11,7 @@ from typing import Any
 from . import bootstrap
 from .core import callback
 from .helpers.frame import warn_use
+from .util.dt import install_loop_time_cache
 from .util.executor import InterruptibleThreadPoolExecutor
 from .util.thread import deadlock_safe_shutdown
 
@@ -75,6 +76,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
         loop.set_default_executor = warn_use(  # type: ignore[assignment]
             loop.set_default_executor, "sets default executor on the event loop"
         )
+        install_loop_time_cache(loop)
         return loop
 
 
