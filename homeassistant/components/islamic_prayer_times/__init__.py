@@ -71,7 +71,7 @@ class IslamicPrayerClient:
         """Schedule future update for sensors.
 
         Always schedule update on 02:01 AM local time to anticipate daylight saving time changes.
-        
+
         Islamic calculated midnight would be almost always before 02:00 AM, so it should not need
         special handling.
         The caveat is that the sensor would be inaccurate between 00:00-02:00AM each day.
@@ -80,19 +80,17 @@ class IslamicPrayerClient:
         _LOGGER.debug("Scheduling next update for Islamic prayer times")
 
         now = dt_util.utcnow()
-        
+
         dst_change = dt_util.start_of_local_day(now) + timedelta(hours=2, minutes=1)
-        
-        if(now < dst_change):
+
+        if now < dst_change:
             next_update_at = dst_change
             _LOGGER.debug(
                 "Current time is before 02:01 AM so update is scheduled on 2:01 AM today to anticipate DST change"
             )
         else:
             next_update_at = dst_change + timedelta(days=1)
-            _LOGGER.debug(
-                "Schedule update for 02:01 AM the next day"
-            )
+            _LOGGER.debug("Schedule update for 02:01 AM the next day")
 
         _LOGGER.info("Next update scheduled for: %s", next_update_at)
 
