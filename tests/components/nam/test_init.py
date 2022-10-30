@@ -32,12 +32,12 @@ async def test_config_not_ready(hass):
         unique_id="aa:bb:cc:dd:ee:ff",
         data={"host": "10.10.2.3"},
     )
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.initialize",
         side_effect=ApiError("API Error"),
     ):
-        entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -50,12 +50,12 @@ async def test_config_not_ready_while_checking_credentials(hass):
         unique_id="aa:bb:cc:dd:ee:ff",
         data={"host": "10.10.2.3"},
     )
+    entry.add_to_hass(hass)
 
     with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=ApiError("API Error"),
     ):
-        entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -68,12 +68,12 @@ async def test_config_auth_failed(hass):
         unique_id="aa:bb:cc:dd:ee:ff",
         data={"host": "10.10.2.3"},
     )
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=AuthFailed("Authorization has failed"),
     ):
-        entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
