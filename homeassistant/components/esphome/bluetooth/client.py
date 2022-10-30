@@ -255,9 +255,9 @@ class ESPHomeClient(BaseBleakClient):
            A :py:class:`bleak.backends.service.BleakGATTServiceCollection` with this device's services tree.
         """
         address_as_int = self._address_as_int
-        domain_data = self.domain_data
+        entry_data = self.entry_data
         if dangerous_use_bleak_cache and (
-            cached_services := domain_data.get_gatt_services_cache(address_as_int)
+            cached_services := entry_data.get_gatt_services_cache(address_as_int)
         ):
             _LOGGER.debug(
                 "Cached services hit for %s - %s",
@@ -301,7 +301,7 @@ class ESPHomeClient(BaseBleakClient):
             self._ble_device.name,
             self._ble_device.address,
         )
-        domain_data.set_gatt_services_cache(address_as_int, services)
+        entry_data.set_gatt_services_cache(address_as_int, services)
         return services
 
     def _resolve_characteristic(
