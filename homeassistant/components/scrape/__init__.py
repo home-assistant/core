@@ -11,24 +11,15 @@ import logging
 import httpx
 
 import voluptuous as vol
-from homeassistant.components.rest.data import RestData
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.rest import RESOURCE_SCHEMA, create_rest_data_from_config
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
-    CONF_AUTHENTICATION,
-    CONF_HEADERS,
-    CONF_PASSWORD,
-    CONF_RESOURCE,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL,
-    HTTP_DIGEST_AUTHENTICATION,
     Platform,
 )
 from homeassistant.core import HomeAssistant

@@ -70,7 +70,6 @@ async def test_scrape_sensor_platform_yaml(hass: HomeAssistant) -> None:
                 username="user@secret.com",
                 password="12345678",
                 authentication="digest",
-                remove_platform=True,
             ),
             return_config(
                 select=".return",
@@ -84,7 +83,7 @@ async def test_scrape_sensor_platform_yaml(hass: HomeAssistant) -> None:
 
     mocker = MockRestData("test_scrape_sensor_authentication")
     with patch(
-        "homeassistant.components.scrape.RestData",
+        "homeassistant.components.rest.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, SENSOR_DOMAIN, config)
