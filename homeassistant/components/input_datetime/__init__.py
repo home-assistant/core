@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_EDITABLE,
+    ATTR_NOW,
     ATTR_TIME,
     CONF_ICON,
     CONF_ID,
@@ -51,7 +52,14 @@ def validate_set_datetime_attrs(config):
     """Validate set_datetime service attributes."""
     has_date_or_time_attr = any(key in config for key in (ATTR_DATE, ATTR_TIME))
     if (
-        sum([has_date_or_time_attr, ATTR_DATETIME in config, ATTR_TIMESTAMP in config])
+        sum(
+            [
+                has_date_or_time_attr,
+                ATTR_DATETIME in config,
+                ATTR_TIMESTAMP in config,
+                ATTR_NOW in config,
+            ]
+        )
         > 1
     ):
         raise vol.Invalid(f"Cannot use together: {', '.join(config.keys())}")
@@ -189,11 +197,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Optional(ATTR_TIME): cv.time,
                     vol.Optional(ATTR_DATETIME): cv.datetime,
                     vol.Optional(ATTR_TIMESTAMP): vol.Coerce(float),
+                    vol.Optional(ATTR_NOW): cv.boolean,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
             cv.has_at_least_one_key(
-                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
+                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP, ATTR_NOW
             ),
             validate_set_datetime_attrs,
         ),
@@ -390,8 +399,13 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_ID]
 
     @callback
-    def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
+    def async_set_datetime(
+        self, date=None, time=None, datetime=None, timestamp=None, now=None
+    ):
         """Set a new date / time."""
+        if now:
+            timestamp = py_datetime.datetime.utcnow().timestamp()
+
         if timestamp:
             datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
 
