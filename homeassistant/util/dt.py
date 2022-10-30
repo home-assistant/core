@@ -6,6 +6,7 @@ import bisect
 from contextlib import suppress
 import datetime as dt
 import re
+from time import monotonic
 from typing import Any
 import zoneinfo
 
@@ -469,11 +470,11 @@ def install_loop_time_cache(loop: asyncio.AbstractEventLoop) -> None:
 
     This is used to speed up the time expression matching.
     """
-    original_time = loop.time
+    monotonic_time = monotonic
 
     def _cached_loop_time() -> float:
         """Return the current time from the cache."""
-        time = original_time()
+        time = monotonic_time()
         setattr(loop, "_loop_time_cache", time)
         return time
 
