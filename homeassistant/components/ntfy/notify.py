@@ -1,7 +1,7 @@
 """ntfy platform for notify component."""
 from http import HTTPStatus
 import logging
-from typing import Any, Union
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 CONF_TOPIC = "topic"
 DEFAULT_URL = "https://ntfy.sh"
@@ -53,7 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 def get_service(
     hass: HomeAssistant,
     config: ConfigType,
-    discovery_info: Union[DiscoveryInfoType, None] = None,
+    discovery_info=None,  # pylint: disable=hass-argument-type
 ) -> BaseNotificationService:
     """Get the ntfy notification service."""
     url = config.get(CONF_URL)
@@ -66,7 +66,7 @@ def get_service(
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
             auth = requests.auth.HTTPDigestAuth(username, password)
         else:
-            auth = requests.auth.HTTPBasicAuth(username, password)
+            auth = requests.auth.HTTPBasicAuth(username, password)  # type: ignore[assignment]
     else:
         auth = None
 
