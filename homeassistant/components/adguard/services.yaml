@@ -23,8 +23,8 @@ add_url:
       selector:
         select:
           options:
-            - "allow"
-            - "block"
+            - "allowlist"
+            - "blocklist"
 
 remove_url:
   name: Remove url
@@ -44,8 +44,8 @@ remove_url:
       selector:
         select:
           options:
-            - "allow"
-            - "block"
+            - "allowlist"
+            - "blocklist"
 
 enable_url:
   name: Enable url
