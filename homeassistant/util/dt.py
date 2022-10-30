@@ -466,7 +466,7 @@ def _datetime_ambiguous(dattim: dt.datetime) -> bool:
     return _datetime_exists(dattim) and dattim.utcoffset() != opposite_fold.utcoffset()
 
 
-def __monotonic_time_course() -> float:
+def __monotonic_time_coarse() -> float:
     """Return a monotonic time in seconds.
 
     This is the course version of time_monotonic, which is faster but less accurate.
@@ -483,12 +483,12 @@ def __monotonic_time_course() -> float:
 try:
     HAS_COARSE_TIME = (
         platform.system() == "Linux"
-        and abs(time.monotonic() - __monotonic_time_course()) < 1
+        and abs(time.monotonic() - __monotonic_time_coarse()) < 1
     )
 except Exception:  # pylint: disable=broad-except
     HAS_COARSE_TIME = False
 
 if HAS_COARSE_TIME:
-    monotonic_time_course = __monotonic_time_course
+    monotonic_time_coarse = __monotonic_time_coarse
 else:
-    monotonic_time_course = time.monotonic
+    monotonic_time_coarse = time.monotonic
