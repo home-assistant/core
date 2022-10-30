@@ -15,14 +15,11 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import (
-    CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -38,9 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ): cv.string,  # have to set topic globally in the configuration, can override in "data"
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
-        vol.Optional(CONF_AUTHENTICATION): vol.In(
-            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
-        ),
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
@@ -63,10 +57,7 @@ def get_service(
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
     if username and password:
-        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = requests.auth.HTTPDigestAuth(username, password)
-        else:
-            auth = requests.auth.HTTPBasicAuth(username, password)  # type: ignore[assignment]
+        auth = requests.auth.HTTPBasicAuth(username, password)
     else:
         auth = None
 
