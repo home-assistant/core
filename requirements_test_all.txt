@@ -420,7 +420,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.59.0
+dbus-fast==1.59.1
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -1355,10 +1355,10 @@ pysoma==0.0.10
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.6.0
+pysqueezebox==0.6.1
 
 # homeassistant.components.switchbee
-pyswitchbee==1.5.5
+pyswitchbee==1.6.1
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
@@ -1692,7 +1692,7 @@ twitchAPI==2.5.2
 uasiren==0.0.1
 
 # homeassistant.components.landisgyr_heat_meter
-ultraheat-api==0.5.0
+ultraheat-api==0.5.1
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.7
