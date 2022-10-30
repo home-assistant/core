@@ -67,6 +67,8 @@ async def test_template_render(hass: HomeAssistant) -> None:
             "command": "echo {{ states.sensor.input_sensor.state }}",
         },
     )
+    await hass.async_block_till_done()
+
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == "sensor_value"
@@ -85,6 +87,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
                 "command": 'echo "{{ states.sensor.input_sensor.state }}" "3 4"',
             },
         )
+        await hass.async_block_till_done()
 
         check_output.assert_called_once_with(
             'echo "sensor_value" "3 4"',
