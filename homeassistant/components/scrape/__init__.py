@@ -10,6 +10,8 @@ from homeassistant.components.rest import RESOURCE_SCHEMA, create_rest_data_from
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ATTRIBUTE,
+    CONF_RESOURCE,
+    CONF_RESOURCE_TEMPLATE,
     CONF_SCAN_INTERVAL,
     CONF_VALUE_TEMPLATE,
     Platform,
@@ -60,7 +62,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for resource_config in scrape_config:
         if not (sensors := resource_config.get(SENSOR_DOMAIN)):
-            raise PlatformNotReady("No sensors configured")
+            _LOGGER.warning(
+                "No sensors configured for %s",
+                resource_config.get(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
+            )
+            continue
 
         rest = create_rest_data_from_config(hass, resource_config)
         coordinator = ScrapeCoordinator(
@@ -75,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise PlatformNotReady
 
         for sensor_config in sensors:
-            discovery.load_platform(
+            await discovery.async_load_platform(
                 hass,
                 Platform.SENSOR,
                 DOMAIN,

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.scrape.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -65,3 +67,33 @@ async def test_setup_config_no_configuration(hass: HomeAssistant) -> None:
 
     entities = er.async_get(hass)
     assert entities.entities == {}
+
+
+async def test_setup_config_no_sensors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup from yaml with no configured sensors print warning and finalizes."""
+    config = {
+        DOMAIN: [
+            {
+                "resource": "https://www.address.com",
+                "verify_ssl": True,
+            },
+            {
+                "resource": "https://www.address2.com",
+                "verify_ssl": True,
+                "sensor": None,
+            },
+        ]
+    }
+
+    mocker = MockRestData("test_scrape_sensor")
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=mocker,
+    ):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert "No sensors configured for https://www.address.com" in caplog.text
+    assert "No sensors configured for https://www.address2.com" in caplog.text
