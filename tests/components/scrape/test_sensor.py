@@ -398,18 +398,3 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     entity = entity_reg.async_get("sensor.ha_version")
 
     assert entity.unique_id == "ha_version_unique_id"
-
-
-async def test_scrape_sensor_not_configured_sensor(hass: HomeAssistant, caplog) -> None:
-    """Test Scrape sensor with missing configured sensors."""
-    config = {DOMAIN: [return_integration_config(sensors=None)]}
-
-    mocker = MockRestData("test_scrape_sensor")
-    with patch(
-        "homeassistant.components.rest.RestData",
-        return_value=mocker,
-    ):
-        assert not await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-
-    assert "No sensors configured" in caplog.text
