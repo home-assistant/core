@@ -480,15 +480,10 @@ def __monotonic_time_coarse() -> float:
     return time.clock_gettime(CLOCK_MONOTONIC_COARSE)
 
 
-try:
-    HAS_COARSE_TIME = (
+monotonic_time_coarse = time.monotonic
+with suppress(Exception):
+    if (
         platform.system() == "Linux"
         and abs(time.monotonic() - __monotonic_time_coarse()) < 1
-    )
-except Exception:  # pylint: disable=broad-except
-    HAS_COARSE_TIME = False
-
-if HAS_COARSE_TIME:
-    monotonic_time_coarse = __monotonic_time_coarse
-else:
-    monotonic_time_coarse = time.monotonic
+    ):
+        monotonic_time_coarse = __monotonic_time_coarse
