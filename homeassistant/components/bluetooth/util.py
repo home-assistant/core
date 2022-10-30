@@ -1,12 +1,13 @@
 """The bluetooth integration utilities."""
 from __future__ import annotations
 
+import asyncio
 import platform
-import time
 
 from bluetooth_auto_recovery import recover_adapter
 
 from homeassistant.core import callback
+from homeassistant.util.dt import cached_loop_time
 
 from .const import (
     DEFAULT_ADAPTER_BY_PLATFORM,
@@ -29,7 +30,7 @@ async def async_load_history_from_system() -> dict[str, BluetoothServiceInfoBlea
 
     bluez_dbus = BlueZDBusObjects()
     await bluez_dbus.load()
-    now = time.monotonic()
+    now = cached_loop_time(asyncio.get_running_loop())
     return {
         address: BluetoothServiceInfoBleak(
             name=history.advertisement_data.local_name

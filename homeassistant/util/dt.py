@@ -1,10 +1,12 @@
 """Helper methods to handle the time in Home Assistant."""
 from __future__ import annotations
 
+import asyncio
 import bisect
 from contextlib import suppress
 import datetime as dt
 import re
+from time import monotonic
 from typing import Any
 import zoneinfo
 
@@ -461,3 +463,24 @@ def _datetime_ambiguous(dattim: dt.datetime) -> bool:
     assert dattim.tzinfo is not None
     opposite_fold = dattim.replace(fold=not dattim.fold)
     return _datetime_exists(dattim) and dattim.utcoffset() != opposite_fold.utcoffset()
+
+
+def install_loop_time_cache(loop: asyncio.AbstractEventLoop) -> None:
+    """Install a cache for the current time on the event loop.
+
+    This is used to speed up the time expression matching.
+    """
+    monotonic_time = monotonic
+
+    def _cached_loop_time() -> float:
+        """Return the current time from the cache."""
+        time = monotonic_time()
+        setattr(loop, "_loop_time_cache", time)
+        return time
+
+    setattr(loop, "time", _cached_loop_time)
+
+
+def cached_loop_time(loop: asyncio.AbstractEventLoop) -> float:
+    """Return the current time from the cache."""
+    return getattr(loop, "_loop_time_cache", None) or loop.time()
