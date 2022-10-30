@@ -131,6 +131,10 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
     },
     {
+        "domain": "hatchrest",
+        "manufacturer_id": 1076
+    },
+    {
         "domain": "homekit_controller",
         "manufacturer_id": 76,
         "manufacturer_data_start": [

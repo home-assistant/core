@@ -1122,6 +1122,9 @@ pyfttt==0.3
 # homeassistant.components.hvv_departures
 pygti==0.9.3
 
+# homeassistant.components.hatchrest
+pyhatchbabyrest-hass==2.1.0
+
 # homeassistant.components.version
 pyhaversion==22.8.0
 
