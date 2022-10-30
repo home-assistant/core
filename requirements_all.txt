@@ -1929,7 +1929,7 @@ pystiebeleltron==0.0.1.dev2
 pysuez==0.1.19
 
 # homeassistant.components.switchbee
-pyswitchbee==1.5.5
+pyswitchbee==1.6.1
 
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
