@@ -113,7 +113,7 @@ def sensor_update_to_bluetooth_data_update(
         },
         entity_data={
             _device_key_to_bluetooth_entity_key(adv.device, key): getattr(
-                adv.readings, key
+                adv.readings, key, None
             )
             for key in SENSOR_DESCRIPTIONS
         },
@@ -149,6 +149,19 @@ class Aranet4BluetoothSensorEntity(
     SensorEntity,
 ):
     """Representation of an Aranet4 sensor."""
+
+    @property
+    def available(self) -> bool:
+        """Return whether the entity was available in the last update."""
+        # Our superclass covers "did the device disappear entirely", but if the
+        # device has smart home integrations disabled, it will send BLE beacons
+        # without data, which we turn into Nones here. Because None is never a
+        # valid value for any of the Aranet4 sensors, that means the entity is
+        # actually unavailable.
+        return (
+            super().available
+            and self.processor.entity_data.get(self.entity_key) is not None
+        )
 
     @property
     def native_value(self) -> int | float | None:

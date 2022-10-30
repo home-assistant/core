@@ -5,7 +5,7 @@ from homeassistant.components.aranet4.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 
-from . import VALID_DATA_SERVICE_INFO
+from . import DISABLED_INTEGRATIONS_SERVICE_INFO, VALID_DATA_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -68,6 +68,44 @@ async def test_sensors(hass):
     assert interval_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Update Interval"
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_smart_home_integration_disabled(hass):
+    """Test disabling smart home integration marks entities as unavailable."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("sensor")) == 0
+    inject_bluetooth_service_info(hass, DISABLED_INTEGRATIONS_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all("sensor")) == 6
+
+    batt_sensor = hass.states.get("sensor.aranet4_12345_battery")
+    assert batt_sensor.state == "unavailable"
+
+    co2_sensor = hass.states.get("sensor.aranet4_12345_carbon_dioxide")
+    assert co2_sensor.state == "unavailable"
+
+    humid_sensor = hass.states.get("sensor.aranet4_12345_humidity")
+    assert humid_sensor.state == "unavailable"
+
+    temp_sensor = hass.states.get("sensor.aranet4_12345_temperature")
+    assert temp_sensor.state == "unavailable"
+
+    press_sensor = hass.states.get("sensor.aranet4_12345_pressure")
+    assert press_sensor.state == "unavailable"
+
+    interval_sensor = hass.states.get("sensor.aranet4_12345_update_interval")
+    assert interval_sensor.state == "unavailable"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
