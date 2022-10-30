@@ -482,4 +482,4 @@ def install_loop_time_cache(loop: asyncio.AbstractEventLoop) -> None:
 
 def cached_loop_time(loop: asyncio.AbstractEventLoop) -> float:
     """Return the current time from the cache."""
-    return getattr(loop, "_loop_time_cache", loop.time())
+    return getattr(loop, "_loop_time_cache", None) or loop.time()
