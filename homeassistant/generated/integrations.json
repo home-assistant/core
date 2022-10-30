@@ -313,7 +313,7 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "aranet4": {
+    "aranet": {
       "name": "Aranet4",
       "integration_type": "device",
       "config_flow": true,

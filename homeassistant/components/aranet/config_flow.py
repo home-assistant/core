@@ -1,4 +1,4 @@
-"""Config flow for Aranet4 integration."""
+"""Config flow for Aranet integration."""
 from __future__ import annotations
 
 import logging
@@ -23,12 +23,12 @@ MIN_VERSION = AranetVersion(1, 2, 0)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Aranet4."""
+    """Handle a config flow for Aranet."""
 
     VERSION = 1
 
     def __init__(self) -> None:
-        """Set up a new config flow for Aranet4."""
+        """Set up a new config flow for Aranet."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_device: Aranet4Advertisement | None = None
         self._discovered_devices: dict[str, tuple[str, Aranet4Advertisement]] = {}

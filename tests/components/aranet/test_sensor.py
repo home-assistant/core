@@ -1,7 +1,7 @@
-"""Test the Aranet4 sensors."""
+"""Test the Aranet sensors."""
 
 
-from homeassistant.components.aranet4.const import DOMAIN
+from homeassistant.components.aranet.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 

@@ -1,4 +1,4 @@
-"""Aranet4 session fixtures."""
+"""Aranet session fixtures."""
 
 import pytest
 

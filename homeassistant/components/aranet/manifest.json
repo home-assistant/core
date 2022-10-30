@@ -1,8 +1,8 @@
 {
-  "domain": "aranet4",
+  "domain": "aranet",
   "name": "Aranet4",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/aranet4",
+  "documentation": "https://www.home-assistant.io/integrations/aranet",
   "requirements": ["aranet4==2.1.3"],
   "dependencies": ["bluetooth"],
   "codeowners": ["@aschmitz"],

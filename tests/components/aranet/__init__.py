@@ -1,4 +1,4 @@
-"""Tests for the Aranet4 integration."""
+"""Tests for the Aranet integration."""
 
 from time import time
 
