@@ -268,6 +268,8 @@ class KNXCommonFlow(ABC, FlowHandler):
         if self.show_advanced_options:
             fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR
 
+        if not self._found_tunnels:
+            errors["base"] = "no_tunnel_discovered"
         return self.async_show_form(
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
         )
@@ -407,6 +409,10 @@ class KNXCommonFlow(ABC, FlowHandler):
             # Optional with default doesn't work properly in flow UI
             fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR
 
+        if not any(
+            router for router in self._found_gateways if router.supports_routing
+        ):
+            errors["base"] = "no_router_discovered"
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
         )

@@ -98,7 +98,7 @@ async def test_routing_setup(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "routing"
-    assert not result2["errors"]
+    assert result2["errors"] == {"base": "no_router_discovered"}
 
     with patch(
         "homeassistant.components.knx.async_setup_entry",
@@ -150,7 +150,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "routing"
-    assert not result2["errors"]
+    assert result2["errors"] == {"base": "no_router_discovered"}
 
     # invalid user input
     result_invalid_input = await hass.config_entries.flow.async_configure(
@@ -169,6 +169,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
         CONF_KNX_MCAST_GRP: "invalid_ip_address",
         CONF_KNX_INDIVIDUAL_ADDRESS: "invalid_individual_address",
         CONF_KNX_LOCAL_IP: "invalid_ip_address",
+        "base": "no_router_discovered",
     }
 
     # valid user input
@@ -274,7 +275,7 @@ async def test_tunneling_setup_manual(
     await hass.async_block_till_done()
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "manual_tunnel"
-    assert not result2["errors"]
+    assert result2["errors"] == {"base": "no_tunnel_discovered"}
 
     with patch(
         "homeassistant.components.knx.async_setup_entry",
@@ -315,7 +316,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "manual_tunnel"
-    assert not result2["errors"]
+    assert result2["errors"] == {"base": "no_tunnel_discovered"}
 
     # invalid host ip address
     result_invalid_host = await hass.config_entries.flow.async_configure(
@@ -330,7 +331,10 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result_invalid_host["type"] == FlowResultType.FORM
     assert result_invalid_host["step_id"] == "manual_tunnel"
-    assert result_invalid_host["errors"] == {CONF_HOST: "invalid_ip_address"}
+    assert result_invalid_host["errors"] == {
+        CONF_HOST: "invalid_ip_address",
+        "base": "no_tunnel_discovered",
+    }
     # invalid local ip address
     result_invalid_local = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
@@ -344,7 +348,10 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result_invalid_local["type"] == FlowResultType.FORM
     assert result_invalid_local["step_id"] == "manual_tunnel"
-    assert result_invalid_local["errors"] == {CONF_KNX_LOCAL_IP: "invalid_ip_address"}
+    assert result_invalid_local["errors"] == {
+        CONF_KNX_LOCAL_IP: "invalid_ip_address",
+        "base": "no_tunnel_discovered",
+    }
 
     # valid user input
     with patch(

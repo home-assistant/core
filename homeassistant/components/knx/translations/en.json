@@ -9,7 +9,9 @@
             "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
-            "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong."
+            "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
+            "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
+            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network."
         },
         "step": {
             "connection_type": {
@@ -90,7 +92,9 @@
             "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
             "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
             "invalid_ip_address": "Invalid IPv4 address.",
-            "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong."
+            "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
+            "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
+            "no_tunnel_discovered": "Could not find a KNX tunneling server on your network."
         },
         "step": {
             "communication_settings": {
