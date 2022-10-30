@@ -89,10 +89,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     intent.async_setup(hass)
 
-    if (flash_briefings_config := config.get(CONF_FLASH_BRIEFINGS)) is not None:
+    if flash_briefings_config := config.get(CONF_FLASH_BRIEFINGS):
         flash_briefings.async_setup(hass, flash_briefings_config)
 
-    if (smart_home_config := config.get(CONF_SMART_HOME)) is not None:
+    if smart_home_config := config.get(CONF_SMART_HOME):
         smart_home_config = smart_home_config or SMART_HOME_SCHEMA({})
         await smart_home_http.async_setup(hass, smart_home_config)
 
