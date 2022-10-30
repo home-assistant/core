@@ -1362,7 +1362,7 @@ pysoma==0.0.10
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.6.0
+pysqueezebox==0.6.1
 
 # homeassistant.components.switchbee
 pyswitchbee==1.5.5

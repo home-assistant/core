@@ -1611,7 +1611,7 @@ pyhaversion==22.8.0
 pyheos==0.7.2
 
 # homeassistant.components.hikvision
-pyhik==0.3.0
+pyhik==0.3.1
 
 # homeassistant.components.hive
 pyhiveapi==0.5.14
@@ -1927,7 +1927,7 @@ pysoma==0.0.10
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.6.0
+pysqueezebox==0.6.1
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
