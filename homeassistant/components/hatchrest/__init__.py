@@ -10,7 +10,7 @@ from pyhatchbabyrest import PyHatchBabyRestAsync, connect_async
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
@@ -32,16 +32,14 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up hatchrest from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
-    address = entry.data["address"]
+    address = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper())
     if not ble_device:
         raise ConfigEntryNotReady(
             f"Could not find Hatch Rest device with address {address}"
         )
 
-    hass.data[DOMAIN][entry.entry_id] = HatchRestCoordinator(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HatchRestCoordinator(
         hass, entry.unique_id, await connect_async(ble_device)
     )
 
@@ -81,10 +79,10 @@ class HatchRestCoordinator(DataUpdateCoordinator):
                 await self.device.refresh_data()
         except TimeoutError as exc:
             raise UpdateFailed(
-                "connection timed out while fetching data from device"
+                "Connection timed out while fetching data from device"
             ) from exc
         except BleakError as exc:
-            raise UpdateFailed("failed getting data from device") from exc
+            raise UpdateFailed("Failed getting data from device") from exc
 
 
 class HatchRestEntity(CoordinatorEntity):
@@ -100,7 +98,7 @@ class HatchRestEntity(CoordinatorEntity):
         self._attr_unique_id = coordinator.unique_id
 
     @property
-    def name(self):
+    def device_name(self):
         """Name of the Hatch Rest device."""
         return self._device.name
 
@@ -115,7 +113,7 @@ class HatchRestEntity(CoordinatorEntity):
         return (
             {
                 "identifiers": {(DOMAIN, self.unique_id)},
-                "name": super().name,
+                "name": self.device_name,
                 "manufacturer": "Hatch",
                 "model": "Rest",
             }

@@ -27,7 +27,7 @@ class HatchRestSwitch(HatchRestEntity, SwitchEntity):
     @property
     def name(self) -> str:
         """Hatch Rest switch name."""
-        return f"{super().name} Power"
+        return f"{super().device_name} power"
 
     @property
     def is_on(self) -> bool:
