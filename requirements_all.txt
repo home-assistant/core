@@ -153,7 +153,7 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==11.2.0
+aioesphomeapi==11.3.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -413,7 +413,7 @@ bimmer_connected==0.10.4
 bizkaibus==0.1.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.5.0
+bleak-retry-connector==2.6.0
 
 # homeassistant.components.bluetooth
 bleak==0.19.1
@@ -1442,7 +1442,7 @@ pyalmond==0.0.2
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.2.0
+pyatmo==7.3.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
