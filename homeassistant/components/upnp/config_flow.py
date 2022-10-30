@@ -121,13 +121,12 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             entry.unique_id for entry in self._async_current_entries()
         }
         for discovery in discoveries:
-            if not (
+            if (
                 _is_complete_discovery(discovery)
                 and _is_igd_device(discovery)
                 and discovery.ssdp_usn not in current_unique_ids
             ):
-                continue
-            self._add_discovery(discovery)
+                self._add_discovery(discovery)
 
         # Ensure anything to add.
         if not self._discoveries:
