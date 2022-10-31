@@ -561,7 +561,7 @@ class Template:
     def async_render_with_possible_json_value(
         self,
         value: Any,
-        error_value: object | None = _SENTINEL,
+        error_value: Any = _SENTINEL,
         variables: dict[str, Any] | None = None,
     ) -> Any:
         """Render template with value exposed.
