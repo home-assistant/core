@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ruuvitag_ble import RuuvitagBluetoothDeviceData
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -24,7 +25,7 @@ class RuuvitagConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
-        self._discovered_device: DeviceData | None = None
+        self._discovered_device: RuuvitagBluetoothDeviceData | None = None
         self._discovered_devices: dict[str, str] = {}
 
     async def async_step_bluetooth(
@@ -33,7 +34,7 @@ class RuuvitagConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
-        device = DeviceData()
+        device = RuuvitagBluetoothDeviceData()
         if not device.supported(discovery_info):
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
@@ -76,7 +77,7 @@ class RuuvitagConfigFlow(ConfigFlow, domain=DOMAIN):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
                 continue
-            device = DeviceData()
+            device = RuuvitagBluetoothDeviceData()
             if device.supported(discovery_info):
                 self._discovered_devices[address] = (
                     device.title or device.get_device_name() or discovery_info.name

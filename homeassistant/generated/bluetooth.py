@@ -259,6 +259,14 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "connectable": False,
     },
     {
+        "domain": "ruuvitag_ble",
+        "manufacturer_id": 1177,
+    },
+    {
+        "domain": "ruuvitag_ble",
+        "local_name": "Ruuvi *",
+    },
+    {
         "domain": "sensorpro",
         "manufacturer_id": 43605,
         "manufacturer_data_start": [

@@ -1527,6 +1527,9 @@ rpi-bad-power==0.1.0
 # homeassistant.components.rtsp_to_webrtc
 rtsp-to-webrtc==0.5.1
 
+# homeassistant.components.ruuvitag_ble
+ruuvitag-ble==0.1.1
+
 # homeassistant.components.yamaha
 rxv==0.7.0
 

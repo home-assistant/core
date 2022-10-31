@@ -334,6 +334,7 @@ FLOWS = {
         "rpi_power",
         "rtsp_to_webrtc",
         "ruckus_unleashed",
+        "ruuvitag_ble",
         "sabnzbd",
         "samsungtv",
         "screenlogic",

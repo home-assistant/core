@@ -3,7 +3,15 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
-from homeassistant import config_entries
+from sensor_state_data import (
+    DeviceKey,
+    SensorDeviceClass,
+    SensorDeviceInfo,
+    SensorUpdate,
+    Units,
+)
+
+from homeassistant import config_entries, const
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
@@ -13,18 +21,61 @@ from homeassistant.components.bluetooth.passive_update_processor import (
 )
 from homeassistant.components.sensor import (
     SensorEntity,
-)
-from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
+    SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 from .const import DOMAIN
 
-SENSOR_DESCRIPTIONS = {}
+SENSOR_DESCRIPTIONS = {
+    (SensorDeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
+        key=f"{SensorDeviceClass.TEMPERATURE}_{Units.TEMP_CELSIUS}",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=const.TEMP_CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (SensorDeviceClass.HUMIDITY, Units.PERCENTAGE): SensorEntityDescription(
+        key=f"{SensorDeviceClass.HUMIDITY}_{Units.PERCENTAGE}",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=const.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (SensorDeviceClass.PRESSURE, Units.PRESSURE_HPA): SensorEntityDescription(
+        key=f"{SensorDeviceClass.PRESSURE}_{Units.PRESSURE_HPA}",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=const.PRESSURE_HPA,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        SensorDeviceClass.VOLTAGE,
+        Units.ELECTRIC_POTENTIAL_MILLIVOLT,
+    ): SensorEntityDescription(
+        key=f"{SensorDeviceClass.VOLTAGE}_{Units.ELECTRIC_POTENTIAL_MILLIVOLT}",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=const.ELECTRIC_POTENTIAL_MILLIVOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (
+        SensorDeviceClass.SIGNAL_STRENGTH,
+        Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    ): SensorEntityDescription(
+        key=f"{SensorDeviceClass.SIGNAL_STRENGTH}_{Units.SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=const.SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    (SensorDeviceClass.COUNT, None): SensorEntityDescription(
+        key=f"{SensorDeviceClass.COUNT}_movement",
+        device_class=SensorDeviceClass.COUNT,
+        native_unit_of_measurement=None,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+}
 
 
 def _device_key_to_bluetooth_entity_key(
@@ -40,11 +91,11 @@ def _sensor_device_info_to_hass(
     """Convert a sensor device info to a sensor device info."""
     hass_device_info = DeviceInfo({})
     if sensor_device_info.name is not None:
-        hass_device_info[ATTR_NAME] = sensor_device_info.name
+        hass_device_info[const.ATTR_NAME] = sensor_device_info.name
     if sensor_device_info.manufacturer is not None:
-        hass_device_info[ATTR_MANUFACTURER] = sensor_device_info.manufacturer
+        hass_device_info[const.ATTR_MANUFACTURER] = sensor_device_info.manufacturer
     if sensor_device_info.model is not None:
-        hass_device_info[ATTR_MODEL] = sensor_device_info.model
+        hass_device_info[const.ATTR_MODEL] = sensor_device_info.model
     return hass_device_info
 
 
