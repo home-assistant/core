@@ -228,6 +228,73 @@ async def test_sensor(hass):
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-uptime"
 
+    state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_caqi_level")
+    assert state
+    assert state.state == "very low"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == "nam__caqi_level"
+    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_pmsx003_caqi_level")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_caqi_level"
+
+    state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_caqi")
+    assert state
+    assert state.state == "19"
+    assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_pmsx003_caqi")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_caqi"
+
+    state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_particulate_matter_10")
+    assert state
+    assert state.state == "10"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
+
+    entry = registry.async_get(
+        "sensor.nettigo_air_monitor_pmsx003_particulate_matter_10"
+    )
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_p1"
+
+    state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_particulate_matter_2_5")
+    assert state
+    assert state.state == "11"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
+
+    entry = registry.async_get(
+        "sensor.nettigo_air_monitor_pmsx003_particulate_matter_2_5"
+    )
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_p2"
+
+    state = hass.states.get("sensor.nettigo_air_monitor_pmsx003_particulate_matter_1_0")
+    assert state
+    assert state.state == "6"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
+
+    entry = registry.async_get(
+        "sensor.nettigo_air_monitor_pmsx003_particulate_matter_1_0"
+    )
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-pms_p0"
+
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_particulate_matter_10")
     assert state
     assert state.state == "19"
@@ -256,12 +323,6 @@ async def test_sensor(hass):
     assert state.state == "very low"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == "nam__caqi_level"
     assert state.attributes.get(ATTR_ICON) == "mdi:air-filter"
-
-    entry = registry.async_get(
-        "sensor.nettigo_air_monitor_sds011_particulate_matter_10"
-    )
-    assert entry
-    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sds011_p1"
 
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_particulate_matter_2_5")
     assert state
