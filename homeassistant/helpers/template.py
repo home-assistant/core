@@ -559,8 +559,11 @@ class Template:
 
     @callback
     def async_render_with_possible_json_value(
-        self, value, error_value=_SENTINEL, variables=None
-    ):
+        self,
+        value: Any,
+        error_value: object | None = _SENTINEL,
+        variables: dict[str, Any] | None = None,
+    ) -> Any:
         """Render template with value exposed.
 
         If valid JSON will expose value_json too.
@@ -571,7 +574,7 @@ class Template:
             return self.template
 
         if self._compiled is None:
-            self._ensure_compiled()
+            self._compiled = self._ensure_compiled()
 
         variables = dict(variables or {})
         variables["value"] = value
