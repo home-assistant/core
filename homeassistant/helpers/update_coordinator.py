@@ -24,6 +24,9 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _T = TypeVar("_T")
+_DataUpdateCoordinatorT = TypeVar(
+    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator"
+)
 
 
 class UpdateFailed(Exception):
@@ -308,11 +311,6 @@ class DataUpdateCoordinator(Generic[_T]):
             self._schedule_refresh()
 
         self.async_update_listeners()
-
-
-_DataUpdateCoordinatorT = TypeVar(
-    "_DataUpdateCoordinatorT", bound=DataUpdateCoordinator
-)
 
 
 class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
