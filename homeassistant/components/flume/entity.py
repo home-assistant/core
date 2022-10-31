@@ -13,7 +13,7 @@ from .const import DOMAIN
 
 
 @dataclass
-class FlumeNotificationSensorRequiredKeysMixin:
+class FlumeNotificationRequiredKeysMixin:
     """Mixin for required keys."""
 
     event_rule: str

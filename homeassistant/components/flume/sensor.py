@@ -38,13 +38,13 @@ from .coordinator import (
     FlumeDeviceDataUpdateCoordinator,
     FlumeNotificationDataUpdateCoordinator,
 )
-from .entity import FlumeEntity, FlumeNotificationSensorRequiredKeysMixin
+from .entity import FlumeEntity, FlumeNotificationRequiredKeysMixin
 from .util import get_valid_flume_devices
 
 
 @dataclass
 class FlumeNotificationSensorEntityDescription(
-    SensorEntityDescription, FlumeNotificationSensorRequiredKeysMixin
+    SensorEntityDescription, FlumeNotificationRequiredKeysMixin
 ):
     """Describe a notification based sensor."""
 
