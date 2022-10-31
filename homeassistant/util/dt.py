@@ -469,7 +469,7 @@ def _datetime_ambiguous(dattim: dt.datetime) -> bool:
 def __monotonic_time_coarse() -> float:
     """Return a monotonic time in seconds.
 
-    This is the course version of time_monotonic, which is faster but less accurate.
+    This is the coarse version of time_monotonic, which is faster but less accurate.
 
     Since many arm64 and 32-bit platforms don't support VDSO with time.monotonic
     because of errata, we can't rely on the kernel to provide a fast

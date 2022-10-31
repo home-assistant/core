@@ -77,6 +77,7 @@ from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F4
 from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
+from .repairs import SupervisorRepairs
 from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,6 +104,7 @@ DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
+DATA_SUPERVISOR_REPAIRS = "supervisor_repairs"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
@@ -757,6 +759,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     hass.async_create_task(
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
     )
+
+    # Start listening for problems with supervisor and making repairs
+    hass.data[DATA_SUPERVISOR_REPAIRS] = repairs = SupervisorRepairs(hass, hassio)
+    await repairs.setup()
 
     return True
 
