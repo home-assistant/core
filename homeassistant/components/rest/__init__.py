@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 import contextlib
 from datetime import timedelta
 import logging
+from typing import Any
 
 import httpx
 import voluptuous as vol
@@ -88,8 +90,8 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
     if DOMAIN not in config:
         return True
 
-    refresh_tasks = []
-    load_tasks = []
+    refresh_tasks: list[Coroutine[Any, Any, None]] = []
+    load_tasks: list[Coroutine[Any, Any, None]] = []
     rest_config: list[ConfigType] = config[DOMAIN]
     for rest_idx, conf in enumerate(rest_config):
         scan_interval: timedelta = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -119,8 +121,8 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
     if refresh_tasks:
         await asyncio.gather(*refresh_tasks)
 
-    if load_tasks:
-        await asyncio.gather(*load_tasks)
+    for task in load_tasks:
+        hass.async_create_task(task)
 
     return True
 
