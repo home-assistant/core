@@ -16,6 +16,7 @@
             },
             "user": {
                 "data": {
+                    "account": "OVO konto ID (lisa ainult siis, kui on mitu kontot)",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 },

@@ -30,6 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import AccuWeatherDataUpdateCoordinator
 from .const import (
@@ -189,7 +190,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindGustDay",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind gust day",
         entity_registry_enabled_default=False,
@@ -201,7 +202,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindGustNight",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind gust night",
         entity_registry_enabled_default=False,
@@ -213,7 +214,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindDay",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind day",
         unit_fn=lambda metric: SPEED_KILOMETERS_PER_HOUR
@@ -224,7 +225,7 @@ FORECAST_SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindNight",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind night",
         unit_fn=lambda metric: SPEED_KILOMETERS_PER_HOUR
@@ -334,7 +335,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="Wind",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind",
         state_class=SensorStateClass.MEASUREMENT,
@@ -345,7 +346,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     ),
     AccuWeatherSensorDescription(
         key="WindGust",
-        device_class=SensorDeviceClass.SPEED,
+        device_class=SensorDeviceClass.WIND_SPEED,
         icon="mdi:weather-windy",
         name="Wind gust",
         entity_registry_enabled_default=False,
@@ -412,12 +413,12 @@ class AccuWeatherSensor(
             self._attr_unique_id = (
                 f"{coordinator.location_key}-{description.key}".lower()
             )
-        if self.coordinator.hass.config.units.is_metric:
+        if self.coordinator.hass.config.units is METRIC_SYSTEM:
             self._unit_system = API_METRIC
         else:
             self._unit_system = API_IMPERIAL
         self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
-            self.coordinator.hass.config.units.is_metric
+            self.coordinator.hass.config.units is METRIC_SYSTEM
         )
         self._attr_device_info = coordinator.device_info
         if forecast_day is not None:
