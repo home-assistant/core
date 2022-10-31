@@ -1,4 +1,15 @@
 {
+    "config": {
+        "step": {
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "\u8fd9\u5f20\u56fe\u7247\u770b\u8d77\u6765\u4e0d\u9519\u3002"
+                },
+                "description": "![\u6444\u50cf\u673a\u9759\u6b62\u753b\u9762\u9884\u89c8]({preview_url})",
+                "title": "\u9884\u89c8"
+            }
+        }
+    },
     "options": {
         "step": {
             "init": {

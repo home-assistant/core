@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
@@ -23,6 +23,12 @@
                     "username": "Brukernavn"
                 }
             }
+        }
+    },
+    "issues": {
+        "migrated_attributes": {
+            "description": "Vakuumenhetsattributtene er n\u00e5 tilgjengelige som diagnostiske sensorer. \n\n Juster eventuelle automatiseringer eller skript du m\u00e5tte ha som bruker disse attributtene.",
+            "title": "Litter-Robot-attributter er n\u00e5 deres egne sensorer"
         }
     }
 }

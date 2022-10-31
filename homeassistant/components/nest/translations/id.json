@@ -52,7 +52,7 @@
                 "data": {
                     "project_id": "ID Proyek Akses Perangkat"
                 },
-                "description": "Buat proyek Akses Perangkat Nest yang **membutuhkan biaya USD5** untuk menyiapkannya.\n1. Buka [Konsol Akses Perangkat]({device_access_console_url}), dan ikuti alur pembayaran.\n1. Klik **Buat proyek**\n1. Beri nama proyek Akses Perangkat Anda dan klik **Berikutnya**.\n1. Masukkan ID Klien OAuth Anda\n1. Aktifkan acara dengan mengklik **Aktifkan** dan **Buat proyek**. \n\n Masukkan ID Proyek Akses Perangkat Anda di bawah ini ([more info]({more_info_url})).\n",
+                "description": "Buat proyek Akses Perangkat Nest yang **membutuhkan biaya USD5 untuk Google** untuk menyiapkannya.\n1. Buka [Konsol Akses Perangkat]({device_access_console_url}), dan ikuti alur pembayaran.\n1. Klik **Buat proyek**\n1. Beri nama proyek Akses Perangkat Anda dan klik **Berikutnya**.\n1. Masukkan ID Klien OAuth Anda\n1. Aktifkan acara dengan mengklik **Aktifkan** dan **Buat proyek**. \n\n Masukkan ID Proyek Akses Perangkat Anda di bawah ini ([more info]({more_info_url})).\n",
                 "title": "Nest: Buat Proyek Akses Perangkat"
             },
             "device_project_upgrade": {

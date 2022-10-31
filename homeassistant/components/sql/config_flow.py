@@ -155,6 +155,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
             db_url = user_input.get(CONF_DB_URL, db_url_default)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
+            name = self.entry.options.get(CONF_NAME, self.entry.title)
 
             try:
                 validate_sql_select(query)
@@ -169,8 +170,8 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlow):
                 return self.async_create_entry(
                     title="",
                     data={
-                        CONF_NAME: self.entry.title,
-                        **self.entry.options,
+                        CONF_NAME: name,
+                        CONF_DB_URL: db_url,
                         **user_input,
                     },
                 )

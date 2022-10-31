@@ -8,7 +8,7 @@ from typing import Any, Protocol, cast
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.components import blueprint
+from homeassistant.components import blueprint, websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -290,6 +290,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema({}),
     )
 
+    websocket_api.async_register_command(hass, websocket_config)
+
     return True
 
 
@@ -326,7 +328,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._logger = LOGGER
         self._variables = variables
         self._trigger_variables = trigger_variables
-        self._raw_config = raw_config
+        self.raw_config = raw_config
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
@@ -477,7 +479,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         with trace_automation(
             self.hass,
             self.unique_id,
-            self._raw_config,
+            self.raw_config,
             self._blueprint_inputs,
             trigger_context,
             self._trace_config,
@@ -853,3 +855,28 @@ def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
         return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
 
     return []
+
+
+@websocket_api.websocket_command({"type": "automation/config", "entity_id": str})
+def websocket_config(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get automation config."""
+    component: EntityComponent[AutomationEntity] = hass.data[DOMAIN]
+
+    automation = component.get_entity(msg["entity_id"])
+
+    if automation is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "config": automation.raw_config,
+        },
+    )

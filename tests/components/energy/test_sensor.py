@@ -58,7 +58,6 @@ async def test_cost_sensor_no_states(hass, hass_storage, setup_integration) -> N
             "flow_from": [
                 {
                     "stat_energy_from": "foo",
-                    "entity_energy_from": "foo",
                     "stat_cost": None,
                     "entity_energy_price": "bar",
                     "number_energy_price": None,
@@ -85,7 +84,6 @@ async def test_cost_sensor_attributes(hass, hass_storage, setup_integration) -> 
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": None,
                     "number_energy_price": 1,
@@ -155,7 +153,6 @@ async def test_cost_sensor_price_entity_total_increasing(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -166,7 +163,6 @@ async def test_cost_sensor_price_entity_total_increasing(
             "flow_to": [
                 {
                     "stat_energy_to": "sensor.energy_production",
-                    "entity_energy_to": "sensor.energy_production",
                     "stat_compensation": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -361,7 +357,6 @@ async def test_cost_sensor_price_entity_total(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -372,7 +367,6 @@ async def test_cost_sensor_price_entity_total(
             "flow_to": [
                 {
                     "stat_energy_to": "sensor.energy_production",
-                    "entity_energy_to": "sensor.energy_production",
                     "stat_compensation": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -569,7 +563,6 @@ async def test_cost_sensor_price_entity_total_no_reset(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -580,7 +573,6 @@ async def test_cost_sensor_price_entity_total_no_reset(
             "flow_to": [
                 {
                     "stat_energy_to": "sensor.energy_production",
-                    "entity_energy_to": "sensor.energy_production",
                     "stat_compensation": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -728,7 +720,6 @@ async def test_cost_sensor_handle_energy_units(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": None,
                     "number_energy_price": 0.5,
@@ -798,7 +789,6 @@ async def test_cost_sensor_handle_price_units(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": "sensor.energy_price",
                     "number_energy_price": None,
@@ -856,7 +846,6 @@ async def test_cost_sensor_handle_gas(
         {
             "type": "gas",
             "stat_energy_from": "sensor.gas_consumption",
-            "entity_energy_from": "sensor.gas_consumption",
             "stat_cost": None,
             "entity_energy_price": None,
             "number_energy_price": 0.5,
@@ -907,7 +896,6 @@ async def test_cost_sensor_handle_gas_kwh(
         {
             "type": "gas",
             "stat_energy_from": "sensor.gas_consumption",
-            "entity_energy_from": "sensor.gas_consumption",
             "stat_cost": None,
             "entity_energy_price": None,
             "number_energy_price": 0.5,
@@ -961,7 +949,6 @@ async def test_cost_sensor_wrong_state_class(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": None,
                     "number_energy_price": 0.5,
@@ -1023,7 +1010,6 @@ async def test_cost_sensor_state_class_measurement_no_reset(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": None,
                     "number_energy_price": 0.5,
@@ -1072,7 +1058,6 @@ async def test_inherit_source_unique_id(hass, hass_storage, setup_integration):
         {
             "type": "gas",
             "stat_energy_from": "sensor.gas_consumption",
-            "entity_energy_from": "sensor.gas_consumption",
             "stat_cost": None,
             "entity_energy_price": None,
             "number_energy_price": 0.5,

@@ -33,6 +33,11 @@
             }
         }
     },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Google\u00a0Agenda sera bient\u00f4t supprim\u00e9e"
+        }
+    },
     "options": {
         "step": {
             "init": {

@@ -4,7 +4,11 @@ from __future__ import annotations
 from boschshcpy import SHCSession
 from boschshcpy.device import SHCDevice
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -317,6 +321,7 @@ class EnergySensor(SHCEntity, SensorEntity):
     """Representation of an SHC energy reporting sensor."""
 
     _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:

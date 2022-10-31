@@ -24,8 +24,8 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.distance import convert as convert_distance
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     CONF_TRACK_HOME,
@@ -160,7 +160,7 @@ class MetWeatherData:
 
         if not self._is_metric:
             elevation = int(
-                round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
+                round(DistanceConverter.convert(elevation, LENGTH_FEET, LENGTH_METERS))
             )
 
         coordinates = {

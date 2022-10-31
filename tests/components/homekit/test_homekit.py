@@ -35,7 +35,7 @@ from homeassistant.components.homekit.const import (
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.components.homekit.util import get_persist_fullpath_for_entry_id
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_DEVICE_ID,
@@ -1392,6 +1392,82 @@ async def test_yaml_updates_update_config_entry_for_name(hass, mock_async_zeroco
     await hass.async_block_till_done()
 
     mock_homekit().async_start.assert_called()
+
+
+async def test_yaml_can_link_with_default_name(hass, mock_async_zeroconf):
+    """Test async_setup with imported config linked by default name."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        data={},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit, patch(
+        "homeassistant.components.network.async_get_source_ip", return_value="1.2.3.4"
+    ):
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await async_setup_component(
+            hass,
+            "homekit",
+            {"homekit": {"entity_config": {"camera.back_camera": {"stream_count": 3}}}},
+        )
+        await hass.async_block_till_done()
+
+    mock_homekit.reset_mock()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert entry.options["entity_config"]["camera.back_camera"]["stream_count"] == 3
+
+
+async def test_yaml_can_link_with_port(hass, mock_async_zeroconf):
+    """Test async_setup with imported config linked by port."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        data={"name": "random", "port": 12345},
+        options={},
+    )
+    entry.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        data={"name": "random", "port": 12346},
+        options={},
+    )
+    entry2.add_to_hass(hass)
+    entry3 = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_ZEROCONF,
+        data={"name": "random", "port": 12347},
+        options={},
+    )
+    entry3.add_to_hass(hass)
+    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit, patch(
+        "homeassistant.components.network.async_get_source_ip", return_value="1.2.3.4"
+    ):
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await async_setup_component(
+            hass,
+            "homekit",
+            {
+                "homekit": {
+                    "port": 12345,
+                    "entity_config": {"camera.back_camera": {"stream_count": 3}},
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    mock_homekit.reset_mock()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert entry.options["entity_config"]["camera.back_camera"]["stream_count"] == 3
+    assert entry2.options == {}
+    assert entry3.options == {}
 
 
 async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_async_zeroconf):

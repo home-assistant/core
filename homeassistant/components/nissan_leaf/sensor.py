@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from . import LeafEntity
 from .const import (
@@ -123,7 +123,7 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
             return None
 
         if not self.car.hass.config.units.is_metric or self.car.force_miles:
-            ret = IMPERIAL_SYSTEM.length(ret, METRIC_SYSTEM.length_unit)
+            ret = DistanceConverter.convert(ret, LENGTH_KILOMETERS, LENGTH_MILES)
 
         return round(ret)
 

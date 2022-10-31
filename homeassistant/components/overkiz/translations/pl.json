@@ -11,7 +11,9 @@
             "server_in_maintenance": "Serwer wy\u0142\u0105czony z powodu przerwy technicznej",
             "too_many_attempts": "Zbyt wiele pr\u00f3b z nieprawid\u0142owym tokenem, konto tymczasowo zablokowane",
             "too_many_requests": "Zbyt wiele \u017c\u0105da\u0144, spr\u00f3buj ponownie p\u00f3\u017aniej.",
-            "unknown": "Nieoczekiwany b\u0142\u0105d"
+            "unknown": "Nieoczekiwany b\u0142\u0105d",
+            "unknown_user": "Nieznany u\u017cytkownik. Konta Somfy Protect nie s\u0105 obs\u0142ugiwane przez t\u0119 integracj\u0119.",
+            "unsupported_hardware": "Twoje urz\u0105dzenie {unsupported_device} nie jest wspierane przez t\u0119 integracj\u0119."
         },
         "flow_title": "Bramka: {gateway_id}",
         "step": {

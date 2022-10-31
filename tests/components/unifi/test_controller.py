@@ -25,13 +25,10 @@ from homeassistant.components.unifi.const import (
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
+    PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
-from homeassistant.components.unifi.controller import (
-    PLATFORMS,
-    RETRY_TIMER,
-    get_unifi_controller,
-)
+from homeassistant.components.unifi.controller import RETRY_TIMER, get_unifi_controller
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.const import (
     CONF_HOST,

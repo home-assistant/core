@@ -3,7 +3,7 @@
 
 from homeassistant.const import STATE_ON
 
-from tests.components.homekit_controller.common import (
+from ..common import (
     HUB_TEST_ACCESSORY_ID,
     DeviceTestInfo,
     EntityTestInfo,
@@ -33,7 +33,7 @@ async def test_meross_mss565_setup(hass):
                 EntityTestInfo(
                     entity_id="light.mss565_28da_dimmer_switch",
                     friendly_name="MSS565-28da Dimmer Switch",
-                    unique_id="homekit-BB1121-12",
+                    unique_id="00:00:00:00:00:00_1_12",
                     capabilities={"supported_color_modes": ["brightness"]},
                     state=STATE_ON,
                 ),

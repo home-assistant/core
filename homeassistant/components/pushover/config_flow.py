@@ -62,6 +62,12 @@ class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None and self._reauth_entry:
             user_input = {**self._reauth_entry.data, **user_input}
+            self._async_abort_entries_match(
+                {
+                    CONF_USER_KEY: user_input[CONF_USER_KEY],
+                    CONF_API_KEY: user_input[CONF_API_KEY],
+                }
+            )
             errors = await validate_input(self.hass, user_input)
             if not errors:
                 self.hass.config_entries.async_update_entry(
@@ -87,9 +93,13 @@ class PushBulletConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USER_KEY])
-            self._abort_if_unique_id_configured()
 
+            self._async_abort_entries_match(
+                {
+                    CONF_USER_KEY: user_input[CONF_USER_KEY],
+                    CONF_API_KEY: user_input[CONF_API_KEY],
+                }
+            )
             self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
 
             errors = await validate_input(self.hass, user_input)

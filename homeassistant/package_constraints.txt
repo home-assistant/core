@@ -1,4 +1,4 @@
-PyJWT==2.4.0
+PyJWT==2.5.0
 PyNaCl==1.5.0
 aiodiscover==1.4.13
 aiohttp==3.8.1
@@ -10,18 +10,18 @@ atomicwrites-homeassistant==1.4.1
 attrs==21.2.0
 awesomeversion==22.9.0
 bcrypt==3.1.7
-bleak-retry-connector==1.17.1
-bleak==0.17.0
-bluetooth-adapters==0.4.1
-bluetooth-auto-recovery==0.3.3
+bleak-retry-connector==2.1.3
+bleak==0.18.1
+bluetooth-adapters==0.6.0
+bluetooth-auto-recovery==0.3.4
 certifi>=2021.5.30
 ciso8601==2.2.0
-cryptography==37.0.4
-dbus-fast==1.4.0
+cryptography==38.0.1
+dbus-fast==1.45.0
 fnvhash==0.1.0
-hass-nabucasa==0.55.0
+hass-nabucasa==0.56.0
 home-assistant-bluetooth==1.3.0
-home-assistant-frontend==20220907.2
+home-assistant-frontend==20221010.0
 httpx==0.23.0
 ifaddr==0.1.7
 jinja2==3.1.2
@@ -38,10 +38,10 @@ pyyaml==6.0
 requests==2.28.1
 scapy==2.4.5
 sqlalchemy==1.4.41
-typing-extensions>=3.10.0.2,<5.0
+typing-extensions>=4.4.0,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
-yarl==1.7.2
+yarl==1.8.1
 zeroconf==0.39.1
 
 # Constrain pycryptodome to avoid vulnerability
@@ -114,9 +114,8 @@ multidict>=6.0.2
 # https://github.com/home-assistant/core/pull/68176
 authlib<1.0
 
-# Pin backoff for compatibility until most libraries have been updated
-# https://github.com/home-assistant/core/pull/70817
-backoff<2.0
+# Version 2.0 added typing, prevent accidental fallbacks
+backoff>=2.0
 
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092

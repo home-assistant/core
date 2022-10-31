@@ -30,12 +30,13 @@ async def async_setup_entry(
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
 
-    entities = []
-    for ac_key, ac_device in instance["coordinator"].data["aircons"].items():
-        for zone_key, zone in ac_device["zones"].items():
-            # Only add zone vent controls when zone in vent control mode.
-            if zone["type"] == 0:
-                entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
+    entities: list[CoverEntity] = []
+    if aircons := instance["coordinator"].data.get("aircons"):
+        for ac_key, ac_device in aircons.items():
+            for zone_key, zone in ac_device["zones"].items():
+                # Only add zone vent controls when zone in vent control mode.
+                if zone["type"] == 0:
+                    entities.append(AdvantageAirZoneVent(instance, ac_key, zone_key))
     async_add_entities(entities)
 
 
@@ -49,7 +50,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
 
-    def __init__(self, instance, ac_key, zone_key):
+    def __init__(self, instance: dict[str, Any], ac_key: str, zone_key: str) -> None:
         """Initialize an Advantage Air Zone Vent."""
         super().__init__(instance, ac_key, zone_key)
         self._attr_name = self._zone["name"]
@@ -68,7 +69,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open zone vent."""
-        await self.async_change(
+        await self.aircon(
             {
                 self.ac_key: {
                     "zones": {
@@ -80,7 +81,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Fully close zone vent."""
-        await self.async_change(
+        await self.aircon(
             {
                 self.ac_key: {
                     "zones": {self.zone_key: {"state": ADVANTAGE_AIR_STATE_CLOSE}}
@@ -92,7 +93,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
         """Change vent position."""
         position = round(kwargs[ATTR_POSITION] / 5) * 5
         if position == 0:
-            await self.async_change(
+            await self.aircon(
                 {
                     self.ac_key: {
                         "zones": {self.zone_key: {"state": ADVANTAGE_AIR_STATE_CLOSE}}
@@ -100,7 +101,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, CoverEntity):
                 }
             )
         else:
-            await self.async_change(
+            await self.aircon(
                 {
                     self.ac_key: {
                         "zones": {

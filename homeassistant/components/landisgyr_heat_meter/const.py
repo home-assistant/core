@@ -44,6 +44,14 @@ HEAT_METER_SENSOR_TYPES = (
         native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Diagnostic entity for debugging, this will match the value in GJ of previous year indicated on the meter's display
+    SensorEntityDescription(
+        key="heat_previous_year_gj",
+        icon="mdi:fire",
+        name="Heat previous year GJ",
+        native_unit_of_measurement="GJ",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     SensorEntityDescription(
         key="volume_previous_year_m3",
         icon="mdi:fire",

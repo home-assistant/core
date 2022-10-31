@@ -83,7 +83,7 @@ class MikrotikDataUpdateCoordinatorTracker(
         """Initialize the tracked device."""
         super().__init__(coordinator)
         self.device = device
-        self._attr_name = str(device.name)
+        self._attr_name = device.name
         self._attr_unique_id = device.mac
 
     @property

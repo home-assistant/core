@@ -22,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,7 +219,7 @@ class MoldIndicator(SensorEntity):
 
         # convert to celsius if necessary
         if unit == TEMP_FAHRENHEIT:
-            return util.temperature.fahrenheit_to_celsius(temp)
+            return TemperatureConverter.convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
         if unit == TEMP_CELSIUS:
             return temp
         _LOGGER.error(
@@ -385,13 +386,13 @@ class MoldIndicator(SensorEntity):
             }
 
         dewpoint = (
-            util.temperature.celsius_to_fahrenheit(self._dewpoint)
+            TemperatureConverter.convert(self._dewpoint, TEMP_CELSIUS, TEMP_FAHRENHEIT)
             if self._dewpoint is not None
             else None
         )
 
         crit_temp = (
-            util.temperature.celsius_to_fahrenheit(self._crit_temp)
+            TemperatureConverter.convert(self._crit_temp, TEMP_CELSIUS, TEMP_FAHRENHEIT)
             if self._crit_temp is not None
             else None
         )

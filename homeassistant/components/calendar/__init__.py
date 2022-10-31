@@ -32,10 +32,12 @@ DOMAIN = "calendar"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[CalendarEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -52,13 +54,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -129,32 +131,6 @@ def _get_api_date(dt_or_d: datetime.datetime | datetime.date) -> dict[str, str]:
     if isinstance(dt_or_d, datetime.datetime):
         return {"dateTime": dt.as_local(dt_or_d).isoformat()}
     return {"date": dt_or_d.isoformat()}
-
-
-def normalize_event(event: dict[str, Any]) -> dict[str, Any]:
-    """Normalize a calendar event."""
-    normalized_event: dict[str, Any] = {}
-
-    start = event.get("start")
-    end = event.get("end")
-    start = get_date(start) if start is not None else None
-    end = get_date(end) if end is not None else None
-    normalized_event["dt_start"] = start
-    normalized_event["dt_end"] = end
-
-    start = start.strftime(DATE_STR_FORMAT) if start is not None else None
-    end = end.strftime(DATE_STR_FORMAT) if end is not None else None
-    normalized_event["start"] = start
-    normalized_event["end"] = end
-
-    # cleanup the string so we don't have a bunch of double+ spaces
-    summary = event.get("summary", "")
-    normalized_event["message"] = re.sub("  +", "", summary).strip()
-    normalized_event["location"] = event.get("location", "")
-    normalized_event["description"] = event.get("description", "")
-    normalized_event["all_day"] = "date" in event["start"]
-
-    return normalized_event
 
 
 def extract_offset(summary: str, offset_prefix: str) -> tuple[str, datetime.timedelta]:
@@ -243,7 +219,7 @@ class CalendarEventView(http.HomeAssistantView):
     url = "/api/calendars/{entity_id}"
     name = "api:calendars:calendar"
 
-    def __init__(self, component: EntityComponent) -> None:
+    def __init__(self, component: EntityComponent[CalendarEntity]) -> None:
         """Initialize calendar view."""
         self.component = component
 
@@ -294,7 +270,7 @@ class CalendarListView(http.HomeAssistantView):
     url = "/api/calendars"
     name = "api:calendars"
 
-    def __init__(self, component: EntityComponent) -> None:
+    def __init__(self, component: EntityComponent[CalendarEntity]) -> None:
         """Initialize calendar view."""
         self.component = component
 

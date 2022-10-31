@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "reauth_successful": "La autenticaci\u00f3n se volvi\u00f3 a realizar correctamente",
+            "reauth_unsuccessful": "No se pudo volver a autenticar, por favor, elimina la integraci\u00f3n y vuelve a configurarla.",
             "unsupported_firmware": "El dispositivo est\u00e1 usando una versi\u00f3n de firmware no compatible."
         },
         "error": {
@@ -16,6 +18,12 @@
                 "description": "\u00bfQuieres configurar {model} en {host}? \n\nLos dispositivos alimentados por bater\u00eda que est\u00e1n protegidos por contrase\u00f1a deben despertarse antes de continuar con la configuraci\u00f3n.\nLos dispositivos que funcionan con bater\u00eda que no est\u00e1n protegidos por contrase\u00f1a se a\u00f1adir\u00e1n cuando el dispositivo se despierte. Puedes activar manualmente el dispositivo ahora con un bot\u00f3n del mismo o esperar a la pr\u00f3xima actualizaci\u00f3n de datos del dispositivo."
             },
             "credentials": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"

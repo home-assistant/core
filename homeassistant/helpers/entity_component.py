@@ -186,7 +186,7 @@ class EntityComponent(Generic[_EntityT]):
 
         This method must be run in the event loop.
         """
-        return await service.async_extract_entities(  # type: ignore[return-value]
+        return await service.async_extract_entities(
             self.hass, self.entities, service_call, expand_group
         )
 

@@ -14,18 +14,9 @@ from aiounifi.controller import (
     DATA_DPI_GROUP,
     DATA_DPI_GROUP_REMOVED,
     DATA_EVENT,
-    SIGNAL_CONNECTION_STATE,
-    SIGNAL_DATA,
 )
-from aiounifi.events import (
-    ACCESS_POINT_CONNECTED,
-    GATEWAY_CONNECTED,
-    SWITCH_CONNECTED,
-    WIRED_CLIENT_CONNECTED,
-    WIRELESS_CLIENT_CONNECTED,
-    WIRELESS_GUEST_CONNECTED,
-)
-from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
+from aiounifi.models.event import EventKey
+from aiounifi.websocket import WebsocketSignal, WebsocketState
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
@@ -74,6 +65,7 @@ from .const import (
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
     LOGGER,
+    PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
@@ -81,17 +73,16 @@ from .switch import BLOCK_SWITCH, POE_SWITCH
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 
 CLIENT_CONNECTED = (
-    WIRED_CLIENT_CONNECTED,
-    WIRELESS_CLIENT_CONNECTED,
-    WIRELESS_GUEST_CONNECTED,
+    EventKey.WIRED_CLIENT_CONNECTED,
+    EventKey.WIRELESS_CLIENT_CONNECTED,
+    EventKey.WIRELESS_GUEST_CONNECTED,
 )
 DEVICE_CONNECTED = (
-    ACCESS_POINT_CONNECTED,
-    GATEWAY_CONNECTED,
-    SWITCH_CONNECTED,
+    EventKey.ACCESS_POINT_CONNECTED,
+    EventKey.GATEWAY_CONNECTED,
+    EventKey.SWITCH_CONNECTED,
 )
 
 
@@ -204,15 +195,15 @@ class UniFiController:
     @callback
     def async_unifi_signalling_callback(self, signal, data):
         """Handle messages back from UniFi library."""
-        if signal == SIGNAL_CONNECTION_STATE:
+        if signal == WebsocketSignal.CONNECTION_STATE:
 
-            if data == STATE_DISCONNECTED and self.available:
+            if data == WebsocketState.DISCONNECTED and self.available:
                 LOGGER.warning("Lost connection to UniFi Network")
 
-            if (data == STATE_RUNNING and not self.available) or (
-                data == STATE_DISCONNECTED and self.available
+            if (data == WebsocketState.RUNNING and not self.available) or (
+                data == WebsocketState.DISCONNECTED and self.available
             ):
-                self.available = data == STATE_RUNNING
+                self.available = data == WebsocketState.RUNNING
                 async_dispatcher_send(self.hass, self.signal_reachable)
 
                 if not self.available:
@@ -220,7 +211,7 @@ class UniFiController:
                 else:
                     LOGGER.info("Connected to UniFi Network")
 
-        elif signal == SIGNAL_DATA and data:
+        elif signal == WebsocketSignal.DATA and data:
 
             if DATA_EVENT in data:
                 clients_connected = set()
@@ -229,16 +220,16 @@ class UniFiController:
 
                 for event in data[DATA_EVENT]:
 
-                    if event.event in CLIENT_CONNECTED:
+                    if event.key in CLIENT_CONNECTED:
                         clients_connected.add(event.mac)
 
-                        if not wireless_clients_connected and event.event in (
-                            WIRELESS_CLIENT_CONNECTED,
-                            WIRELESS_GUEST_CONNECTED,
+                        if not wireless_clients_connected and event.key in (
+                            EventKey.WIRELESS_CLIENT_CONNECTED,
+                            EventKey.WIRELESS_GUEST_CONNECTED,
                         ):
                             wireless_clients_connected = True
 
-                    elif event.event in DEVICE_CONNECTED:
+                    elif event.key in DEVICE_CONNECTED:
                         devices_connected.add(event.mac)
 
                 if wireless_clients_connected:

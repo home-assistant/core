@@ -5,11 +5,7 @@ from unittest.mock import ANY, call, patch
 import pytest
 
 from homeassistant.components import camera
-from homeassistant.components.climate.const import (
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    HVAC_MODE_HEAT,
-)
+from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
 from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
@@ -383,7 +379,7 @@ async def test_query_message(hass):
         "payload": {
             "devices": {
                 "light.non_existing": {"online": False},
-                "light.demo_light": {"on": False, "online": True, "brightness": 0},
+                "light.demo_light": {"on": False, "online": True},
                 "light.another_light": {
                     "on": True,
                     "online": True,
@@ -727,7 +723,6 @@ async def test_execute_times_out(hass, report_state, on, brightness, value):
                     "states": {
                         "on": on,
                         "online": True,
-                        "brightness": brightness,
                     },
                 },
                 {
@@ -808,7 +803,7 @@ async def test_raising_error_trait(hass):
     """Test raising an error while executing a trait command."""
     hass.states.async_set(
         "climate.bla",
-        HVAC_MODE_HEAT,
+        HVACMode.HEAT,
         {ATTR_MIN_TEMP: 15, ATTR_MAX_TEMP: 30, ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
     )
 

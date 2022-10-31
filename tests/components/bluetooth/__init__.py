@@ -19,6 +19,16 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+__all__ = (
+    "inject_advertisement",
+    "inject_advertisement_with_source",
+    "inject_advertisement_with_time_and_source",
+    "inject_advertisement_with_time_and_source_connectable",
+    "inject_bluetooth_service_info",
+    "patch_all_discovered_devices",
+    "patch_discovered_devices",
+)
+
 
 def _get_manager() -> BluetoothManager:
     """Return the bluetooth manager."""
@@ -80,23 +90,56 @@ def inject_advertisement_with_time_and_source_connectable(
     )
 
 
+def inject_bluetooth_service_info_bleak(
+    hass: HomeAssistant, info: models.BluetoothServiceInfoBleak
+) -> None:
+    """Inject an advertisement into the manager with connectable status."""
+    advertisement_data = AdvertisementData(  # type: ignore[no-untyped-call]
+        local_name=None if info.name == "" else info.name,
+        manufacturer_data=info.manufacturer_data,
+        service_data=info.service_data,
+        service_uuids=info.service_uuids,
+    )
+    device = BLEDevice(  # type: ignore[no-untyped-call]
+        address=info.address,
+        name=info.name,
+        details={},
+        rssi=info.rssi,
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        device,
+        advertisement_data,
+        info.time,
+        SOURCE_LOCAL,
+        connectable=info.connectable,
+    )
+
+
+def inject_bluetooth_service_info(
+    hass: HomeAssistant, info: models.BluetoothServiceInfo
+) -> None:
+    """Inject a BluetoothServiceInfo into the manager."""
+    advertisement_data = AdvertisementData(  # type: ignore[no-untyped-call]
+        local_name=None if info.name == "" else info.name,
+        manufacturer_data=info.manufacturer_data,
+        service_data=info.service_data,
+        service_uuids=info.service_uuids,
+    )
+    device = BLEDevice(  # type: ignore[no-untyped-call]
+        address=info.address,
+        name=info.name,
+        details={},
+        rssi=info.rssi,
+    )
+    inject_advertisement(hass, device, advertisement_data)
+
+
 def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
     """Mock all the discovered devices from all the scanners."""
     return patch.object(
         _get_manager(), "async_all_discovered_devices", return_value=mock_discovered
     )
-
-
-def patch_history(mock_history: dict[str, models.BluetoothServiceInfoBleak]) -> None:
-    """Patch the history."""
-    return patch.dict(_get_manager()._history, mock_history)
-
-
-def patch_connectable_history(
-    mock_history: dict[str, models.BluetoothServiceInfoBleak]
-) -> None:
-    """Patch the connectable history."""
-    return patch.dict(_get_manager()._connectable_history, mock_history)
 
 
 def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:

@@ -65,7 +65,11 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._dev_id in self.coordinator.data.devices
+        return (
+            self._dev_id in self.coordinator.data.devices
+            and ("available" not in self.device or self.device["available"])
+            and super().available
+        )
 
     @property
     def device(self) -> dict[str, Any]:

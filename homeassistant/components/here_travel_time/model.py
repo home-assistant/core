@@ -13,7 +13,6 @@ class HERERoutingData(TypedDict):
     ATTR_DURATION: float
     ATTR_DURATION_IN_TRAFFIC: float
     ATTR_DISTANCE: float
-    ATTR_ROUTE: str
     ATTR_ORIGIN: str
     ATTR_DESTINATION: str
     ATTR_ORIGIN_NAME: str

@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import Mock
 
-from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
+from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 

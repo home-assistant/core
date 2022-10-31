@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pylgnetcast import LgNetCastClient, LgNetCastError
+from pylgnetcast import LG_COMMAND, LgNetCastClient, LgNetCastError
 from requests import RequestException
 import voluptuous as vol
 
@@ -212,7 +212,7 @@ class LgTVDevice(MediaPlayerEntity):
 
     def turn_off(self) -> None:
         """Turn off media player."""
-        self.send_command(1)
+        self.send_command(LG_COMMAND.POWER)
 
     def turn_on(self) -> None:
         """Turn on the media player."""
@@ -221,11 +221,11 @@ class LgTVDevice(MediaPlayerEntity):
 
     def volume_up(self) -> None:
         """Volume up the media player."""
-        self.send_command(24)
+        self.send_command(LG_COMMAND.VOLUME_UP)
 
     def volume_down(self) -> None:
         """Volume down media player."""
-        self.send_command(25)
+        self.send_command(LG_COMMAND.VOLUME_DOWN)
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -233,7 +233,7 @@ class LgTVDevice(MediaPlayerEntity):
 
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self.send_command(26)
+        self.send_command(LG_COMMAND.MUTE_TOGGLE)
 
     def select_source(self, source: str) -> None:
         """Select input source."""
@@ -250,21 +250,21 @@ class LgTVDevice(MediaPlayerEntity):
         """Send play command."""
         self._playing = True
         self._state = MediaPlayerState.PLAYING
-        self.send_command(33)
+        self.send_command(LG_COMMAND.PLAY)
 
     def media_pause(self) -> None:
         """Send media pause command to media player."""
         self._playing = False
         self._state = MediaPlayerState.PAUSED
-        self.send_command(34)
+        self.send_command(LG_COMMAND.PAUSE)
 
     def media_next_track(self) -> None:
         """Send next track command."""
-        self.send_command(36)
+        self.send_command(LG_COMMAND.FAST_FORWARD)
 
     def media_previous_track(self) -> None:
         """Send the previous track command."""
-        self.send_command(37)
+        self.send_command(LG_COMMAND.REWIND)
 
     def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
         """Tune to channel."""

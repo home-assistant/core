@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured_account": "L'account \u00e8 gi\u00e0 configurato",
-            "ezviz_cloud_account_missing": "Ezviz cloud account mancante. Riconfigura l'account Ezviz cloud",
+            "ezviz_cloud_account_missing": "Account EZVIZ cloud mancante. Si prega di riconfigurare l'account EZVIZ cloud",
             "unknown": "Errore imprevisto"
         },
         "error": {
@@ -17,8 +17,8 @@
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "Inserisci le credenziali RTSP per la videocamera Ezviz {serial} con IP {ip_address}",
-                "title": "Rilevata videocamera Ezviz"
+                "description": "Inserisci le credenziali RTSP per la videocamera EZVIZ {serial} con IP {ip_address}",
+                "title": "Rilevata videocamera EZVIZ"
             },
             "user": {
                 "data": {
@@ -26,7 +26,7 @@
                     "url": "URL",
                     "username": "Nome utente"
                 },
-                "title": "Connettiti a Ezviz Cloud"
+                "title": "Connettiti a EZVIZ Cloud"
             },
             "user_custom_url": {
                 "data": {
@@ -35,7 +35,7 @@
                     "username": "Nome utente"
                 },
                 "description": "Specifica manualmente l'URL dell'area geografica",
-                "title": "Connettiti all'URL personalizzato di Ezviz"
+                "title": "Connettiti all'URL EZVIZ personalizzato"
             }
         }
     },

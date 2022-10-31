@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "account_locked": "Kontoen er l\u00e5st. Pr\u00f8v igjen senere.",

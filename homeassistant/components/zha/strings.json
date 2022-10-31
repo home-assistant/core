@@ -76,6 +76,22 @@
         "title": "Reconfigure ZHA",
         "description": "ZHA will be stopped.  Do you wish to continue?"
       },
+      "prompt_migrate_or_reconfigure": {
+        "title": "Migrate or re-configure",
+        "description": "Are you migrating to a new radio or re-configuring the current radio?",
+        "menu_options": {
+          "intent_migrate": "Migrate to a new radio",
+          "intent_reconfigure": "Re-configure the current radio"
+        }
+      },
+      "intent_migrate": {
+        "title": "Migrate to a new radio",
+        "description": "Your old radio will be factory reset.  If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\nDo you wish to continue?"
+      },
+      "instruct_unplug": {
+        "title": "Unplug your old radio",
+        "description": "Your old radio has been reset.  If the hardware is no longer needed, you can now unplug it."
+      },
       "choose_serial_port": {
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]",
         "data": {
@@ -160,7 +176,12 @@
     }
   },
   "device_automation": {
-    "action_type": { "squawk": "Squawk", "warn": "Warn" },
+    "action_type": {
+      "squawk": "Squawk",
+      "warn": "Warn",
+      "issue_all_led_effect": "Issue effect for all LEDs",
+      "issue_individual_led_effect": "Issue effect for individual LED"
+    },
     "trigger_type": {
       "remote_button_short_press": "\"{subtype}\" button pressed",
       "remote_button_short_release": "\"{subtype}\" button released",
