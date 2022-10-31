@@ -40,7 +40,12 @@ from .const import (
     TYPE_LOCAL,
 )
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 LAST_EVENT_STORAGE_VERSION = 1
 LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
 _LOGGER = logging.getLogger(__name__)
