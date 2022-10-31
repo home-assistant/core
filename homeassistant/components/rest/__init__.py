@@ -90,15 +90,15 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
     if DOMAIN not in config:
         return True
 
-    refresh_tasks: list[Coroutine[Any, Any, None]] = []
-    load_tasks: list[Coroutine[Any, Any, None]] = []
+    refresh_coroutines: list[Coroutine[Any, Any, None]] = []
+    load_coroutines: list[Coroutine[Any, Any, None]] = []
     rest_config: list[ConfigType] = config[DOMAIN]
     for rest_idx, conf in enumerate(rest_config):
         scan_interval: timedelta = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         resource_template: template.Template | None = conf.get(CONF_RESOURCE_TEMPLATE)
         rest = create_rest_data_from_config(hass, conf)
         coordinator = _rest_coordinator(hass, rest, resource_template, scan_interval)
-        refresh_tasks.append(coordinator.async_refresh())
+        refresh_coroutines.append(coordinator.async_refresh())
         hass.data[DOMAIN][REST_DATA].append({REST: rest, COORDINATOR: coordinator})
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
@@ -109,20 +109,20 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
                 hass.data[DOMAIN][platform_domain].append(platform_conf)
                 platform_idx = len(hass.data[DOMAIN][platform_domain]) - 1
 
-                load = discovery.async_load_platform(
+                load_coroutine = discovery.async_load_platform(
                     hass,
                     platform_domain,
                     DOMAIN,
                     {REST_IDX: rest_idx, PLATFORM_IDX: platform_idx},
                     config,
                 )
-                load_tasks.append(load)
+                load_coroutines.append(load_coroutine)
 
-    if refresh_tasks:
-        await asyncio.gather(*refresh_tasks)
+    if refresh_coroutines:
+        await asyncio.gather(*refresh_coroutines)
 
-    for task in load_tasks:
-        hass.async_create_task(task)
+    for load_coroutine in load_coroutines:
+        hass.async_create_task(load_coroutine)
 
     return True
 
