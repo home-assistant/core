@@ -97,8 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Init the config flow."""
-        self._reauth: bool = False
-        self._existing_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     @staticmethod
     @core.callback
@@ -119,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Configure a cloud based alarm."""
         errors = {}
         if user_input is not None:
-            if not self._reauth:
+            if not self._reauth_entry:
                 await self.async_set_unique_id(user_input[CONF_USERNAME])
                 self._abort_if_unique_id_configured()
 
@@ -133,16 +132,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if not self._reauth:
+                if not self._reauth_entry:
                     return self.async_create_entry(title=info["title"], data=user_input)
                 self.hass.config_entries.async_update_entry(
-                    self._existing_entry,
+                    self._reauth_entry,
                     data=user_input,
                     unique_id=user_input[CONF_USERNAME],
                 )
-                await self.hass.config_entries.async_reload(
-                    self._existing_entry.entry_id
-                )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
@@ -151,8 +148,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
-        self._reauth = True
-        self._existing_entry = await self.async_set_unique_id(entry_data[CONF_USERNAME])
+        self._reauth_entry = await self.async_set_unique_id(entry_data[CONF_USERNAME])
         return await self.async_step_cloud()
 
     async def async_step_local(self, user_input=None):
