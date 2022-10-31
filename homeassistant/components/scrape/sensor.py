@@ -97,7 +97,6 @@ async def async_setup_platform(
         rest = create_rest_data_from_config(hass, resource_config)
 
         coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
-        await coordinator.async_refresh()
 
         sensor_config = config
         template_config = vol.Schema(
@@ -109,6 +108,7 @@ async def async_setup_platform(
         sensor_config = discovery_info["config"]
         template_config = sensor_config
 
+    await coordinator.async_refresh()
     if coordinator.data is None:
         raise PlatformNotReady
 
