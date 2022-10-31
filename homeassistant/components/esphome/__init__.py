@@ -249,6 +249,8 @@ async def async_setup_entry(  # noqa: C901
 
     async def on_disconnect() -> None:
         """Run disconnect callbacks on API disconnect."""
+        name = entry_data.device_info.name if entry_data.device_info else host
+        _LOGGER.debug("%s: %s disconnected, running disconnected callbacks", name, host)
         for disconnect_cb in entry_data.disconnect_callbacks:
             disconnect_cb()
         entry_data.disconnect_callbacks = []
