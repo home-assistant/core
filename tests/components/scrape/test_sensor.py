@@ -292,13 +292,13 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.ha_version")
-    assert state
-    assert state.state == "Current Version: 2021.12.10"
+        state = hass.states.get("sensor.ha_version")
+        assert state
+        assert state.state == "Current Version: 2021.12.10"
 
-    mocker.payload = "test_scrape_sensor_no_data"
-    async_fire_time_changed(hass, datetime.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+        mocker.payload = "test_scrape_sensor_no_data"
+        async_fire_time_changed(hass, datetime.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
     assert state is not None

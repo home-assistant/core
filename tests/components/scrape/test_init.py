@@ -61,14 +61,14 @@ async def test_setup_no_data_fails_with_recovery(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.ha_version")
-    assert state is None
+        state = hass.states.get("sensor.ha_version")
+        assert state is None
 
-    assert "Platform scrape not ready yet" in caplog.text
+        assert "Platform scrape not ready yet" in caplog.text
 
-    mocker.payload = "test_scrape_sensor"
-    async_fire_time_changed(hass, datetime.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+        mocker.payload = "test_scrape_sensor"
+        async_fire_time_changed(hass, datetime.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
     assert state.state == "Current Version: 2021.12.10"
