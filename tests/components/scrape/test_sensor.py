@@ -261,11 +261,11 @@ async def test_scrape_sensor_no_data(hass: HomeAssistant) -> None:
         "homeassistant.components.rest.RestData",
         return_value=mocker,
     ):
-        assert not await async_setup_component(hass, DOMAIN, config)
+        assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
-    assert state is None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:

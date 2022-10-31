@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.scrape.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -51,11 +52,11 @@ async def test_setup_no_data_fails(hass: HomeAssistant) -> None:
         "homeassistant.components.scrape.coordinator.RestData",
         return_value=MockRestData("test_scrape_sensor_no_data"),
     ):
-        assert not await async_setup_component(hass, DOMAIN, config)
+        assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
-    assert state is None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_setup_config_no_configuration(hass: HomeAssistant) -> None:
@@ -72,7 +73,7 @@ async def test_setup_config_no_configuration(hass: HomeAssistant) -> None:
 async def test_setup_config_no_sensors(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test setup from yaml with no configured sensors print warning and finalizes."""
+    """Test setup from yaml with no configured sensors finalize properly."""
     config = {
         DOMAIN: [
             {
@@ -94,6 +95,3 @@ async def test_setup_config_no_sensors(
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
-
-    assert "No sensors configured for https://www.address.com" in caplog.text
-    assert "No sensors configured for https://www.address2.com" in caplog.text
