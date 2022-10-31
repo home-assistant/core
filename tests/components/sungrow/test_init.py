@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.sungrow.config_flow import CannotConnect
-from homeassistant.components.sungrow.const import DOMAIN
+from homeassistant.components.sungrow.const import DAILY_POWER_YIELDS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -53,16 +53,15 @@ async def test_device_data(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         await hass.data[DOMAIN][entry.entry_id].async_refresh()
 
-        assert (
-            hass.data[DOMAIN][entry.entry_id].data["4990 ~ 4999 - Serial number"]
-            == inverter_data["4990 ~ 4999 - Serial number"]
-        )
+        sensor = hass.states.get("sensor.mock_title_yield_day")
+
+        assert sensor.state == str(inverter_data[DAILY_POWER_YIELDS])
 
         mock_client.assert_called_once()
 
 
 async def test_device_data_not_available(hass: HomeAssistant) -> None:
-    """Test device data."""
+    """Test device data not available."""
     with patch(
         "homeassistant.components.sungrow.SungrowData.update",
         side_effect=CannotConnect,
@@ -91,9 +90,9 @@ async def test_data_update(hass: HomeAssistant) -> None:
         await hass.data[DOMAIN][entry.entry_id].async_refresh()
 
         assert hass.data[DOMAIN][entry.entry_id].last_update_success is True
-        assert (
-            hass.data[DOMAIN][entry.entry_id].data["4990 ~ 4999 - Serial number"]
-            == inverter_data["4990 ~ 4999 - Serial number"]
-        )
+
+        sensor = hass.states.get("sensor.mock_title_yield_day")
+
+        assert sensor.state == str(inverter_data[DAILY_POWER_YIELDS])
 
         mock_client.assert_called_once()
