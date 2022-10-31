@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_EDITABLE,
-    ATTR_NOW,
     ATTR_TIME,
     CONF_ICON,
     CONF_ID,
@@ -57,7 +56,6 @@ def validate_set_datetime_attrs(config):
                 has_date_or_time_attr,
                 ATTR_DATETIME in config,
                 ATTR_TIMESTAMP in config,
-                ATTR_NOW in config,
             ]
         )
         > 1
@@ -197,16 +195,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Optional(ATTR_TIME): cv.time,
                     vol.Optional(ATTR_DATETIME): cv.datetime,
                     vol.Optional(ATTR_TIMESTAMP): vol.Coerce(float),
-                    vol.Optional(ATTR_NOW): cv.boolean,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
             cv.has_at_least_one_key(
-                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP, ATTR_NOW
+                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
             ),
             validate_set_datetime_attrs,
         ),
         "async_set_datetime",
+    )
+
+    component.async_register_entity_service(
+        "now",
+        {},
+        "async_now",
     )
 
     return True
@@ -399,13 +402,8 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_ID]
 
     @callback
-    def async_set_datetime(
-        self, date=None, time=None, datetime=None, timestamp=None, now=None
-    ):
+    def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
         """Set a new date / time."""
-        if now:
-            timestamp = py_datetime.datetime.utcnow().timestamp()
-
         if timestamp:
             datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
 
@@ -432,6 +430,13 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             date, time, dt_util.DEFAULT_TIME_ZONE
         )
         self.async_write_ha_state()
+
+    @callback
+    def async_now(self):
+        """Set date / time to now."""
+        now_timestamp = py_datetime.datetime.utcnow().timestamp()
+
+        self.async_set_datetime(timestamp=now_timestamp)
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""

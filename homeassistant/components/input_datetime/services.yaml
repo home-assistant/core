@@ -33,11 +33,12 @@ set_datetime:
           min: 0
           max: 9223372036854775807
           mode: box
-    now:
-      name: Now
-      description: The entity will be set to the current datetime.
-      selector:
-        boolean:
+now:
+  name: Now
+  description: This can be used to set the date and/or time to the current date and/or time.
+  target:
+    entity:
+      domain: input_datetime
 
 reload:
   name: Reload

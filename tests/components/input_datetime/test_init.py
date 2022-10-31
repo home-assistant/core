@@ -752,6 +752,83 @@ async def test_timestamp(hass):
     )
 
 
+async def test_now(hass):
+    """Test now service."""
+    hass.config.set_time_zone("UTC")
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_datetime_initial": {
+                    "has_time": True,
+                    "has_date": True,
+                    "initial": "2020-12-13 10:00:00",
+                },
+                "test_date_initial": {
+                    "has_time": False,
+                    "has_date": True,
+                    "initial": "2020-12-13",
+                },
+                "test_time_initial": {
+                    "has_time": True,
+                    "has_date": False,
+                    "initial": "10:00:00",
+                },
+            }
+        },
+    )
+
+    utc_now = datetime.datetime.utcnow()
+
+    # Test that setting to now on datetime works.
+    expected_min = utc_now - datetime.timedelta(seconds=1)
+    await hass.services.async_call(
+        DOMAIN,
+        "now",
+        {
+            ATTR_ENTITY_ID: "input_datetime.test_datetime_initial",
+        },
+        blocking=True,
+    )
+    state_datetime_updated = hass.states.get("input_datetime.test_datetime_initial")
+    date_datetime_updated = datetime.datetime.strptime(
+        state_datetime_updated.state, "%Y-%m-%d %H:%M:%S"
+    )
+    assert date_datetime_updated >= expected_min
+
+    # Test that setting to now on date works.
+    expected_min = utc_now - datetime.timedelta(days=1)
+    await hass.services.async_call(
+        DOMAIN,
+        "now",
+        {
+            ATTR_ENTITY_ID: "input_datetime.test_date_initial",
+        },
+        blocking=True,
+    )
+    state_date_updated = hass.states.get("input_datetime.test_date_initial")
+    date_date_updated = datetime.datetime.strptime(state_date_updated.state, "%Y-%m-%d")
+    assert date_date_updated >= expected_min
+
+    # Test that setting to now on time works.
+    expected_min = utc_now - datetime.timedelta(seconds=1)
+    await hass.services.async_call(
+        DOMAIN,
+        "now",
+        {
+            ATTR_ENTITY_ID: "input_datetime.test_time_initial",
+        },
+        blocking=True,
+    )
+    state_time_updated = hass.states.get("input_datetime.test_time_initial")
+    date_time_updated = datetime.datetime.strptime(
+        state_time_updated.state, "%H:%M:%S"
+    ).replace(year=utc_now.year, month=utc_now.month, day=utc_now.day)
+    assert date_time_updated >= expected_min
+
+
 @pytest.mark.parametrize(
     "config, error",
     [
