@@ -31,7 +31,7 @@ def _async_can_connect_factory(
     def _async_can_connect() -> bool:
         """Check if a given source can make another connection."""
         _LOGGER.debug(
-            "Checking if %s can connect, available=%s, ble_connections_free=%s",
+            "%s: Checking can connect, available=%s, ble_connections_free=%s",
             source,
             entry_data.available,
             entry_data.ble_connections_free,
@@ -55,7 +55,7 @@ async def async_connect_scanner(
     version = entry_data.device_info.bluetooth_proxy_version
     connectable = version >= 2
     _LOGGER.debug(
-        "Connecting scanner for %s, version=%s, connectable=%s",
+        "%s: Connecting scanner version=%s, connectable=%s",
         source,
         version,
         connectable,
