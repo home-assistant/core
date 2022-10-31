@@ -3,6 +3,8 @@ import asyncio
 from http import HTTPStatus
 
 import aiohttp
+import pytest
+import voluptuous
 
 from homeassistant.components.rest import DOMAIN
 import homeassistant.components.rest.switch as rest
@@ -19,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
@@ -35,16 +36,20 @@ PARAMS = None
 
 async def test_setup_missing_config(hass: HomeAssistant) -> None:
     """Test setup with configuration missing required entries."""
-    assert not await rest.async_setup_platform(hass, {CONF_PLATFORM: DOMAIN}, None)
+    with pytest.raises(voluptuous.MultipleInvalid):
+        await rest.async_setup_platform(
+            hass, rest.PLATFORM_SCHEMA({CONF_PLATFORM: DOMAIN}), None
+        )
 
 
 async def test_setup_missing_schema(hass: HomeAssistant) -> None:
     """Test setup with resource missing schema."""
-    assert not await rest.async_setup_platform(
-        hass,
-        {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "localhost"},
-        None,
-    )
+    with pytest.raises(voluptuous.MultipleInvalid):
+        await rest.async_setup_platform(
+            hass,
+            rest.PLATFORM_SCHEMA({CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "localhost"}),
+            None,
+        )
 
 
 async def test_setup_failed_connect(
@@ -54,7 +59,9 @@ async def test_setup_failed_connect(
     aioclient_mock.get("http://localhost", exc=aiohttp.ClientError)
     assert not await rest.async_setup_platform(
         hass,
-        {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
+        rest.PLATFORM_SCHEMA(
+            {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"}
+        ),
         None,
     )
 
@@ -66,7 +73,9 @@ async def test_setup_timeout(
     aioclient_mock.get("http://localhost", exc=asyncio.TimeoutError())
     assert not await rest.async_setup_platform(
         hass,
-        {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
+        rest.PLATFORM_SCHEMA(
+            {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"}
+        ),
         None,
     )
 
@@ -198,29 +207,27 @@ async def test_setup_with_templated_headers_params(
 
 
 def _setup_test_switch(hass: HomeAssistant) -> None:
-    body_on = Template("on", hass)
-    body_off = Template("off", hass)
-    headers = {"Content-type": Template(CONTENT_TYPE_JSON, hass)}
-    switch = rest.RestSwitch(
-        hass,
+    body_on = "on"
+    body_off = "off"
+    headers = {"Content-type": CONTENT_TYPE_JSON}
+    config = rest.PLATFORM_SCHEMA(
         {
-            CONF_NAME: Template(NAME, hass),
+            CONF_PLATFORM: "switch",
+            CONF_NAME: NAME,
             CONF_DEVICE_CLASS: DEVICE_CLASS,
             CONF_RESOURCE: RESOURCE,
             rest.CONF_STATE_RESOURCE: STATE_RESOURCE,
             rest.CONF_METHOD: METHOD,
             rest.CONF_HEADERS: headers,
-            rest.CONF_PARAMS: PARAMS,
             rest.CONF_BODY_ON: body_on,
             rest.CONF_BODY_OFF: body_off,
-            rest.CONF_IS_ON_TEMPLATE: None,
             rest.CONF_TIMEOUT: 10,
             rest.CONF_VERIFY_SSL: True,
-        },
-        None,
+        }
     )
+    switch = rest.RestSwitch(hass, config, None)
     switch.hass = hass
-    return switch, body_on, body_off
+    return switch, config[rest.CONF_BODY_ON], config[rest.CONF_BODY_OFF]
 
 
 def test_name(hass: HomeAssistant) -> None:
