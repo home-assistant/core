@@ -190,7 +190,7 @@ async def test_config_entry_accessory(
                                 "iid": 7,
                                 "perms": ["pr"],
                                 "type": "52",
-                                "value": "2022.11.0",
+                                "value": ANY,
                             },
                         ],
                         "iid": 1,

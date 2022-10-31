@@ -946,3 +946,162 @@ async def test_validation_grid_no_costs_tracking(
         "energy_sources": [[]],
         "device_consumption": [],
     }
+
+
+async def test_validation_water(
+    hass, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
+):
+    """Test validating water with sensors for energy and cost/compensation."""
+    mock_is_entity_recorded["sensor.water_cost_1"] = False
+    mock_is_entity_recorded["sensor.water_compensation_1"] = False
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_1",
+                    "stat_cost": "sensor.water_cost_1",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_2",
+                    "stat_cost": "sensor.water_cost_2",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_3",
+                    "stat_cost": "sensor.water_cost_2",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_4",
+                    "entity_energy_price": "sensor.water_price_1",
+                },
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_3",
+                    "entity_energy_price": "sensor.water_price_2",
+                },
+            ]
+        }
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "sensor.water_consumption_1",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "beers",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_2",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "ft³",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_3",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "m³",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_4",
+        "10.10",
+        {"unit_of_measurement": "beers", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.water_cost_2",
+        "10.10",
+        {"unit_of_measurement": "EUR/kWh", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.water_price_1",
+        "10.10",
+        {"unit_of_measurement": "EUR/m³", "state_class": "total_increasing"},
+    )
+    hass.states.async_set(
+        "sensor.water_price_2",
+        "10.10",
+        {"unit_of_measurement": "EUR/invalid", "state_class": "total_increasing"},
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [
+            [
+                {
+                    "type": "entity_unexpected_unit_water",
+                    "identifier": "sensor.water_consumption_1",
+                    "value": "beers",
+                },
+                {
+                    "type": "recorder_untracked",
+                    "identifier": "sensor.water_cost_1",
+                    "value": None,
+                },
+                {
+                    "type": "entity_not_defined",
+                    "identifier": "sensor.water_cost_1",
+                    "value": None,
+                },
+            ],
+            [],
+            [],
+            [
+                {
+                    "type": "entity_unexpected_device_class",
+                    "identifier": "sensor.water_consumption_4",
+                    "value": None,
+                },
+            ],
+            [
+                {
+                    "type": "entity_unexpected_unit_water_price",
+                    "identifier": "sensor.water_price_2",
+                    "value": "EUR/invalid",
+                },
+            ],
+        ],
+        "device_consumption": [],
+    }
+
+
+async def test_validation_water_no_costs_tracking(
+    hass, mock_energy_manager, mock_is_entity_recorded, mock_get_metadata
+):
+    """Test validating water with sensors without cost tracking."""
+    await mock_energy_manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "water",
+                    "stat_energy_from": "sensor.water_consumption_1",
+                    "stat_cost": None,
+                    "entity_energy_price": None,
+                    "number_energy_price": None,
+                },
+            ]
+        }
+    )
+    hass.states.async_set(
+        "sensor.water_consumption_1",
+        "10.10",
+        {
+            "device_class": "water",
+            "unit_of_measurement": "m³",
+            "state_class": "total_increasing",
+        },
+    )
+
+    assert (await validate.async_validate(hass)).as_dict() == {
+        "energy_sources": [[]],
+        "device_consumption": [],
+    }
