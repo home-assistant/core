@@ -432,7 +432,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 )
                 return self.finish_flow(
                     new_entry_data=entry_data,
-                    title=CONF_KNX_ROUTING.capitalize(),
+                    title=f"Routing as {_individual_address}",
                 )
 
         fields = {

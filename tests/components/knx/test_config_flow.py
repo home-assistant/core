@@ -114,7 +114,7 @@ async def test_routing_setup(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result3["type"] == FlowResultType.CREATE_ENTRY
-        assert result3["title"] == CONF_KNX_ROUTING.capitalize()
+        assert result3["title"] == "Routing as 1.1.110"
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
@@ -188,7 +188,7 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result3["type"] == FlowResultType.CREATE_ENTRY
-        assert result3["title"] == CONF_KNX_ROUTING.capitalize()
+        assert result3["title"] == "Routing as 1.1.110"
         assert result3["data"] == {
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
