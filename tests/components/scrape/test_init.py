@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.scrape.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -38,7 +37,9 @@ async def test_setup_config(hass: HomeAssistant) -> None:
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_setup_no_data_fails(hass: HomeAssistant) -> None:
+async def test_setup_no_data_fails(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setup entry no data fails."""
     config = {
         DOMAIN: [
@@ -49,14 +50,16 @@ async def test_setup_no_data_fails(hass: HomeAssistant) -> None:
     }
 
     with patch(
-        "homeassistant.components.scrape.coordinator.RestData",
+        "homeassistant.components.rest.RestData",
         return_value=MockRestData("test_scrape_sensor_no_data"),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
-    assert state.state == STATE_UNAVAILABLE
+    assert state is None
+
+    assert "Platform scrape not ready yet" in caplog.text
 
 
 async def test_setup_config_no_configuration(hass: HomeAssistant) -> None:

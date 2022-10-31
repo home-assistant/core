@@ -4,6 +4,8 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.scrape.sensor import SCAN_INTERVAL
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -248,7 +250,9 @@ async def test_scrape_sensor_authentication(hass: HomeAssistant) -> None:
     assert state2.state == "secret text"
 
 
-async def test_scrape_sensor_no_data(hass: HomeAssistant) -> None:
+async def test_scrape_sensor_no_data(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test Scrape sensor fails on no data."""
     config = {
         DOMAIN: return_integration_config(
@@ -265,7 +269,9 @@ async def test_scrape_sensor_no_data(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
-    assert state.state == STATE_UNAVAILABLE
+    assert state is None
+
+    assert "Platform scrape not ready yet" in caplog.text
 
 
 async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:

@@ -98,8 +98,6 @@ async def async_setup_platform(
 
         coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
         await coordinator.async_refresh()
-        if coordinator.data is None:
-            raise PlatformNotReady
 
         sensor_config = config
         template_config = vol.Schema(
@@ -110,6 +108,9 @@ async def async_setup_platform(
         coordinator = discovery_info["coordinator"]
         sensor_config = discovery_info["config"]
         template_config = sensor_config
+
+    if coordinator.data is None:
+        raise PlatformNotReady
 
     name: str = template_config[CONF_NAME]
     unique_id: str | None = template_config.get(CONF_UNIQUE_ID)
@@ -169,8 +170,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
-        if (raw_data := self.coordinator.data) is None:
-            return None
+        raw_data = self.coordinator.data
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
