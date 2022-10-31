@@ -1,7 +1,6 @@
 """A risco entity base class."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from pyrisco.common import Zone
@@ -68,17 +67,13 @@ class RiscoCloudZoneEntity(RiscoCloudEntity):
         self._zone = zone
         self._attr_name = name
         device_unique_id = zone_unique_id(self._risco, zone_id)
-        self._attr_unique_id = device_unique_id + suffix
+        self._attr_unique_id = f"{device_unique_id}{suffix}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_unique_id)},
             manufacturer="Risco",
             name=self._zone.name,
         )
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes."""
-        return {"zone_id": self._zone_id}
+        self._attr_extra_state_attributes = {"zone_id": zone_id}
 
     def _get_data_from_coordinator(self) -> None:
         self._zone = self.coordinator.data.zones[self._zone_id]
@@ -106,12 +101,13 @@ class RiscoLocalZoneEntity(Entity):
         self._zone = zone
         self._attr_name = name
         device_unique_id = f"{system_id}_zone_{zone_id}_local"
-        self._attr_unique_id = device_unique_id + suffix
+        self._attr_unique_id = f"{device_unique_id}{suffix}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_unique_id)},
             manufacturer="Risco",
             name=zone.name,
         )
+        self._attr_extra_state_attributes = {"zone_id": zone_id}
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
@@ -119,8 +115,3 @@ class RiscoLocalZoneEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, signal, self.async_write_ha_state)
         )
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes."""
-        return {"zone_id": self._zone_id}

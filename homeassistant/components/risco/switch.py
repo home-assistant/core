@@ -19,7 +19,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Risco alarm control panel."""
+    """Set up the Risco switch."""
     if is_local(config_entry):
         local_data: LocalData = hass.data[DOMAIN][config_entry.entry_id]
         async_add_entities(
@@ -36,7 +36,7 @@ async def async_setup_entry(
         )
 
 
-class RiscoCloudSwitch(SwitchEntity, RiscoCloudZoneEntity):
+class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
     """Representation of a bypass switch for a Risco cloud zone."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -72,7 +72,7 @@ class RiscoCloudSwitch(SwitchEntity, RiscoCloudZoneEntity):
         self.async_write_ha_state()
 
 
-class RiscoLocalSwitch(SwitchEntity, RiscoLocalZoneEntity):
+class RiscoLocalSwitch(RiscoLocalZoneEntity, SwitchEntity):
     """Representation of a bypass switch for a Risco local zone."""
 
     _attr_entity_category = EntityCategory.CONFIG

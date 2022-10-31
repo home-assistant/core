@@ -45,7 +45,7 @@ async def async_setup_entry(
         )
 
 
-class RiscoCloudBinarySensor(BinarySensorEntity, RiscoCloudZoneEntity):
+class RiscoCloudBinarySensor(RiscoCloudZoneEntity, BinarySensorEntity):
     """Representation of a Risco cloud zone as a binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
@@ -64,7 +64,7 @@ class RiscoCloudBinarySensor(BinarySensorEntity, RiscoCloudZoneEntity):
         return self._zone.triggered
 
 
-class RiscoLocalBinarySensor(BinarySensorEntity, RiscoLocalZoneEntity):
+class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
     """Representation of a Risco local zone as a binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
@@ -89,7 +89,7 @@ class RiscoLocalBinarySensor(BinarySensorEntity, RiscoLocalZoneEntity):
         return self._zone.triggered
 
 
-class RiscoLocalAlarmedBinarySensor(BinarySensorEntity, RiscoLocalZoneEntity):
+class RiscoLocalAlarmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
     """Representation whether a zone in Risco local is currently triggering an alarm."""
 
     _attr_should_poll = False
