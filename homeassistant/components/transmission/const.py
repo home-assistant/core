@@ -18,7 +18,7 @@ SUPPORTED_ORDER_MODES = {
         torrents, key=lambda t: t.ratio, reverse=True
     ),
 }
-
+CONF_ENTRY_ID = "entry_id"
 CONF_LIMIT = "limit"
 CONF_ORDER = "order"
 
