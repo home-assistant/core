@@ -1,4 +1,8 @@
 """Support for a State MQTT vacuum."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -11,15 +15,18 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     STATE_IDLE,
     STATE_PAUSED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps, json_loads
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
@@ -32,11 +39,12 @@ from ..const import (
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
+from ..models import ReceiveMessage
 from ..util import get_mqtt_data, valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
-SERVICE_TO_STRING = {
+SERVICE_TO_STRING: dict[VacuumEntityFeature, str] = {
     VacuumEntityFeature.START: "start",
     VacuumEntityFeature.PAUSE: "pause",
     VacuumEntityFeature.STOP: "stop",
@@ -52,7 +60,7 @@ SERVICE_TO_STRING = {
 STRING_TO_SERVICE = {v: k for k, v in SERVICE_TO_STRING.items()}
 
 
-DEFAULT_SERVICES = (
+DEFAULT_SERVICES: VacuumEntityFeature | int = (
     VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.RETURN_HOME
@@ -60,7 +68,7 @@ DEFAULT_SERVICES = (
     | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.CLEAN_SPOT
 )
-ALL_SERVICES = (
+ALL_SERVICES: VacuumEntityFeature | int = (
     DEFAULT_SERVICES
     | VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.LOCATE
@@ -72,7 +80,7 @@ BATTERY = "battery_level"
 FAN_SPEED = "fan_speed"
 STATE = "state"
 
-POSSIBLE_STATES = {
+POSSIBLE_STATES: dict[str, str] = {
     STATE_IDLE: STATE_IDLE,
     STATE_DOCKED: STATE_DOCKED,
     STATE_ERROR: STATE_ERROR,
@@ -147,8 +155,12 @@ DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE_MODERN.extend({}, extra=vol.REMOV
 
 
 async def async_setup_entity_state(
-    hass, config, async_add_entities, config_entry, discovery_data
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None,
+) -> None:
     """Set up a State MQTT Vacuum."""
     async_add_entities([MqttStateVacuum(hass, config, config_entry, discovery_data)])
 
@@ -159,20 +171,32 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    _supported_features: VacuumEntityFeature | int
+    _fan_speed_list: list[str]
+    _set_fan_speed_topic: str | None
+    _send_command_topic: str | None
+    _payloads: dict[str, Any]
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize the vacuum."""
-        self._state_attrs = {}
+        self._state_attrs: dict[str, Any] = {}
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_STATE
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
+        supported_feature_strings: list[str] = config[CONF_SUPPORTED_FEATURES]
         self._attr_supported_features = strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
@@ -193,21 +217,23 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             )
         }
 
-    def _update_state_attributes(self, payload):
+    def _update_state_attributes(self, payload: dict[str, Any]) -> None:
         """Update the entity state attributes."""
         self._state_attrs.update(payload)
         self._attr_fan_speed = self._state_attrs.get(FAN_SPEED, 0)
         self._attr_battery_level = max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        topics = {}
+        topics: dict[str, Any] = {}
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        def state_message_received(msg):
+        def state_message_received(msg: ReceiveMessage) -> None:
             """Handle state MQTT message."""
-            payload = json_loads(msg.payload)
+            raw_payload: Any = json_loads(msg.payload)
+            assert isinstance(raw_payload, dict)
+            payload: dict[str, Any] = raw_payload
             if STATE in payload and (
                 payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
             ):
@@ -218,7 +244,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._update_state_attributes(payload)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
-        if self._config.get(CONF_STATE_TOPIC):
+        if self._config.get(CONF_STATE_TOPIC) is not None:
             topics["state_position_topic"] = {
                 "topic": self._config.get(CONF_STATE_TOPIC),
                 "msg_callback": state_message_received,
@@ -229,14 +255,15 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self.hass, self._sub_state, topics
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Start the vacuum."""
         if self.supported_features & VacuumEntityFeature.START == 0:
             return None
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_START],
@@ -245,10 +272,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_ENCODING],
         )
 
-    async def async_pause(self):
+    async def async_pause(self) -> None:
         """Pause the vacuum."""
         if self.supported_features & VacuumEntityFeature.PAUSE == 0:
             return
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_PAUSE],
@@ -257,10 +285,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_ENCODING],
         )
 
-    async def async_stop(self, **kwargs):
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
         if self.supported_features & VacuumEntityFeature.STOP == 0:
             return
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_STOP],
@@ -269,12 +298,13 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_ENCODING],
         )
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if (self.supported_features & VacuumEntityFeature.FAN_SPEED == 0) or (
             fan_speed not in self.fan_speed_list
         ):
             return
+        assert self._set_fan_speed_topic is not None
         await self.async_publish(
             self._set_fan_speed_topic,
             fan_speed,
@@ -283,10 +313,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_ENCODING],
         )
 
-    async def async_return_to_base(self, **kwargs):
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Tell the vacuum to return to its dock."""
         if self.supported_features & VacuumEntityFeature.RETURN_HOME == 0:
             return
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_RETURN_TO_BASE],
@@ -295,10 +326,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_ENCODING],
         )
 
-    async def async_clean_spot(self, **kwargs):
+    async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         if self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0:
             return
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_CLEAN_SPOT],
@@ -307,10 +339,11 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_ENCODING],
         )
 
-    async def async_locate(self, **kwargs):
+    async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum (usually by playing a song)."""
         if self.supported_features & VacuumEntityFeature.LOCATE == 0:
             return
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._config[CONF_PAYLOAD_LOCATE],
@@ -319,19 +352,26 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._config[CONF_ENCODING],
         )
 
-    async def async_send_command(self, command, params=None, **kwargs):
+    async def async_send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Send a command to a vacuum cleaner."""
+        payload: str
         if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
             return
-        if params:
-            message = {"command": command}
+        if isinstance(params, dict):
+            message: dict[str, Any] = {"command": command}
             message.update(params)
-            message = json_dumps(message)
+            payload = json_dumps(message)
         else:
-            message = command
+            payload = command
+        assert self._send_command_topic is not None
         await self.async_publish(
             self._send_command_topic,
-            message,
+            payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
