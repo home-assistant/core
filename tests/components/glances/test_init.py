@@ -21,7 +21,6 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state == ConfigEntryState.LOADED
-    assert hass.data[DOMAIN][entry.entry_id]
 
 
 async def test_conn_error(hass: HomeAssistant, mock_api: MagicMock) -> None:

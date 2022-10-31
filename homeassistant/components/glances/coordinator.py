@@ -18,13 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Get the latest data from Glances api."""
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: Glances
-    ) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: Glances) -> None:
         """Initialize the Glances data."""
         self.hass = hass
-        self.config_entry: ConfigEntry = config_entry
-        self.host: str = self.config_entry.data[CONF_HOST]
+        self.config_entry = entry
+        self.host: str = entry.data[CONF_HOST]
         self.api = api
         super().__init__(
             hass,

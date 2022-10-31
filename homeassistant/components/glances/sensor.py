@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
     CONF_NAME,
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
@@ -33,11 +32,18 @@ from .const import CPU_ICON, DOMAIN
 
 
 @dataclass
-class GlancesSensorEntityDescription(SensorEntityDescription):
-    """Describe Glances sensor entity."""
+class GlancesSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
 
-    type: str = ""
-    name_suffix: str | None = None
+    type: str
+    name_suffix: str
+
+
+@dataclass
+class GlancesSensorEntityDescription(
+    SensorEntityDescription, GlancesSensorEntityDescriptionMixin
+):
+    """Describe Glances sensor entity."""
 
 
 SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
@@ -339,7 +345,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Glances",
-            name=name or coordinator.config_entry.data[CONF_HOST],
+            name=name or coordinator.host,
         )
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
 

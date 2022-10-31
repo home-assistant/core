@@ -41,8 +41,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def get_api(hass: HomeAssistant, entry: dict[str, Any]) -> Glances:
     """Return the api from glances_api."""
-    params = entry.copy()
-    params.pop(CONF_NAME, None)
-    verify_ssl = params.pop(CONF_VERIFY_SSL, True)
-    httpx_client = get_async_client(hass, verify_ssl=verify_ssl)
-    return Glances(httpx_client=httpx_client, **params)
+    entry.pop(CONF_NAME, None)
+    httpx_client = get_async_client(hass, verify_ssl=entry[CONF_VERIFY_SSL])
+    return Glances(httpx_client=httpx_client, **entry)

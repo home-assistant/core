@@ -7,11 +7,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import glances
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_FORM,
-    FlowResultType,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_USER_INPUT
 
@@ -54,7 +50,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_api: MagicMock) -> 
         result["flow_id"], user_input=MOCK_USER_INPUT
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -69,5 +65,5 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_INPUT
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
