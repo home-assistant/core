@@ -169,7 +169,8 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
-        raw_data = self.coordinator.data
+        if (raw_data := self.coordinator.data) is None:
+            return None
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
