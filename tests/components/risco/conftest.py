@@ -70,7 +70,10 @@ def events():
 def cloud_config_entry(hass, options):
     """Fixture for a cloud config entry."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=TEST_CLOUD_CONFIG, options=options
+        domain=DOMAIN,
+        data=TEST_CLOUD_CONFIG,
+        options=options,
+        unique_id=TEST_CLOUD_CONFIG[CONF_USERNAME],
     )
     config_entry.add_to_hass(hass)
     return config_entry
