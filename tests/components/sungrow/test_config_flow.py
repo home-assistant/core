@@ -94,7 +94,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_validate_input(hass: HomeAssistant) -> None:
-    """Test Input validation with valid auth."""
+    """Test Input validation with valid address."""
     with patch(
         "homeassistant.components.sungrow.config_flow.Client", return_value=MockClient
     ):
