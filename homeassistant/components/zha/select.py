@@ -300,7 +300,7 @@ class MoesBacklightMode(types.enum8):
     },
 )
 class MoesBacklightModeSelectEntity(ZCLEnumSelectEntity, id_suffix="backlight_mode"):
-    """Moes devices have a diferent backlight mode select options."""
+    """Moes devices have a different backlight mode select options."""
 
     _select_attr = "backlight_mode"
     _enum = MoesBacklightMode
