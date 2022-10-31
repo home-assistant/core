@@ -1147,7 +1147,7 @@ pyinsteon==1.2.0
 pyipma==3.0.5
 
 # homeassistant.components.ipp
-pyipp==0.12.0
+pyipp==0.12.1
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
