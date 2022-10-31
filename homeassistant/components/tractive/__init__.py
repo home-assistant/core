@@ -217,8 +217,8 @@ class TractiveClient:
                         self._send_position_update(event)
             except aiotractive.exceptions.UnauthorizedError:
                 self._config_entry.async_start_reauth(self._hass)
-                asyncio.create_task(self.unsubscribe())
-                _LOGGER.error(
+                await self.unsubscribe()
+                _LOGGER.exception(
                     "Authentication failed for %s, try reconfiguring device",
                     self._config_entry.data[CONF_EMAIL],
                 )
