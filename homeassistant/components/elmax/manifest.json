@@ -7,5 +7,5 @@
   "codeowners": ["@albertogeniola"],
   "iot_class": "cloud_polling",
   "loggers": ["elmax_api"],
-  "zeroconf": ["VideoBox._elmax._tcp.local."]
+  "zeroconf": ["_elmax._tcp.local."]
 }

@@ -38,6 +38,12 @@
                     "panel_pin": "PIN Code"
                 },
                 "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured."
+            },
+            "zeroconf_setup": {
+                "data": {
+                    "panel_pin": "Panel PIN code"
+                },
+                "description": "Configure discovered local Elmax panel"
             }
         }
     }
