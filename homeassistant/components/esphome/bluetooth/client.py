@@ -201,6 +201,11 @@ class ESPHomeClient(BaseBleakClient):
                 connected_future.set_exception(BleakError("Disconnected"))
                 return
 
+            _LOGGER.debug(
+                "%s - %s: connected, registering for disconnected callbacks",
+                self._ble_device.name,
+                self._ble_device.address,
+            )
             self.entry_data.disconnect_callbacks.append(self._async_esp_disconnected)
             connected_future.set_result(connected)
 
