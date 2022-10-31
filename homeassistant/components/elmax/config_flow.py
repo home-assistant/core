@@ -140,19 +140,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         client = ElmaxLocal(panel_api_url=client_api_url, panel_code=panel_pin)
         await client.login()
         # Retrieve the current panel status. If this succeeds, it means the
-        # setup did complete successfully. At the moment the local-api
-        # does not expose the Panel ID, so there is no way to get it.
-        # When such feature is added at the lower API level, we might take
-        # the panel ID and store it as ELMAX_PANEL_ID within async_create_entry data.
-        await client.get_current_panel_status()
-
+        # setup did complete successfully.
+        status = await client.get_current_panel_status()
         return await self._check_unique_and_create_entry(
-            unique_id=client_api_url,
+            unique_id=status.panel_id,
             title=f"Elmax Direct {client_api_url}",
             data={
                 CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT,
                 CONF_ELMAX_MODE_DIRECT_URI: client_api_url,
                 CONF_ELMAX_PANEL_PIN: panel_pin,
+                CONF_ELMAX_PANEL_ID: status.panel_id,
             },
         )
 
@@ -200,13 +197,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
             return self.async_show_form(
                 step_id="zeroconf_setup",
-                data_schema=DIRECT_SETUP_SCHEMA,
+                data_schema=ZEROCONF_SETUP_SCHEMA,
                 errors={"base": "network_error"},
             )
         except ElmaxBadLoginError:
             return self.async_show_form(
                 step_id="zeroconf_setup",
-                data_schema=DIRECT_SETUP_SCHEMA,
+                data_schema=ZEROCONF_SETUP_SCHEMA,
                 errors={"base": "invalid_auth"},
             )
 
