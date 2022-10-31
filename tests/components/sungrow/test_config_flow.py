@@ -5,7 +5,7 @@ from homeassistant import config_entries
 from homeassistant.components.sungrow.config_flow import validate_input
 from homeassistant.components.sungrow.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import MockClient, MockClientNoConnection
 
@@ -15,7 +15,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -33,7 +33,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sungrow A1234567890"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -47,7 +47,7 @@ async def test_form_defaults(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
@@ -64,7 +64,7 @@ async def test_form_defaults(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sungrow A1234567890"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -89,7 +89,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
