@@ -15,5 +15,15 @@
       "update_channel": "Update Channel",
       "version_api": "Version API"
     }
+  },
+  "issues": {
+    "unhealthy": {
+      "title": "Unhealthy system - {reason}",
+      "description": "System is currently unhealthy due to '{reason}'. Use the link to learn more about what is wrong and how to fix it."
+    },
+    "unsupported": {
+      "title": "Unsupported system - {reason}",
+      "description": "System is unsupported due to '{reason}'. Use the link to learn more about what this means and how to return to a supported system."
+    }
   }
 }
