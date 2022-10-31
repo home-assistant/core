@@ -24,6 +24,24 @@ from homeassistant.const import (
 
 DOMAIN = "sungrow"
 
+SERIAL_NUMBER = "4990 ~ 4999 - Serial number"
+TOTAL_ACTIVE_POWER = "5031 - Total active power"
+TOTAL_DC_POWER = "5017 - Total DC power"
+PHASE_A_VOLTAGE = "5019 - Phase A voltage"
+PHASE_B_VOLTAGE = "5020 - Phase B voltage"
+PHASE_C_VOLTAGE = "5021 - Phase C voltage"
+PHASE_A_CURRENT = "5022 - Phase A current"
+PHASE_B_CURRENT = "5023 - Phase B current"
+PHASE_C_CURRENT = "5024 - Phase C current"
+DAILY_POWER_YIELDS = "5003 - Daily power yields"
+TOTAL_POWER_YIELDS = "5144 - Total power yields"
+DAILY_RUNNING_TIME = "5113 - Daily running time"
+TOTAL_RUNNING_TIME = "5006 - Total running time"
+NOMINAL_ACTIVE_POWER = "5001 - Nominal active power"
+POWER_FACTOR = "5035 - Power factor"
+GRID_FREQUENCY = "5036 - Grid frequency"
+ALTERNATOR_LOSS = "alternator_loss"
+
 
 @dataclass
 class SungrowSensorEntityDescription(SensorEntityDescription):
@@ -35,7 +53,7 @@ class SungrowSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     # '5031 - Total active power'
     SungrowSensorEntityDescription(
-        key="5031 - Total active power",
+        key=TOTAL_ACTIVE_POWER,
         name="power AC",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
@@ -43,7 +61,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5017 - Total DC power'
     SungrowSensorEntityDescription(
-        key="5017 - Total DC power",
+        key=TOTAL_DC_POWER,
         name="power DC",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
@@ -51,7 +69,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5019 - Phase A voltage'
     SungrowSensorEntityDescription(
-        key="5019 - Phase A voltage",
+        key=PHASE_A_VOLTAGE,
         name="voltage AC1",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -59,7 +77,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5020 - Phase B voltage'
     SungrowSensorEntityDescription(
-        key="5020 - Phase B voltage",
+        key=PHASE_B_VOLTAGE,
         name="voltage AC2",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -67,7 +85,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5021 - Phase C voltage'
     SungrowSensorEntityDescription(
-        key="5021 - Phase C voltage",
+        key=PHASE_C_VOLTAGE,
         name="voltage AC3",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -75,7 +93,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5022 - Phase A current'
     SungrowSensorEntityDescription(
-        key="5022 - Phase A current",
+        key=PHASE_A_CURRENT,
         name="current AC1",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -83,7 +101,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5023 - Phase B current'
     SungrowSensorEntityDescription(
-        key="5023 - Phase B current",
+        key=PHASE_B_CURRENT,
         name="current AC2",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -91,7 +109,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5024 - Phase C current'
     SungrowSensorEntityDescription(
-        key="5024 - Phase C current",
+        key=PHASE_C_CURRENT,
         name="current AC3",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=SensorDeviceClass.CURRENT,
@@ -99,7 +117,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5003 - Daily power yields'
     SungrowSensorEntityDescription(
-        key="5003 - Daily power yields",
+        key=DAILY_POWER_YIELDS,
         name="yield day",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
@@ -108,7 +126,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5144 - Total power yields'
     SungrowSensorEntityDescription(
-        key="5144 - Total power yields",
+        key=TOTAL_POWER_YIELDS,
         name="yield total",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
@@ -118,7 +136,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5113 - Daily running time'
     SungrowSensorEntityDescription(
-        key="5113 - Daily running time",
+        key=DAILY_RUNNING_TIME,
         name="running time today",
         icon="mdi:solar-power",
         native_unit_of_measurement=TIME_MINUTES,
@@ -127,7 +145,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5006 - Total running time'
     SungrowSensorEntityDescription(
-        key="5006 - Total running time",
+        key=TOTAL_RUNNING_TIME,
         name="running time total",
         icon="mdi-clock-start",
         native_unit_of_measurement=TIME_HOURS,
@@ -137,7 +155,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5001 - Nominal active power'
     SungrowSensorEntityDescription(
-        key="5001 - Nominal active power",
+        key=NOMINAL_ACTIVE_POWER,
         name="installed peak power",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_KILO_WATT,
@@ -145,7 +163,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5017 - Total DC power' - '5031 - Total active power'
     SungrowSensorEntityDescription(
-        key="alternator_loss",
+        key=ALTERNATOR_LOSS,
         name="alternator loss",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
@@ -154,7 +172,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5035 - Power factor'
     SungrowSensorEntityDescription(
-        key="5035 - Power factor",
+        key=POWER_FACTOR,
         name="power factor",
         icon="mdi-gauge",
         native_unit_of_measurement=PERCENTAGE,
@@ -164,7 +182,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     ),
     # '5036 - Grid frequency'
     SungrowSensorEntityDescription(
-        key="5036 - Grid frequency",
+        key=GRID_FREQUENCY,
         name="net frequency",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
