@@ -1,4 +1,9 @@
 """Support for Legacy MQTT vacuum."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -8,18 +13,27 @@ from homeassistant.components.vacuum import (
     VacuumEntity,
     VacuumEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
 from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
-from ..models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
+from ..models import (
+    MqttValueTemplate,
+    PayloadSentinel,
+    PublishPayloadType,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from ..util import get_mqtt_data, valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
@@ -92,6 +106,8 @@ DEFAULT_PAYLOAD_TURN_ON = "turn_on"
 DEFAULT_RETAIN = False
 DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES, SERVICE_TO_STRING)
 
+TEMPLATE_ERROR = "{#TEMPLATE_ERROR#}"
+
 MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED = MQTT_VACUUM_ATTRIBUTES_BLOCKED | frozenset(
     {ATTR_STATUS}
 )
@@ -159,8 +175,12 @@ DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY_MODERN.extend(
 
 
 async def async_setup_entity_legacy(
-    hass, config, async_add_entities, config_entry, discovery_data
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType | None,
+) -> None:
     """Set up a MQTT Vacuum Legacy."""
     async_add_entities([MqttVacuum(hass, config, config_entry, discovery_data)])
 
@@ -171,24 +191,41 @@ class MqttVacuum(MqttEntity, VacuumEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED
 
-    def __init__(self, hass, config, config_entry, discovery_data):
+    _encoding: str | None
+    _fan_speed_list: list[str]
+    _qos: bool
+    _retain: bool
+    _payloads: dict[str, str]
+    _send_command_topic: str | None
+    _set_fan_speed_topic: str | None
+    _state_topics: dict[str, Any]
+    _templates: dict[str, Callable[..., ReceivePayloadType]]
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        config_entry: ConfigEntry,
+        discovery_data: DiscoveryInfoType | None,
+    ) -> None:
         """Initialize the vacuum."""
         self._attr_battery_level = 0
         self._attr_is_on = False
         self._attr_fan_speed = "unknown"
 
-        self._charging = False
-        self._docked = False
-        self._error = None
+        self._charging: bool = False
+        self._cleaning: bool = False
+        self._docked: bool = False
+        self._error: str | None = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema():
+    def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_LEGACY
 
-    def _setup_from_config(self, config):
+    def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
         self._attr_supported_features = strings_to_services(
@@ -204,7 +241,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._send_command_topic = config.get(CONF_SEND_COMMAND_TOPIC)
 
         self._payloads = {
-            key: config.get(key)
+            key: config[key]
             for key in (
                 CONF_PAYLOAD_TURN_ON,
                 CONF_PAYLOAD_TURN_OFF,
@@ -227,7 +264,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             )
         }
         self._templates = {
-            key: config.get(key)
+            key: MqttValueTemplate(
+                config[key], entity=self
+            ).async_render_with_possible_json_value
             for key in (
                 CONF_BATTERY_LEVEL_TEMPLATE,
                 CONF_CHARGING_TEMPLATE,
@@ -236,13 +275,11 @@ class MqttVacuum(MqttEntity, VacuumEntity):
                 CONF_ERROR_TEMPLATE,
                 CONF_FAN_SPEED_TEMPLATE,
             )
+            if key in config
         }
 
-    def _prepare_subscribe_topics(self):
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        for tpl in self._templates.values():
-            if tpl is not None:
-                tpl = MqttValueTemplate(tpl, entity=self)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -250,23 +287,19 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             """Handle new MQTT message."""
             if (
                 msg.topic == self._state_topics[CONF_BATTERY_LEVEL_TOPIC]
-                and self._templates[CONF_BATTERY_LEVEL_TEMPLATE]
+                and CONF_BATTERY_LEVEL_TEMPLATE in self._config
             ):
-                battery_level = self._templates[
+                battery_level: ReceivePayloadType = self._templates[
                     CONF_BATTERY_LEVEL_TEMPLATE
-                ].async_render_with_possible_json_value(
-                    msg.payload, PayloadSentinel.DEFAULT
-                )
+                ](msg.payload, PayloadSentinel.DEFAULT)
                 if battery_level and battery_level is not PayloadSentinel.DEFAULT:
                     self._attr_battery_level = max(0, min(100, int(battery_level)))
 
             if (
                 msg.topic == self._state_topics[CONF_CHARGING_TOPIC]
-                and self._templates[CONF_CHARGING_TEMPLATE]
+                and CONF_CHARGING_TEMPLATE in self._config
             ):
-                charging = self._templates[
-                    CONF_CHARGING_TEMPLATE
-                ].async_render_with_possible_json_value(
+                charging = self._templates[CONF_CHARGING_TEMPLATE](
                     msg.payload, PayloadSentinel.DEFAULT
                 )
                 if charging and charging is not PayloadSentinel.DEFAULT:
@@ -274,11 +307,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
             if (
                 msg.topic == self._state_topics[CONF_CLEANING_TOPIC]
-                and self._templates[CONF_CLEANING_TEMPLATE]
+                and CONF_CLEANING_TEMPLATE in self._config
             ):
-                cleaning = self._templates[
-                    CONF_CLEANING_TEMPLATE
-                ].async_render_with_possible_json_value(
+                cleaning = self._templates[CONF_CLEANING_TEMPLATE](
                     msg.payload, PayloadSentinel.DEFAULT
                 )
                 if cleaning and cleaning is not PayloadSentinel.DEFAULT:
@@ -286,11 +317,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
             if (
                 msg.topic == self._state_topics[CONF_DOCKED_TOPIC]
-                and self._templates[CONF_DOCKED_TEMPLATE]
+                and CONF_DOCKED_TEMPLATE in self._config
             ):
-                docked = self._templates[
-                    CONF_DOCKED_TEMPLATE
-                ].async_render_with_possible_json_value(
+                docked = self._templates[CONF_DOCKED_TEMPLATE](
                     msg.payload, PayloadSentinel.DEFAULT
                 )
                 if docked and docked is not PayloadSentinel.DEFAULT:
@@ -298,11 +327,9 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
             if (
                 msg.topic == self._state_topics[CONF_ERROR_TOPIC]
-                and self._templates[CONF_ERROR_TEMPLATE]
+                and CONF_ERROR_TEMPLATE in self._config
             ):
-                error = self._templates[
-                    CONF_ERROR_TEMPLATE
-                ].async_render_with_possible_json_value(
+                error = self._templates[CONF_ERROR_TEMPLATE](
                     msg.payload, PayloadSentinel.DEFAULT
                 )
                 if error is not PayloadSentinel.DEFAULT:
@@ -322,15 +349,13 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
             if (
                 msg.topic == self._state_topics[CONF_FAN_SPEED_TOPIC]
-                and self._templates[CONF_FAN_SPEED_TEMPLATE]
+                and CONF_FAN_SPEED_TEMPLATE in self._config
             ):
-                fan_speed = self._templates[
+                fan_speed: ReceivePayloadType | None = self._templates[
                     CONF_FAN_SPEED_TEMPLATE
-                ].async_render_with_possible_json_value(
-                    msg.payload, PayloadSentinel.DEFAULT
-                )
+                ](msg.payload, PayloadSentinel.DEFAULT)
                 if fan_speed and fan_speed is not PayloadSentinel.DEFAULT:
-                    self._attr_fan_speed = fan_speed
+                    self._attr_fan_speed = str(fan_speed)
 
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
@@ -349,12 +374,12 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             },
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def battery_icon(self):
+    def battery_icon(self) -> str:
         """Return the battery icon for the vacuum cleaner.
 
         No need to check VacuumEntityFeature.BATTERY, this won't be called if battery_level is None.
@@ -363,26 +388,27 @@ class MqttVacuum(MqttEntity, VacuumEntity):
             battery_level=self.battery_level, charging=self._charging
         )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
         if self.supported_features & VacuumEntityFeature.TURN_ON == 0:
             return
-
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_TURN_ON],
-            self._qos,
-            self._retain,
-            self._encoding,
+            qos=self._qos,
+            retain=self._retain,
+            encoding=self._encoding,
         )
         self._attr_status = "Cleaning"
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the vacuum off."""
         if self.supported_features & VacuumEntityFeature.TURN_OFF == 0:
             return None
 
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_TURN_OFF],
@@ -393,11 +419,12 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._attr_status = "Turning Off"
         self.async_write_ha_state()
 
-    async def async_stop(self, **kwargs):
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
         if self.supported_features & VacuumEntityFeature.STOP == 0:
             return None
 
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_STOP],
@@ -408,11 +435,12 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._attr_status = "Stopping the current task"
         self.async_write_ha_state()
 
-    async def async_clean_spot(self, **kwargs):
+    async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         if self.supported_features & VacuumEntityFeature.CLEAN_SPOT == 0:
             return None
 
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_CLEAN_SPOT],
@@ -423,11 +451,12 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._attr_status = "Cleaning spot"
         self.async_write_ha_state()
 
-    async def async_locate(self, **kwargs):
+    async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum (usually by playing a song)."""
         if self.supported_features & VacuumEntityFeature.LOCATE == 0:
             return None
 
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_LOCATE],
@@ -438,11 +467,12 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._attr_status = "Hi, I'm over here!"
         self.async_write_ha_state()
 
-    async def async_start_pause(self, **kwargs):
+    async def async_start_pause(self, **kwargs: Any) -> None:
         """Start, pause or resume the cleaning task."""
         if self.supported_features & VacuumEntityFeature.PAUSE == 0:
             return None
 
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_START_PAUSE],
@@ -453,11 +483,12 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._attr_status = "Pausing/Resuming cleaning..."
         self.async_write_ha_state()
 
-    async def async_return_to_base(self, **kwargs):
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Tell the vacuum to return to its dock."""
         if self.supported_features & VacuumEntityFeature.RETURN_HOME == 0:
             return None
 
+        assert self._command_topic is not None
         await self.async_publish(
             self._command_topic,
             self._payloads[CONF_PAYLOAD_RETURN_TO_BASE],
@@ -468,13 +499,14 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._attr_status = "Returning home..."
         self.async_write_ha_state()
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if (
             self.supported_features & VacuumEntityFeature.FAN_SPEED == 0
         ) or fan_speed not in self.fan_speed_list:
             return None
 
+        assert self._set_fan_speed_topic is not None
         await self.async_publish(
             self._set_fan_speed_topic,
             fan_speed,
@@ -485,22 +517,29 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         self._attr_status = f"Setting fan to {fan_speed}..."
         self.async_write_ha_state()
 
-    async def async_send_command(self, command, params=None, **kwargs):
+    async def async_send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Send a command to a vacuum cleaner."""
+        message_payload: PublishPayloadType
         if self.supported_features & VacuumEntityFeature.SEND_COMMAND == 0:
             return
         if params:
-            message = {"command": command}
+            message: dict[str, Any] = {"command": command}
             message.update(params)
-            message = json_dumps(message)
+            message_payload = json_dumps(message)
         else:
-            message = command
+            message_payload = command
+        assert self._send_command_topic is not None
         await self.async_publish(
             self._send_command_topic,
-            message,
+            message_payload,
             self._qos,
             self._retain,
             self._encoding,
         )
-        self._attr_status = f"Sending command {message}..."
+        self._attr_status = f"Sending command {message_payload}..."
         self.async_write_ha_state()

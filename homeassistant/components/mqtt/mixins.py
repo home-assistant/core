@@ -1107,7 +1107,7 @@ class MqttEntity(
         payload: PublishPayloadType,
         qos: int = 0,
         retain: bool = False,
-        encoding: str = DEFAULT_ENCODING,
+        encoding: str | None = DEFAULT_ENCODING,
     ) -> None:
         """Publish message to an MQTT topic."""
         log_message(self.hass, self.entity_id, topic, payload, qos, retain)
