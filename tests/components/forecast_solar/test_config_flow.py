@@ -87,7 +87,7 @@ async def test_options_flow_invalid_api(
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_api_key"}
+    assert result2["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
 async def test_options_flow(
@@ -161,6 +161,7 @@ async def test_options_flow_without_key(
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("data") == {
+        CONF_API_KEY: None,
         CONF_DECLINATION: 21,
         CONF_AZIMUTH: 22,
         CONF_MODULES_POWER: 2122,

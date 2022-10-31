@@ -21,6 +21,8 @@ from .const import (
     DOMAIN,
 )
 
+RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
+
 
 class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Forecast.Solar."""
@@ -85,26 +87,20 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def validate_input(self, user_input: dict[str, Any]) -> str | None:
-        """Validate the input from the config options flow."""
-        if user_input.get(CONF_API_KEY):
-            api_key = user_input[CONF_API_KEY]
-            if not re.match("[a-zA-Z0-9]{16}", api_key):
-                raise Exception("invalid_api_key")
-        return None
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            try:
-                await self.validate_input(user_input)
-            except Exception as error:  # pylint: disable=broad-except
-                errors["base"] = str(error)
+            if (api_key := user_input.get(CONF_API_KEY)) and RE_API_KEY.match(
+                api_key
+            ) is None:
+                errors[CONF_API_KEY] = "invalid_api_key"
             else:
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(
+                    title="", data=user_input | {CONF_API_KEY: api_key or None}
+                )
 
         return self.async_show_form(
             step_id="init",
