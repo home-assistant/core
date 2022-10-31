@@ -28,10 +28,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 NAME = "foo"
 DEVICE_CLASS = SwitchDeviceClass.SWITCH
-METHOD = "post"
 RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
-PARAMS = None
 
 
 async def test_setup_missing_config(hass: HomeAssistant) -> None:
@@ -207,8 +205,6 @@ async def test_setup_with_templated_headers_params(
 
 
 def _setup_test_switch(hass: HomeAssistant) -> None:
-    body_on = "on"
-    body_off = "off"
     headers = {"Content-type": CONTENT_TYPE_JSON}
     config = rest.PLATFORM_SCHEMA(
         {
@@ -217,12 +213,7 @@ def _setup_test_switch(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: DEVICE_CLASS,
             CONF_RESOURCE: RESOURCE,
             rest.CONF_STATE_RESOURCE: STATE_RESOURCE,
-            rest.CONF_METHOD: METHOD,
             rest.CONF_HEADERS: headers,
-            rest.CONF_BODY_ON: body_on,
-            rest.CONF_BODY_OFF: body_off,
-            rest.CONF_TIMEOUT: 10,
-            rest.CONF_VERIFY_SSL: True,
         }
     )
     switch = rest.RestSwitch(hass, config, None)
