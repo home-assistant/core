@@ -1790,7 +1790,7 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.9.4
+yalexs-ble==1.9.5
 
 # homeassistant.components.august
 yalexs==1.2.6
