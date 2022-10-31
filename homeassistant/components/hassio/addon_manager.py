@@ -302,7 +302,7 @@ class AddonManager:
         self,
         addon_config: dict[str, Any],
     ) -> None:
-        """Configure and start manager add-on."""
+        """Configure the manager add-on, if needed."""
         addon_info = await self.async_get_addon_info()
 
         if addon_info.state is AddonState.NOT_INSTALLED:
