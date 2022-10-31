@@ -86,9 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     config,
                 )
             )
-    print(refresh_coroutines)
-    print(load_coroutines)
-    print(config)
+
     if refresh_coroutines:
         await asyncio.gather(*refresh_coroutines)
 
