@@ -81,8 +81,9 @@ _PORT_SELECTOR = vol.All(
 class KNXCommonFlow(ABC, FlowHandler):
     """Base class for KNX flows."""
 
-    def __init__(self) -> None:
+    def __init__(self, initial_data: KNXConfigEntryData) -> None:
         """Initialize KNXCommonFlow."""
+        self.initial_data = initial_data
         self._found_gateways: list[GatewayDescriptor] = []
         self._found_tunnels: list[GatewayDescriptor] = []
         self._selected_tunnel: GatewayDescriptor | None = None
@@ -240,16 +241,12 @@ class KNXCommonFlow(ABC, FlowHandler):
             CONF_KNX_LABEL_TUNNELING_TCP,
             CONF_KNX_LABEL_TUNNELING_TCP_SECURE,
         ]
-        ip_address = user_input[CONF_HOST] if user_input else ""
-        port = user_input[CONF_PORT] if user_input else DEFAULT_MCAST_PORT
-        default_type = (
-            user_input[CONF_KNX_TUNNELING_TYPE]
-            if user_input
-            # if no tunnel was found, default route_back to avoid NAT issues
-            else CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
-        )
-        if not user_input and self._selected_tunnel is not None:
-            # default to first found tunnel for first attempt
+
+        if (  # initial attempt on ConfigFlow
+            isinstance(self, ConfigFlow)
+            and not user_input
+            and self._selected_tunnel is not None
+        ):  # default to first found tunnel
             ip_address = self._selected_tunnel.ip_addr
             port = self._selected_tunnel.port
             if self._selected_tunnel.tunnelling_requires_secure:
@@ -258,6 +255,27 @@ class KNXCommonFlow(ABC, FlowHandler):
                 default_type = CONF_KNX_LABEL_TUNNELING_TCP
             else:
                 default_type = CONF_KNX_LABEL_TUNNELING_UDP
+        else:  # OptionFlow, no tunnel discovered or user input
+            ip_address = (
+                user_input[CONF_HOST]
+                if user_input
+                else self.initial_data.get(CONF_HOST)
+            )
+            port = (
+                user_input[CONF_PORT]
+                if user_input
+                else self.initial_data.get(CONF_PORT, DEFAULT_MCAST_PORT)
+            )
+            _initial_connection_type = self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
+            default_type = (
+                user_input[CONF_KNX_TUNNELING_TYPE]
+                if user_input
+                else _initial_connection_type
+                if _initial_connection_type in connection_methods
+                # if no tunnel was found, default route_back to avoid NAT issues
+                else CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
+            )
+
         fields = {
             vol.Required(CONF_KNX_TUNNELING_TYPE, default=default_type): vol.In(
                 connection_methods
@@ -294,7 +312,10 @@ class KNXCommonFlow(ABC, FlowHandler):
             )
 
         fields = {
-            vol.Required(CONF_KNX_SECURE_USER_ID, default=2): vol.All(
+            vol.Required(
+                CONF_KNX_SECURE_USER_ID,
+                default=self.initial_data.get(CONF_KNX_SECURE_USER_ID, 2),
+            ): vol.All(
                 selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=1, max=127, mode=selector.NumberSelectorMode.BOX
@@ -302,10 +323,16 @@ class KNXCommonFlow(ABC, FlowHandler):
                 ),
                 vol.Coerce(int),
             ),
-            vol.Required(CONF_KNX_SECURE_USER_PASSWORD): selector.TextSelector(
+            vol.Required(
+                CONF_KNX_SECURE_USER_PASSWORD,
+                default=self.initial_data.get(CONF_KNX_SECURE_USER_PASSWORD),
+            ): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
             ),
-            vol.Required(CONF_KNX_SECURE_DEVICE_AUTHENTICATION): selector.TextSelector(
+            vol.Required(
+                CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
+                default=self.initial_data.get(CONF_KNX_SECURE_DEVICE_AUTHENTICATION),
+            ): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD),
             ),
         }
@@ -347,8 +374,14 @@ class KNXCommonFlow(ABC, FlowHandler):
                 )
 
         fields = {
-            vol.Required(CONF_KNX_KNXKEY_FILENAME): selector.TextSelector(),
-            vol.Required(CONF_KNX_KNXKEY_PASSWORD): selector.TextSelector(),
+            vol.Required(
+                CONF_KNX_KNXKEY_FILENAME,
+                default=self.initial_data.get(CONF_KNX_KNXKEY_FILENAME),
+            ): selector.TextSelector(),
+            vol.Required(
+                CONF_KNX_KNXKEY_PASSWORD,
+                default=self.initial_data.get(CONF_KNX_KNXKEY_PASSWORD),
+            ): selector.TextSelector(),
         }
 
         return self.async_show_form(
@@ -361,10 +394,17 @@ class KNXCommonFlow(ABC, FlowHandler):
         _individual_address = (
             user_input[CONF_KNX_INDIVIDUAL_ADDRESS]
             if user_input
-            else XKNX.DEFAULT_ADDRESS
+            else self.initial_data[CONF_KNX_INDIVIDUAL_ADDRESS]
         )
         _multicast_group = (
-            user_input[CONF_KNX_MCAST_GRP] if user_input else DEFAULT_MCAST_GRP
+            user_input[CONF_KNX_MCAST_GRP]
+            if user_input
+            else self.initial_data[CONF_KNX_MCAST_GRP]
+        )
+        _multicast_port = (
+            user_input[CONF_KNX_MCAST_PORT]
+            if user_input
+            else self.initial_data[CONF_KNX_MCAST_PORT]
         )
 
         if user_input is not None:
@@ -387,7 +427,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                     connection_type=CONF_KNX_ROUTING,
                     individual_address=_individual_address,
                     multicast_group=_multicast_group,
-                    multicast_port=user_input[CONF_KNX_MCAST_PORT],
+                    multicast_port=_multicast_port,
                     local_ip=_local_ip,
                 )
                 return self.finish_flow(
@@ -400,9 +440,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 CONF_KNX_INDIVIDUAL_ADDRESS, default=_individual_address
             ): _IA_SELECTOR,
             vol.Required(CONF_KNX_MCAST_GRP, default=_multicast_group): _IP_SELECTOR,
-            vol.Required(
-                CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT
-            ): _PORT_SELECTOR,
+            vol.Required(CONF_KNX_MCAST_PORT, default=_multicast_port): _PORT_SELECTOR,
         }
 
         if self.show_advanced_options:
@@ -422,6 +460,10 @@ class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
     """Handle a KNX config flow."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize KNX options flow."""
+        super().__init__(initial_data=DEFAULT_ENTRY_DATA)
 
     @staticmethod
     @callback
@@ -452,8 +494,7 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize KNX options flow."""
         self.config_entry = config_entry
-        self.initial_data: KNXConfigEntryData = self.config_entry.data  # type: ignore[assignment]
-        super().__init__()
+        super().__init__(initial_data=config_entry.data)  # type: ignore[arg-type]
 
     @callback
     def finish_flow(
