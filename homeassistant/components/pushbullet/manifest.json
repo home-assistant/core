@@ -1,7 +1,6 @@
 {
   "domain": "pushbullet",
   "name": "Pushbullet",
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/pushbullet",
   "requirements": ["pushbullet.py==0.11.0"],
   "codeowners": ["@engrbm87"],

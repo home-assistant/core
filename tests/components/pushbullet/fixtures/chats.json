@@ -6,11 +6,11 @@
       "iden": "ujpah72o0sjAoRtnM0jc",
       "modified": 1412047948.579031,
       "with": {
-        "email": "carmack@idsoftware.com",
-        "email_normalized": "carmack@idsoftware.com",
+        "email": "someone@example.com",
+        "email_normalized": "someone@example.com",
         "iden": "ujlMns72k",
         "image_url": "https://dl.pushbulletusercontent.com/foGfub1jtC6yYcOMACk1AbHwTrTKvrDc/john.jpg",
-        "name": "John Carmack",
+        "name": "Someone",
         "type": "user"
       }
     }

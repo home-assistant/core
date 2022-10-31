@@ -14,8 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -124,10 +129,10 @@ async def async_setup_entry(
     pushbullet: PushBullet = hass.data[DOMAIN][entry.entry_id]
     pb_provider = PushBulletNotificationProvider(hass, pushbullet)
     entities = [
-        PushBulletNotificationSensor(hass, entry, pb_provider, description)
+        PushBulletNotificationSensor(entry.data[CONF_NAME], pb_provider, description)
         for description in SENSOR_TYPES
     ]
-
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pb_provider.shutdown)
     async_add_entities(entities)
 
 
@@ -139,19 +144,19 @@ class PushBulletNotificationSensor(SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        entry: ConfigEntry,
+        name: str,
         pb_provider: PushBulletNotificationProvider,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Pushbullet sensor."""
-        self.hass = hass
         self.entity_description = description
         self.pb_provider = pb_provider
-        self._attr_unique_id = f"{entry.entry_id}-{description.key}"
+        self._attr_unique_id = (
+            f"{pb_provider.pushbullet.user_info['iden']}-{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.pb_provider.pushbullet.user_info["iden"])},
-            name=entry.data[CONF_NAME],
+            identifiers={(DOMAIN, pb_provider.pushbullet.user_info["iden"])},
+            name=name,
             entry_type=DeviceEntryType.SERVICE,
         )
 
@@ -176,6 +181,10 @@ class PushBulletNotificationSensor(SensorEntity):
                 self.hass, DATA_UPDATED, self.async_update_callback
             )
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Close running thread on remove."""
+        self.pb_provider.shutdown()
 
 
 class PushBulletNotificationProvider(threading.Thread):
@@ -213,3 +222,7 @@ class PushBulletNotificationProvider(threading.Thread):
             self.listener.run_forever()
         finally:
             self.listener.close()
+
+    def shutdown(self, event: Event | None = None) -> None:
+        """Shut down the thread."""
+        self.join()

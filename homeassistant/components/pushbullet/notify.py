@@ -90,13 +90,12 @@ class PushBulletNotificationService(BaseNotificationService):
         """
         targets: list[str] = kwargs.get(ATTR_TARGET, [])
         title: str = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data: dict[str, Any] = kwargs.get(ATTR_DATA, {})
-        # refreshed = False
+        data: dict[str, Any] = kwargs[ATTR_DATA] or {}
 
         if not targets:
             # Backward compatibility, notify all devices in own account.
             self._push_data(message, title, data, self.pushbullet)
-            _LOGGER.info("Sent notification to self")
+            _LOGGER.debug("Sent notification to self")
             return
 
         # refresh device and channel targets
@@ -135,7 +134,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # Attempt push_note on a dict value. Keys are types & target
             # name. Dict pbtargets has all *actual* targets.
             self._push_data(message, title, data, self.pbtargets[ttype][tname])
-            _LOGGER.info("Sent notification to %s/%s", ttype, tname)
+            _LOGGER.debug("Sent notification to %s/%s", ttype, tname)
 
     def _push_data(
         self,
