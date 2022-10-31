@@ -434,8 +434,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         rain_value = self._get_rain(day, hour) or 0
         snow_value = self._get_snow(day, hour) or 0
 
-        if round(rain_value + snow_value, 1) == 0:
-            return None
         return round(rain_value + snow_value, 1)
 
     def _calc_precipitation_prob(self, day, hour):
@@ -443,8 +441,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         rain_value = self._get_rain_prob(day, hour) or 0
         snow_value = self._get_snow_prob(day, hour) or 0
 
-        if rain_value == 0 and snow_value == 0:
-            return None
         return max(rain_value, snow_value)
 
     @staticmethod
