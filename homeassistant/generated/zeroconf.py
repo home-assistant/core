@@ -243,11 +243,6 @@ HOMEKIT = {
 }
 
 ZEROCONF = {
-    "VideoBox._elmax._tcp.local.": [
-        {
-            "domain": "elmax",
-        },
-    ],
     "_Volumio._tcp.local.": [
         {
             "domain": "volumio",
@@ -384,6 +379,11 @@ ZEROCONF = {
     "_elg._tcp.local.": [
         {
             "domain": "elgato",
+        },
+    ],
+    "_elmax._tcp.local.": [
+        {
+            "domain": "elmax",
         },
     ],
     "_enphase-envoy._tcp.local.": [

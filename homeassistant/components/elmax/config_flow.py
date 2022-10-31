@@ -12,6 +12,7 @@ import httpx
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -71,6 +72,12 @@ DIRECT_SETUP_SCHEMA = vol.Schema(
     }
 )
 
+ZEROCONF_SETUP_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ELMAX_PANEL_PIN): str,
+    }
+)
+
 
 def _store_panel_by_name(
     panel: PanelEntry, username: str, panel_names: dict[str, str]
@@ -97,6 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _panel_names: dict
     _reauth_username: str | None
     _reauth_panelid: str | None
+    _zeroconf_panel_api_uri: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -124,17 +132,45 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA, errors=errors
         )
 
-    async def async_step_direct_setup(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle the direct setup step."""
-        panel_api_uri = user_input[CONF_ELMAX_MODE_DIRECT_URI]
-        panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
-
-        # Attempt the connection to make sure the address is connect, the pin works. Also,
+    async def _test_direct_and_create_entry(self, panel_api_uri: str, panel_pin: str):
+        """Test the direct connection to the Elmax panel and create and entry if successful."""
+        # Attempt the connection to make sure the pin works. Also,
         # take the chance to retrieve the panel ID via APIs.
         client_api_url = get_direct_api_url(panel_api_uri)
         client = ElmaxLocal(panel_api_url=client_api_url, panel_code=panel_pin)
+        await client.login()
+        # Retrieve the current panel status. If this succeeds, it means the
+        # setup did complete successfully. At the moment the local-api
+        # does not expose the Panel ID, so there is no way to get it.
+        # When such feature is added at the lower API level, we might take
+        # the panel ID and store it as ELMAX_PANEL_ID within async_create_entry data.
+        await client.get_current_panel_status()
+
+        return await self._check_unique_and_create_entry(
+            unique_id=client_api_url,
+            title=f"Elmax Direct {client_api_url}",
+            data={
+                CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT,
+                CONF_ELMAX_MODE_DIRECT_URI: client_api_url,
+                CONF_ELMAX_PANEL_PIN: panel_pin,
+            },
+        )
+
+    async def async_step_direct_setup(self, user_input: dict[str, Any]) -> FlowResult:
+        """Handle the direct setup step."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="direct_setup",
+                data_schema=DIRECT_SETUP_SCHEMA,
+                errors=None,
+            )
+
+        panel_api_uri = user_input[CONF_ELMAX_MODE_DIRECT_URI]
+        panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
         try:
-            await client.login()
+            return await self._test_direct_and_create_entry(
+                panel_api_uri=panel_api_uri, panel_pin=panel_pin
+            )
         except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
             return self.async_show_form(
                 step_id="direct_setup",
@@ -148,22 +184,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={"base": "invalid_auth"},
             )
 
-        # Retrieve the current panel status. If this succeeds, it means the
-        # setup did complete successfully. At the moment the local-api
-        # does not expose the Panel ID, so there is no way to get it.
-        # When such features is added at the lower API level, we might take
-        # the panel ID and store it as ELMAX_PANEL_ID within async_create_entry data.
-        await client.get_current_panel_status()
-
-        return await self._check_unique_and_create_entry(
-            unique_id=client_api_url,
-            title=f"Elmax Direct {client_api_url}",
-            data={
-                CONF_ELMAX_MODE: CONF_ELMAX_MODE_DIRECT,
-                CONF_ELMAX_MODE_DIRECT_URI: client_api_url,
-                CONF_ELMAX_PANEL_PIN: panel_pin,
-            },
-        )
+    async def async_step_zeroconf_setup(self, user_input: dict[str, Any]) -> FlowResult:
+        """Handle the direct setup step triggered via zeroconf."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="zeroconf_setup",
+                data_schema=ZEROCONF_SETUP_SCHEMA,
+                errors=None,
+            )
+        panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
+        try:
+            return await self._test_direct_and_create_entry(
+                panel_api_uri=self._zeroconf_panel_api_uri, panel_pin=panel_pin
+            )
+        except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
+            return self.async_show_form(
+                step_id="zeroconf_setup",
+                data_schema=DIRECT_SETUP_SCHEMA,
+                errors={"base": "network_error"},
+            )
+        except ElmaxBadLoginError:
+            return self.async_show_form(
+                step_id="zeroconf_setup",
+                data_schema=DIRECT_SETUP_SCHEMA,
+                errors={"base": "invalid_auth"},
+            )
 
     async def _check_unique_and_create_entry(
         self, unique_id: str, title: str, data: Mapping[str, Any]
@@ -359,6 +404,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=schema, errors=errors
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle device found via zeroconf."""
+
+        # Currently, we are using the IP as hostname. This might be a problem if the user is using
+        # DHCP on their Elmax panel. In the future we might consider the usage of discovery_info.hostname instead.
+        host = discovery_info.host
+        port = discovery_info.port
+        schema = "http"
+        if discovery_info.type == "_elmax-ssl._tcp.local.":
+            schema = "https"
+        client_api_url = f"{schema}://{host}:{port}"
+        # The current version of the local APIs do not expose the panel ID within the txt records,
+        # so we cannot immediately identify a panel that is being already added (IP is not enough as
+        # using DHCP this might be volatile). When this gets changed on Elmax side, we can use the local
+        # method _async_abort_entries_match({PANEL_ID: panel_id}) to prevent duplicate entries
+        self._zeroconf_panel_api_uri = client_api_url
+        return self.async_show_form(
+            step_id="zeroconf_setup", data_schema=ZEROCONF_SETUP_SCHEMA
         )
 
     @staticmethod

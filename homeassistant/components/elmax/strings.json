@@ -14,6 +14,12 @@
           "username": "[%key:common::config_flow::data::username%]"
         }
       },
+      "zeroconf_setup": {
+        "description": "Configure discovered local Elmax panel",
+        "data": {
+          "panel_pin": "Panel PIN code"
+        }
+      },
       "direct_setup": {
         "description": "Specify the Elmax panel connection parameters below.",
         "data": {
