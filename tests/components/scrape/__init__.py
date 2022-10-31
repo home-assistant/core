@@ -113,5 +113,3 @@ class MockRestData:
             self.data = "<div class='return'>secret text</div>"
         if self.payload == "test_scrape_sensor_no_data":
             self.data = None
-        if self.count == 3:
-            self.data = None
