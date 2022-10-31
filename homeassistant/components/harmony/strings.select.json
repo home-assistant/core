@@ -1,7 +1,7 @@
 {
   "state": {
     "harmony__activities": {
-      "PowerOff": "power_off"
+      "power_off": "Power Off"
     }
   }
 }
