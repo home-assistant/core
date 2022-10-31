@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, SERIAL_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,13 +32,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     port = data.get("port", 502)
     client = Client(sungrow_register.regmap, data["host"], port)
     await hass.async_add_executor_job(client.load_register)
-    if "4990 ~ 4999 - Serial number" not in client.inverter:
+    if SERIAL_NUMBER not in client.inverter:
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
-    return {
-        "title": "Sungrow " + client.inverter["4990 ~ 4999 - Serial number"].decode()
-    }
+    return {"title": "Sungrow " + client.inverter[SERIAL_NUMBER].decode()}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
