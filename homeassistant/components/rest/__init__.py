@@ -121,8 +121,8 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> bool
     if refresh_coroutines:
         await asyncio.gather(*refresh_coroutines)
 
-    for load_coroutine in load_coroutines:
-        hass.async_create_task(load_coroutine)
+    if load_coroutines:
+        await asyncio.gather(*load_coroutines)
 
     return True
 
