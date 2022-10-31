@@ -31,6 +31,7 @@ from .const import (
     CONF_KNX_MCAST_GRP,
     CONF_KNX_MCAST_PORT,
     CONF_KNX_RATE_LIMIT,
+    CONF_KNX_ROUTE_BACK,
     CONF_KNX_ROUTING,
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_ID,
@@ -59,10 +60,11 @@ DEFAULT_ENTRY_DATA = KNXConfigEntryData(
 )
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
-CONF_KNX_LABEL_TUNNELING_TCP: Final = "TCP"
-CONF_KNX_LABEL_TUNNELING_TCP_SECURE: Final = "TCP with IP Secure"
-CONF_KNX_LABEL_TUNNELING_UDP: Final = "UDP"
-CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK: Final = "UDP with route back / NAT mode"
+CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
+    CONF_KNX_TUNNELING: "UDP (Tunnelling v1)",
+    CONF_KNX_TUNNELING_TCP: "TCP (Tunnelling v2)",
+    CONF_KNX_TUNNELING_TCP_SECURE: "Secure Tunnelling (TCP)",
+}
 
 OPTION_MANUAL_TUNNEL: Final = "Manual"
 
@@ -207,20 +209,11 @@ class KNXCommonFlow(ABC, FlowHandler):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             if not errors:
-                _user_tunnel_type = user_input[CONF_KNX_TUNNELING_TYPE]
-                connection_type = (
-                    CONF_KNX_TUNNELING_TCP_SECURE
-                    if _user_tunnel_type == CONF_KNX_LABEL_TUNNELING_TCP_SECURE
-                    else CONF_KNX_TUNNELING_TCP
-                    if _user_tunnel_type == CONF_KNX_LABEL_TUNNELING_TCP
-                    else CONF_KNX_TUNNELING
-                )
+                connection_type = user_input[CONF_KNX_TUNNELING_TYPE]
                 self._tunneling_config = KNXConfigEntryData(
                     host=_host,
                     port=user_input[CONF_PORT],
-                    route_back=(
-                        _user_tunnel_type == CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
-                    ),
+                    route_back=user_input[CONF_KNX_ROUTE_BACK],
                     local_ip=_local_ip,
                     connection_type=connection_type,
                 )
@@ -235,26 +228,23 @@ class KNXCommonFlow(ABC, FlowHandler):
                     title=f"Tunneling @ {_host}",
                 )
 
-        connection_methods: list[str] = [
-            CONF_KNX_LABEL_TUNNELING_UDP,
-            CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
-            CONF_KNX_LABEL_TUNNELING_TCP,
-            CONF_KNX_LABEL_TUNNELING_TCP_SECURE,
-        ]
-
-        if (  # initial attempt on ConfigFlow
-            isinstance(self, ConfigFlow)
+        _reconfiguring_existing_tunnel = (
+            self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
+            in CONF_KNX_TUNNELING_TYPE_LABELS
+        )
+        if (  # initial attempt on ConfigFlow or coming from automatic / routing
+            (isinstance(self, ConfigFlow) or not _reconfiguring_existing_tunnel)
             and not user_input
             and self._selected_tunnel is not None
         ):  # default to first found tunnel
             ip_address = self._selected_tunnel.ip_addr
             port = self._selected_tunnel.port
             if self._selected_tunnel.tunnelling_requires_secure:
-                default_type = CONF_KNX_LABEL_TUNNELING_TCP_SECURE
+                default_type = CONF_KNX_TUNNELING_TCP_SECURE
             elif self._selected_tunnel.supports_tunnelling_tcp:
-                default_type = CONF_KNX_LABEL_TUNNELING_TCP
+                default_type = CONF_KNX_TUNNELING_TCP
             else:
-                default_type = CONF_KNX_LABEL_TUNNELING_UDP
+                default_type = CONF_KNX_TUNNELING
         else:  # OptionFlow, no tunnel discovered or user input
             ip_address = (
                 user_input[CONF_HOST]
@@ -266,22 +256,26 @@ class KNXCommonFlow(ABC, FlowHandler):
                 if user_input
                 else self.initial_data.get(CONF_PORT, DEFAULT_MCAST_PORT)
             )
-            _initial_connection_type = self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
             default_type = (
                 user_input[CONF_KNX_TUNNELING_TYPE]
                 if user_input
-                else _initial_connection_type
-                if _initial_connection_type in connection_methods
-                # if no tunnel was found, default route_back to avoid NAT issues
-                else CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK
+                else self.initial_data[CONF_KNX_CONNECTION_TYPE]
+                if _reconfiguring_existing_tunnel
+                else CONF_KNX_TUNNELING
             )
+        _route_back: bool = self.initial_data.get(
+            CONF_KNX_ROUTE_BACK, not bool(self._selected_tunnel)
+        )
 
         fields = {
             vol.Required(CONF_KNX_TUNNELING_TYPE, default=default_type): vol.In(
-                connection_methods
+                CONF_KNX_TUNNELING_TYPE_LABELS
             ),
             vol.Required(CONF_HOST, default=ip_address): _IP_SELECTOR,
             vol.Required(CONF_PORT, default=port): _PORT_SELECTOR,
+            vol.Required(
+                CONF_KNX_ROUTE_BACK, default=_route_back
+            ): selector.BooleanSelector(),
         }
         if self.show_advanced_options:
             fields[vol.Optional(CONF_KNX_LOCAL_IP)] = _IP_SELECTOR

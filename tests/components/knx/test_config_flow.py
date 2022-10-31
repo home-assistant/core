@@ -9,10 +9,6 @@ from xknx.io.gateway_scanner import GatewayDescriptor
 from homeassistant import config_entries
 from homeassistant.components.knx.config_flow import (
     CONF_KNX_GATEWAY,
-    CONF_KNX_LABEL_TUNNELING_TCP,
-    CONF_KNX_LABEL_TUNNELING_TCP_SECURE,
-    CONF_KNX_LABEL_TUNNELING_UDP,
-    CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
     CONF_KNX_TUNNELING_TYPE,
     DEFAULT_ENTRY_DATA,
     OPTION_MANUAL_TUNNEL,
@@ -206,9 +202,10 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
     [
         (
             {
-                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING,
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
+                CONF_KNX_ROUTE_BACK: False,
             },
             {
                 **DEFAULT_ENTRY_DATA,
@@ -222,9 +219,10 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
         ),
         (
             {
-                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_TCP,
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
+                CONF_KNX_ROUTE_BACK: False,
             },
             {
                 **DEFAULT_ENTRY_DATA,
@@ -238,9 +236,10 @@ async def test_routing_setup_advanced(hass: HomeAssistant) -> None:
         ),
         (
             {
-                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP_ROUTE_BACK,
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING,
                 CONF_HOST: "192.168.0.1",
                 CONF_PORT: 3675,
+                CONF_KNX_ROUTE_BACK: True,
             },
             {
                 **DEFAULT_ENTRY_DATA,
@@ -322,7 +321,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
     result_invalid_host = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {
-            CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
+            CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING,
             CONF_HOST: DEFAULT_MCAST_GRP,  # multicast addresses are invalid
             CONF_PORT: 3675,
             CONF_KNX_LOCAL_IP: "192.168.1.112",
@@ -339,7 +338,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
     result_invalid_local = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         {
-            CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
+            CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING,
             CONF_HOST: "192.168.0.2",
             CONF_PORT: 3675,
             CONF_KNX_LOCAL_IP: "asdf",
@@ -361,7 +360,7 @@ async def test_tunneling_setup_for_local_ip(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_UDP,
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING,
                 CONF_HOST: "192.168.0.2",
                 CONF_PORT: 3675,
                 CONF_KNX_LOCAL_IP: "192.168.1.112",
@@ -582,7 +581,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
     result3 = await hass.config_entries.flow.async_configure(
         manual_tunnel_flow["flow_id"],
         {
-            CONF_KNX_TUNNELING_TYPE: CONF_KNX_LABEL_TUNNELING_TCP_SECURE,
+            CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
             CONF_HOST: "192.168.0.1",
             CONF_PORT: 3675,
         },

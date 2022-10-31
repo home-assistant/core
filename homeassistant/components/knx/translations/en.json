@@ -25,12 +25,14 @@
                     "host": "Host",
                     "local_ip": "Local IP of Home Assistant",
                     "port": "Port",
+                    "route_back": "Route back / NAT mode",
                     "tunneling_type": "KNX Tunneling Type"
                 },
                 "data_description": {
                     "host": "IP address of the KNX/IP tunneling device.",
                     "local_ip": "Leave blank to use auto-discovery.",
-                    "port": "Port of the KNX/IP tunneling device."
+                    "port": "Port of the KNX/IP tunneling device.",
+                    "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT. Only applies for UDP connections."
                 },
                 "description": "Please enter the connection information of your tunneling device."
             },
@@ -118,12 +120,14 @@
                     "host": "Host",
                     "local_ip": "Local IP of Home Assistant",
                     "port": "Port",
+                    "route_back": "Route back / NAT mode",
                     "tunneling_type": "KNX Tunneling Type"
                 },
                 "data_description": {
                     "host": "IP address of the KNX/IP tunneling device.",
                     "local_ip": "Leave blank to use auto-discovery.",
-                    "port": "Port of the KNX/IP tunneling device."
+                    "port": "Port of the KNX/IP tunneling device.",
+                    "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT. Only applies for UDP connections."
                 },
                 "description": "Please enter the connection information of your tunneling device."
             },
