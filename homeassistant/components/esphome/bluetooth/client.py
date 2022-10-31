@@ -127,13 +127,15 @@ class ESPHomeClient(BaseBleakClient):
 
     def _async_ble_device_disconnected(self) -> None:
         """Handle the BLE device disconnecting from the ESP."""
-        _LOGGER.debug("%s: BLE device disconnected", self._source)
-        self._is_connected = False
+        was_connected = self._is_connected
         self.services = BleakGATTServiceCollection()  # type: ignore[no-untyped-call]
+        self._is_connected = False
         if self._disconnected_event:
             self._disconnected_event.set()
             self._disconnected_event = None
-        self._async_call_bleak_disconnected_callback()
+        if was_connected:
+            _LOGGER.debug("%s: BLE device disconnected", self._source)
+            self._async_call_bleak_disconnected_callback()
         self._unsubscribe_connection_state()
 
     def _async_esp_disconnected(self) -> None:
