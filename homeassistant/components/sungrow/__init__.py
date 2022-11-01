@@ -47,7 +47,7 @@ class SungrowData(update_coordinator.DataUpdateCoordinator):
             hass, _LOGGER, name="Sungrow", update_interval=timedelta(seconds=300)
         )
 
-        self.host = entry.data.get(CONF_HOST, "")
+        self.host = entry.data[CONF_HOST]
         self.port = entry.data.get(CONF_PORT, 502)
 
         self.unique_id = entry.entry_id
