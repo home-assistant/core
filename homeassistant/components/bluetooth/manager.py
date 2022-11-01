@@ -127,6 +127,7 @@ class BluetoothManager:
         self._non_connectable_scanners: list[BaseHaScanner] = []
         self._connectable_scanners: list[BaseHaScanner] = []
         self._adapters: dict[str, AdapterDetails] = {}
+        self._sources: set[str] = set()
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -379,7 +380,7 @@ class BluetoothManager:
         if (
             (old_service_info := all_history.get(address))
             and source != old_service_info.source
-            and old_service_info.source in self._adapters
+            and old_service_info.source in self._sources
             and self._prefer_previous_adv_from_different_source(
                 old_service_info, service_info
             )
@@ -399,7 +400,7 @@ class BluetoothManager:
                     # the old connectable advertisement
                     or (
                         source != old_connectable_service_info.source
-                        and old_connectable_service_info.source in self._adapters
+                        and old_connectable_service_info.source in self._sources
                         and self._prefer_previous_adv_from_different_source(
                             old_connectable_service_info, service_info
                         )
@@ -599,8 +600,10 @@ class BluetoothManager:
         def _unregister_scanner() -> None:
             self._advertisement_tracker.async_remove_source(scanner.source)
             scanners.remove(scanner)
+            self._sources.remove(scanner.source)
 
         scanners.append(scanner)
+        self._sources.add(scanner.source)
         return _unregister_scanner
 
     @hass_callback
