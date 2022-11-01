@@ -41,7 +41,12 @@ from .const import (
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
-from .utils import device_update_info, get_block_device_name, get_rpc_device_name
+from .utils import (
+    device_update_info,
+    get_block_device_name,
+    get_rpc_device_name,
+    get_rpc_device_wakeup_period,
+)
 
 
 @dataclass
@@ -355,6 +360,24 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
+    def update_sleep_period(self) -> bool:
+        """Check device sleep period & update if changed."""
+        if (
+            not self.device.initialized
+            or not (wakeup_period := get_rpc_device_wakeup_period(self.device.status))
+            or wakeup_period == self.entry.data.get(CONF_SLEEP_PERIOD)
+        ):
+            return False
+
+        data = {**self.entry.data}
+        data[CONF_SLEEP_PERIOD] = wakeup_period
+        self.hass.config_entries.async_update_entry(self.entry, data=data)
+
+        update_interval = SLEEP_PERIOD_MULTIPLIER * wakeup_period
+        self.update_interval = timedelta(seconds=update_interval)
+
+        return True
+
     @callback
     def _async_device_updates_handler(self) -> None:
         """Handle device updates."""
@@ -364,6 +387,8 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
             or self.device.event == self._last_event
         ):
             return
+
+        self.update_sleep_period()
 
         self._last_event = self.device.event
 
@@ -393,6 +418,9 @@ class ShellyRpcCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
+        if self.update_sleep_period():
+            return
+
         if sleep_period := self.entry.data.get(CONF_SLEEP_PERIOD):
             # Sleeping device, no point polling it, just mark it unavailable
             raise UpdateFailed(

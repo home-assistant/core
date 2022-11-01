@@ -31,6 +31,7 @@ FLOWS = {
         "anthemav",
         "apcupsd",
         "apple_tv",
+        "aranet",
         "arcam_fmj",
         "aseko_pool_live",
         "asuswrt",

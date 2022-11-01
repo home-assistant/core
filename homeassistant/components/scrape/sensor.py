@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
-    SensorEntity,
 )
 from homeassistant.const import (
     CONF_ATTRIBUTE,
@@ -35,11 +34,16 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.template_entity import (
+    TEMPLATE_SENSOR_BASE_SCHEMA,
+    TemplateSensor,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
 from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,23 +83,40 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(config)
-    rest = create_rest_data_from_config(hass, resource_config)
+    if discovery_info is None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "moved_yaml",
+            breaks_in_ha_version="2022.12.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="moved_yaml",
+        )
+        resource_config = vol.Schema(RESOURCE_SCHEMA, extra=vol.REMOVE_EXTRA)(config)
+        rest = create_rest_data_from_config(hass, resource_config)
 
-    coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
-    await coordinator.async_refresh()
-    if coordinator.data is None:
-        raise PlatformNotReady
+        coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
+        await coordinator.async_refresh()
+        if coordinator.data is None:
+            raise PlatformNotReady
 
-    name: str = config[CONF_NAME]
-    select: str | None = config.get(CONF_SELECT)
-    attr: str | None = config.get(CONF_ATTRIBUTE)
-    index: int = config[CONF_INDEX]
-    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
-    device_class: str | None = config.get(CONF_DEVICE_CLASS)
-    state_class: str | None = config.get(CONF_STATE_CLASS)
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
-    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+        sensor_config = config
+        template_config = vol.Schema(
+            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
+        )(sensor_config)
+
+    else:
+        coordinator = discovery_info["coordinator"]
+        sensor_config = discovery_info["config"]
+        template_config = sensor_config
+
+    name: str = template_config[CONF_NAME]
+    unique_id: str | None = template_config.get(CONF_UNIQUE_ID)
+    select: str | None = sensor_config.get(CONF_SELECT)
+    attr: str | None = sensor_config.get(CONF_ATTRIBUTE)
+    index: int = sensor_config[CONF_INDEX]
+    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
 
     if value_template is not None:
         value_template.hass = hass
@@ -103,54 +124,52 @@ async def async_setup_platform(
     async_add_entities(
         [
             ScrapeSensor(
+                hass,
                 coordinator,
-                unique_id,
+                template_config,
                 name,
+                unique_id,
                 select,
                 attr,
                 index,
                 value_template,
-                unit,
-                device_class,
-                state_class,
             )
         ],
     )
 
 
-class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], SensorEntity):
+class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
     """Representation of a web scrape sensor."""
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: ScrapeCoordinator,
-        unique_id: str | None,
+        config: ConfigType,
         name: str,
+        unique_id: str | None,
         select: str | None,
         attr: str | None,
         index: int,
         value_template: Template | None,
-        unit: str | None,
-        device_class: str | None,
-        state_class: str | None,
     ) -> None:
         """Initialize a web scrape sensor."""
-        super().__init__(coordinator)
-        self._attr_native_value = None
+        CoordinatorEntity.__init__(self, coordinator)
+        TemplateSensor.__init__(
+            self,
+            hass,
+            config=config,
+            fallback_name=name,
+            unique_id=unique_id,
+        )
         self._select = select
         self._attr = attr
         self._index = index
         self._value_template = value_template
-        self._attr_name = name
-        self._attr_unique_id = unique_id
-        self._attr_native_unit_of_measurement = unit
-        self._attr_device_class = device_class
-        self._attr_state_class = state_class
 
     def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
         raw_data = self.coordinator.data
-        _LOGGER.debug("Raw beautiful soup: %s", raw_data)
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
