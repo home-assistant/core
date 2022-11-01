@@ -19,11 +19,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    VOLUME_GALLONS,
     UnitOfEnergy,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
 
@@ -832,7 +834,10 @@ async def test_cost_sensor_handle_price_units(
     assert state.state == "20.0"
 
 
-@pytest.mark.parametrize("unit", (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS))
+@pytest.mark.parametrize(
+    "unit",
+    (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS),
+)
 async def test_cost_sensor_handle_gas(
     setup_integration, hass, hass_storage, unit
 ) -> None:
@@ -933,13 +938,22 @@ async def test_cost_sensor_handle_gas_kwh(
     assert state.state == "50.0"
 
 
-@pytest.mark.parametrize("unit", (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS))
+@pytest.mark.parametrize(
+    "unit_system,usage_unit,growth",
+    (
+        (US_CUSTOMARY_SYSTEM, VOLUME_CUBIC_FEET, "50.0"),
+        # 1 Gallon = 0.13 cubic foot, 100 gl growth @ 0.5/ft3:
+        (US_CUSTOMARY_SYSTEM, VOLUME_GALLONS, "6.68402777777778"),
+        (METRIC_SYSTEM, VOLUME_CUBIC_METERS, "50.0"),
+    ),
+)
 async def test_cost_sensor_handle_water(
-    setup_integration, hass, hass_storage, unit
+    setup_integration, hass, hass_storage, unit_system, usage_unit, growth
 ) -> None:
     """Test water cost price from sensor entity."""
+    hass.config.units = unit_system
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: unit,
+        ATTR_UNIT_OF_MEASUREMENT: usage_unit,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     energy_data = data.EnergyManager.default_preferences()
@@ -981,7 +995,7 @@ async def test_cost_sensor_handle_water(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.water_consumption_cost")
-    assert state.state == "50.0"
+    assert state.state == growth
 
 
 @pytest.mark.parametrize("state_class", [None])
