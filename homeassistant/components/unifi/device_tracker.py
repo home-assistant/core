@@ -3,11 +3,10 @@
 from datetime import timedelta
 import logging
 
-from aiounifi.interfaces.api_handlers import SOURCE_DATA, SOURCE_EVENT
+from aiounifi.models.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.models.event import EventKey
 
-from homeassistant.components.device_tracker import DOMAIN, SourceType
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker import DOMAIN, ScannerEntity, SourceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -111,8 +110,7 @@ def add_client_entities(controller, async_add_entities, clients):
 
         trackers.append(UniFiClientTracker(client, controller))
 
-    if trackers:
-        async_add_entities(trackers)
+    async_add_entities(trackers)
 
 
 @callback
@@ -127,8 +125,7 @@ def add_device_entities(controller, async_add_entities, devices):
         device = controller.api.devices[mac]
         trackers.append(UniFiDeviceTracker(device, controller))
 
-    if trackers:
-        async_add_entities(trackers)
+    async_add_entities(trackers)
 
 
 class UniFiClientTracker(UniFiClientBase, ScannerEntity):

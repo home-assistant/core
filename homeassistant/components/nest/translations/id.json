@@ -99,8 +99,8 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "Proses konfigurasi Nest di configuration.yaml sedang dihapus di Home Assistant 2022.10. \n\nKredensial Aplikasi OAuth yang Anda dan setelan akses telah diimpor ke antarmuka secara otomatis. Hapus konfigurasi YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
-            "title": "Konfigurasi YAML Nest dalam proses penghapusan"
+            "description": "Proses konfigurasi Integrasi Nest di configuration.yaml sedang dihapus di Home Assistant 2022.10. \n\nKredensial Aplikasi OAuth yang Anda dan setelan akses telah diimpor ke antarmuka secara otomatis. Hapus konfigurasi YAML dari file configuration.yaml Anda dan mulai ulang Home Assistant untuk memperbaiki masalah ini.",
+            "title": "Konfigurasi YAML Integrasi Nest dalam proses penghapusan"
         },
         "removed_app_auth": {
             "description": "Untuk meningkatkan keamanan dan mengurangi risiko phishing, Google telah menghentikan metode autentikasi yang digunakan oleh Home Assistant.\n\n**Tindakan berikut diperlukan untuk diselesaikan** ([info lebih lanjut]({more_info_url}))\n\n1. Kunjungi halaman integrasi\n1. Klik Konfigurasi Ulang pada integrasi Nest.\n1. Home Assistant akan memandu Anda melalui langkah-langkah untuk meningkatkan ke Autentikasi Web.\n\nLihat [instruksi integrasi]({documentation_url}) Nest untuk informasi pemecahan masalah.",

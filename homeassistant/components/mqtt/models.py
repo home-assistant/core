@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from .client import MQTT, Subscription
     from .debug_info import TimestampedPublishMessage
     from .device_trigger import Trigger
-    from .discovery import MQTTConfig
+    from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
 
 _SENTINEL = object()
@@ -86,7 +86,7 @@ class TriggerDebugInfo(TypedDict):
 class PendingDiscovered(TypedDict):
     """Pending discovered items."""
 
-    pending: deque[MQTTConfig]
+    pending: deque[MQTTDiscoveryPayload]
     unsub: CALLBACK_TYPE
 
 

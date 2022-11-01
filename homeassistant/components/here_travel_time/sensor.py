@@ -17,7 +17,6 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     TIME_MINUTES,
@@ -41,6 +40,7 @@ from .const import (
     DOMAIN,
     ICON_CAR,
     ICONS,
+    IMPERIAL_UNITS,
 )
 
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -216,6 +216,6 @@ class DistanceSensor(HERETravelTimeSensor):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
-        if self.coordinator.config.units == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self.coordinator.config.units == IMPERIAL_UNITS:
             return LENGTH_MILES
         return LENGTH_KILOMETERS

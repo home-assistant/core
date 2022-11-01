@@ -754,7 +754,7 @@ class LogRelayHandler(logging.Handler):
                 "|".join([re.escape(x) for x in (hass_path, config_dir)])
             )
         )
-        entry = LogEntry(record, stack, _figure_out_source(record, stack, paths_re))
+        entry = LogEntry(record, _figure_out_source(record, stack, paths_re))
         async_dispatcher_send(
             self.hass,
             ZHA_GW_MSG,
