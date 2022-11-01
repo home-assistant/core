@@ -7,7 +7,11 @@ import logging
 from typing import Any, TypeVar, cast
 import uuid
 
-from aioesphomeapi import ESP_CONNECTION_ERROR_DESCRIPTION, BLEConnectionError
+from aioesphomeapi import (
+    ESP_CONNECTION_ERROR_DESCRIPTION,
+    ESPHOME_GATT_ERRORS,
+    BLEConnectionError,
+)
 from aioesphomeapi.connection import APIConnectionError, TimeoutAPIError
 import async_timeout
 from bleak.backends.characteristic import BleakGATTCharacteristic
@@ -207,7 +211,9 @@ class ESPHomeClient(BaseBleakClient):
                     human_error = ESP_CONNECTION_ERROR_DESCRIPTION[ble_connection_error]
                 except (KeyError, ValueError):
                     ble_connection_error_name = str(error)
-                    human_error = f"Unknown error code {error}"
+                    human_error = ESPHOME_GATT_ERRORS.get(
+                        error, f"Unknown error code {error}"
+                    )
                 connected_future.set_exception(
                     BleakError(
                         f"Error {ble_connection_error_name} while connecting: {human_error}"
