@@ -340,7 +340,7 @@ bellows==0.34.2
 bimmer_connected==0.10.4
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==2.8.1
+bleak-retry-connector==2.8.2
 
 # homeassistant.components.bluetooth
 bleak==0.19.1
