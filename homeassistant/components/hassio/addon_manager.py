@@ -123,7 +123,7 @@ class AddonManager:
             )
         )
 
-    @api_error("Failed to get {addon_name} add-on discovery info")
+    @api_error("Failed to get the {addon_name} add-on discovery info")
     async def async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""
         discovery_info = await async_get_addon_discovery_info(
