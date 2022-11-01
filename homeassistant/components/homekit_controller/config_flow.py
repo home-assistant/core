@@ -265,6 +265,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "AccessoryIP": discovery_info.host,
             "AccessoryPort": discovery_info.port,
         }
+        if "._tcp." in discovery_info.name:
+            updated_ip_port["Connection"] = "IP"
+        elif "._udp." in discovery_info.name:
+            updated_ip_port["Connection"] = "CoAP"
 
         # If the device is already paired and known to us we should monitor c#
         # (config_num) for changes. If it changes, we check for new entities

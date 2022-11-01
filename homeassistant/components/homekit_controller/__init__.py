@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import voluptuous as vol
 
 import aiohomekit
 from aiohomekit.exceptions import (
@@ -14,14 +15,26 @@ from aiohomekit.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
-from .const import KNOWN_DEVICES
+from .const import (
+    ATTR_HKID,
+    ATTR_THREAD_CHANNEL,
+    ATTR_THREAD_EXTENDED_PAN_ID,
+    ATTR_THREAD_NETWORK_KEY,
+    ATTR_THREAD_NETWORK_NAME,
+    ATTR_THREAD_PAN_ID,
+    ATTR_THREAD_UNKNOWN_FLAG,
+    DOMAIN,
+    KNOWN_DEVICES,
+    SERVICE_THREAD_PROVISION
+)
 from .utils import async_get_controller
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,6 +82,51 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller)
+
+    async def thread_provision(service: ServiceCall) -> None:
+        hkid: str = service.data[ATTR_HKID]
+        network_name: str = service.data[ATTR_THREAD_NETWORK_NAME]
+        channel: int = service.data[ATTR_THREAD_CHANNEL]
+        pan_id: str = service.data[ATTR_THREAD_PAN_ID]
+        extended_pan_id: str = service.data[ATTR_THREAD_EXTENDED_PAN_ID]
+        network_key: str = service.data[ATTR_THREAD_NETWORK_KEY]
+        unknown: int = service.data[ATTR_THREAD_UNKNOWN_FLAG]
+        _LOGGER.warning("Provisioning Thread credentials: %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s" % (
+            ATTR_HKID, hkid,
+            ATTR_THREAD_NETWORK_NAME, network_name,
+            ATTR_THREAD_CHANNEL, channel,
+            ATTR_THREAD_PAN_ID, pan_id,
+            ATTR_THREAD_EXTENDED_PAN_ID, extended_pan_id,
+            ATTR_THREAD_NETWORK_KEY, 'REDACTED',
+            ATTR_THREAD_UNKNOWN_FLAG, unknown,
+        ))
+
+        if hkid not in hass.data[KNOWN_DEVICES]:
+            _LOGGER.warning("Unknown HKID")
+            return
+
+        connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
+        await connection.pairing.thread_provision(network_name, channel, pan_id, extended_pan_id, network_key, unknown)
+
+        return
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_THREAD_PROVISION,
+        thread_provision,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_HKID): cv.string,
+                vol.Required(ATTR_THREAD_NETWORK_NAME): vol.All(cv.string, vol.Length(max=16)),
+                vol.Required(ATTR_THREAD_CHANNEL): vol.All(cv.positive_int, vol.Range(min=11, max=26)),
+                vol.Required(ATTR_THREAD_PAN_ID): vol.All(cv.string, vol.Length(min=1, max=4)),
+                vol.Required(ATTR_THREAD_EXTENDED_PAN_ID): vol.All(cv.string, vol.Length(min=1, max=16)),
+                vol.Required(ATTR_THREAD_NETWORK_KEY): vol.All(cv.string, vol.Length(min=1, max=32)),
+                vol.Required(ATTR_THREAD_UNKNOWN_FLAG): vol.All(cv.positive_int, vol.Range(min=0, max=255)),
+            }
+        )
+    )
 
     return True
 

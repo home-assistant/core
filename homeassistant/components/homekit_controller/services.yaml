@@ -1,0 +1,54 @@
+# Describes the format for available homekit_controller services
+
+thread_provision:
+  name: Provision Thread network credentials to a device
+  description: >-
+    Write credentials to the Thread Control Point on the specified entity.
+  fields:
+    hkid:
+      name: HomeKit pairing ID
+      description: HomeKit accessory pairing ID, IEEE address
+      example: "AA:BB:CC:DD:EE:FF"
+      selector:
+        text:
+    network_name:
+      name: Network Name
+      description: Thread Network Name, 16 characters
+      example: DoYouLikeCrochet
+      selector:
+        text:
+    channel:
+      name: Channel
+      description: 802.15.4 channel, integer
+      default: 15
+      selector:
+        number:
+          min: 11
+          max: 26
+    pan_id:
+      name: PAN ID
+      description: PAN ID, hex string, length 4
+      example: F00D
+      selector:
+        text:
+    extended_pan_id:
+      name: Extended PAN ID
+      description: Extended PAN ID, hex string, length 16
+      example: FEEDFACECAFEF00D
+      selector:
+        text:
+    network_key:
+      name: Network Key
+      description: Network Key, hex string, length 32
+      example: 781596af7a02bad2743af7213c136fc9
+      selector:
+        text:
+    flag:
+      name: Unknown Value
+      description: Unknown value; iOS=0, Android=1?
+      advanced: true
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 255

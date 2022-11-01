@@ -24,6 +24,16 @@ IDENTIFIER_ACCESSORY_ID = "homekit_controller:accessory-id"
 IDENTIFIER_LEGACY_SERIAL_NUMBER = "serial-number"
 IDENTIFIER_LEGACY_ACCESSORY_ID = "accessory-id"
 
+ATTR_HKID = "hkid"
+ATTR_THREAD_NETWORK_NAME = "network_name"
+ATTR_THREAD_CHANNEL = "channel"
+ATTR_THREAD_PAN_ID = "pan_id"
+ATTR_THREAD_EXTENDED_PAN_ID = "extended_pan_id"
+ATTR_THREAD_NETWORK_KEY = "network_key"
+ATTR_THREAD_UNKNOWN_FLAG = "flag"
+
+SERVICE_THREAD_PROVISION = "thread_provision"
+
 # Mapping from Homekit type to component.
 HOMEKIT_ACCESSORY_DISPATCH = {
     ServicesTypes.LIGHTBULB: "light",
