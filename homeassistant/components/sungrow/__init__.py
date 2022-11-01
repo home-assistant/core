@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 
 from .config_flow import CannotConnect
-from .const import DOMAIN
+from .const import ALTERNATOR_LOSS, DOMAIN, TOTAL_ACTIVE_POWER, TOTAL_DC_POWER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,8 +80,8 @@ class SungrowData(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error("No route to host/endpoint: %s", self.host)
             raise update_coordinator.UpdateFailed(err)
 
-        data["alternator_loss"] = data.get("5017 - Total DC power", 0) - data.get(
-            "5031 - Total active power", 0
+        data[ALTERNATOR_LOSS] = data.get(TOTAL_DC_POWER, 0) - data.get(
+            TOTAL_ACTIVE_POWER, 0
         )
 
         return data
