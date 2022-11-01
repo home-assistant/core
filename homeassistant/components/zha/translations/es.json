@@ -150,7 +150,7 @@
             "device_flipped": "Dispositivo volteado \"{subtype}\"",
             "device_knocked": "Dispositivo golpeado \"{subtype}\"",
             "device_offline": "Dispositivo sin conexi\u00f3n",
-            "device_rotated": "Dispositivo girado \"{subtype}\"",
+            "device_rotated": "Dispositivo rotado \"{subtype}\"",
             "device_shaken": "Dispositivo agitado",
             "device_slid": "Dispositivo deslizado \"{subtype}\"",
             "device_tilted": "Dispositivo inclinado",
