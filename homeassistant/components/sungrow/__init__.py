@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, urlparse
 
 from SungrowModbusClient import Client, sungrow_register
 
@@ -54,6 +54,9 @@ class SungrowData(update_coordinator.DataUpdateCoordinator):
         self.name = entry.title
 
         url = urlparse(self.host, "http")
+        netloc = url.netloc or url.path
+        path = url.path if url.netloc else ""
+        url = ParseResult("http", netloc, path, *url[3:])
         self.config_url = url.geturl()
 
         self.client = Client(sungrow_register.regmap, self.host, self.port)
