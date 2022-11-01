@@ -140,10 +140,8 @@ def assert_repair_in_list(issues: list[dict[str, Any]], unhealthy: bool, reason:
         "issue_domain": None,
         "learn_more_url": f"https://www.home-assistant.io/more-info/{repair_type}/{reason}",
         "severity": "critical" if unhealthy else "warning",
-        "translation_key": repair_type,
-        "translation_placeholders": {
-            "reason": reason,
-        },
+        "translation_key": f"{repair_type}_{reason}",
+        "translation_placeholders": None,
     } in issues
 
 
@@ -393,3 +391,74 @@ async def test_reasons_added_and_removed(
     assert_repair_in_list(
         msg["result"]["issues"], unhealthy=False, reason="content_trust"
     )
+
+
+async def test_ignored_unsupported_skipped(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client,
+):
+    """Unsupported reasons which have an identical unhealthy reason are ignored."""
+    mock_resolution_info(
+        aioclient_mock, unsupported=["privileged"], unhealthy=["privileged"]
+    )
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="privileged")
+
+
+async def test_new_unsupported_unhealthy_reason(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client,
+):
+    """New unsupported/unhealthy reasons result in a generic repair until next core update."""
+    mock_resolution_info(
+        aioclient_mock, unsupported=["fake_unsupported"], unhealthy=["fake_unhealthy"]
+    )
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 2
+    assert {
+        "breaks_in_ha_version": None,
+        "created": ANY,
+        "dismissed_version": None,
+        "domain": "hassio",
+        "ignored": False,
+        "is_fixable": False,
+        "issue_id": "unhealthy_system_fake_unhealthy",
+        "issue_domain": None,
+        "learn_more_url": "https://www.home-assistant.io/more-info/unhealthy/fake_unhealthy",
+        "severity": "critical",
+        "translation_key": "unhealthy",
+        "translation_placeholders": {"reason": "fake_unhealthy"},
+    } in msg["result"]["issues"]
+    assert {
+        "breaks_in_ha_version": None,
+        "created": ANY,
+        "dismissed_version": None,
+        "domain": "hassio",
+        "ignored": False,
+        "is_fixable": False,
+        "issue_id": "unsupported_system_fake_unsupported",
+        "issue_domain": None,
+        "learn_more_url": "https://www.home-assistant.io/more-info/unsupported/fake_unsupported",
+        "severity": "warning",
+        "translation_key": "unsupported",
+        "translation_placeholders": {"reason": "fake_unsupported"},
+    } in msg["result"]["issues"]
