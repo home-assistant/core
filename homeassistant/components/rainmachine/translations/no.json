@@ -35,6 +35,7 @@
         "step": {
             "init": {
                 "data": {
+                    "use_app_run_times": "Bruk sonekj\u00f8ringstider fra RainMachine-appen",
                     "zone_run_time": "Standard sonekj\u00f8ringstid (i sekunder)"
                 },
                 "title": "Konfigurer RainMachine"
