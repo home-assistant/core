@@ -183,6 +183,66 @@ class AddonManager:
         """Install the managed add-on."""
         await async_install_addon(self._hass, self.addon_slug)
 
+    @api_error("Failed to uninstall the {addon_name} add-on")
+    async def async_uninstall_addon(self) -> None:
+        """Uninstall the managed add-on."""
+        await async_uninstall_addon(self._hass, self.addon_slug)
+
+    @api_error("Failed to update the {addon_name} add-on")
+    async def async_update_addon(self) -> None:
+        """Update the managed add-on if needed."""
+        addon_info = await self.async_get_addon_info()
+
+        if addon_info.state is AddonState.NOT_INSTALLED:
+            raise AddonError(f"{self.addon_name} add-on is not installed")
+
+        if not addon_info.update_available:
+            return
+
+        await self.async_create_backup()
+        await async_update_addon(self._hass, self.addon_slug)
+
+    @api_error("Failed to start the {addon_name} add-on")
+    async def async_start_addon(self) -> None:
+        """Start the managed add-on."""
+        await async_start_addon(self._hass, self.addon_slug)
+
+    @api_error("Failed to restart the {addon_name} add-on")
+    async def async_restart_addon(self) -> None:
+        """Restart the managed add-on."""
+        await async_restart_addon(self._hass, self.addon_slug)
+
+    @api_error("Failed to stop the {addon_name} add-on")
+    async def async_stop_addon(self) -> None:
+        """Stop the managed add-on."""
+        await async_stop_addon(self._hass, self.addon_slug)
+
+    @api_error("Failed to create a backup of the {addon_name} add-on")
+    async def async_create_backup(self) -> None:
+        """Create a partial backup of the managed add-on."""
+        addon_info = await self.async_get_addon_info()
+        name = f"addon_{self.addon_slug}_{addon_info.version}"
+
+        self._logger.debug("Creating backup: %s", name)
+        await async_create_backup(
+            self._hass,
+            {"name": name, "addons": [self.addon_slug]},
+            partial=True,
+        )
+
+    async def async_configure_addon(
+        self,
+        addon_config: dict[str, Any],
+    ) -> None:
+        """Configure the manager add-on, if needed."""
+        addon_info = await self.async_get_addon_info()
+
+        if addon_info.state is AddonState.NOT_INSTALLED:
+            raise AddonError(f"{self.addon_name} add-on is not installed")
+
+        if addon_config != addon_info.options:
+            await self.async_set_addon_options(addon_config)
+
     @callback
     def async_schedule_install_addon(self, catch_error: bool = False) -> asyncio.Task:
         """Schedule a task that installs the managed add-on.
@@ -223,25 +283,6 @@ class AddonManager:
             )
         return self._install_task
 
-    @api_error("Failed to uninstall the {addon_name} add-on")
-    async def async_uninstall_addon(self) -> None:
-        """Uninstall the managed add-on."""
-        await async_uninstall_addon(self._hass, self.addon_slug)
-
-    @api_error("Failed to update the {addon_name} add-on")
-    async def async_update_addon(self) -> None:
-        """Update the managed add-on if needed."""
-        addon_info = await self.async_get_addon_info()
-
-        if addon_info.state is AddonState.NOT_INSTALLED:
-            raise AddonError(f"{self.addon_name} add-on is not installed")
-
-        if not addon_info.update_available:
-            return
-
-        await self.async_create_backup()
-        await async_update_addon(self._hass, self.addon_slug)
-
     @callback
     def async_schedule_update_addon(self, catch_error: bool = False) -> asyncio.Task:
         """Schedule a task that updates and sets up the managed add-on.
@@ -255,16 +296,6 @@ class AddonManager:
                 catch_error=catch_error,
             )
         return self._update_task
-
-    @api_error("Failed to start the {addon_name} add-on")
-    async def async_start_addon(self) -> None:
-        """Start the managed add-on."""
-        await async_start_addon(self._hass, self.addon_slug)
-
-    @api_error("Failed to restart the {addon_name} add-on")
-    async def async_restart_addon(self) -> None:
-        """Restart the managed add-on."""
-        await async_restart_addon(self._hass, self.addon_slug)
 
     @callback
     def async_schedule_start_addon(self, catch_error: bool = False) -> asyncio.Task:
@@ -294,24 +325,6 @@ class AddonManager:
             )
         return self._restart_task
 
-    @api_error("Failed to stop the {addon_name} add-on")
-    async def async_stop_addon(self) -> None:
-        """Stop the managed add-on."""
-        await async_stop_addon(self._hass, self.addon_slug)
-
-    async def async_configure_addon(
-        self,
-        addon_config: dict[str, Any],
-    ) -> None:
-        """Configure the manager add-on, if needed."""
-        addon_info = await self.async_get_addon_info()
-
-        if addon_info.state is AddonState.NOT_INSTALLED:
-            raise AddonError(f"{self.addon_name} add-on is not installed")
-
-        if addon_config != addon_info.options:
-            await self.async_set_addon_options(addon_config)
-
     @callback
     def async_schedule_setup_addon(
         self,
@@ -335,19 +348,6 @@ class AddonManager:
                 catch_error=catch_error,
             )
         return self._start_task
-
-    @api_error("Failed to create a backup of the {addon_name} add-on")
-    async def async_create_backup(self) -> None:
-        """Create a partial backup of the managed add-on."""
-        addon_info = await self.async_get_addon_info()
-        name = f"addon_{self.addon_slug}_{addon_info.version}"
-
-        self._logger.debug("Creating backup: %s", name)
-        await async_create_backup(
-            self._hass,
-            {"name": name, "addons": [self.addon_slug]},
-            partial=True,
-        )
 
     @callback
     def _async_schedule_addon_operation(
