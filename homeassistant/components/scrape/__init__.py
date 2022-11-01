@@ -1,7 +1,10 @@
 """The scrape component."""
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Coroutine
 from datetime import timedelta
+from typing import Any
 
 import voluptuous as vol
 
@@ -54,6 +57,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not (scrape_config := config.get(DOMAIN)):
         return True
 
+    load_coroutines: list[Coroutine[Any, Any, None]] = []
     for resource_config in scrape_config:
         rest = create_rest_data_from_config(hass, resource_config)
         coordinator = ScrapeCoordinator(
@@ -66,12 +70,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         sensors: list[ConfigType] = resource_config.get(SENSOR_DOMAIN, [])
         if sensors:
-            await discovery.async_load_platform(
-                hass,
-                Platform.SENSOR,
-                DOMAIN,
-                {"coordinator": coordinator, "configs": sensors},
-                config,
+            load_coroutines.append(
+                discovery.async_load_platform(
+                    hass,
+                    Platform.SENSOR,
+                    DOMAIN,
+                    {"coordinator": coordinator, "configs": sensors},
+                    config,
+                )
             )
+
+    if load_coroutines:
+        await asyncio.gather(*load_coroutines)
 
     return True
