@@ -1472,9 +1472,7 @@ class AlexaModeController(AlexaCapability):
 
         # Humidifier modes
         if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
-            self._resource = AlexaModeResource(
-                [AlexaGlobalCatalog.SETTING_PRESET], False
-            )
+            self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
             modes = self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES, [])
             for mode in modes:
                 self._resource.add_mode(f"{humidifier.ATTR_MODE}.{mode}", [mode])
