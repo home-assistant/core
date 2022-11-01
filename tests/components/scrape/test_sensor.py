@@ -69,6 +69,7 @@ async def test_scrape_sensor_platform_yaml(hass: HomeAssistant) -> None:
                 name="Auth page2",
                 username="user@secret.com",
                 password="12345678",
+                template="{{value}}",
             ),
         ]
     }
