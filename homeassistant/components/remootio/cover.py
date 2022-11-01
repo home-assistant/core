@@ -92,23 +92,6 @@ class RemootioCover(cover.CoverEntity):
 
         self.async_schedule_update_ha_state(force_refresh=True)
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Terminate the used Remootio client."""
-
-        _LOGGER.debug(
-            "Doing async_will_remove_from_hass for %s with entity id %s",
-            self.__class__,
-            self.entity_id,
-        )
-
-        terminated: bool = await self._remootio_client.terminate()
-        if terminated:
-            _LOGGER.debug(
-                "Remootio client successfully terminated for %s with entity id %s",
-                self.__class__,
-                self.entity_id,
-            )
-
     async def async_update(self) -> None:
         """Trigger state update of the used Remootio client."""
         await self._remootio_client.trigger_state_update()
