@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_UNIQUE_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -59,6 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PING_COUNT, default=DEFAULT_PING_COUNT): vol.Range(
             min=1, max=100
         ),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -73,6 +74,7 @@ async def async_setup_platform(
     host = config[CONF_HOST]
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
     privileged = hass.data[DOMAIN][PING_PRIVS]
     ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if privileged is None:
@@ -81,23 +83,34 @@ async def async_setup_platform(
         ping_cls = PingDataICMPLib
 
     async_add_entities(
-        [PingBinarySensor(name, ping_cls(hass, host, count, privileged))]
+        [PingBinarySensor(name, unique_id, ping_cls(hass, host, count, privileged))]
     )
 
 
 class PingBinarySensor(RestoreEntity, BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
-    def __init__(self, name: str, ping: PingDataSubProcess | PingDataICMPLib) -> None:
+    def __init__(
+        self,
+        name: str,
+        unique_id: str | None,
+        ping: PingDataSubProcess | PingDataICMPLib,
+    ) -> None:
         """Initialize the Ping Binary sensor."""
         self._available = False
         self._name = name
         self._ping = ping
+        self._unique_id = unique_id
 
     @property
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the sensor's unique id."""
+        return self._unique_id
 
     @property
     def available(self) -> bool:
