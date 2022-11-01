@@ -10,29 +10,18 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.keyboard_key import KeyboardKey
-from systembridgeconnector.models.keyboard_text import KeyboardText
-from systembridgeconnector.models.open_path import OpenPath
-from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import SUPPORTED_VERSION, Version
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_URL,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import services
 from .const import DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
 
@@ -42,15 +31,6 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
-
-CONF_BRIDGE = "bridge"
-CONF_KEY = "key"
-CONF_TEXT = "text"
-
-SERVICE_OPEN_PATH = "open_path"
-SERVICE_OPEN_URL = "open_url"
-SERVICE_SEND_KEYPRESS = "send_keypress"
-SERVICE_SEND_TEXT = "send_text"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -129,107 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
-        return True
-
-    def valid_device(device: str):
-        """Check device is valid."""
-        device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get(device)
-        if device_entry is not None:
-            try:
-                return next(
-                    entry.entry_id
-                    for entry in hass.config_entries.async_entries(DOMAIN)
-                    if entry.entry_id in device_entry.config_entries
-                )
-            except StopIteration as exception:
-                raise vol.Invalid from exception
-        raise vol.Invalid(f"Device {device} does not exist")
-
-    async def handle_open_path(call: ServiceCall) -> None:
-        """Handle the open path service call."""
-        _LOGGER.info("Open: %s", call.data)
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
-        ]
-        await coordinator.websocket_client.open_path(
-            OpenPath(path=call.data[CONF_PATH])
-        )
-
-    async def handle_open_url(call: ServiceCall) -> None:
-        """Handle the open url service call."""
-        _LOGGER.info("Open: %s", call.data)
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
-        ]
-        await coordinator.websocket_client.open_url(OpenUrl(url=call.data[CONF_URL]))
-
-    async def handle_send_keypress(call: ServiceCall) -> None:
-        """Handle the send_keypress service call."""
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
-        ]
-        await coordinator.websocket_client.keyboard_keypress(
-            KeyboardKey(key=call.data[CONF_KEY])
-        )
-
-    async def handle_send_text(call: ServiceCall) -> None:
-        """Handle the send_keypress service call."""
-        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
-        ]
-        await coordinator.websocket_client.keyboard_text(
-            KeyboardText(text=call.data[CONF_TEXT])
-        )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_OPEN_PATH,
-        handle_open_path,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_PATH): cv.string,
-            },
-        ),
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_OPEN_URL,
-        handle_open_url,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_URL): cv.string,
-            },
-        ),
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SEND_KEYPRESS,
-        handle_send_keypress,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_KEY): cv.string,
-            },
-        ),
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SEND_TEXT,
-        handle_send_text,
-        schema=vol.Schema(
-            {
-                vol.Required(CONF_BRIDGE): valid_device,
-                vol.Required(CONF_TEXT): cv.string,
-            },
-        ),
-    )
+    services.register(hass)
 
     # Reload entry when its updated.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -253,10 +133,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         del hass.data[DOMAIN][entry.entry_id]
 
     if not hass.data[DOMAIN]:
-        hass.services.async_remove(DOMAIN, SERVICE_OPEN_PATH)
-        hass.services.async_remove(DOMAIN, SERVICE_OPEN_URL)
-        hass.services.async_remove(DOMAIN, SERVICE_SEND_KEYPRESS)
-        hass.services.async_remove(DOMAIN, SERVICE_SEND_TEXT)
+        services.remove(hass)
 
     return unload_ok
 

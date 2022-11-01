@@ -70,3 +70,69 @@ send_text:
       example: "Hello world"
       selector:
         text:
+sleep:
+  name: Sleep
+  description: Sends the system to sleep.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+hibernate:
+  name: Hibernate
+  description: Hibernate the system.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+restart:
+  name: Restart
+  description: Restart the system.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+shutdown:
+  name: Shutdown
+  description: Shutdown the system.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+lock:
+  name: Lock
+  description: Lock the system.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+logout:
+  name: Log Out
+  description: Log out the current user.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to send the command to.
+      required: true
+      selector:
+        device:
+          integration: system_bridge
