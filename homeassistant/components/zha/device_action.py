@@ -93,7 +93,7 @@ DEVICE_ACTION_SCHEMAS = {
     ),
     INOVELLI_INDIVIDUAL_LED_EFFECT: vol.Schema(
         {
-            vol.Required("led_number"): vol.All(vol.Coerce(int), vol.Range(1, 7)),
+            vol.Required("led_number"): vol.All(vol.Coerce(int), vol.Range(0, 6)),
             vol.Required("effect_type"): vol.In(
                 InovelliConfigEntityChannel.LEDEffectType.__members__.keys()
             ),
