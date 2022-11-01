@@ -1409,9 +1409,7 @@ class AlexaModeController(AlexaCapability):
         # Humidifier mode
         if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_MODE}":
             mode = self.entity.attributes.get(humidifier.ATTR_MODE, None)
-            if mode in self.entity.attributes.get(
-                humidifier.ATTR_AVAILABLE_MODES, None
-            ):
+            if mode in self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES, []):
                 return f"{humidifier.ATTR_MODE}.{mode}"
 
         # Cover Position

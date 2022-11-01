@@ -1456,7 +1456,7 @@ async def async_api_adjust_range(
             if range_delta_default
             else int(range_delta)
         )
-        service = fan.SERVICE_SET_PERCENTAGE
+        service = humidifier.SERVICE_SET_HUMIDITY
         if not (current := entity.attributes.get(humidifier.ATTR_HUMIDITY)):
             msg = f"Unable to determine {entity.entity_id} current target humidity"
             raise AlexaInvalidValueError(msg)
