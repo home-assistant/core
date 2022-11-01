@@ -1674,7 +1674,7 @@ class AlexaRangeController(AlexaCapability):
         # Humidifier Target Humidity Resources
         if self.instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":
             self._resource = AlexaPresetResource(
-                labels=["Percentage"],
+                labels=["Humidity", "Percentage", "Target humidity"],
                 min_value=self.entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10),
                 max_value=self.entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90),
                 precision=1,
