@@ -32,6 +32,7 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 IGNORED_OVERKIZ_DEVICES: list[UIClass | UIWidget] = [
@@ -60,6 +61,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIClass.SWINGING_SHUTTER: Platform.COVER,
     UIClass.VENETIAN_BLIND: Platform.COVER,
     UIClass.WINDOW: Platform.COVER,
+    UIClass.POD: Platform.UPDATE,
     UIWidget.ALARM_PANEL_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.ATLANTIC_ELECTRICAL_HEATER: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_ELECTRICAL_TOWEL_DRYER: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
