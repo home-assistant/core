@@ -379,6 +379,7 @@ class BluetoothManager:
         if (
             (old_service_info := all_history.get(address))
             and source != old_service_info.source
+            and old_service_info.source in self._adapters
             and self._prefer_previous_adv_from_different_source(
                 old_service_info, service_info
             )
@@ -398,6 +399,7 @@ class BluetoothManager:
                     # the old connectable advertisement
                     or (
                         source != old_connectable_service_info.source
+                        and old_connectable_service_info.source in self._adapters
                         and self._prefer_previous_adv_from_different_source(
                             old_connectable_service_info, service_info
                         )
