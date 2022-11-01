@@ -66,19 +66,19 @@ class ZWaveMeController:
 
     def add_device(self, device: ZWaveMeData) -> None:
         """Send signal to create device."""
-        if device.deviceType in ZWAVE_ME_PLATFORMS and self.platforms_inited:
-            if device.id in self.device_ids:
-                dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{device.id}", device)
-            else:
-                dispatcher_send(
-                    self._hass, f"ZWAVE_ME_NEW_{device.deviceType.upper()}", device
-                )
-                self.device_ids.add(device.id)
+        if device.id in self.device_ids:
+            dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{device.id}", device)
+        else:
+            dispatcher_send(
+                self._hass, f"ZWAVE_ME_NEW_{device.deviceType.upper()}", device
+            )
+            self.device_ids.add(device.id)
 
     def on_device_create(self, devices: list[ZWaveMeData]) -> None:
         """Create multiple devices."""
         for device in devices:
-            self.add_device(device)
+            if device.deviceType in ZWAVE_ME_PLATFORMS and self.platforms_inited:
+                self.add_device(device)
 
     def on_device_update(self, new_info: ZWaveMeData) -> None:
         """Send signal to update device."""
