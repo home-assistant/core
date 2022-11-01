@@ -7,48 +7,63 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components.todoist.calendar import DOMAIN, _parse_due_date
-from homeassistant.components.todoist.types import DueDate
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import entity_registry
 from homeassistant.util import dt
 
 
+class MockDue:
+    """Mock a Todoist due date."""
+
+    def __init__(self, data: dict[str, Any]) -> None:
+        """Initialize the mock."""
+        self.date = data["date"]
+        self.is_recurring = data["is_recurring"]
+        self.datetime = data["datetime"]
+        self.string = data["string"]
+        self.timezone = data["timezone"]
+
+
 def test_parse_due_date_invalid():
     """Test None is returned if the due date can't be parsed."""
-    data: DueDate = {
+    data = {
         "date": "invalid",
         "is_recurring": False,
-        "lang": "en",
+        "datetime": "invalid",
         "string": "",
         "timezone": None,
     }
-    assert _parse_due_date(data, timezone_offset=-8) is None
+    due = MockDue(data)
+    assert _parse_due_date(due) is None
 
 
-def test_parse_due_date_with_no_time_data():
-    """Test due date is parsed correctly when it has no time data."""
-    data: DueDate = {
+def test_parse_due_date_without_timezone():
+    """Test due date is parsed correctly when it has no timezone."""
+    data = {
         "date": "2022-02-02",
         "is_recurring": False,
-        "lang": "en",
+        "datetime": "2022-02-02T14:00:00Z",
         "string": "Feb 2 2:00 PM",
         "timezone": None,
     }
-    actual = _parse_due_date(data, timezone_offset=-8)
-    assert datetime(2022, 2, 2, 8, 0, 0, tzinfo=dt.UTC) == actual
+    due = MockDue(data)
+    actual = _parse_due_date(due)
+    assert datetime(2022, 2, 2, 14, 0, 0, tzinfo=dt.UTC) == actual
 
 
-def test_parse_due_date_without_timezone_uses_offset():
-    """Test due date uses user local timezone offset when it has no timezone."""
-    data: DueDate = {
-        "date": "2022-02-02T14:00:00",
+def test_parse_due_date_with_timezone():
+    """Test due date is parsed correctly when it has a timezone."""
+    data = {
+        "date": "2022-02-02",
         "is_recurring": False,
-        "lang": "en",
+        "datetime": "2022-02-02T14:00:00Z",
         "string": "Feb 2 2:00 PM",
-        "timezone": None,
+        "timezone": "America/New_York",
     }
-    actual = _parse_due_date(data, timezone_offset=-8)
-    assert datetime(2022, 2, 2, 22, 0, 0, tzinfo=dt.UTC) == actual
+    due = MockDue(data)
+    actual = _parse_due_date(due)
+    # 2 p.m. in New York is 6:56 p.m. UTC
+    assert datetime(2022, 2, 2, 18, 56, 0, tzinfo=dt.UTC) == actual
 
 
 @pytest.fixture(name="state")

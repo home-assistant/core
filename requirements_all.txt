@@ -2074,6 +2074,9 @@ pytradfri[async]==9.0.0
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.2.1
 
+# homeassistant.components.todoist
+pytz==2022.6
+
 # homeassistant.components.usb
 pyudev==0.23.2
 
@@ -2422,7 +2425,7 @@ tilt-ble==0.2.3
 tmb==0.0.4
 
 # homeassistant.components.todoist
-todoist-python==8.0.0
+todoist_api_python==2.0.1
 
 # homeassistant.components.tolo
 tololib==0.1.0b3

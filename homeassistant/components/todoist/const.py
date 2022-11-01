@@ -73,8 +73,6 @@ PRIORITY = "priority"
 PROJECT_ID = "project_id"
 # Service Call: What Project do you want a Task added to?
 PROJECT_NAME = "project"
-# Todoist API: Fetch all Projects
-PROJECTS = "projects"
 # Calendar Platform: When does a calendar event start?
 START = "start"
 # Calendar Platform: What is the next calendar event about?

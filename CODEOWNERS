@@ -1159,8 +1159,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
 /homeassistant/components/tmb/ @alemuro
-/homeassistant/components/todoist/ @boralyl
-/tests/components/todoist/ @boralyl
+/homeassistant/components/todoist/ @boralyl @nwithan8
+/tests/components/todoist/ @boralyl @nwithan8
 /homeassistant/components/tolo/ @MatthiasLohr
 /tests/components/tolo/ @MatthiasLohr
 /homeassistant/components/tomorrowio/ @raman325 @lymanepp
