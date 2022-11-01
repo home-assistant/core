@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import threading
 from typing import Any
 
 from pushbullet import Listener, PushBullet
@@ -18,7 +17,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -128,11 +127,24 @@ async def async_setup_entry(
 
     pushbullet: PushBullet = hass.data[DOMAIN][entry.entry_id]
     pb_provider = PushBulletNotificationProvider(hass, pushbullet)
+
+    def listener_start(event: Event) -> None:
+        """Start the listener thread."""
+        _LOGGER.debug("Starting listener for pushbullet")
+        pb_provider.start()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, listener_start)
+    entry.async_on_unload(pb_provider.close)
+
     entities = [
-        PushBulletNotificationSensor(entry.data[CONF_NAME], pb_provider, description)
+        PushBulletNotificationSensor(
+            entry.data[CONF_NAME],
+            pb_provider,
+            description,
+        )
         for description in SENSOR_TYPES
     ]
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pb_provider.shutdown)
+
     async_add_entities(entities)
 
 
@@ -182,26 +194,19 @@ class PushBulletNotificationSensor(SensorEntity):
             )
         )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Close running thread on remove."""
-        self.pb_provider.shutdown()
 
-
-class PushBulletNotificationProvider(threading.Thread):
+class PushBulletNotificationProvider(Listener):
     """Provider for an account, leading to one or more sensors."""
 
     def __init__(self, hass: HomeAssistant, pushbullet: PushBullet) -> None:
         """Start to retrieve pushes from the given Pushbullet instance."""
-
-        super().__init__()
         self.hass = hass
         self.pushbullet = pushbullet
         self.data: dict[str, Any] = {}
-        self.listener = Listener(account=pushbullet, on_push=self.on_push)
+        super().__init__(account=pushbullet, on_push=self.update_data)
         self.daemon = True
-        self.start()
 
-    def on_push(self, data: dict[str, Any]) -> None:
+    def update_data(self, data: dict[str, Any]) -> None:
         """Update the current data.
 
         Currently only monitors pushes but might be extended to monitor
@@ -210,19 +215,3 @@ class PushBulletNotificationProvider(threading.Thread):
         if data["type"] == "push":
             self.data = data["push"]
         dispatcher_send(self.hass, DATA_UPDATED)
-
-    def run(self):
-        """Retrieve_pushes.
-
-        Spawn a new Listener and links it to self.on_push.
-        """
-
-        _LOGGER.debug("Getting pushes")
-        try:
-            self.listener.run_forever()
-        finally:
-            self.listener.close()
-
-    def shutdown(self, event: Event | None = None) -> None:
-        """Shut down the thread."""
-        self.join()
