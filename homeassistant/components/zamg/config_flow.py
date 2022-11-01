@@ -7,7 +7,7 @@ import voluptuous as vol
 from zamg import ZamgData
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -72,14 +72,13 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=user_input.get(CONF_NAME) or self._client.get_station_name,
+            title=self._client.get_station_name,
             data={CONF_STATION_ID: station_id},
         )
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle ZAMG configuration import."""
         station_id = str(config.get(CONF_STATION_ID))
-        station_name = config.get(CONF_NAME)
         # create issue every time after restart
         # parameter is_persistent seems not working
         async_create_issue(
@@ -91,12 +90,6 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
         )
-
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if station_id in entry.data[CONF_STATION_ID]:
-                return self.async_abort(
-                    reason="already_configured",
-                )
 
         if self._client is None:
             self._client = ZamgData()
@@ -111,26 +104,17 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             longitude = config.get(CONF_LONGITUDE) or self.hass.config.longitude
             station_id = await self._client.closest_station(latitude, longitude)
 
-        if not station_name:
-            await self._client.zamg_stations()
-            self._client.set_default_station(station_id)
-            station_name = self._client.get_station_name
-
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if station_id in entry.data[CONF_STATION_ID]:
-                return self.async_abort(
-                    reason="already_configured",
-                )
+        # Check if already configured
+        await self.async_set_unique_id(station_id)
+        self._abort_if_unique_id_configured()
 
         LOGGER.debug(
-            "importing zamg station from configuration.yaml: station_id = %s, name = %s",
+            "importing zamg station from configuration.yaml: station_id = %s",
             station_id,
-            station_name,
         )
 
         return await self.async_step_user(
             user_input={
                 CONF_STATION_ID: int(station_id),
-                CONF_NAME: station_name,
             }
         )
