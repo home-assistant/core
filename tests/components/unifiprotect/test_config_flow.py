@@ -254,24 +254,28 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
         await hass.async_block_till_done()
         assert mock_config.state == config_entries.ConfigEntryState.LOADED
 
-    result = await hass.config_entries.options.async_init(mock_config.entry_id)
-    assert result["type"] == FlowResultType.FORM
-    assert not result["errors"]
-    assert result["step_id"] == "init"
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        assert result["type"] == FlowResultType.FORM
+        assert not result["errors"]
+        assert result["step_id"] == "init"
 
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {CONF_DISABLE_RTSP: True, CONF_ALL_UPDATES: True, CONF_OVERRIDE_CHOST: True},
-    )
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_DISABLE_RTSP: True,
+                CONF_ALL_UPDATES: True,
+                CONF_OVERRIDE_CHOST: True,
+            },
+        )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
-        "all_updates": True,
-        "disable_rtsp": True,
-        "override_connection_host": True,
-        "max_media": 1000,
-    }
-    await hass.config_entries.async_unload(mock_config.entry_id)
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["data"] == {
+            "all_updates": True,
+            "disable_rtsp": True,
+            "override_connection_host": True,
+            "max_media": 1000,
+        }
+        await hass.config_entries.async_unload(mock_config.entry_id)
 
 
 @pytest.mark.parametrize(
