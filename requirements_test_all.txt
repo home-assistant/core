@@ -544,7 +544,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==2.2.0
+gcal-sync==2.2.2
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
