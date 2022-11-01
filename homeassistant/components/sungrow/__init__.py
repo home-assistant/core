@@ -61,7 +61,7 @@ class SungrowData(update_coordinator.DataUpdateCoordinator):
 
         self.client = Client(sungrow_register.regmap, self.host, self.port)
 
-        self.logger.debug(
+        _LOGGER.debug(
             "Sungrow setting with host: %s",
             self.host,
         )
