@@ -335,7 +335,7 @@ class AddonManager:
             )
         return self._start_task
 
-    @api_error("Failed to create a backup of the {addon_name} add-on.")
+    @api_error("Failed to create a backup of the {addon_name} add-on")
     async def async_create_backup(self) -> None:
         """Create a partial backup of the managed add-on."""
         addon_info = await self.async_get_addon_info()
