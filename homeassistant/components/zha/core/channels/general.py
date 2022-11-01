@@ -156,7 +156,7 @@ class BasicChannel(ZigbeeChannel):
     def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Basic channel."""
         super().__init__(cluster, ch_pool)
-        if is_hue_motion_sensor(self):
+        if is_hue_motion_sensor(self) and self.cluster.endpoint.endpoint_id == 2:
             self.ZCL_INIT_ATTRS = (  # pylint: disable=invalid-name
                 self.ZCL_INIT_ATTRS.copy()
             )
