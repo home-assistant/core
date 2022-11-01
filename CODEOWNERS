@@ -747,8 +747,8 @@ build.json @home-assistant/supervisor
 /tests/components/local_todo/ @allenporter
 /homeassistant/components/lock/ @home-assistant/core
 /tests/components/lock/ @home-assistant/core
-/homeassistant/components/logbook/ @home-assistant/core @bdraco
-/tests/components/logbook/ @home-assistant/core @bdraco
+/homeassistant/components/logbook/ @home-assistant/core
+/tests/components/logbook/ @home-assistant/core
 /homeassistant/components/logger/ @home-assistant/core
 /tests/components/logger/ @home-assistant/core
 /homeassistant/components/logi_circle/ @evanjd
@@ -1157,8 +1157,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/schlage/ @dknowles2
 /tests/components/schlage/ @dknowles2
 /homeassistant/components/schluter/ @prairieapps
-/homeassistant/components/scrape/ @fabaff @gjohansson-ST
-/tests/components/scrape/ @fabaff @gjohansson-ST
+/homeassistant/components/scrape/ @fabaff @gjohansson-ST @epenet
+/tests/components/scrape/ @fabaff @gjohansson-ST @epenet
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
 /tests/components/screenlogic/ @dieselrabbit @bdraco
 /homeassistant/components/script/ @home-assistant/core

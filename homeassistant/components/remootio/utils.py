@@ -1,4 +1,6 @@
 """Utility methods for the Remootio integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 from logging import Logger
@@ -72,7 +74,7 @@ async def create_client(
     hass: core.HomeAssistant,
     connection_options: ConnectionOptions,
     logger: Logger,
-    expected_serial_number: str = None,
+    expected_serial_number: str | None = None,
 ) -> RemootioClient:
     """Create an Remootio client based on the given data."""
     result: RemootioClient = None

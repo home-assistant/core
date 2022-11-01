@@ -1,9 +1,10 @@
 {
   "domain": "remootio",
   "name": "Remootio",
+  "integration_type": "device",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/remootio",
-  "requirements": ["aioremootio==1.0.0a15"],
+  "requirements": ["aioremootio==1.0.0a17"],
   "ssdp": [],
   "homekit": {},
   "dependencies": [],

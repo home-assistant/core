@@ -4878,6 +4878,11 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "remootio": {
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "renault": {
       "name": "Renault",
       "integration_type": "hub",
@@ -7132,6 +7137,7 @@
     "nmap_tracker",
     "plant",
     "proximity",
+    "remootio",
     "rpi_power",
     "schedule",
     "season",
