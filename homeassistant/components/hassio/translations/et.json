@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "unhealthy": {
+            "description": "S\u00fcsteem ei ole praegu korras '{reason}' t\u00f5ttu. Kasuta linki, et saada rohkem teavet selle kohta, mis on valesti ja kuidas seda parandada.",
+            "title": "Vigane s\u00fcsteem \u2013 {reason}"
+        },
+        "unsupported": {
+            "description": "S\u00fcsteemi ei toetata '{reason}' t\u00f5ttu. Kasuta linki, et saada lisateavet selle kohta, mida see t\u00e4hendab ja kuidas toetatud s\u00fcsteemi naasta.",
+            "title": "Toetamata s\u00fcsteem \u2013 {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "Agendi versioon",

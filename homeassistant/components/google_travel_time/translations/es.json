@@ -28,6 +28,7 @@
                     "mode": "Modo de viaje",
                     "time": "Hora",
                     "time_type": "Tipo de tiempo",
+                    "traffic_mode": "Modo de tr\u00e1fico",
                     "transit_mode": "Modo de tr\u00e1nsito",
                     "transit_routing_preference": "Preferencia de ruta de tr\u00e1nsito",
                     "units": "Unidades"
