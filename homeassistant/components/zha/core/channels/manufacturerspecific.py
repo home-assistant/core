@@ -88,7 +88,7 @@ class TuyaChannel(ZigbeeChannel):
             "_TZE200_k6jhsr0q",
             "_TZE200_9mahtqtg",
         ):
-            self.ZCL_INIT_ATTRS = {
+            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
                 "backlight_mode": True,
                 "power_on_state": True,
             }
