@@ -1,5 +1,4 @@
 """ntfy platform for notify component."""
-from http import HTTPStatus
 import logging
 from typing import Any
 
@@ -31,8 +30,8 @@ DEFAULT_URL = "https://ntfy.sh"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(
-            CONF_TOPIC
-        ): cv.string,  # have to set topic globally in the configuration, can override in "data"
+            CONF_TOPIC  # have to set topic globally in the configuration, can override in "data"
+        ): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
         vol.Optional(CONF_PASSWORD): cv.string,
@@ -63,10 +62,10 @@ def get_service(
 
     return NtfyNotificationService(
         hass,
-        url,
-        topic,
-        auth,
-        verify_ssl,
+        url=url,
+        topic=topic,
+        auth=auth,
+        verify_ssl=verify_ssl,
     )
 
 
@@ -76,6 +75,7 @@ class NtfyNotificationService(BaseNotificationService):
     def __init__(
         self,
         hass,
+        *,
         url,
         topic,
         auth,
@@ -128,26 +128,13 @@ class NtfyNotificationService(BaseNotificationService):
             verify=self._verify_ssl,
         )
 
-        if (
-            response.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR
-            and response.status_code < 600
-        ):
+        try:
+            response.raise_for_status()  # raise an error if a 4xx or 5xx response is returned
+        except requests.exceptions.HTTPError:
             _LOGGER.exception(
-                "Server error. Response %d: %s:", response.status_code, response.reason
+                "Error communicating with ntfy. Response %d: %s:",
+                response.status_code,
+                response.reason,
             )
-        elif (
-            response.status_code >= HTTPStatus.BAD_REQUEST
-            and response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
-        ):
-            _LOGGER.exception(
-                "Client error. Response %d: %s:", response.status_code, response.reason
-            )
-        elif (
-            response.status_code >= HTTPStatus.OK
-            and response.status_code < HTTPStatus.MULTIPLE_CHOICES
-        ):
-            _LOGGER.debug(
-                "Success. Response %d: %s:", response.status_code, response.reason
-            )
-        else:
-            _LOGGER.debug("Response %d: %s:", response.status_code, response.reason)
+
+        _LOGGER.debug("Response %d: %s:", response.status_code, response.reason)
