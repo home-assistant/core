@@ -20,6 +20,7 @@ from . import (
     requirements,
     services,
     ssdp,
+    strict_typing,
     translations,
     usb,
     zeroconf,
@@ -45,6 +46,7 @@ INTEGRATION_PLUGINS = [
 ]
 HASS_PLUGINS = [
     coverage,
+    strict_typing,
     mypy_config,
     metadata,
 ]
