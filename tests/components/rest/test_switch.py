@@ -33,12 +33,12 @@ STATE_RESOURCE = RESOURCE
 PARAMS = None
 
 
-async def test_setup_missing_config(hass):
+async def test_setup_missing_config(hass: HomeAssistant) -> None:
     """Test setup with configuration missing required entries."""
     assert not await rest.async_setup_platform(hass, {CONF_PLATFORM: DOMAIN}, None)
 
 
-async def test_setup_missing_schema(hass):
+async def test_setup_missing_schema(hass: HomeAssistant) -> None:
     """Test setup with resource missing schema."""
     assert not await rest.async_setup_platform(
         hass,
@@ -47,7 +47,9 @@ async def test_setup_missing_schema(hass):
     )
 
 
-async def test_setup_failed_connect(hass, aioclient_mock):
+async def test_setup_failed_connect(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup when connection error occurs."""
     aioclient_mock.get("http://localhost", exc=aiohttp.ClientError)
     assert not await rest.async_setup_platform(
@@ -57,7 +59,9 @@ async def test_setup_failed_connect(hass, aioclient_mock):
     )
 
 
-async def test_setup_timeout(hass, aioclient_mock):
+async def test_setup_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup when connection timeout occurs."""
     aioclient_mock.get("http://localhost", exc=asyncio.TimeoutError())
     assert not await rest.async_setup_platform(
@@ -67,7 +71,9 @@ async def test_setup_timeout(hass, aioclient_mock):
     )
 
 
-async def test_setup_minimum(hass, aioclient_mock):
+async def test_setup_minimum(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with minimum configuration."""
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     with assert_setup_component(1, Platform.SWITCH):
@@ -85,7 +91,9 @@ async def test_setup_minimum(hass, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
-async def test_setup_query_params(hass, aioclient_mock):
+async def test_setup_query_params(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with query params."""
     aioclient_mock.get("http://localhost/?search=something", status=HTTPStatus.OK)
     with assert_setup_component(1, Platform.SWITCH):
@@ -105,7 +113,7 @@ async def test_setup_query_params(hass, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
-async def test_setup(hass, aioclient_mock):
+async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup with valid configuration."""
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
@@ -127,7 +135,9 @@ async def test_setup(hass, aioclient_mock):
     assert_setup_component(1, Platform.SWITCH)
 
 
-async def test_setup_with_state_resource(hass, aioclient_mock):
+async def test_setup_with_state_resource(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with valid configuration."""
     aioclient_mock.get("http://localhost", status=HTTPStatus.NOT_FOUND)
     aioclient_mock.get("http://localhost/state", status=HTTPStatus.OK)
@@ -151,7 +161,9 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
     assert_setup_component(1, Platform.SWITCH)
 
 
-async def test_setup_with_templated_headers_params(hass, aioclient_mock):
+async def test_setup_with_templated_headers_params(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with valid configuration."""
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
@@ -185,7 +197,7 @@ async def test_setup_with_templated_headers_params(hass, aioclient_mock):
 """Tests for REST switch platform."""
 
 
-def _setup_test_switch(hass):
+def _setup_test_switch(hass: HomeAssistant) -> None:
     body_on = Template("on", hass)
     body_off = Template("off", hass)
     headers = {"Content-type": Template(CONTENT_TYPE_JSON, hass)}
@@ -211,25 +223,27 @@ def _setup_test_switch(hass):
     return switch, body_on, body_off
 
 
-def test_name(hass):
+def test_name(hass: HomeAssistant) -> None:
     """Test the name."""
     switch, body_on, body_off = _setup_test_switch(hass)
     assert switch.name == NAME
 
 
-def test_device_class(hass):
+def test_device_class(hass: HomeAssistant) -> None:
     """Test the name."""
     switch, body_on, body_off = _setup_test_switch(hass)
     assert switch.device_class == DEVICE_CLASS
 
 
-def test_is_on_before_update(hass):
+def test_is_on_before_update(hass: HomeAssistant) -> None:
     """Test is_on in initial state."""
     switch, body_on, body_off = _setup_test_switch(hass)
     assert switch.is_on is None
 
 
-async def test_turn_on_success(hass, aioclient_mock):
+async def test_turn_on_success(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test turn_on."""
     aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
     switch, body_on, body_off = _setup_test_switch(hass)
@@ -239,7 +253,9 @@ async def test_turn_on_success(hass, aioclient_mock):
     assert switch.is_on
 
 
-async def test_turn_on_status_not_ok(hass, aioclient_mock):
+async def test_turn_on_status_not_ok(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test turn_on when error status returned."""
     aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     switch, body_on, body_off = _setup_test_switch(hass)
@@ -249,7 +265,9 @@ async def test_turn_on_status_not_ok(hass, aioclient_mock):
     assert switch.is_on is None
 
 
-async def test_turn_on_timeout(hass, aioclient_mock):
+async def test_turn_on_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test turn_on when timeout occurs."""
     aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     switch, body_on, body_off = _setup_test_switch(hass)
@@ -258,7 +276,9 @@ async def test_turn_on_timeout(hass, aioclient_mock):
     assert switch.is_on is None
 
 
-async def test_turn_off_success(hass, aioclient_mock):
+async def test_turn_off_success(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test turn_off."""
     aioclient_mock.post(RESOURCE, status=HTTPStatus.OK)
     switch, body_on, body_off = _setup_test_switch(hass)
@@ -268,7 +288,9 @@ async def test_turn_off_success(hass, aioclient_mock):
     assert not switch.is_on
 
 
-async def test_turn_off_status_not_ok(hass, aioclient_mock):
+async def test_turn_off_status_not_ok(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test turn_off when error status returned."""
     aioclient_mock.post(RESOURCE, status=HTTPStatus.INTERNAL_SERVER_ERROR)
     switch, body_on, body_off = _setup_test_switch(hass)
@@ -278,7 +300,9 @@ async def test_turn_off_status_not_ok(hass, aioclient_mock):
     assert switch.is_on is None
 
 
-async def test_turn_off_timeout(hass, aioclient_mock):
+async def test_turn_off_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test turn_off when timeout occurs."""
     aioclient_mock.post(RESOURCE, exc=asyncio.TimeoutError())
     switch, body_on, body_off = _setup_test_switch(hass)
@@ -287,7 +311,9 @@ async def test_turn_off_timeout(hass, aioclient_mock):
     assert switch.is_on is None
 
 
-async def test_update_when_on(hass, aioclient_mock):
+async def test_update_when_on(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test update when switch is on."""
     switch, body_on, body_off = _setup_test_switch(hass)
     aioclient_mock.get(RESOURCE, text=body_on.template)
@@ -296,7 +322,9 @@ async def test_update_when_on(hass, aioclient_mock):
     assert switch.is_on
 
 
-async def test_update_when_off(hass, aioclient_mock):
+async def test_update_when_off(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test update when switch is off."""
     switch, body_on, body_off = _setup_test_switch(hass)
     aioclient_mock.get(RESOURCE, text=body_off.template)
@@ -305,7 +333,9 @@ async def test_update_when_off(hass, aioclient_mock):
     assert not switch.is_on
 
 
-async def test_update_when_unknown(hass, aioclient_mock):
+async def test_update_when_unknown(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test update when unknown status returned."""
     aioclient_mock.get(RESOURCE, text="unknown status")
     switch, body_on, body_off = _setup_test_switch(hass)
@@ -314,7 +344,9 @@ async def test_update_when_unknown(hass, aioclient_mock):
     assert switch.is_on is None
 
 
-async def test_update_timeout(hass, aioclient_mock):
+async def test_update_timeout(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test update when timeout occurs."""
     aioclient_mock.get(RESOURCE, exc=asyncio.TimeoutError())
     switch, body_on, body_off = _setup_test_switch(hass)

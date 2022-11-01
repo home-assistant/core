@@ -153,7 +153,7 @@ aioecowitt==2022.09.3
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==11.4.1
+aioesphomeapi==11.4.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -171,7 +171,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==2.2.9
+aiohomekit==2.2.10
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -255,7 +255,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==4.1.1
+aioshelly==4.1.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -543,7 +543,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.bluetooth
-dbus-fast==1.59.1
+dbus-fast==1.60.0
 
 # homeassistant.components.debugpy
 debugpy==1.6.3
@@ -728,7 +728,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==2.2.0
+gcal-sync==2.2.2
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -871,7 +871,7 @@ hole==0.7.0
 holidays==0.16
 
 # homeassistant.components.frontend
-home-assistant-frontend==20221027.0
+home-assistant-frontend==20221031.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2
@@ -1241,7 +1241,7 @@ openwrt-luci-rpc==1.1.11
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oralb
-oralb-ble==0.9.0
+oralb-ble==0.10.0
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -1300,7 +1300,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.2.0
+pillow==9.3.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1953,7 +1953,7 @@ pythinkingcleaner==0.0.3
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.6
+python-bsblan==0.5.7
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
@@ -2580,7 +2580,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.9
 
 # homeassistant.components.yalexs_ble
-yalexs-ble==1.9.4
+yalexs-ble==1.9.5
 
 # homeassistant.components.august
 yalexs==1.2.6
@@ -2607,7 +2607,7 @@ zamg==0.1.1
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.39.3
+zeroconf==0.39.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.84

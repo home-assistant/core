@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "unhealthy": {
+            "description": "O sistema n\u00e3o est\u00e1 \u00edntegro devido a '{reason}'. Use o link para saber mais sobre o que est\u00e1 errado e como corrigi-lo.",
+            "title": "Sistema insalubre - {reason}"
+        },
+        "unsupported": {
+            "description": "O sistema n\u00e3o \u00e9 suportado devido a '{reason}'. Use o link para saber mais sobre o que isso significa e como retornar a um sistema compat\u00edvel.",
+            "title": "Sistema n\u00e3o suportado - {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "Vers\u00e3o do Agent",

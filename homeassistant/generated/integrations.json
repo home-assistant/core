@@ -3831,7 +3831,7 @@
     },
     "ovo_energy": {
       "name": "OVO Energy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5151,7 +5151,7 @@
     },
     "system_bridge": {
       "name": "System Bridge",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
