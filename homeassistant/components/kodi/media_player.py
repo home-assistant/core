@@ -64,6 +64,7 @@ from .const import (
     EVENT_TURN_OFF,
     EVENT_TURN_ON,
 )
+from .kodi_connman import KodiConnectionClient, KodiConnectionManager
 
 _KodiEntityT = TypeVar("_KodiEntityT", bound="KodiEntity")
 _P = ParamSpec("_P")
@@ -250,7 +251,7 @@ def cmd(
     return wrapper
 
 
-class KodiEntity(MediaPlayerEntity):
+class KodiEntity(KodiConnectionClient, MediaPlayerEntity):
     """Representation of a XBMC/Kodi device."""
 
     _attr_supported_features = (
@@ -270,19 +271,32 @@ class KodiEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_STEP
     )
 
-    def __init__(self, connman, name, uid):
+    def __init__(self, connman: KodiConnectionManager, name: str, uid: str) -> None:
         """Initialize the Kodi entity."""
-        self._connman = connman
+        super().__init__(connman)
         self._kodi = connman.kodi
         self._unique_id = uid
         self._players = None
-        self._properties = {}
-        self._item = {}
-        self._app_properties = {}
+        self._properties: dict = {}
+        self._item: dict = {}
+        self._app_properties: dict = {}
         self._media_position_updated_at = None
         self._media_position = None
 
-        self._attr_name = name
+        self._conf_name = name
+        self._attr_name = "Kodi"
+
+        self._media_callbacks = {
+            "Player.OnPause": self.async_on_speed_event,
+            "Player.OnPlay": self.async_on_speed_event,
+            "Player.OnAVStart": self.async_on_speed_event,
+            "Player.OnAVChange": self.async_on_speed_event,
+            "Player.OnResume": self.async_on_speed_event,
+            "Player.OnSpeedChanged": self.async_on_speed_event,
+            "Player.OnSeek": self.async_on_speed_event,
+            "Player.OnStop": self.async_on_stop,
+            "Application.OnVolumeChanged": self.async_on_volume_changed,
+        }
 
     def _reset_state(self, players=None):
         self._players = players
@@ -301,7 +315,7 @@ class KodiEntity(MediaPlayerEntity):
         return not self._players
 
     @callback
-    def async_on_speed_event(self, sender, data):
+    def async_on_speed_event(self, sender, data):  # pylint: disable=unused-argument
         """Handle player changes between playing and paused."""
         self._properties["speed"] = data["player"]["speed"]
 
@@ -315,7 +329,7 @@ class KodiEntity(MediaPlayerEntity):
         self.async_schedule_update_ha_state(force_refresh)
 
     @callback
-    def async_on_stop(self, sender, data):
+    def async_on_stop(self, sender, data):  # pylint: disable=unused-argument
         """Handle the stop of the player playback."""
         # Prevent stop notifications which are sent after quit notification
         if self._kodi_is_off:
@@ -325,24 +339,11 @@ class KodiEntity(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_on_volume_changed(self, sender, data):
+    def async_on_volume_changed(self, sender, data):  # pylint: disable=unused-argument
         """Handle the volume changes."""
         self._app_properties["volume"] = data["volume"]
         self._app_properties["muted"] = data["muted"]
         self.async_write_ha_state()
-
-    async def async_on_quit(self, sender, data):
-        """Reset the player state on quit action."""
-        # The websocket connection must be closed. Otherwise the jsonrpc
-        # library throws an uncatchable TransportError exception
-        await self._clear_connection(True)
-
-    async def _clear_connection(self, close=False):
-        """Reset state and close connection if requested."""
-        self._reset_state()
-        self.async_write_ha_state()
-        if close:
-            await self._connman.close()
 
     @property
     def unique_id(self):
@@ -355,7 +356,7 @@ class KodiEntity(MediaPlayerEntity):
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Kodi",
-            name=self.name,
+            name=self._conf_name,
         )
 
     @property
@@ -369,25 +370,18 @@ class KodiEntity(MediaPlayerEntity):
 
         # On first connect, if Kodi already plays any media,
         # self_properties might be empty
-        if self._properties:
-            if self._properties["speed"] == 0:
-                return MediaPlayerState.PAUSED
+        if self._properties and self._properties["speed"] == 0:
+            return MediaPlayerState.PAUSED
 
         return MediaPlayerState.PLAYING
 
     async def async_added_to_hass(self) -> None:
-        """Connect the websocket if needed."""
-        if not self._connman.can_subscribe:
-            return
-
-        if self._connman.connected:
-            await self._on_ws_connected()
-
+        """Register callbacks for needed api methods."""
         await self._connman.add_callback_on_connect(self._on_ws_connected)
         await self._connman.add_callback_on_disconnect(self._on_ws_disconnected)
 
     async def _on_ws_connected(self):
-        """Call after ws is connected."""
+        """Call after websocket is connected."""
         self._register_ws_callbacks()
 
         version = (await self._kodi.get_application_properties(["version"]))["version"]
@@ -400,46 +394,21 @@ class KodiEntity(MediaPlayerEntity):
 
     async def _on_ws_disconnected(self):
         """Call after websocket is disconnected."""
-        await self._clear_connection()
+        self._reset_state()
+        self.async_write_ha_state()
         self._unregister_ws_callbacks()
-
-    @callback
-    def async_dummy(self, sender, data):
-        """Empty function to replace websocket callbacks on lost/closed connection."""
 
     @callback
     def _register_ws_callbacks(self):
         _LOGGER.debug("Registering kodi media_player websocket callbacks")
-        server = self._connman.connection.server
-        server.Player.OnPause = self.async_on_speed_event
-        server.Player.OnPlay = self.async_on_speed_event
-        server.Player.OnAVStart = self.async_on_speed_event
-        server.Player.OnAVChange = self.async_on_speed_event
-        server.Player.OnResume = self.async_on_speed_event
-        server.Player.OnSpeedChanged = self.async_on_speed_event
-        server.Player.OnSeek = self.async_on_speed_event
-        server.Player.OnStop = self.async_on_stop
-        server.Application.OnVolumeChanged = self.async_on_volume_changed
-        server.System.OnQuit = self.async_on_quit
-        server.System.OnRestart = self.async_on_quit
-        server.System.OnSleep = self.async_on_quit
+        for api_method, api_callback in self._media_callbacks.items():
+            self._connman.register_websocket_callback(api_method, api_callback)
 
     @callback
     def _unregister_ws_callbacks(self):
         _LOGGER.debug("Unregistering kodi media_player websocket callbacks")
-        server = self._connman.connection.server
-        server.Player.OnPause = self.async_dummy
-        server.Player.OnPlay = self.async_dummy
-        server.Player.OnAVStart = self.async_dummy
-        server.Player.OnAVChange = self.async_dummy
-        server.Player.OnResume = self.async_dummy
-        server.Player.OnSpeedChanged = self.async_dummy
-        server.Player.OnSeek = self.async_dummy
-        server.Player.OnStop = self.async_dummy
-        server.Application.OnVolumeChanged = self.async_dummy
-        server.System.OnQuit = self.async_dummy
-        server.System.OnRestart = self.async_dummy
-        server.System.OnSleep = self.async_dummy
+        for api_method in self._media_callbacks:
+            self._connman.unregister_websocket_callback(api_method)
 
     @cmd
     async def async_update(self) -> None:
@@ -490,11 +459,6 @@ class KodiEntity(MediaPlayerEntity):
         except TransportError:
             self._reset_state()
             return
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state."""
-        return not self._connman.can_subscribe
 
     @property
     def volume_level(self):

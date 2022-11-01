@@ -35,7 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def validate_http(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect over HTTP."""
-
     host = data[CONF_HOST]
     port = data[CONF_PORT]
     username = data.get(CONF_USERNAME)

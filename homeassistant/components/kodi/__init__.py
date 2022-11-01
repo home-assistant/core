@@ -7,7 +7,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DATA_CONNECTION, DATA_REMOVE_LISTENER, DOMAIN
-from .kodi_connman import KodiConnMan
+from .kodi_connman import KodiConnectionManager
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
@@ -15,7 +15,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.BINARY_SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Kodi from a config entry."""
-    connman = KodiConnMan(hass, entry)
+    connman = KodiConnectionManager(hass, entry)
     if not await connman.connect():
         return False
 
