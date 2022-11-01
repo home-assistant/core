@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_STATION_ID, DOMAIN
 from .coordinator import ZamgDataUpdateCoordinator
 
-PLATFORMS = (Platform.WEATHER, Platform.SENSOR)
+PLATFORMS = (Platform.SENSOR, Platform.WEATHER)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
