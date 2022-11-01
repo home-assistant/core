@@ -271,6 +271,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
         "override_connection_host": True,
         "max_media": 1000,
     }
+    await hass.config_entries.async_unload(mock_config.entry_id)
 
 
 @pytest.mark.parametrize(
