@@ -255,7 +255,7 @@ aiosenseme==0.6.1
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==4.1.1
+aioshelly==4.1.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
