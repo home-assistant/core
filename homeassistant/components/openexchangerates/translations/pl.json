@@ -26,8 +26,8 @@
     },
     "issues": {
         "deprecated_yaml": {
-            "description": "Konfiguracja Open Exchange Rates przy u\u017cyciu YAML zostanie usuni\u0119ta. \n\nTwoja istniej\u0105ca konfiguracja YAML zosta\u0142a automatycznie zaimportowana do interfejsu u\u017cytkownika. \n\nUsu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
-            "title": "Konfiguracja YAML dla Open Exchange Rates zostanie usuni\u0119ta"
+            "description": "Konfiguracja Open Exchange Rates przy u\u017cyciu YAML zosta\u0142a usuni\u0119ta. \n\nUsu\u0144 konfiguracj\u0119 YAML z pliku configuration.yaml i uruchom ponownie Home Assistanta, aby rozwi\u0105za\u0107 ten problem.",
+            "title": "Konfiguracja YAML dla Open Exchange Rates zosta\u0142a usuni\u0119ta"
         }
     }
 }

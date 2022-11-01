@@ -9,8 +9,7 @@ from ibeacon_ble import (
     IBEACON_FIRST_BYTE,
     IBEACON_SECOND_BYTE,
     iBeaconAdvertisement,
-    is_ibeacon_service_info,
-    parse,
+    iBeaconParser,
 )
 
 from homeassistant.components import bluetooth
@@ -27,6 +26,7 @@ from .const import (
     DOMAIN,
     MAX_IDS,
     MAX_IDS_PER_UUID,
+    MIN_SEEN_TRANSIENT_NEW,
     SIGNAL_IBEACON_DEVICE_NEW,
     SIGNAL_IBEACON_DEVICE_SEEN,
     SIGNAL_IBEACON_DEVICE_UNAVAILABLE,
@@ -111,6 +111,7 @@ class IBeaconCoordinator:
         self.hass = hass
         self._entry = entry
         self._dev_reg = registry
+        self._ibeacon_parser = iBeaconParser()
 
         # iBeacon devices that do not follow the spec
         # and broadcast custom data in the major and minor fields
@@ -125,6 +126,7 @@ class IBeaconCoordinator:
         self._last_ibeacon_advertisement_by_unique_id: dict[
             str, iBeaconAdvertisement
         ] = {}
+        self._transient_seen_count: dict[str, int] = {}
         self._group_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_address: dict[str, set[str]] = {}
         self._unique_ids_by_group_id: dict[str, set[str]] = {}
@@ -140,6 +142,14 @@ class IBeaconCoordinator:
         self._major_minor_by_uuid: dict[str, set[tuple[int, int]]] = {}
 
     @callback
+    def async_device_id_seen(self, device_id: str) -> bool:
+        """Return True if the device_id has been seen since boot."""
+        return bool(
+            device_id in self._last_ibeacon_advertisement_by_unique_id
+            or device_id in self._last_seen_by_group_id
+        )
+
+    @callback
     def _async_handle_unavailable(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
@@ -153,6 +163,7 @@ class IBeaconCoordinator:
     def _async_cancel_unavailable_tracker(self, address: str) -> None:
         """Cancel unavailable tracking for an address."""
         self._unavailable_trackers.pop(address)()
+        self._transient_seen_count.pop(address, None)
 
     @callback
     def _async_ignore_uuid(self, uuid: str) -> None:
@@ -228,7 +239,7 @@ class IBeaconCoordinator:
         """Update from a bluetooth callback."""
         if service_info.address in self._ignore_addresses:
             return
-        if not (ibeacon_advertisement := parse(service_info)):
+        if not (ibeacon_advertisement := self._ibeacon_parser.parse(service_info)):
             return
 
         uuid_str = str(ibeacon_advertisement.uuid)
@@ -289,12 +300,21 @@ class IBeaconCoordinator:
             or service_info.device.name.replace("-", ":") == service_info.device.address
         ):
             return
+        previously_tracked = address in self._unique_ids_by_address
         self._last_ibeacon_advertisement_by_unique_id[unique_id] = ibeacon_advertisement
         self._async_track_ibeacon_with_unique_address(address, group_id, unique_id)
         if address not in self._unavailable_trackers:
             self._unavailable_trackers[address] = bluetooth.async_track_unavailable(
                 self.hass, self._async_handle_unavailable, address
             )
+
+        if not previously_tracked and new and ibeacon_advertisement.transient:
+            # Do not create a new tracker right away for transient devices
+            # If they keep advertising, we will create entities for them
+            # once _async_update_rssi_and_transients has seen them enough times
+            self._transient_seen_count[address] = 1
+            return
+
         # Some manufacturers violate the spec and flood us with random
         # data (sometimes its temperature data).
         #
@@ -341,23 +361,42 @@ class IBeaconCoordinator:
             async_dispatcher_send(self.hass, signal_unavailable(group_id))
 
     @callback
-    def _async_update_rssi(self) -> None:
+    def _async_update_rssi_and_transients(self) -> None:
         """Check to see if the rssi has changed and update any devices.
 
         We don't callback on RSSI changes so we need to check them
         here and send them over the dispatcher periodically to
         ensure the distance calculation is update.
+
+        If the transient flag is set we also need to check to see
+        if the device is still transmitting and increment the counter
         """
         for (
             unique_id,
             ibeacon_advertisement,
         ) in self._last_ibeacon_advertisement_by_unique_id.items():
             address = unique_id.split("_")[-1]
-            if (
-                service_info := bluetooth.async_last_service_info(
-                    self.hass, address, connectable=False
-                )
-            ) and service_info.rssi != ibeacon_advertisement.rssi:
+            service_info = bluetooth.async_last_service_info(
+                self.hass, address, connectable=False
+            )
+            if not service_info:
+                continue
+
+            if address in self._transient_seen_count:
+                self._transient_seen_count[address] += 1
+                if self._transient_seen_count[address] == MIN_SEEN_TRANSIENT_NEW:
+                    self._transient_seen_count.pop(address)
+                    _async_dispatch_update(
+                        self.hass,
+                        unique_id,
+                        service_info,
+                        ibeacon_advertisement,
+                        True,
+                        True,
+                    )
+                    continue
+
+            if service_info.rssi != ibeacon_advertisement.rssi:
                 ibeacon_advertisement.update_rssi(service_info.rssi)
                 async_dispatcher_send(
                     self.hass,
@@ -369,7 +408,7 @@ class IBeaconCoordinator:
     def _async_update(self, _now: datetime) -> None:
         """Update the Coordinator."""
         self._async_check_unavailable_groups_with_random_macs()
-        self._async_update_rssi()
+        self._async_update_rssi_and_transients()
 
     @callback
     def _async_restore_from_registry(self) -> None:
@@ -395,9 +434,9 @@ class IBeaconCoordinator:
                 group_id = f"{uuid}_{major}_{minor}"
                 self._group_ids_random_macs.add(group_id)
 
-    @callback
-    def async_start(self) -> None:
+    async def async_start(self) -> None:
         """Start the Coordinator."""
+        await self._ibeacon_parser.async_setup()
         self._async_restore_from_registry()
         entry = self._entry
         entry.async_on_unload(
@@ -413,14 +452,6 @@ class IBeaconCoordinator:
             )
         )
         entry.async_on_unload(self._async_stop)
-        # Replay any that are already there.
-        for service_info in bluetooth.async_discovered_service_info(
-            self.hass, connectable=False
-        ):
-            if is_ibeacon_service_info(service_info):
-                self._async_update_ibeacon(
-                    service_info, bluetooth.BluetoothChange.ADVERTISEMENT
-                )
         entry.async_on_unload(
             async_track_time_interval(self.hass, self._async_update, UPDATE_INTERVAL)
         )

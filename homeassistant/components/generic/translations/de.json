@@ -45,6 +45,13 @@
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "description": "Gib die Einstellungen f\u00fcr die Verbindung mit der Kamera ein."
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "Dieses Bild sieht gut aus."
+                },
+                "description": "![Kamera-Standbildvorschau]({preview_url})",
+                "title": "Vorschau"
             }
         }
     },
@@ -68,6 +75,13 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "Dieses Bild sieht gut aus."
+                },
+                "description": "![Kamera-Standbildvorschau]({preview_url})",
+                "title": "Vorschau"
+            },
             "content_type": {
                 "data": {
                     "content_type": "Inhaltstyp"

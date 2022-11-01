@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "unhealthy": {
+            "description": "A rendszer jelenleg renellenes \u00e1llapotban van '{reason}' miatt. A link seg\u00edts\u00e9g\u00e9vel t\u00f6bbet is megtudhat arr\u00f3l, hogy mi a probl\u00e9ma, \u00e9s hogyan jav\u00edthatja ki.",
+            "title": "Rendellenes \u00e1llapot \u2013 {reason}"
+        },
+        "unsupported": {
+            "description": "A rendszer nem t\u00e1mogatott a k\u00f6vetkez\u0151 miatt: '{reason}'. A hivatkoz\u00e1s seg\u00edts\u00e9g\u00e9vel t\u00f6bbet megtudhat arr\u00f3l, mit jelent ez, \u00e9s hogyan t\u00e9rhet vissza egy t\u00e1mogatott rendszerhez.",
+            "title": "Nem t\u00e1mogatott rendszer \u2013 {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "\u00dcgyn\u00f6k verzi\u00f3",

@@ -320,6 +320,8 @@ class ThermostatEntity(ClimateEntity):
         """Set new target preset mode."""
         if preset_mode not in self.preset_modes:
             raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
+        if self.preset_mode == preset_mode:  # API doesn't like duplicate preset modes
+            return
         trait = self._device.traits[ThermostatEcoTrait.NAME]
         try:
             await trait.set_mode(PRESET_INV_MODE_MAP[preset_mode])

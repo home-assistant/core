@@ -59,7 +59,7 @@
             "pressure": "Perubahan tekanan {entity_name}",
             "reactive_power": "Perubahan daya reaktif {entity_name}",
             "signal_strength": "Perubahan kekuatan sinyal {entity_name}",
-            "speed": "Perubahan kecepatan {nama_entitas}",
+            "speed": "Perubahan kecepatan {entity_name}",
             "sulphur_dioxide": "Perubahan konsentrasi sulfur dioksida {entity_name}",
             "temperature": "Perubahan suhu {entity_name}",
             "value": "Perubahan nilai {entity_name}",

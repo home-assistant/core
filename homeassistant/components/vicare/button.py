@@ -1,4 +1,4 @@
-"""Viessmann ViCare sensor device."""
+"""Viessmann ViCare button device."""
 from __future__ import annotations
 
 from contextlib import suppress
@@ -30,7 +30,7 @@ BUTTON_DHW_ACTIVATE_ONETIME_CHARGE = "activate_onetimecharge"
 class ViCareButtonEntityDescription(
     ButtonEntityDescription, ViCareRequiredKeysMixinWithSet
 ):
-    """Describes ViCare button sensor entity."""
+    """Describes ViCare button entity."""
 
 
 BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
@@ -45,28 +45,41 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 )
 
 
+def _build_entity(name, vicare_api, device_config, description):
+    """Create a ViCare button entity."""
+    _LOGGER.debug("Found device %s", name)
+    try:
+        description.value_getter(vicare_api)
+        _LOGGER.debug("Found entity %s", name)
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.info("Feature not supported %s", name)
+        return None
+    except AttributeError:
+        _LOGGER.debug("Attribute Error %s", name)
+        return None
+
+    return ViCareButton(
+        name,
+        vicare_api,
+        device_config,
+        description,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Create the ViCare binary sensor devices."""
+    """Create the ViCare button entities."""
     name = VICARE_NAME
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
 
     entities = []
 
     for description in BUTTON_DESCRIPTIONS:
-        try:
-            description.value_getter(api)
-            _LOGGER.debug("Found entity %s", description.name)
-        except PyViCareNotSupportedFeatureError:
-            _LOGGER.info("Feature not supported %s", description.name)
-            continue
-        except AttributeError:
-            _LOGGER.debug("Attribute Error %s", name)
-            continue
-        entity = ViCareButton(
+        entity = await hass.async_add_executor_job(
+            _build_entity,
             f"{name} {description.name}",
             api,
             hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
@@ -86,7 +99,7 @@ class ViCareButton(ButtonEntity):
     def __init__(
         self, name, api, device_config, description: ViCareButtonEntityDescription
     ):
-        """Initialize the sensor."""
+        """Initialize the button."""
         self.entity_description = description
         self._device_config = device_config
         self._api = api

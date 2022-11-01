@@ -15,6 +15,7 @@ from .coordinator import SwitchBeeCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
     Platform.SWITCH,
@@ -27,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     central_unit = entry.data[CONF_HOST]
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = CentralUnitAPI(central_unit, user, password, websession)
     try:

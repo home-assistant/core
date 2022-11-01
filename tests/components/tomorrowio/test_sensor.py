@@ -25,7 +25,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import API_V4_ENTRY_DATA
 
@@ -172,7 +172,7 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
 
 async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
     """Test v4 sensor data."""
-    hass.config.units = IMPERIAL_SYSTEM
+    hass.config.units = US_CUSTOMARY_SYSTEM
     await _setup(hass, V4_FIELDS, API_V4_ENTRY_DATA)
     check_sensor_state(hass, O3, "91.35")
     check_sensor_state(hass, CO, "0.0")

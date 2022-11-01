@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
+    CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
     ENTITY_MATCH_ALL,
@@ -52,7 +53,6 @@ if TYPE_CHECKING:
 
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
-CONF_SERVICE_DATA_TEMPLATE = "data_template"
 
 _LOGGER = logging.getLogger(__name__)
 

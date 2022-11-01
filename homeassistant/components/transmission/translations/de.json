@@ -29,6 +29,19 @@
             }
         }
     },
+    "issues": {
+        "deprecated_key": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Aktualisiere alle Automatisierungen oder Skripte, die diesen Dienst verwenden, und ersetze den Namensschl\u00fcssel durch den Entry_id-Schl\u00fcssel.",
+                        "title": "Der Namensschl\u00fcssel in den \u00dcbertragungsdiensten wird entfernt"
+                    }
+                }
+            },
+            "title": "Der Namensschl\u00fcssel in den \u00dcbertragungsdiensten wird entfernt"
+        }
+    },
     "options": {
         "step": {
             "init": {

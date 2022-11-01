@@ -5,7 +5,8 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "incomplete_info": "Ufullstendig informasjon til installasjonsenheten, ingen vert eller token leveres.",
             "not_xiaomi_miio": "Enheten st\u00f8ttes (enn\u00e5) ikke av Xiaomi Miio.",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket",
+            "unknown": "Uventet feil"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",

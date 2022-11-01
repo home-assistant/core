@@ -31,8 +31,7 @@ def async_setup_entry_base(
         added_entities = []
         for device in devices:
             added_entities.append(entity_from_device(device, bridge))
-        if added_entities:
-            async_add_entities(added_entities)
+        async_add_entities(added_entities)
 
     bridge.register_add_devices(platform, async_add_entities_platform)
 

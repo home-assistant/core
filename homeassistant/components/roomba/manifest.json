@@ -17,6 +17,10 @@
     {
       "hostname": "roomba-*",
       "macaddress": "DCF505*"
+    },
+    {
+      "hostname": "roomba-*",
+      "macaddress": "204EF6*"
     }
   ],
   "iot_class": "local_push",

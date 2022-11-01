@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "unhealthy": {
+            "description": "Actualmente el sistema no est\u00e1 en buen estado debido a ''{reason}''. Utiliza el enlace para obtener m\u00e1s informaci\u00f3n sobre lo que est\u00e1 mal y c\u00f3mo solucionarlo.",
+            "title": "Sistema en mal estado: {reason}"
+        },
+        "unsupported": {
+            "description": "El sistema no es compatible debido a ''{reason}''. Utiliza el enlace para obtener m\u00e1s informaci\u00f3n sobre lo que esto significa y c\u00f3mo volver a un sistema compatible.",
+            "title": "Sistema no compatible: {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "Versi\u00f3n del agente",

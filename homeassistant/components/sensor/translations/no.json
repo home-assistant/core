@@ -31,7 +31,9 @@
             "is_value": "Gjeldende {entity_name} verdi",
             "is_volatile_organic_compounds": "Gjeldende {entity_name} flyktige organiske forbindelser",
             "is_voltage": "Gjeldende {entity_name} spenning",
-            "is_volume": "Gjeldende {entity_name} -volum"
+            "is_volume": "Gjeldende {entity_name} -volum",
+            "is_water": "N\u00e5v\u00e6rende {entity_name} vann",
+            "is_weight": "N\u00e5v\u00e6rende vekt p\u00e5 {entity_name}"
         },
         "trigger_type": {
             "apparent_power": "{entity_name} tilsynelatende kraftendringer",
@@ -64,7 +66,9 @@
             "value": "{entity_name} verdi endringer",
             "volatile_organic_compounds": "{entity_name} konsentrasjon av flyktige organiske forbindelser",
             "voltage": "{entity_name} spenningsendringer",
-            "volume": "{entity_name} volumendringer"
+            "volume": "{entity_name} volumendringer",
+            "water": "{entity_name} vannforandringer",
+            "weight": "Vektendringer {entity_name}"
         }
     },
     "state": {

@@ -489,7 +489,10 @@ class SonosSpeaker:
             return
 
         if crossfade := event.variables.get("current_crossfade_mode"):
-            self.cross_fade = bool(int(crossfade))
+            crossfade = bool(int(crossfade))
+            if self.cross_fade != crossfade:
+                self.cross_fade = crossfade
+                self.async_write_entity_states()
 
         # Missing transport_state indicates a transient error
         if (new_status := event.variables.get("transport_state")) is None:

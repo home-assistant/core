@@ -9,7 +9,6 @@ from london_tube_status import TubeData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -25,8 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "london_underground"
 
-ATTRIBUTION = "Powered by TfL Open Data"
-
 CONF_LINE = "line"
 
 ICON = "mdi:subway"
@@ -39,13 +36,13 @@ TUBE_LINES = [
     "Circle",
     "District",
     "DLR",
+    "Elizabeth line",
     "Hammersmith & City",
     "Jubilee",
     "London Overground",
     "Metropolitan",
     "Northern",
     "Piccadilly",
-    "TfL Rail",
     "Victoria",
     "Waterloo & City",
 ]
@@ -102,11 +99,12 @@ class LondonTubeCoordinator(DataUpdateCoordinator):
 class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     """Sensor that reads the status of a line from Tube Data."""
 
+    _attr_attribution = "Powered by TfL Open Data"
+
     def __init__(self, coordinator, name):
         """Initialize the London Underground sensor."""
         super().__init__(coordinator)
         self._name = name
-        self.attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def name(self):
@@ -126,5 +124,4 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return other details about the sensor state."""
-        self.attrs["Description"] = self.coordinator.data[self.name]["Description"]
-        return self.attrs
+        return {"Description": self.coordinator.data[self.name]["Description"]}

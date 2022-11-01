@@ -602,6 +602,29 @@ async def test_thermostat_set_eco_preset(
         "params": {"mode": "OFF"},
     }
 
+    # Simulate the mode changing
+    await create_event(
+        {
+            "sdm.devices.traits.ThermostatEco": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "OFF",
+            },
+        }
+    )
+
+    auth.method = None
+    auth.url = None
+    auth.json = None
+
+    # Attempting to set the preset mode when already in that mode will
+    # not send any messages to the API (it would otherwise fail)
+    await common.async_set_preset_mode(hass, PRESET_NONE)
+    await hass.async_block_till_done()
+
+    assert auth.method is None
+    assert auth.url is None
+    assert auth.json is None
+
 
 async def test_thermostat_set_cool(
     hass: HomeAssistant,
