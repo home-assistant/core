@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
@@ -45,6 +44,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER_URL,
 )
+from .coordinator import ZamgDataUpdateCoordinator
 
 _DType = Union[type[int], type[float], type[str]]
 
@@ -245,13 +245,17 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
     entity_description: ZamgSensorEntityDescription
 
     def __init__(
-        self, coordinator, name, station_id, description: ZamgSensorEntityDescription
-    ):
+        self,
+        coordinator: ZamgDataUpdateCoordinator,
+        name: str,
+        station_id: str,
+        description: ZamgSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{station_id}_{description.key}"
+        self._attr_unique_id = f"{DOMAIN}_{station_id}_{description.key}"
         self.station_id = f"{station_id}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -264,17 +268,19 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.data[self.station_id].get(
-            self.entity_description.para_name
-        )["data"]
+        try:
+            return self.coordinator.data[self.station_id][
+                self.entity_description.para_name
+            ]["data"]
+        except (KeyError):
+            return None
 
     @property
     def extra_state_attributes(self) -> Mapping[str, str]:
         """Return the state attributes."""
-        update_time = self.coordinator.data.get("last_update", "")
+        if (update_time := self.coordinator.data["last_update"]) is not None:
+            update_time = update_time.isoformat()
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_STATION: self.coordinator.data.get("Name"),
-            CONF_STATION_ID: self.station_id,
-            ATTR_UPDATED: update_time.isoformat(),
+            ATTR_STATION: self.coordinator.data["Name"],
+            ATTR_UPDATED: update_time or STATE_UNKNOWN,
         }
