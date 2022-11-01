@@ -199,9 +199,9 @@ class MatrixBot:
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
     def _is_url(self, url):
-        """Validate the URL can be parsed and at least has scheme + netloc."""
+        """Validate the URL can be parsed, has netloc, and has the http/https scheme."""
         result = urlparse(url)
-        return all([result.scheme, result.netloc])
+        return result.scheme in ("http", "https") and result.netloc
 
     def _handle_room_message(self, room_id, room, event):
         """Handle a message sent to a Matrix room."""
