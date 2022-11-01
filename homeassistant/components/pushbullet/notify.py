@@ -58,7 +58,7 @@ async def async_get_service(
         )
         return None
 
-    pushbullet: PushBullet = hass.data[DOMAIN][discovery_info["entry_id"]]
+    pushbullet: PushBullet = hass.data[DOMAIN][discovery_info["entry_id"]].pushbullet
     return PushBulletNotificationService(hass, pushbullet)
 
 

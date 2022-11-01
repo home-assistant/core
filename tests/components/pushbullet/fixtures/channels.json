@@ -3,12 +3,12 @@
     {
       "active": true,
       "created": 1412047948.579029,
-      "description": "News about Elon Musk.",
+      "description": "Sample channel.",
       "iden": "ujxPklLhvyKsjAvkMyTVh6",
-      "image_url": "https://dl.pushbulletusercontent.com/StzRmwdkIe8gluBH3XoJ9HjRqjlUYSf4/musk.jpg",
+      "image_url": "https://dl.pushbulletusercontent.com/abc123/image.jpg",
       "modified": 1412047948.579031,
-      "name": "Elon Musk News",
-      "tag": "elonmusknews"
+      "name": "Sample channel",
+      "tag": "sample-channel"
     }
   ]
 }

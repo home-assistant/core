@@ -6,12 +6,18 @@ import logging
 from pushbullet import InvalidKeyError, PushBullet, PushbulletError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_START,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType
 
+from .api import PushBulletNotificationProvider
 from .const import DATA_HASS_CONFIG, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
@@ -39,7 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except PushbulletError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = pushbullet
+    pb_provider = PushBulletNotificationProvider(hass, pushbullet)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = pb_provider
+
+    def start_listener(event: Event) -> None:
+        """Start the listener thread."""
+        _LOGGER.debug("Starting listener for pushbullet")
+        pb_provider.start()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_listener)
 
     hass.async_create_task(
         discovery.async_load_platform(
@@ -58,5 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        pb_provider: PushBulletNotificationProvider = hass.data[DOMAIN].pop(
+            entry.entry_id
+        )
+        await hass.async_add_executor_job(pb_provider.close)
     return unload_ok

@@ -5,6 +5,7 @@ from pushbullet import InvalidKeyError, PushbulletError
 
 from homeassistant.components.pushbullet.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_CONFIG
@@ -25,6 +26,13 @@ async def test_async_setup_entry_success(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.pushbullet.api.PushBulletNotificationProvider.start"
+    ) as mock_start:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        mock_start.assert_called_once()
 
 
 async def test_setup_entry_failed_invalid_key(hass: HomeAssistant) -> None:

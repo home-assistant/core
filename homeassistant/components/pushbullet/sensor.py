@@ -1,10 +1,6 @@
 """Pushbullet platform for sensor component."""
 from __future__ import annotations
 
-import logging
-from typing import Any
-
-from pushbullet import Listener, PushBullet
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -13,24 +9,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
-)
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .api import PushBulletNotificationProvider
 from .const import DATA_UPDATED, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -125,23 +115,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Pushbullet sensors from config entry."""
 
-    pushbullet: PushBullet = hass.data[DOMAIN][entry.entry_id]
-    pb_provider = PushBulletNotificationProvider(hass, pushbullet)
-
-    def listener_start(event: Event) -> None:
-        """Start the listener thread."""
-        _LOGGER.debug("Starting listener for pushbullet")
-        pb_provider.start()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, listener_start)
-    entry.async_on_unload(pb_provider.close)
+    pb_provider: PushBulletNotificationProvider = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        PushBulletNotificationSensor(
-            entry.data[CONF_NAME],
-            pb_provider,
-            description,
-        )
+        PushBulletNotificationSensor(entry.data[CONF_NAME], pb_provider, description)
         for description in SENSOR_TYPES
     ]
 
@@ -193,25 +170,3 @@ class PushBulletNotificationSensor(SensorEntity):
                 self.hass, DATA_UPDATED, self.async_update_callback
             )
         )
-
-
-class PushBulletNotificationProvider(Listener):
-    """Provider for an account, leading to one or more sensors."""
-
-    def __init__(self, hass: HomeAssistant, pushbullet: PushBullet) -> None:
-        """Start to retrieve pushes from the given Pushbullet instance."""
-        self.hass = hass
-        self.pushbullet = pushbullet
-        self.data: dict[str, Any] = {}
-        super().__init__(account=pushbullet, on_push=self.update_data)
-        self.daemon = True
-
-    def update_data(self, data: dict[str, Any]) -> None:
-        """Update the current data.
-
-        Currently only monitors pushes but might be extended to monitor
-        different kinds of Pushbullet events.
-        """
-        if data["type"] == "push":
-            self.data = data["push"]
-        dispatcher_send(self.hass, DATA_UPDATED)
