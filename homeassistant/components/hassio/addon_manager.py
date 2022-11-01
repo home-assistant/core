@@ -116,6 +116,7 @@ class AddonManager:
         return any(
             task and not task.done()
             for task in (
+                self._restart_task,
                 self._install_task,
                 self._start_task,
                 self._update_task,
