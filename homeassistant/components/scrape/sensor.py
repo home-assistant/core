@@ -99,13 +99,28 @@ async def async_setup_platform(
 
         coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
 
-        sensor_config: ConfigType = config
-        template_config: ConfigType = vol.Schema(
-            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA
-        )(sensor_config)
+        sensors_config: list[tuple[ConfigType, ConfigType]] = [
+            (
+                config,
+                vol.Schema(TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA)(
+                    config
+                ),
+            )
+        ]
 
+    else:
+        coordinator = discovery_info["coordinator"]
+        sensors_config = [
+            (sensor_config, sensor_config)
+            for sensor_config in discovery_info["configs"]
+        ]
+
+    await coordinator.async_refresh()
+    if coordinator.data is None:
+        raise PlatformNotReady
+
+    for sensor_config, template_config in sensors_config:
         value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
-
         if value_template is not None:
             value_template.hass = hass
 
@@ -122,33 +137,6 @@ async def async_setup_platform(
                 value_template,
             )
         )
-
-    else:
-        coordinator = discovery_info["coordinator"]
-
-        for sensor_config in discovery_info["configs"]:
-            value_template = sensor_config.get(CONF_VALUE_TEMPLATE)
-            if value_template is not None:
-                value_template.hass = hass
-
-            template_config = sensor_config
-            entities.append(
-                ScrapeSensor(
-                    hass,
-                    coordinator,
-                    template_config,
-                    template_config[CONF_NAME],
-                    template_config.get(CONF_UNIQUE_ID),
-                    sensor_config.get(CONF_SELECT),
-                    sensor_config.get(CONF_ATTRIBUTE),
-                    sensor_config[CONF_INDEX],
-                    value_template,
-                )
-            )
-
-    await coordinator.async_refresh()
-    if coordinator.data is None:
-        raise PlatformNotReady
 
     async_add_entities(entities)
 
