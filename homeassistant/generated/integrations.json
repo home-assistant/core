@@ -313,6 +313,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "aranet": {
+      "name": "Aranet",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "arcam_fmj": {
       "name": "Arcam FMJ Receivers",
       "integration_type": "hub",
@@ -3825,7 +3831,7 @@
     },
     "ovo_energy": {
       "name": "OVO Energy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4468,7 +4474,7 @@
           "name": "Samsung Family Hub"
         },
         "samsungtv": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Samsung Smart TV"
@@ -5145,7 +5151,7 @@
     },
     "system_bridge": {
       "name": "System Bridge",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6212,7 +6218,7 @@
     "min_max": {
       "integration_type": "helper",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "calculated"
     },
     "schedule": {
       "integration_type": "helper",
