@@ -1,5 +1,6 @@
 """Test the zwave_me removal of stale devices."""
 from unittest.mock import patch
+import uuid
 
 import pytest as pytest
 from zwave_me_ws import ZWaveMeData
@@ -44,7 +45,9 @@ async def test_remove_stale_devices(
     """Test removing devices with old-format ids."""
 
     config_entry = MockConfigEntry(
-        domain="zwave_me", data={CONF_TOKEN: "test_token", CONF_URL: "http://test_test"}
+        unique_id=uuid.uuid4(),
+        domain="zwave_me",
+        data={CONF_TOKEN: "test_token", CONF_URL: "http://test_test"},
     )
     config_entry.add_to_hass(hass)
     device_reg.async_get_or_create(
