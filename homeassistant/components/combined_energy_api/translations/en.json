@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "installation_id": "Installation ID",
+                    "password": "Password",
+                    "username": "Email or Mobile Number"
+                },
+                "description": "Email or Mobile phone number used to login the Combined Energy Dashboard"
+            }
+        }
+    }
+}

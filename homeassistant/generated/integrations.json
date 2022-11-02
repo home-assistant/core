@@ -883,6 +883,17 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "combined_energy": {
+      "name": "Combined Energy",
+      "integrations": {
+        "combined_energy_api": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Combined Energy API"
+        }
+      }
+    },
     "comed_hourly_pricing": {
       "name": "ComEd Hourly Pricing",
       "integration_type": "hub",

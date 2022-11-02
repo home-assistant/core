@@ -211,6 +211,8 @@ build.json @home-assistant/supervisor
 /tests/components/coinbase/ @tombrien
 /homeassistant/components/color_extractor/ @GenericStudent
 /tests/components/color_extractor/ @GenericStudent
+/homeassistant/components/combined_energy_api/ @timsavage
+/tests/components/combined_energy_api/
 /homeassistant/components/comelit/ @chemelli74
 /tests/components/comelit/ @chemelli74
 /homeassistant/components/comfoconnect/ @michaelarnauts

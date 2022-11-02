@@ -1,0 +1,13 @@
+{
+  "domain": "combined_energy_api",
+  "name": "Combined Energy API",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/combined_energy",
+  "requirements": ["combined-energy-api==0.3"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@timsavage"],
+  "iot_class": "cloud_polling"
+}

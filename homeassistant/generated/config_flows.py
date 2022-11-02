@@ -86,6 +86,7 @@ FLOWS = {
         "co2signal",
         "coinbase",
         "color_extractor",
+        "combined_energy_api",
         "comelit",
         "control4",
         "coolmaster",
