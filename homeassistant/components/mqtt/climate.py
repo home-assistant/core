@@ -378,7 +378,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         self._value_templates = None
         self._command_templates = None
         self._feature_preset_mode = False
-        self._optimistic_preset_mode = False
+        self._optimistic_preset_mode = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
