@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "unhealthy": {
+            "description": "Systemet er for \u00f8yeblikket usunt p\u00e5 grunn av '{reason}'. Bruk linken for \u00e5 l\u00e6re mer om hva som er galt og hvordan du kan fikse det.",
+            "title": "Usunt system \u2013 {reason}"
+        },
+        "unsupported": {
+            "description": "Systemet st\u00f8ttes ikke p\u00e5 grunn av '{reason}'. Bruk lenken for \u00e5 l\u00e6re mer om hva dette betyr og hvordan du g\u00e5r tilbake til et st\u00f8ttet system.",
+            "title": "Systemet st\u00f8ttes ikke \u2013 {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "Agentversjon",
