@@ -4,6 +4,8 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.scrape.sensor import SCAN_INTERVAL
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -67,6 +69,7 @@ async def test_scrape_sensor_platform_yaml(hass: HomeAssistant) -> None:
                 name="Auth page2",
                 username="user@secret.com",
                 password="12345678",
+                template="{{value}}",
             ),
         ]
     }
@@ -248,7 +251,9 @@ async def test_scrape_sensor_authentication(hass: HomeAssistant) -> None:
     assert state2.state == "secret text"
 
 
-async def test_scrape_sensor_no_data(hass: HomeAssistant) -> None:
+async def test_scrape_sensor_no_data(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test Scrape sensor fails on no data."""
     config = {
         DOMAIN: return_integration_config(
@@ -261,11 +266,13 @@ async def test_scrape_sensor_no_data(hass: HomeAssistant) -> None:
         "homeassistant.components.rest.RestData",
         return_value=mocker,
     ):
-        assert not await async_setup_component(hass, DOMAIN, config)
+        assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
     assert state is None
+
+    assert "Platform scrape not ready yet" in caplog.text
 
 
 async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
@@ -286,13 +293,13 @@ async def test_scrape_sensor_no_data_refresh(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.ha_version")
-    assert state
-    assert state.state == "Current Version: 2021.12.10"
+        state = hass.states.get("sensor.ha_version")
+        assert state
+        assert state.state == "Current Version: 2021.12.10"
 
-    mocker.payload = "test_scrape_sensor_no_data"
-    async_fire_time_changed(hass, datetime.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+        mocker.payload = "test_scrape_sensor_no_data"
+        async_fire_time_changed(hass, datetime.utcnow() + SCAN_INTERVAL)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_version")
     assert state is not None
@@ -398,18 +405,3 @@ async def test_scrape_sensor_unique_id(hass: HomeAssistant) -> None:
     entity = entity_reg.async_get("sensor.ha_version")
 
     assert entity.unique_id == "ha_version_unique_id"
-
-
-async def test_scrape_sensor_not_configured_sensor(hass: HomeAssistant, caplog) -> None:
-    """Test Scrape sensor with missing configured sensors."""
-    config = {DOMAIN: [return_integration_config(sensors=None)]}
-
-    mocker = MockRestData("test_scrape_sensor")
-    with patch(
-        "homeassistant.components.rest.RestData",
-        return_value=mocker,
-    ):
-        assert not await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-
-    assert "No sensors configured" in caplog.text
