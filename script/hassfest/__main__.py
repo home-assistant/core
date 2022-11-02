@@ -50,7 +50,7 @@ HASS_PLUGINS = [
 ]
 
 ALL_PLUGIN_NAMES = [
-    plugin.__name__.rsplit(".", maxsplit=1)[-1]
+    plugin.__name__.rpartition(".")[-1]
     for plugin in (*INTEGRATION_PLUGINS, *HASS_PLUGINS)
 ]
 
@@ -147,7 +147,7 @@ def main():
         plugins += HASS_PLUGINS
 
     for plugin in plugins:
-        plugin_name = plugin.__name__.rsplit(".", maxsplit=1)[-1]
+        plugin_name = plugin.__name__.rpartition(".")[-1]
         if plugin_name not in config.plugins:
             continue
         try:
@@ -194,7 +194,7 @@ def main():
 
         if config.action == "generate":
             for plugin in plugins:
-                plugin_name = plugin.__name__.rsplit(".", maxsplit=1)[-1]
+                plugin_name = plugin.__name__.rpartition(".")[-1]
                 if plugin_name not in config.plugins:
                     continue
                 if hasattr(plugin, "generate"):

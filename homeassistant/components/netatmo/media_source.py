@@ -146,13 +146,13 @@ def async_parse_identifier(
     if not item.identifier or "/" not in item.identifier:
         return "events", "", None
 
-    source, path = item.identifier.lstrip("/").split("/", 1)
+    source, _, path = item.identifier.lstrip("/").partition("/")
 
     if source != "events":
         raise Unresolvable("Unknown source directory.")
 
     if "/" in path:
-        camera_id, event_id = path.split("/", 1)
+        camera_id, _, event_id = path.partition("/")
         return source, camera_id, int(event_id)
 
     return source, path, None

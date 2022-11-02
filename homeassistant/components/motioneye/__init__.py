@@ -115,7 +115,7 @@ def split_motioneye_device_identifier(
     """Get the identifiers for a motionEye device."""
     if len(identifier) != 2 or identifier[0] != DOMAIN or "_" not in identifier[1]:
         return None
-    config_id, camera_id_str = identifier[1].split("_", 1)
+    config_id, _, camera_id_str = identifier[1].partition("_")
     try:
         camera_id = int(camera_id_str)
     except ValueError:

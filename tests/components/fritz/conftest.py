@@ -51,7 +51,7 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
             {**kwargs},
         )
         if ":" in service:
-            service, number = service.split(":", 1)
+            service, _, number = service.partition(":")
             service = service + number
         elif not service[-1].isnumeric():
             service = service + "1"

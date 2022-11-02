@@ -57,7 +57,7 @@ class DeconzBase(Generic[_DeviceT]):
         assert isinstance(self._device, PydeconzDevice)
         if not self._device.unique_id or self._device.unique_id.count(":") != 7:
             return None
-        return self._device.unique_id.split("-", 1)[0]
+        return self._device.unique_id.partition("-")[0]
 
     @property
     def device_info(self) -> DeviceInfo | None:

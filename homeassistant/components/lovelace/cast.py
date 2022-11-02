@@ -126,7 +126,7 @@ async def async_play_media(
         return False
 
     if "/" in media_id:
-        url_path, view_path = media_id.split("/", 1)
+        url_path, _, view_path = media_id.partition("/")
     else:
         url_path = media_id
         try:

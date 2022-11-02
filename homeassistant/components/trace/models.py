@@ -120,7 +120,7 @@ class ActionTrace(BaseTrace):
 
         if self._trace:
             last_step = list(self._trace)[-1]
-        domain, item_id = self.key.split(".", 1)
+        domain, _, item_id = self.key.partition(".")
 
         result = {
             "last_step": last_step,

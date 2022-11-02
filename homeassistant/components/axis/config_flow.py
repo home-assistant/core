@@ -181,7 +181,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             {
                 CONF_HOST: discovery_info.host,
                 CONF_MAC: format_mac(discovery_info.properties["macaddress"]),
-                CONF_NAME: discovery_info.name.split(".", 1)[0],
+                CONF_NAME: discovery_info.name.partition(".")[0],
                 CONF_PORT: discovery_info.port,
             }
         )

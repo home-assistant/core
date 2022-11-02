@@ -77,7 +77,7 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
         rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
         rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
         rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
-        str(resetsAtTime).split(".", maxsplit=1)[0],
+        str(resetsAtTime).partition(".")[0],
     )
 
 

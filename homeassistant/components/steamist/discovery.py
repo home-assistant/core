@@ -45,7 +45,7 @@ def async_update_entry_from_discovery(
     if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
         updates["title"] = data_updates[CONF_NAME] = device.name
     if not entry.data.get(CONF_MODEL) and "-" in device.hostname:
-        data_updates[CONF_MODEL] = device.hostname.split("-", maxsplit=1)[0]
+        data_updates[CONF_MODEL] = device.hostname.partition("-")[0]
     if data_updates:
         updates["data"] = {**entry.data, **data_updates}
     if updates:

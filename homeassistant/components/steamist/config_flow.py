@@ -113,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: device.ipaddress})
         data = {CONF_HOST: device.ipaddress, CONF_NAME: device.name}
         if device.hostname:
-            data[CONF_MODEL] = device.hostname.split("-", maxsplit=1)[0]
+            data[CONF_MODEL] = device.hostname.partition("-")[0]
         return self.async_create_entry(
             title=device.name,
             data=data,

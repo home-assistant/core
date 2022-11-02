@@ -883,7 +883,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         }:
             return None, None
         owntone_uri = convert_to_owntone_uri(media_content_id)
-        item_id_str = owntone_uri.rsplit(":", maxsplit=1)[-1]
+        item_id_str = owntone_uri.rpartition(":")[-1]
         if media_content_type == MediaType.TRACK:
             result = await self.api.get_track(int(item_id_str))
         elif media_content_type == MediaType.ALBUM:

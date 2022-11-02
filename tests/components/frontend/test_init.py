@@ -535,7 +535,7 @@ async def test_get_version(hass, ws_client):
     """Test get_version command."""
     frontend = await async_get_integration(hass, "frontend")
     cur_version = next(
-        req.split("==", 1)[1]
+        req.partition("==")[-1]
         for req in frontend.requirements
         if req.startswith("home-assistant-frontend==")
     )

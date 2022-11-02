@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             args_compiled = None
             cache[cmd] = prog, args, args_compiled
         else:
-            prog, args = cmd.split(" ", 1)
+            prog, _, args = cmd.partition(" ")
             args_compiled = template.Template(args, hass)
             cache[cmd] = prog, args, args_compiled
 

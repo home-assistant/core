@@ -98,7 +98,7 @@ async def test_zeroconf(hass: HomeAssistant):
 
     assert (
         context["title_placeholders"][CONF_NAME]
-        == DISCOVERY_INFO.hostname.split(".", maxsplit=1)[0]
+        == DISCOVERY_INFO.hostname.partition(".")[0]
     )
 
     with patch(

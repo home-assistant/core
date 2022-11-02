@@ -17,12 +17,12 @@ TRIGGERS = {
 
 def _get_trigger_platform(config: ConfigType) -> TriggersPlatformModule:
     """Return trigger platform."""
-    platform_split = config[CONF_PLATFORM].split(".", maxsplit=1)
-    if len(platform_split) < 2 or platform_split[1] not in TRIGGERS:
+    trigger = config[CONF_PLATFORM].partition(".")[-1]
+    if trigger not in TRIGGERS:
         raise ValueError(
             f"Unknown webOS Smart TV trigger platform {config[CONF_PLATFORM]}"
         )
-    return cast(TriggersPlatformModule, TRIGGERS[platform_split[1]])
+    return cast(TriggersPlatformModule, TRIGGERS[trigger])
 
 
 async def async_validate_trigger_config(

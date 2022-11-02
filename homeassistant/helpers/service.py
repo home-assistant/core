@@ -202,7 +202,7 @@ def async_prepare_call_from_config(
                 f"Template rendered invalid service: {domain_service}"
             ) from ex
 
-    domain, service = domain_service.split(".", 1)
+    domain, _, service = domain_service.partition(".")
 
     target = {}
     if CONF_TARGET in config:

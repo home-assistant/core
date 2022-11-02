@@ -197,7 +197,7 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
     endpoints = []
 
     for entity_id in entity_ids:
-        if (domain := entity_id.split(".", 1)[0]) not in ENTITY_ADAPTERS:
+        if (domain := entity_id.partition(".")[0]) not in ENTITY_ADAPTERS:
             continue
 
         if (state := hass.states.get(entity_id)) is None:
@@ -232,7 +232,7 @@ async def async_send_delete_message(hass, config, entity_ids):
     endpoints = []
 
     for entity_id in entity_ids:
-        domain = entity_id.split(".", 1)[0]
+        domain = entity_id.partition(".")[0]
 
         if domain not in ENTITY_ADAPTERS:
             continue

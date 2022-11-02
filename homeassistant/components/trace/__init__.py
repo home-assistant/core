@@ -95,7 +95,7 @@ async def async_list_contexts(
 
     def _trace_id(run_id: str, key: str) -> dict[str, str]:
         """Make trace_id for the response."""
-        domain, item_id = key.split(".", 1)
+        domain, _, item_id = key.partition(".")
         return {"run_id": run_id, "domain": domain, "item_id": item_id}
 
     return {
@@ -127,7 +127,7 @@ async def async_list_traces(
     if not wanted_key:
         traces: list[dict[str, Any]] = []
         for key in _get_data(hass):
-            domain = key.split(".", 1)[0]
+            domain = key.partition(".")[0]
             if domain == wanted_domain:
                 traces.extend(_get_debug_traces(hass, key))
     else:

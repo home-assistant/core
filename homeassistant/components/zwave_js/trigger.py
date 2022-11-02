@@ -19,10 +19,10 @@ TRIGGERS = {
 
 def _get_trigger_platform(config: ConfigType) -> ModuleType:
     """Return trigger platform."""
-    platform_split = config[CONF_PLATFORM].split(".", maxsplit=1)
-    if len(platform_split) < 2 or platform_split[1] not in TRIGGERS:
+    trigger = config[CONF_PLATFORM].partition(".")[-1]
+    if trigger not in TRIGGERS:
         raise ValueError(f"Unknown Z-Wave JS trigger platform {config[CONF_PLATFORM]}")
-    return TRIGGERS[platform_split[1]]
+    return TRIGGERS[trigger]
 
 
 async def async_validate_trigger_config(

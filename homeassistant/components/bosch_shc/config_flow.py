@@ -154,7 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
                     CONF_HOST: self.host,
                     CONF_TOKEN: result["token"],
-                    CONF_HOSTNAME: result["token"].split(":", 1)[1],
+                    CONF_HOSTNAME: result["token"].partition(":", 1)[-1],
                 }
                 existing_entry = await self.async_set_unique_id(self.info["unique_id"])
                 if existing_entry:

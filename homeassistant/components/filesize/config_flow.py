@@ -58,7 +58,7 @@ class FilesizeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(full_path)
                 self._abort_if_unique_id_configured()
 
-                name = str(user_input[CONF_FILE_PATH]).rsplit("/", maxsplit=1)[-1]
+                name = str(user_input[CONF_FILE_PATH]).rpartition("/")[-1]
                 return self.async_create_entry(
                     title=name,
                     data={CONF_FILE_PATH: user_input[CONF_FILE_PATH]},

@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         @callback
         def _async_migrator(entity_entry: entity_registry.RegistryEntry):
             """Migrate away from unstable ID."""
-            country, info_type = entity_entry.unique_id.rsplit("-", 1)
+            country, _, info_type = entity_entry.unique_id.rpartition("-")
             if not country.isnumeric():
                 return None
             return {"new_unique_id": f"{entry.title}-{info_type}"}

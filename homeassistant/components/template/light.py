@@ -571,6 +571,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             if render in ("None", ""):
                 self._color = None
                 return
+            # TODO: use partition or maybe ast.literal_eval
             h_str, s_str = map(
                 float, render.replace("(", "").replace(")", "").split(",", 1)
             )

@@ -700,7 +700,7 @@ async def websocket_get_version(
 
     for req in integration.requirements:
         if req.startswith("home-assistant-frontend=="):
-            frontend = req.split("==", 1)[1]
+            frontend = req.partition("==")[-1]
 
     if frontend is None:
         connection.send_error(msg["id"], "unknown_version", "Version not found")

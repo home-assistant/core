@@ -433,7 +433,7 @@ def async_get_loaded_integrations(hass: core.HomeAssistant) -> set[str]:
         if "." not in component:
             integrations.add(component)
             continue
-        domain, platform = component.split(".", 1)
+        domain, _, platform = component.partition(".")
         if domain in BASE_PLATFORMS:
             integrations.add(platform)
     return integrations
@@ -458,10 +458,7 @@ def async_start_setup(
     time_taken = dt_util.utcnow() - started
     for unique, domain in unique_components.items():
         del setup_started[unique]
-        if "." in domain:
-            _, integration = domain.split(".", 1)
-        else:
-            integration = domain
+        integration = domain.rpartition(".")[-1]
         if integration in setup_time:
             setup_time[integration] += time_taken
         else:

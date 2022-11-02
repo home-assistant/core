@@ -88,7 +88,7 @@ def async_update_unique_id(
     if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
         return
 
-    unique_id = f'{unique_id.split("-", 1)[0]}-{description.key}'
+    unique_id = f'{unique_id.partition("-")[0]}-{description.key}'
     if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
         ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 

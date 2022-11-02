@@ -63,7 +63,7 @@ def prepare_user_input(
     tmp: dict[str, Any] = {}
 
     for reg in user_input[CONF_REGIONS]:
-        tmp[_all_region_codes_sorted[reg]] = reg.split("_", 1)[0]
+        tmp[_all_region_codes_sorted[reg]] = reg.partition("_")[0]
 
     compact: dict[str, Any] = {}
 

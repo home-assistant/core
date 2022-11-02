@@ -168,11 +168,11 @@ class ImageServeView(HomeAssistantView):
 
     async def get(self, request: web.Request, image_id: str, filename: str):
         """Serve image."""
-        image_size = filename.split("-", 1)[0]
+        image_size = filename.partition("-")[0]
         try:
-            parts = image_size.split("x", 1)
-            width = int(parts[0])
-            height = int(parts[1])
+            width, _, height = image_size.partition("x")
+            width = int(width)
+            height = int(height)
         except (ValueError, IndexError) as err:
             raise web.HTTPBadRequest from err
 
@@ -205,8 +205,13 @@ class ImageServeView(HomeAssistantView):
         )
 
 
-def _generate_thumbnail(original_path, content_type, target_path, target_size):
+def _generate_thumbnail(
+    original_path: pathlib.Path | str,
+    content_type: str,
+    target_path: pathlib.Path | str,
+    target_size: tuple[int, int],
+) -> None:
     """Generate a size."""
     image = ImageOps.exif_transpose(Image.open(original_path))
     image.thumbnail(target_size)
-    image.save(target_path, format=content_type.split("/", 1)[1])
+    image.save(target_path, format=content_type.partition("/")[-1])

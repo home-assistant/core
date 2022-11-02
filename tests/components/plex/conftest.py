@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 def plex_server_url(entry):
     """Return a protocol-less URL from a config entry."""
-    return entry.data[PLEX_SERVER_CONFIG][CONF_URL].split(":", 1)[-1]
+    return entry.data[PLEX_SERVER_CONFIG][CONF_URL].partition(":")[-1]
 
 
 @pytest.fixture(name="album", scope="session")

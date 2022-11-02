@@ -193,7 +193,7 @@ def websocket_breakpoint_list(
     breakpoints = breakpoint_list(hass)
     for _breakpoint in breakpoints:
         key = _breakpoint.pop("key")
-        _breakpoint["domain"], _breakpoint["item_id"] = key.split(".", 1)
+        _breakpoint["domain"], _, _breakpoint["item_id"] = key.partition(".")
 
     connection.send_result(msg["id"], breakpoints)
 
@@ -213,7 +213,7 @@ def websocket_subscribe_breakpoint_events(
     @callback
     def breakpoint_hit(key, run_id, node):
         """Forward events to websocket."""
-        domain, item_id = key.split(".", 1)
+        domain, _, item_id = key.partition(".")
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],

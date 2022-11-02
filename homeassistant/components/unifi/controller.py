@@ -298,12 +298,14 @@ class UniFiController:
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
+            mac_prefix, _, mac_suffix = entry.unique_id.partition("_")
             if entry.domain == Platform.DEVICE_TRACKER:
-                mac = entry.unique_id.split("-", 1)[0]
-            elif entry.domain == Platform.SWITCH and entry.unique_id.startswith(
-                BLOCK_SWITCH
+                mac = mac_prefix
+            elif entry.domain == Platform.SWITCH and (
+                entry.unique_id.startswith(BLOCK_SWITCH)
+                or entry.unique_id.startswith(POE_SWITCH)
             ):
-                mac = entry.unique_id.split("-", 1)[1]
+                mac = mac_suffix
             else:
                 continue
 

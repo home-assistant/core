@@ -152,7 +152,7 @@ class CommandSensorData:
             args = None
             args_compiled = None
         else:
-            prog, args = command.split(" ", 1)
+            prog, _, args = command.partition(" ")
             args_compiled = Template(args, self.hass)
 
         if args_compiled:

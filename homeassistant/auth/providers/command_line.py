@@ -90,7 +90,7 @@ class CommandLineAuthProvider(AuthProvider):
                     line = _line.decode().lstrip()
                     if line.startswith("#"):
                         continue
-                    key, value = line.split("=", 1)
+                    key, _, value = line.partition("=")
                 except ValueError:
                     # malformed line
                     continue

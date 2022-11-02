@@ -244,7 +244,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a discovered synology_dsm."""
         parsed_url = urlparse(discovery_info.ssdp_location)
         friendly_name = (
-            discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
+            discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME].partition("(")[0].strip()
         )
 
         discovered_mac = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL].upper()

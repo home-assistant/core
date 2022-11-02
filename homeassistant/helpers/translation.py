@@ -97,10 +97,7 @@ def _merge_resources(
     # Build response
     resources: dict[str, dict[str, Any]] = {}
     for component in components:
-        if "." not in component:
-            domain = component
-        else:
-            domain = component.split(".", 1)[0]
+        domain = component.partition(".")[0]
 
         domain_resources = resources.setdefault(domain, {})
 

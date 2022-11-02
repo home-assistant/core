@@ -247,11 +247,6 @@ class PlatformCompiledStatistics:
     current_metadata: dict[str, tuple[int, StatisticMetaData]]
 
 
-def split_statistic_id(entity_id: str) -> list[str]:
-    """Split a state entity ID into domain and object ID."""
-    return entity_id.split(":", 1)
-
-
 VALID_STATISTIC_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_):(?!_)[\da-z_]+(?<!_)$")
 
 
@@ -1902,7 +1897,7 @@ def async_add_external_statistics(
         raise HomeAssistantError("Invalid statistic_id")
 
     # The source must not be empty and must be aligned with the statistic_id
-    domain, _object_id = split_statistic_id(metadata["statistic_id"])
+    domain, _, _object_id = metadata["statistic_id"].partition(":")
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
 
