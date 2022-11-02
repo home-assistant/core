@@ -83,7 +83,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    entities: list[ScrapeSensor] = []
+    coordinator: ScrapeCoordinator
+    sensors_config: list[ConfigType]
     if discovery_info is None:
         async_create_issue(
             hass,
@@ -99,27 +100,22 @@ async def async_setup_platform(
 
         coordinator = ScrapeCoordinator(hass, rest, SCAN_INTERVAL)
 
-        sensors_config: list[tuple[ConfigType, ConfigType]] = [
-            (
-                config,
-                vol.Schema(TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.REMOVE_EXTRA)(
-                    config
-                ),
+        sensors_config = [
+            vol.Schema(TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA)(
+                config
             )
         ]
 
     else:
         coordinator = discovery_info["coordinator"]
-        sensors_config = [
-            (sensor_config, sensor_config)
-            for sensor_config in discovery_info["configs"]
-        ]
+        sensors_config = discovery_info["configs"]
 
     await coordinator.async_refresh()
     if coordinator.data is None:
         raise PlatformNotReady
 
-    for sensor_config, template_config in sensors_config:
+    entities: list[ScrapeSensor] = []
+    for sensor_config in sensors_config:
         value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
@@ -128,9 +124,9 @@ async def async_setup_platform(
             ScrapeSensor(
                 hass,
                 coordinator,
-                template_config,
-                template_config[CONF_NAME],
-                template_config.get(CONF_UNIQUE_ID),
+                sensor_config,
+                sensor_config[CONF_NAME],
+                sensor_config.get(CONF_UNIQUE_ID),
                 sensor_config.get(CONF_SELECT),
                 sensor_config.get(CONF_ATTRIBUTE),
                 sensor_config[CONF_INDEX],
