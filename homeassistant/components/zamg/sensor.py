@@ -255,7 +255,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{DOMAIN}_{station_id}_{description.key}"
+        self._attr_unique_id = f"{station_id}_{description.key}"
         self.station_id = f"{station_id}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
