@@ -78,7 +78,7 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Handle ZAMG configuration import."""
-        station_id = str(config.get(CONF_STATION_ID))
+        station_id = config.get(CONF_STATION_ID)
         # create issue every time after restart
         # parameter is_persistent seems not working
         async_create_issue(
@@ -115,6 +115,6 @@ class ZamgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(
             user_input={
-                CONF_STATION_ID: int(station_id),
+                CONF_STATION_ID: station_id,
             }
         )
