@@ -185,7 +185,7 @@ def _generate_and_validate_mypy_ini(config: Config) -> str:
     mypy_config.add_section(general_section)
     for key, value in GENERAL_SETTINGS.items():
         mypy_config.set(general_section, key, value)
-    for key in sorted(STRICT_SETTINGS):
+    for key in STRICT_SETTINGS:
         mypy_config.set(general_section, key, "true")
 
     # By default enable no_implicit_reexport only for homeassistant.*
@@ -194,7 +194,7 @@ def _generate_and_validate_mypy_ini(config: Config) -> str:
     mypy_config.add_section(components_section)
     mypy_config.set(components_section, "no_implicit_reexport", "true")
 
-    for core_module in sorted(strict_core_modules):
+    for core_module in strict_core_modules:
         core_section = f"mypy-{core_module}"
         mypy_config.add_section(core_section)
         for key in STRICT_SETTINGS_CORE:
@@ -203,14 +203,14 @@ def _generate_and_validate_mypy_ini(config: Config) -> str:
     # By default strict checks are disabled for components.
     components_section = "mypy-homeassistant.components.*"
     mypy_config.add_section(components_section)
-    for key in sorted(STRICT_SETTINGS):
+    for key in STRICT_SETTINGS:
         mypy_config.set(components_section, key, "false")
     mypy_config.set(components_section, "no_implicit_reexport", "false")
 
-    for strict_module in sorted(strict_modules):
+    for strict_module in strict_modules:
         strict_section = f"mypy-{strict_module}"
         mypy_config.add_section(strict_section)
-        for key in sorted(STRICT_SETTINGS):
+        for key in STRICT_SETTINGS:
             mypy_config.set(strict_section, key, "true")
         if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
             mypy_config.set(strict_section, "no_implicit_reexport", "true")
@@ -225,10 +225,10 @@ def _generate_and_validate_mypy_ini(config: Config) -> str:
     # Disable strict checks for tests
     tests_section = "mypy-tests.*"
     mypy_config.add_section(tests_section)
-    for key in sorted(STRICT_SETTINGS):
+    for key in STRICT_SETTINGS:
         mypy_config.set(tests_section, key, "false")
 
-    for ignored_module in sorted(IGNORED_MODULES):
+    for ignored_module in IGNORED_MODULES:
         ignored_section = f"mypy-{ignored_module}"
         mypy_config.add_section(ignored_section)
         mypy_config.set(ignored_section, "ignore_errors", "true")
