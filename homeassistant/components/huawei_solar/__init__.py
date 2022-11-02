@@ -1,6 +1,7 @@
 """The Huawei Solar integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -93,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
             DATA_UPDATE_COORDINATORS: update_coordinators,
         }
-    except HuaweiSolarException as err:
+    except (HuaweiSolarException, TimeoutError, asyncio.TimeoutError) as err:
         if primary_bridge is not None:
             await primary_bridge.stop()
 
@@ -106,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         raise err
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
