@@ -1,7 +1,6 @@
 """Support for MQTT binary sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import functools
 import logging
@@ -26,7 +25,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
@@ -134,9 +133,8 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         discovery_data: DiscoveryInfoType | None,
     ) -> None:
         """Initialize the MQTT binary sensor."""
-        self._expired: bool | None
-        self._expiration_trigger: Callable[..., None] | None = None
-        self._delay_listener: Callable[..., None] | None = None
+        self._expiration_trigger: CALLBACK_TYPE | None = None
+        self._delay_listener: CALLBACK_TYPE | None = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
