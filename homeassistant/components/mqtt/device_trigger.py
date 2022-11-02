@@ -35,14 +35,13 @@ from .const import (
     CONF_TOPIC,
     DOMAIN,
 )
-from .discovery import MQTT_DISCOVERY_DONE
+from .discovery import MQTT_DISCOVERY_DONE, MQTTDiscoveryPayload
 from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MqttDiscoveryDeviceUpdate,
     send_discovery_done,
     update_device,
 )
-from .models import MqttData
 from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -198,12 +197,12 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
-        self._config: ConfigType = config
-        self._config_entry: ConfigEntry = config_entry
-        self.device_id: str = device_id
-        self.discovery_data: DiscoveryInfoType = discovery_data
-        self.hass: HomeAssistant = hass
-        self._mqtt_data: MqttData = get_mqtt_data(hass)
+        self._config = config
+        self._config_entry = config_entry
+        self.device_id = device_id
+        self.discovery_data = discovery_data
+        self.hass = hass
+        self._mqtt_data = get_mqtt_data(hass)
 
         MqttDiscoveryDeviceUpdate.__init__(
             self,
@@ -238,7 +237,7 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdate):
             self.hass, discovery_hash, self.discovery_data, self.device_id
         )
 
-    async def async_update(self, discovery_data: dict[str, Any]) -> None:
+    async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
         """Handle MQTT device trigger discovery updates."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
@@ -265,11 +264,11 @@ async def async_setup_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     config_entry: ConfigEntry,
-    discovery_data: dict[str, Any],
+    discovery_data: DiscoveryInfoType,
 ) -> None:
     """Set up the MQTT device trigger."""
     config = TRIGGER_DISCOVERY_SCHEMA(config)
-    discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+    discovery_hash: tuple[str, str] = discovery_data[ATTR_DISCOVERY_HASH]
 
     if (device_id := update_device(hass, config_entry, config)) is None:
         async_dispatcher_send(hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None)
