@@ -389,23 +389,24 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._attr_hvac_modes = self._config[CONF_MODE_LIST]
-        self._attr_min_temp = self._config[CONF_TEMP_MIN]
-        self._attr_max_temp = self._config[CONF_TEMP_MAX]
-        self._attr_precision = self._config.get(CONF_PRECISION, super().precision)
-        self._attr_fan_modes = self._config[CONF_FAN_MODE_LIST]
-        self._attr_swing_modes = self._config[CONF_SWING_MODE_LIST]
-        self._attr_target_temperature_step = self._config[CONF_TEMP_STEP]
-        self._attr_temperature_unit = self._config.get(
+        self._attr_hvac_modes = config[CONF_MODE_LIST]
+        self._attr_min_temp = config[CONF_TEMP_MIN]
+        self._attr_max_temp = config[CONF_TEMP_MAX]
+        self._attr_precision = config.get(CONF_PRECISION, super().precision)
+        self._attr_fan_modes = config[CONF_FAN_MODE_LIST]
+        self._attr_swing_modes = config[CONF_SWING_MODE_LIST]
+        self._attr_target_temperature_step = config[CONF_TEMP_STEP]
+        self._attr_temperature_unit = config.get(
             CONF_TEMPERATURE_UNIT, self.hass.config.units.temperature_unit
         )
 
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
 
         # set to None in non-optimistic mode
-        self._attr_target_temperature = (
-            self._attr_fan_mode
-        ) = self._attr_hvac_mode = self._attr_swing_mode = None
+        self._attr_target_temperature = None
+        self._attr_fan_mode = None
+        self._attr_hvac_mode = None
+        self._attr_swing_mode = None
         self._attr_target_temperature_low = None
         self._attr_target_temperature_high = None
 
@@ -691,7 +692,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             if not preset_mode:
                 _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
                 return
-            if preset_mode not in self._attr_preset_modes:
+            if preset_mode not in self.preset_modes:
                 _LOGGER.warning(
                     "'%s' received on topic %s. '%s' is not a valid preset mode",
                     msg.payload,
@@ -714,11 +715,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
-
-    @property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        return self._attr_current_temperature
 
     async def _publish(self, topic, payload):
         if self._topic[topic] is not None:
@@ -808,11 +804,8 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set a preset mode."""
-        if self._feature_preset_mode and self._attr_preset_modes is not None:
-            if (
-                preset_mode not in self._attr_preset_modes
-                and preset_mode is not PRESET_NONE
-            ):
+        if self._feature_preset_mode and self.preset_modes:
+            if preset_mode not in self.preset_modes and preset_mode is not PRESET_NONE:
                 _LOGGER.warning("'%s' is not a valid preset mode", preset_mode)
                 return
             mqtt_payload = self._command_templates[CONF_PRESET_MODE_COMMAND_TEMPLATE](
