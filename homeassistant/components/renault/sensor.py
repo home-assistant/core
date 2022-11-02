@@ -191,7 +191,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         # For vehicles that DO NOT report charging power in watts, this seems to
         # correspond to the maximum power that would be admissible by the car based
         # on the battery state, regardless of the type of charger.
-        key="charging_power",
+        key="admissible_charging_power",
         condition_lambda=lambda a: not a.details.reports_charging_power_in_watts(),
         coordinator="battery",
         data_key="chargingInstantaneousPower",
