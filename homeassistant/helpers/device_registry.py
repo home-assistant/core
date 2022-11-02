@@ -21,8 +21,6 @@ from .debounce import Debouncer
 from .frame import report
 from .typing import UNDEFINED, UndefinedType
 
-# mypy: disallow_any_generics
-
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 

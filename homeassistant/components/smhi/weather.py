@@ -57,7 +57,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import Throttle, slugify, speed as speed_util
+from homeassistant.util import Throttle, slugify
+from homeassistant.util.unit_conversion import SpeedConverter
 
 from .const import (
     ATTR_SMHI_CLOUDINESS,
@@ -155,7 +156,7 @@ class SmhiWeather(WeatherEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         if self._forecasts:
-            wind_gust = speed_util.convert(
+            wind_gust = SpeedConverter.convert(
                 self._forecasts[0].wind_gust,
                 SPEED_METERS_PER_SECOND,
                 self._wind_speed_unit,

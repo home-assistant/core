@@ -4,9 +4,9 @@ from typing import Any
 
 from screenlogicpy.const import DATA as SL_DATA, EQUIPMENT, HEAT_MODE
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

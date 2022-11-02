@@ -11,20 +11,15 @@ from aiomusiccast.features import ZoneFeature
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     BrowseMedia,
+    MediaClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_TRACK,
-    MEDIA_TYPE_MUSIC,
-    REPEAT_MODE_OFF,
-)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
@@ -80,11 +75,12 @@ async def async_setup_entry(
 class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     """The musiccast media player."""
 
+    _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
 
     def __init__(self, zone_id, name, entry_id, coordinator):
         """Initialize the musiccast device."""
-        self._player_state = STATE_PLAYING
+        self._player_state = MediaPlayerState.PLAYING
         self._volume_muted = False
         self._shuffle = False
         self._zone_id = zone_id
@@ -99,7 +95,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         self._volume_max = self.coordinator.data.zones[self._zone_id].max_volume
 
         self._cur_track = 0
-        self._repeat = REPEAT_MODE_OFF
+        self._repeat = RepeatMode.OFF
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
@@ -149,20 +145,15 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return None
 
     @property
-    def media_content_type(self):
-        """Return the content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
     def state(self):
         """Return the state of the player."""
         if self.coordinator.data.zones[self._zone_id].power == "on":
             if self._is_netusb and self.coordinator.data.netusb_playback == "pause":
-                return STATE_PAUSED
+                return MediaPlayerState.PAUSED
             if self._is_netusb and self.coordinator.data.netusb_playback == "stop":
-                return STATE_IDLE
-            return STATE_PLAYING
-        return STATE_OFF
+                return MediaPlayerState.IDLE
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.OFF
 
     @property
     def volume_level(self):
@@ -281,7 +272,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             )
             media_id = play_item.url
 
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
 
         if media_id:
@@ -324,7 +315,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 ),
             )
 
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             raise HomeAssistantError(
                 "The device has to be turned on to be able to browse media."
             )
@@ -344,8 +335,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
         def get_content_type(item):
             if item.can_play:
-                return MEDIA_CLASS_TRACK
-            return MEDIA_CLASS_DIRECTORY
+                return MediaClass.TRACK
+            return MediaClass.DIRECTORY
 
         children = [
             BrowseMedia(
@@ -429,7 +420,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         return (
             MC_REPEAT_MODE_TO_HA_MAPPING.get(self.coordinator.data.netusb_repeat)
             if self._is_netusb
-            else REPEAT_MODE_OFF
+            else RepeatMode.OFF
         )
 
     @property
@@ -459,7 +450,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             supported_features |= MediaPlayerEntityFeature.PLAY
             supported_features |= MediaPlayerEntityFeature.STOP
 
-        if self.state != STATE_OFF:
+        if self.state != MediaPlayerState.OFF:
             supported_features |= MediaPlayerEntityFeature.BROWSE_MEDIA
 
         return supported_features
@@ -486,7 +477,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 "Service next track is not supported for non NetUSB or Tuner sources."
             )
 
-    async def async_set_repeat(self, repeat: str) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Enable/disable repeat mode."""
         if self._is_netusb:
             await self.coordinator.musiccast.netusb_repeat(
@@ -705,7 +696,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             if entity.entity_id in group_members
         ]
 
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
 
         if not self.is_server and self.musiccast_zone_entity.is_server:
@@ -779,7 +770,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         """
         # If we should join the group, which is served by the main zone, we can simply select main_sync as input.
         _LOGGER.debug("%s called service client join", self.entity_id)
-        if self.state == STATE_OFF:
+        if self.state == MediaPlayerState.OFF:
             await self.async_turn_on()
         if self.ip_address == server.ip_address:
             if server.zone == DEFAULT_ZONE:

@@ -28,6 +28,7 @@ from .common import (
     async_find_group_entity_id,
     async_shift_time,
     async_test_rejoin,
+    async_wait_for_updates,
     find_entity_id,
     get_zha_gateway,
     patch_zha_config,
@@ -36,7 +37,6 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_fire_time_changed
-from tests.components.zha.common import async_wait_for_updates
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e9"
@@ -176,7 +176,7 @@ async def device_light_2(hass, zigpy_device_mock, zha_device_joined):
             }
         },
         ieee=IEEE_GROUPABLE_DEVICE2,
-        manufacturer="Sengled",
+        manufacturer="sengled",
         nwk=0xC79E,
     )
     color_cluster = zigpy_device.endpoints[1].light_color

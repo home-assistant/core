@@ -3,11 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER, SourceType
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import (
-    DOMAIN as DEVICE_TRACKER,
-    SourceType,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
@@ -86,7 +83,7 @@ class MikrotikDataUpdateCoordinatorTracker(
         """Initialize the tracked device."""
         super().__init__(coordinator)
         self.device = device
-        self._attr_name = str(device.name)
+        self._attr_name = device.name
         self._attr_unique_id = device.mac
 
     @property

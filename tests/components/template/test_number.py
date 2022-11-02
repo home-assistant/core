@@ -6,7 +6,7 @@ from homeassistant.components.input_number import (
     DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,

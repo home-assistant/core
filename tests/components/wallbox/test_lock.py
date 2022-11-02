@@ -9,13 +9,13 @@ from homeassistant.components.wallbox import CHARGER_LOCKED_UNLOCKED_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import (
+from . import (
     authorisation_response,
     entry,
     setup_integration,
     setup_integration_read_only,
 )
-from tests.components.wallbox.const import MOCK_LOCK_ENTITY_ID
+from .const import MOCK_LOCK_ENTITY_ID
 
 
 async def test_wallbox_lock_class(hass: HomeAssistant) -> None:

@@ -18,6 +18,19 @@
             }
         }
     },
+    "issues": {
+        "replaced_old_entity": {
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "description": "Friss\u00edtse az ezt az entit\u00e1st haszn\u00e1l\u00f3 automatiz\u00e1l\u00e1sokat vagy szkripteket, hogy helyette a k\u00f6vetkez\u0151t haszn\u00e1ja: `{replacement_entity_id}`",
+                        "title": "{old_entity_id} entit\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl."
+                    }
+                }
+            },
+            "title": "{old_entity_id} entit\u00e1s elt\u00e1vol\u00edt\u00e1sra ker\u00fcl."
+        }
+    },
     "options": {
         "step": {
             "init": {

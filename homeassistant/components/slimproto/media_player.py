@@ -14,12 +14,10 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,9 +26,9 @@ from homeassistant.util.dt import utcnow
 from .const import DEFAULT_NAME, DOMAIN, PLAYER_EVENT
 
 STATE_MAPPING = {
-    PlayerState.IDLE: STATE_IDLE,
-    PlayerState.PLAYING: STATE_PLAYING,
-    PlayerState.PAUSED: STATE_PAUSED,
+    PlayerState.IDLE: MediaPlayerState.IDLE,
+    PlayerState.PLAYING: MediaPlayerState.PLAYING,
+    PlayerState.PAUSED: MediaPlayerState.PAUSED,
 }
 
 
@@ -132,10 +130,10 @@ class SlimProtoPlayer(MediaPlayerEntity):
         return self.player.connected
 
     @property
-    def state(self) -> str:
+    def state(self) -> MediaPlayerState:
         """Return current state."""
         if not self.player.powered:
-            return STATE_OFF
+            return MediaPlayerState.OFF
         return STATE_MAPPING[self.player.state]
 
     @callback

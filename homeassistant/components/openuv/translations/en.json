@@ -18,6 +18,16 @@
             }
         }
     },
+    "issues": {
+        "deprecated_service_multiple_alternate_targets": {
+            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with one of these entity IDs as the target: `{alternate_targets}`.",
+            "title": "The {deprecated_service} service is being removed"
+        },
+        "deprecated_service_single_alternate_target": {
+            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with `{alternate_targets}` as the target.",
+            "title": "The {deprecated_service} service is being removed"
+        }
+    },
     "options": {
         "step": {
             "init": {

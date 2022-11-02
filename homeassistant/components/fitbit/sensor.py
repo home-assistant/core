@@ -90,7 +90,7 @@ def request_app_setup(
         if os.path.isfile(config_path):
             config_file = load_json(config_path)
             if config_file == DEFAULT_CONFIG:
-                error_msg = "You didn't correctly modify fitbit.conf, please try again."
+                error_msg = f"You didn't correctly modify {FITBIT_CONFIG_FILE}, please try again."
 
                 configurator.notify_errors(hass, _CONFIGURING["fitbit"], error_msg)
             else:
@@ -115,7 +115,7 @@ def request_app_setup(
         )
         return
 
-    submit = "I have saved my Client ID and Client Secret into fitbit.conf."
+    submit = f"I have saved my Client ID and Client Secret into {FITBIT_CONFIG_FILE}."
 
     _CONFIGURING["fitbit"] = configurator.request_config(
         hass,
@@ -195,8 +195,9 @@ def setup_platform(
         if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
+        user_profile = authd_client.user_profile_get()["user"]
         if (unit_system := config[CONF_UNIT_SYSTEM]) == "default":
-            authd_client.system = authd_client.user_profile_get()["user"]["locale"]
+            authd_client.system = user_profile["locale"]
             if authd_client.system != "en_GB":
                 if hass.config.units.is_metric:
                     authd_client.system = "metric"
@@ -211,6 +212,7 @@ def setup_platform(
         entities = [
             FitbitSensor(
                 authd_client,
+                user_profile,
                 config_path,
                 description,
                 hass.config.units.is_metric,
@@ -224,6 +226,7 @@ def setup_platform(
                 [
                     FitbitSensor(
                         authd_client,
+                        user_profile,
                         config_path,
                         FITBIT_RESOURCE_BATTERY,
                         hass.config.units.is_metric,
@@ -345,6 +348,7 @@ class FitbitSensor(SensorEntity):
     def __init__(
         self,
         client: Fitbit,
+        user_profile: dict[str, Any],
         config_path: str,
         description: FitbitSensorEntityDescription,
         is_metric: bool,
@@ -358,8 +362,12 @@ class FitbitSensor(SensorEntity):
         self.is_metric = is_metric
         self.clock_format = clock_format
         self.extra = extra
+
+        self._attr_unique_id = f"{user_profile['encodedId']}_{description.key}"
         if self.extra is not None:
             self._attr_name = f"{self.extra.get('deviceVersion')} Battery"
+            self._attr_unique_id = f"{self._attr_unique_id}_{self.extra.get('id')}"
+
         if (unit_type := description.unit_type) == "":
             split_resource = description.key.rsplit("/", maxsplit=1)[-1]
             try:

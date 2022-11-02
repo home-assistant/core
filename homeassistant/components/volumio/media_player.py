@@ -10,23 +10,15 @@ import json
 from typing import Any
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    REPEAT_MODE_ALL,
-    REPEAT_MODE_OFF,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ID,
-    CONF_NAME,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -58,6 +50,7 @@ async def async_setup_entry(
 class Volumio(MediaPlayerEntity):
     """Volumio Player Object."""
 
+    _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -114,20 +107,15 @@ class Volumio(MediaPlayerEntity):
         )
 
     @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         status = self._state.get("status", None)
         if status == "pause":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if status == "play":
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
 
-        return STATE_IDLE
+        return MediaPlayerState.IDLE
 
     @property
     def media_title(self):
@@ -179,11 +167,11 @@ class Volumio(MediaPlayerEntity):
         return self._state.get("random", False)
 
     @property
-    def repeat(self):
+    def repeat(self) -> RepeatMode:
         """Return current repeat mode."""
         if self._state.get("repeat", None):
-            return REPEAT_MODE_ALL
-        return REPEAT_MODE_OFF
+            return RepeatMode.ALL
+        return RepeatMode.OFF
 
     @property
     def source_list(self):
@@ -241,9 +229,9 @@ class Volumio(MediaPlayerEntity):
         """Enable/disable shuffle mode."""
         await self._volumio.set_shuffle(shuffle)
 
-    async def async_set_repeat(self, repeat: str) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        if repeat == REPEAT_MODE_OFF:
+        if repeat == RepeatMode.OFF:
             await self._volumio.repeatAll("false")
         else:
             await self._volumio.repeatAll("true")
@@ -264,13 +252,15 @@ class Volumio(MediaPlayerEntity):
         self._playlists = await self._volumio.get_playlists()
 
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
         await self._volumio.replace_and_play(json.loads(media_id))
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         self.thumbnail_cache = {}
@@ -283,7 +273,7 @@ class Volumio(MediaPlayerEntity):
 
     async def async_get_browse_image(
         self,
-        media_content_type: str,
+        media_content_type: MediaType | str,
         media_content_id: str,
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:

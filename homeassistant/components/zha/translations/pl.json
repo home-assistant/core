@@ -6,12 +6,63 @@
             "usb_probe_failed": "Nie uda\u0142o si\u0119 sondowa\u0107 urz\u0105dzenia USB"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_backup_json": "Nieprawid\u0142owa kopia zapasowa JSON"
         },
         "flow_title": "{name}",
         "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Wybierz automatyczn\u0105 kopi\u0119 zapasow\u0105"
+                },
+                "description": "Przywr\u00f3\u0107 ustawienia sieciowe z automatycznej kopii zapasowej",
+                "title": "Przywracanie z automatycznej kopii zapasowej"
+            },
+            "choose_formation_strategy": {
+                "description": "Wybierz ustawienia sieciowe radia.",
+                "menu_options": {
+                    "choose_automatic_backup": "Przywr\u00f3\u0107 z automatycznej kopii zapasowej",
+                    "form_new_network": "Usu\u0144 ustawienia sieciowe i utw\u00f3rz now\u0105 sie\u0107",
+                    "reuse_settings": "Zachowaj ustawienia sieciowe radia",
+                    "upload_manual_backup": "Prze\u015blij r\u0119czn\u0105 kopi\u0119 zapasow\u0105"
+                },
+                "title": "Tworzenie sieci"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
+                },
+                "description": "Wybierz port szeregowy dla swojego radia Zigbee",
+                "title": "Wyb\u00f3r portu szeregowego"
+            },
             "confirm": {
                 "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
+            "confirm_hardware": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Typ radia"
+                },
+                "description": "Wybierz typ radia Zigbee",
+                "title": "Typ radia"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "pr\u0119dko\u015b\u0107 portu",
+                    "flow_control": "kontrola przep\u0142ywu danych",
+                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
+                },
+                "description": "Wprowad\u017a ustawienia portu szeregowego",
+                "title": "Ustawienia portu szeregowego"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Trwa\u0142e zast\u0105pienie radiowego adresu IEEE"
+                },
+                "description": "Twoja kopia zapasowa ma inny adres IEEE ni\u017c twoje radio. Aby sie\u0107 dzia\u0142a\u0142a prawid\u0142owo, nale\u017cy r\u00f3wnie\u017c zmieni\u0107 adres IEEE radia. \n\nTo jest trwa\u0142a operacja.",
+                "title": "Nadpisanie adresu IEEE radia"
             },
             "pick_radio": {
                 "data": {
@@ -28,6 +79,13 @@
                 },
                 "description": "Wprowadzanie ustawie\u0144 dla portu",
                 "title": "Ustawienia"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Prze\u015blij plik"
+                },
+                "description": "Przywr\u00f3\u0107 ustawienia sieciowe z pliku kopii zapasowej JSON. Mo\u017cesz go pobra\u0107 z innej instalacji ZHA z **Ustawienia sieci** lub u\u017cy\u0107 pliku `coordinator_backup.json` z Zigbee2MQTT.",
+                "title": "Przesy\u0142anie r\u0119cznej kopii zapasowej"
             },
             "user": {
                 "data": {
@@ -58,6 +116,8 @@
     },
     "device_automation": {
         "action_type": {
+            "issue_all_led_effect": "Efekt dla wszystkich LED-\u00f3w",
+            "issue_individual_led_effect": "Efekt dla poszczeg\u00f3lnych LED-\u00f3w",
             "squawk": "squawk",
             "warn": "ostrze\u017cenie"
         },
@@ -110,6 +170,94 @@
             "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
             "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
             "remote_button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_zha_device": "To urz\u0105dzenie nie jest urz\u0105dzeniem zha",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "usb_probe_failed": "Nie uda\u0142o si\u0119 sondowa\u0107 urz\u0105dzenia USB"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_backup_json": "Nieprawid\u0142owa kopia zapasowa JSON"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "choose_automatic_backup": {
+                "data": {
+                    "choose_automatic_backup": "Wybierz automatyczn\u0105 kopi\u0119 zapasow\u0105"
+                },
+                "description": "Przywr\u00f3\u0107 ustawienia sieciowe z automatycznej kopii zapasowej",
+                "title": "Przywracanie z automatycznej kopii zapasowej"
+            },
+            "choose_formation_strategy": {
+                "description": "Wybierz ustawienia sieciowe radia.",
+                "menu_options": {
+                    "choose_automatic_backup": "Przywr\u00f3\u0107 z automatycznej kopii zapasowej",
+                    "form_new_network": "Usu\u0144 ustawienia sieciowe i utw\u00f3rz now\u0105 sie\u0107",
+                    "reuse_settings": "Zachowaj ustawienia sieciowe radia",
+                    "upload_manual_backup": "Prze\u015blij r\u0119czn\u0105 kopi\u0119 zapasow\u0105"
+                },
+                "title": "Tworzenie sieci"
+            },
+            "choose_serial_port": {
+                "data": {
+                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
+                },
+                "description": "Wybierz port szeregowy dla swojego radia Zigbee",
+                "title": "Wyb\u00f3r portu szeregowego"
+            },
+            "init": {
+                "description": "ZHA zostanie zatrzymany. Czy chcesz kontynuowa\u0107?",
+                "title": "Zmiana konfiguracji ZHA"
+            },
+            "instruct_unplug": {
+                "description": "Tw\u00f3j stary typ radia zosta\u0142 zresetowany. Je\u015bli sprz\u0119t nie jest ju\u017c potrzebny, mo\u017cesz go teraz od\u0142\u0105czy\u0107.",
+                "title": "Od\u0142\u0105cz stary typ radia"
+            },
+            "intent_migrate": {
+                "description": "Twoje stare radio zostanie zresetowane do ustawie\u0144 fabrycznych. Je\u015bli u\u017cywasz po\u0142\u0105czonego adaptera Z-Wave i Zigbee, takiego jak HUSBZB-1, zresetuje to tylko cz\u0119\u015b\u0107 Zigbee. \n\nCzy chcesz kontynuowa\u0107?",
+                "title": "Migracja do nowego typu radia"
+            },
+            "manual_pick_radio_type": {
+                "data": {
+                    "radio_type": "Typ radia"
+                },
+                "description": "Wybierz typ radia Zigbee",
+                "title": "Typ radia"
+            },
+            "manual_port_config": {
+                "data": {
+                    "baudrate": "pr\u0119dko\u015b\u0107 portu",
+                    "flow_control": "kontrola przep\u0142ywu danych",
+                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
+                },
+                "description": "Wprowad\u017a ustawienia portu szeregowego",
+                "title": "Ustawienia portu szeregowego"
+            },
+            "maybe_confirm_ezsp_restore": {
+                "data": {
+                    "overwrite_coordinator_ieee": "Trwa\u0142e zast\u0105pienie radiowego adresu IEEE"
+                },
+                "description": "Twoja kopia zapasowa ma inny adres IEEE ni\u017c twoje radio. Aby sie\u0107 dzia\u0142a\u0142a prawid\u0142owo, nale\u017cy r\u00f3wnie\u017c zmieni\u0107 adres IEEE radia. \n\nTo jest trwa\u0142a operacja.",
+                "title": "Nadpisanie adresu IEEE radia"
+            },
+            "prompt_migrate_or_reconfigure": {
+                "description": "Czy migrujesz do nowego typu radia czy ponownie konfigurujesz obecne radio?",
+                "menu_options": {
+                    "intent_migrate": "Migracja do nowego",
+                    "intent_reconfigure": "Ponowna konfiguracja"
+                },
+                "title": "Migracja czy ponowna konfiguracja"
+            },
+            "upload_manual_backup": {
+                "data": {
+                    "uploaded_backup_file": "Prze\u015blij plik"
+                },
+                "description": "Przywr\u00f3\u0107 ustawienia sieciowe z pliku kopii zapasowej JSON. Mo\u017cesz go pobra\u0107 z innej instalacji ZHA z **Ustawienia sieci** lub u\u017cy\u0107 pliku `coordinator_backup.json` z Zigbee2MQTT.",
+                "title": "Przesy\u0142anie r\u0119cznej kopii zapasowej"
+            }
         }
     }
 }

@@ -13,12 +13,11 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
+    MediaPlayerState,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
-from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -58,6 +57,7 @@ def setup_platform(
 class GstreamerDevice(MediaPlayerEntity):
     """Representation of a Gstreamer device."""
 
+    _attr_media_content_type = MediaType.MUSIC
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.PLAY
@@ -71,7 +71,7 @@ class GstreamerDevice(MediaPlayerEntity):
         """Initialize the Gstreamer device."""
         self._player = player
         self._name = name or DOMAIN
-        self._state = STATE_IDLE
+        self._state = MediaPlayerState.IDLE
         self._volume = None
         self._duration = None
         self._uri = None
@@ -104,7 +104,7 @@ class GstreamerDevice(MediaPlayerEntity):
             )
             media_id = sourced_media.url
 
-        elif media_type != MEDIA_TYPE_MUSIC:
+        elif media_type != MediaType.MUSIC:
             _LOGGER.error("Invalid media type")
             return
 
@@ -128,11 +128,6 @@ class GstreamerDevice(MediaPlayerEntity):
     def media_content_id(self):
         """Content ID of currently playing media."""
         return self._uri
-
-    @property
-    def content_type(self):
-        """Content type of currently playing media."""
-        return MEDIA_TYPE_MUSIC
 
     @property
     def name(self):

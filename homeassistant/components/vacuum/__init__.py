@@ -40,8 +40,6 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "vacuum"
@@ -112,6 +110,8 @@ SUPPORT_MAP = 2048
 SUPPORT_STATE = 4096
 SUPPORT_START = 8192
 
+# mypy: disallow-any-generics
+
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -121,7 +121,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the vacuum component."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[_BaseVacuum](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -160,13 +160,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[_BaseVacuum] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[_BaseVacuum] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 

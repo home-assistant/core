@@ -6,8 +6,12 @@ from typing import Any, NamedTuple
 from pytouchline import PyTouchline
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv

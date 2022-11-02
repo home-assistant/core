@@ -170,6 +170,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "WIND_SPEED": SensorEntityDescription(
         key="WIND_SPEED",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
     ),
     "WIND_DIRECTION": SensorEntityDescription(

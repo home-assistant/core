@@ -16,5 +16,15 @@
                 "description": "\u00bfQuieres configurar Tasmota?"
             }
         }
+    },
+    "issues": {
+        "topic_duplicated": {
+            "description": "Varios dispositivos Tasmota comparten el tema {topic}. \n\nDispositivos Tasmota con este problema: {offenders}.",
+            "title": "Varios dispositivos Tasmota est\u00e1n compartiendo el mismo tema"
+        },
+        "topic_no_prefix": {
+            "description": "El dispositivo Tasmota {name} con IP {ip} no incluye `%prefix%` en su tema completo. \n\nLas entidades para estos dispositivos est\u00e1n deshabilitadas hasta que se haya corregido la configuraci\u00f3n.",
+            "title": "El dispositivo Tasmota {name} tiene un tema MQTT no v\u00e1lido"
+        }
     }
 }

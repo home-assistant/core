@@ -9,7 +9,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )

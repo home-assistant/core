@@ -10,10 +10,9 @@ from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.fritz.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DEVICE_CLASS_TIMESTAMP,
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -38,21 +37,21 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
     },
     "sensor.mock_title_device_uptime": {
         # ATTR_STATE: "2022-02-05T17:46:04+00:00",
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+        ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
     },
     "sensor.mock_title_connection_uptime": {
         # ATTR_STATE: "2022-03-06T11:27:16+00:00",
-        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
+        ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
     },
     "sensor.mock_title_upload_throughput": {
         ATTR_STATE: "3.4",
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         ATTR_UNIT_OF_MEASUREMENT: "kB/s",
         ATTR_ICON: "mdi:upload",
     },
     "sensor.mock_title_download_throughput": {
         ATTR_STATE: "67.6",
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         ATTR_UNIT_OF_MEASUREMENT: "kB/s",
         ATTR_ICON: "mdi:download",
     },
@@ -68,13 +67,13 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
     },
     "sensor.mock_title_gb_sent": {
         ATTR_STATE: "1.7",
-        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         ATTR_UNIT_OF_MEASUREMENT: "GB",
         ATTR_ICON: "mdi:upload",
     },
     "sensor.mock_title_gb_received": {
         ATTR_STATE: "5.2",
-        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         ATTR_UNIT_OF_MEASUREMENT: "GB",
         ATTR_ICON: "mdi:download",
     },

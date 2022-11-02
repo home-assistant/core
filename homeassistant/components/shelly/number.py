@@ -119,7 +119,7 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, NumberEntity):
         LOGGER.debug("Setting state for entity %s, state: %s", self.name, params)
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                return await self.wrapper.device.http_request("get", path, params)
+                return await self.coordinator.device.http_request("get", path, params)
         except (asyncio.TimeoutError, OSError) as err:
             LOGGER.error(
                 "Setting state for entity %s failed, state: %s, error: %s",

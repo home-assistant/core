@@ -7,6 +7,7 @@ from typing import Any
 
 from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
+import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -26,7 +27,8 @@ async def async_try_connect(ip_address: str) -> Device:
     device = Device(Service(ip_addresses=[ip_address], port=PORT))
     run_future = device.async_run()
     try:
-        await asyncio.wait_for(device.async_wait_available(), timeout=RUN_TIMEOUT)
+        async with async_timeout.timeout(RUN_TIMEOUT):
+            await device.async_wait_available()
     except asyncio.TimeoutError as ex:
         raise CannotConnect from ex
     finally:

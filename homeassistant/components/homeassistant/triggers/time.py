@@ -23,8 +23,6 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
     vol.All(str, cv.entity_domain(["input_datetime", "sensor"])),

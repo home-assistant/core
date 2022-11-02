@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Plasseringen er allerede konfigurert",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",

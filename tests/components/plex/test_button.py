@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.plex.const import DEBOUNCE_TIMEOUT
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.util import dt

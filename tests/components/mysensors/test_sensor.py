@@ -117,7 +117,8 @@ async def test_distance_sensor(
 
     assert state
     assert state.state == "15"
-    assert state.attributes[ATTR_ICON] == "mdi:ruler"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.DISTANCE
+    assert ATTR_ICON not in state.attributes
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "cm"
 
 

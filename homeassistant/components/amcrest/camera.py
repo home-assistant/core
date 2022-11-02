@@ -12,8 +12,11 @@ from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    Camera,
+    CameraEntityFeature,
+)
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant

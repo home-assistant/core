@@ -4,14 +4,12 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components.humidifier import (
-    HumidifierDeviceClass,
-    HumidifierEntity,
-    HumidifierEntityFeature,
-)
-from homeassistant.components.humidifier.const import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     MODE_AUTO,
+    HumidifierDeviceClass,
+    HumidifierEntity,
+    HumidifierEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

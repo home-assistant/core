@@ -6,13 +6,14 @@ from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )

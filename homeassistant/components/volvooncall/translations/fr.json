@@ -15,9 +15,15 @@
                     "password": "Mot de passe",
                     "region": "R\u00e9gion",
                     "scandinavian_miles": "Utiliser les miles scandinaves",
+                    "unit_system": "Syst\u00e8me d'unit\u00e9s",
                     "username": "Nom d'utilisateur"
                 }
             }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "title": "La configuration YAML pour Volvo\u00a0On\u00a0Call sera bient\u00f4t supprim\u00e9e"
         }
     }
 }

@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_RESOURCES,
     CONF_SCAN_INTERVAL,
+    CONF_UNIT_SYSTEM,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -38,6 +39,9 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     RESOURCES,
+    UNIT_SYSTEM_IMPERIAL,
+    UNIT_SYSTEM_METRIC,
+    UNIT_SYSTEM_SCANDINAVIAN_MILES,
     VOLVO_DISCOVERY_NEW,
 )
 from .errors import InvalidAuth
@@ -109,6 +113,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Volvo On Call component from a ConfigEntry."""
+
+    # added CONF_UNIT_SYSTEM / deprecated CONF_SCANDINAVIAN_MILES in 2022.10 to support imperial units
+    if CONF_UNIT_SYSTEM not in entry.data:
+        new_conf = {**entry.data}
+
+        scandinavian_miles: bool = entry.data[CONF_SCANDINAVIAN_MILES]
+
+        new_conf[CONF_UNIT_SYSTEM] = (
+            UNIT_SYSTEM_SCANDINAVIAN_MILES if scandinavian_miles else UNIT_SYSTEM_METRIC
+        )
+
+        hass.config_entries.async_update_entry(entry, data=new_conf)
+
     session = async_get_clientsession(hass)
 
     connection = Connection(
@@ -183,7 +200,13 @@ class VolvoData:
 
         dashboard = vehicle.dashboard(
             mutable=self.config_entry.data[CONF_MUTABLE],
-            scandinavian_miles=self.config_entry.data[CONF_SCANDINAVIAN_MILES],
+            scandinavian_miles=(
+                self.config_entry.data[CONF_UNIT_SYSTEM]
+                == UNIT_SYSTEM_SCANDINAVIAN_MILES
+            ),
+            usa_units=(
+                self.config_entry.data[CONF_UNIT_SYSTEM] == UNIT_SYSTEM_IMPERIAL
+            ),
         )
 
         for instrument in (

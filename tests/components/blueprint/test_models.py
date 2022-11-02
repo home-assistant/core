@@ -47,7 +47,9 @@ def blueprint_2():
 @pytest.fixture
 def domain_bps(hass):
     """Domain blueprints fixture."""
-    return models.DomainBlueprints(hass, "automation", logging.getLogger(__name__))
+    return models.DomainBlueprints(
+        hass, "automation", logging.getLogger(__name__), None
+    )
 
 
 def test_blueprint_model_init():

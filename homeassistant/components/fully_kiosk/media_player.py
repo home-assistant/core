@@ -4,13 +4,13 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.browse_media import (
+from homeassistant.components.media_player import (
     BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerState,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -34,12 +34,12 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
 
     _attr_supported_features = MEDIA_SUPPORT_FULLYKIOSK
     _attr_assumed_state = True
-    _attr_state = STATE_IDLE
 
     def __init__(self, coordinator: FullyKioskDataUpdateCoordinator) -> None:
         """Initialize the media player entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.data['deviceID']}-mediaplayer"
+        self._attr_state = MediaPlayerState.IDLE
 
     async def async_play_media(
         self, media_type: str, media_id: str, **kwargs: Any
@@ -52,13 +52,13 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
         await self.coordinator.fully.playSound(media_id, AUDIOMANAGER_STREAM_MUSIC)
-        self._attr_state = STATE_PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
         self.async_write_ha_state()
 
     async def async_media_stop(self) -> None:
         """Stop playing media."""
         await self.coordinator.fully.stopSound()
-        self._attr_state = STATE_IDLE
+        self._attr_state = MediaPlayerState.IDLE
         self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume: float) -> None:

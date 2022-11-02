@@ -8,15 +8,13 @@ from panasonic_viera import Keys
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
-    BrowseMedia,
+    MediaType,
     async_process_play_media_url,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_URL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -191,13 +189,13 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     ) -> None:
         """Play media."""
         if media_source.is_media_source_id(media_id):
-            media_type = MEDIA_TYPE_URL
+            media_type = MediaType.URL
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
 
-        if media_type != MEDIA_TYPE_URL:
+        if media_type != MediaType.URL:
             _LOGGER.warning("Unsupported media_type: %s", media_type)
             return
 

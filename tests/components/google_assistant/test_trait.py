@@ -9,9 +9,11 @@ from homeassistant.components import (
     binary_sensor,
     button,
     camera,
+    climate,
     cover,
     fan,
     group,
+    humidifier,
     input_boolean,
     input_button,
     input_select,
@@ -25,14 +27,9 @@ from homeassistant.components import (
     switch,
     vacuum,
 )
-from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.components.google_assistant.error import SmartHomeError
-from homeassistant.components.humidifier import const as humidifier
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    SERVICE_PLAY_MEDIA,
-)
+from homeassistant.components.media_player import SERVICE_PLAY_MEDIA, MediaType
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -842,14 +839,14 @@ async def test_temperature_setting_climate_onoff(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_AUTO,
+            climate.HVACMode.AUTO,
             {
                 ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE,
                 climate.ATTR_HVAC_MODES: [
-                    climate.HVAC_MODE_OFF,
-                    climate.HVAC_MODE_COOL,
-                    climate.HVAC_MODE_HEAT,
-                    climate.HVAC_MODE_HEAT_COOL,
+                    climate.HVACMode.OFF,
+                    climate.HVACMode.COOL,
+                    climate.HVACMode.HEAT,
+                    climate.HVACMode.HEAT_COOL,
                 ],
                 climate.ATTR_MIN_TEMP: None,
                 climate.ATTR_MAX_TEMP: None,
@@ -887,7 +884,7 @@ async def test_temperature_setting_climate_no_modes(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_AUTO,
+            climate.HVACMode.AUTO,
             {
                 climate.ATTR_HVAC_MODES: [],
                 climate.ATTR_MIN_TEMP: None,
@@ -913,16 +910,16 @@ async def test_temperature_setting_climate_range(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_AUTO,
+            climate.HVACMode.AUTO,
             {
                 climate.ATTR_CURRENT_TEMPERATURE: 70,
                 climate.ATTR_CURRENT_HUMIDITY: 25,
                 ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_RANGE,
                 climate.ATTR_HVAC_MODES: [
                     STATE_OFF,
-                    climate.HVAC_MODE_COOL,
-                    climate.HVAC_MODE_HEAT,
-                    climate.HVAC_MODE_AUTO,
+                    climate.HVACMode.COOL,
+                    climate.HVACMode.HEAT,
+                    climate.HVACMode.AUTO,
                 ],
                 climate.ATTR_TARGET_TEMP_HIGH: 75,
                 climate.ATTR_TARGET_TEMP_LOW: 65,
@@ -970,7 +967,7 @@ async def test_temperature_setting_climate_range(hass):
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: "climate.bla",
-        climate.ATTR_HVAC_MODE: climate.HVAC_MODE_COOL,
+        climate.ATTR_HVAC_MODE: climate.HVACMode.COOL,
     }
 
     with pytest.raises(helpers.SmartHomeError) as err:
@@ -995,9 +992,9 @@ async def test_temperature_setting_climate_setpoint(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_COOL,
+            climate.HVACMode.COOL,
             {
-                climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVAC_MODE_COOL],
+                climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVACMode.COOL],
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
                 ATTR_TEMPERATURE: 18,
@@ -1050,11 +1047,11 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
         hass,
         State(
             "climate.bla",
-            climate.HVAC_MODE_HEAT_COOL,
+            climate.HVACMode.HEAT_COOL,
             {
                 climate.ATTR_HVAC_MODES: [
-                    climate.HVAC_MODE_OFF,
-                    climate.HVAC_MODE_HEAT_COOL,
+                    climate.HVACMode.OFF,
+                    climate.HVACMode.HEAT_COOL,
                 ],
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
@@ -3169,7 +3166,7 @@ async def test_channel(hass):
     assert media_player_calls[0].data == {
         ATTR_ENTITY_ID: "media_player.demo",
         media_player.ATTR_MEDIA_CONTENT_ID: "1",
-        media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+        media_player.ATTR_MEDIA_CONTENT_TYPE: MediaType.CHANNEL,
     }
 
     with pytest.raises(SmartHomeError, match="Channel is not available"):

@@ -3,8 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.sensor.const import CONF_STATE_CLASS
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_UNIT_OF_MEASUREMENT,

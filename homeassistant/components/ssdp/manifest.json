@@ -8,5 +8,6 @@
   "codeowners": [],
   "quality_scale": "internal",
   "iot_class": "local_push",
-  "loggers": ["async_upnp_client"]
+  "loggers": ["async_upnp_client"],
+  "integration_type": "system"
 }

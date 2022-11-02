@@ -1,10 +1,10 @@
 """Provides device triggers for binary sensors."""
 import voluptuous as vol
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.const import (
+from homeassistant.components.device_automation import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
+    DEVICE_TRIGGER_BASE_SCHEMA,
 )
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
@@ -15,8 +15,6 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, BinarySensorDeviceClass
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DEVICE_CLASS_NONE = "none"
 

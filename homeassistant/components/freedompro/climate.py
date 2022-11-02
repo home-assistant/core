@@ -8,9 +8,9 @@ from typing import Any
 from aiohttp.client import ClientSession
 from pyfreedompro import put_state
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

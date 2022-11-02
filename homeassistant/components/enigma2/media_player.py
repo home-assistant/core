@@ -7,8 +7,9 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_TVSHOW
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -16,9 +17,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -104,6 +102,7 @@ def setup_platform(
 class Enigma2Device(MediaPlayerEntity):
     """Representation of an Enigma2 box."""
 
+    _attr_media_content_type = MediaType.TVSHOW
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -133,11 +132,11 @@ class Enigma2Device(MediaPlayerEntity):
         return self.e2_box.mac_address
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self.e2_box.is_recording_playback:
-            return STATE_PLAYING
-        return STATE_OFF if self.e2_box.in_standby else STATE_ON
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.OFF if self.e2_box.in_standby else MediaPlayerState.ON
 
     @property
     def available(self) -> bool:
@@ -171,11 +170,6 @@ class Enigma2Device(MediaPlayerEntity):
     def media_content_id(self):
         """Service Ref of current playing media."""
         return self.e2_box.current_service_ref
-
-    @property
-    def media_content_type(self):
-        """Type of video currently playing."""
-        return MEDIA_TYPE_TVSHOW
 
     @property
     def is_volume_muted(self):

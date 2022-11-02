@@ -87,25 +87,26 @@ async def test_availability_when_connection_lost(
 ):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock_entry_with_yaml_config, scene.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, scene.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock_entry_with_yaml_config, scene.DOMAIN, DEFAULT_CONFIG_LEGACY
+        hass, mqtt_mock_entry_with_yaml_config, scene.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     config = {
-        scene.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "command_topic": "command-topic",
-            "payload_on": 1,
+        mqtt.DOMAIN: {
+            scene.DOMAIN: {
+                "name": "test",
+                "command_topic": "command-topic",
+                "payload_on": 1,
+            }
         }
     }
 
@@ -123,11 +124,12 @@ async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_conf
 async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     config = {
-        scene.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "command_topic": "command-topic",
-            "payload_on": 1,
+        mqtt.DOMAIN: {
+            scene.DOMAIN: {
+                "name": "test",
+                "command_topic": "command-topic",
+                "payload_on": 1,
+            }
         }
     }
 
@@ -145,20 +147,20 @@ async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_confi
 async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique id option only creates one scene per unique_id."""
     config = {
-        scene.DOMAIN: [
-            {
-                "platform": "mqtt",
-                "name": "Test 1",
-                "command_topic": "command-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-            {
-                "platform": "mqtt",
-                "name": "Test 2",
-                "command_topic": "command-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            },
-        ]
+        mqtt.DOMAIN: {
+            scene.DOMAIN: [
+                {
+                    "name": "Test 1",
+                    "command_topic": "command-topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+                {
+                    "name": "Test 2",
+                    "command_topic": "command-topic",
+                    "unique_id": "TOTALLY_UNIQUE",
+                },
+            ]
+        }
     }
     await help_test_unique_id(
         hass, mqtt_mock_entry_with_yaml_config, scene.DOMAIN, config
@@ -175,8 +177,8 @@ async def test_discovery_removal_scene(hass, mqtt_mock_entry_no_yaml_config, cap
 
 async def test_discovery_update_payload(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered scene."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[scene.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG_LEGACY[scene.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][scene.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][scene.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["payload_on"] = "ON"
@@ -223,12 +225,14 @@ async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
 async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = scene.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
+    config = DEFAULT_CONFIG
     await help_test_reloadable(
         hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
     )
 
 
+# Test deprecated YAML configuration under the platform key
+# Scheduled to be removed in HA core 2022.12
 async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     """Test reloading the MQTT platform with late entry setup."""
     domain = scene.DOMAIN
@@ -239,17 +243,14 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
 async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = scene.DOMAIN
-    config = copy.deepcopy(DEFAULT_CONFIG_LEGACY[platform])
-    config["name"] = "test"
-    del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
-    assert hass.states.get(f"{platform}.test") is not None
+    await help_test_setup_manual_entity_from_yaml(hass, DEFAULT_CONFIG)
+    assert hass.states.get(f"{platform}.test")
 
 
 async def test_unload_entry(hass, mqtt_mock_entry_with_yaml_config, tmp_path):
     """Test unloading the config entry."""
     domain = scene.DOMAIN
-    config = DEFAULT_CONFIG_LEGACY[domain]
+    config = DEFAULT_CONFIG
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry_with_yaml_config, tmp_path, domain, config
     )

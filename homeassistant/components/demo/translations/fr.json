@@ -14,7 +14,7 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Appuyez sur OK une fois le liquide de clignotant rempli",
+                        "description": "Appuyez sur VALIDER une fois le liquide de clignotant rempli",
                         "title": "Le liquide de clignotant doit \u00eatre rempli"
                     }
                 }

@@ -3,7 +3,7 @@
   "name": "Landis+Gyr Heat Meter",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/landisgyr_heat_meter",
-  "requirements": ["ultraheat-api==0.4.1"],
+  "requirements": ["ultraheat-api==0.5.0"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

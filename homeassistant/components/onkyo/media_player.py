@@ -9,18 +9,13 @@ from eiscp import eISCP
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    DOMAIN,
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.components.media_player.const import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -259,7 +254,7 @@ class OnkyoDevice(MediaPlayerEntity):
         self._receiver = receiver
         self._muted = False
         self._volume = 0
-        self._pwstate = STATE_OFF
+        self._pwstate = MediaPlayerState.OFF
         if name:
             # not discovered
             self._name = name
@@ -303,9 +298,9 @@ class OnkyoDevice(MediaPlayerEntity):
         if not status:
             return
         if status[1] == "on":
-            self._pwstate = STATE_ON
+            self._pwstate = MediaPlayerState.ON
         else:
-            self._pwstate = STATE_OFF
+            self._pwstate = MediaPlayerState.OFF
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
             self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
             self._attributes.pop(ATTR_PRESET, None)
@@ -514,9 +509,9 @@ class OnkyoDeviceZone(OnkyoDevice):
         if not status:
             return
         if status[1] == "on":
-            self._pwstate = STATE_ON
+            self._pwstate = MediaPlayerState.ON
         else:
-            self._pwstate = STATE_OFF
+            self._pwstate = MediaPlayerState.OFF
             return
 
         volume_raw = self.command(f"zone{self._zone}.volume=query")

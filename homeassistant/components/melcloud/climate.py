@@ -14,11 +14,11 @@ from pymelcloud.atw_device import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

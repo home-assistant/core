@@ -12,8 +12,8 @@ from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, get_ffmpeg_man
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    RTSP_TRANSPORTS,
 )
-from homeassistant.components.stream.const import RTSP_TRANSPORTS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant
@@ -142,15 +142,20 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
 
         if self.device.capabilities.snapshot:
             try:
-                image = await self.device.device.get_snapshot(
+                if image := await self.device.device.get_snapshot(
                     self.profile.token, self._basic_auth
-                )
-                return image
+                ):
+                    return image
             except ONVIFError as err:
                 LOGGER.error(
                     "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
                     self.device.name,
                     err,
+                )
+            else:
+                LOGGER.error(
+                    "Fetch snapshot image failed from %s, falling back to FFmpeg",
+                    self.device.name,
                 )
 
         assert self._stream_uri

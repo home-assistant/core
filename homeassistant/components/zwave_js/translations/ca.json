@@ -91,6 +91,12 @@
             "zwave_js.value_updated.value": "Canvi del valor en un valor Z-Wave JS"
         }
     },
+    "issues": {
+        "invalid_server_version": {
+            "description": "La versi\u00f3 del servidor Z-Wave JS que est\u00e0s executant actualment \u00e9s massa antiga per a aquesta versi\u00f3 de Home Assistant. Actualitza a l'\u00faltima versi\u00f3 per resoldre aquest problema.",
+            "title": "Es necessita una versi\u00f3 m\u00e9s nova del servidor Z-Wave JS"
+        }
+    },
     "options": {
         "abort": {
             "addon_get_discovery_info_failed": "No s'ha pogut obtenir la informaci\u00f3 de descobriment del complement Z-Wave JS.",

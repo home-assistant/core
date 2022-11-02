@@ -17,10 +17,10 @@ from xbox.webapi.api.provider.smartglass.models import (
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_APP, MEDIA_TYPE_GAME
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,12 +44,12 @@ SUPPORT_XBOX = (
 )
 
 XBOX_STATE_MAP = {
-    PlaybackState.Playing: STATE_PLAYING,
-    PlaybackState.Paused: STATE_PAUSED,
-    PowerState.On: STATE_ON,
-    PowerState.SystemUpdate: STATE_OFF,
-    PowerState.ConnectedStandby: STATE_OFF,
-    PowerState.Off: STATE_OFF,
+    PlaybackState.Playing: MediaPlayerState.PLAYING,
+    PlaybackState.Paused: MediaPlayerState.PAUSED,
+    PowerState.On: MediaPlayerState.ON,
+    PowerState.SystemUpdate: MediaPlayerState.OFF,
+    PowerState.ConnectedStandby: MediaPlayerState.OFF,
+    PowerState.Off: MediaPlayerState.OFF,
     PowerState.Unknown: None,
 }
 
@@ -109,7 +109,7 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self.state not in [STATE_PLAYING, STATE_PAUSED]:
+        if self.state not in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
             return (
                 SUPPORT_XBOX
                 & ~MediaPlayerEntityFeature.NEXT_TRACK
@@ -122,8 +122,8 @@ class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntit
         """Media content type."""
         app_details = self.data.app_details
         if app_details and app_details.product_family == "Games":
-            return MEDIA_TYPE_GAME
-        return MEDIA_TYPE_APP
+            return MediaType.GAME
+        return MediaType.APP
 
     @property
     def media_title(self):

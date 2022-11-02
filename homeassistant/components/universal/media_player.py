@@ -7,12 +7,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    MediaPlayerEntity,
-    MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
@@ -39,11 +33,16 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
+    PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -53,6 +52,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_STATE_TEMPLATE,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -70,13 +70,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_BUFFERING,
-    STATE_IDLE,
-    STATE_OFF,
     STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -102,16 +96,16 @@ CONF_COMMANDS = "commands"
 STATES_ORDER = [
     STATE_UNKNOWN,
     STATE_UNAVAILABLE,
-    STATE_OFF,
-    STATE_IDLE,
-    STATE_STANDBY,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_BUFFERING,
-    STATE_PLAYING,
+    MediaPlayerState.OFF,
+    MediaPlayerState.IDLE,
+    MediaPlayerState.STANDBY,
+    MediaPlayerState.ON,
+    MediaPlayerState.PAUSED,
+    MediaPlayerState.BUFFERING,
+    MediaPlayerState.PLAYING,
 ]
 STATES_ORDER_LOOKUP = {state: idx for idx, state in enumerate(STATES_ORDER)}
-STATES_ORDER_IDLE = STATES_ORDER_LOOKUP[STATE_IDLE]
+STATES_ORDER_IDLE = STATES_ORDER_LOOKUP[MediaPlayerState.IDLE]
 
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
@@ -124,6 +118,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ATTRS, default={}): vol.Or(
             cv.ensure_list(ATTRS_SCHEMA), ATTRS_SCHEMA
         ),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_TEMPLATE): cv.template,
     },
@@ -146,6 +141,7 @@ async def async_setup_platform(
         config.get(CONF_CHILDREN),
         config.get(CONF_COMMANDS),
         config.get(CONF_ATTRS),
+        config.get(CONF_UNIQUE_ID),
         config.get(CONF_DEVICE_CLASS),
         config.get(CONF_STATE_TEMPLATE),
     )
@@ -165,6 +161,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         children,
         commands,
         attributes,
+        unique_id=None,
         device_class=None,
         state_template=None,
     ):
@@ -183,6 +180,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._state_template_result = None
         self._state_template = state_template
         self._device_class = device_class
+        self._attr_unique_id = unique_id
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to children and template state changes."""
@@ -294,7 +292,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1]
             )
-            return master_state if master_state else STATE_OFF
+            return master_state if master_state else MediaPlayerState.OFF
 
         return None
 
@@ -312,13 +310,13 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         else master state or off
         """
         master_state = self.master_state  # avoid multiple lookups
-        if (master_state == STATE_OFF) or (self._state_template is not None):
+        if (master_state == MediaPlayerState.OFF) or (self._state_template is not None):
             return master_state
 
         if active_child := self._child_state:
             return active_child.state
 
-        return master_state if master_state else STATE_OFF
+        return master_state if master_state else MediaPlayerState.OFF
 
     @property
     def volume_level(self):

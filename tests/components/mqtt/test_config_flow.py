@@ -1,5 +1,5 @@
 """Test config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -21,6 +21,15 @@ def mock_finish_setup():
         "homeassistant.components.mqtt.MQTT.async_connect", return_value=True
     ) as mock_finish:
         yield mock_finish
+
+
+@pytest.fixture
+def mock_reload_after_entry_update():
+    """Mock out the reload after updating the entry."""
+    with patch(
+        "homeassistant.components.mqtt._async_config_entry_updated"
+    ) as mock_reload:
+        yield mock_reload
 
 
 @pytest.fixture
@@ -155,7 +164,7 @@ async def test_manual_config_set(
     assert await async_setup_component(hass, "mqtt", {"mqtt": {"broker": "bla"}})
     await hass.async_block_till_done()
     # do not try to reload
-    del hass.data["mqtt_reload_needed"]
+    hass.data["mqtt"].reload_needed = False
     assert len(mock_finish_setup.mock_calls) == 0
 
     mock_try_connection.return_value = True
@@ -177,9 +186,19 @@ async def test_manual_config_set(
         "discovery": True,
     }
     # Check we tried the connection, with precedence for config entry settings
-    mock_try_connection.assert_called_once_with(hass, "127.0.0.1", 1883, None, None)
+    mock_try_connection.assert_called_once_with(
+        {
+            "broker": "127.0.0.1",
+            "protocol": "3.1.1",
+            "keepalive": 60,
+            "discovery_prefix": "homeassistant",
+            "port": 1883,
+        },
+    )
     # Check config entry got setup
     assert len(mock_finish_setup.mock_calls) == 1
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert config_entry.title == "127.0.0.1"
 
 
 async def test_user_single_instance(hass):
@@ -218,7 +237,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
                 "host": "mock-mosquitto",
                 "port": "1883",
                 "protocol": "3.1.1",
-            }
+            },
+            name="Mosquitto",
+            slug="mosquitto",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -242,7 +263,9 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
                 "password": "mock-pass",
                 "protocol": "3.1.1",  # Set by the addon's discovery, ignored by HA
                 "ssl": False,  # Set by the addon's discovery, ignored by HA
-            }
+            },
+            name="Mock Addon",
+            slug="mosquitto",
         ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
@@ -269,7 +292,56 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
     assert len(mock_finish_setup.mock_calls) == 1
 
 
-async def test_option_flow(hass, mqtt_mock_entry_no_yaml_config, mock_try_connection):
+async def test_hassio_cannot_connect(
+    hass, mock_try_connection_time_out, mock_finish_setup
+):
+    """Test a config flow is aborted when a connection was not successful."""
+    mock_try_connection.return_value = True
+
+    result = await hass.config_entries.flow.async_init(
+        "mqtt",
+        data=HassioServiceInfo(
+            config={
+                "addon": "Mock Addon",
+                "host": "mock-broker",
+                "port": 1883,
+                "username": "mock-user",
+                "password": "mock-pass",
+                "protocol": "3.1.1",  # Set by the addon's discovery, ignored by HA
+                "ssl": False,  # Set by the addon's discovery, ignored by HA
+            },
+            name="Mock Addon",
+            slug="mosquitto",
+        ),
+        context={"source": config_entries.SOURCE_HASSIO},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "hassio_confirm"
+    assert result["description_placeholders"] == {"addon": "Mock Addon"}
+
+    mock_try_connection_time_out.reset_mock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"discovery": True}
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "cannot_connect"
+    # Check we tried the connection
+    assert len(mock_try_connection_time_out.mock_calls)
+    # Check config entry got setup
+    assert len(mock_finish_setup.mock_calls) == 0
+
+
+@patch(
+    "homeassistant.config.async_hass_config_yaml",
+    AsyncMock(return_value={}),
+)
+async def test_option_flow(
+    hass,
+    mqtt_mock_entry_no_yaml_config,
+    mock_try_connection,
+    caplog,
+):
     """Test config flow options."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     mock_try_connection.return_value = True
@@ -339,11 +411,19 @@ async def test_option_flow(hass, mqtt_mock_entry_no_yaml_config, mock_try_connec
     }
 
     await hass.async_block_till_done()
-    assert mqtt_mock.async_connect.call_count == 1
+    assert config_entry.title == "another-broker"
+    # assert that the entry was reloaded with the new config
+    assert (
+        "<Event call_service[L]: domain=mqtt, service=reload, service_data=>"
+        in caplog.text
+    )
 
 
 async def test_disable_birth_will(
-    hass, mqtt_mock_entry_no_yaml_config, mock_try_connection
+    hass,
+    mqtt_mock_entry_no_yaml_config,
+    mock_try_connection,
+    mock_reload_after_entry_update,
 ):
     """Test disabling birth and will."""
     mqtt_mock = await mqtt_mock_entry_no_yaml_config()
@@ -404,7 +484,8 @@ async def test_disable_birth_will(
     }
 
     await hass.async_block_till_done()
-    assert mqtt_mock.async_connect.call_count == 1
+    # assert that the entry was reloaded with the new config
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 def get_default(schema, key):
@@ -426,7 +507,10 @@ def get_suggested(schema, key):
 
 
 async def test_option_flow_default_suggested_values(
-    hass, mqtt_mock_entry_no_yaml_config, mock_try_connection_success
+    hass,
+    mqtt_mock_entry_no_yaml_config,
+    mock_try_connection_success,
+    mock_reload_after_entry_update,
 ):
     """Test config flow options has default/suggested values."""
     await mqtt_mock_entry_no_yaml_config()

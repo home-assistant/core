@@ -40,7 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
-import homeassistant.util.temperature as temp_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     AUDIO_CODEC_COPY,
@@ -391,12 +391,12 @@ def cleanup_name_for_homekit(name: str | None) -> str:
 
 def temperature_to_homekit(temperature: float | int, unit: str) -> float:
     """Convert temperature to Celsius for HomeKit."""
-    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS), 1)
+    return round(TemperatureConverter.convert(temperature, unit, TEMP_CELSIUS), 1)
 
 
 def temperature_to_states(temperature: float | int, unit: str) -> float:
     """Convert temperature back from Celsius to Home Assistant unit."""
-    return round(temp_util.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
+    return round(TemperatureConverter.convert(temperature, TEMP_CELSIUS, unit) * 2) / 2
 
 
 def density_to_air_quality(density: float) -> int:

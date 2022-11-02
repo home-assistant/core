@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
+from .helpers import lametric_exception_handler
 
 
 @dataclass
@@ -81,6 +82,7 @@ class LaMetricButtonEntity(LaMetricEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
 
+    @lametric_exception_handler
     async def async_press(self) -> None:
         """Send out a command to LaMetric."""
         await self.entity_description.press_fn(self.coordinator.lametric)

@@ -72,8 +72,8 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(api.gateway_id))},
         manufacturer="Plugwise",
-        name=entry.title,
-        model=f"Smile {api.smile_name}",
+        model=api.smile_model,
+        name=api.smile_name,
         sw_version=api.smile_version[0],
     )
 

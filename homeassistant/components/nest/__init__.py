@@ -27,7 +27,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.camera import Image, img_util
-from homeassistant.components.http.const import KEY_HASS_USER
+from homeassistant.components.http import KEY_HASS_USER
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

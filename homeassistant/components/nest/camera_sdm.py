@@ -18,8 +18,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
 
-from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.components.camera.const import StreamType
+from homeassistant.components.camera import Camera, CameraEntityFeature, StreamType
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

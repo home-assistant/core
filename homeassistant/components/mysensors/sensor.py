@@ -94,12 +94,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "V_WEIGHT": SensorEntityDescription(
         key="V_WEIGHT",
         native_unit_of_measurement=MASS_KILOGRAMS,
-        icon="mdi:weight-kilogram",
+        device_class=SensorDeviceClass.WEIGHT,
     ),
     "V_DISTANCE": SensorEntityDescription(
         key="V_DISTANCE",
         native_unit_of_measurement=LENGTH_METERS,
-        icon="mdi:ruler",
+        device_class=SensorDeviceClass.DISTANCE,
     ),
     "V_IMPEDANCE": SensorEntityDescription(
         key="V_IMPEDANCE",

@@ -13,12 +13,11 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
-)
-from homeassistant.components.media_player.browse_media import (
-    BrowseMedia,
+    MediaPlayerState,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -27,11 +26,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -46,10 +40,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 MAP_STATUS = {
-    "PLAY_STATE": STATE_PLAYING,
-    "BUFFERING_STATE": STATE_PLAYING,
-    "PAUSE_STATE": STATE_PAUSED,
-    "STOP_STATE": STATE_OFF,
+    "PLAY_STATE": MediaPlayerState.PLAYING,
+    "BUFFERING_STATE": MediaPlayerState.PLAYING,
+    "PAUSE_STATE": MediaPlayerState.PAUSED,
+    "STOP_STATE": MediaPlayerState.OFF,
 }
 
 ATTR_SOUNDTOUCH_GROUP = "soundtouch_group"
@@ -168,15 +162,15 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         return self._volume.actual / 100
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self._status is None or self._status.source == "STANDBY":
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
         if self._status.source == "INVALID_SOURCE":
-            return STATE_UNKNOWN
+            return None
 
-        return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
+        return MAP_STATUS.get(self._status.play_status)
 
     @property
     def source(self):

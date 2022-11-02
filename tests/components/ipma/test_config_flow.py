@@ -166,7 +166,7 @@ async def test_config_entry_migration(hass):
     )
 
     with patch(
-        "homeassistant.components.ipma.weather.async_get_location",
+        "pyipma.location.Location.get",
         return_value=MockLocation(),
     ):
         assert await async_setup_component(hass, DOMAIN, {})

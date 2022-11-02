@@ -548,11 +548,9 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Return a dict with additional info useful for introspection."""
         return {"panels": list(self.hass.data[DATA_PANELS])}
 
-    def freeze(self) -> None:
-        """Freeze the resource."""
-
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
+        return False
 
     def get_template(self) -> jinja2.Template:
         """Get template."""

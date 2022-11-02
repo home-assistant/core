@@ -74,6 +74,8 @@ ATTR_DIRECTION = "direction"
 ATTR_PRESET_MODE = "preset_mode"
 ATTR_PRESET_MODES = "preset_modes"
 
+# mypy: disallow-any-generics
+
 
 class NotValidPresetModeError(ValueError):
     """Exception class when the preset_mode in not in the preset_modes list."""
@@ -89,7 +91,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Expose fan control via statemachine and services."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[FanEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -163,13 +165,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[FanEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[FanEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 

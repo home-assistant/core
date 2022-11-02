@@ -12,16 +12,10 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -201,7 +195,7 @@ class YamahaDevice(MediaPlayerEntity):
         self.receiver = receiver
         self._muted = False
         self._volume = 0
-        self._pwstate = STATE_OFF
+        self._pwstate = MediaPlayerState.OFF
         self._current_source = None
         self._sound_mode = None
         self._sound_mode_list = None
@@ -226,13 +220,13 @@ class YamahaDevice(MediaPlayerEntity):
 
         if self.receiver.on:
             if self._play_status is None:
-                self._pwstate = STATE_ON
+                self._pwstate = MediaPlayerState.ON
             elif self._play_status.playing:
-                self._pwstate = STATE_PLAYING
+                self._pwstate = MediaPlayerState.PLAYING
             else:
-                self._pwstate = STATE_IDLE
+                self._pwstate = MediaPlayerState.IDLE
         else:
-            self._pwstate = STATE_OFF
+            self._pwstate = MediaPlayerState.OFF
 
         self._muted = self.receiver.mute
         self._volume = (self.receiver.volume / 100) + 1
@@ -443,7 +437,7 @@ class YamahaDevice(MediaPlayerEntity):
         """Content type of current playing media."""
         # Loose assumption that if playback is supported, we are playing music
         if self._is_playback_supported:
-            return MEDIA_TYPE_MUSIC
+            return MediaType.MUSIC
         return None
 
     @property

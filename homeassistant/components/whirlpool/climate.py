@@ -8,8 +8,8 @@ from whirlpool.aircon import Aircon, FanSpeed as AirconFanSpeed, Mode as AirconM
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -17,6 +17,7 @@ from homeassistant.components.climate.const import (
     FAN_OFF,
     SWING_HORIZONTAL,
     SWING_OFF,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )

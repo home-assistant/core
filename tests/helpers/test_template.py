@@ -973,11 +973,26 @@ def test_average(hass):
     assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
     assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
 
+    # Testing of default values
+    assert template.Template("{{ average([1, 2, 3], -1) }}", hass).async_render() == 2
+    assert template.Template("{{ average([], -1) }}", hass).async_render() == -1
+    assert template.Template("{{ average([], default=-1) }}", hass).async_render() == -1
+    assert (
+        template.Template("{{ average([], 5, default=-1) }}", hass).async_render() == -1
+    )
+    assert (
+        template.Template("{{ average(1, 'a', 3, default=-1) }}", hass).async_render()
+        == -1
+    )
+
     with pytest.raises(TemplateError):
         template.Template("{{ 1 | average }}", hass).async_render()
 
     with pytest.raises(TemplateError):
         template.Template("{{ average() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ average([]) }}", hass).async_render()
 
 
 def test_min(hass):
@@ -1564,6 +1579,45 @@ def test_timedelta(mock_is_safe, hass):
             hass,
         ).async_render()
         assert result == "15 days"
+
+
+def test_version(hass):
+    """Test version filter and function."""
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version}}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9')}}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result == "2099.9.9"
+
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version < '2099.9.10' }}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9') < '2099.9.10' }}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result is True
+
+    filter_result = template.Template(
+        "{{ '2099.9.9' | version == '2099.9.9' }}",
+        hass,
+    ).async_render()
+    function_result = template.Template(
+        "{{ version('2099.9.9') == '2099.9.9' }}",
+        hass,
+    ).async_render()
+    assert filter_result == function_result is True
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            "{{ version(None) < '2099.9.10' }}",
+            hass,
+        ).async_render()
 
 
 def test_regex_match(hass):
@@ -2416,6 +2470,30 @@ async def test_integration_entities(hass):
     # Test non existing integration/entry title
     info = render_to_info(hass, "{{ integration_entities('abc123') }}")
     assert_result_info(info, [])
+    assert info.rate_limit is None
+
+
+async def test_entry_id(hass):
+    """Test entry_id function."""
+    config_entry = MockConfigEntry(domain="light", title="Some integration")
+    config_entry.add_to_hass(hass)
+    entity_registry = mock_registry(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
+    )
+
+    info = render_to_info(hass, "{{ 'sensor.fail' | entry_id }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 56 | entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | entry_id }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, f"{{{{ entry_id('{entity_entry.entity_id}') }}}}")
+    assert_result_info(info, config_entry.entry_id)
     assert info.rate_limit is None
 
 

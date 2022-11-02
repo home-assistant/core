@@ -38,8 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
-from homeassistant.util.distance import convert as distance_convert
-from homeassistant.util.speed import convert as speed_convert
+from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
@@ -135,7 +134,7 @@ SENSOR_TYPES = (
         name="Cloud Base",
         unit_imperial=LENGTH_MILES,
         unit_metric=LENGTH_KILOMETERS,
-        imperial_conversion=lambda val: distance_convert(
+        imperial_conversion=lambda val: DistanceConverter.convert(
             val, LENGTH_KILOMETERS, LENGTH_MILES
         ),
     ),
@@ -145,7 +144,7 @@ SENSOR_TYPES = (
         name="Cloud Ceiling",
         unit_imperial=LENGTH_MILES,
         unit_metric=LENGTH_KILOMETERS,
-        imperial_conversion=lambda val: distance_convert(
+        imperial_conversion=lambda val: DistanceConverter.convert(
             val, LENGTH_KILOMETERS, LENGTH_MILES
         ),
     ),
@@ -160,7 +159,7 @@ SENSOR_TYPES = (
         name="Wind Gust",
         unit_imperial=SPEED_MILES_PER_HOUR,
         unit_metric=SPEED_METERS_PER_SECOND,
-        imperial_conversion=lambda val: speed_convert(
+        imperial_conversion=lambda val: SpeedConverter.convert(
             val, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR
         ),
     ),

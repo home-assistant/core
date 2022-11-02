@@ -1,4 +1,5 @@
 """The tests for the MQTT discovery."""
+import copy
 import json
 from pathlib import Path
 import re
@@ -12,7 +13,7 @@ from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
-from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
+from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_ON,
@@ -22,6 +23,8 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
+
+from .test_common import help_test_unload_config_entry
 
 from tests.common import (
     MockConfigEntry,
@@ -149,7 +152,7 @@ async def test_correct_config_discovery(hass, mqtt_mock_entry_no_yaml_config, ca
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("binary_sensor", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("binary_sensor", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN])
@@ -167,7 +170,7 @@ async def test_discover_fan(hass, mqtt_mock_entry_no_yaml_config, caplog):
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("fan", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("fan", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CLIMATE])
@@ -187,7 +190,7 @@ async def test_discover_climate(hass, mqtt_mock_entry_no_yaml_config, caplog):
 
     assert state is not None
     assert state.name == "ClimateTest"
-    assert ("climate", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("climate", "bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
@@ -209,7 +212,9 @@ async def test_discover_alarm_control_panel(
 
     assert state is not None
     assert state.name == "AlarmControlPanelTest"
-    assert ("alarm_control_panel", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("alarm_control_panel", "bla") in hass.data[
+        "mqtt"
+    ].discovery_already_discovered
 
 
 @pytest.mark.parametrize(
@@ -369,7 +374,7 @@ async def test_discovery_with_object_id(
 
     assert state is not None
     assert state.name == name
-    assert (domain, "object bla") in hass.data[ALREADY_DISCOVERED]
+    assert (domain, "object bla") in hass.data["mqtt"].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
@@ -387,7 +392,9 @@ async def test_discovery_incl_nodeid(hass, mqtt_mock_entry_no_yaml_config, caplo
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("binary_sensor", "my_node_id bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("binary_sensor", "my_node_id bla") in hass.data[
+        "mqtt"
+    ].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
@@ -938,9 +945,9 @@ async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog)
         '      "payload_not_available": "not_available"'
         "    },"
         "    {"
-        '      "topic":"avail_item2/~",'
-        '      "payload_available": "available",'
-        '      "payload_not_available": "not_available"'
+        '      "t":"avail_item2/~",'
+        '      "pl_avail": "available",'
+        '      "pl_not_avail": "not_available"'
         "    }"
         "  ],"
         '  "dev":{'
@@ -967,7 +974,7 @@ async def test_discovery_expansion(hass, mqtt_mock_entry_no_yaml_config, caplog)
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test_topic/some/base/topic", "ON")
@@ -992,9 +999,9 @@ async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplo
         '  "stat_t": "test_topic/~",'
         '  "cmd_t": "~/test_topic",'
         '  "availability": {'
-        '    "topic":"~/avail_item1",'
-        '    "payload_available": "available",'
-        '    "payload_not_available": "not_available"'
+        '    "t":"~/avail_item1",'
+        '    "pl_avail": "available",'
+        '    "pl_not_avail": "not_available"'
         "  },"
         '  "dev":{'
         '    "ids":["5706DF"],'
@@ -1020,7 +1027,7 @@ async def test_discovery_expansion_2(hass, mqtt_mock_entry_no_yaml_config, caplo
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
 
@@ -1099,7 +1106,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
@@ -1148,7 +1155,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
     state = hass.states.get("switch.DiscoveryExpansionTest1")
     assert state is not None
     assert state.name == "DiscoveryExpansionTest1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "some/base/topic/avail_item1", b"\x00")
@@ -1233,7 +1240,7 @@ async def test_no_implicit_state_topic_switch(
     state = hass.states.get("switch.Test1")
     assert state is not None
     assert state.name == "Test1"
-    assert ("switch", "bla") in hass.data[ALREADY_DISCOVERED]
+    assert ("switch", "bla") in hass.data["mqtt"].discovery_already_discovered
     assert state.state == STATE_UNKNOWN
     assert state.attributes["assumed_state"] is True
 
@@ -1277,7 +1284,9 @@ async def test_complex_discovery_topic_prefix(
 
     assert state is not None
     assert state.name == "Beer"
-    assert ("binary_sensor", "node1 object1") in hass.data[ALREADY_DISCOVERED]
+    assert ("binary_sensor", "node1 object1") in hass.data[
+        "mqtt"
+    ].discovery_already_discovered
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])
@@ -1356,3 +1365,170 @@ async def test_mqtt_discovery_unsubscribe_once(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
         mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+async def test_clear_config_topic_disabled_entity(
+    hass, mqtt_mock_entry_no_yaml_config, device_reg, caplog
+):
+    """Test the discovery topic is removed when a disabled entity is removed."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
+    # discover an entity that is not enabled by default
+    config = {
+        "name": "sbfspot_12345",
+        "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
+        "unique_id": "sbfspot_12345",
+        "enabled_by_default": False,
+        "device": {
+            "identifiers": ["sbfspot_12345"],
+            "name": "sbfspot_12345",
+            "sw_version": "1.0",
+            "connections": [["mac", "12:34:56:AB:CD:EF"]],
+        },
+    }
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+    # discover an entity that is not unique (part 1), will be added
+    config_not_unique1 = copy.deepcopy(config)
+    config_not_unique1["name"] = "sbfspot_12345_1"
+    config_not_unique1["unique_id"] = "not_unique"
+    config_not_unique1.pop("enabled_by_default")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
+        json.dumps(config_not_unique1),
+    )
+    # discover an entity that is not unique (part 2), will not be added
+    config_not_unique2 = copy.deepcopy(config_not_unique1)
+    config_not_unique2["name"] = "sbfspot_12345_2"
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345_2/config",
+        json.dumps(config_not_unique2),
+    )
+    await hass.async_block_till_done()
+    assert "Platform mqtt does not generate unique IDs" in caplog.text
+
+    assert hass.states.get("sensor.sbfspot_12345") is None  # disabled
+    assert hass.states.get("sensor.sbfspot_12345_1") is not None  # enabled
+    assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
+
+    # Verify device is created
+    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    assert device_entry is not None
+
+    # Remove the device from the registry
+    device_reg.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Assert all valid discovery topics are cleared
+    assert mqtt_mock.async_publish.call_count == 2
+    assert (
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345/config", "", 0, True)
+        in mqtt_mock.async_publish.mock_calls
+    )
+    assert (
+        call("homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config", "", 0, True)
+        in mqtt_mock.async_publish.mock_calls
+    )
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+async def test_clean_up_registry_monitoring(
+    hass, mqtt_mock_entry_no_yaml_config, device_reg, tmp_path
+):
+    """Test registry monitoring hook is removed after a reload."""
+    await mqtt_mock_entry_no_yaml_config()
+    hooks: dict = hass.data["mqtt"].discovery_registry_hooks
+    # discover an entity that is not enabled by default
+    config1 = {
+        "name": "sbfspot_12345",
+        "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
+        "unique_id": "sbfspot_12345",
+        "enabled_by_default": False,
+        "device": {
+            "identifiers": ["sbfspot_12345"],
+            "name": "sbfspot_12345",
+            "sw_version": "1.0",
+            "connections": [["mac", "12:34:56:AB:CD:EF"]],
+        },
+    }
+    # Publish it config
+    # Since it is not enabled_by_default the sensor will not be loaded
+    # it should register a hook for monitoring the entiry registry
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+        json.dumps(config1),
+    )
+    await hass.async_block_till_done()
+    assert len(hooks) == 1
+
+    # Publish it again no new monitor should be started
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
+        json.dumps(config1),
+    )
+    await hass.async_block_till_done()
+    assert len(hooks) == 1
+
+    # Verify device is created
+    device_entry = device_reg.async_get_device(set(), {("mac", "12:34:56:AB:CD:EF")})
+    assert device_entry is not None
+
+    # Enload the entry
+    # The monitoring should be cleared
+    await help_test_unload_config_entry(hass, tmp_path, {})
+    assert len(hooks) == 0
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR])
+async def test_unique_id_collission_has_priority(
+    hass, mqtt_mock_entry_no_yaml_config, entity_reg
+):
+    """Test tehe unique_id collision detection has priority over registry disabled items."""
+    await mqtt_mock_entry_no_yaml_config()
+    config = {
+        "name": "sbfspot_12345",
+        "state_topic": "homeassistant_test/sensor/sbfspot_0/sbfspot_12345/",
+        "unique_id": "sbfspot_12345",
+        "enabled_by_default": False,
+        "device": {
+            "identifiers": ["sbfspot_12345"],
+            "name": "sbfspot_12345",
+            "sw_version": "1.0",
+            "connections": [["mac", "12:34:56:AB:CD:EF"]],
+        },
+    }
+    # discover an entity that is not unique and disabled by default (part 1), will be added
+    config_not_unique1 = copy.deepcopy(config)
+    config_not_unique1["name"] = "sbfspot_12345_1"
+    config_not_unique1["unique_id"] = "not_unique"
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345_1/config",
+        json.dumps(config_not_unique1),
+    )
+    # discover an entity that is not unique (part 2), will not be added, and the registry entry is cleared
+    config_not_unique2 = copy.deepcopy(config_not_unique1)
+    config_not_unique2["name"] = "sbfspot_12345_2"
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/sbfspot_0/sbfspot_12345_2/config",
+        json.dumps(config_not_unique2),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sbfspot_12345_1") is None  # not enabled
+    assert hass.states.get("sensor.sbfspot_12345_2") is None  # not unique
+
+    # Verify the first entity is created
+    assert entity_reg.async_get("sensor.sbfspot_12345_1") is not None
+    # Verify the second entity is not created because it is not unique
+    assert entity_reg.async_get("sensor.sbfspot_12345_2") is None

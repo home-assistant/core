@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 
 import aiohomekit
@@ -41,7 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await conn.async_setup()
     except (AccessoryNotFoundError, EncryptionError, AccessoryDisconnectedError) as ex:
         del hass.data[KNOWN_DEVICES][conn.unique_id]
-        await conn.pairing.close()
+        with contextlib.suppress(asyncio.TimeoutError):
+            await conn.pairing.close()
         raise ConfigEntryNotReady from ex
 
     return True

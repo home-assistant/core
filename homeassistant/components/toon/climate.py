@@ -10,12 +10,12 @@ from toonapi import (
     ACTIVE_STATE_SLEEP,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_HOME,
     PRESET_SLEEP,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,

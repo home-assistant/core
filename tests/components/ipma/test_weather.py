@@ -19,7 +19,6 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
-    DOMAIN as WEATHER_DOMAIN,
 )
 from homeassistant.const import STATE_UNKNOWN
 
@@ -181,7 +180,8 @@ async def test_setup_config_flow(hass):
         return_value=MockLocation(),
     ):
         entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
-        await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
@@ -203,7 +203,8 @@ async def test_daily_forecast(hass):
         return_value=MockLocation(),
     ):
         entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
-        await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
@@ -227,7 +228,8 @@ async def test_hourly_forecast(hass):
         return_value=MockLocation(),
     ):
         entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG_HOURLY)
-        await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")
@@ -248,7 +250,8 @@ async def test_failed_get_observation_forecast(hass):
         return_value=MockBadLocation(),
     ):
         entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
-        await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("weather.hometown")

@@ -20,6 +20,7 @@ from homeassistant.const import (
     ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
     STATE_UNKNOWN,
+    VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import entity_registry as er
@@ -57,7 +58,6 @@ async def test_cost_sensor_no_states(hass, hass_storage, setup_integration) -> N
             "flow_from": [
                 {
                     "stat_energy_from": "foo",
-                    "entity_energy_from": "foo",
                     "stat_cost": None,
                     "entity_energy_price": "bar",
                     "number_energy_price": None,
@@ -84,7 +84,6 @@ async def test_cost_sensor_attributes(hass, hass_storage, setup_integration) -> 
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": None,
                     "number_energy_price": 1,
@@ -154,7 +153,6 @@ async def test_cost_sensor_price_entity_total_increasing(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -165,7 +163,6 @@ async def test_cost_sensor_price_entity_total_increasing(
             "flow_to": [
                 {
                     "stat_energy_to": "sensor.energy_production",
-                    "entity_energy_to": "sensor.energy_production",
                     "stat_compensation": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -360,7 +357,6 @@ async def test_cost_sensor_price_entity_total(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -371,7 +367,6 @@ async def test_cost_sensor_price_entity_total(
             "flow_to": [
                 {
                     "stat_energy_to": "sensor.energy_production",
-                    "entity_energy_to": "sensor.energy_production",
                     "stat_compensation": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -568,7 +563,6 @@ async def test_cost_sensor_price_entity_total_no_reset(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -579,7 +573,6 @@ async def test_cost_sensor_price_entity_total_no_reset(
             "flow_to": [
                 {
                     "stat_energy_to": "sensor.energy_production",
-                    "entity_energy_to": "sensor.energy_production",
                     "stat_compensation": None,
                     "entity_energy_price": price_entity,
                     "number_energy_price": fixed_price,
@@ -727,7 +720,6 @@ async def test_cost_sensor_handle_energy_units(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": None,
                     "number_energy_price": 0.5,
@@ -797,7 +789,6 @@ async def test_cost_sensor_handle_price_units(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": "sensor.energy_price",
                     "number_energy_price": None,
@@ -841,10 +832,13 @@ async def test_cost_sensor_handle_price_units(
     assert state.state == "20.0"
 
 
-async def test_cost_sensor_handle_gas(hass, hass_storage, setup_integration) -> None:
+@pytest.mark.parametrize("unit", (VOLUME_CUBIC_FEET, VOLUME_CUBIC_METERS))
+async def test_cost_sensor_handle_gas(
+    hass, hass_storage, setup_integration, unit
+) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
-        ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
+        ATTR_UNIT_OF_MEASUREMENT: unit,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     energy_data = data.EnergyManager.default_preferences()
@@ -852,7 +846,6 @@ async def test_cost_sensor_handle_gas(hass, hass_storage, setup_integration) -> 
         {
             "type": "gas",
             "stat_energy_from": "sensor.gas_consumption",
-            "entity_energy_from": "sensor.gas_consumption",
             "stat_cost": None,
             "entity_energy_price": None,
             "number_energy_price": 0.5,
@@ -903,7 +896,6 @@ async def test_cost_sensor_handle_gas_kwh(
         {
             "type": "gas",
             "stat_energy_from": "sensor.gas_consumption",
-            "entity_energy_from": "sensor.gas_consumption",
             "stat_cost": None,
             "entity_energy_price": None,
             "number_energy_price": 0.5,
@@ -957,7 +949,6 @@ async def test_cost_sensor_wrong_state_class(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": None,
                     "number_energy_price": 0.5,
@@ -1019,7 +1010,6 @@ async def test_cost_sensor_state_class_measurement_no_reset(
             "flow_from": [
                 {
                     "stat_energy_from": "sensor.energy_consumption",
-                    "entity_energy_from": "sensor.energy_consumption",
                     "stat_cost": None,
                     "entity_energy_price": None,
                     "number_energy_price": 0.5,
@@ -1068,7 +1058,6 @@ async def test_inherit_source_unique_id(hass, hass_storage, setup_integration):
         {
             "type": "gas",
             "stat_energy_from": "sensor.gas_consumption",
-            "entity_energy_from": "sensor.gas_consumption",
             "stat_cost": None,
             "entity_energy_price": None,
             "number_energy_price": 0.5,

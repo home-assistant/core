@@ -7,7 +7,7 @@ import aiohttp
 from pushover_complete import BadAPIRequestError
 import pytest
 
-from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.pushover.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -66,6 +66,16 @@ async def test_async_setup_entry_success(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
+
+
+async def test_unique_id_updated(hass: HomeAssistant) -> None:
+    """Test updating unique_id to new format."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, unique_id="MYUSERKEY")
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
+    assert entry.unique_id is None
 
 
 async def test_async_setup_entry_failed_invalid_api_key(

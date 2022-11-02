@@ -1,6 +1,6 @@
 """Constants for testing the Coinbase integration."""
 
-from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.diagnostics import REDACTED
 
 GOOD_CURRENCY = "BTC"
 GOOD_CURRENCY_2 = "USD"

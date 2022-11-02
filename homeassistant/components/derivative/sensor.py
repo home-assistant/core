@@ -35,8 +35,6 @@ from .const import (
     CONF_UNIT_TIME,
 )
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE_ID = "source"

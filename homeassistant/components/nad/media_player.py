@@ -8,15 +8,9 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -186,10 +180,12 @@ class NAD(MediaPlayerEntity):
             self._state = None
             return
         self._state = (
-            STATE_ON if self._nad_receiver.main_power("?") == "On" else STATE_OFF
+            MediaPlayerState.ON
+            if self._nad_receiver.main_power("?") == "On"
+            else MediaPlayerState.OFF
         )
 
-        if self._state == STATE_ON:
+        if self._state == MediaPlayerState.ON:
             self._mute = self._nad_receiver.main_mute("?") == "On"
             volume = self._nad_receiver.main_volume("?")
             # Some receivers cannot report the volume, e.g. C 356BEE,
@@ -312,9 +308,9 @@ class NADtcp(MediaPlayerEntity):
 
         # Update on/off state
         if nad_status["power"]:
-            self._state = STATE_ON
+            self._state = MediaPlayerState.ON
         else:
-            self._state = STATE_OFF
+            self._state = MediaPlayerState.OFF
 
         # Update current volume
         self._volume = self.nad_vol_to_internal_vol(nad_status["volume"])

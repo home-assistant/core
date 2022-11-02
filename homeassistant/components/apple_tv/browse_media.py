@@ -1,34 +1,29 @@
 """Support for media browsing."""
+from typing import Any
 
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_APP,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_APPS,
-)
+from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 
 
-def build_app_list(app_list):
+def build_app_list(app_list: dict[str, str]) -> BrowseMedia:
     """Create response payload for app list."""
-    app_list = [
-        {"app_id": app_id, "title": app_name, "type": MEDIA_TYPE_APP}
+    media_list = [
+        {"app_id": app_id, "title": app_name, "type": MediaType.APP}
         for app_name, app_id in app_list.items()
     ]
 
     return BrowseMedia(
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="apps",
-        media_content_type=MEDIA_TYPE_APPS,
+        media_content_type=MediaType.APPS,
         title="Apps",
         can_play=False,
         can_expand=True,
-        children=[item_payload(item) for item in app_list],
-        children_media_class=MEDIA_CLASS_APP,
+        children=[item_payload(item) for item in media_list],
+        children_media_class=MediaClass.APP,
     )
 
 
-def item_payload(item):
+def item_payload(item: dict[str, Any]) -> BrowseMedia:
     """
     Create response payload for a single media item.
 
@@ -36,8 +31,8 @@ def item_payload(item):
     """
     return BrowseMedia(
         title=item["title"],
-        media_class=MEDIA_CLASS_APP,
-        media_content_type=MEDIA_TYPE_APP,
+        media_class=MediaClass.APP,
+        media_content_type=MediaType.APP,
         media_content_id=item["app_id"],
         can_play=False,
         can_expand=False,

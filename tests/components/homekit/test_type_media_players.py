@@ -18,13 +18,13 @@ from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
     TelevisionMediaPlayer,
 )
-from homeassistant.components.media_player import MediaPlayerDeviceClass
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
+    MediaPlayerDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components import climate
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY,

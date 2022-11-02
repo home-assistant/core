@@ -48,12 +48,12 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
         """Initialize an ledble light."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_unique_id = device._address
+        self._attr_unique_id = device.address
         self._attr_device_info = DeviceInfo(
             name=name,
             model=hex(device.model_num),
             sw_version=hex(device.version_num),
-            connections={(dr.CONNECTION_BLUETOOTH, device._address)},
+            connections={(dr.CONNECTION_BLUETOOTH, device.address)},
         )
         self._async_update_attrs()
 

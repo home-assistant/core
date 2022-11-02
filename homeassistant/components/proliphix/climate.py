@@ -6,8 +6,9 @@ from typing import Any
 import proliphix
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
