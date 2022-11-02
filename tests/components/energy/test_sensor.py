@@ -941,9 +941,9 @@ async def test_cost_sensor_handle_gas_kwh(
 @pytest.mark.parametrize(
     "unit_system,usage_unit,growth",
     (
-        (US_CUSTOMARY_SYSTEM, VOLUME_CUBIC_FEET, "50.0"),
-        # 1 Gallon = 0.13 cubic foot, 100 gl growth @ 0.5/ft3:
-        (US_CUSTOMARY_SYSTEM, VOLUME_GALLONS, "6.68402777777778"),
+        # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
+        (US_CUSTOMARY_SYSTEM, VOLUME_CUBIC_FEET, "374.025974025974"),
+        (US_CUSTOMARY_SYSTEM, VOLUME_GALLONS, "50.0"),
         (METRIC_SYSTEM, VOLUME_CUBIC_METERS, "50.0"),
     ),
 )

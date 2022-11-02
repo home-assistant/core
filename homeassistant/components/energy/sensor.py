@@ -275,7 +275,7 @@ class EnergyCostSensor(SensorEntity):
             if self.hass.config.units.is_metric:
                 default_price_unit = UnitOfVolume.CUBIC_METERS
             else:
-                default_price_unit = UnitOfVolume.CUBIC_FEET
+                default_price_unit = UnitOfVolume.GALLONS
 
         energy_state = self.hass.states.get(
             cast(str, self._config[self._adapter.stat_energy_key])
