@@ -1,4 +1,14 @@
 {
+    "issues": {
+        "unhealthy": {
+            "description": "Il sistema non \u00e8 attualmente integro a causa di '{reason}'. Usa il collegamento per saperne di pi\u00f9 sul problema e su come risolverlo.",
+            "title": "Sistema non pi\u00f9 integro - {reason}"
+        },
+        "unsupported": {
+            "description": "Il sistema non \u00e8 supportato a causa di '{reason}'. Utilizzare il collegamento per ulteriori informazioni sul significato e su come tornare a un sistema supportato.",
+            "title": "Sistema non supportato - {reason}"
+        }
+    },
     "system_health": {
         "info": {
             "agent_version": "Versione agente",
