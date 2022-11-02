@@ -18,12 +18,9 @@ from .const import (
     CONF_HOST,
     CONF_PASSWORD,
     DEVICE_POLLING_DELAY,
-    ID,
-    IS_REACHABLE,
     LIVISI_REACHABILITY_CHANGE,
     LIVISI_STATE_CHANGE,
     LOGGER,
-    STATE,
 )
 
 
@@ -106,29 +103,26 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     def on_data(self, event_data: LivisiEvent) -> None:
         """Define a handler to fire when the data is received."""
         if event_data.onState is not None:
-            device_id_state: dict = {
-                ID: event_data.source,
-                STATE: event_data.onState,
-            }
-            async_dispatcher_send(self.hass, LIVISI_STATE_CHANGE, device_id_state)
-        if event_data.isReachable is not None:
-            device_id_reachability: dict = {
-                ID: event_data.source,
-                IS_REACHABLE: event_data.isReachable,
-            }
             async_dispatcher_send(
-                self.hass, LIVISI_REACHABILITY_CHANGE, device_id_reachability
+                self.hass,
+                f"{LIVISI_STATE_CHANGE}_{event_data.source}",
+                event_data.onState,
+            )
+        if event_data.isReachable is not None:
+            async_dispatcher_send(
+                self.hass,
+                f"{LIVISI_REACHABILITY_CHANGE}_{event_data.source}",
+                event_data.isReachable,
             )
 
     async def on_close(self) -> None:
         """Define a handler to fire when the websocket is closed."""
-        for device in self.devices:
-            device_id_reachability: dict = {
-                "id": device,
-                "is_reachable": False,
-            }
+        for device_id in self.devices:
+            is_reachable: bool = False
             async_dispatcher_send(
-                self.hass, LIVISI_REACHABILITY_CHANGE, device_id_reachability
+                self.hass,
+                f"{LIVISI_REACHABILITY_CHANGE}{device_id}",
+                is_reachable,
             )
 
         await self.websocket.connect(self.on_data, self.on_close, self.port)

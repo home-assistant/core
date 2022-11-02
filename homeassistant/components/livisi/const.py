@@ -12,9 +12,6 @@ CLASSIC_PORT: Final = 8080
 DEVICE_POLLING_DELAY: Final = 60
 LIVISI_STATE_CHANGE: Final = "livisi_state_change"
 LIVISI_REACHABILITY_CHANGE: Final = "livisi_reachability_change"
-ID: Final = "id"
-STATE: Final = "state"
-IS_REACHABLE: Final = "is_reachable"
 
 SWITCH_PLATFORM: Final = "switch"
 

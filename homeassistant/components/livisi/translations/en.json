@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "shc_unreachable": "The SHC is unreachable.",
+            "cannot_connect": "Failed to connect",
             "wrong_ip_address": "The IP address is incorrect or the SHC cannot be reached locally.",
             "wrong_password": "The password is incorrect."
         },

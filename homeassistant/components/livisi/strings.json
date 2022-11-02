@@ -11,7 +11,7 @@
     },
     "error": {
       "wrong_password": "The password is incorrect.",
-      "shc_unreachable": "The SHC is unreachable.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_ip_address": "The IP address is incorrect or the SHC cannot be reached locally."
     }
   }

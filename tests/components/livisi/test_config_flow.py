@@ -38,7 +38,7 @@ async def test_create_entry(hass):
 @pytest.mark.parametrize(
     "exception,expected_reason",
     [
-        (livisi_errors.ShcUnreachableException(), "shc_unreachable"),
+        (livisi_errors.ShcUnreachableException(), "cannot_connect"),
         (livisi_errors.IncorrectIpAddressException(), "wrong_ip_address"),
         (livisi_errors.WrongCredentialException(), "wrong_password"),
     ],

@@ -40,7 +40,7 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except livisi_errors.WrongCredentialException:
             errors["base"] = "wrong_password"
         except livisi_errors.ShcUnreachableException:
-            errors["base"] = "shc_unreachable"
+            errors["base"] = "cannot_connect"
         except livisi_errors.IncorrectIpAddressException:
             errors["base"] = "wrong_ip_address"
         else:
@@ -48,10 +48,10 @@ class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 controller_info = await self.get_controller()
             except ClientConnectorError:
-                errors["base"] = "shc_unreachable"
+                errors["base"] = "cannot_connect"
             if controller_info:
                 return await self.create_entity(user_input, controller_info)
-            errors["base"] = "shc_unreachable"
+            errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user", data_schema=self.data_schema, errors=errors

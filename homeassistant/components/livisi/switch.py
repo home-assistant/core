@@ -14,13 +14,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
-    ID,
-    IS_REACHABLE,
     LIVISI_REACHABILITY_CHANGE,
     LIVISI_STATE_CHANGE,
     LOGGER,
     PSS_DEVICE_TYPE,
-    STATE,
 )
 from .coordinator import LivisiDataUpdateCoordinator
 
@@ -39,14 +36,16 @@ async def async_setup_entry(
         shc_devices: list[dict[str, Any]] = coordinator.data
         entities: list[SwitchEntity] = []
         for device in shc_devices:
-            if device["type"] == PSS_DEVICE_TYPE:
-                if device["id"] not in coordinator.devices:
-                    livisi_switch: SwitchEntity = create_entity(
-                        config_entry, device, coordinator
-                    )
-                    LOGGER.debug("Include device type: %s", device["type"])
-                    coordinator.devices.add(device["id"])
-                    entities.append(livisi_switch)
+            if (
+                device["type"] == PSS_DEVICE_TYPE
+                and device["id"] not in coordinator.devices
+            ):
+                livisi_switch: SwitchEntity = create_entity(
+                    config_entry, device, coordinator
+                )
+                LOGGER.debug("Include device type: %s", device["type"])
+                coordinator.devices.add(device["id"])
+                entities.append(livisi_switch)
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -135,32 +134,28 @@ class LivisiSwitch(CoordinatorEntity[LivisiDataUpdateCoordinator], SwitchEntity)
         else:
             self._attr_is_on = response
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, LIVISI_STATE_CHANGE, self.update_states)
+            async_dispatcher_connect(
+                self.hass,
+                f"{LIVISI_STATE_CHANGE}_{self._capability_id}",
+                self.update_states,
+            )
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, LIVISI_REACHABILITY_CHANGE, self.update_reachability
+                self.hass,
+                f"{LIVISI_REACHABILITY_CHANGE}_{self.unique_id}",
+                self.update_reachability,
             )
         )
 
     @callback
-    def update_states(self, device_id_state) -> None:
+    def update_states(self, state) -> None:
         """Update the states of the switch device."""
-        if device_id_state[ID] != self._capability_id:
-            return
-        on_state = device_id_state[STATE]
-        if on_state is None:
-            return
-        if on_state is True:
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
+        self._attr_is_on = state
         self.async_write_ha_state()
 
     @callback
-    def update_reachability(self, device_id_reachability) -> None:
+    def update_reachability(self, is_reachable: bool) -> None:
         """Update the reachability of the switch device."""
-        if device_id_reachability[ID] != self.unique_id:
-            return
-        self._attr_available = device_id_reachability[IS_REACHABLE]
+        self._attr_available = is_reachable
         self.async_write_ha_state()
