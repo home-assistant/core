@@ -56,7 +56,6 @@ async def test_remove_stale_devices(
         "homeassistant.components.zwave_me.async_setup_platforms",
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-    assert len(hass.data["zwave_me"][config_entry.entry_id].device_ids) > 0
     assert (
         bool(
             device_reg.async_get_device(
