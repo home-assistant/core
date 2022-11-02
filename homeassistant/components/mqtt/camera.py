@@ -153,10 +153,10 @@ class MqttCamera(MqttEntity, Camera):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-            assert isinstance(msg.payload, bytes)
             if CONF_IMAGE_ENCODING in self._config:
                 self._last_image = b64decode(msg.payload)
             else:
+                assert isinstance(msg.payload, bytes)
                 self._last_image = msg.payload
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
