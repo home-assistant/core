@@ -47,8 +47,7 @@ def add_entities(
         new_tracked.append(AsusWrtDevice(router, device))
         tracked.add(mac)
 
-    if new_tracked:
-        async_add_entities(new_tracked)
+    async_add_entities(new_tracked)
 
 
 class AsusWrtDevice(ScannerEntity):

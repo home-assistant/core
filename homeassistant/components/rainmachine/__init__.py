@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    CONF_UNIT_OF_MEASUREMENT,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -79,8 +80,18 @@ CONF_SECONDS = "seconds"
 CONF_SOLARRAD = "solarrad"
 CONF_TEMPERATURE = "temperature"
 CONF_TIMESTAMP = "timestamp"
+CONF_UNITS = "units"
+CONF_VALUE = "value"
 CONF_WEATHER = "weather"
 CONF_WIND = "wind"
+
+# Config Validator for Flow Meter Data
+CV_FLOW_METER_VALID_UNITS = {
+    "clicks",
+    "gal",
+    "litre",
+    "m3",
+}
 
 # Config Validators for Weather Service Data
 CV_WX_DATA_VALID_PERCENTAGE = vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
@@ -91,6 +102,7 @@ CV_WX_DATA_VALID_PRESSURE = vol.All(vol.Coerce(float), vol.Range(min=60.0, max=1
 CV_WX_DATA_VALID_SOLARRAD = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=5.0))
 
 SERVICE_NAME_PAUSE_WATERING = "pause_watering"
+SERVICE_NAME_PUSH_FLOW_METER_DATA = "push_flow_meter_data"
 SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
 SERVICE_NAME_RESTRICT_WATERING = "restrict_watering"
 SERVICE_NAME_STOP_ALL = "stop_all"
@@ -106,6 +118,15 @@ SERVICE_SCHEMA = vol.Schema(
 SERVICE_PAUSE_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
     {
         vol.Required(CONF_SECONDS): cv.positive_int,
+    }
+)
+
+SERVICE_PUSH_FLOW_METER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
+    {
+        vol.Required(CONF_VALUE): cv.positive_float,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(
+            cv.string, vol.In(CV_FLOW_METER_VALID_UNITS)
+        ),
     }
 )
 
@@ -321,6 +342,17 @@ async def async_setup_entry(  # noqa: C901
         await controller.watering.pause_all(call.data[CONF_SECONDS])
 
     @call_with_controller(update_programs_and_zones=False)
+    async def async_push_flow_meter_data(
+        call: ServiceCall, controller: Controller
+    ) -> None:
+        """Push flow meter data to the device."""
+        value = call.data[CONF_VALUE]
+        if units := call.data.get(CONF_UNIT_OF_MEASUREMENT):
+            await controller.watering.post_flowmeter(value=value, units=units)
+        else:
+            await controller.watering.post_flowmeter(value=value)
+
+    @call_with_controller(update_programs_and_zones=False)
     async def async_push_weather_data(
         call: ServiceCall, controller: Controller
     ) -> None:
@@ -379,6 +411,11 @@ async def async_setup_entry(  # noqa: C901
             async_pause_watering,
         ),
         (
+            SERVICE_NAME_PUSH_FLOW_METER_DATA,
+            SERVICE_PUSH_FLOW_METER_DATA_SCHEMA,
+            async_push_flow_meter_data,
+        ),
+        (
             SERVICE_NAME_PUSH_WEATHER_DATA,
             SERVICE_PUSH_WEATHER_DATA_SCHEMA,
             async_push_weather_data,
@@ -419,6 +456,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # defined during integration setup:
         for service_name in (
             SERVICE_NAME_PAUSE_WATERING,
+            SERVICE_NAME_PUSH_FLOW_METER_DATA,
             SERVICE_NAME_PUSH_WEATHER_DATA,
             SERVICE_NAME_RESTRICT_WATERING,
             SERVICE_NAME_STOP_ALL,

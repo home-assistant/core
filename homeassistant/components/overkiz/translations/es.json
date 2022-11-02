@@ -12,7 +12,8 @@
             "too_many_attempts": "Demasiados intentos con un token no v\u00e1lido, prohibido temporalmente",
             "too_many_requests": "Demasiadas solicitudes, vuelve a intentarlo m\u00e1s tarde",
             "unknown": "Error inesperado",
-            "unknown_user": "Usuario desconocido. Las cuentas de Somfy Protect no son compatibles con esta integraci\u00f3n."
+            "unknown_user": "Usuario desconocido. Las cuentas de Somfy Protect no son compatibles con esta integraci\u00f3n.",
+            "unsupported_hardware": "Tu hardware {unsupported_device} no es compatible con esta integraci\u00f3n."
         },
         "flow_title": "Puerta de enlace: {gateway_id}",
         "step": {

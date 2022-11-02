@@ -18,6 +18,7 @@ def return_config(
     username=None,
     password=None,
     headers=None,
+    unique_id=None,
 ) -> dict[str, dict[str, Any]]:
     """Return config."""
     config = {
@@ -44,6 +45,8 @@ def return_config(
         config["password"] = password
     if headers:
         config["headers"] = headers
+    if unique_id:
+        config["unique_id"] = unique_id
     return config
 
 

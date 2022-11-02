@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     LENGTH_KILOMETERS,
     PERCENTAGE,
     SPEED_MILES_PER_HOUR,
@@ -84,6 +83,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_speed",
         name="Wind speed",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        suggested_unit_of_measurement=SPEED_MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
         entity_registry_enabled_default=True,
@@ -99,6 +99,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="wind_gust",
         name="Wind gust",
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        suggested_unit_of_measurement=SPEED_MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         icon="mdi:weather-windy",
         entity_registry_enabled_default=False,
@@ -180,6 +181,7 @@ class MetOfficeCurrentSensor(
 ):
     """Implementation of a Met Office current weather condition sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
 
     def __init__(
@@ -258,7 +260,6 @@ class MetOfficeCurrentSensor(
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_LAST_UPDATE: self.coordinator.data.now.date,
             ATTR_SENSOR_ID: self.entity_description.key,
             ATTR_SITE_ID: self.coordinator.data.site.id,

@@ -23,5 +23,14 @@
                 "title": "RTSPtoWebRTC seadistamine"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "stun_server": "Stun serveri aadress (host:port)"
+                }
+            }
+        }
     }
 }

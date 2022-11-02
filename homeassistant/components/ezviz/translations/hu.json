@@ -17,7 +17,7 @@
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
-                "description": "\u00cdrja be az RTSP-hiteles\u00edt\u0151 adatokat az Ezviz {serial} kamer\u00e1hoz IP- {ip_address}",
+                "description": "\u00cdrja be az RTSP-hiteles\u00edt\u0151 adatokat az Ezviz {serial}, {ip_address} IP-c\u00edm\u0171 kamer\u00e1hoz",
                 "title": "Felfedezett Ezviz kamera"
             },
             "user": {
@@ -35,7 +35,7 @@
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
                 "description": "Adja meg k\u00e9zzel a r\u00e9gi\u00f3 URL-j\u00e9t",
-                "title": "Csatlakozzon az Ezviz-hez egy\u00e9ni URL"
+                "title": "Csatlakozzon egyedi Ezviz URL-hez"
             }
         }
     },

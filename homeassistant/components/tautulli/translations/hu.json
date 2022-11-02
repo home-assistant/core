@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },

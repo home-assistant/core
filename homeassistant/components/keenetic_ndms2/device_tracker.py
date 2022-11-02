@@ -64,8 +64,7 @@ async def async_setup_entry(
                     )
                 )
 
-    if restored:
-        async_add_entities(restored)
+    async_add_entities(restored)
 
     async_dispatcher_connect(hass, router.signal_update, update_from_router)
 
@@ -79,8 +78,7 @@ def update_items(router: KeeneticRouter, async_add_entities, tracked: set[str]):
             tracked.add(mac)
             new_tracked.append(KeeneticTracker(device, router))
 
-    if new_tracked:
-        async_add_entities(new_tracked)
+    async_add_entities(new_tracked)
 
 
 class KeeneticTracker(ScannerEntity):

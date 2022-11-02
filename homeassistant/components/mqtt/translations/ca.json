@@ -5,15 +5,33 @@
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "bad_birth": "T\u00f2pic del missatge de naixement ('birth') inv\u00e0lid",
+            "bad_certificate": "El certificat CA \u00e9s inv\u00e0lid",
+            "bad_client_cert": "Certificat de client inv\u00e0lid, assegura't que la codificaci\u00f3 del fitxer sigui PEM",
+            "bad_client_cert_key": "El certificat de client i la clau privada no formen una parella v\u00e0lida",
+            "bad_client_key": "Clau privada inv\u00e0lida, assegura't que la codificaci\u00f3 del fitxer sigui PEM i sense contrasenya",
+            "bad_discovery_prefix": "Prefix de descobriment inv\u00e0lid",
+            "bad_will": "T\u00f2pic del missatge d'\u00faltima voluntat ('will') inv\u00e0lid",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_inclusion": "El certificat de client i la clau privada s'han de configurar conjuntament"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Opcions avan\u00e7ades",
                     "broker": "Broker",
+                    "certificate": "Ruta a un fitxer de certificat CA personalitzat",
+                    "client_cert": "Ruta a un fitxer de certificat de client",
+                    "client_id": "ID de client (deixa-ho buit per generar-lo aleat\u00f2riament)",
+                    "client_key": "Ruta a un fitxer de clau privada",
                     "discovery": "Habilita el descobriment autom\u00e0tic",
+                    "keepalive": "Temps entre enviaments de missatges de manteniment viu ('keep alive')",
                     "password": "Contrasenya",
                     "port": "Port",
+                    "protocol": "Protocol MQTT",
+                    "set_ca_cert": "Validaci\u00f3 del certificat del 'broker'",
+                    "set_client_cert": "Utilitza un certificat de client",
+                    "tls_insecure": "Ignora la validaci\u00f3 del certificat del 'broker'",
                     "username": "Nom d'usuari"
                 },
                 "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT."
@@ -53,20 +71,40 @@
         "deprecated_yaml": {
             "description": "S'ha trobat el MQTT {platform}(s) sota el codi de la integraci\u00f3 `{platform}`.\n\nSi us plau, moveu la configuraci\u00f3 a la integraci\u00f3 `mqtt`i reinicieu el Home Assistant per solucionar aquesta incid\u00e8ncia. Vegeu la [documentaci\u00f3]({more_info_url}) per a m\u00e9s informaci\u00f3.",
             "title": "El MQTT {platform}(s) configurat manualment necessita la vostra atenci\u00f3"
+        },
+        "deprecated_yaml_broker_settings": {
+            "description": "La configuraci\u00f3 seg\u00fcent que s'ha trobat a `configuration.yaml` ha estat migrada l'entrada de configuraci\u00f3 d'MQTT. Els par\u00e0metres de `configuration.yaml` ja no s'utilitzen.\n`{deprecated_settings}` \n\nElimina la configuraci\u00f3 MQTT de `configuration.yaml` i reinicia Home Assistant per solucionar aquest problema. Consulta la [documentaci\u00f3]({more_info_url}), per a m\u00e9s informaci\u00f3.",
+            "title": "S'han trobat par\u00e0metres de configuraci\u00f3 MQTT obsolets  a `configuration.yaml`"
         }
     },
     "options": {
         "error": {
-            "bad_birth": "Topic del missatge de naixement inv\u00e0lid.",
-            "bad_will": "Topic missatge d'\u00faltima voluntat inv\u00e0lid.",
-            "cannot_connect": "Ha fallat la connexi\u00f3"
+            "bad_birth": "T\u00f2pic del missatge de naixement ('birth') inv\u00e0lid",
+            "bad_certificate": "El certificat CA \u00e9s inv\u00e0lid",
+            "bad_client_cert": "Certificat de client inv\u00e0lid, assegura't que la codificaci\u00f3 del fitxer sigui PEM",
+            "bad_client_cert_key": "El certificat de client i la clau privada no formen una parella v\u00e0lida",
+            "bad_client_key": "Clau privada inv\u00e0lida, assegura't que la codificaci\u00f3 del fitxer sigui PEM i sense contrasenya",
+            "bad_discovery_prefix": "Prefix de descobriment inv\u00e0lid",
+            "bad_will": "T\u00f2pic del missatge d'\u00faltima voluntat ('will') inv\u00e0lid",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_inclusion": "El certificat de client i la clau privada s'han de configurar conjuntament"
         },
         "step": {
             "broker": {
                 "data": {
+                    "advanced_options": "Opcions avan\u00e7ades",
                     "broker": "Broker",
+                    "certificate": "Puja un fitxer de certificat CA personalitzat",
+                    "client_cert": "Puja un fitxer de certificat de client",
+                    "client_id": "ID de client (deixa-ho buit per generar-lo aleat\u00f2riament)",
+                    "client_key": "Puja un fitxer de clau privada",
+                    "keepalive": "Temps entre enviaments de missatges de manteniment viu ('keep alive')",
                     "password": "Contrasenya",
                     "port": "Port",
+                    "protocol": "Protocol MQTT",
+                    "set_ca_cert": "Validaci\u00f3 del certificat del 'broker'",
+                    "set_client_cert": "Utilitza un certificat de client",
+                    "tls_insecure": "Ignora la validaci\u00f3 del certificat del 'broker'",
                     "username": "Nom d'usuari"
                 },
                 "description": "Introdueix la informaci\u00f3 de connexi\u00f3 del teu broker MQTT.",
@@ -80,13 +118,14 @@
                     "birth_retain": "Retenci\u00f3 del missatge de naixement",
                     "birth_topic": "Topic del missatge de naixement",
                     "discovery": "Activar descobriment",
+                    "discovery_prefix": "Prefix de descobriment",
                     "will_enable": "Activa el missatge d'\u00faltima voluntat",
                     "will_payload": "Dades (payload) del missatge d'\u00faltima voluntat",
                     "will_qos": "QoS del missatge d'\u00faltima voluntat",
                     "will_retain": "Retenci\u00f3 del missatge d'\u00faltima voluntat",
                     "will_topic": "Topic del missatge d'\u00faltima voluntat"
                 },
-                "description": "Descobriment - Si est\u00e0 activat (recomanat), Home Assistant descobrir\u00e0 autom\u00e0ticament dispositius i entitats que publiquin la seva configuraci\u00f3 al broker MQTT. Si est\u00e0 desactivat, les configuracions s'han de fer manualment.\nMissatge de naixement - S'enviar\u00e0 cada vegada que Home Assistant \u00e9s connecti al broker MQTT.\nMissatge d'\u00faltima voluntat - S'enviar\u00e0 cada vegada que Home Assistant perdi la connexi\u00f3 amb el broker, tant si \u00e9s una desconnexi\u00f3 neta (per exemple si s'apaga Home Assistant) com si \u00e9s una desconnexi\u00f3 dolenta (per exemple si Home Assistant falla o perd la connexi\u00f3 a Internet).",
+                "description": "Descobriment - Si est\u00e0 activat (recomanat), Home Assistant descobrir\u00e0 autom\u00e0ticament dispositius i entitats que publiquin la seva configuraci\u00f3 al 'broker' MQTT. Si est\u00e0 desactivat, les configuracions s'han de fer manualment.\nPrefix de descobriment - Prefix del t\u00f2pics de configuraci\u00f3 a utilitzar per al descobriment autom\u00e0tic.\nMissatge de naixement - S'enviar\u00e0 cada vegada que Home Assistant es connecti al 'broker' MQTT.\nMissatge d'\u00faltima voluntat - S'enviar\u00e0 cada vegada que Home Assistant perdi la connexi\u00f3 amb el 'broker', tant si \u00e9s una desconnexi\u00f3 neta (per exemple si s'apaga Home Assistant) com si \u00e9s una desconnexi\u00f3 dolenta (per exemple si Home Assistant falla o perd la connexi\u00f3 a Internet).",
                 "title": "Opcions d'MQTT"
             }
         }

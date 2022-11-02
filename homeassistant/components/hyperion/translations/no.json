@@ -8,7 +8,7 @@
             "auth_required_error": "Kan ikke fastsl\u00e5 om autorisasjon er n\u00f8dvendig",
             "cannot_connect": "Tilkobling mislyktes",
             "no_id": "Hyperion Ambilight-forekomsten rapporterte ikke ID-en",
-            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+            "reauth_successful": "Re-autentisering var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
