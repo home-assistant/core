@@ -12,14 +12,14 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Halte die Home-Taste von {name} gedr\u00fcckt, bis das Ger\u00e4t einen Ton erzeugt (ca. zwei Sekunden) und sende die Best\u00e4tigung innerhalb von 30 Sekunden ab.",
+                "description": "Stelle sicher, dass die iRobot-App auf keinem Ger\u00e4t ausgef\u00fchrt wird. Halte die Home-Taste auf {name} gedr\u00fcckt, bis das Ger\u00e4t einen Ton erzeugt (etwa zwei Sekunden) und best\u00e4tige dann innerhalb von 30 Sekunden.",
                 "title": "Passwort abrufen"
             },
             "link_manual": {
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Das Passwort konnte nicht automatisch vom Ger\u00e4t abgerufen werden. Bitte die in der Dokumentation beschriebenen Schritte unter {auth_help_url} befolgen",
+                "description": "Das Passwort konnte nicht automatisch vom Ger\u00e4t abgerufen werden. Bitte stelle sicher, dass die iRobot-App auf keinem Ger\u00e4t ge\u00f6ffnet ist, w\u00e4hrend du versuchst, das Passwort abzurufen. Bitte befolge die Schritte in der Dokumentation unter: {auth_help_url}",
                 "title": "Passwort eingeben"
             },
             "manual": {

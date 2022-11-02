@@ -59,10 +59,45 @@ class PhillipsRemote(ZigbeeChannel):
     REPORT_CONFIG = ()
 
 
+@registries.CHANNEL_ONLY_CLUSTERS.register(registries.TUYA_MANUFACTURER_CLUSTER)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.TUYA_MANUFACTURER_CLUSTER)
+class TuyaChannel(ZigbeeChannel):
+    """Channel for the Tuya manufacturer Zigbee cluster."""
+
+    REPORT_CONFIG = ()
+
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
+        """Initialize TuyaChannel."""
+        super().__init__(cluster, ch_pool)
+
+        if self.cluster.endpoint.manufacturer in (
+            "_TZE200_7tdtqgwv",
+            "_TZE200_amp6tsvy",
+            "_TZE200_oisqyl4o",
+            "_TZE200_vhy3iakz",
+            "_TZ3000_uim07oem",
+            "_TZE200_wfxuhoea",
+            "_TZE200_tviaymwx",
+            "_TZE200_g1ib5ldv",
+            "_TZE200_wunufsil",
+            "_TZE200_7deq70b8",
+            "_TZE200_tz32mtza",
+            "_TZE200_2hf7x9n3",
+            "_TZE200_aqnazj70",
+            "_TZE200_1ozguk6x",
+            "_TZE200_k6jhsr0q",
+            "_TZE200_9mahtqtg",
+        ):
+            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+                "backlight_mode": True,
+                "power_on_state": True,
+            }
+
+
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFCC0)
 class OppleRemote(ZigbeeChannel):
-    """Opple button channel."""
+    """Opple channel."""
 
     REPORT_CONFIG = ()
 
@@ -81,6 +116,10 @@ class OppleRemote(ZigbeeChannel):
                 "monitoring_mode": True,
                 "motion_sensitivity": True,
                 "approach_distance": True,
+            }
+        elif self.cluster.endpoint.model in ("lumi.plug.mmeu01", "lumi.plug.maeu01"):
+            self.ZCL_INIT_ATTRS = {
+                "power_outage_memory": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
@@ -158,7 +197,7 @@ class InovelliConfigEntityChannel(ZigbeeChannel):
         Clear = 0xFF
 
     REPORT_CONFIG = ()
-    ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+    ZCL_INIT_ATTRS = {
         "dimming_speed_up_remote": False,
         "dimming_speed_up_local": False,
         "ramp_rate_off_to_on_local": False,

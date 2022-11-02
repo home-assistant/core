@@ -6,11 +6,15 @@ from typing import Any
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.state import State
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import HomeKit
+from .accessories import HomeAccessory, HomeBridge
 from .const import DOMAIN, HOMEKIT
+
+TO_REDACT = {"access_token", "entity_picture"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -27,9 +31,14 @@ async def async_get_config_entry_diagnostics(
             "options": dict(entry.options),
         },
     }
-    if not hasattr(homekit, "driver"):
+    if not homekit.driver:  # not started yet or startup failed
         return data
     driver: AccessoryDriver = homekit.driver
+    if driver.accessory:
+        if isinstance(driver.accessory, HomeBridge):
+            data["bridge"] = _get_bridge_diagnostics(hass, driver.accessory)
+        else:
+            data["accessory"] = _get_accessory_diagnostics(hass, driver.accessory)
     data.update(driver.get_accessories())
     state: State = driver.state
     data.update(
@@ -42,3 +51,27 @@ async def async_get_config_entry_diagnostics(
         }
     )
     return data
+
+
+def _get_bridge_diagnostics(hass: HomeAssistant, bridge: HomeBridge) -> dict[int, Any]:
+    """Return diagnostics for a bridge."""
+    return {
+        aid: _get_accessory_diagnostics(hass, accessory)
+        for aid, accessory in bridge.accessories.items()
+    }
+
+
+def _get_accessory_diagnostics(
+    hass: HomeAssistant, accessory: HomeAccessory
+) -> dict[str, Any]:
+    """Return diagnostics for an accessory."""
+    return {
+        "aid": accessory.aid,
+        "config": accessory.config,
+        "category": accessory.category,
+        "name": accessory.display_name,
+        "entity_id": accessory.entity_id,
+        "entity_state": async_redact_data(
+            hass.states.get(accessory.entity_id), TO_REDACT
+        ),
+    }

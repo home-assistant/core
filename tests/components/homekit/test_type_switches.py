@@ -150,23 +150,23 @@ async def test_valve_set_state(hass, hk_driver, events):
     assert acc.category == 29  # Faucet
     assert acc.char_valve_type.value == 3  # Water faucet
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SHOWER})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 3, {CONF_TYPE: TYPE_SHOWER})
     await acc.run()
     await hass.async_block_till_done()
     assert acc.category == 30  # Shower
     assert acc.char_valve_type.value == 2  # Shower head
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SPRINKLER})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 4, {CONF_TYPE: TYPE_SPRINKLER})
     await acc.run()
     await hass.async_block_till_done()
     assert acc.category == 28  # Sprinkler
     assert acc.char_valve_type.value == 1  # Irrigation
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_VALVE})
+    acc = Valve(hass, hk_driver, "Valve", entity_id, 5, {CONF_TYPE: TYPE_VALVE})
     await acc.run()
     await hass.async_block_till_done()
 
-    assert acc.aid == 2
+    assert acc.aid == 5
     assert acc.category == 29  # Faucet
 
     assert acc.char_active.value == 0

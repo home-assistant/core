@@ -88,13 +88,14 @@ def raise_exceptions_from_results(
     if errors := [
         tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
     ]:
-        lines = (
-            f"{len(errors)} error(s):",
+        lines = [
             *(
                 f"{zwave_object} - {error.__class__.__name__}: {error.args[0]}"
                 for zwave_object, error in errors
-            ),
-        )
+            )
+        ]
+        if len(lines) > 1:
+            lines.insert(0, f"{len(errors)} error(s):")
         raise HomeAssistantError("\n".join(lines))
 
 

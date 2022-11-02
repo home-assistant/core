@@ -25,7 +25,7 @@ import weakref
 
 from awesomeversion import AwesomeVersion
 import jinja2
-from jinja2 import pass_context, pass_environment
+from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 import voluptuous as vol
@@ -1063,6 +1063,14 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     ]
 
 
+def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get an config entry ID from an entity ID."""
+    entity_reg = entity_registry.async_get(hass)
+    if entity := entity_reg.async_get(entity_id):
+        return entity.config_entry_id
+    return None
+
+
 def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     """Get a device ID from an entity ID or device name."""
     entity_reg = entity_registry.async_get(hass)
@@ -1649,7 +1657,7 @@ def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
     return pass_environment(wrapper)
 
 
-def average(*args: Any) -> float:
+def average(*args: Any, default: Any = _SENTINEL) -> Any:
     """
     Filter and function to calculate the arithmetic mean of an iterable or of two or more arguments.
 
@@ -1658,13 +1666,23 @@ def average(*args: Any) -> float:
     if len(args) == 0:
         raise TypeError("average expected at least 1 argument, got 0")
 
-    if len(args) == 1:
-        if isinstance(args[0], Iterable):
-            return statistics.fmean(args[0])
-
+    # If first argument is iterable and more then 1 argument provided but not a named default,
+    # then use 2nd argument as default.
+    if isinstance(args[0], Iterable):
+        average_list = args[0]
+        if len(args) > 1 and default is _SENTINEL:
+            default = args[1]
+    elif len(args) == 1:
         raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        average_list = args
 
-    return statistics.fmean(args)
+    try:
+        return statistics.fmean(average_list)
+    except (TypeError, statistics.StatisticsError):
+        if default is _SENTINEL:
+            raise_no_default("average", args)
+        return default
 
 
 def forgiving_float(value, default=_SENTINEL):
@@ -2072,6 +2090,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_attr"] = hassfunction(device_attr)
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
 
+        self.globals["config_entry_id"] = hassfunction(config_entry_id)
+        self.filters["config_entry_id"] = pass_context(self.globals["config_entry_id"])
+
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = pass_context(self.globals["device_id"])
 
@@ -2132,9 +2153,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["closest"] = pass_context(hassfunction(closest_filter))
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_state"] = hassfunction(is_state)
+        self.tests["is_state"] = pass_eval_context(self.globals["is_state"])
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
+        self.tests["is_state_attr"] = pass_eval_context(self.globals["is_state_attr"])
         self.globals["state_attr"] = hassfunction(state_attr)
+        self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
+        self.filters["states"] = self.globals["states"]
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
 

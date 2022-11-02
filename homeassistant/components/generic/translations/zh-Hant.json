@@ -45,6 +45,13 @@
                     "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
                 },
                 "description": "\u8f38\u5165\u651d\u5f71\u6a5f\u9023\u7dda\u8a2d\u5b9a\u3002"
+            },
+            "user_confirm_still": {
+                "data": {
+                    "confirmed_ok": "\u5f71\u50cf\u633a\u6e05\u6670\u3002"
+                },
+                "description": "![\u651d\u5f71\u6a5f\u975c\u614b\u9810\u89bd]({preview_url})",
+                "title": "\u9810\u89bd"
             }
         }
     },
@@ -68,6 +75,13 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
+            "confirm_still": {
+                "data": {
+                    "confirmed_ok": "\u5f71\u50cf\u633a\u6e05\u6670\u3002"
+                },
+                "description": "![\u651d\u5f71\u6a5f\u975c\u614b\u9810\u89bd]({preview_url})",
+                "title": "\u9810\u89bd"
+            },
             "content_type": {
                 "data": {
                     "content_type": "\u5167\u5bb9\u985e\u578b"

@@ -24,7 +24,6 @@ class RenaultSelectRequiredKeysMixin:
 
     data_key: str
     icon_lambda: Callable[[RenaultSelectEntity], str]
-    options: list[str]
 
 
 @dataclass
@@ -73,11 +72,6 @@ class RenaultSelectEntity(
     def icon(self) -> str | None:
         """Icon handling."""
         return self.entity_description.icon_lambda(self)
-
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return self.entity_description.options
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

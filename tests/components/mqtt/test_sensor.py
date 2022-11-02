@@ -313,6 +313,12 @@ async def test_setting_sensor_value_via_mqtt_json_message(
 
     assert state.state == "100"
 
+    # Make sure the state is written when a sensor value is reset to ''
+    async_fire_mqtt_message(hass, "test-topic", '{ "val": "" }')
+    state = hass.states.get("sensor.test")
+
+    assert state.state == ""
+
 
 async def test_setting_sensor_value_via_mqtt_json_message_and_default_current_state(
     hass, mqtt_mock_entry_with_yaml_config

@@ -1,6 +1,11 @@
 """Test the Z-Wave JS climate platform."""
 import pytest
+from zwave_js_server.const import CommandClass
+from zwave_js_server.const.command_class.thermostat import (
+    THERMOSTAT_OPERATING_STATE_PROPERTY,
+)
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -25,6 +30,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
+from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -37,6 +43,7 @@ from .common import (
     CLIMATE_FLOOR_THERMOSTAT_ENTITY,
     CLIMATE_MAIN_HEAT_ACTIONNER,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
+    replace_value_of_zwave_value,
 )
 
 
@@ -637,3 +644,25 @@ async def test_temp_unit_fix(
     state = hass.states.get("climate.z_wave_thermostat")
     assert state
     assert state.attributes["current_temperature"] == 21.1
+
+
+async def test_thermostat_unknown_values(
+    hass, client, climate_radio_thermostat_ct100_plus_state, integration
+):
+    """Test a thermostat v2 with unknown values."""
+    node_state = replace_value_of_zwave_value(
+        climate_radio_thermostat_ct100_plus_state,
+        [
+            ZwaveValueMatcher(
+                THERMOSTAT_OPERATING_STATE_PROPERTY,
+                command_class=CommandClass.THERMOSTAT_OPERATING_STATE,
+            )
+        ],
+        None,
+    )
+    node = Node(client, node_state)
+    client.driver.controller.emit("node added", {"node": node})
+    await hass.async_block_till_done()
+    state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
+
+    assert ATTR_HVAC_ACTION not in state.attributes

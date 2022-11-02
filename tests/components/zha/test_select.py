@@ -163,7 +163,7 @@ async def test_select_restore_state(
 ):
     """Test zha select entity restore state."""
 
-    entity_id = "select.fakemanufacturer_fakemodel_defaulttoneselect"
+    entity_id = "select.fakemanufacturer_fakemodel_default_siren_tone"
     core_rs(entity_id, state="Burglar")
 
     zigpy_device = zigpy_device_mock(
@@ -202,12 +202,12 @@ async def test_on_off_select_new_join(hass, light, zha_device_joined):
         "start_up_on_off": general.OnOff.StartUpOnOff.On
     }
     zha_device = await zha_device_joined(light)
-    select_name = general.OnOff.StartUpOnOff.__name__
+    select_name = "start_up_behavior"
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier=select_name,
     )
     assert entity_id is not None
 
@@ -285,12 +285,12 @@ async def test_on_off_select_restored(hass, light, zha_device_restored):
         in on_off_cluster.read_attributes.call_args_list
     )
 
-    select_name = general.OnOff.StartUpOnOff.__name__
+    select_name = "start_up_behavior"
     entity_id = await find_entity_id(
         Platform.SELECT,
         zha_device,
         hass,
-        qualifier=select_name.lower(),
+        qualifier=select_name,
     )
     assert entity_id is not None
 

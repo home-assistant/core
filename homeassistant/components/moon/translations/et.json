@@ -9,5 +9,11 @@
             }
         }
     },
+    "issues": {
+        "removed_yaml": {
+            "description": "Mooni seadistamine YAML-i abil on eemaldatud.\n\nHome Assistant ei kasuta teie olemasolevat YAML-i konfiguratsiooni.\n\nEemaldage FAILIST CONFIGURATION.yaml YAML-konfiguratsioon ja taask\u00e4ivitage selle probleemi lahendamiseks Home Assistant.",
+            "title": "Moon YAML konfiguratsioon on eemaldatud"
+        }
+    },
     "title": "Kuu"
 }
