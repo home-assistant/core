@@ -282,5 +282,5 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             update_time = update_time.isoformat()
         return {
             ATTR_STATION: self.coordinator.data["Name"],
-            ATTR_UPDATED: update_time or STATE_UNKNOWN,
+            ATTR_UPDATED: update_time,
         }
