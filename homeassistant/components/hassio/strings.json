@@ -31,7 +31,7 @@
     },
     "unhealthy_setup": {
       "title": "Unhealthy system - Setup failed",
-      "description": "System is currently because setup failed to complete. There are a number of reasons this can occur, use the link to learn more and how to fix this."
+      "description": "System is currently unhealthy because setup failed to complete. There are a number of reasons this can occur, use the link to learn more and how to fix this."
     },
     "unhealthy_privileged": {
       "title": "Unhealthy system - Not privileged",
