@@ -217,8 +217,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             ):
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
-            assert isinstance(payload, str)
-            self._state = payload
+            self._state = str(payload)
             get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         self._sub_state = subscription.async_prepare_subscribe_topics(
@@ -275,9 +274,8 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        if self._config[CONF_CODE_DISARM_REQUIRED] and not self._validate_code(
-            code, "disarming"
-        ):
+        code_required: bool = self._config[CONF_CODE_DISARM_REQUIRED]
+        if code_required and not self._validate_code(code, "disarming"):
             return
         payload: str = self._config[CONF_PAYLOAD_DISARM]
         await self._publish(code, payload)
@@ -287,9 +285,8 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        if self._config[CONF_CODE_ARM_REQUIRED] and not self._validate_code(
-            code, "arming home"
-        ):
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
+        if code_required and not self._validate_code(code, "arming home"):
             return
         action: str = self._config[CONF_PAYLOAD_ARM_HOME]
         await self._publish(code, action)
@@ -299,9 +296,8 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        if self._config[CONF_CODE_ARM_REQUIRED] and not self._validate_code(
-            code, "arming away"
-        ):
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
+        if code_required and not self._validate_code(code, "arming away"):
             return
         action: str = self._config[CONF_PAYLOAD_ARM_AWAY]
         await self._publish(code, action)
@@ -311,9 +307,8 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        if self._config[CONF_CODE_ARM_REQUIRED] and not self._validate_code(
-            code, "arming night"
-        ):
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
+        if code_required and not self._validate_code(code, "arming night"):
             return
         action: str = self._config[CONF_PAYLOAD_ARM_NIGHT]
         await self._publish(code, action)
@@ -323,9 +318,8 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        if self._config[CONF_CODE_ARM_REQUIRED] and not self._validate_code(
-            code, "arming vacation"
-        ):
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
+        if code_required and not self._validate_code(code, "arming vacation"):
             return
         action: str = self._config[CONF_PAYLOAD_ARM_VACATION]
         await self._publish(code, action)
@@ -335,9 +329,8 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        if self._config[CONF_CODE_ARM_REQUIRED] and not self._validate_code(
-            code, "arming custom bypass"
-        ):
+        code_required: bool = self._config[CONF_CODE_ARM_REQUIRED]
+        if code_required and not self._validate_code(code, "arming custom bypass"):
             return
         action: str = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
         await self._publish(code, action)
@@ -347,9 +340,8 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
         This method is a coroutine.
         """
-        if self._config[CONF_CODE_TRIGGER_REQUIRED] and not self._validate_code(
-            code, "triggering"
-        ):
+        code_required: bool = self._config[CONF_CODE_TRIGGER_REQUIRED]
+        if code_required and not self._validate_code(code, "triggering"):
             return
         action: str = self._config[CONF_PAYLOAD_TRIGGER]
         await self._publish(code, action)
