@@ -841,6 +841,98 @@ edit_replymarkup:
       selector:
         object:
 
+edit_media:
+  name: Edit message media
+  description: Edit the media of a message.
+  fields:
+    message_id:
+      name: Message ID
+      description: id of the message to edit.
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    chat_id:
+      name: Chat ID
+      description: The chat_id where to edit the reply_markup.
+      required: true
+      example: 12345
+      selector:
+        text:
+    media_type:
+      name: Media type
+      description: "Type of media."
+      selector:
+        select:
+          options:
+            - "photo"
+            - "video"
+    url:
+      name: URL
+      description: Remote path to the media.
+      example: "http://example.org/path/to/the/image.png"
+      selector:
+        text:
+    file:
+      name: File
+      description: Local path to the media.
+      example: "/path/to/the/image.png"
+      selector:
+        text:
+    caption:
+      name: Caption
+      description: The title of the image.
+      example: "My image"
+      selector:
+        text:
+    username:
+      name: Username
+      description: Username for a URL which require HTTP authentication.
+      example: myuser
+      selector:
+        text:
+    password:
+      name: Password
+      description: Password (or bearer token) for a URL which require HTTP authentication.
+      example: myuser_pwd
+      selector:
+        text:
+    authentication:
+      name: Authentication method
+      description: Define which authentication method to use. Set to `digest` to use HTTP digest authentication, or `bearer_token` for OAuth 2.0 bearer token authentication. Defaults to `basic`.
+      default: digest
+      selector:
+        select:
+          options:
+            - "digest"
+            - "bearer_token"
+    parse_mode:
+      name: Parse mode
+      description: "Parser for the message text."
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdown2"
+    verify_ssl:
+      name: Verify SSL
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      selector:
+        boolean:
+    inline_keyboard:
+      name: Inline keyboard
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+    message_tag:
+      name: Message tag
+      description: "Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}"
+      example: "msg_to_edit"
+      selector:
+        text:
+
 answer_callback_query:
   name: Answer callback query
   description: Respond to a callback query originated by clicking on an online keyboard button. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.
