@@ -942,9 +942,9 @@ async def test_cost_sensor_handle_gas_kwh(
     "unit_system,usage_unit,growth",
     (
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
-        (US_CUSTOMARY_SYSTEM, VOLUME_CUBIC_FEET, "374.025974025974"),
-        (US_CUSTOMARY_SYSTEM, VOLUME_GALLONS, "50.0"),
-        (METRIC_SYSTEM, VOLUME_CUBIC_METERS, "50.0"),
+        (US_CUSTOMARY_SYSTEM, VOLUME_CUBIC_FEET, 374.025974025974),
+        (US_CUSTOMARY_SYSTEM, VOLUME_GALLONS, 50.0),
+        (METRIC_SYSTEM, VOLUME_CUBIC_METERS, 50.0),
     ),
 )
 async def test_cost_sensor_handle_water(
@@ -995,7 +995,7 @@ async def test_cost_sensor_handle_water(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.water_consumption_cost")
-    assert state.state == growth
+    assert float(state.state) == pytest.approx(growth)
 
 
 @pytest.mark.parametrize("state_class", [None])
